@@ -32,6 +32,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getProjectCoordinates } from "@/utils/projectLocationBuckets";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const Projects: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -198,7 +199,7 @@ const Projects: React.FC = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center text-destructive">
-          Erreur lors du chargement des projets
+          <T k="auto.projects.erreur_lors_du_chargement_des_projets" fallback="Erreur lors du chargement des projets" />
         </div>
       </div>
     );
@@ -268,7 +269,7 @@ const Projects: React.FC = () => {
                       selectAllOnPage(paginatedProjects.map((p) => p.id))
                     }
                   >
-                    Page
+                    <T k="auto.projects.page" fallback="Page" />
                   </Button>
                   <Button
                     variant="outline"
@@ -276,10 +277,10 @@ const Projects: React.FC = () => {
                     className="h-7 text-xs"
                     onClick={() => selectAll(projects?.map((p) => p.id) || [])}
                   >
-                    Tout
+                    <T k="auto.projects.tout" fallback="Tout" />
                   </Button>
                   <Button variant="outline" size="sm" className="h-7 text-xs" onClick={clearSelection}>
-                    Effacer
+                    <T k="auto.projects.effacer" fallback="Effacer" />
                   </Button>
                 </div>
               </div>
@@ -359,10 +360,10 @@ const Projects: React.FC = () => {
                           </h4>
                           <div className="space-y-1 text-sm text-muted-foreground">
                             <p>
-                              <strong>Région:</strong> {location.region}
+                              <strong><T k="auto.projects.region" fallback="Région:" /></strong> {location.region}
                             </p>
                             <p>
-                              <strong>Statut:</strong>
+                              <strong><T k="auto.projects.statut" fallback="Statut:" /></strong>
                               <span
                                 className={`ml-1 px-2 py-1 rounded text-xs ${
                                   location.status === "en cours"
@@ -380,15 +381,15 @@ const Projects: React.FC = () => {
                             {project && (
                               <>
                                 <p>
-                                  <strong>Budget:</strong>{" "}
+                                  <strong><T k="auto.projects.budget" fallback="Budget:" /></strong>{" "}
                                   {formatAmount2(project.budget)}
                                 </p>
                                 <p>
-                                  <strong>Équipe:</strong> {project.teamSize}{" "}
+                                  <strong><T k="auto.projects.equipe" fallback="Équipe:" /></strong> {project.teamSize}{" "}
                                   membres
                                 </p>
                                 <p>
-                                  <strong>Progrès:</strong> {project.progress}%
+                                  <strong><T k="auto.projects.progres" fallback="Progrès:" /></strong> {project.progress}%
                                 </p>
                               </>
                             )}
@@ -398,7 +399,7 @@ const Projects: React.FC = () => {
                             </p>
                             {location.startDate && (
                               <p>
-                                <strong>Début:</strong>{" "}
+                                <strong><T k="auto.projects.debut" fallback="Début:" /></strong>{" "}
                                 {new Date(
                                   location.startDate
                                 ).toLocaleDateString("fr-FR")}
@@ -420,7 +421,7 @@ const Projects: React.FC = () => {
                     <div className="text-muted-foreground">
                       <Map className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <h3 className="text-lg font-medium mb-2">
-                        Aucun projet trouvé
+                        <T k="auto.projects.aucun_projet_trouve" fallback="Aucun projet trouvé" />
                       </h3>
                       <p>
                         Aucun projet ne correspond aux critères de filtrage

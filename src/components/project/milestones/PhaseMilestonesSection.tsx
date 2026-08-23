@@ -47,6 +47,7 @@ import {
     Trash2
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface PhaseMilestonesSectionProps {
   projectId: string;
@@ -301,14 +302,14 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                 onClick={handleGenerateFromTemplate}
               >
                 <Sparkles className="h-4 w-4 mr-1" />
-                Générer depuis référentiel
+                <T k="auto.phasemilestonessection.generer_depuis_referentiel" fallback="Générer depuis référentiel" />
               </Button>
             )}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" onClick={resetForm}>
                   <Plus className="h-4 w-4 mr-1" />
-                  Ajouter
+                  <T k="auto.phasemilestonessection.ajouter" fallback="Ajouter" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
@@ -319,7 +320,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div>
-                    <Label htmlFor="title">Titre</Label>
+                    <Label htmlFor="title"><T k="auto.phasemilestonessection.titre" fallback="Titre" /></Label>
                     <Input
                       id="title"
                       value={formData.title}
@@ -328,7 +329,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description"><T k="auto.phasemilestonessection.description" fallback="Description" /></Label>
                     <Textarea
                       id="description"
                       value={formData.description}
@@ -339,7 +340,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="type">Type</Label>
+                      <Label htmlFor="type"><T k="auto.phasemilestonessection.type" fallback="Type" /></Label>
                       <Select
                         value={formData.type}
                         onValueChange={(value) => setFormData({ ...formData, type: value as MilestoneType })}
@@ -355,7 +356,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="priority">Priorité</Label>
+                      <Label htmlFor="priority"><T k="auto.phasemilestonessection.priorite" fallback="Priorité" /></Label>
                       <Select
                         value={formData.priority}
                         onValueChange={(value) => setFormData({ ...formData, priority: value as MilestonePriority })}
@@ -374,7 +375,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="target_date">Date cible</Label>
+                      <Label htmlFor="target_date"><T k="auto.phasemilestonessection.date_cible" fallback="Date cible" /></Label>
                       <Input
                         id="target_date"
                         type="date"
@@ -383,7 +384,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                       />
                     </div>
                     <div>
-                      <Label htmlFor="weight">Poids (0.1 - 1.0)</Label>
+                      <Label htmlFor="weight"><T k="auto.phasemilestonessection.poids_0_1_1_0" fallback="Poids (0.1 - 1.0)" /></Label>
                       <Input
                         id="weight"
                         type="number"
@@ -396,7 +397,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="notes"><T k="auto.phasemilestonessection.notes" fallback="Notes" /></Label>
                     <Textarea
                       id="notes"
                       value={formData.notes}
@@ -406,7 +407,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Annuler
+                      <T k="auto.phasemilestonessection.annuler" fallback="Annuler" />
                     </Button>
                     <Button onClick={handleSave} disabled={!formData.title || !formData.target_date}>
                       {editingMilestone ? 'Modifier' : 'Ajouter'}
@@ -423,7 +424,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
         {milestones.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
             <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>Aucun jalon défini</p>
+            <p><T k="auto.phasemilestonessection.aucun_jalon_defini" fallback="Aucun jalon défini" /></p>
             {hasTemplates && !readonly && (
               <p className="text-sm mt-1">
                 Cliquez sur "Générer depuis référentiel" pour créer les jalons standards

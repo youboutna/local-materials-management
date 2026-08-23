@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { T } from '@/components/i18n/T';
 
 interface PaymentDocument {
   id: string;
@@ -225,7 +226,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Demande de Paiement
+            <T k="auto.paymentrequestmodal.demande_de_paiement" fallback="Demande de Paiement" />
           </DialogTitle>
           <DialogDescription>
             {projectName && <span className="font-medium">{projectName}</span>}
@@ -241,7 +242,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  Documents d'Inspection Requis
+                  <T k="auto.paymentrequestmodal.documents_d_inspection_requis" fallback="Documents d'Inspection Requis" />
                 </CardTitle>
                 <Badge variant={allRequiredDocsAvailable ? 'default' : 'destructive'}>
                   {allRequiredDocsAvailable ? 'Complet' : 'Incomplet'}
@@ -278,7 +279,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">{docType.label}</span>
                             {docType.required && (
-                              <Badge variant="outline" className="text-xs">Obligatoire</Badge>
+                              <Badge variant="outline" className="text-xs"><T k="auto.paymentrequestmodal.obligatoire" fallback="Obligatoire" /></Badge>
                             )}
                           </div>
                           {status?.available && status.document && (
@@ -306,7 +307,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                         ) : (
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-destructive" />
-                            <span className="text-xs text-destructive">Non disponible</span>
+                            <span className="text-xs text-destructive"><T k="auto.paymentrequestmodal.non_disponible" fallback="Non disponible" /></span>
                           </div>
                         )}
                       </div>
@@ -331,7 +332,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
           {/* Payment Details Section */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Détails du Paiement</CardTitle>
+              <CardTitle className="text-sm"><T k="auto.paymentrequestmodal.details_du_paiement" fallback="Détails du Paiement" /></CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -353,14 +354,14 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                         className="h-auto p-0 ml-2"
                         onClick={() => setAmount(suggestedAmount)}
                       >
-                        Appliquer
+                        <T k="auto.paymentrequestmodal.appliquer" fallback="Appliquer" />
                       </Button>
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Avancement au moment du paiement (%)</Label>
+                  <Label><T k="auto.paymentrequestmodal.avancement_au_moment_du_paiement" fallback="Avancement au moment du paiement (%)" /></Label>
                   <Input
                     type="number"
                     min={0}
@@ -387,7 +388,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
+            <T k="auto.paymentrequestmodal.annuler" fallback="Annuler" />
           </Button>
           <Button 
             onClick={handleSubmit}

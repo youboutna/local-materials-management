@@ -15,6 +15,7 @@ import { ReferentialType } from '@/config/referentials';
 import { useConstructionPhaseHex } from '@/hooks/hexagonal/useConstructionPhaseHex';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface ConstructionPhaseWithStepsProps {
   projectId: string;
   referentialCode?: ReferentialType;
@@ -86,7 +87,7 @@ export function ConstructionPhaseWithSteps({
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement des phases...</p>
+          <p className="text-muted-foreground"><T k="auto.constructionphasewithsteps.chargement_des_phases" fallback="Chargement des phases..." /></p>
         </div>
       </div>
     );
@@ -96,8 +97,8 @@ export function ConstructionPhaseWithSteps({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Phases de construction</h2>
-          <p className="text-muted-foreground">Gestion des phases avec étapes du référentiel</p>
+          <h2 className="text-2xl font-bold"><T k="auto.constructionphasewithsteps.phases_de_construction" fallback="Phases de construction" /></h2>
+          <p className="text-muted-foreground"><T k="auto.constructionphasewithsteps.gestion_des_phases_avec_etapes_du_referentiel" fallback="Gestion des phases avec étapes du référentiel" /></p>
         </div>
         <div className="space-x-2">
           {referentialCode && (
@@ -132,7 +133,7 @@ export function ConstructionPhaseWithSteps({
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>Progression</span>
+                    <span><T k="auto.constructionphasewithsteps.progression" fallback="Progression" /></span>
                     <span>{phase.progress}%</span>
                   </div>
                   <Progress value={phase.progress} className="h-2" />
@@ -157,8 +158,8 @@ export function ConstructionPhaseWithSteps({
             <Tabs defaultValue="steps" className="w-full">
               <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
                 <TabsTrigger value="steps">Étapes ({phaseSteps.length})</TabsTrigger>
-                <TabsTrigger value="progress">Progression</TabsTrigger>
-                <TabsTrigger value="details">Détails</TabsTrigger>
+                <TabsTrigger value="progress"><T k="auto.constructionphasewithsteps.progression" fallback="Progression" /></TabsTrigger>
+                <TabsTrigger value="details"><T k="auto.constructionphasewithsteps.details" fallback="Détails" /></TabsTrigger>
               </TabsList>
 
               <TabsContent value="steps" className="space-y-4">
@@ -176,7 +177,7 @@ export function ConstructionPhaseWithSteps({
                       <div className="space-y-3">
                         <div>
                           <div className="flex justify-between text-sm mb-1">
-                            <span>Progression</span>
+                            <span><T k="auto.constructionphasewithsteps.progression" fallback="Progression" /></span>
                             <span>{step.progress}%</span>
                           </div>
                           <Progress value={step.progress} className="h-2" />
@@ -205,7 +206,7 @@ export function ConstructionPhaseWithSteps({
 
               <TabsContent value="progress" className="space-y-4">
                 <Card>
-                  <CardHeader><CardTitle className="text-base">Progression de la phase</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-base"><T k="auto.constructionphasewithsteps.progression_de_la_phase" fallback="Progression de la phase" /></CardTitle></CardHeader>
                   <CardContent>
                     <Progress value={selectedPhase.progress} className="h-3" />
                     <p className="text-sm text-muted-foreground mt-2">
@@ -217,13 +218,13 @@ export function ConstructionPhaseWithSteps({
 
               <TabsContent value="details" className="space-y-4">
                 <Card>
-                  <CardHeader><CardTitle className="text-base">Informations</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-base"><T k="auto.constructionphasewithsteps.informations" fallback="Informations" /></CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span className="font-medium">Nom:</span><span>{(selectedPhase as any).name || (selectedPhase as any).title}</span></div>
-                      <div className="flex justify-between"><span className="font-medium">Statut:</span><Badge className={getPhaseStatusColor(selectedPhase.status)}><TranslatedStatus code={selectedPhase.status} /></Badge></div>
-                      <div className="flex justify-between"><span className="font-medium">Progression:</span><span>{selectedPhase.progress}%</span></div>
-                      {selectedPhase.budget && <div className="flex justify-between"><span className="font-medium">Budget:</span><span>{selectedPhase.budget.toLocaleString()} MRU</span></div>}
+                      <div className="flex justify-between"><span className="font-medium"><T k="auto.constructionphasewithsteps.nom" fallback="Nom:" /></span><span>{(selectedPhase as any).name || (selectedPhase as any).title}</span></div>
+                      <div className="flex justify-between"><span className="font-medium"><T k="auto.constructionphasewithsteps.statut" fallback="Statut:" /></span><Badge className={getPhaseStatusColor(selectedPhase.status)}><TranslatedStatus code={selectedPhase.status} /></Badge></div>
+                      <div className="flex justify-between"><span className="font-medium"><T k="auto.constructionphasewithsteps.progression" fallback="Progression:" /></span><span>{selectedPhase.progress}%</span></div>
+                      {selectedPhase.budget && <div className="flex justify-between"><span className="font-medium"><T k="auto.constructionphasewithsteps.budget" fallback="Budget:" /></span><span>{selectedPhase.budget.toLocaleString()} MRU</span></div>}
                     </div>
                   </CardContent>
                 </Card>

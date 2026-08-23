@@ -26,6 +26,7 @@ import {
   getCityByCode,
   getCitiesByWilaya
 } from '@/utils/mauritaniaUtils';
+import { T } from '@/components/i18n/T';
 
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({
@@ -269,7 +270,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
           </div>
           <Badge variant="secondary" className="bg-gradient-to-r from-accent/20 to-accent/10 text-accent-foreground border-accent/20">
             <Target className="h-3 w-3 mr-1" />
-            Précision GPS
+            <T k="auto.interactivemapgis.precision_gps" fallback="Précision GPS" />
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -281,21 +282,21 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
               className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
             >
               <MapPin className="h-4 w-4" />
-              Localisation
+              <T k="auto.interactivemapgis.localisation" fallback="Localisation" />
             </TabsTrigger>
             <TabsTrigger 
               value="shape"
               className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
             >
               <Pentagon className="h-4 w-4" />
-              Forme
+              <T k="auto.interactivemapgis.forme" fallback="Forme" />
             </TabsTrigger>
             <TabsTrigger 
               value="summary"
               className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
             >
               <Info className="h-4 w-4" />
-              Résumé
+              <T k="auto.interactivemapgis.resume" fallback="Résumé" />
             </TabsTrigger>
           </TabsList>
 
@@ -303,7 +304,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
             <div className="space-y-3">
               <Label htmlFor="address" className="text-sm font-medium text-foreground flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
-                Adresse de localisation
+                <T k="auto.interactivemapgis.adresse_de_localisation" fallback="Adresse de localisation" />
               </Label>
               <Input
                 id="address"
@@ -318,7 +319,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
               <div className="bg-gradient-to-r from-muted/50 to-accent/10 border border-accent/20 p-4 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground">Coordonnées GPS précises</span>
+                  <span className="text-sm font-medium text-foreground"><T k="auto.interactivemapgis.coordonnees_gps_precises" fallback="Coordonnées GPS précises" /></span>
                 </div>
                 <div className="font-mono text-sm text-muted-foreground bg-background/60 px-3 py-2 rounded-lg border">
                   Lat: {mapData.coordinates.lat.toFixed(6)} | Lng: {mapData.coordinates.lng.toFixed(6)}
@@ -352,7 +353,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                           <strong className={city.isCapital ? "text-destructive" : "text-primary"}>
                             {city.name}
                           </strong>
-                          {city.isCapital && <div className="text-xs text-destructive font-semibold">Capitale</div>}
+                          {city.isCapital && <div className="text-xs text-destructive font-semibold"><T k="auto.interactivemapgis.capitale" fallback="Capitale" /></div>}
                           <div className="text-xs text-muted-foreground mt-1">
                             Région: {getWilayaByCode(city.parentCode)?.name || city.parentCode}
                           </div>
@@ -383,7 +384,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   {mapData?.coordinates && (
                     <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
                       <Popup>
-                        <strong className="text-success">Position sélectionnée</strong>
+                        <strong className="text-success"><T k="auto.interactivemapgis.position_selectionnee" fallback="Position sélectionnée" /></strong>
                       </Popup>
                     </Marker>
                   )}
@@ -397,7 +398,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('osm')}
                   className="text-xs"
                 >
-                  OSM
+                  <T k="auto.interactivemapgis.osm" fallback="OSM" />
                 </Button>
                 <Button
                   type="button"
@@ -406,7 +407,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('satellite')}
                   className="text-xs"
                 >
-                  Satellite
+                  <T k="auto.interactivemapgis.satellite" fallback="Satellite" />
                 </Button>
                 <Button
                   type="button"
@@ -415,7 +416,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('topo')}
                   className="text-xs"
                 >
-                  Topo
+                  <T k="auto.interactivemapgis.topo" fallback="Topo" />
                 </Button>
                 <Button
                   type="button"
@@ -424,7 +425,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('relief')}
                   className="text-xs"
                 >
-                  Relief
+                  <T k="auto.interactivemapgis.relief" fallback="Relief" />
                 </Button>
               </div>
             </div>
@@ -447,7 +448,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
             <div className="bg-gradient-to-r from-muted/30 to-accent/10 border border-border/50 p-4 rounded-xl">
               <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
                 <Pentagon className="h-4 w-4 text-primary" />
-                Outils de tracé géométrique
+                <T k="auto.interactivemapgis.outils_de_trace_geometrique" fallback="Outils de tracé géométrique" />
               </h4>
               <div className="flex flex-wrap gap-3">
                 <Button
@@ -458,7 +459,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   className="flex items-center gap-2 bg-background/50 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
                 >
                   <Square className="h-4 w-4" />
-                  Rectangle
+                  <T k="auto.interactivemapgis.rectangle" fallback="Rectangle" />
                 </Button>
                 <Button
                   type="button"
@@ -468,7 +469,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   className="flex items-center gap-2 bg-background/50 border-accent/20 hover:border-accent hover:bg-accent/5 transition-all shadow-sm"
                 >
                   <Circle className="h-4 w-4" />
-                  Cercle
+                  <T k="auto.interactivemapgis.cercle" fallback="Cercle" />
                 </Button>
                 <Button
                   type="button"
@@ -478,7 +479,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   className="flex items-center gap-2 bg-background/50 border-success/20 hover:border-success hover:bg-success/5 transition-all shadow-sm"
                 >
                   <Pentagon className="h-4 w-4" />
-                  Forme libre
+                  <T k="auto.interactivemapgis.forme_libre" fallback="Forme libre" />
                 </Button>
                 <Button
                   type="button"
@@ -488,7 +489,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   className="flex items-center gap-2 bg-background/50 border-destructive/20 hover:border-destructive hover:bg-destructive/5 transition-all shadow-sm"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Effacer
+                  <T k="auto.interactivemapgis.effacer" fallback="Effacer" />
                 </Button>
               </div>
             </div>
@@ -514,7 +515,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
 
                   {mapData?.coordinates && (
                     <Marker position={[mapData.coordinates.lat, mapData.coordinates.lng]}>
-                      <Popup>Position de référence</Popup>
+                      <Popup><T k="auto.interactivemapgis.position_de_reference" fallback="Position de référence" /></Popup>
                     </Marker>
                   )}
 
@@ -532,7 +533,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                       }}
                     >
                       <Popup>
-                        <strong>Forme tracée</strong>
+                        <strong><T k="auto.interactivemapgis.forme_tracee" fallback="Forme tracée" /></strong>
                         <div className="text-xs text-muted-foreground">
                           Type: {mapData?.shapeType || 'polygon'}
                         </div>
@@ -549,7 +550,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('osm')}
                   className="text-xs"
                 >
-                  OSM
+                  <T k="auto.interactivemapgis.osm" fallback="OSM" />
                 </Button>
                 <Button
                   type="button"
@@ -558,7 +559,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('satellite')}
                   className="text-xs"
                 >
-                  Satellite
+                  <T k="auto.interactivemapgis.satellite" fallback="Satellite" />
                 </Button>
                 <Button
                   type="button"
@@ -567,7 +568,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('topo')}
                   className="text-xs"
                 >
-                  Topo
+                  <T k="auto.interactivemapgis.topo" fallback="Topo" />
                 </Button>
                 <Button
                   type="button"
@@ -576,7 +577,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   onClick={() => setMapLayer('relief')}
                   className="text-xs"
                 >
-                  Relief
+                  <T k="auto.interactivemapgis.relief" fallback="Relief" />
                 </Button>
               </div>
             </div>
@@ -586,7 +587,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-info animate-pulse" />
-                    <span className="text-sm font-medium text-foreground">Mode tracé actif</span>
+                    <span className="text-sm font-medium text-foreground"><T k="auto.interactivemapgis.mode_trace_actif" fallback="Mode tracé actif" /></span>
                   </div>
                   <Button
                     type="button"
@@ -596,11 +597,11 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                     className="bg-gradient-to-r from-success/10 to-success/5 border-success/20 hover:border-success text-success-foreground"
                   >
                     <Save className="h-3 w-3 mr-1" />
-                    Terminer
+                    <T k="auto.interactivemapgis.terminer" fallback="Terminer" />
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Cliquez sur la carte pour ajouter des points à votre forme géométrique.
+                  <T k="auto.interactivemapgis.cliquez_sur_la_carte_pour_ajouter_des_points_a_v" fallback="Cliquez sur la carte pour ajouter des points à votre forme géométrique." />
                 </p>
               </div>
             )}
@@ -623,7 +624,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary" />
-                    Informations de localisation
+                    <T k="auto.interactivemapgis.informations_de_localisation" fallback="Informations de localisation" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -632,7 +633,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                       <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
                         <div className="flex items-center gap-2 mb-1">
                           <Target className="h-3 w-3 text-primary" />
-                          <span className="text-xs font-medium text-muted-foreground">Coordonnées GPS</span>
+                          <span className="text-xs font-medium text-muted-foreground"><T k="auto.interactivemapgis.coordonnees_gps" fallback="Coordonnées GPS" /></span>
                         </div>
                         <p className="font-mono text-sm text-foreground">
                           {mapData?.coordinates.lat.toFixed(6)}, {mapData.coordinates.lng.toFixed(6)}
@@ -642,7 +643,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                         <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
                           <div className="flex items-center gap-2 mb-1">
                             <MapPin className="h-3 w-3 text-accent" />
-                            <span className="text-xs font-medium text-muted-foreground">Adresse</span>
+                            <span className="text-xs font-medium text-muted-foreground"><T k="auto.interactivemapgis.adresse" fallback="Adresse" /></span>
                           </div>
                           <p className="text-sm text-foreground">{address}</p>
                         </div>
@@ -651,7 +652,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   ) : (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Info className="h-4 w-4" />
-                      <span className="text-sm">Aucune position sélectionnée</span>
+                      <span className="text-sm"><T k="auto.interactivemapgis.aucune_position_selectionnee" fallback="Aucune position sélectionnée" /></span>
                     </div>
                   )}
                 </CardContent>
@@ -661,7 +662,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Pentagon className="h-4 w-4 text-accent" />
-                    Données géométriques
+                    <T k="auto.interactivemapgis.donnees_geometriques" fallback="Données géométriques" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -671,7 +672,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                         <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
                           <div className="flex items-center gap-2 mb-1">
                             <Square className="h-3 w-3 text-accent" />
-                            <span className="text-xs font-medium text-muted-foreground">Type de forme</span>
+                            <span className="text-xs font-medium text-muted-foreground"><T k="auto.interactivemapgis.type_de_forme" fallback="Type de forme" /></span>
                           </div>
                           <Badge variant="secondary" className="capitalize">
                             {mapData?.shapeType || 'polygon'}
@@ -680,7 +681,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                         <div className="bg-background/60 border border-border/50 p-3 rounded-lg">
                           <div className="flex items-center gap-2 mb-1">
                             <Target className="h-3 w-3 text-accent" />
-                            <span className="text-xs font-medium text-muted-foreground">Nombre de points</span>
+                            <span className="text-xs font-medium text-muted-foreground"><T k="auto.interactivemapgis.nombre_de_points" fallback="Nombre de points" /></span>
                           </div>
                           <span className="text-sm font-semibold text-foreground">{mapData?.shape?.length || 0}</span>
                         </div>
@@ -689,7 +690,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
                   ) : (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Info className="h-4 w-4" />
-                      <span className="text-sm">Aucune forme géométrique tracée</span>
+                      <span className="text-sm"><T k="auto.interactivemapgis.aucune_forme_geometrique_tracee" fallback="Aucune forme géométrique tracée" /></span>
                     </div>
                   )}
                 </CardContent>

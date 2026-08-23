@@ -19,6 +19,7 @@ import { AlertTriangle, Ban, CheckCircle, Clock, DollarSign, Shield } from 'luci
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { T } from '@/components/i18n/T';
 
 interface PaymentBlockHistoryItem {
   id: string;
@@ -217,23 +218,23 @@ const PaymentBlockingInterface = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Contrôle des Paiements</h2>
+          <h2 className="text-2xl font-bold tracking-tight"><T k="auto.paymentblockinginterface.controle_des_paiements" fallback="Contrôle des Paiements" /></h2>
           <p className="text-muted-foreground">
-            Système de blocage automatique basé sur les garanties et conformité
+            <T k="auto.paymentblockinginterface.systeme_de_blocage_automatique_base_sur_les_gara" fallback="Système de blocage automatique basé sur les garanties et conformité" />
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <DollarSign className="h-4 w-4 mr-2" />
-              Nouveau Paiement
+              <T k="auto.paymentblockinginterface.nouveau_paiement" fallback="Nouveau Paiement" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Traitement de Paiement</DialogTitle>
+              <DialogTitle><T k="auto.paymentblockinginterface.traitement_de_paiement" fallback="Traitement de Paiement" /></DialogTitle>
               <DialogDescription>
-                Valider les prérequis et traiter un paiement entrepreneur
+                <T k="auto.paymentblockinginterface.valider_les_prerequis_et_traiter_un_paiement_ent" fallback="Valider les prérequis et traiter un paiement entrepreneur" />
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -244,7 +245,7 @@ const PaymentBlockingInterface = () => {
                     name="projectId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>ID Projet</FormLabel>
+                        <FormLabel><T k="auto.paymentblockinginterface.id_projet" fallback="ID Projet" /></FormLabel>
                         <FormControl>
                           <Input placeholder="proj-123..." {...field} />
                         </FormControl>
@@ -257,7 +258,7 @@ const PaymentBlockingInterface = () => {
                     name="contractorId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>ID Entrepreneur</FormLabel>
+                        <FormLabel><T k="auto.paymentblockinginterface.id_entrepreneur" fallback="ID Entrepreneur" /></FormLabel>
                         <FormControl>
                           <Input placeholder="cont-456..." {...field} />
                         </FormControl>
@@ -272,7 +273,7 @@ const PaymentBlockingInterface = () => {
                   name="contractorName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nom Entrepreneur</FormLabel>
+                      <FormLabel><T k="auto.paymentblockinginterface.nom_entrepreneur" fallback="Nom Entrepreneur" /></FormLabel>
                       <FormControl>
                         <Input placeholder="Entreprise BTP..." {...field} />
                       </FormControl>
@@ -287,7 +288,7 @@ const PaymentBlockingInterface = () => {
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Montant (MRU)</FormLabel>
+                        <FormLabel><T k="auto.paymentblockinginterface.montant_mru" fallback="Montant (MRU)" /></FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -305,7 +306,7 @@ const PaymentBlockingInterface = () => {
                     name="progressAtPayment"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Progression (%)</FormLabel>
+                        <FormLabel><T k="auto.paymentblockinginterface.progression" fallback="Progression (%)" /></FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -325,7 +326,7 @@ const PaymentBlockingInterface = () => {
                   name="contractorContact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Entrepreneur</FormLabel>
+                      <FormLabel><T k="auto.paymentblockinginterface.contact_entrepreneur" fallback="Contact Entrepreneur" /></FormLabel>
                       <FormControl>
                         <Input placeholder="email@exemple.com ou +222..." {...field} />
                       </FormControl>
@@ -339,7 +340,7 @@ const PaymentBlockingInterface = () => {
                   name="paymentMethod"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Méthode de Paiement</FormLabel>
+                      <FormLabel><T k="auto.paymentblockinginterface.methode_de_paiement" fallback="Méthode de Paiement" /></FormLabel>
                       <FormControl>
                         <Input placeholder="bank_transfer, check, mobile..." {...field} />
                       </FormControl>
@@ -388,7 +389,7 @@ const PaymentBlockingInterface = () => {
                   
                   {(validationResult.blockingReasons || []).length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-destructive">Problèmes bloquants:</p>
+                      <p className="text-sm font-medium text-destructive"><T k="auto.paymentblockinginterface.problemes_bloquants" fallback="Problèmes bloquants:" /></p>
                       {(validationResult.blockingReasons || []).map((reason: any, index: number) => (
                         <div key={index} className="flex items-center gap-2 text-sm text-destructive">
                           {getReasonIcon(reason.blockReason || reason.reason || '')}
@@ -400,7 +401,7 @@ const PaymentBlockingInterface = () => {
                   
                   {(validationResult.warningReasons || []).length > 0 && (
                     <div className="space-y-2 mt-3">
-                      <p className="text-sm font-medium text-warning">Avertissements:</p>
+                      <p className="text-sm font-medium text-warning"><T k="auto.paymentblockinginterface.avertissements" fallback="Avertissements:" /></p>
                       {(validationResult.warningReasons || []).map((reason: any, index: number) => (
                         <div key={index} className="flex items-center gap-2 text-sm text-warning">
                           {getReasonIcon(reason.warningType || reason.reason || '')}
@@ -420,33 +421,33 @@ const PaymentBlockingInterface = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paiements Bloqués</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.paymentblockinginterface.paiements_bloques" fallback="Paiements Bloqués" /></CardTitle>
             <Ban className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{stats.blockedPayments}</div>
             <p className="text-xs text-muted-foreground">
-              Ce mois
+              <T k="auto.paymentblockinginterface.ce_mois" fallback="Ce mois" />
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assurances Expirées</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.paymentblockinginterface.assurances_expirees" fallback="Assurances Expirées" /></CardTitle>
             <Shield className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{stats.expiredInsurances}</div>
             <p className="text-xs text-muted-foreground">
-              Entrepreneurs concernés
+              <T k="auto.paymentblockinginterface.entrepreneurs_concernes" fallback="Entrepreneurs concernés" />
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projets en Retard</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.paymentblockinginterface.projets_en_retard" fallback="Projets en Retard" /></CardTitle>
             <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
@@ -459,13 +460,13 @@ const PaymentBlockingInterface = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents Manquants</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.paymentblockinginterface.documents_manquants" fallback="Documents Manquants" /></CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{stats.missingDocuments}</div>
             <p className="text-xs text-muted-foreground">
-              À fournir
+              <T k="auto.paymentblockinginterface.a_fournir" fallback="À fournir" />
             </p>
           </CardContent>
         </Card>
@@ -474,9 +475,9 @@ const PaymentBlockingInterface = () => {
       {/* Recent Blocked Payments */}
       <Card>
         <CardHeader>
-          <CardTitle>Paiements Bloqués Récents</CardTitle>
+          <CardTitle><T k="auto.paymentblockinginterface.paiements_bloques_recents" fallback="Paiements Bloqués Récents" /></CardTitle>
           <CardDescription>
-            Historique des paiements bloqués par le système de contrôle
+            <T k="auto.paymentblockinginterface.historique_des_paiements_bloques_par_le_systeme_" fallback="Historique des paiements bloqués par le système de contrôle" />
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -507,7 +508,7 @@ const PaymentBlockingInterface = () => {
               ))
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Aucun paiement bloqué récemment
+                <T k="auto.paymentblockinginterface.aucun_paiement_bloque_recemment" fallback="Aucun paiement bloqué récemment" />
               </p>
             )}
           </div>

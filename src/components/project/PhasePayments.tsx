@@ -23,6 +23,7 @@ import {
   useSupplierInfo,
   PhasePaymentFormData
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 interface PhasePaymentsProps {
   phaseId: string;
@@ -164,7 +165,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
   };
 
   if (isLoading) {
-    return <div className="animate-pulse">Chargement des paiements...</div>;
+    return <div className="animate-pulse"><T k="auto.phasepayments.chargement_des_paiements" fallback="Chargement des paiements..." /></div>;
   }
 
   const totalAmount = payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
@@ -186,18 +187,18 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
               onClick={() => navigate('/payment-control')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Voir tous les paiements
+              <T k="auto.phasepayments.voir_tous_les_paiements" fallback="Voir tous les paiements" />
             </Button>
             <Dialog open={isAdding} onOpenChange={setIsAdding}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Ajouter un paiement
+                  <T k="auto.phasepayments.ajouter_un_paiement" fallback="Ajouter un paiement" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Enregistrer un paiement</DialogTitle>
+                <DialogTitle><T k="auto.phasepayments.enregistrer_un_paiement" fallback="Enregistrer un paiement" /></DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -248,7 +249,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                     />
                   </div>
                   <div>
-                    <Label htmlFor="payment_method">Méthode de paiement</Label>
+                    <Label htmlFor="payment_method"><T k="auto.phasepayments.methode_de_paiement" fallback="Méthode de paiement" /></Label>
                     <Select
                       value={formData.payment_method}
                       onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
@@ -257,11 +258,11 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
-                        <SelectItem value="cash">Espèces</SelectItem>
-                        <SelectItem value="check">Chèque</SelectItem>
-                        <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                        <SelectItem value="other">Autre</SelectItem>
+                        <SelectItem value="bank_transfer"><T k="auto.phasepayments.virement_bancaire" fallback="Virement bancaire" /></SelectItem>
+                        <SelectItem value="cash"><T k="auto.phasepayments.especes" fallback="Espèces" /></SelectItem>
+                        <SelectItem value="check"><T k="auto.phasepayments.cheque" fallback="Chèque" /></SelectItem>
+                        <SelectItem value="mobile_money"><T k="auto.phasepayments.mobile_money" fallback="Mobile Money" /></SelectItem>
+                        <SelectItem value="other"><T k="auto.phasepayments.autre" fallback="Autre" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -279,7 +280,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
                     />
                   </div>
                   <div>
-                    <Label htmlFor="progress_at_payment">Progression (%)</Label>
+                    <Label htmlFor="progress_at_payment"><T k="auto.phasepayments.progression" fallback="Progression (%)" /></Label>
                     <Input
                       id="progress_at_payment"
                       type="number"
@@ -305,7 +306,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
-                    Annuler
+                    <T k="auto.phasepayments.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit" disabled={addPaymentMutation.isPending}>
                     {addPaymentMutation.isPending ? 'Enregistrement...' : 'Enregistrer le paiement'}
@@ -400,7 +401,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">Aucun paiement enregistré pour cette phase.</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.phasepayments.aucun_paiement_enregistre_pour_cette_phase" fallback="Aucun paiement enregistré pour cette phase." /></p>
           </div>
         )}
       </CardContent>

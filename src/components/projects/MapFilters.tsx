@@ -22,6 +22,7 @@ import {
 } from '@/utils/mauritaniaUtils';
 import { MapPin, Filter, Building, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { T } from '@/components/i18n/T';
 
 interface MapFiltersProps {
   locations: MapLocation[];
@@ -138,7 +139,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
       <CardContent className="pt-6">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-medium">Filtres de la carte</h3>
+          <h3 className="text-lg font-medium"><T k="auto.mapfilters.filtres_de_la_carte" fallback="Filtres de la carte" /></h3>
           <Badge variant="secondary" className="ml-auto">
             {locations.length} projet{locations.length > 1 ? 's' : ''}
           </Badge>
@@ -148,7 +149,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           <div className="space-y-2">
             <Label htmlFor="status-filter" className="text-sm font-medium flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              Statut du projet
+              <T k="auto.mapfilters.statut_du_projet" fallback="Statut du projet" />
             </Label>
             <Select 
               value={statusFilter} 
@@ -161,7 +162,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                 <SelectItem value="all">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    Tous les statuts
+                    <T k="auto.mapfilters.tous_les_statuts" fallback="Tous les statuts" />
                   </div>
                 </SelectItem>
                 {availableStatuses.map(status => (
@@ -207,7 +208,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                 <SelectItem value="all">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-3 w-3 text-muted-foreground" />
-                    Toutes les régions
+                    <T k="auto.mapfilters.toutes_les_regions" fallback="Toutes les régions" />
                   </div>
                 </SelectItem>
                 {availableRegions.map(region => {
@@ -219,10 +220,10 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                           <MapPin className="h-3 w-3 text-success" />
                           <span className="font-medium">{region.name}</span>
                           {region.economicImportance === 'capital' && (
-                            <Badge variant="secondary" className="text-xs px-1">Capitale</Badge>
+                            <Badge variant="secondary" className="text-xs px-1"><T k="auto.mapfilters.capitale" fallback="Capitale" /></Badge>
                           )}
                           {region.economicImportance === 'economic' && (
-                            <Badge variant="secondary" className="text-xs px-1">Économique</Badge>
+                            <Badge variant="secondary" className="text-xs px-1"><T k="auto.mapfilters.economique" fallback="Économique" /></Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground pl-5">
@@ -261,7 +262,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
               <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-              Résultats
+              <T k="auto.mapfilters.resultats" fallback="Résultats" />
             </Label>
             <div className="p-3 bg-muted rounded-lg">
               <div className="text-lg font-bold text-foreground">
@@ -345,7 +346,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
         {(statusFilter !== 'all' || regionFilter !== 'all') && (
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Filtres actifs:</span>
+              <span className="text-muted-foreground"><T k="auto.mapfilters.filtres_actifs" fallback="Filtres actifs:" /></span>
               {statusFilter !== 'all' && (
                 <Badge variant="secondary" className="flex items-center gap-1">
                   Statut: {statusFilter}

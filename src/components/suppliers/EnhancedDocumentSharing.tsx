@@ -15,6 +15,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Search, Send, Upload } from 'lucide-react';
 import React, { useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface Document {
   id: string;
@@ -326,26 +327,26 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         <DialogHeader>
           <DialogTitle>Gestion des documents - {supplier.name}</DialogTitle>
           <DialogDescription>
-            Partagez, consultez et retirez les documents accessibles à ce fournisseur.
+            <T k="auto.enhanceddocumentsharing.partagez_consultez_et_retirez_les_documents_acce" fallback="Partagez, consultez et retirez les documents accessibles à ce fournisseur." />
           </DialogDescription>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-            <TabsTrigger value="share">Partager des documents</TabsTrigger>
-            <TabsTrigger value="upload">Télécharger nouveau document</TabsTrigger>
+            <TabsTrigger value="share"><T k="auto.enhanceddocumentsharing.partager_des_documents" fallback="Partager des documents" /></TabsTrigger>
+            <TabsTrigger value="upload"><T k="auto.enhanceddocumentsharing.telecharger_nouveau_document" fallback="Télécharger nouveau document" /></TabsTrigger>
           </TabsList>
 
           <TabsContent value="share" className="space-y-4">
             {/* Filters */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Filtres</CardTitle>
+                <CardTitle className="text-lg"><T k="auto.enhanceddocumentsharing.filtres" fallback="Filtres" /></CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium">Rechercher</label>
+                    <label className="text-sm font-medium"><T k="auto.enhanceddocumentsharing.rechercher" fallback="Rechercher" /></label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -358,13 +359,13 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium">Type de document</label>
+                    <label className="text-sm font-medium"><T k="auto.enhanceddocumentsharing.type_de_document" fallback="Type de document" /></label>
                     <Select value={selectedDocumentType || "all-types"} onValueChange={(value) => setSelectedDocumentType(value === "all-types" ? "" : value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Tous les types" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all-types">Tous les types</SelectItem>
+                        <SelectItem value="all-types"><T k="auto.enhanceddocumentsharing.tous_les_types" fallback="Tous les types" /></SelectItem>
                         {DOCUMENT_TYPES.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             {type.label}
@@ -375,7 +376,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium">Projet</label>
+                    <label className="text-sm font-medium"><T k="auto.enhanceddocumentsharing.projet" fallback="Projet" /></label>
                     <ProjectSelector
                       value={selectedProject}
                       onChange={(projectId) => setSelectedProject(projectId || '')}
@@ -390,7 +391,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
             {/* Documents List */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Documents disponibles</CardTitle>
+                <CardTitle className="text-lg"><T k="auto.enhanceddocumentsharing.documents_disponibles" fallback="Documents disponibles" /></CardTitle>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -423,14 +424,14 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                             onClick={() => handleShareDocument(doc.id, doc.title)}
                           >
                             <Send className="h-4 w-4 mr-2" />
-                            Partager
+                            <T k="auto.enhanceddocumentsharing.partager" fallback="Partager" />
                           </Button>
                         </div>
                       ))
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                        <p>Aucun document trouvé</p>
+                        <p><T k="auto.enhanceddocumentsharing.aucun_document_trouve" fallback="Aucun document trouvé" /></p>
                       </div>
                     )}
                   </div>
@@ -442,7 +443,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
           <TabsContent value="upload" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Télécharger un nouveau document</CardTitle>
+                <CardTitle className="text-lg"><T k="auto.enhanceddocumentsharing.telecharger_un_nouveau_document" fallback="Télécharger un nouveau document" /></CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -477,7 +478,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Projet (optionnel)</label>
+                  <label className="text-sm font-medium"><T k="auto.enhanceddocumentsharing.projet_optionnel" fallback="Projet (optionnel)" /></label>
                   <ProjectSelector
                     value={uploadFormData.project_id}
                     onChange={(projectId) => setUploadFormData(prev => ({ ...prev, project_id: projectId || '' }))}
@@ -487,7 +488,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Description</label>
+                  <label className="text-sm font-medium"><T k="auto.enhanceddocumentsharing.description" fallback="Description" /></label>
                   <Textarea
                     value={uploadFormData.description}
                     onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -519,17 +520,17 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                     {uploading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                        Téléchargement...
+                        <T k="auto.enhanceddocumentsharing.telechargement" fallback="Téléchargement..." />
                       </>
                     ) : (
                       <>
                         <Upload className="h-4 w-4 mr-2" />
-                        Télécharger et partager
+                        <T k="auto.enhanceddocumentsharing.telecharger_et_partager" fallback="Télécharger et partager" />
                       </>
                     )}
                   </Button>
                   <Button type="button" variant="outline" onClick={resetUploadForm}>
-                    Réinitialiser
+                    <T k="auto.enhanceddocumentsharing.reinitialiser" fallback="Réinitialiser" />
                   </Button>
                 </div>
               </CardContent>

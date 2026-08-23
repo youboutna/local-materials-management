@@ -21,6 +21,7 @@ import {
   classifyPerformance,
   PERFORMANCE_STATUS_TEXT_CLASS,
 } from '@/config/referentials/kpi/health-thresholds.referential';
+import { T } from '@/components/i18n/T';
 
 // Create service instance once
 const performanceService = getPerformanceMonitoringService();
@@ -212,14 +213,14 @@ const PerformanceMetrics: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Métriques HTTP en Temps Réel
+            <T k="auto.performancemetrics.metriques_http_en_temps_reel" fallback="Métriques HTTP en Temps Réel" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Taux de succès</span>
+                <span><T k="auto.performancemetrics.taux_de_succes" fallback="Taux de succès" /></span>
                 <span className="font-medium">{data.http.successRate.toFixed(1)}%</span>
               </div>
               <Progress value={data.http.successRate} className="h-2" />
@@ -227,14 +228,14 @@ const PerformanceMetrics: React.FC = () => {
             
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Requêtes actives</span>
+                <span><T k="auto.performancemetrics.requetes_actives" fallback="Requêtes actives" /></span>
                 <Badge variant="outline">{data.http.activeRequests}</Badge>
               </div>
             </div>
             
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Tentatives de retry</span>
+                <span><T k="auto.performancemetrics.tentatives_de_retry" fallback="Tentatives de retry" /></span>
                 <Badge variant={data.http.retryAttempts > 5 ? 'destructive' : 'secondary'}>
                   {data.http.retryAttempts}
                 </Badge>
@@ -261,20 +262,20 @@ const PerformanceMetrics: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Temps de Réponse</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.performancemetrics.temps_de_reponse" fallback="Temps de Réponse" /></CardTitle>
             <Clock className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${getPerformanceColor(data.requests.averageResponseTime, 'HTTP_RESPONSE_MS')}`}>
               {formatMetric(data.requests.averageResponseTime, 'time')}
             </div>
-            <div className="text-xs text-muted-foreground">Moyenne mobile</div>
+            <div className="text-xs text-muted-foreground"><T k="auto.performancemetrics.moyenne_mobile" fallback="Moyenne mobile" /></div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Utilisation Mémoire</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.performancemetrics.utilisation_memoire" fallback="Utilisation Mémoire" /></CardTitle>
             <Gauge className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
@@ -291,7 +292,7 @@ const PerformanceMetrics: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux d'Erreur</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.performancemetrics.taux_d_erreur" fallback="Taux d'Erreur" /></CardTitle>
             <TrendingUp className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -310,14 +311,14 @@ const PerformanceMetrics: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Performance Base de Données
+            <T k="auto.performancemetrics.performance_base_de_donnees" fallback="Performance Base de Données" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Connexions actives</span>
+                <span><T k="auto.performancemetrics.connexions_actives" fallback="Connexions actives" /></span>
                 <span>{Math.round(data.database.connections)} / {data.database.maxConnections}</span>
               </div>
               <Progress 
@@ -331,19 +332,19 @@ const PerformanceMetrics: React.FC = () => {
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Temps requête moyen</span>
+                <span><T k="auto.performancemetrics.temps_requete_moyen" fallback="Temps requête moyen" /></span>
                 <span className={getPerformanceColor(data.database.queryTime, 'DB_QUERY_MS')}>
                   {formatMetric(data.database.queryTime, 'time')}
                 </span>
               </div>
               <div className="text-xs text-muted-foreground">
-                Dernière mesure
+                <T k="auto.performancemetrics.derniere_mesure" fallback="Dernière mesure" />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Requêtes lentes</span>
+                <span><T k="auto.performancemetrics.requetes_lentes" fallback="Requêtes lentes" /></span>
                 <Badge variant={data.database.slowQueries > 5 ? 'destructive' : 'secondary'}>
                   {data.database.slowQueries}
                 </Badge>
@@ -362,7 +363,7 @@ const PerformanceMetrics: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Erreurs HTTP Récentes
+              <T k="auto.performancemetrics.erreurs_http_recentes" fallback="Erreurs HTTP Récentes" />
             </CardTitle>
           </CardHeader>
           <CardContent>

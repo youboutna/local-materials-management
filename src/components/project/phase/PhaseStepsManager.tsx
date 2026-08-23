@@ -64,6 +64,7 @@ import { Upload } from "lucide-react";
 import PhaseStepResourceDialog from "./PhaseStepResourceDialog";
 
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 interface PhaseStepsManagerProps {
   // Accept legacy PhaseStepDTO[] or unified StepItem[]
   steps: PhaseStepDTO[] | StepItem[];
@@ -157,7 +158,7 @@ const StepEditDialog: React.FC<{
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Nom de l'étape <span className="text-destructive">*</span></Label>
+            <Label><T k="auto.phasestepsmanager.nom_de_l_etape" fallback="Nom de l'étape" /> <span className="text-destructive">*</span></Label>
             <Input
               value={formData.name || ''}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -166,7 +167,7 @@ const StepEditDialog: React.FC<{
           </div>
           
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label><T k="auto.phasestepsmanager.description" fallback="Description" /></Label>
             <Textarea
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -177,7 +178,7 @@ const StepEditDialog: React.FC<{
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Statut</Label>
+              <Label><T k="auto.phasestepsmanager.statut" fallback="Statut" /></Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value as PhaseStatus })}
@@ -199,7 +200,7 @@ const StepEditDialog: React.FC<{
             </div>
             
             <div className="space-y-2">
-              <Label>Durée estimée (jours)</Label>
+              <Label><T k="auto.phasestepsmanager.duree_estimee_jours" fallback="Durée estimée (jours)" /></Label>
               <Input
                 type="number"
                 min="1"
@@ -226,7 +227,7 @@ const StepEditDialog: React.FC<{
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Date de début</Label>
+              <Label><T k="auto.phasestepsmanager.date_de_debut" fallback="Date de début" /></Label>
               <Input
                 type="date"
                 value={formData.start_date || ''}
@@ -234,7 +235,7 @@ const StepEditDialog: React.FC<{
               />
             </div>
             <div className="space-y-2">
-              <Label>Date de fin</Label>
+              <Label><T k="auto.phasestepsmanager.date_de_fin" fallback="Date de fin" /></Label>
               <Input
                 type="date"
                 value={formData.end_date || ''}
@@ -245,7 +246,7 @@ const StepEditDialog: React.FC<{
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button variant="outline" onClick={onClose}><T k="auto.phasestepsmanager.annuler" fallback="Annuler" /></Button>
           <Button onClick={handleSave} disabled={!formData.name?.trim()}>
             <Save className="h-4 w-4 mr-2" />
             {isNew ? 'Ajouter' : 'Sauvegarder'}
@@ -309,7 +310,7 @@ const TaskEditDialog: React.FC<{
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Nom de la tâche <span className="text-destructive">*</span></Label>
+            <Label><T k="auto.phasestepsmanager.nom_de_la_tache" fallback="Nom de la tâche" /> <span className="text-destructive">*</span></Label>
             <Input
               value={formData.name || ''}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -318,7 +319,7 @@ const TaskEditDialog: React.FC<{
           </div>
           
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label><T k="auto.phasestepsmanager.description" fallback="Description" /></Label>
             <Textarea
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -329,7 +330,7 @@ const TaskEditDialog: React.FC<{
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Statut</Label>
+              <Label><T k="auto.phasestepsmanager.statut" fallback="Statut" /></Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => {
@@ -358,7 +359,7 @@ const TaskEditDialog: React.FC<{
             </div>
             
             <div className="space-y-2">
-              <Label>Durée (jours)</Label>
+              <Label><T k="auto.phasestepsmanager.duree_jours" fallback="Durée (jours)" /></Label>
               <Input
                 type="number"
                 min="1"
@@ -384,7 +385,7 @@ const TaskEditDialog: React.FC<{
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button variant="outline" onClick={onClose}><T k="auto.phasestepsmanager.annuler" fallback="Annuler" /></Button>
           <Button onClick={handleSave} disabled={!formData.name?.trim()}>
             <Save className="h-4 w-4 mr-2" />
             {isNew ? 'Ajouter' : 'Sauvegarder'}
@@ -473,7 +474,7 @@ const StepCard: React.FC<{
               
               {/* Quick status selector */}
               <div className="flex items-center gap-2 ml-7 mb-3">
-                <span className="text-xs text-muted-foreground">Statut:</span>
+                <span className="text-xs text-muted-foreground"><T k="auto.phasestepsmanager.statut" fallback="Statut:" /></span>
                 <div className="flex gap-1">
                   {statusOptions.map((opt) => (
                     <button
@@ -526,16 +527,16 @@ const StepCard: React.FC<{
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onEdit}>
                   <Edit className="h-4 w-4 mr-2" />
-                  Modifier
+                  <T k="auto.phasestepsmanager.modifier" fallback="Modifier" />
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onAddTask}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Ajouter une tâche
+                  <T k="auto.phasestepsmanager.ajouter_une_tache" fallback="Ajouter une tâche" />
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onDelete} className="text-destructive">
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Supprimer
+                  <T k="auto.phasestepsmanager.supprimer" fallback="Supprimer" />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -550,7 +551,7 @@ const StepCard: React.FC<{
                 </p>
                 <Button variant="ghost" size="sm" onClick={onAddTask} className="h-7 text-xs">
                   <Plus className="h-3 w-3 mr-1" />
-                  Tâche
+                  <T k="auto.phasestepsmanager.tache" fallback="Tâche" />
                 </Button>
               </div>
               <div className="space-y-2">
@@ -626,10 +627,10 @@ const StepCard: React.FC<{
           {expanded && step.tasks.length === 0 && (
             <div className="mt-4 pt-4 border-t ml-7">
               <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground mb-2">Aucune tâche</p>
+                <p className="text-sm text-muted-foreground mb-2"><T k="auto.phasestepsmanager.aucune_tache" fallback="Aucune tâche" /></p>
                 <Button variant="outline" size="sm" onClick={onAddTask}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Ajouter une tâche
+                  <T k="auto.phasestepsmanager.ajouter_une_tache" fallback="Ajouter une tâche" />
                 </Button>
               </div>
             </div>
@@ -643,7 +644,7 @@ const StepCard: React.FC<{
             >
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-medium text-muted-foreground">
-                  Ressources de l'étape
+                  <T k="auto.phasestepsmanager.ressources_de_l_etape" fallback="Ressources de l'étape" />
                 </p>
                 <div className="flex items-center gap-2">
                   {projectId && (
@@ -654,7 +655,7 @@ const StepCard: React.FC<{
                       title="Importer BOQ vers cette étape"
                       trigger={
                         <Button size="sm" variant="outline">
-                          <Upload className="h-4 w-4 mr-2" /> Import BOQ
+                          <Upload className="h-4 w-4 mr-2" /> <T k="auto.phasestepsmanager.import_boq" fallback="Import BOQ" />
                         </Button>
                       }
                     />
@@ -794,13 +795,13 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
           <Layers className="h-8 w-8 text-muted-foreground/50" />
         </div>
-        <p className="text-muted-foreground mb-2">Aucune étape définie pour cette phase</p>
+        <p className="text-muted-foreground mb-2"><T k="auto.phasestepsmanager.aucune_etape_definie_pour_cette_phase" fallback="Aucune étape définie pour cette phase" /></p>
         <p className="text-sm text-muted-foreground/70 mb-4">
-          Ajoutez des étapes pour suivre la progression
+          <T k="auto.phasestepsmanager.ajoutez_des_etapes_pour_suivre_la_progression" fallback="Ajoutez des étapes pour suivre la progression" />
         </p>
         <Button onClick={() => setIsAddingStep(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Ajouter une étape
+          <T k="auto.phasestepsmanager.ajouter_une_etape" fallback="Ajouter une étape" />
         </Button>
         
         <StepEditDialog
@@ -839,7 +840,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
           </Badge>
           <Button onClick={() => setIsAddingStep(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Ajouter
+            <T k="auto.phasestepsmanager.ajouter" fallback="Ajouter" />
           </Button>
         </div>
       </div>
@@ -913,7 +914,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogTitle><T k="auto.phasestepsmanager.confirmer_la_suppression" fallback="Confirmer la suppression" /></AlertDialogTitle>
             <AlertDialogDescription>
               {deleteConfirm?.type === 'step' 
                 ? "Êtes-vous sûr de vouloir supprimer cette étape et toutes ses tâches ?"
@@ -922,9 +923,9 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel><T k="auto.phasestepsmanager.annuler" fallback="Annuler" /></AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground">
-              Supprimer
+              <T k="auto.phasestepsmanager.supprimer" fallback="Supprimer" />
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

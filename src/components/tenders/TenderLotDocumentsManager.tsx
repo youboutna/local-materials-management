@@ -39,6 +39,7 @@ import {
 } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
 
 import { TENDER_DOCUMENT_CATEGORIES } from '@/config/referentials/tender/document-categories.referential';
+import { T } from '@/components/i18n/T';
 
 const CATEGORIES = TENDER_DOCUMENT_CATEGORIES;
 
@@ -229,7 +230,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
         {!readOnly && (
           <Button size="sm" variant="outline" onClick={openCreate} className="gap-1">
             <Plus className="h-3.5 w-3.5" />
-            Ajouter
+            <T k="auto.tenderlotdocumentsmanager.ajouter" fallback="Ajouter" />
           </Button>
         )}
       </div>
@@ -240,7 +241,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
         </div>
       ) : docs.length === 0 ? (
         <p className="text-sm text-muted-foreground py-3 text-center border rounded-lg border-dashed">
-          Aucun document
+          <T k="auto.tenderlotdocumentsmanager.aucun_document" fallback="Aucun document" />
         </p>
       ) : (
         <div className="space-y-2">
@@ -259,7 +260,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
                     </Badge>
                   )}
                   {(doc.lotIds ?? []).length === 0 ? (
-                    <Badge variant="secondary" className="text-[10px] py-0">Commun</Badge>
+                    <Badge variant="secondary" className="text-[10px] py-0"><T k="auto.tenderlotdocumentsmanager.commun" fallback="Commun" /></Badge>
                   ) : (
                     (doc.lotIds ?? []).map((id) => {
                       const lot = availableLots.find((l) => l.id === id);
@@ -313,7 +314,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
               {editing ? 'Modifier le document' : 'Ajouter un document'} — {scopeLabel}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Téléverser un fichier et définir les lots concernés par ce document.
+              <T k="auto.tenderlotdocumentsmanager.televerser_un_fichier_et_definir_les_lots_concer" fallback="Téléverser un fichier et définir les lots concernés par ce document." />
             </DialogDescription>
           </DialogHeader>
 
@@ -350,7 +351,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
               </div>
               {!form.fileUrl && !uploadFile.isPending && (
                 <p className="text-xs text-muted-foreground">
-                  Sélectionnez un fichier pour activer l'enregistrement.
+                  <T k="auto.tenderlotdocumentsmanager.selectionnez_un_fichier_pour_activer_l_enregistr" fallback="Sélectionnez un fichier pour activer l'enregistrement." />
                 </p>
               )}
             </div>
@@ -365,7 +366,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
             </div>
 
             <div className="space-y-2">
-              <Label>Catégorie</Label>
+              <Label><T k="auto.tenderlotdocumentsmanager.categorie" fallback="Catégorie" /></Label>
               <Select
                 value={form.category}
                 onValueChange={(v) => setForm({ ...form, category: v })}
@@ -392,7 +393,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
                   onCheckedChange={(v) => toggleCommon(!!v)}
                 />
                 <Label htmlFor="scope-common" className="cursor-pointer text-sm font-normal">
-                  Commun à tous les lots (non rattaché à un lot spécifique)
+                  <T k="auto.tenderlotdocumentsmanager.commun_a_tous_les_lots_non_rattache_a_un_lot_spe" fallback="Commun à tous les lots (non rattaché à un lot spécifique)" />
                 </Label>
               </div>
               {!form.common && (
@@ -411,7 +412,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
                         />
                         <Label htmlFor={`lot-${lot.id}`} className="cursor-pointer text-sm font-normal flex-1">
                           <Badge variant="outline" className="mr-2">Lot {lot.number}</Badge>
-                          {lot.title || <span className="text-muted-foreground italic">Sans titre</span>}
+                          {lot.title || <span className="text-muted-foreground italic"><T k="auto.tenderlotdocumentsmanager.sans_titre" fallback="Sans titre" /></span>}
                         </Label>
                       </div>
                     ))
@@ -424,7 +425,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label><T k="auto.tenderlotdocumentsmanager.description" fallback="Description" /></Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -435,7 +436,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Annuler
+              <T k="auto.tenderlotdocumentsmanager.annuler" fallback="Annuler" />
             </Button>
             <Button onClick={handleSubmit} disabled={!canSubmit}>
               {(createDoc.isPending || updateDoc.isPending) && (

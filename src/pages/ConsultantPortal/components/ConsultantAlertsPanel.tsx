@@ -12,6 +12,7 @@ import { AlertTriangle, BellOff, CheckCircle2 } from 'lucide-react';
 import type { AlertData } from '@/dtos/entities/AlertDTO';
 import type { ExpiryItem } from '@/hooks/hexagonal/useConsultantPortalHex';
 import { formatAmount2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   alerts: AlertData[];
@@ -30,24 +31,24 @@ export function ConsultantAlertsPanel({ alerts, expiries, onAcknowledge, onResol
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-            Alertes de mes projets
+            <T k="auto.consultantalertspanel.alertes_de_mes_projets" fallback="Alertes de mes projets" />
           </CardTitle>
-          <CardDescription>Retards, conformité et escalades sur les projets que vous suivez.</CardDescription>
+          <CardDescription><T k="auto.consultantalertspanel.retards_conformite_et_escalades_sur_les_projets_" fallback="Retards, conformité et escalades sur les projets que vous suivez." /></CardDescription>
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
             <p className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-              <BellOff className="h-4 w-4" aria-hidden="true" /> Aucune alerte active.
+              <BellOff className="h-4 w-4" aria-hidden="true" /> <T k="auto.consultantalertspanel.aucune_alerte_active" fallback="Aucune alerte active." />
             </p>
           ) : (
             <Table>
-              <caption className="sr-only">Alertes du périmètre consultant</caption>
+              <caption className="sr-only"><T k="auto.consultantalertspanel.alertes_du_perimetre_consultant" fallback="Alertes du périmètre consultant" /></caption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Alerte</TableHead>
-                  <TableHead>Sévérité</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead><T k="auto.consultantalertspanel.alerte" fallback="Alerte" /></TableHead>
+                  <TableHead><T k="auto.consultantalertspanel.severite" fallback="Sévérité" /></TableHead>
+                  <TableHead><T k="auto.consultantalertspanel.statut" fallback="Statut" /></TableHead>
+                  <TableHead className="text-right"><T k="auto.consultantalertspanel.actions" fallback="Actions" /></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -67,11 +68,11 @@ export function ConsultantAlertsPanel({ alerts, expiries, onAcknowledge, onResol
                     </TableCell>
                     <TableCell className="space-x-2 text-right">
                       <Button size="sm" variant="outline" onClick={() => onAcknowledge(alert.id)}>
-                        Accuser réception
+                        <T k="auto.consultantalertspanel.accuser_reception" fallback="Accuser réception" />
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => onResolve(alert.id)}>
                         <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden="true" />
-                        Résoudre
+                        <T k="auto.consultantalertspanel.resoudre" fallback="Résoudre" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -85,20 +86,20 @@ export function ConsultantAlertsPanel({ alerts, expiries, onAcknowledge, onResol
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Échéances garanties &amp; assurances</CardTitle>
-          <CardDescription>Suivi des expirations sur les projets de votre périmètre.</CardDescription>
+          <CardDescription><T k="auto.consultantalertspanel.suivi_des_expirations_sur_les_projets_de_votre_p" fallback="Suivi des expirations sur les projets de votre périmètre." /></CardDescription>
         </CardHeader>
         <CardContent>
           {expiries.length === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">Aucune garantie ni police à surveiller.</p>
+            <p className="py-4 text-sm text-muted-foreground"><T k="auto.consultantalertspanel.aucune_garantie_ni_police_a_surveiller" fallback="Aucune garantie ni police à surveiller." /></p>
           ) : (
             <Table>
-              <caption className="sr-only">Échéances des garanties bancaires et assurances</caption>
+              <caption className="sr-only"><T k="auto.consultantalertspanel.echeances_des_garanties_bancaires_et_assurances" fallback="Échéances des garanties bancaires et assurances" /></caption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type</TableHead>
+                  <TableHead><T k="auto.consultantalertspanel.type" fallback="Type" /></TableHead>
                   <TableHead>Émetteur / Référence</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead>Échéance</TableHead>
+                  <TableHead><T k="auto.consultantalertspanel.montant" fallback="Montant" /></TableHead>
+                  <TableHead><T k="auto.consultantalertspanel.echeance" fallback="Échéance" /></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

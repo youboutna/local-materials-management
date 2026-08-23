@@ -9,6 +9,7 @@ import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 // Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { LocationDTO } from "@/dtos/shared";
+import { T } from '@/components/i18n/T';
 
 interface LocationStepProps {
   formData: ProjectDTO;
@@ -86,41 +87,41 @@ const LocationStep: React.FC<LocationStepProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Zone géographique</label>
+              <label className="block text-sm font-medium mb-2"><T k="auto.locationstep.zone_geographique" fallback="Zone géographique" /></label>
               <select 
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 value={(formData as any).geographicZone || (formData as any).geographic_zone || ''}
                 onChange={(e) => onUpdate({ geographicZone: e.target.value } as any)}
               >
-                <option value="">Sélectionner une zone</option>
-                <option value="urban">Zone urbaine</option>
-                <option value="suburban">Zone périurbaine</option>
-                <option value="rural">Zone rurale</option>
-                <option value="industrial">Zone industrielle</option>
-                <option value="coastal">Zone côtière</option>
-                <option value="mountain">Zone montagneuse</option>
+                <option value=""><T k="auto.locationstep.selectionner_une_zone" fallback="Sélectionner une zone" /></option>
+                <option value="urban"><T k="auto.locationstep.zone_urbaine" fallback="Zone urbaine" /></option>
+                <option value="suburban"><T k="auto.locationstep.zone_periurbaine" fallback="Zone périurbaine" /></option>
+                <option value="rural"><T k="auto.locationstep.zone_rurale" fallback="Zone rurale" /></option>
+                <option value="industrial"><T k="auto.locationstep.zone_industrielle" fallback="Zone industrielle" /></option>
+                <option value="coastal"><T k="auto.locationstep.zone_cotiere" fallback="Zone côtière" /></option>
+                <option value="mountain"><T k="auto.locationstep.zone_montagneuse" fallback="Zone montagneuse" /></option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Type de terrain</label>
+              <label className="block text-sm font-medium mb-2"><T k="auto.locationstep.type_de_terrain" fallback="Type de terrain" /></label>
               <select 
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 value={(formData as any).terrainType || (formData as any).terrain_type || ''}
                 onChange={(e) => onUpdate({ terrainType: e.target.value } as any)}
               >
-                <option value="">Sélectionner le type</option>
-                <option value="flat">Terrain plat</option>
-                <option value="sloped">Terrain en pente</option>
-                <option value="rocky">Terrain rocheux</option>
-                <option value="clay">Terrain argileux</option>
-                <option value="sandy">Terrain sableux</option>
-                <option value="marshy">Terrain marécageux</option>
+                <option value=""><T k="auto.locationstep.selectionner_le_type" fallback="Sélectionner le type" /></option>
+                <option value="flat"><T k="auto.locationstep.terrain_plat" fallback="Terrain plat" /></option>
+                <option value="sloped"><T k="auto.locationstep.terrain_en_pente" fallback="Terrain en pente" /></option>
+                <option value="rocky"><T k="auto.locationstep.terrain_rocheux" fallback="Terrain rocheux" /></option>
+                <option value="clay"><T k="auto.locationstep.terrain_argileux" fallback="Terrain argileux" /></option>
+                <option value="sandy"><T k="auto.locationstep.terrain_sableux" fallback="Terrain sableux" /></option>
+                <option value="marshy"><T k="auto.locationstep.terrain_marecageux" fallback="Terrain marécageux" /></option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Contraintes environnementales</label>
+            <label className="block text-sm font-medium mb-2"><T k="auto.locationstep.contraintes_environnementales" fallback="Contraintes environnementales" /></label>
               <textarea 
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
                 placeholder="Décrivez les contraintes environnementales, réglementaires ou géographiques spécifiques au site"
@@ -139,7 +140,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
                   onChange={(e) => onUpdate({ has_utilities: e.target.checked } as unknown as Partial<ProjectDTO>)}
                 />
                 <label htmlFor="hasUtilities" className="text-sm font-medium">
-                  Raccordements aux réseaux disponibles
+                  <T k="auto.locationstep.raccordements_aux_reseaux_disponibles" fallback="Raccordements aux réseaux disponibles" />
                 </label>
               </div>
               <div className="flex items-center space-x-3">
@@ -151,14 +152,14 @@ const LocationStep: React.FC<LocationStepProps> = ({
                   onChange={(e) => onUpdate({ requires_permits: e.target.checked } as unknown as Partial<ProjectDTO>)}
                 />
               <label htmlFor="requiresPermits" className="text-sm font-medium">
-                Permis spéciaux requis
+                <T k="auto.locationstep.permis_speciaux_requis" fallback="Permis spéciaux requis" />
               </label>
             </div>
           </div>
 
            {formData.coordinates && (
              <div className="bg-muted p-4 rounded-lg">
-               <h4 className="text-md font-medium mb-2">Informations de localisation</h4>
+               <h4 className="text-md font-medium mb-2"><T k="auto.locationstep.informations_de_localisation" fallback="Informations de localisation" /></h4>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                  {formData.coordinates?.latitude && (
                    <>

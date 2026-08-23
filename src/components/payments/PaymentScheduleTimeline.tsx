@@ -22,6 +22,7 @@ import { format, differenceInDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { usePaymentsHex } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 // Define PaymentMilestone interface locally since hook doesn't export it
 interface PaymentMilestone {
@@ -108,7 +109,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Calendar className="h-5 w-5 text-primary" />
-          Échéancier des Paiements
+          <T k="auto.paymentscheduletimeline.echeancier_des_paiements" fallback="Échéancier des Paiements" />
         </CardTitle>
       </CardHeader>
 
@@ -118,18 +119,18 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
           <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
             <div className="flex items-center gap-2 text-primary mb-2">
               <DollarSign className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase">Total</span>
+              <span className="text-xs font-medium uppercase"><T k="auto.paymentscheduletimeline.total" fallback="Total" /></span>
             </div>
             <p className="text-xl font-bold">
               {(totalAmount / 1000000).toFixed(2)}M
             </p>
-            <p className="text-xs text-muted-foreground">MRU</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.paymentscheduletimeline.mru" fallback="MRU" /></p>
           </div>
 
           <div className="bg-gradient-to-br from-success/10 to-success/5 rounded-lg p-4 border border-success/20">
             <div className="flex items-center gap-2 text-success mb-2">
               <CheckCircle className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase">Payé</span>
+              <span className="text-xs font-medium uppercase"><T k="auto.paymentscheduletimeline.paye" fallback="Payé" /></span>
             </div>
             <p className="text-xl font-bold">
               {(paidAmount / 1000000).toFixed(2)}M
@@ -148,7 +149,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
               overdueAmount > 0 ? "text-destructive" : "text-muted-foreground"
             )}>
               <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase">En retard</span>
+              <span className="text-xs font-medium uppercase"><T k="auto.paymentscheduletimeline.en_retard" fallback="En retard" /></span>
             </div>
             <p className="text-xl font-bold">
               {(overdueAmount / 1000000).toFixed(2)}M
@@ -166,12 +167,12 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
               totalPenalties > 0 ? "text-warning" : "text-muted-foreground"
             )}>
               <TrendingDown className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase">Pénalités</span>
+              <span className="text-xs font-medium uppercase"><T k="auto.paymentscheduletimeline.penalites" fallback="Pénalités" /></span>
             </div>
             <p className="text-xl font-bold">
               {(totalPenalties / 1000).toFixed(0)}K
             </p>
-            <p className="text-xs text-muted-foreground">MRU accumulées</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.paymentscheduletimeline.mru_accumulees" fallback="MRU accumulées" /></p>
           </div>
         </div>
 
@@ -289,7 +290,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
                           }}
                         >
                           <FileText className="h-3.5 w-3.5 mr-1" />
-                          Initier
+                          <T k="auto.paymentscheduletimeline.initier" fallback="Initier" />
                         </Button>
                       )}
                     </div>
@@ -303,7 +304,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
         {payments.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucun échéancier de paiement défini</p>
+            <p><T k="auto.paymentscheduletimeline.aucun_echeancier_de_paiement_defini" fallback="Aucun échéancier de paiement défini" /></p>
             <p className="text-xs mt-1">
               Créez des jalons de type "paiement" pour définir l'échéancier
             </p>

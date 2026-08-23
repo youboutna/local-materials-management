@@ -32,6 +32,7 @@ import {
   actionFormSchema
 } from '@/hooks/hexagonal';
 import type { ActionFormData, PaymentControlActionsProps, ActionMetadata } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 // Use the same ActionType from schema
 type ActionType = 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail';
@@ -166,7 +167,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
             name="assigneeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Assigné à</FormLabel>
+                <FormLabel><T k="auto.paymentcontrolactions.assigne_a" fallback="Assigné à" /></FormLabel>
                 <FormControl>
                   <UserSelector
                     value={field.value}
@@ -187,7 +188,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
             name="escalationLevel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Niveau d'escalade</FormLabel>
+                <FormLabel><T k="auto.paymentcontrolactions.niveau_d_escalade" fallback="Niveau d'escalade" /></FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -218,7 +219,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Actions de Contrôle de Paiement
+          <T k="auto.paymentcontrolactions.actions_de_controle_de_paiement" fallback="Actions de Contrôle de Paiement" />
         </CardTitle>
         <CardDescription>
           Actions disponibles pour le paiement de {amount.toLocaleString()} MRU —{' '}
@@ -232,7 +233,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
           <div className="mb-4 p-3 bg-warning/10 border border-warning/30 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="h-4 w-4 text-warning" />
-              <span className="font-medium text-warning">Raisons de blocage</span>
+              <span className="font-medium text-warning"><T k="auto.paymentcontrolactions.raisons_de_blocage" fallback="Raisons de blocage" /></span>
             </div>
             <ul className="space-y-1">
               {blockingReasons.map((reason, index) => (
@@ -266,7 +267,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                       {actionTypes.find(t => t.value === form.watch('actionType'))?.label}
                     </DialogTitle>
                     <DialogDescription>
-                      Configurer et envoyer l'action de contrôle de paiement
+                      <T k="auto.paymentcontrolactions.configurer_et_envoyer_l_action_de_controle_de_pa" fallback="Configurer et envoyer l'action de contrôle de paiement" />
                     </DialogDescription>
                   </DialogHeader>
 
@@ -278,7 +279,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                           name="title"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Titre</FormLabel>
+                              <FormLabel><T k="auto.paymentcontrolactions.titre" fallback="Titre" /></FormLabel>
                               <FormControl>
                                 <Input placeholder="Titre de l'action" {...field} />
                               </FormControl>
@@ -292,7 +293,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                           name="priority"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Priorité</FormLabel>
+                              <FormLabel><T k="auto.paymentcontrolactions.priorite" fallback="Priorité" /></FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
@@ -322,7 +323,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                         name="message"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Message</FormLabel>
+                            <FormLabel><T k="auto.paymentcontrolactions.message" fallback="Message" /></FormLabel>
                             <FormControl>
                               <Textarea 
                                 placeholder="Description détaillée de l'action" 
@@ -340,7 +341,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                         name="recipientIds"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Destinataire principal</FormLabel>
+                            <FormLabel><T k="auto.paymentcontrolactions.destinataire_principal" fallback="Destinataire principal" /></FormLabel>
                             <FormControl>
                               <UserSelector
                                 value={field.value?.[0] || ''}
@@ -361,7 +362,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                           name="dueDate"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Date limite</FormLabel>
+                              <FormLabel><T k="auto.paymentcontrolactions.date_limite" fallback="Date limite" /></FormLabel>
                               <FormControl>
                                 <Input type="date" {...field} />
                               </FormControl>
@@ -375,7 +376,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                           name="notificationChannels"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Canaux de notification</FormLabel>
+                              <FormLabel><T k="auto.paymentcontrolactions.canaux_de_notification" fallback="Canaux de notification" /></FormLabel>
                               <div className="space-y-2">
                                 {notificationChannels.map((channel) => (
                                   <div key={channel.value} className="flex flex-row items-start space-x-3 space-y-0">
@@ -416,7 +417,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                               />
                             </FormControl>
                             <FormLabel className="text-sm font-normal">
-                              Suivi requis
+                              <T k="auto.paymentcontrolactions.suivi_requis" fallback="Suivi requis" />
                             </FormLabel>
                           </FormItem>
                         )}
@@ -428,7 +429,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                           variant="outline" 
                           onClick={() => setIsDialogOpen(false)}
                         >
-                          Annuler
+                          <T k="auto.paymentcontrolactions.annuler" fallback="Annuler" />
                         </Button>
                         <Button type="submit" disabled={isLoading}>
                           {isLoading ? 'Envoi en cours...' : 'Envoyer'}

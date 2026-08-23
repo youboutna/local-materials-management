@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { setStorageConfig, getStorageConfig, StorageConfig, StorageProvider } from '@/config/storage';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { CheckCircle, XCircle, Database, Folder, Server, Cloud } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 const StorageSettings = () => {
   const [config, setConfig] = useState<StorageConfig>(getStorageConfig());
@@ -71,7 +72,7 @@ const StorageSettings = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="bucket">Nom du bucket</Label>
+              <Label htmlFor="bucket"><T k="auto.storagesettings.nom_du_bucket" fallback="Nom du bucket" /></Label>
               <Input
                 id="bucket"
                 value={config.bucket || ''}
@@ -87,7 +88,7 @@ const StorageSettings = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="host">Hôte FTP</Label>
+                <Label htmlFor="host"><T k="auto.storagesettings.hote_ftp" fallback="Hôte FTP" /></Label>
                 <Input
                   id="host"
                   value={config.host || ''}
@@ -96,7 +97,7 @@ const StorageSettings = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="port">Port</Label>
+                <Label htmlFor="port"><T k="auto.storagesettings.port" fallback="Port" /></Label>
                 <Input
                   id="port"
                   type="number"
@@ -108,7 +109,7 @@ const StorageSettings = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="username">Nom d'utilisateur</Label>
+                <Label htmlFor="username"><T k="auto.storagesettings.nom_d_utilisateur" fallback="Nom d'utilisateur" /></Label>
                 <Input
                   id="username"
                   value={config.username || ''}
@@ -116,7 +117,7 @@ const StorageSettings = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password"><T k="auto.storagesettings.mot_de_passe" fallback="Mot de passe" /></Label>
                 <Input
                   id="password"
                   type="password"
@@ -126,7 +127,7 @@ const StorageSettings = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="basePath">Chemin de base</Label>
+              <Label htmlFor="basePath"><T k="auto.storagesettings.chemin_de_base" fallback="Chemin de base" /></Label>
               <Input
                 id="basePath"
                 value={config.basePath || ''}
@@ -141,7 +142,7 @@ const StorageSettings = () => {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="basePath">Chemin de base</Label>
+              <Label htmlFor="basePath"><T k="auto.storagesettings.chemin_de_base" fallback="Chemin de base" /></Label>
               <Input
                 id="basePath"
                 value={config.basePath || ''}
@@ -176,12 +177,12 @@ const StorageSettings = () => {
       <CardHeader>
         <CardTitle className="flex items-center">
           <Folder className="mr-2 h-5 w-5" />
-          Configuration du Stockage
+          <T k="auto.storagesettings.configuration_du_stockage" fallback="Configuration du Stockage" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <Label htmlFor="provider">Fournisseur de stockage</Label>
+          <Label htmlFor="provider"><T k="auto.storagesettings.fournisseur_de_stockage" fallback="Fournisseur de stockage" /></Label>
           <Select value={config.provider} onValueChange={(value) => handleConfigChange('provider', value)}>
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un fournisseur" />
@@ -206,7 +207,7 @@ const StorageSettings = () => {
 
         <div className="flex items-center space-x-4">
           <Button onClick={handleSave}>
-            Sauvegarder la configuration
+            <T k="auto.storagesettings.sauvegarder_la_configuration" fallback="Sauvegarder la configuration" />
           </Button>
           
           <Button 
@@ -229,18 +230,18 @@ const StorageSettings = () => {
         </div>
 
         <div className="p-4 bg-primary/10 border border-primary/30 rounded-md">
-          <h4 className="font-medium text-blue-900 mb-2">Configuration actuelle</h4>
+          <h4 className="font-medium text-blue-900 mb-2"><T k="auto.storagesettings.configuration_actuelle" fallback="Configuration actuelle" /></h4>
           <p className="text-primary">
-            Fournisseur: <strong>{config.provider}</strong>
+            <T k="auto.storagesettings.fournisseur" fallback="Fournisseur:" /> <strong>{config.provider}</strong>
           </p>
           {config.bucket && (
             <p className="text-primary">
-              Bucket: <strong>{config.bucket}</strong>
+              <T k="auto.storagesettings.bucket" fallback="Bucket:" /> <strong>{config.bucket}</strong>
             </p>
           )}
           {config.host && (
             <p className="text-primary">
-              Hôte: <strong>{config.host}:{config.port || 21}</strong>
+              <T k="auto.storagesettings.hote" fallback="Hôte:" /> <strong>{config.host}:{config.port || 21}</strong>
             </p>
           )}
         </div>

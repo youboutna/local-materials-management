@@ -13,6 +13,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { useToast } from '@/hooks/use-toast';
+import { T } from '@/components/i18n/T';
 
 interface InsuranceFormData {
   projectId: string;
@@ -80,7 +81,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Nouveau Certificat d'Assurance
+          <T k="auto.insuranceformwithprojectselector.nouveau_certificat_d_assurance" fallback="Nouveau Certificat d'Assurance" />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -109,7 +110,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
             </div>
 
             <div>
-              <Label htmlFor="contractorId">ID Entrepreneur</Label>
+              <Label htmlFor="contractorId"><T k="auto.insuranceformwithprojectselector.id_entrepreneur" fallback="ID Entrepreneur" /></Label>
               <Input
                 id="contractorId"
                 value={formData.contractorId}
@@ -145,23 +146,23 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="coverageType">Type de couverture</Label>
+              <Label htmlFor="coverageType"><T k="auto.insuranceformwithprojectselector.type_de_couverture" fallback="Type de couverture" /></Label>
               <Select value={formData.coverageType} onValueChange={(value) => updateFormData('coverageType', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner le type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="responsabilite_civile">Responsabilité civile</SelectItem>
-                  <SelectItem value="tous_risques_chantier">Tous risques chantier</SelectItem>
-                  <SelectItem value="responsabilite_decennale">Responsabilité décennale</SelectItem>
-                  <SelectItem value="assurance_materiel">Assurance matériel</SelectItem>
-                  <SelectItem value="autre">Autre</SelectItem>
+                  <SelectItem value="responsabilite_civile"><T k="auto.insuranceformwithprojectselector.responsabilite_civile" fallback="Responsabilité civile" /></SelectItem>
+                  <SelectItem value="tous_risques_chantier"><T k="auto.insuranceformwithprojectselector.tous_risques_chantier" fallback="Tous risques chantier" /></SelectItem>
+                  <SelectItem value="responsabilite_decennale"><T k="auto.insuranceformwithprojectselector.responsabilite_decennale" fallback="Responsabilité décennale" /></SelectItem>
+                  <SelectItem value="assurance_materiel"><T k="auto.insuranceformwithprojectselector.assurance_materiel" fallback="Assurance matériel" /></SelectItem>
+                  <SelectItem value="autre"><T k="auto.insuranceformwithprojectselector.autre" fallback="Autre" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="coverageAmount">Montant de couverture (MRU)</Label>
+              <Label htmlFor="coverageAmount"><T k="auto.insuranceformwithprojectselector.montant_de_couverture_mru" fallback="Montant de couverture (MRU)" /></Label>
               <Input
                 id="coverageAmount"
                 type="number"
@@ -227,7 +228,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
           </div>
 
           <div>
-            <Label htmlFor="certificateUrl">URL du certificat</Label>
+            <Label htmlFor="certificateUrl"><T k="auto.insuranceformwithprojectselector.url_du_certificat" fallback="URL du certificat" /></Label>
             <Input
               id="certificateUrl"
               value={formData.certificateUrl}
@@ -237,7 +238,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
           </div>
 
           <div>
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes"><T k="auto.insuranceformwithprojectselector.notes" fallback="Notes" /></Label>
             <Textarea
               id="notes"
               value={formData.notes}

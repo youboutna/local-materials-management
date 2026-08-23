@@ -15,6 +15,7 @@ import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
+import { T } from '@/components/i18n/T';
 
 // Local form data interface matching component needs (Rule #2: camelCase)
 interface InsuranceFormData {
@@ -253,7 +254,7 @@ const InsuranceCrud: React.FC = () => {
           <DialogTrigger asChild>
             <Button onClick={openCreateForm} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Nouveau Certificat
+              <T k="auto.insurancecrud.nouveau_certificat" fallback="Nouveau Certificat" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -349,7 +350,7 @@ const InsuranceCrud: React.FC = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.insurancecrud.statut" fallback="Statut" /></Label>
                   <Select 
                     value={formData.status} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
@@ -396,7 +397,7 @@ const InsuranceCrud: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes"><T k="auto.insurancecrud.notes" fallback="Notes" /></Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
@@ -410,7 +411,7 @@ const InsuranceCrud: React.FC = () => {
               {!isViewMode && (
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                    Annuler
+                    <T k="auto.insurancecrud.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit">
                     {isEditing ? 'Mettre à jour' : 'Créer'}
@@ -424,20 +425,20 @@ const InsuranceCrud: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Certificats d'Assurance</CardTitle>
+          <CardTitle><T k="auto.insurancecrud.liste_des_certificats_d_assurance" fallback="Liste des Certificats d'Assurance" /></CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Projet</TableHead>
-                <TableHead>Contractant</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Police</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Expiration</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead><T k="auto.insurancecrud.projet" fallback="Projet" /></TableHead>
+                <TableHead><T k="auto.insurancecrud.contractant" fallback="Contractant" /></TableHead>
+                <TableHead><T k="auto.insurancecrud.type" fallback="Type" /></TableHead>
+                <TableHead><T k="auto.insurancecrud.police" fallback="Police" /></TableHead>
+                <TableHead><T k="auto.insurancecrud.montant" fallback="Montant" /></TableHead>
+                <TableHead><T k="auto.insurancecrud.expiration" fallback="Expiration" /></TableHead>
+                <TableHead><T k="auto.insurancecrud.statut" fallback="Statut" /></TableHead>
+                <TableHead><T k="auto.insurancecrud.actions" fallback="Actions" /></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -506,7 +507,7 @@ const InsuranceCrud: React.FC = () => {
               {certificates.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Aucun certificat d'assurance enregistré
+                    <T k="auto.insurancecrud.aucun_certificat_d_assurance_enregistre" fallback="Aucun certificat d'assurance enregistré" />
                   </TableCell>
                 </TableRow>
               )}

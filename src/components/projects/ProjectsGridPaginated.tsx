@@ -26,6 +26,7 @@ import { Link } from "react-router-dom";
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import StatusBadge from "@/components/StatusBadge";
 import { Checkbox } from "../ui/checkbox";
+import { T } from '@/components/i18n/T';
 
 interface ProjectsGridPaginatedProps {
   projects: ProjectData[];
@@ -147,10 +148,10 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
         <CardContent className="text-center py-12">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Aucun projet trouvé
+            <T k="auto.projectsgridpaginated.aucun_projet_trouve" fallback="Aucun projet trouvé" />
           </h3>
           <p className="text-muted-foreground">
-            Aucun projet ne correspond à vos critères de recherche.
+            <T k="auto.projectsgridpaginated.aucun_projet_ne_correspond_a_vos_criteres_de_rec" fallback="Aucun projet ne correspond à vos critères de recherche." />
           </p>
         </CardContent>
       </Card>
@@ -179,14 +180,14 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
               size="sm"
               onClick={() => onSelectAllOnPage?.(allProjectIdsOnPage)}
             >
-              Sélectionner la page
+              <T k="auto.projectsgridpaginated.selectionner_la_page" fallback="Sélectionner la page" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => onDeselectAllOnPage?.(allProjectIdsOnPage)}
             >
-              Désélectionner la page
+              <T k="auto.projectsgridpaginated.deselectionner_la_page" fallback="Désélectionner la page" />
             </Button>
           </div>
         </div>
@@ -207,7 +208,7 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
             onClick={() => setDensity("compact")}
             aria-pressed={density === "compact"}
           >
-            <Rows3 className="h-3.5 w-3.5 mr-1" /> Compact
+            <Rows3 className="h-3.5 w-3.5 mr-1" /> <T k="auto.projectsgridpaginated.compact" fallback="Compact" />
           </Button>
           <Button
             variant={density === "detailed" ? "secondary" : "ghost"}
@@ -216,7 +217,7 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
             onClick={() => setDensity("detailed")}
             aria-pressed={density === "detailed"}
           >
-            <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Détaillé
+            <LayoutGrid className="h-3.5 w-3.5 mr-1" /> <T k="auto.projectsgridpaginated.detaille" fallback="Détaillé" />
           </Button>
         </div>
       </div>
@@ -322,10 +323,10 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
                       </Badge>
                       <div className="flex gap-1.5">
                         <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
-                          <Link to={`/projects/${project.id}/edit`}>Modifier</Link>
+                          <Link to={`/projects/${project.id}/edit`}><T k="auto.projectsgridpaginated.modifier" fallback="Modifier" /></Link>
                         </Button>
                         <Button asChild size="sm" className="h-7 px-2 text-xs">
-                          <Link to={`/projects/${project.id}`}>Voir les détails</Link>
+                          <Link to={`/projects/${project.id}`}><T k="auto.projectsgridpaginated.voir_les_details" fallback="Voir les détails" /></Link>
                         </Button>
                       </div>
                     </div>

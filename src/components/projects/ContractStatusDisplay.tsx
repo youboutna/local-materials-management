@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, FileCheck, Building, AlertCircle } from 'lucide-react';
 import { format, differenceInDays, isAfter, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 interface ContractStatusDisplayProps {
   project: {
@@ -79,7 +80,7 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <FileCheck className="h-5 w-5" />
-            Statut du contrat
+            <T k="auto.contractstatusdisplay.statut_du_contrat" fallback="Statut du contrat" />
           </span>
           <Badge className={`${contractPhase.color} text-white`}>
             {contractPhase.label}
@@ -91,18 +92,18 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
         <div className="space-y-4">
           <h4 className="font-medium flex items-center gap-2">
             <CalendarIcon className="h-4 w-4" />
-            Chronologie contractuelle
+            <T k="auto.contractstatusdisplay.chronologie_contractuelle" fallback="Chronologie contractuelle" />
           </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Lancement appel d'offres</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.lancement_appel_d_offres" fallback="Lancement appel d'offres" /></span>
                 <span className="text-sm">{formatDate(project.launchDate)}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Attribution du marché</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.attribution_du_marche" fallback="Attribution du marché" /></span>
                 <span className="text-sm">{formatDate(project.attributionDate)}</span>
                 {tenderDuration && (
                   <span className="text-xs text-muted-foreground">
@@ -114,12 +115,12 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
             
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Début des travaux</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.debut_des_travaux" fallback="Début des travaux" /></span>
                 <span className="text-sm">{formatDate(project.startDate)}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Fin prévue</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.fin_prevue" fallback="Fin prévue" /></span>
                 <span className="text-sm">{formatDate(project.endDate)}</span>
               </div>
             </div>
@@ -130,30 +131,30 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
         <div className="space-y-4">
           <h4 className="font-medium flex items-center gap-2">
             <Building className="h-4 w-4" />
-            Détails contractuels
+            <T k="auto.contractstatusdisplay.details_contractuels" fallback="Détails contractuels" />
           </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Type de marché</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.type_de_marche" fallback="Type de marché" /></span>
                 <span className="text-sm">{project.marketType || 'Non spécifié'}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Mode de sélection</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.mode_de_selection" fallback="Mode de sélection" /></span>
                 <span className="text-sm">{project.selectionMode || 'Non spécifié'}</span>
               </div>
             </div>
             
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Source de financement</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.source_de_financement" fallback="Source de financement" /></span>
                 <span className="text-sm">{project.financingSource || 'Non spécifiée'}</span>
               </div>
               
               <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">Référence</span>
+                <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.reference" fallback="Référence" /></span>
                 <span className="text-sm font-mono">{project.projectReference || 'Non attribuée'}</span>
               </div>
             </div>
@@ -165,7 +166,7 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
           <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-warning mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-warning">Appel d'offres en cours</p>
+              <p className="text-sm font-medium text-warning"><T k="auto.contractstatusdisplay.appel_d_offres_en_cours" fallback="Appel d'offres en cours" /></p>
               <p className="text-xs text-warning">
                 La procédure d'appel d'offres est actuellement active. L'attribution est prévue le {formatDate(project.attributionDate)}.
               </p>
@@ -177,7 +178,7 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
           <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-primary mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-primary">Préparation du contrat</p>
+              <p className="text-sm font-medium text-primary"><T k="auto.contractstatusdisplay.preparation_du_contrat" fallback="Préparation du contrat" /></p>
               <p className="text-xs text-primary">
                 Le marché a été attribué. Le contrat est en cours de préparation avant le début des travaux.
               </p>

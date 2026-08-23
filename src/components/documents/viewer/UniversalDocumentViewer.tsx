@@ -40,6 +40,7 @@ import {
   ViewableDocument,
   viewerStatusLabel,
 } from './types';
+import { T } from '@/components/i18n/T';
 
 interface Props extends DocumentViewerOptions {
   document: ViewableDocument | null;
@@ -194,7 +195,7 @@ export function UniversalDocumentViewer({
                   title="Accès sécurisé via passerelle — l'URL de stockage n'est pas exposée"
                   className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
                 >
-                  <ShieldCheck className="h-3 w-3" /> Proxy
+                  <ShieldCheck className="h-3 w-3" /> <T k="auto.universaldocumentviewer.proxy" fallback="Proxy" />
                 </span>
               )}
             </div>
@@ -250,13 +251,13 @@ export function UniversalDocumentViewer({
                   </p>
                   <Button onClick={triggerDownload}>
                     <Download className="mr-2 h-4 w-4" />
-                    Télécharger le fichier
+                    <T k="auto.universaldocumentviewer.telecharger_le_fichier" fallback="Télécharger le fichier" />
                   </Button>
                 </div>
               )
             ) : (
               <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
-                Aucun fichier attaché à ce document.
+                <T k="auto.universaldocumentviewer.aucun_fichier_attache_a_ce_document" fallback="Aucun fichier attaché à ce document." />
               </div>
             )}
           </div>
@@ -264,21 +265,21 @@ export function UniversalDocumentViewer({
           <div className="border-t border-border bg-card px-6 py-3">
             <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
               <div>
-                <dt className="text-muted-foreground">Taille</dt>
+                <dt className="text-muted-foreground"><T k="auto.universaldocumentviewer.taille" fallback="Taille" /></dt>
                 <dd className="font-medium">{formatBytes(doc.fileSize)}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Type MIME</dt>
+                <dt className="text-muted-foreground"><T k="auto.universaldocumentviewer.type_mime" fallback="Type MIME" /></dt>
                 <dd className="truncate font-medium">{doc.mimeType ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Créé le</dt>
+                <dt className="text-muted-foreground"><T k="auto.universaldocumentviewer.cree_le" fallback="Créé le" /></dt>
                 <dd className="font-medium">
                   {doc.createdAt ? new Date(doc.createdAt).toLocaleString('fr-FR') : '—'}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Mis à jour</dt>
+                <dt className="text-muted-foreground"><T k="auto.universaldocumentviewer.mis_a_jour" fallback="Mis à jour" /></dt>
                 <dd className="font-medium">
                   {doc.updatedAt ? new Date(doc.updatedAt).toLocaleString('fr-FR') : '—'}
                 </dd>
@@ -294,7 +295,7 @@ export function UniversalDocumentViewer({
             <div className="flex flex-wrap items-center justify-between gap-2">
               {allowStatusChange && doc.id ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Statut</span>
+                  <span className="text-xs text-muted-foreground"><T k="auto.universaldocumentviewer.statut" fallback="Statut" /></span>
                   <Select value={status} onValueChange={handleStatusChange} disabled={savingStatus}>
                     <SelectTrigger className="h-8 w-[190px]">
                       <SelectValue />
@@ -318,14 +319,14 @@ export function UniversalDocumentViewer({
                   <Button variant="outline" size="sm" asChild>
                     <a href={displayUrl} target="_blank" rel="noreferrer">
                       <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                      Ouvrir
+                      <T k="auto.universaldocumentviewer.ouvrir" fallback="Ouvrir" />
                     </a>
                   </Button>
                 )}
                 {displayUrl && (
                   <Button variant="outline" size="sm" onClick={triggerDownload}>
                     <Download className="mr-1 h-3.5 w-3.5" />
-                    Télécharger
+                    <T k="auto.universaldocumentviewer.telecharger" fallback="Télécharger" />
                   </Button>
                 )}
                 {onDelete && (
@@ -339,7 +340,7 @@ export function UniversalDocumentViewer({
                     }}
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" />
-                    Supprimer
+                    <T k="auto.universaldocumentviewer.supprimer" fallback="Supprimer" />
                   </Button>
                 )}
               </div>

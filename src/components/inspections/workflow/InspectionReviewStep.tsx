@@ -23,6 +23,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { InspectionDetails } from './InspectionDetailsStep';
 import { InspectionDocumentType, InspectionWorkflowService } from '@/application/services/InspectionWorkflowService';
+import { T } from '@/components/i18n/T';
 
 interface InspectionReviewStepProps {
   mode: 'request' | 'schedule';
@@ -79,7 +80,7 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
   return (
     <div className="space-y-6">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold">Récapitulatif</h3>
+        <h3 className="text-lg font-semibold"><T k="auto.inspectionreviewstep.recapitulatif" fallback="Récapitulatif" /></h3>
         <p className="text-sm text-muted-foreground mt-1">
           Vérifiez les informations avant de {mode === 'request' ? 'soumettre la demande' : 'programmer l\'inspection'}
         </p>
@@ -109,7 +110,7 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Type d'inspection
+              <T k="auto.inspectionreviewstep.type_d_inspection" fallback="Type d'inspection" />
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -127,7 +128,7 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Date et Heure
+              <T k="auto.inspectionreviewstep.date_et_heure" fallback="Date et Heure" />
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -154,13 +155,13 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Inspecteur
+                <T k="auto.inspectionreviewstep.inspecteur" fallback="Inspecteur" />
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <p className="font-medium">{details.inspector_name || 'Non assigné'}</p>
               {details.backup_inspector_id && (
-                <p className="text-xs text-muted-foreground">Suppléant assigné</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.inspectionreviewstep.suppleant_assigne" fallback="Suppléant assigné" /></p>
               )}
             </CardContent>
           </Card>
@@ -171,7 +172,7 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Documents requis
+              <T k="auto.inspectionreviewstep.documents_requis" fallback="Documents requis" />
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
@@ -191,7 +192,7 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
       {details.requirements && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Exigences particulières</CardTitle>
+            <CardTitle className="text-sm"><T k="auto.inspectionreviewstep.exigences_particulieres" fallback="Exigences particulières" /></CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <p className="text-sm text-muted-foreground">{details.requirements}</p>
@@ -205,7 +206,7 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
       <div className="flex items-center space-x-4 p-4 rounded-lg border bg-muted/20">
         <Bell className="h-5 w-5 text-muted-foreground" />
         <div className="flex-1">
-          <Label htmlFor="notify" className="font-medium">Notifications</Label>
+          <Label htmlFor="notify" className="font-medium"><T k="auto.inspectionreviewstep.notifications" fallback="Notifications" /></Label>
           <p className="text-xs text-muted-foreground">
             Notifier l'entrepreneur de cette {mode === 'request' ? 'demande' : 'programmation'}
           </p>
@@ -226,16 +227,16 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
           className="gap-2"
         >
           {isSubmitting ? (
-            <>Traitement en cours...</>
+            <><T k="auto.inspectionreviewstep.traitement_en_cours" fallback="Traitement en cours..." /></>
           ) : mode === 'request' ? (
             <>
               <Send className="h-4 w-4" />
-              Soumettre la demande
+              <T k="auto.inspectionreviewstep.soumettre_la_demande" fallback="Soumettre la demande" />
             </>
           ) : (
             <>
               <CalendarPlus className="h-4 w-4" />
-              Programmer l'inspection
+              <T k="auto.inspectionreviewstep.programmer_l_inspection" fallback="Programmer l'inspection" />
             </>
           )}
         </Button>

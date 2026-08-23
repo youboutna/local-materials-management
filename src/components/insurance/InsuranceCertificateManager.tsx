@@ -24,6 +24,7 @@ import {
   InsuranceAlertDTO,
   InsuranceCertificateDTO
 } from '@/dtos/entities/InsuranceDTO';
+import { T } from '@/components/i18n/T';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'ID projet requis'),
@@ -145,7 +146,7 @@ const InsuranceCertificateManager = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Chargement des données d'assurance...</p>
+          <p className="mt-2 text-sm text-muted-foreground"><T k="auto.insurancecertificatemanager.chargement_des_donnees_d_assurance" fallback="Chargement des données d'assurance..." /></p>
         </div>
       </div>
     );
@@ -155,9 +156,9 @@ const InsuranceCertificateManager = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Gestion des Attestations d'Assurance</h2>
+          <h2 className="text-2xl font-bold tracking-tight"><T k="auto.insurancecertificatemanager.gestion_des_attestations_d_assurance" fallback="Gestion des Attestations d'Assurance" /></h2>
           <p className="text-muted-foreground">
-            Surveillance automatique des expirations et gestion des certificats
+            <T k="auto.insurancecertificatemanager.surveillance_automatique_des_expirations_et_gest" fallback="Surveillance automatique des expirations et gestion des certificats" />
           </p>
         </div>
         <div className="flex gap-2">
@@ -170,14 +171,14 @@ const InsuranceCertificateManager = () => {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Nouveau Certificat
+                <T k="auto.insurancecertificatemanager.nouveau_certificat" fallback="Nouveau Certificat" />
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Nouveau Certificat d'Assurance</DialogTitle>
+                <DialogTitle><T k="auto.insurancecertificatemanager.nouveau_certificat_d_assurance" fallback="Nouveau Certificat d'Assurance" /></DialogTitle>
                 <DialogDescription>
-                  Ajouter un nouveau certificat d'assurance pour un entrepreneur
+                  <T k="auto.insurancecertificatemanager.ajouter_un_nouveau_certificat_d_assurance_pour_u" fallback="Ajouter un nouveau certificat d'assurance pour un entrepreneur" />
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
@@ -188,7 +189,7 @@ const InsuranceCertificateManager = () => {
                       name="projectId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ID Projet</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.id_projet" fallback="ID Projet" /></FormLabel>
                           <FormControl>
                             <Input placeholder="proj-123..." {...field} />
                           </FormControl>
@@ -201,7 +202,7 @@ const InsuranceCertificateManager = () => {
                       name="contractorId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ID Entrepreneur</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.id_entrepreneur" fallback="ID Entrepreneur" /></FormLabel>
                           <FormControl>
                             <Input placeholder="cont-456..." {...field} />
                           </FormControl>
@@ -216,7 +217,7 @@ const InsuranceCertificateManager = () => {
                     name="contractorName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nom Entrepreneur</FormLabel>
+                        <FormLabel><T k="auto.insurancecertificatemanager.nom_entrepreneur" fallback="Nom Entrepreneur" /></FormLabel>
                         <FormControl>
                           <Input placeholder="Entreprise BTP..." {...field} />
                         </FormControl>
@@ -231,7 +232,7 @@ const InsuranceCertificateManager = () => {
                       name="insuranceCompany"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Compagnie d'Assurance</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.compagnie_d_assurance" fallback="Compagnie d'Assurance" /></FormLabel>
                           <FormControl>
                             <Input placeholder="Assurances Générales..." {...field} />
                           </FormControl>
@@ -244,7 +245,7 @@ const InsuranceCertificateManager = () => {
                       name="policyNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Numéro de Police</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.numero_de_police" fallback="Numéro de Police" /></FormLabel>
                           <FormControl>
                             <Input placeholder="POL-789..." {...field} />
                           </FormControl>
@@ -260,7 +261,7 @@ const InsuranceCertificateManager = () => {
                       name="coverageType"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Type de Couverture</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.type_de_couverture" fallback="Type de Couverture" /></FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -268,11 +269,11 @@ const InsuranceCertificateManager = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="responsabilite_civile">Responsabilité Civile</SelectItem>
-                              <SelectItem value="decennale">Décennale</SelectItem>
-                              <SelectItem value="vehicules">Véhicules</SelectItem>
-                              <SelectItem value="materiel">Matériel</SelectItem>
-                              <SelectItem value="tous_risques">Tous Risques</SelectItem>
+                              <SelectItem value="responsabilite_civile"><T k="auto.insurancecertificatemanager.responsabilite_civile" fallback="Responsabilité Civile" /></SelectItem>
+                              <SelectItem value="decennale"><T k="auto.insurancecertificatemanager.decennale" fallback="Décennale" /></SelectItem>
+                              <SelectItem value="vehicules"><T k="auto.insurancecertificatemanager.vehicules" fallback="Véhicules" /></SelectItem>
+                              <SelectItem value="materiel"><T k="auto.insurancecertificatemanager.materiel" fallback="Matériel" /></SelectItem>
+                              <SelectItem value="tous_risques"><T k="auto.insurancecertificatemanager.tous_risques" fallback="Tous Risques" /></SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -284,7 +285,7 @@ const InsuranceCertificateManager = () => {
                       name="coverageAmount"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Montant Couverture (MRU)</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.montant_couverture_mru" fallback="Montant Couverture (MRU)" /></FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
@@ -305,7 +306,7 @@ const InsuranceCertificateManager = () => {
                       name="validFrom"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date de Début</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.date_de_debut" fallback="Date de Début" /></FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -318,7 +319,7 @@ const InsuranceCertificateManager = () => {
                       name="validUntil"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date d'Expiration</FormLabel>
+                          <FormLabel><T k="auto.insurancecertificatemanager.date_d_expiration" fallback="Date d'Expiration" /></FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -333,7 +334,7 @@ const InsuranceCertificateManager = () => {
                     name="certificateUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>URL du Certificat (optionnel)</FormLabel>
+                        <FormLabel><T k="auto.insurancecertificatemanager.url_du_certificat_optionnel" fallback="URL du Certificat (optionnel)" /></FormLabel>
                         <FormControl>
                           <Input placeholder="https://..." {...field} />
                         </FormControl>
@@ -347,7 +348,7 @@ const InsuranceCertificateManager = () => {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes (optionnel)</FormLabel>
+                        <FormLabel><T k="auto.insurancecertificatemanager.notes_optionnel" fallback="Notes (optionnel)" /></FormLabel>
                         <FormControl>
                           <Textarea placeholder="Notes additionnelles..." {...field} />
                         </FormControl>
@@ -358,10 +359,10 @@ const InsuranceCertificateManager = () => {
 
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Annuler
+                      <T k="auto.insurancecertificatemanager.annuler" fallback="Annuler" />
                     </Button>
                     <Button type="submit">
-                      Créer Certificat
+                      <T k="auto.insurancecertificatemanager.creer_certificat" fallback="Créer Certificat" />
                     </Button>
                   </div>
                 </form>
@@ -377,10 +378,10 @@ const InsuranceCertificateManager = () => {
             Alertes ({alerts.length})
           </TabsTrigger>
           <TabsTrigger value="active">
-            Certificats Actifs
+            <T k="auto.insurancecertificatemanager.certificats_actifs" fallback="Certificats Actifs" />
           </TabsTrigger>
           <TabsTrigger value="expired">
-            Expirés
+            <T k="auto.insurancecertificatemanager.expires" fallback="Expirés" />
           </TabsTrigger>
         </TabsList>
 
@@ -390,7 +391,7 @@ const InsuranceCertificateManager = () => {
               <CardContent className="flex items-center justify-center h-32">
                 <div className="text-center">
                   <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Aucune alerte d'expiration d'assurance</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.insurancecertificatemanager.aucune_alerte_d_expiration_d_assurance" fallback="Aucune alerte d'expiration d'assurance" /></p>
                 </div>
               </CardContent>
             </Card>
@@ -419,19 +420,19 @@ const InsuranceCertificateManager = () => {
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">
-                          <strong>Expiration:</strong> {new Date(alert.expiryDate || '').toLocaleDateString()}
+                          <strong><T k="auto.insurancecertificatemanager.expiration" fallback="Expiration:" /></strong> {new Date(alert.expiryDate || '').toLocaleDateString()}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          <strong>Jours restants:</strong> {(alert.daysRemaining || 0) < 0 ? 'Expirée' : alert.daysRemaining || 0}
+                          <strong><T k="auto.insurancecertificatemanager.jours_restants" fallback="Jours restants:" /></strong> {(alert.daysRemaining || 0) < 0 ? 'Expirée' : alert.daysRemaining || 0}
                         </p>
                       </div>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline">
                           <FileText className="h-4 w-4 mr-1" />
-                          Voir Certificat
+                          <T k="auto.insurancecertificatemanager.voir_certificat" fallback="Voir Certificat" />
                         </Button>
                         <Button size="sm">
-                          Renouveler
+                          <T k="auto.insurancecertificatemanager.renouveler" fallback="Renouveler" />
                         </Button>
                       </div>
                     </div>
@@ -447,7 +448,7 @@ const InsuranceCertificateManager = () => {
             <CardContent className="flex items-center justify-center h-32">
               <div className="text-center">
                 <Calendar className="h-8 w-8 text-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Les certificats actifs seront affichés ici</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancecertificatemanager.les_certificats_actifs_seront_affiches_ici" fallback="Les certificats actifs seront affichés ici" /></p>
               </div>
             </CardContent>
           </Card>
@@ -458,7 +459,7 @@ const InsuranceCertificateManager = () => {
             <CardContent className="flex items-center justify-center h-32">
               <div className="text-center">
                 <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Les certificats expirés seront affichés ici</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.insurancecertificatemanager.les_certificats_expires_seront_affiches_ici" fallback="Les certificats expirés seront affichés ici" /></p>
               </div>
             </CardContent>
           </Card>

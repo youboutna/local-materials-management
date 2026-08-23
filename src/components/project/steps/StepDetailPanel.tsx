@@ -36,6 +36,7 @@ import EnhancedScheduleInspectionModal from '@/components/inspections/EnhancedSc
 import PaymentRequestModal from '@/components/payments/PaymentRequestModal';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // Types
 type StepDetailTab = 'overview' | 'inspections' | 'documents' | 'payments';
 
@@ -209,7 +210,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                   className="gap-1"
                 >
                   <CalendarPlus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Inspection</span>
+                  <span className="hidden sm:inline"><T k="auto.stepdetailpanel.inspection" fallback="Inspection" /></span>
                 </Button>
               )}
               {permissions.canRequestPayment && (
@@ -220,7 +221,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                   className="gap-1 text-success border-success/30 hover:bg-success/10"
                 >
                   <DollarSign className="h-4 w-4" />
-                  <span className="hidden sm:inline">Paiement</span>
+                  <span className="hidden sm:inline"><T k="auto.stepdetailpanel.paiement" fallback="Paiement" /></span>
                 </Button>
               )}
               {onClose && (
@@ -238,11 +239,11 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
           <TabsTrigger value="overview" className="gap-1">
             <Eye className="h-4 w-4" />
-            <span className="hidden sm:inline">Aperçu</span>
+            <span className="hidden sm:inline"><T k="auto.stepdetailpanel.apercu" fallback="Aperçu" /></span>
           </TabsTrigger>
           <TabsTrigger value="inspections" className="gap-1">
             <ClipboardCheck className="h-4 w-4" />
-            <span className="hidden sm:inline">Inspections</span>
+            <span className="hidden sm:inline"><T k="auto.stepdetailpanel.inspections" fallback="Inspections" /></span>
             {(inspectionsData?.totalCount || 0) > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                 {inspectionsData?.totalCount}
@@ -251,11 +252,11 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           </TabsTrigger>
           <TabsTrigger value="documents" className="gap-1">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Documents</span>
+            <span className="hidden sm:inline"><T k="auto.stepdetailpanel.documents" fallback="Documents" /></span>
           </TabsTrigger>
           <TabsTrigger value="payments" className="gap-1">
             <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Paiements</span>
+            <span className="hidden sm:inline"><T k="auto.stepdetailpanel.paiements" fallback="Paiements" /></span>
             {(paymentsData?.paymentCount || 0) > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                 {paymentsData?.paymentCount}
@@ -270,7 +271,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Date début</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.stepdetailpanel.date_debut" fallback="Date début" /></div>
                 <div className="text-lg font-medium flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   {formatDate(step.start_date)}
@@ -279,7 +280,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Date fin</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.stepdetailpanel.date_fin" fallback="Date fin" /></div>
                 <div className="text-lg font-medium flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   {formatDate(step.end_date)}
@@ -288,7 +289,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Inspections</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.stepdetailpanel.inspections" fallback="Inspections" /></div>
                 <div className="text-lg font-medium flex items-center gap-1">
                   <ClipboardCheck className="h-4 w-4" />
                   {inspectionsData?.approvedCount || 0}/{inspectionsData?.totalCount || 0}
@@ -297,7 +298,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Paiements</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.stepdetailpanel.paiements" fallback="Paiements" /></div>
                 <div className="text-lg font-medium flex items-center gap-1 text-success">
                   <DollarSign className="h-4 w-4" />
                   {formatCurrency(paymentsData?.totalPaid || 0)}
@@ -347,11 +348,11 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Inspections</CardTitle>
+                <CardTitle className="text-base"><T k="auto.stepdetailpanel.inspections" fallback="Inspections" /></CardTitle>
                 {permissions.canRequestInspection && (
                   <Button size="sm" variant="outline" onClick={() => handleInspectionAction('request')}>
                     <CalendarPlus className="h-4 w-4 mr-1" />
-                    Nouvelle
+                    <T k="auto.stepdetailpanel.nouvelle" fallback="Nouvelle" />
                   </Button>
                 )}
               </div>
@@ -392,7 +393,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <ClipboardCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Aucune inspection pour cette étape</p>
+                  <p><T k="auto.stepdetailpanel.aucune_inspection_pour_cette_etape" fallback="Aucune inspection pour cette étape" /></p>
                   {permissions.canRequestInspection && (
                     <Button 
                       size="sm" 
@@ -401,7 +402,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                       onClick={() => handleInspectionAction('request')}
                     >
                       <CalendarPlus className="h-4 w-4 mr-1" />
-                      Programmer une inspection
+                      <T k="auto.stepdetailpanel.programmer_une_inspection" fallback="Programmer une inspection" />
                     </Button>
                   )}
                 </div>
@@ -414,7 +415,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
         <TabsContent value="documents" className="mt-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Documents</CardTitle>
+              <CardTitle className="text-base"><T k="auto.stepdetailpanel.documents" fallback="Documents" /></CardTitle>
             </CardHeader>
             <CardContent>
               {step.documents && step.documents.length > 0 ? (
@@ -435,7 +436,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Aucun document pour cette étape</p>
+                  <p><T k="auto.stepdetailpanel.aucun_document_pour_cette_etape" fallback="Aucun document pour cette étape" /></p>
                 </div>
               )}
             </CardContent>
@@ -447,11 +448,11 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Paiements</CardTitle>
+                <CardTitle className="text-base"><T k="auto.stepdetailpanel.paiements" fallback="Paiements" /></CardTitle>
                 {permissions.canRequestPayment && (
                   <Button size="sm" variant="outline" onClick={handlePaymentAction}>
                     <DollarSign className="h-4 w-4 mr-1" />
-                    Demander
+                    <T k="auto.stepdetailpanel.demander" fallback="Demander" />
                   </Button>
                 )}
               </div>
@@ -486,7 +487,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                   
                   {/* Total */}
                   <div className="flex items-center justify-between pt-3 border-t">
-                    <span className="font-medium">Total payé</span>
+                    <span className="font-medium"><T k="auto.stepdetailpanel.total_paye" fallback="Total payé" /></span>
                     <span className="font-bold text-lg text-success">
                       {formatCurrency(paymentsData.totalPaid)}
                     </span>
@@ -495,7 +496,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Aucun paiement pour cette étape</p>
+                  <p><T k="auto.stepdetailpanel.aucun_paiement_pour_cette_etape" fallback="Aucun paiement pour cette étape" /></p>
                   {permissions.canRequestPayment && (
                     <Button 
                       size="sm" 
@@ -504,7 +505,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                       onClick={handlePaymentAction}
                     >
                       <DollarSign className="h-4 w-4 mr-1" />
-                      Demander un paiement
+                      <T k="auto.stepdetailpanel.demander_un_paiement" fallback="Demander un paiement" />
                     </Button>
                   )}
                 </div>

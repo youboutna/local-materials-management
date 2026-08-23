@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Users, Download, Calendar, User, FolderOpen, Eye } from 'lucide-react';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useToast } from '@/hooks/use-toast';
+import { T } from '@/components/i18n/T';
 
 interface Document {
   id: string;
@@ -203,7 +204,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
         <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
           <div className="text-center text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-2" />
-            <p>Aucun fichier disponible pour la prévisualisation</p>
+            <p><T k="auto.documentdetails.aucun_fichier_disponible_pour_la_previsualisatio" fallback="Aucun fichier disponible pour la prévisualisation" /></p>
           </div>
         </div>
       );
@@ -227,7 +228,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
           />
           <div className="hidden text-center text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-2" />
-            <p>Impossible de charger l'image</p>
+            <p><T k="auto.documentdetails.impossible_de_charger_l_image" fallback="Impossible de charger l'image" /></p>
           </div>
         </div>
       );
@@ -256,7 +257,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
       <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
         <div className="text-center text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-2" />
-          <p>Prévisualisation non disponible pour ce type de fichier</p>
+          <p><T k="auto.documentdetails.previsualisation_non_disponible_pour_ce_type_de_" fallback="Prévisualisation non disponible pour ce type de fichier" /></p>
           <p className="text-sm mt-1">Type: {document.mime_type || 'Non spécifié'}</p>
           <Button 
             variant="outline" 
@@ -266,7 +267,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
             disabled={downloading}
           >
             <Download className="h-4 w-4 mr-2" />
-            Télécharger pour consulter
+            <T k="auto.documentdetails.telecharger_pour_consulter" fallback="Télécharger pour consulter" />
           </Button>
         </div>
       </div>
@@ -290,10 +291,10 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-            <TabsTrigger value="details">Détails</TabsTrigger>
+            <TabsTrigger value="details"><T k="auto.documentdetails.details" fallback="Détails" /></TabsTrigger>
             <TabsTrigger value="preview" disabled={!canPreview()}>
               <Eye className="h-4 w-4 mr-2" />
-              Aperçu
+              <T k="auto.documentdetails.apercu" fallback="Aperçu" />
             </TabsTrigger>
           </TabsList>
 
@@ -313,7 +314,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
             {/* Description */}
             {document.description && (
               <div>
-                <h3 className="text-sm font-medium text-foreground mb-2">Description</h3>
+                <h3 className="text-sm font-medium text-foreground mb-2"><T k="auto.documentdetails.description" fallback="Description" /></h3>
                 <p className="text-sm text-muted-foreground">{document.description}</p>
               </div>
             )}
@@ -321,24 +322,24 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
             {/* File Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h3 className="text-sm font-medium text-foreground mb-2">Informations du fichier</h3>
+                <h3 className="text-sm font-medium text-foreground mb-2"><T k="auto.documentdetails.informations_du_fichier" fallback="Informations du fichier" /></h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Nom:</span>
+                    <span className="text-muted-foreground"><T k="auto.documentdetails.nom" fallback="Nom:" /></span>
                     <span className="font-medium">{document.file_name}</span>
                   </div>
                   {document.file_size && (
                     <div className="flex items-center gap-2">
                       <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Taille:</span>
+                      <span className="text-muted-foreground"><T k="auto.documentdetails.taille" fallback="Taille:" /></span>
                       <span className="font-medium">{formatFileSize(document.file_size)}</span>
                     </div>
                   )}
                   {document.mime_type && (
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Type:</span>
+                      <span className="text-muted-foreground"><T k="auto.documentdetails.type" fallback="Type:" /></span>
                       <span className="font-medium">{document.mime_type}</span>
                     </div>
                   )}
@@ -346,11 +347,11 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-foreground mb-2">Métadonnées</h3>
+                <h3 className="text-sm font-medium text-foreground mb-2"><T k="auto.documentdetails.metadonnees" fallback="Métadonnées" /></h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Créé le:</span>
+                    <span className="text-muted-foreground"><T k="auto.documentdetails.cree_le" fallback="Créé le:" /></span>
                     <span className="font-medium">
                       {document.created_at ? new Date(document.created_at).toLocaleDateString('fr-FR', {
                         year: 'numeric',
@@ -363,13 +364,13 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
                   </div>
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Téléchargé par:</span>
+                    <span className="text-muted-foreground"><T k="auto.documentdetails.telecharge_par" fallback="Téléchargé par:" /></span>
                     <span className="font-medium">{document.uploaded_by}</span>
                   </div>
                   {document.project_id && (
                     <div className="flex items-center gap-2">
                       <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Projet ID:</span>
+                      <span className="text-muted-foreground"><T k="auto.documentdetails.projet_id" fallback="Projet ID:" /></span>
                       <span className="font-medium">{document.project_id}</span>
                     </div>
                   )}
@@ -388,7 +389,7 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
         {/* Actions */}
         <div className="flex justify-end space-x-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fermer
+            <T k="auto.documentdetails.fermer" fallback="Fermer" />
           </Button>
           {document.file_url && (
             <Button 

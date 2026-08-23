@@ -33,6 +33,7 @@ import {
   BankGuaranteeRow
 } from '@/hooks/hexagonal';
 import { BankGuaranteeType, BankGuaranteeStatus } from '@/dtos/entities/BankGuaranteeDTO';
+import { T } from '@/components/i18n/T';
 
 const EnhancedBankGuaranteeCrud = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -246,13 +247,13 @@ const EnhancedBankGuaranteeCrud = () => {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Gestion des Garanties Bancaires
+          <T k="auto.enhancedbankguaranteecrud.gestion_des_garanties_bancaires" fallback="Gestion des Garanties Bancaires" />
         </CardTitle>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button onClick={openCreateForm} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Nouvelle Garantie
+              <T k="auto.enhancedbankguaranteecrud.nouvelle_garantie" fallback="Nouvelle Garantie" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -338,7 +339,7 @@ const EnhancedBankGuaranteeCrud = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.enhancedbankguaranteecrud.statut" fallback="Statut" /></Label>
                   <Select 
                     value={formData.status} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as BankGuaranteeStatus }))}
@@ -383,7 +384,7 @@ const EnhancedBankGuaranteeCrud = () => {
               </div>
               
               <div>
-                <Label>Documents Justificatifs</Label>
+                <Label><T k="auto.enhancedbankguaranteecrud.documents_justificatifs" fallback="Documents Justificatifs" /></Label>
                 {!isViewMode && (
                   <div className="space-y-2">
                     <DocumentSelector
@@ -400,7 +401,7 @@ const EnhancedBankGuaranteeCrud = () => {
               </div>
               
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes"><T k="auto.enhancedbankguaranteecrud.notes" fallback="Notes" /></Label>
                 <Textarea
                   id="notes"
                   value={formData.notes || ''}
@@ -413,7 +414,7 @@ const EnhancedBankGuaranteeCrud = () => {
               {!isViewMode && (
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                    Annuler
+                    <T k="auto.enhancedbankguaranteecrud.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                     {isEditing ? 'Mettre à jour' : 'Créer'}
@@ -439,7 +440,7 @@ const EnhancedBankGuaranteeCrud = () => {
               <SelectValue placeholder="Type de garantie" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les types</SelectItem>
+              <SelectItem value="all"><T k="auto.enhancedbankguaranteecrud.tous_les_types" fallback="Tous les types" /></SelectItem>
               {guaranteeTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
               ))}
@@ -450,14 +451,14 @@ const EnhancedBankGuaranteeCrud = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Projet</TableHead>
-              <TableHead>Banque</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Expiration</TableHead>
-              <TableHead>Jours restants</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.projet" fallback="Projet" /></TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.banque" fallback="Banque" /></TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.type" fallback="Type" /></TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.montant" fallback="Montant" /></TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.expiration" fallback="Expiration" /></TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.jours_restants" fallback="Jours restants" /></TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.statut" fallback="Statut" /></TableHead>
+              <TableHead><T k="auto.enhancedbankguaranteecrud.actions" fallback="Actions" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -504,7 +505,7 @@ const EnhancedBankGuaranteeCrud = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Consulter la garantie</TooltipContent>
+                      <TooltipContent><T k="auto.enhancedbankguaranteecrud.consulter_la_garantie" fallback="Consulter la garantie" /></TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -512,7 +513,7 @@ const EnhancedBankGuaranteeCrud = () => {
                           <Edit className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Modifier la garantie</TooltipContent>
+                      <TooltipContent><T k="auto.enhancedbankguaranteecrud.modifier_la_garantie" fallback="Modifier la garantie" /></TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -527,7 +528,7 @@ const EnhancedBankGuaranteeCrud = () => {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Supprimer la garantie</TooltipContent>
+                      <TooltipContent><T k="auto.enhancedbankguaranteecrud.supprimer_la_garantie" fallback="Supprimer la garantie" /></TooltipContent>
                     </Tooltip>
                   </div>
                 </TableCell>
@@ -536,7 +537,7 @@ const EnhancedBankGuaranteeCrud = () => {
             {filteredGuarantees.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  Aucune garantie bancaire ne correspond aux filtres
+                  <T k="auto.enhancedbankguaranteecrud.aucune_garantie_bancaire_ne_correspond_aux_filtr" fallback="Aucune garantie bancaire ne correspond aux filtres" />
                 </TableCell>
               </TableRow>
             )}

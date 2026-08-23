@@ -13,6 +13,7 @@ import WilayaBoundariesLayer from '@/components/gis/layers/WilayaBoundariesLayer
 // Import hexagonal architecture services
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
 import { LocationDataService } from '@/application/services/LocationDataService';
+import { T } from '@/components/i18n/T';
 
 // City interface for this component
 interface MapCity {
@@ -215,7 +216,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </div>
           <Badge variant="secondary" className="bg-gradient-to-r from-accent/20 to-accent/10 text-accent-foreground border-accent/20">
             <Compass className="h-3 w-3 mr-1" />
-            Mauritanie
+            <T k="auto.interactivemap.mauritanie" fallback="Mauritanie" />
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -223,7 +224,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <div className="space-y-3">
           <Label htmlFor="map-address" className="text-sm font-medium text-foreground flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
-            Adresse de localisation
+            <T k="auto.interactivemap.adresse_de_localisation" fallback="Adresse de localisation" />
           </Label>
           <Input
             id="map-address"
@@ -238,7 +239,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <div className="bg-gradient-to-r from-muted/50 to-accent/10 border border-accent/20 p-4 rounded-xl backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-2">
               <Target className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">Coordonnées GPS précises</span>
+              <span className="text-sm font-medium text-foreground"><T k="auto.interactivemap.coordonnees_gps_precises" fallback="Coordonnées GPS précises" /></span>
             </div>
             <div className="font-mono text-sm text-muted-foreground bg-background/60 px-3 py-2 rounded-lg border">
               Lat: {mapData.center.lat.toFixed(6)} | Lng: {mapData.center.lng.toFixed(6)}
@@ -249,7 +250,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         <div className="space-y-3">
           <Label className="text-sm font-medium text-foreground flex items-center gap-2">
             <Globe className="h-4 w-4 text-primary" />
-            Carte interactive de la Mauritanie
+            <T k="auto.interactivemap.carte_interactive_de_la_mauritanie" fallback="Carte interactive de la Mauritanie" />
           </Label>
           <div className="relative z-0 w-full h-96 border border-border/50 rounded-xl overflow-hidden shadow-lg bg-background/50 backdrop-blur-sm">
             <MapContainer
@@ -259,7 +260,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
               className="z-0"
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright"><T k="auto.interactivemap.openstreetmap" fallback="OpenStreetMap" /></a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
 
@@ -280,7 +281,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                         {city.name}
                       </strong>
                       {city.isCapital && (
-                        <div className="text-xs text-destructive font-semibold">Capitale</div>
+                        <div className="text-xs text-destructive font-semibold"><T k="auto.interactivemap.capitale" fallback="Capitale" /></div>
                       )}
                       <div className="text-xs text-muted-foreground mt-1">
                         Région: {city.parentCode}
@@ -305,7 +306,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   <Popup>
                     <div className="text-center">
                       <strong className="text-success">
-                        Position sélectionnée
+                        <T k="auto.interactivemap.position_selectionnee" fallback="Position sélectionnée" />
                       </strong>
                       <div className="text-xs text-muted-foreground">
                         {mapData.center.lat.toFixed(6)},{" "}
@@ -332,7 +333,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   <Popup>
                     <div className="text-center">
                       <strong className="text-primary">
-                        Forme de l'entrepôt
+                        <T k="auto.interactivemap.forme_de_l_entrepot" fallback="Forme de l'entrepôt" />
                       </strong>
                       <div className="text-xs text-muted-foreground">
                         Type: {mapData?.shapeType || "polygon"}
@@ -348,10 +349,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 <div className="bg-gradient-to-br from-background/95 to-muted/95 border border-border/50 px-6 py-4 rounded-xl shadow-lg text-center backdrop-blur-sm">
                   <Target className="h-10 w-10 mx-auto text-primary mb-3" />
                   <p className="text-sm text-foreground font-medium mb-1">
-                    Cliquez sur la carte pour sélectionner une position
+                    <T k="auto.interactivemap.cliquez_sur_la_carte_pour_selectionner_une_posit" fallback="Cliquez sur la carte pour sélectionner une position" />
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Explorez les villes de Mauritanie avec les contrôles de navigation
+                    <T k="auto.interactivemap.explorez_les_villes_de_mauritanie_avec_les_contr" fallback="Explorez les villes de Mauritanie avec les contrôles de navigation" />
                   </p>
                 </div>
               </div>

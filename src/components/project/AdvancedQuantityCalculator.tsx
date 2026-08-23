@@ -27,6 +27,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
+import { T } from '@/components/i18n/T';
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -57,18 +58,18 @@ const getRecommendations = (elementType: string) => {
     case "concrete_slab":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Épaisseur recommandée : 15 cm (0.15 m) pour dalle courante</li>
+          <li><T k="auto.advancedquantitycalculator.epaisseur_recommandee_15_cm_0_15_m_pour_dalle_co" fallback="Épaisseur recommandée : 15 cm (0.15 m) pour dalle courante" /></li>
           <li>Classe de béton : C25/30</li>
           <li>Dosage ciment : 350 kg/m³</li>
-          <li>Ferraillage minimal : ST25C ou équivalent</li>
+          <li><T k="auto.advancedquantitycalculator.ferraillage_minimal_st25c_ou_equivalent" fallback="Ferraillage minimal : ST25C ou équivalent" /></li>
         </ul>
       );
        case "lean_concrete":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Épaisseur courante : 5 à 10 cm</li>
+          <li><T k="auto.advancedquantitycalculator.epaisseur_courante_5_a_10_cm" fallback="Épaisseur courante : 5 à 10 cm" /></li>
           <li>Classe de béton : C12/15</li>
-          <li>Utilisé comme couche de propreté sous fondations</li>
+          <li><T k="auto.advancedquantitycalculator.utilise_comme_couche_de_proprete_sous_fondations" fallback="Utilisé comme couche de propreté sous fondations" /></li>
           <li>Dosage ciment : 200 à 250 kg/m³</li>
         </ul>
       );
@@ -76,38 +77,38 @@ const getRecommendations = (elementType: string) => {
       return (
         <ul className="list-disc ml-4 text-xs text-orange-900">
           <li>Profondeur selon étude de sol (généralement ≥ 0.8 m)</li>
-          <li>Largeur minimale : 40 cm</li>
-          <li>Utiliser béton de propreté en fond de fouille</li>
+          <li><T k="auto.advancedquantitycalculator.largeur_minimale_40_cm" fallback="Largeur minimale : 40 cm" /></li>
+          <li><T k="auto.advancedquantitycalculator.utiliser_beton_de_proprete_en_fond_de_fouille" fallback="Utiliser béton de propreté en fond de fouille" /></li>
         </ul>
       );
     case "foundation_masonry":
       return (
         <ul className="list-disc ml-4 text-xs text-orange-900">
-          <li>Utiliser blocs ou pierres de fondation</li>
-          <li>Épaisseur minimale : 30 cm</li>
+          <li><T k="auto.advancedquantitycalculator.utiliser_blocs_ou_pierres_de_fondation" fallback="Utiliser blocs ou pierres de fondation" /></li>
+          <li><T k="auto.advancedquantitycalculator.epaisseur_minimale_30_cm" fallback="Épaisseur minimale : 30 cm" /></li>
           <li>Jointement au mortier dosé à 400 kg/m³</li>
         </ul>
       );
     case "foundation_chape":
       return (
         <ul className="list-disc ml-4 text-xs text-orange-900">
-          <li>Chape de propreté sur fondation</li>
-          <li>Épaisseur courante : 2 à 3 cm</li>
+          <li><T k="auto.advancedquantitycalculator.chape_de_proprete_sur_fondation" fallback="Chape de propreté sur fondation" /></li>
+          <li><T k="auto.advancedquantitycalculator.epaisseur_courante_2_a_3_cm" fallback="Épaisseur courante : 2 à 3 cm" /></li>
           <li>Dosage ciment : 300 kg/m³</li>
         </ul>
       );
     case "roof_insulation":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Utiliser panneaux isolants adaptés (laine de roche, polystyrène...)</li>
-          <li>Épaisseur recommandée : 5 à 10 cm</li>
+          <li><T k="auto.advancedquantitycalculator.utiliser_panneaux_isolants_adaptes_laine_de_roch" fallback="Utiliser panneaux isolants adaptés (laine de roche, polystyrène...)" /></li>
+          <li><T k="auto.advancedquantitycalculator.epaisseur_recommandee_5_a_10_cm" fallback="Épaisseur recommandée : 5 à 10 cm" /></li>
           <li>Vérifier la résistance thermique (R ≥ 3 m².K/W)</li>
         </ul>
       );
     case "cement_block_masonry":
       return (
         <ul className="list-disc ml-4 text-xs text-success">
-          <li>Blocs creux 20x20x40 cm courants</li>
+          <li><T k="auto.advancedquantitycalculator.blocs_creux_20x20x40_cm_courants" fallback="Blocs creux 20x20x40 cm courants" /></li>
           <li>13 blocs/m² environ</li>
           <li>Dosage mortier : 400 kg/m³</li>
         </ul>
@@ -116,147 +117,147 @@ const getRecommendations = (elementType: string) => {
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
           <li>Classe de béton : C25/30 minimum</li>
-          <li>Ferraillage selon plans d’exécution</li>
-          <li>Vibrer le béton pour éviter les nids de cailloux</li>
+          <li><T k="auto.advancedquantitycalculator.ferraillage_selon_plans_d_execution" fallback="Ferraillage selon plans d’exécution" /></li>
+          <li><T k="auto.advancedquantitycalculator.vibrer_le_beton_pour_eviter_les_nids_de_cailloux" fallback="Vibrer le béton pour éviter les nids de cailloux" /></li>
         </ul>
       );
     case "wooden_roof_structure":
       return (
         <ul className="list-disc ml-4 text-xs text-yellow-900">
-          <li>Bois sec et traité contre insectes</li>
-          <li>Section minimale des chevrons : 6x12 cm</li>
-          <li>Entraxe courant : 60 cm</li>
+          <li><T k="auto.advancedquantitycalculator.bois_sec_et_traite_contre_insectes" fallback="Bois sec et traité contre insectes" /></li>
+          <li><T k="auto.advancedquantitycalculator.section_minimale_des_chevrons_6x12_cm" fallback="Section minimale des chevrons : 6x12 cm" /></li>
+          <li><T k="auto.advancedquantitycalculator.entraxe_courant_60_cm" fallback="Entraxe courant : 60 cm" /></li>
         </ul>
       );
     case "metal_gutter":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Acier galvanisé ou PVC</li>
+          <li><T k="auto.advancedquantitycalculator.acier_galvanise_ou_pvc" fallback="Acier galvanisé ou PVC" /></li>
           <li>Pente minimale : 5 mm/m</li>
-          <li>Fixation tous les 50 cm</li>
+          <li><T k="auto.advancedquantitycalculator.fixation_tous_les_50_cm" fallback="Fixation tous les 50 cm" /></li>
         </ul>
       );
     case "roof_covering":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Pente minimale : 10%</li>
-          <li>Prévoir écran sous toiture pour étanchéité</li>
-          <li>Fixation selon DTU</li>
+          <li><T k="auto.advancedquantitycalculator.pente_minimale_10" fallback="Pente minimale : 10%" /></li>
+          <li><T k="auto.advancedquantitycalculator.prevoir_ecran_sous_toiture_pour_etancheite" fallback="Prévoir écran sous toiture pour étanchéité" /></li>
+          <li><T k="auto.advancedquantitycalculator.fixation_selon_dtu" fallback="Fixation selon DTU" /></li>
         </ul>
       );
     case "tiling":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Prévoir 5% de pertes</li>
-          <li>Jointement : 2 à 5 mm</li>
-          <li>Colle adaptée au support</li>
+          <li><T k="auto.advancedquantitycalculator.prevoir_5_de_pertes" fallback="Prévoir 5% de pertes" /></li>
+          <li><T k="auto.advancedquantitycalculator.jointement_2_a_5_mm" fallback="Jointement : 2 à 5 mm" /></li>
+          <li><T k="auto.advancedquantitycalculator.colle_adaptee_au_support" fallback="Colle adaptée au support" /></li>
         </ul>
       );
     case "wooden_ceiling":
       return (
         <ul className="list-disc ml-4 text-xs text-yellow-900">
-          <li>Bois sec et traité</li>
-          <li>Épaisseur courante : 15 à 20 mm</li>
-          <li>Fixation sur ossature bois</li>
+          <li><T k="auto.advancedquantitycalculator.bois_sec_et_traite" fallback="Bois sec et traité" /></li>
+          <li><T k="auto.advancedquantitycalculator.epaisseur_courante_15_a_20_mm" fallback="Épaisseur courante : 15 à 20 mm" /></li>
+          <li><T k="auto.advancedquantitycalculator.fixation_sur_ossature_bois" fallback="Fixation sur ossature bois" /></li>
         </ul>
       );
     case "balustrade":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Hauteur réglementaire : 1 m minimum</li>
+          <li><T k="auto.advancedquantitycalculator.hauteur_reglementaire_1_m_minimum" fallback="Hauteur réglementaire : 1 m minimum" /></li>
           <li>Espacement barreaux : ≤ 11 cm</li>
-          <li>Matériau : acier, bois ou aluminium</li>
+          <li><T k="auto.advancedquantitycalculator.materiau_acier_bois_ou_aluminium" fallback="Matériau : acier, bois ou aluminium" /></li>
         </ul>
       );
     case "electrical_installation":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Respecter la norme NFC 15-100</li>
-          <li>Utiliser câbles de section adaptée</li>
-          <li>Protection différentielle obligatoire</li>
+          <li><T k="auto.advancedquantitycalculator.respecter_la_norme_nfc_15_100" fallback="Respecter la norme NFC 15-100" /></li>
+          <li><T k="auto.advancedquantitycalculator.utiliser_cables_de_section_adaptee" fallback="Utiliser câbles de section adaptée" /></li>
+          <li><T k="auto.advancedquantitycalculator.protection_differentielle_obligatoire" fallback="Protection différentielle obligatoire" /></li>
         </ul>
       );
     case "plumbing_installation":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Utiliser tubes PER ou multicouche</li>
-          <li>Pression d’essai : 6 bars</li>
-          <li>Prévoir vannes d’arrêt accessibles</li>
+          <li><T k="auto.advancedquantitycalculator.utiliser_tubes_per_ou_multicouche" fallback="Utiliser tubes PER ou multicouche" /></li>
+          <li><T k="auto.advancedquantitycalculator.pression_d_essai_6_bars" fallback="Pression d’essai : 6 bars" /></li>
+          <li><T k="auto.advancedquantitycalculator.prevoir_vannes_d_arret_accessibles" fallback="Prévoir vannes d’arrêt accessibles" /></li>
         </ul>
       );
     case "septic_tank":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Volume selon nombre d’usagers</li>
-          <li>Étanchéité parfaite indispensable</li>
-          <li>Ventilation obligatoire</li>
+          <li><T k="auto.advancedquantitycalculator.volume_selon_nombre_d_usagers" fallback="Volume selon nombre d’usagers" /></li>
+          <li><T k="auto.advancedquantitycalculator.etancheite_parfaite_indispensable" fallback="Étanchéité parfaite indispensable" /></li>
+          <li><T k="auto.advancedquantitycalculator.ventilation_obligatoire" fallback="Ventilation obligatoire" /></li>
         </ul>
       );
     case "site_preparation":
       return (
         <ul className="list-disc ml-4 text-xs text-success">
-          <li>Débroussaillage complet du terrain</li>
-          <li>Évacuation des déchets et gravats</li>
-          <li>Nivellement avant travaux</li>
+          <li><T k="auto.advancedquantitycalculator.debroussaillage_complet_du_terrain" fallback="Débroussaillage complet du terrain" /></li>
+          <li><T k="auto.advancedquantitycalculator.evacuation_des_dechets_et_gravats" fallback="Évacuation des déchets et gravats" /></li>
+          <li><T k="auto.advancedquantitycalculator.nivellement_avant_travaux" fallback="Nivellement avant travaux" /></li>
         </ul>
       );
     case "excavation":
       return (
         <ul className="list-disc ml-4 text-xs text-orange-900">
-          <li>Profondeur selon étude de sol</li>
-          <li>Talutage ou blindage pour sécurité</li>
-          <li>Évacuation des terres excédentaires</li>
+          <li><T k="auto.advancedquantitycalculator.profondeur_selon_etude_de_sol" fallback="Profondeur selon étude de sol" /></li>
+          <li><T k="auto.advancedquantitycalculator.talutage_ou_blindage_pour_securite" fallback="Talutage ou blindage pour sécurité" /></li>
+          <li><T k="auto.advancedquantitycalculator.evacuation_des_terres_excedentaires" fallback="Évacuation des terres excédentaires" /></li>
         </ul>
       );
     case "masonry_wall":
       return (
         <ul className="list-disc ml-4 text-xs text-success">
-          <li>Épaisseur mur standard : 20 cm</li>
-          <li>Type de brique : Brique creuse ou bloc ciment</li>
+          <li><T k="auto.advancedquantitycalculator.epaisseur_mur_standard_20_cm" fallback="Épaisseur mur standard : 20 cm" /></li>
+          <li><T k="auto.advancedquantitycalculator.type_de_brique_brique_creuse_ou_bloc_ciment" fallback="Type de brique : Brique creuse ou bloc ciment" /></li>
           <li>Dosage mortier : 400 kg/m³</li>
-          <li>Joint vertical décalé pour stabilité</li>
-          <li>Chaînage horizontal tous les 1,20 m de hauteur</li>
-          <li>Humidifier les blocs avant pose</li>
+          <li><T k="auto.advancedquantitycalculator.joint_vertical_decale_pour_stabilite" fallback="Joint vertical décalé pour stabilité" /></li>
+          <li><T k="auto.advancedquantitycalculator.chainage_horizontal_tous_les_1_20_m_de_hauteur" fallback="Chaînage horizontal tous les 1,20 m de hauteur" /></li>
+          <li><T k="auto.advancedquantitycalculator.humidifier_les_blocs_avant_pose" fallback="Humidifier les blocs avant pose" /></li>
         </ul>
       );
     case "painting":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Préparer soigneusement les supports</li>
-          <li>Appliquer une sous-couche adaptée</li>
-          <li>Respecter les temps de séchage</li>
+          <li><T k="auto.advancedquantitycalculator.preparer_soigneusement_les_supports" fallback="Préparer soigneusement les supports" /></li>
+          <li><T k="auto.advancedquantitycalculator.appliquer_une_sous_couche_adaptee" fallback="Appliquer une sous-couche adaptée" /></li>
+          <li><T k="auto.advancedquantitycalculator.respecter_les_temps_de_sechage" fallback="Respecter les temps de séchage" /></li>
         </ul>
       );
     case "fence":
       return (
         <ul className="list-disc ml-4 text-xs text-success">
-          <li>Hauteur réglementaire selon PLU</li>
-          <li>Fondations adaptées au sol</li>
-          <li>Traitement anticorrosion pour les parties métalliques</li>
+          <li><T k="auto.advancedquantitycalculator.hauteur_reglementaire_selon_plu" fallback="Hauteur réglementaire selon PLU" /></li>
+          <li><T k="auto.advancedquantitycalculator.fondations_adaptees_au_sol" fallback="Fondations adaptées au sol" /></li>
+          <li><T k="auto.advancedquantitycalculator.traitement_anticorrosion_pour_les_parties_metall" fallback="Traitement anticorrosion pour les parties métalliques" /></li>
         </ul>
       );
     case "gate":
       return (
         <ul className="list-disc ml-4 text-xs text-success">
-          <li>Prévoir une ouverture sécurisée</li>
-          <li>Matériau adapté à l'usage (acier, alu, bois)</li>
-          <li>Vérifier l’alignement et la fixation</li>
+          <li><T k="auto.advancedquantitycalculator.prevoir_une_ouverture_securisee" fallback="Prévoir une ouverture sécurisée" /></li>
+          <li><T k="auto.advancedquantitycalculator.materiau_adapte_a_l_usage_acier_alu_bois" fallback="Matériau adapté à l'usage (acier, alu, bois)" /></li>
+          <li><T k="auto.advancedquantitycalculator.verifier_l_alignement_et_la_fixation" fallback="Vérifier l’alignement et la fixation" /></li>
         </ul>
       );
     case "landscaping":
       return (
         <ul className="list-disc ml-4 text-xs text-success">
-          <li>Prévoir un drainage efficace</li>
-          <li>Choisir des plantes adaptées au climat</li>
-          <li>Stabiliser les allées et accès</li>
+          <li><T k="auto.advancedquantitycalculator.prevoir_un_drainage_efficace" fallback="Prévoir un drainage efficace" /></li>
+          <li><T k="auto.advancedquantitycalculator.choisir_des_plantes_adaptees_au_climat" fallback="Choisir des plantes adaptées au climat" /></li>
+          <li><T k="auto.advancedquantitycalculator.stabiliser_les_allees_et_acces" fallback="Stabiliser les allées et accès" /></li>
         </ul>
       );
     case "architectural_plan":
       return (
         <ul className="list-disc ml-4 text-xs text-blue-900">
-          <li>Vérifier la conformité aux règles d’urbanisme</li>
-          <li>Inclure toutes les vues nécessaires (plan, coupe, élévation)</li>
-          <li>Joindre un plan de masse et des détails techniques</li>
+          <li><T k="auto.advancedquantitycalculator.verifier_la_conformite_aux_regles_d_urbanisme" fallback="Vérifier la conformité aux règles d’urbanisme" /></li>
+          <li><T k="auto.advancedquantitycalculator.inclure_toutes_les_vues_necessaires_plan_coupe_e" fallback="Inclure toutes les vues nécessaires (plan, coupe, élévation)" /></li>
+          <li><T k="auto.advancedquantitycalculator.joindre_un_plan_de_masse_et_des_details_techniqu" fallback="Joindre un plan de masse et des détails techniques" /></li>
         </ul>
       );
     default:
@@ -834,12 +835,12 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     <div className="space-y-6">
       {/* Top form card */}
       <Card>
-        <CardHeader><CardTitle><Calculator className="h-5 w-5 inline-block mr-2" />Calculateur de Métrés Avancé</CardTitle></CardHeader>
+        <CardHeader><CardTitle><Calculator className="h-5 w-5 inline-block mr-2" /><T k="auto.advancedquantitycalculator.calculateur_de_metres_avance" fallback="Calculateur de Métrés Avancé" /></CardTitle></CardHeader>
         <CardContent>
           {/* Type + dimensions */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <Label>Type d'élément</Label>
+              <Label><T k="auto.advancedquantitycalculator.type_d_element" fallback="Type d'élément" /></Label>
               <Select value={form.elementType} onValueChange={v => setForm(f => ({ ...f, elementType: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -849,18 +850,18 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             </div>
             {/* Length */}
             <div>
-              <Label>Longueur (m)</Label>
+              <Label><T k="auto.advancedquantitycalculator.longueur_m" fallback="Longueur (m)" /></Label>
               <Input type="number" step="0.01" min="0.01" value={form.length || ""} onChange={e => setForm(f => ({ ...f, length: parseFloat(e.target.value) || 0 }))} placeholder="0.00" />
             </div>
             {currentElement && currentElement.requires.includes("width") && (
               <div>
-                <Label>Largeur (m)</Label>
+                <Label><T k="auto.advancedquantitycalculator.largeur_m" fallback="Largeur (m)" /></Label>
                 <Input type="number" step="0.01" min="0.01" value={form.width || ""} onChange={e => setForm(f => ({ ...f, width: parseFloat(e.target.value) || 0 }))} placeholder="0.00" />
               </div>
             )}
             {currentElement && currentElement.requires.includes("height") && (
               <div>
-                <Label>Hauteur (m)</Label>
+                <Label><T k="auto.advancedquantitycalculator.hauteur_m" fallback="Hauteur (m)" /></Label>
                 <Input type="number" step="0.01" min="0.01" value={form.height || ""} onChange={e => setForm(f => ({ ...f, height: parseFloat(e.target.value) || 0 }))} placeholder="0.00" />
               </div>
             )}
@@ -871,7 +872,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             )}
           {currentElement && currentElement.requires.includes("quantity") && (
             <div>
-              <Label>Quantité de </Label>
+              <Label><T k="auto.advancedquantitycalculator.quantite_de" fallback="Quantité de" /> </Label>
               <Input type="number" step="0.01" min="1" value={form.quantity || ""} onChange={e => setForm(f => ({ ...f, quantity: parseFloat(e.target.value) || 0 }))} placeholder="1" /> </div>
           )}
           </div>
@@ -931,7 +932,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 <Select value={resourceType} onValueChange={(v) => setResourceType(v as BoqResourceType)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="material">Matériau</SelectItem>
+                    <SelectItem value="material"><T k="auto.advancedquantitycalculator.materiau" fallback="Matériau" /></SelectItem>
                     <SelectItem value="labour">Main-d'œuvre</SelectItem>
                     <SelectItem value="equipment">Équipement / Service</SelectItem>
                   </SelectContent>
@@ -1001,12 +1002,12 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
               <thead className="bg-muted">
                   <tr>{/* No whitespace here */}
                     <th className=" border border-border px-1 py-1 ">#</th>
-                    <th className="border border-border px-1 py-1 uppercase">Élément</th>
-                    <th className="border border-gray- px-1 py-1 uppercase">Dimensions</th>
+                    <th className="border border-border px-1 py-1 uppercase"><T k="auto.advancedquantitycalculator.element" fallback="Élément" /></th>
+                    <th className="border border-gray- px-1 py-1 uppercase"><T k="auto.advancedquantitycalculator.dimensions" fallback="Dimensions" /></th>
         
-                    <th className="border border-border px-2 py-1 uppercase">Détail des ressources</th>
-                    <th className="border border-border px-2 py-1 uppercase">Actions</th>
-                    <th className="border border-border px-1 py-1 uppercase">Désignation d'origine</th> {/* NEW */}
+                    <th className="border border-border px-2 py-1 uppercase"><T k="auto.advancedquantitycalculator.detail_des_ressources" fallback="Détail des ressources" /></th>
+                    <th className="border border-border px-2 py-1 uppercase"><T k="auto.advancedquantitycalculator.actions" fallback="Actions" /></th>
+                    <th className="border border-border px-1 py-1 uppercase"><T k="auto.advancedquantitycalculator.designation_d_origine" fallback="Désignation d'origine" /></th> {/* NEW */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -1049,14 +1050,14 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                             />
                             <div className="grid grid-cols-3 gap-1">
                               <div>
-                                <Label className="text-[10px]">Unité</Label>
+                                <Label className="text-[10px]"><T k="auto.advancedquantitycalculator.unite" fallback="Unité" /></Label>
                                 <Input className="h-8 text-xs"
                                   value={(calc.metadata as any)?.unit ?? ''}
                                   onChange={(e) => updateCalcInline(i, { unit: e.target.value })}
                                 />
                               </div>
                               <div>
-                                <Label className="text-[10px]">Qté</Label>
+                                <Label className="text-[10px]"><T k="auto.advancedquantitycalculator.qte" fallback="Qté" /></Label>
                                 <Input className="h-8 text-xs" type="number" step="0.01" min="0"
                                   value={(calc.results as any)?.['Quantité'] ?? 0}
                                   onChange={(e) => updateCalcInline(i, { quantity: parseFloat(e.target.value) || 0 })}
@@ -1088,7 +1089,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                         )}
                         {getRecommendations(calc.elementType || 'basic_calculator') && !isImported(calc) && (
                           <div className="mt-2 p-2 bg-primary/10 rounded text-xs">
-                            <div className="font-medium">Recommandations:</div>
+                            <div className="font-medium"><T k="auto.advancedquantitycalculator.recommandations" fallback="Recommandations:" /></div>
                             {getRecommendations(calc.elementType || 'basic_calculator')}
                           </div>
                         )}
@@ -1097,7 +1098,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                       {editIndex === i && isImported(calc) ? (
                         <div className="space-y-2 text-left">
                           <div>
-                            <Label className="text-xs">Désignation</Label>
+                            <Label className="text-xs"><T k="auto.advancedquantitycalculator.designation" fallback="Désignation" /></Label>
                             <Input
                               value={editImported.designation}
                               onChange={(e) => setEditImported((f) => ({ ...f, designation: e.target.value }))}
@@ -1105,7 +1106,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </div>
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <Label className="text-xs">Unité</Label>
+                              <Label className="text-xs"><T k="auto.advancedquantitycalculator.unite" fallback="Unité" /></Label>
                               <Input
                                 value={editImported.unit}
                                 onChange={(e) => setEditImported((f) => ({ ...f, unit: e.target.value }))}
@@ -1113,7 +1114,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                               />
                             </div>
                             <div>
-                              <Label className="text-xs">Quantité</Label>
+                              <Label className="text-xs"><T k="auto.advancedquantitycalculator.quantite" fallback="Quantité" /></Label>
                               <Input
                                 type="number"
                                 step="0.01"
@@ -1138,8 +1139,8 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                             {((editImported.quantity || 0) * (editImported.unitPrice || 0)).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}
                           </div>
                           <div className="flex gap-1">
-                            <Button size="sm" variant="default" onClick={handleSaveEditImported}>Valider</Button>
-                            <Button size="sm" variant="ghost" onClick={() => setEditIndex(null)}>Annuler</Button>
+                            <Button size="sm" variant="default" onClick={handleSaveEditImported}><T k="auto.advancedquantitycalculator.valider" fallback="Valider" /></Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditIndex(null)}><T k="auto.advancedquantitycalculator.annuler" fallback="Annuler" /></Button>
                           </div>
                         </div>
                       ) : editIndex === i ? (
@@ -1209,7 +1210,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                             ))}
                             {!showEditOpeningForm && (
                               <Button size="sm" onClick={() => setShowEditOpeningForm(true)}>
-                                Ajouter ouverture
+                                <T k="auto.advancedquantitycalculator.ajouter_ouverture" fallback="Ajouter ouverture" />
                               </Button>
                             )}
                             {showEditOpeningForm && (
@@ -1277,10 +1278,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           </div>
                           <div className="flex gap-1 mt-2">
                             <Button size="sm" variant="default" onClick={handleSaveEdit}>
-                              Valider
+                              <T k="auto.advancedquantitycalculator.valider" fallback="Valider" />
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => setEditIndex(null)}>
-                              Annuler
+                              <T k="auto.advancedquantitycalculator.annuler" fallback="Annuler" />
                             </Button>
                           </div>
                         </div>
@@ -1294,7 +1295,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                           >
                             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="material">Matériau</SelectItem>
+                              <SelectItem value="material"><T k="auto.advancedquantitycalculator.materiau" fallback="Matériau" /></SelectItem>
                               <SelectItem value="labour">Main-d'œuvre</SelectItem>
                               <SelectItem value="equipment">Équipement / Service</SelectItem>
                             </SelectContent>

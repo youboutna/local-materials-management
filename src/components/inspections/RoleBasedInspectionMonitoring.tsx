@@ -47,6 +47,7 @@ import {
   useInspectionMonitoringHex,
   type MonitoringInspection
 } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 const RoleBasedInspectionMonitoring = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -244,15 +245,15 @@ const RoleBasedInspectionMonitoring = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Suivi des Inspections</h1>
+          <h1 className="text-3xl font-bold"><T k="auto.rolebasedinspectionmonitoring.suivi_des_inspections" fallback="Suivi des Inspections" /></h1>
           <p className="text-muted-foreground">
-            Gestion des inspections selon les rôles et permissions
+            <T k="auto.rolebasedinspectionmonitoring.gestion_des_inspections_selon_les_roles_et_permi" fallback="Gestion des inspections selon les rôles et permissions" />
           </p>
         </div>
         {isAdmin && (
           <Button onClick={() => navigate(createUrl)}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Inspection
+            <T k="auto.rolebasedinspectionmonitoring.nouvelle_inspection" fallback="Nouvelle Inspection" />
           </Button>
         )}
       </div>
@@ -265,7 +266,7 @@ const RoleBasedInspectionMonitoring = () => {
             {projectId && <strong>projet {projectId.slice(0, 8)}…</strong>}
           </span>
           <Button variant="ghost" size="sm" onClick={clearScope} aria-label="Effacer le filtre">
-            Effacer
+            <T k="auto.rolebasedinspectionmonitoring.effacer" fallback="Effacer" />
           </Button>
         </div>
       )}
@@ -279,7 +280,7 @@ const RoleBasedInspectionMonitoring = () => {
         !['completed', 'approved'].includes(i.status)
       ).length > 0 && (
         <div className="border-l-4 border-red-500 pl-4">
-          <h4 className="font-semibold text-destructive mb-2"> Inspections en retard</h4>
+          <h4 className="font-semibold text-destructive mb-2"> <T k="auto.rolebasedinspectionmonitoring.inspections_en_retard" fallback="Inspections en retard" /></h4>
           <div className="space-y-2">
             {inspections
               .filter(i => 
@@ -308,7 +309,7 @@ const RoleBasedInspectionMonitoring = () => {
                         )}
                       >
                         <Send className="h-4 w-4 mr-2" />
-                        Alerte hiérarchie
+                        <T k="auto.rolebasedinspectionmonitoring.alerte_hierarchie" fallback="Alerte hiérarchie" />
                       </Button>
                     )}
                   </div>
@@ -323,13 +324,13 @@ const RoleBasedInspectionMonitoring = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filtres
+            <T k="auto.rolebasedinspectionmonitoring.filtres" fallback="Filtres" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-end">
             <div className="flex-1">
-              <Label htmlFor="search">Recherche</Label>
+              <Label htmlFor="search"><T k="auto.rolebasedinspectionmonitoring.recherche" fallback="Recherche" /></Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
@@ -344,13 +345,13 @@ const RoleBasedInspectionMonitoring = () => {
               </div>
             </div>
             <div className="w-48">
-              <Label htmlFor="status">Statut</Label>
+              <Label htmlFor="status"><T k="auto.rolebasedinspectionmonitoring.statut" fallback="Statut" /></Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status" aria-label="Filtrer par statut">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="all"><T k="auto.rolebasedinspectionmonitoring.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
                   <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
                   <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
                   <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
@@ -366,7 +367,7 @@ const RoleBasedInspectionMonitoring = () => {
       {/* Inspections Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Inspections</CardTitle>
+          <CardTitle><T k="auto.rolebasedinspectionmonitoring.liste_des_inspections" fallback="Liste des Inspections" /></CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -379,12 +380,12 @@ const RoleBasedInspectionMonitoring = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Inspecteur</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Progression</TableHead>
-                    <TableHead>Commentaires</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead><T k="auto.rolebasedinspectionmonitoring.inspecteur" fallback="Inspecteur" /></TableHead>
+                    <TableHead><T k="auto.rolebasedinspectionmonitoring.date" fallback="Date" /></TableHead>
+                    <TableHead><T k="auto.rolebasedinspectionmonitoring.statut" fallback="Statut" /></TableHead>
+                    <TableHead><T k="auto.rolebasedinspectionmonitoring.progression" fallback="Progression" /></TableHead>
+                    <TableHead><T k="auto.rolebasedinspectionmonitoring.commentaires" fallback="Commentaires" /></TableHead>
+                    <TableHead><T k="auto.rolebasedinspectionmonitoring.actions" fallback="Actions" /></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -438,12 +439,12 @@ const RoleBasedInspectionMonitoring = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => openEditDialog(inspection)}>
                               <Edit className="h-4 w-4 mr-2" />
-                              Modifier
+                              <T k="auto.rolebasedinspectionmonitoring.modifier" fallback="Modifier" />
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link to={`/inspections/${inspection.id}`}>
                                 <Eye className="h-4 w-4 mr-2" />
-                                Voir les détails
+                                <T k="auto.rolebasedinspectionmonitoring.voir_les_details" fallback="Voir les détails" />
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -453,7 +454,7 @@ const RoleBasedInspectionMonitoring = () => {
                                 className="text-destructive"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Supprimer
+                                <T k="auto.rolebasedinspectionmonitoring.supprimer" fallback="Supprimer" />
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -486,12 +487,12 @@ const RoleBasedInspectionMonitoring = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Modifier l'Inspection</DialogTitle>
+            <DialogTitle><T k="auto.rolebasedinspectionmonitoring.modifier_l_inspection" fallback="Modifier l'Inspection" /></DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="inspector">Inspecteur</Label>
+                <Label htmlFor="inspector"><T k="auto.rolebasedinspectionmonitoring.inspecteur" fallback="Inspecteur" /></Label>
                 <Input
                   id="inspector"
                   value={editFormData.inspector}
@@ -500,7 +501,7 @@ const RoleBasedInspectionMonitoring = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date"><T k="auto.rolebasedinspectionmonitoring.date" fallback="Date" /></Label>
                 <Input
                   id="date"
                   type="date"
@@ -512,7 +513,7 @@ const RoleBasedInspectionMonitoring = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="status">Statut</Label>
+                <Label htmlFor="status"><T k="auto.rolebasedinspectionmonitoring.statut" fallback="Statut" /></Label>
                 <Select value={editFormData.status} onValueChange={(value) => setEditFormData(prev => ({ ...prev, status: value }))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -527,7 +528,7 @@ const RoleBasedInspectionMonitoring = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="progress">Progression (%)</Label>
+                <Label htmlFor="progress"><T k="auto.rolebasedinspectionmonitoring.progression" fallback="Progression (%)" /></Label>
                 <Input
                   id="progress"
                   type="number"
@@ -539,7 +540,7 @@ const RoleBasedInspectionMonitoring = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="comments">Commentaires</Label>
+              <Label htmlFor="comments"><T k="auto.rolebasedinspectionmonitoring.commentaires" fallback="Commentaires" /></Label>
               <Textarea
                 id="comments"
                 value={editFormData.comments}
@@ -550,12 +551,12 @@ const RoleBasedInspectionMonitoring = () => {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Annuler
+                <T k="auto.rolebasedinspectionmonitoring.annuler" fallback="Annuler" />
               </Button>
               <Button 
                 onClick={handleSaveEdit}
               >
-                Enregistrer
+                <T k="auto.rolebasedinspectionmonitoring.enregistrer" fallback="Enregistrer" />
               </Button>
             </div>
           </div>

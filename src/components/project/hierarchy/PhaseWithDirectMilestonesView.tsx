@@ -28,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { T } from '@/components/i18n/T';
 
 interface Milestone {
   id: string;
@@ -158,14 +159,14 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
       <Card className={className}>
         <CardContent className="py-12 text-center">
           <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">Aucun jalon défini</h3>
+          <h3 className="text-lg font-medium mb-2"><T k="auto.phasewithdirectmilestonesview.aucun_jalon_defini" fallback="Aucun jalon défini" /></h3>
           <p className="text-muted-foreground mb-4">
-            Cette phase n'a pas de jalons configurés.
+            <T k="auto.phasewithdirectmilestonesview.cette_phase_n_a_pas_de_jalons_configures" fallback="Cette phase n'a pas de jalons configurés." />
           </p>
           {onAddMilestone && (
             <Button onClick={onAddMilestone}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter un jalon
+              <T k="auto.phasewithdirectmilestonesview.ajouter_un_jalon" fallback="Ajouter un jalon" />
             </Button>
           )}
         </CardContent>
@@ -219,7 +220,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Par type</DropdownMenuLabel>
+                  <DropdownMenuLabel><T k="auto.phasewithdirectmilestonesview.par_type" fallback="Par type" /></DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setFilterType(filterType === "inspection" ? null : "inspection")}>
                     <ClipboardCheck className="h-4 w-4 mr-2" />
                     Inspections
@@ -237,7 +238,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
                   </DropdownMenuItem>
                   
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Par statut</DropdownMenuLabel>
+                  <DropdownMenuLabel><T k="auto.phasewithdirectmilestonesview.par_statut" fallback="Par statut" /></DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => setFilterStatus(filterStatus === "pending" ? null : "pending")}>
                     En attente
                     {filterStatus === "pending" && <CheckCircle className="h-3 w-3 ml-auto" />}
@@ -255,7 +256,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={clearFilters} className="text-destructive">
-                        Effacer les filtres
+                        <T k="auto.phasewithdirectmilestonesview.effacer_les_filtres" fallback="Effacer les filtres" />
                       </DropdownMenuItem>
                     </>
                   )}
@@ -265,7 +266,7 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
               {onAddMilestone && (
                 <Button variant="ghost" size="sm" onClick={onAddMilestone}>
                   <Plus className="h-4 w-4 mr-1" />
-                  Ajouter
+                  <T k="auto.phasewithdirectmilestonesview.ajouter" fallback="Ajouter" />
                 </Button>
               )}
               
@@ -387,9 +388,9 @@ export const PhaseWithDirectMilestonesView: React.FC<PhaseWithDirectMilestonesVi
             {/* Message si aucun résultat après filtrage */}
             {filteredMilestones.length === 0 && hasFilters && (
               <div className="text-center py-8 text-muted-foreground">
-                <p>Aucun jalon ne correspond aux filtres.</p>
+                <p><T k="auto.phasewithdirectmilestonesview.aucun_jalon_ne_correspond_aux_filtres" fallback="Aucun jalon ne correspond aux filtres." /></p>
                 <Button variant="link" onClick={clearFilters}>
-                  Effacer les filtres
+                  <T k="auto.phasewithdirectmilestonesview.effacer_les_filtres" fallback="Effacer les filtres" />
                 </Button>
               </div>
             )}

@@ -32,6 +32,7 @@ import { useComplianceHex } from "@/hooks/hexagonal";
 import { ComplianceItemDTO, ComplianceType, ComplianceStatus, CompliancePriority } from "@/dtos/entities/ComplianceDTO";
 
 import { TranslatedCategory, TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface PhaseComplianceProps {
   phaseId: string;
   projectId: string;
@@ -182,13 +183,13 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
-          Conformité de la Phase
+          <T k="auto.phasecompliance.conformite_de_la_phase" fallback="Conformité de la Phase" />
         </CardTitle>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter
+              <T k="auto.phasecompliance.ajouter" fallback="Ajouter" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -200,7 +201,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="category">Catégorie</Label>
+                  <Label htmlFor="category"><T k="auto.phasecompliance.categorie" fallback="Catégorie" /></Label>
                   <Select
                     value={formData.category}
                     onValueChange={(value: ComplianceType) =>
@@ -211,17 +212,17 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="regulatory">Réglementaire</SelectItem>
+                      <SelectItem value="regulatory"><T k="auto.phasecompliance.reglementaire" fallback="Réglementaire" /></SelectItem>
                       <SelectItem value="financial"><TranslatedCategory code="financial" /></SelectItem>
                       <SelectItem value="technical"><TranslatedCategory code="technical" /></SelectItem>
                       <SelectItem value="environmental">
-                        Environnementale
+                        <T k="auto.phasecompliance.environnementale" fallback="Environnementale" />
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="priority">Priorité</Label>
+                  <Label htmlFor="priority"><T k="auto.phasecompliance.priorite" fallback="Priorité" /></Label>
                   <Select
                     value={formData.priority}
                     onValueChange={(value: CompliancePriority) =>
@@ -241,7 +242,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                 </div>
               </div>
               <div>
-                <Label htmlFor="title">Titre</Label>
+                <Label htmlFor="title"><T k="auto.phasecompliance.titre" fallback="Titre" /></Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -252,7 +253,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description"><T k="auto.phasecompliance.description" fallback="Description" /></Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -264,7 +265,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.phasecompliance.statut" fallback="Statut" /></Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value: ComplianceStatus) =>
@@ -277,15 +278,15 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                     <SelectContent>
                       <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
                       <SelectItem value="in_review"><TranslatedStatus code="in_review" /></SelectItem>
-                      <SelectItem value="compliant">Conforme</SelectItem>
+                      <SelectItem value="compliant"><T k="auto.phasecompliance.conforme" fallback="Conforme" /></SelectItem>
                       <SelectItem value="non_compliant">
-                        Non conforme
+                        <T k="auto.phasecompliance.non_conforme" fallback="Non conforme" />
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="deadline">Date limite</Label>
+                  <Label htmlFor="deadline"><T k="auto.phasecompliance.date_limite" fallback="Date limite" /></Label>
                   <Input
                     id="deadline"
                     type="date"
@@ -297,7 +298,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                 </div>
               </div>
               <div>
-                <Label htmlFor="responsible">Responsable</Label>
+                <Label htmlFor="responsible"><T k="auto.phasecompliance.responsable" fallback="Responsable" /></Label>
                 <Input
                   id="responsible"
                   value={formData.responsiblePerson}
@@ -311,7 +312,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes"><T k="auto.phasecompliance.notes" fallback="Notes" /></Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
@@ -326,7 +327,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                 >
-                  Annuler
+                  <T k="auto.phasecompliance.annuler" fallback="Annuler" />
                 </Button>
                 <Button onClick={handleSave}>
                   {editingItem ? "Modifier" : "Ajouter"}
@@ -339,7 +340,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
       <CardContent>
         {complianceItems.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            Aucun élément de conformité pour cette phase
+            <T k="auto.phasecompliance.aucun_element_de_conformite_pour_cette_phase" fallback="Aucun élément de conformité pour cette phase" />
           </div>
         ) : (
           <div className="space-y-4">

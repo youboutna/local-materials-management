@@ -45,6 +45,7 @@ import {
   useAssigneeDetails,
   type TaskAssignment
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 type Project = { id: string; title: string };
 
@@ -421,7 +422,7 @@ const TaskAssignmentsComponent = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filtres et Recherche
+            <T k="auto.taskassignments.filtres_et_recherche" fallback="Filtres et Recherche" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -429,7 +430,7 @@ const TaskAssignmentsComponent = () => {
             <div>
               <Label htmlFor="search">
                 <Search className="h-4 w-4 inline mr-2" aria-hidden="true" />
-                Rechercher
+                <T k="auto.taskassignments.rechercher" fallback="Rechercher" />
               </Label>
               <Input
                 id="search"
@@ -441,7 +442,7 @@ const TaskAssignmentsComponent = () => {
               />
             </div>
             <div>
-              <Label htmlFor="filter-status">Statut</Label>
+              <Label htmlFor="filter-status"><T k="auto.taskassignments.statut" fallback="Statut" /></Label>
               <Select
                 value={filterStatus}
                 onValueChange={setFilterStatus}
@@ -450,7 +451,7 @@ const TaskAssignmentsComponent = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="all"><T k="auto.taskassignments.tous" fallback="Tous" /></SelectItem>
                   <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
                   <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
                   <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
@@ -459,7 +460,7 @@ const TaskAssignmentsComponent = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="filter-priority">Priorité</Label>
+              <Label htmlFor="filter-priority"><T k="auto.taskassignments.priorite" fallback="Priorité" /></Label>
               <Select
                 value={filterPriority}
                 onValueChange={setFilterPriority}
@@ -468,7 +469,7 @@ const TaskAssignmentsComponent = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="all"><T k="auto.taskassignments.toutes" fallback="Toutes" /></SelectItem>
                   <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
                   <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
                   <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
@@ -477,7 +478,7 @@ const TaskAssignmentsComponent = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="filter-assignee">Assigné à</Label>
+              <Label htmlFor="filter-assignee"><T k="auto.taskassignments.assigne_a" fallback="Assigné à" /></Label>
               <Select
                 value={filterAssignee}
                 onValueChange={setFilterAssignee}
@@ -486,7 +487,7 @@ const TaskAssignmentsComponent = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="all"><T k="auto.taskassignments.tous" fallback="Tous" /></SelectItem>
                   {uniqueAssignees && Object.entries(uniqueAssignees).map(([id, name]) => (
                     <SelectItem key={id} value={id}>{name}</SelectItem>
                   ))}
@@ -520,7 +521,7 @@ const TaskAssignmentsComponent = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="project">Projet</Label>
+                  <Label htmlFor="project"><T k="auto.taskassignments.projet" fallback="Projet" /></Label>
                   <Select
                     value={formData.project_id}
                     onValueChange={(value) => setFormData({ ...formData, project_id: value })}
@@ -540,7 +541,7 @@ const TaskAssignmentsComponent = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description"><T k="auto.taskassignments.description" fallback="Description" /></Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -568,7 +569,7 @@ const TaskAssignmentsComponent = () => {
 
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="due_date">Date d'échéance</Label>
+                  <Label htmlFor="due_date"><T k="auto.taskassignments.date_d_echeance" fallback="Date d'échéance" /></Label>
                   <Input
                     id="due_date"
                     type="date"
@@ -577,7 +578,7 @@ const TaskAssignmentsComponent = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="priority">Priorité</Label>
+                  <Label htmlFor="priority"><T k="auto.taskassignments.priorite" fallback="Priorité" /></Label>
                   <Select
                     value={formData.priority}
                     onValueChange={(value) => setFormData({ ...formData, priority: value })}
@@ -598,7 +599,7 @@ const TaskAssignmentsComponent = () => {
               {/* Métré & main d'œuvre — issu du DQE, éditable (référentiel DQE_LABOR_REFERENTIAL) */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantité</Label>
+                  <Label htmlFor="quantity"><T k="auto.taskassignments.quantite" fallback="Quantité" /></Label>
                   <Input
                     id="quantity"
                     type="number"
@@ -608,7 +609,7 @@ const TaskAssignmentsComponent = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="unit">Unité</Label>
+                  <Label htmlFor="unit"><T k="auto.taskassignments.unite" fallback="Unité" /></Label>
                   <Input
                     id="unit"
                     value={formData.unit}
@@ -617,7 +618,7 @@ const TaskAssignmentsComponent = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="estimated_duration">Délai (jours)</Label>
+                  <Label htmlFor="estimated_duration"><T k="auto.taskassignments.delai_jours" fallback="Délai (jours)" /></Label>
                   <Input
                     id="estimated_duration"
                     type="number"
@@ -651,7 +652,7 @@ const TaskAssignmentsComponent = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Statut</Label>
+                  <Label htmlFor="status"><T k="auto.taskassignments.statut" fallback="Statut" /></Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -668,7 +669,7 @@ const TaskAssignmentsComponent = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="notes"><T k="auto.taskassignments.notes" fallback="Notes" /></Label>
                   <Textarea
                     id="notes"
                     value={formData.notes}
@@ -680,7 +681,7 @@ const TaskAssignmentsComponent = () => {
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuler
+                  <T k="auto.taskassignments.annuler" fallback="Annuler" />
                 </Button>
                 <Button
                   type="submit"
@@ -755,13 +756,13 @@ const TaskAssignmentsComponent = () => {
         <Card>
           <CardContent className="text-center py-12">
             <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucune tâche</h3>
+            <h3 className="text-lg font-medium mb-2"><T k="auto.taskassignments.aucune_tache" fallback="Aucune tâche" /></h3>
             <p className="text-muted-foreground mb-4">
-              Commencez par créer une nouvelle tâche.
+              <T k="auto.taskassignments.commencez_par_creer_une_nouvelle_tache" fallback="Commencez par créer une nouvelle tâche." />
             </p>
             <Button onClick={() => setIsCreating(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Créer une tâche
+              <T k="auto.taskassignments.creer_une_tache" fallback="Créer une tâche" />
             </Button>
           </CardContent>
         </Card>

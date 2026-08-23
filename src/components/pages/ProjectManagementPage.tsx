@@ -78,9 +78,10 @@ import {
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_CATEGORIES 
 } from '@/dtos/entities/ProjectDTO';
+import { T } from '@/components/i18n/T';
 
 // ProjectDashboard placeholder - component will be created separately
-const ProjectDashboard: React.FC<any> = () => <div>Project Dashboard</div>;
+const ProjectDashboard: React.FC<any> = () => <div><T k="auto.projectmanagementpage.project_dashboard" fallback="Project Dashboard" /></div>;
 import { Skeleton } from '../ui/skeleton';
 
 import { TranslatedSeverity, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
@@ -211,15 +212,15 @@ const ProjectManagementPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Project Management</h1>
+          <h1 className="text-3xl font-bold"><T k="auto.projectmanagementpage.project_management" fallback="Project Management" /></h1>
           <div className="flex gap-2">
             <Button variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              <T k="auto.projectmanagementpage.refresh" fallback="Refresh" />
             </Button>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              New Project
+              <T k="auto.projectmanagementpage.new_project" fallback="New Project" />
             </Button>
           </div>
         </div>
@@ -253,15 +254,15 @@ const ProjectManagementPage: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Project Management</h1>
+          <h1 className="text-3xl font-bold"><T k="auto.projectmanagementpage.project_management" fallback="Project Management" /></h1>
           <p className="text-muted-foreground">
-            Manage all your construction projects efficiently
+            <T k="auto.projectmanagementpage.manage_all_your_construction_projects_efficientl" fallback="Manage all your construction projects efficiently" />
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate('/projects/create')}>
             <Plus className="h-4 w-4 mr-2" />
-            New Project
+            <T k="auto.projectmanagementpage.new_project" fallback="New Project" />
           </Button>
           <Button 
             variant="outline" 
@@ -270,11 +271,11 @@ const ProjectManagementPage: React.FC = () => {
             disabled={selectedProjects.length === 0}
           >
             <Settings className="h-4 w-4 mr-2" />
-            Bulk Actions
+            <T k="auto.projectmanagementpage.bulk_actions" fallback="Bulk Actions" />
           </Button>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            <T k="auto.projectmanagementpage.export" fallback="Export" />
           </Button>
         </div>
       </div>
@@ -299,10 +300,10 @@ const ProjectManagementPage: React.FC = () => {
               }>
                 <SelectTrigger className="w-40">
                   <Filter className="h-4 w-4 mr-2" />
-                  Status
+                  <T k="auto.projectmanagementpage.status" fallback="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value=""><T k="auto.projectmanagementpage.all_statuses" fallback="All Statuses" /></SelectItem>
                   {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -316,10 +317,10 @@ const ProjectManagementPage: React.FC = () => {
               }>
                 <SelectTrigger className="w-40">
                   <Target className="h-4 w-4 mr-2" />
-                  Category
+                  <T k="auto.projectmanagementpage.category" fallback="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value=""><T k="auto.projectmanagementpage.all_categories" fallback="All Categories" /></SelectItem>
                   {categoryOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -329,7 +330,7 @@ const ProjectManagementPage: React.FC = () => {
               </Select>
 
               <Button variant="outline" size="sm" onClick={clearFilters}>
-                Clear Filters
+                <T k="auto.projectmanagementpage.clear_filters" fallback="Clear Filters" />
               </Button>
             </div>
           </div>
@@ -343,7 +344,7 @@ const ProjectManagementPage: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectmanagementpage.total_projects" fallback="Total Projects" /></p>
                   <p className="text-2xl font-bold">{statistics.metrics.totalProjects}</p>
                 </div>
                 <Building className="h-8 w-8 text-primary" />
@@ -355,7 +356,7 @@ const ProjectManagementPage: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectmanagementpage.active_projects" fallback="Active Projects" /></p>
                   <p className="text-2xl font-bold text-primary">{statistics.metrics.activeProjects}</p>
                 </div>
                 <Activity className="h-8 w-8 text-primary" />
@@ -367,7 +368,7 @@ const ProjectManagementPage: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectmanagementpage.completed" fallback="Completed" /></p>
                   <p className="text-2xl font-bold text-success">{statistics.metrics.completedProjects}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-success" />
@@ -379,7 +380,7 @@ const ProjectManagementPage: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Avg Progress</p>
+                  <p className="text-sm font-medium text-muted-foreground"><T k="auto.projectmanagementpage.avg_progress" fallback="Avg Progress" /></p>
                   <p className="text-2xl font-bold">{statistics.performanceMetrics.averageProgress}%</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-500" />
@@ -393,12 +394,12 @@ const ProjectManagementPage: React.FC = () => {
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="projects">Projects</TabsTrigger>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="workflow">Workflow</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="overview"><T k="auto.projectmanagementpage.overview" fallback="Overview" /></TabsTrigger>
+          <TabsTrigger value="projects"><T k="auto.projectmanagementpage.projects" fallback="Projects" /></TabsTrigger>
+          <TabsTrigger value="dashboard"><T k="auto.projectmanagementpage.dashboard" fallback="Dashboard" /></TabsTrigger>
+          <TabsTrigger value="analytics"><T k="auto.projectmanagementpage.analytics" fallback="Analytics" /></TabsTrigger>
+          <TabsTrigger value="workflow"><T k="auto.projectmanagementpage.workflow" fallback="Workflow" /></TabsTrigger>
+          <TabsTrigger value="reports"><T k="auto.projectmanagementpage.reports" fallback="Reports" /></TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -407,7 +408,7 @@ const ProjectManagementPage: React.FC = () => {
             {/* Project Status Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Project Status Distribution</CardTitle>
+                <CardTitle><T k="auto.projectmanagementpage.project_status_distribution" fallback="Project Status Distribution" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -432,30 +433,30 @@ const ProjectManagementPage: React.FC = () => {
             {/* Budget Analysis */}
             <Card>
               <CardHeader>
-                <CardTitle>Budget Analysis</CardTitle>
+                <CardTitle><T k="auto.projectmanagementpage.budget_analysis" fallback="Budget Analysis" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Total Budget</span>
+                    <span className="text-sm font-medium"><T k="auto.projectmanagementpage.total_budget" fallback="Total Budget" /></span>
                     <span className="text-sm font-bold">
                       ${statistics?.budgetAnalysis.total?.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Spent Budget</span>
+                    <span className="text-sm font-medium"><T k="auto.projectmanagementpage.spent_budget" fallback="Spent Budget" /></span>
                     <span className="text-sm font-bold text-warning">
                       ${statistics?.budgetAnalysis.spent?.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Remaining</span>
+                    <span className="text-sm font-medium"><T k="auto.projectmanagementpage.remaining" fallback="Remaining" /></span>
                     <span className="text-sm font-bold text-success">
                       ${statistics?.budgetAnalysis.remaining?.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Utilization</span>
+                    <span className="text-sm font-medium"><T k="auto.projectmanagementpage.utilization" fallback="Utilization" /></span>
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground">
                         {statistics?.budgetAnalysis.utilization.toFixed(1)}%
@@ -471,7 +472,7 @@ const ProjectManagementPage: React.FC = () => {
           {/* Performance Metrics */}
           <Card>
             <CardHeader>
-              <CardTitle>Performance Metrics</CardTitle>
+              <CardTitle><T k="auto.projectmanagementpage.performance_metrics" fallback="Performance Metrics" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -479,19 +480,19 @@ const ProjectManagementPage: React.FC = () => {
                   <div className="text-2xl font-bold text-primary">
                     {statistics?.performanceMetrics.averageProgress}%
                   </div>
-                  <p className="text-sm text-muted-foreground">Average Progress</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.projectmanagementpage.average_progress" fallback="Average Progress" /></p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-success">
                     {statistics?.performanceMetrics.onTimeDelivery}%
                   </div>
-                  <p className="text-sm text-muted-foreground">On-Time Delivery</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.projectmanagementpage.on_time_delivery" fallback="On-Time Delivery" /></p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">
                     {statistics?.performanceMetrics.qualityScore}%
                   </div>
-                  <p className="text-sm text-muted-foreground">Quality Score</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.projectmanagementpage.quality_score" fallback="Quality Score" /></p>
                 </div>
               </div>
             </CardContent>
@@ -518,7 +519,7 @@ const ProjectManagementPage: React.FC = () => {
                     onClick={() => setShowCreateDialog(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    New Project
+                    <T k="auto.projectmanagementpage.new_project" fallback="New Project" />
                   </Button>
                 </div>
               </CardTitle>
@@ -568,7 +569,7 @@ const ProjectManagementPage: React.FC = () => {
                         {PROJECT_STATUS_LABELS[project.status as ProjectStatus] || project.status}
                       </Badge>
                       <div className="mt-2">
-                        <div className="text-sm text-muted-foreground">Progress</div>
+                        <div className="text-sm text-muted-foreground"><T k="auto.projectmanagementpage.progress" fallback="Progress" /></div>
                         <Progress value={project.progress || 0} className="w-32 h-2" />
                       </div>
                     </div>
@@ -589,12 +590,12 @@ const ProjectManagementPage: React.FC = () => {
         <TabsContent value="analytics" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Project Analytics</CardTitle>
+              <CardTitle><T k="auto.projectmanagementpage.project_analytics" fallback="Project Analytics" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
                 <p className="text-muted-foreground">
-                  Select a project to view detailed analytics
+                  <T k="auto.projectmanagementpage.select_a_project_to_view_detailed_analytics" fallback="Select a project to view detailed analytics" />
                 </p>
               </div>
             </CardContent>
@@ -606,13 +607,13 @@ const ProjectManagementPage: React.FC = () => {
           {workflow ? (
             <Card>
               <CardHeader>
-                <CardTitle>Project Workflow</CardTitle>
+                <CardTitle><T k="auto.projectmanagementpage.project_workflow" fallback="Project Workflow" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold">Current Step</h4>
+                      <h4 className="font-semibold"><T k="auto.projectmanagementpage.current_step" fallback="Current Step" /></h4>
                       <p className="text-sm text-muted-foreground">
                         Step {workflow.currentStep} of {workflow.totalSteps}
                       </p>
@@ -630,11 +631,11 @@ const ProjectManagementPage: React.FC = () => {
                   <div className="flex gap-2">
                     <Button onClick={advanceWorkflow} disabled={workflow.currentStep >= workflow.totalSteps}>
                       <Target className="h-4 w-4 mr-2" />
-                      Advance Workflow
+                      <T k="auto.projectmanagementpage.advance_workflow" fallback="Advance Workflow" />
                     </Button>
                     <Button variant="outline" onClick={() => blockWorkflow('Manual block' as any)}>
                       <AlertTriangle className="h-4 w-4 mr-2" />
-                      Block Workflow
+                      <T k="auto.projectmanagementpage.block_workflow" fallback="Block Workflow" />
                     </Button>
                   </div>
 
@@ -642,7 +643,7 @@ const ProjectManagementPage: React.FC = () => {
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Workflow Blockers:</strong>
+                        <strong><T k="auto.projectmanagementpage.workflow_blockers" fallback="Workflow Blockers:" /></strong>
                         <ul className="mt-2 list-disc list-inside">
                           {workflow.blockers.map((blocker, index) => (
                             <li key={index}>
@@ -660,7 +661,7 @@ const ProjectManagementPage: React.FC = () => {
             <Card>
               <CardContent className="text-center py-8">
                 <p className="text-muted-foreground">
-                  Select a project to view workflow information
+                  <T k="auto.projectmanagementpage.select_a_project_to_view_workflow_information" fallback="Select a project to view workflow information" />
                 </p>
               </CardContent>
             </Card>
@@ -671,33 +672,33 @@ const ProjectManagementPage: React.FC = () => {
         <TabsContent value="reports" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Project Reports</CardTitle>
+              <CardTitle><T k="auto.projectmanagementpage.project_reports" fallback="Project Reports" /></CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Button variant="outline" className="h-20 flex-col">
                   <FileText className="h-6 w-6 mb-2" />
-                  Progress Report
+                  <T k="auto.projectmanagementpage.progress_report" fallback="Progress Report" />
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <DollarSign className="h-6 w-6 mb-2" />
-                  Financial Report
+                  <T k="auto.projectmanagementpage.financial_report" fallback="Financial Report" />
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <Users className="h-6 w-6 mb-2" />
-                  Resource Report
+                  <T k="auto.projectmanagementpage.resource_report" fallback="Resource Report" />
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <Target className="h-6 w-6 mb-2" />
-                  Milestone Report
+                  <T k="auto.projectmanagementpage.milestone_report" fallback="Milestone Report" />
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <AlertTriangle className="h-6 w-6 mb-2" />
-                  Risk Report
+                  <T k="auto.projectmanagementpage.risk_report" fallback="Risk Report" />
                 </Button>
                 <Button variant="outline" className="h-20 flex-col">
                   <Shield className="h-6 w-6 mb-2" />
-                  Quality Report
+                  <T k="auto.projectmanagementpage.quality_report" fallback="Quality Report" />
                 </Button>
               </div>
             </CardContent>
@@ -709,16 +710,16 @@ const ProjectManagementPage: React.FC = () => {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
+            <DialogTitle><T k="auto.projectmanagementpage.create_new_project" fallback="Create New Project" /></DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="title">Project Title</Label>
+                <Label htmlFor="title"><T k="auto.projectmanagementpage.project_title" fallback="Project Title" /></Label>
                 <Input id="title" placeholder="Enter project title" />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location"><T k="auto.projectmanagementpage.location" fallback="Location" /></Label>
                 <UnifiedLocationSelector
                   value={{}}
                   onChange={(loc) => {
@@ -729,20 +730,20 @@ const ProjectManagementPage: React.FC = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="budget">Budget</Label>
+                <Label htmlFor="budget"><T k="auto.projectmanagementpage.budget" fallback="Budget" /></Label>
                 <Input id="budget" type="number" placeholder="Enter budget" />
               </div>
               <div>
-                <Label htmlFor="startDate">Start Date</Label>
+                <Label htmlFor="startDate"><T k="auto.projectmanagementpage.start_date" fallback="Start Date" /></Label>
                 <Input id="startDate" type="date" />
               </div>
               <div>
-                <Label htmlFor="endDate">End Date</Label>
+                <Label htmlFor="endDate"><T k="auto.projectmanagementpage.end_date" fallback="End Date" /></Label>
                 <Input id="endDate" type="date" />
               </div>
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description"><T k="auto.projectmanagementpage.description" fallback="Description" /></Label>
               <textarea 
                 id="description" 
                 placeholder="Enter project description"
@@ -751,13 +752,13 @@ const ProjectManagementPage: React.FC = () => {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                Cancel
+                <T k="auto.projectmanagementpage.cancel" fallback="Cancel" />
               </Button>
               <Button onClick={() => {
                 // This would integrate with the createProject hook
                 setShowCreateDialog(false);
               }}>
-                Create Project
+                <T k="auto.projectmanagementpage.create_project" fallback="Create Project" />
               </Button>
             </div>
           </div>
@@ -768,7 +769,7 @@ const ProjectManagementPage: React.FC = () => {
       <Dialog open={showBulkActions} onOpenChange={setShowBulkActions}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bulk Actions</DialogTitle>
+            <DialogTitle><T k="auto.projectmanagementpage.bulk_actions" fallback="Bulk Actions" /></DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -779,7 +780,7 @@ const ProjectManagementPage: React.FC = () => {
             
             <div className="space-y-2">
               <div>
-                <Label htmlFor="bulkStatus">Update Status</Label>
+                <Label htmlFor="bulkStatus"><T k="auto.projectmanagementpage.update_status" fallback="Update Status" /></Label>
                 <Select onValueChange={(value) => 
                   value ? handleBulkStatusUpdate(value as ProjectStatus) : undefined
                 }>
@@ -803,14 +804,14 @@ const ProjectManagementPage: React.FC = () => {
                   disabled={selectedProjects.length === 0}
                 >
                   <Archive className="h-4 w-4 mr-2" />
-                  Archive Selected
+                  <T k="auto.projectmanagementpage.archive_selected" fallback="Archive Selected" />
                 </Button>
               </div>
             </div>
             
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowBulkActions(false)}>
-                Cancel
+                <T k="auto.projectmanagementpage.cancel" fallback="Cancel" />
               </Button>
             </div>
           </div>

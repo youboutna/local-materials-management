@@ -29,6 +29,7 @@ import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsH
 import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 /**
  * TenderEstimateBoq — remplace le legacy TenderQuantitativeEstimate.
@@ -45,7 +46,7 @@ const TenderEstimateBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
           title="Importer un DQE prévisionnel"
           trigger={
             <Button variant="outline" size="sm" className="gap-2">
-              <Upload className="h-4 w-4" /> Importer DQE
+              <Upload className="h-4 w-4" /> <T k="auto.tenderdocumentmanager.importer_dqe" fallback="Importer DQE" />
             </Button>
           }
           onImported={() => boq.refetch()}
@@ -393,7 +394,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             {isBidder && !readonly && (
               <Button onClick={() => setIsUploadDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter Document
+                <T k="auto.tenderdocumentmanager.ajouter_document" fallback="Ajouter Document" />
               </Button>
             )}
           </div>
@@ -401,9 +402,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         <CardContent>
           <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as TenderDocumentCategory)}>
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
-              <TabsTrigger value="administrative">Administratifs</TabsTrigger>
-              <TabsTrigger value="technical">Techniques</TabsTrigger>
-              <TabsTrigger value="financial">Financières</TabsTrigger>
+              <TabsTrigger value="administrative"><T k="auto.tenderdocumentmanager.administratifs" fallback="Administratifs" /></TabsTrigger>
+              <TabsTrigger value="technical"><T k="auto.tenderdocumentmanager.techniques" fallback="Techniques" /></TabsTrigger>
+              <TabsTrigger value="financial"><T k="auto.tenderdocumentmanager.financieres" fallback="Financières" /></TabsTrigger>
             </TabsList>
 
             {(['administrative', 'technical'] as TenderDocumentCategory[]).map((category) => (
@@ -443,7 +444,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                           <div className="flex items-center gap-2">
                             {tenderDoc.is_required && (
                               <Badge variant="outline" className="text-xs">
-                                Requis
+                                <T k="auto.tenderdocumentmanager.requis" fallback="Requis" />
                               </Badge>
                             )}
                             <Badge className={getStatusColor(tenderDoc.status ?? 'pending')}>
@@ -466,7 +467,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                         
                         {tenderDoc.reviewer_notes && (
                           <div className="text-xs text-muted-foreground mb-3 p-2 bg-muted rounded">
-                            <strong>Notes:</strong> {tenderDoc.reviewer_notes}
+                            <strong><T k="auto.tenderdocumentmanager.notes" fallback="Notes:" /></strong> {tenderDoc.reviewer_notes}
                           </div>
                         )}
 
@@ -479,7 +480,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                 onClick={() => openDocument(tenderDoc.document!, { proxy: true })}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
-                                Voir
+                                <T k="auto.tenderdocumentmanager.voir" fallback="Voir" />
                               </Button>
                               <Button
                                 size="sm"
@@ -493,7 +494,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                   rel="noreferrer"
                                 >
                                   <Download className="h-4 w-4 mr-1" />
-                                  Télécharger
+                                  <T k="auto.tenderdocumentmanager.telecharger" fallback="Télécharger" />
                                 </a>
                               </Button>
                             </>
@@ -522,8 +523,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
               
               <Tabs defaultValue="documents" className="w-full">
                 <TabsList>
-                  <TabsTrigger value="documents">Documents</TabsTrigger>
-                  <TabsTrigger value="dqe">Devis Quantitatif Estimatif</TabsTrigger>
+                  <TabsTrigger value="documents"><T k="auto.tenderdocumentmanager.documents" fallback="Documents" /></TabsTrigger>
+                  <TabsTrigger value="dqe"><T k="auto.tenderdocumentmanager.devis_quantitatif_estimatif" fallback="Devis Quantitatif Estimatif" /></TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="documents" className="space-y-4">
@@ -545,7 +546,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                             <div className="flex items-center gap-2">
                               {tenderDoc.is_required && (
                                 <Badge variant="outline" className="text-xs">
-                                  Requis
+                                  <T k="auto.tenderdocumentmanager.requis" fallback="Requis" />
                                 </Badge>
                               )}
                               <Badge className={getStatusColor(tenderDoc.status ?? 'pending')}>
@@ -579,7 +580,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                 onClick={() => tenderDoc.document?.file_url && window.open(tenderDoc.document.file_url, '_blank')}
                               >
                                 <Eye className="h-3 w-3 mr-1" />
-                                Voir
+                                <T k="auto.tenderdocumentmanager.voir" fallback="Voir" />
                               </Button>
                             )}
                           </div>
@@ -590,7 +591,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                   {filterDocumentsByCategory('financial').length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p>Aucun document financier trouvé.</p>
+                      <p><T k="auto.tenderdocumentmanager.aucun_document_financier_trouve" fallback="Aucun document financier trouvé." /></p>
                     </div>
                   )}
                 </TabsContent>
@@ -609,13 +610,13 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-terracotta-600" />
-            Documents des lots
+            <T k="auto.tenderdocumentmanager.documents_des_lots" fallback="Documents des lots" />
             <Badge variant="outline" className="ml-2">{lotOptions.length} lot(s)</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h4 className="text-sm font-semibold mb-2">Communs à tous les lots</h4>
+            <h4 className="text-sm font-semibold mb-2"><T k="auto.tenderdocumentmanager.communs_a_tous_les_lots" fallback="Communs à tous les lots" /></h4>
             <TenderLotDocumentsManager
               tenderId={tenderId}
               lotId={null}
@@ -650,7 +651,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter un Document d'Appel d'Offres</DialogTitle>
+            <DialogTitle><T k="auto.tenderdocumentmanager.ajouter_un_document_d_appel_d_offres" fallback="Ajouter un Document d'Appel d'Offres" /></DialogTitle>
             <DialogDescription>
               Sélectionnez la catégorie, la sous-catégorie et le fichier à joindre à cet appel d'offres.
             </DialogDescription>
@@ -659,7 +660,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
           
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
-              <Label>Catégorie</Label>
+              <Label><T k="auto.tenderdocumentmanager.categorie" fallback="Catégorie" /></Label>
               <Select 
                 value={uploadFormData.category} 
                 onValueChange={(value: TenderDocumentCategory) => setUploadFormData(prev => ({ ...prev, category: value }))}
@@ -676,7 +677,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             </div>
 
             <div>
-              <Label>Sous-catégorie</Label>
+              <Label><T k="auto.tenderdocumentmanager.sous_categorie" fallback="Sous-catégorie" /></Label>
               <Select 
                 value={uploadFormData.subcategory} 
                 onValueChange={handleSubcategoryChange}
@@ -725,7 +726,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                 <div className="flex items-start gap-2">
                   <Calculator className="h-4 w-4 text-primary mt-0.5" />
                   <div className="text-sm text-primary">
-                    <p className="font-medium">Devis Quantitatif Estimatif</p>
+                    <p className="font-medium"><T k="auto.tenderdocumentmanager.devis_quantitatif_estimatif" fallback="Devis Quantitatif Estimatif" /></p>
                     <p>Vous pouvez créer un devis calculé à partir du référentiel matériaux ou télécharger une facture/bon de commande existant.</p>
                   </div>
                 </div>
@@ -733,7 +734,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             )}
 
             <div>
-              <Label>Titre</Label>
+              <Label><T k="auto.tenderdocumentmanager.titre" fallback="Titre" /></Label>
               <Input
                 value={uploadFormData.title}
                 onChange={(e) => setUploadFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -743,7 +744,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             </div>
 
             <div>
-              <Label>Description</Label>
+              <Label><T k="auto.tenderdocumentmanager.description" fallback="Description" /></Label>
               <Textarea
                 value={uploadFormData.description}
                 onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -752,7 +753,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
             </div>
 
             <div>
-              <Label>Fichier</Label>
+              <Label><T k="auto.tenderdocumentmanager.fichier" fallback="Fichier" /></Label>
               <Input
                 type="file"
                 onChange={handleFileSelect}
@@ -768,7 +769,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
-                Annuler
+                <T k="auto.tenderdocumentmanager.annuler" fallback="Annuler" />
               </Button>
               <Button type="submit" disabled={uploading || uploadMutation.isPending}>
                 {uploading || uploadMutation.isPending ? 'Téléchargement...' : 'Ajouter'}

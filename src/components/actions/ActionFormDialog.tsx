@@ -11,6 +11,7 @@ import { CalendarIcon, Users, Send, Phone, Mail, FileText, Download, Shield } fr
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { T } from '@/components/i18n/T';
 
 export interface ActionFormData {
   actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail' | 'export_receipt' | 'blockchain_verification';
@@ -164,7 +165,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Action Type */}
           <div className="space-y-2">
-            <Label htmlFor="actionType">Type d'action</Label>
+            <Label htmlFor="actionType"><T k="auto.actionformdialog.type_d_action" fallback="Type d'action" /></Label>
             <Select 
               value={formData.actionType} 
               onValueChange={(value: ActionFormData['actionType']) => 
@@ -192,7 +193,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
 
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Titre</Label>
+            <Label htmlFor="title"><T k="auto.actionformdialog.titre" fallback="Titre" /></Label>
             <Input
               id="title"
               value={formData.title}
@@ -204,7 +205,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
 
           {/* Message */}
           <div className="space-y-2">
-            <Label htmlFor="message">Message</Label>
+            <Label htmlFor="message"><T k="auto.actionformdialog.message" fallback="Message" /></Label>
             <Textarea
               id="message"
               value={formData.message}
@@ -217,7 +218,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
 
           {/* Priority */}
           <div className="space-y-2">
-            <Label htmlFor="priority">Priorité</Label>
+            <Label htmlFor="priority"><T k="auto.actionformdialog.priorite" fallback="Priorité" /></Label>
             <Select 
               value={formData.priority} 
               onValueChange={(value: ActionFormData['priority']) => 
@@ -247,7 +248,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {/* Task Assignment Specific Fields */}
           {formData.actionType === 'task_assignment' && (
             <div className="space-y-2">
-              <Label htmlFor="assignee">Assigné à</Label>
+              <Label htmlFor="assignee"><T k="auto.actionformdialog.assigne_a" fallback="Assigné à" /></Label>
               <Select 
                 value={formData.assigneeId || ''} 
                 onValueChange={(value) => 
@@ -271,7 +272,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {/* Hierarchy Notification Specific Fields */}
           {formData.actionType === 'hierarchy_notification' && (
             <div className="space-y-2">
-              <Label htmlFor="escalationLevel">Niveau d'escalade</Label>
+              <Label htmlFor="escalationLevel"><T k="auto.actionformdialog.niveau_d_escalade" fallback="Niveau d'escalade" /></Label>
               <Select 
                 value={formData.escalationLevel || 'team'} 
                 onValueChange={(value: 'team' | 'supervisor' | 'manager' | 'director') => 
@@ -282,10 +283,10 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="team">Équipe</SelectItem>
-                  <SelectItem value="supervisor">Superviseur</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="director">Directeur</SelectItem>
+                  <SelectItem value="team"><T k="auto.actionformdialog.equipe" fallback="Équipe" /></SelectItem>
+                  <SelectItem value="supervisor"><T k="auto.actionformdialog.superviseur" fallback="Superviseur" /></SelectItem>
+                  <SelectItem value="manager"><T k="auto.actionformdialog.manager" fallback="Manager" /></SelectItem>
+                  <SelectItem value="director"><T k="auto.actionformdialog.directeur" fallback="Directeur" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -309,7 +310,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
               </div>
               <div className="border rounded-lg p-3 max-h-32 overflow-y-auto">
                 {availableRecipients.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Aucun destinataire disponible</p>
+                  <p className="text-sm text-muted-foreground"><T k="auto.actionformdialog.aucun_destinataire_disponible" fallback="Aucun destinataire disponible" /></p>
                 ) : (
                   availableRecipients
                     .filter(recipient => {
@@ -366,13 +367,13 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {/* Hierarchy Notification Recipients Info */}
           {formData.actionType === 'hierarchy_notification' && (
             <div className="space-y-2">
-              <Label>Destinataires hiérarchiques</Label>
+              <Label><T k="auto.actionformdialog.destinataires_hierarchiques" fallback="Destinataires hiérarchiques" /></Label>
               <div className="text-xs text-muted-foreground mb-2">
                 Les notifications seront automatiquement envoyées aux personnes du niveau hiérarchique sélectionné
               </div>
               <div className="p-3 bg-primary/10 rounded-lg">
                 <div className="text-sm">
-                  <strong>Niveau sélectionné :</strong> {
+                  <strong><T k="auto.actionformdialog.niveau_selectionne" fallback="Niveau sélectionné :" /></strong> {
                     formData.escalationLevel === 'team' && 'Équipe - Collègues de même niveau'
                   }
                   {formData.escalationLevel === 'supervisor' && 'Superviseur - Responsable direct'}
@@ -386,13 +387,13 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {/* Task Assignment Info */}
           {formData.actionType === 'task_assignment' && formData.assigneeId && (
             <div className="space-y-2">
-              <Label>Personne assignée</Label>
+              <Label><T k="auto.actionformdialog.personne_assignee" fallback="Personne assignée" /></Label>
               <div className="text-xs text-muted-foreground mb-2">
-                La tâche sera assignée à la personne sélectionnée ci-dessus
+                <T k="auto.actionformdialog.la_tache_sera_assignee_a_la_personne_selectionne" fallback="La tâche sera assignée à la personne sélectionnée ci-dessus" />
               </div>
               <div className="p-3 bg-success-soft rounded-lg">
                 <div className="text-sm">
-                  <strong>Assigné à :</strong> {
+                  <strong><T k="auto.actionformdialog.assigne_a" fallback="Assigné à :" /></strong> {
                     availableEmployees.find(emp => emp.id === formData.assigneeId)?.full_name || 'Employé sélectionné'
                   }
                   {availableEmployees.find(emp => emp.id === formData.assigneeId)?.position && 
@@ -437,7 +438,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
-              Annuler
+              <T k="auto.actionformdialog.annuler" fallback="Annuler" />
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? 'Création...' : 'Créer l\'action'}

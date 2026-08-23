@@ -20,6 +20,7 @@ import {
   useDeleteSupplier,
   SupplierMgmtFormData
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 const SuppliersManagement = () => {
   const [isCreating, setIsCreating] = useState(false);
@@ -131,10 +132,10 @@ const SuppliersManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gestion des Fournisseurs</h2>
+        <h2 className="text-2xl font-bold"><T k="auto.suppliersmanagement.gestion_des_fournisseurs" fallback="Gestion des Fournisseurs" /></h2>
         <Button onClick={() => setIsCreating(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau Fournisseur
+          <T k="auto.suppliersmanagement.nouveau_fournisseur" fallback="Nouveau Fournisseur" />
         </Button>
       </div>
 
@@ -157,14 +158,14 @@ const SuppliersManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Personne de contact</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliersmanagement.personne_de_contact" fallback="Personne de contact" /></label>
                   <Input
                     value={formData.contactPerson}
                     onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Email</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliersmanagement.email" fallback="Email" /></label>
                   <Input
                     type="email"
                     value={formData.email}
@@ -172,14 +173,14 @@ const SuppliersManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Téléphone</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliersmanagement.telephone" fallback="Téléphone" /></label>
                   <Input
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Catégorie</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliersmanagement.categorie" fallback="Catégorie" /></label>
                   <Select
                     value={formData.category}
                     onValueChange={(value) => setFormData({ ...formData, category: value })}
@@ -188,16 +189,16 @@ const SuppliersManagement = () => {
                       <SelectValue placeholder="Sélectionner une catégorie" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="construction">Construction</SelectItem>
-                      <SelectItem value="equipment">Équipement</SelectItem>
-                      <SelectItem value="materials">Matériaux</SelectItem>
-                      <SelectItem value="services">Services</SelectItem>
-                      <SelectItem value="transport">Transport</SelectItem>
+                      <SelectItem value="construction"><T k="auto.suppliersmanagement.construction" fallback="Construction" /></SelectItem>
+                      <SelectItem value="equipment"><T k="auto.suppliersmanagement.equipement" fallback="Équipement" /></SelectItem>
+                      <SelectItem value="materials"><T k="auto.suppliersmanagement.materiaux" fallback="Matériaux" /></SelectItem>
+                      <SelectItem value="services"><T k="auto.suppliersmanagement.services" fallback="Services" /></SelectItem>
+                      <SelectItem value="transport"><T k="auto.suppliersmanagement.transport" fallback="Transport" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Note (1-5)</label>
+                  <label className="text-sm font-medium"><T k="auto.suppliersmanagement.note_1_5" fallback="Note (1-5)" /></label>
                   <Select
                     value={(formData.rating ?? 0).toString()}
                     onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
@@ -217,7 +218,7 @@ const SuppliersManagement = () => {
               </div>
               
               <div>
-                <label className="text-sm font-medium">Adresse</label>
+                <label className="text-sm font-medium"><T k="auto.suppliersmanagement.adresse" fallback="Adresse" /></label>
                 <Textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -230,7 +231,7 @@ const SuppliersManagement = () => {
                   {editingId ? 'Mettre à jour' : 'Créer'}
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuler
+                  <T k="auto.suppliersmanagement.annuler" fallback="Annuler" />
                 </Button>
               </div>
             </form>
@@ -272,7 +273,7 @@ const SuppliersManagement = () => {
                 )}
                 {supplier.rating && (
                   <div className="flex items-center space-x-1">
-                    <span>Note:</span>
+                    <span><T k="auto.suppliersmanagement.note" fallback="Note:" /></span>
                     <div className="flex">
                       {renderStars(supplier.rating.overall || 0)}
                     </div>
@@ -307,7 +308,7 @@ const SuppliersManagement = () => {
         <Card>
           <CardContent className="text-center py-8">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Aucun fournisseur trouvé</p>
+            <p className="text-muted-foreground"><T k="auto.suppliersmanagement.aucun_fournisseur_trouve" fallback="Aucun fournisseur trouvé" /></p>
           </CardContent>
         </Card>
       )}

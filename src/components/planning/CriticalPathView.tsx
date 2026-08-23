@@ -22,6 +22,7 @@ import { getMilestoneService } from '@/application/services/MilestoneService';
 import { CriticalPathDTO, MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 interface CriticalPathViewProps {
   projectId: string;
@@ -109,7 +110,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
       <Card>
         <CardContent className="p-8 text-center">
           <Route className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-          <p className="text-muted-foreground">Aucun chemin critique défini</p>
+          <p className="text-muted-foreground"><T k="auto.criticalpathview.aucun_chemin_critique_defini" fallback="Aucun chemin critique défini" /></p>
           <p className="text-xs text-muted-foreground mt-1">
             Le chemin critique est calculé automatiquement à partir des jalons marqués comme critiques
           </p>
@@ -124,7 +125,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Route className="h-5 w-5 text-destructive" />
-            Chemin Critique
+            <T k="auto.criticalpathview.chemin_critique" fallback="Chemin Critique" />
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">
@@ -143,21 +144,21 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
           <div className="bg-destructive/10 rounded-lg p-4 border border-destructive/20">
             <div className="flex items-center gap-2 text-destructive mb-2">
               <Route className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase">Durée critique</span>
+              <span className="text-xs font-medium uppercase"><T k="auto.criticalpathview.duree_critique" fallback="Durée critique" /></span>
             </div>
             <p className="text-2xl font-bold">{criticalPath.totalDurationDays}j</p>
           </div>
           <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/20">
             <div className="flex items-center gap-2 text-warning mb-2">
               <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase">Proche critique</span>
+              <span className="text-xs font-medium uppercase"><T k="auto.criticalpathview.proche_critique" fallback="Proche critique" /></span>
             </div>
             <p className="text-2xl font-bold">{nearCriticalMilestones.length}</p>
           </div>
           <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
             <div className="flex items-center gap-2 text-primary mb-2">
               <Target className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase">Fin estimée</span>
+              <span className="text-xs font-medium uppercase"><T k="auto.criticalpathview.fin_estimee" fallback="Fin estimée" /></span>
             </div>
             <p className="text-lg font-bold">
               {format(parseISO(criticalPath.estimatedEndDate), 'd MMM yyyy', { locale: fr })}
@@ -169,7 +170,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
         <div className="space-y-3">
           <h4 className="font-medium text-sm flex items-center gap-2 text-destructive">
             <Route className="h-4 w-4" />
-            Séquence Critique
+            <T k="auto.criticalpathview.sequence_critique" fallback="Séquence Critique" />
           </h4>
           
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -231,7 +232,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
           <div className="space-y-3 mt-6">
             <h4 className="font-medium text-sm flex items-center gap-2 text-warning">
               <AlertTriangle className="h-4 w-4" />
-              Jalons Proches du Critique
+              <T k="auto.criticalpathview.jalons_proches_du_critique" fallback="Jalons Proches du Critique" />
               <Badge variant="secondary" className="text-xs">
                 Marge {"<"} 5 jours
               </Badge>
@@ -270,7 +271,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
         <div className="flex flex-wrap gap-4 pt-4 border-t text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-destructive" />
-            <span>En retard</span>
+            <span><T k="auto.criticalpathview.en_retard" fallback="En retard" /></span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-warning" />
@@ -278,11 +279,11 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-success" />
-            <span>Terminé</span>
+            <span><T k="auto.criticalpathview.termine" fallback="Terminé" /></span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-primary" />
-            <span>À venir</span>
+            <span><T k="auto.criticalpathview.a_venir" fallback="À venir" /></span>
           </div>
         </div>
       </CardContent>

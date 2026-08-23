@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import MaterialSelector from '@/components/MaterialSelector';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface ProjectMaterial {
   id: string;
   quantity: number;
@@ -194,24 +195,24 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Matériaux du projet
+              <T k="auto.projectmaterials.materiaux_du_projet" fallback="Matériaux du projet" />
               <Badge variant="outline" className="ml-2">
                 <Calculator className="h-3 w-3 mr-1" />
-                Métrés auto
+                <T k="auto.projectmaterials.metres_auto" fallback="Métrés auto" />
               </Badge>
             </CardTitle>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  Ajouter des matériaux
+                  <T k="auto.projectmaterials.ajouter_des_materiaux" fallback="Ajouter des matériaux" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Ajouter des matériaux au projet</DialogTitle>
+                  <DialogTitle><T k="auto.projectmaterials.ajouter_des_materiaux_au_projet" fallback="Ajouter des matériaux au projet" /></DialogTitle>
                   <p className="text-sm text-muted-foreground">
-                    Les métrés seront automatiquement calculés pour chaque matériau ajouté.
+                    <T k="auto.projectmaterials.les_metres_seront_automatiquement_calcules_pour_" fallback="Les métrés seront automatiquement calculés pour chaque matériau ajouté." />
                   </p>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -221,7 +222,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
                   />
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Annuler
+                      <T k="auto.projectmaterials.annuler" fallback="Annuler" />
                     </Button>
                     <Button onClick={handleAddMaterials} disabled={selectedMaterials.length === 0}>
                       Ajouter {selectedMaterials.length} matériau(x)
@@ -236,19 +237,19 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-adrar-600">{materials.length}</p>
-              <p className="text-sm text-muted-foreground">Types de matériaux</p>
+              <p className="text-sm text-muted-foreground"><T k="auto.projectmaterials.types_de_materiaux" fallback="Types de matériaux" /></p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-terracotta-600">
                 {calculateTotalValue().toLocaleString('fr-FR')} MRU
               </p>
-              <p className="text-sm text-muted-foreground">Valeur totale</p>
+              <p className="text-sm text-muted-foreground"><T k="auto.projectmaterials.valeur_totale" fallback="Valeur totale" /></p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-success">
                 {materials.reduce((total, item) => total + item.quantity, 0)}
               </p>
-              <p className="text-sm text-muted-foreground">Quantité totale</p>
+              <p className="text-sm text-muted-foreground"><T k="auto.projectmaterials.quantite_totale" fallback="Quantité totale" /></p>
             </div>
           </div>
         </CardContent>
@@ -259,7 +260,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
         <Card>
           <CardContent className="p-8 text-center">
             <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">Aucun matériau assigné</h3>
+            <h3 className="text-lg font-medium text-foreground mb-2"><T k="auto.projectmaterials.aucun_materiau_assigne" fallback="Aucun matériau assigné" /></h3>
             <p className="text-muted-foreground mb-4">
               Commencez par ajouter des matériaux à ce projet. Les métrés seront calculés automatiquement.
             </p>
@@ -267,7 +268,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  Ajouter des matériaux
+                  <T k="auto.projectmaterials.ajouter_des_materiaux" fallback="Ajouter des matériaux" />
                 </Button>
               </DialogTrigger>
             </Dialog>
@@ -303,13 +304,13 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Prix unitaire:</span>
+                      <span className="text-muted-foreground"><T k="auto.projectmaterials.prix_unitaire" fallback="Prix unitaire:" /></span>
                       <span className="font-medium">
                         {(item.material.price_per_unit || 0).toLocaleString('fr-FR')} MRU/<TranslatedUnit code={item.material.unit} />
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Valeur totale:</span>
+                      <span className="text-muted-foreground"><T k="auto.projectmaterials.valeur_totale" fallback="Valeur totale:" /></span>
                       <span className="font-medium text-terracotta-600">
                         {(item.quantity * (item.material.price_per_unit || 0)).toLocaleString('fr-FR')} MRU
                       </span>

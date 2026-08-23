@@ -17,6 +17,7 @@ import { AlertTriangle, Calendar, CheckCircle2, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface InspectionDetailsStepProps {
   projectId: string;
@@ -147,7 +148,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Date et Heure
+              <T k="auto.inspectiondetailsstep.date_et_heure" fallback="Date et Heure" />
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -165,7 +166,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
               {mode === 'schedule' && (
                 <>
                   <div className="space-y-2">
-                    <Label>Heure</Label>
+                    <Label><T k="auto.inspectiondetailsstep.heure" fallback="Heure" /></Label>
                     <Input
                       type="time"
                       value={details.scheduled_time}
@@ -174,7 +175,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Durée (heures)</Label>
+                    <Label><T k="auto.inspectiondetailsstep.duree_heures" fallback="Durée (heures)" /></Label>
                     <Select 
                       value={details.estimated_duration_hours.toString()} 
                       onValueChange={(v) => setDetails(prev => ({ ...prev, estimated_duration_hours: parseInt(v) }))}
@@ -196,7 +197,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
             {mode === 'request' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Date alternative 1</Label>
+                  <Label className="text-muted-foreground"><T k="auto.inspectiondetailsstep.date_alternative_1" fallback="Date alternative 1" /></Label>
                   <Input
                     type="date"
                     value={alternateDate1}
@@ -205,7 +206,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground">Date alternative 2</Label>
+                  <Label className="text-muted-foreground"><T k="auto.inspectiondetailsstep.date_alternative_2" fallback="Date alternative 2" /></Label>
                   <Input
                     type="date"
                     value={alternateDate2}
@@ -224,7 +225,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Assignation
+                <T k="auto.inspectiondetailsstep.assignation" fallback="Assignation" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -241,10 +242,10 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
                           <div className="flex items-center gap-2">
                             <span>{inspector.name}</span>
                             {inspector.isEngineeringConsultant && (
-                              <Badge variant="outline" className="text-xs">Ing. Conseil</Badge>
+                              <Badge variant="outline" className="text-xs"><T k="auto.inspectiondetailsstep.ing_conseil" fallback="Ing. Conseil" /></Badge>
                             )}
                             {inspector.isTechnicalManager && (
-                              <Badge variant="outline" className="text-xs">Resp. Tech.</Badge>
+                              <Badge variant="outline" className="text-xs"><T k="auto.inspectiondetailsstep.resp_tech" fallback="Resp. Tech." /></Badge>
                             )}
                             {inspector.isDefault && (
                               <CheckCircle2 className="h-3 w-3 text-success" />
@@ -263,7 +264,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Inspecteur suppléant</Label>
+                  <Label><T k="auto.inspectiondetailsstep.inspecteur_suppleant" fallback="Inspecteur suppléant" /></Label>
                   <Select 
                     value={details.backup_inspector_id || 'none'} 
                     onValueChange={(v) => setDetails(prev => ({ ...prev, backup_inspector_id: v === 'none' ? undefined : v }))}
@@ -272,7 +273,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
                       <SelectValue placeholder="Optionnel..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Aucun</SelectItem>
+                      <SelectItem value="none"><T k="auto.inspectiondetailsstep.aucun" fallback="Aucun" /></SelectItem>
                       {inspectors
                         .filter(i => i.id !== details.inspector_id)
                         .map(inspector => (
@@ -291,11 +292,11 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
         {/* Priority & Requirements */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Priorité et Exigences</CardTitle>
+            <CardTitle className="text-sm"><T k="auto.inspectiondetailsstep.priorite_et_exigences" fallback="Priorité et Exigences" /></CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Priorité</Label>
+              <Label><T k="auto.inspectiondetailsstep.priorite" fallback="Priorité" /></Label>
               <Select 
                 value={details.priority} 
                 onValueChange={(v) => setDetails(prev => ({ ...prev, priority: v as 'low' | 'medium' | 'high' }))}
@@ -312,7 +313,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label>Exigences particulières</Label>
+              <Label><T k="auto.inspectiondetailsstep.exigences_particulieres" fallback="Exigences particulières" /></Label>
               <Textarea
                 placeholder="Décrivez les points particuliers à vérifier, les zones à inspecter..."
                 value={details.requirements || ''}
@@ -326,7 +327,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
 
       <div className="flex justify-end">
         <Button onClick={handleContinue} disabled={!isValid}>
-          Continuer
+          <T k="auto.inspectiondetailsstep.continuer" fallback="Continuer" />
         </Button>
       </div>
     </div>

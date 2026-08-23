@@ -18,6 +18,7 @@ import { btpClient } from '@/integrations/supabase/schema-clients';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Project {
   id: string;
   title: string;
@@ -300,13 +301,13 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filtres de Projets
+            <T k="auto.advancedinspectionscheduler.filtres_de_projets" fallback="Filtres de Projets" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Rechercher</Label>
+              <Label><T k="auto.advancedinspectionscheduler.rechercher" fallback="Rechercher" /></Label>
               <Input
                 placeholder="Nom du projet ou référence..."
                 value={projectFilter}
@@ -314,16 +315,16 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               />
             </div>
             <div>
-              <Label>Statut</Label>
+              <Label><T k="auto.advancedinspectionscheduler.statut" fallback="Statut" /></Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border z-[100]">
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="en cours">En cours</SelectItem>
-                  <SelectItem value="en attente">En attente</SelectItem>
-                  <SelectItem value="en inspection">En inspection</SelectItem>
+                  <SelectItem value="all"><T k="auto.advancedinspectionscheduler.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
+                  <SelectItem value="en cours"><T k="auto.advancedinspectionscheduler.en_cours" fallback="En cours" /></SelectItem>
+                  <SelectItem value="en attente"><T k="auto.advancedinspectionscheduler.en_attente" fallback="En attente" /></SelectItem>
+                  <SelectItem value="en inspection"><T k="auto.advancedinspectionscheduler.en_inspection" fallback="En inspection" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -334,7 +335,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       {/* Project Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Sélection du Projet</CardTitle>
+          <CardTitle><T k="auto.advancedinspectionscheduler.selection_du_projet" fallback="Sélection du Projet" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -383,14 +384,14 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Configuration de l'Inspection
+              <T k="auto.advancedinspectionscheduler.configuration_de_l_inspection" fallback="Configuration de l'Inspection" />
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                Projet sélectionné: <strong>{selectedProject.title}</strong>
+                <T k="auto.advancedinspectionscheduler.projet_selectionne" fallback="Projet sélectionné:" /> <strong>{selectedProject.title}</strong>
               </AlertDescription>
             </Alert>
 
@@ -432,7 +433,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                     <SelectContent className="bg-background border z-[100] max-h-60">
                       {filteredInspectors.length === 0 ? (
                         <div className="p-4 text-center text-muted-foreground">
-                          Aucun inspecteur trouvé
+                          <T k="auto.advancedinspectionscheduler.aucun_inspecteur_trouve" fallback="Aucun inspecteur trouvé" />
                         </div>
                       ) : (
                         filteredInspectors.map((inspector) => {
@@ -449,22 +450,22 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                                   <span className="font-medium">{inspector.full_name}</span>
                                   {isEngConsultant && (
                                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                                      Consultant
+                                      <T k="auto.advancedinspectionscheduler.consultant" fallback="Consultant" />
                                     </span>
                                   )}
                                   {isInspector && (
                                     <span className="text-xs bg-success-soft text-success px-2 py-1 rounded">
-                                      Inspecteur
+                                      <T k="auto.advancedinspectionscheduler.inspecteur" fallback="Inspecteur" />
                                     </span>
                                   )}
                                   {isSupplier && (
                                     <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                                      Fournisseur
+                                      <T k="auto.advancedinspectionscheduler.fournisseur" fallback="Fournisseur" />
                                     </span>
                                   )}
                                   {isResponsable && !isSupplier && (
                                     <span className="text-xs bg-warning/10 text-warning px-2 py-1 rounded">
-                                      Responsable
+                                      <T k="auto.advancedinspectionscheduler.responsable" fallback="Responsable" />
                                     </span>
                                   )}
                                 </div>
@@ -503,7 +504,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               </div>
 
               <div>
-                <Label>Progression Cible (%)</Label>
+                <Label><T k="auto.advancedinspectionscheduler.progression_cible" fallback="Progression Cible (%)" /></Label>
                 <Input
                   type="number"
                   min="0"
@@ -554,7 +555,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
             )}
 
             <div>
-              <Label>Exigences Spéciales</Label>
+              <Label><T k="auto.advancedinspectionscheduler.exigences_speciales" fallback="Exigences Spéciales" /></Label>
               <Textarea
                 placeholder="Décrivez les exigences ou critères spéciaux pour cette inspection..."
                 value={requirements}
@@ -573,7 +574,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               />
               <Label htmlFor="notifyContractor" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
-                Notifier l'entrepreneur principal
+                <T k="auto.advancedinspectionscheduler.notifier_l_entrepreneur_principal" fallback="Notifier l'entrepreneur principal" />
               </Label>
             </div>
 
@@ -583,7 +584,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               size="lg"
             >
               <Send className="h-4 w-4 mr-2" />
-              Programmer l'Inspection
+              <T k="auto.advancedinspectionscheduler.programmer_l_inspection" fallback="Programmer l'Inspection" />
             </Button>
           </CardContent>
         </Card>

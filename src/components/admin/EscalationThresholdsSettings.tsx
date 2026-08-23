@@ -15,6 +15,7 @@ import {
   ESCALATION_UNIT_LABELS,
   type EscalationUnit,
 } from '@/config/referentials/kpi/escalation-thresholds.referential';
+import { T } from '@/components/i18n/T';
 
 type EscalationThreshold = EscalationThresholdRow;
 
@@ -115,7 +116,7 @@ const EscalationThresholdsSettings: React.FC = () => {
         <CardContent className="pt-6">
           <div className="flex items-center justify-center h-32">
             <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-            <span>Chargement des seuils d'escalade...</span>
+            <span><T k="auto.escalationthresholdssettings.chargement_des_seuils_d_escalade" fallback="Chargement des seuils d'escalade..." /></span>
           </div>
         </CardContent>
       </Card>
@@ -128,7 +129,7 @@ const EscalationThresholdsSettings: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Configuration des Seuils d'Escalade
+            <T k="auto.escalationthresholdssettings.configuration_des_seuils_d_escalade" fallback="Configuration des Seuils d'Escalade" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -139,7 +140,7 @@ const EscalationThresholdsSettings: React.FC = () => {
           
           <div className="flex items-center justify-between mb-6">
             <div className="text-sm">
-              <span className="font-medium">Total des seuils configurés:</span>
+              <span className="font-medium"><T k="auto.escalationthresholdssettings.total_des_seuils_configures" fallback="Total des seuils configurés:" /></span>
               <Badge variant="outline" className="ml-2">{thresholds.length}</Badge>
             </div>
             <Button onClick={saveThresholds} disabled={saving} className="gap-2">
@@ -178,13 +179,13 @@ const EscalationThresholdsSettings: React.FC = () => {
 
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nom du Seuil</TableHead>
-                          <TableHead>Valeur</TableHead>
-                          <TableHead>Unité</TableHead>
-                          <TableHead>Sévérité</TableHead>
-                          <TableHead>Niveau</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Actif</TableHead>
+                          <TableHead><T k="auto.escalationthresholdssettings.nom_du_seuil" fallback="Nom du Seuil" /></TableHead>
+                          <TableHead><T k="auto.escalationthresholdssettings.valeur" fallback="Valeur" /></TableHead>
+                          <TableHead><T k="auto.escalationthresholdssettings.unite" fallback="Unité" /></TableHead>
+                          <TableHead><T k="auto.escalationthresholdssettings.severite" fallback="Sévérité" /></TableHead>
+                          <TableHead><T k="auto.escalationthresholdssettings.niveau" fallback="Niveau" /></TableHead>
+                          <TableHead><T k="auto.escalationthresholdssettings.description" fallback="Description" /></TableHead>
+                          <TableHead><T k="auto.escalationthresholdssettings.actif" fallback="Actif" /></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -261,7 +262,7 @@ const EscalationThresholdsSettings: React.FC = () => {
                     {getThresholdsByType(type.key).length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
                         <type.icon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>Aucun seuil configuré pour cette catégorie</p>
+                        <p><T k="auto.escalationthresholdssettings.aucun_seuil_configure_pour_cette_categorie" fallback="Aucun seuil configuré pour cette catégorie" /></p>
                       </div>
                     )}
                   </CardContent>
@@ -275,7 +276,7 @@ const EscalationThresholdsSettings: React.FC = () => {
       {/* Summary Section — catégories mises en avant par le référentiel */}
       <Card>
         <CardHeader>
-          <CardTitle>Résumé des Seuils d'Escalade</CardTitle>
+          <CardTitle><T k="auto.escalationthresholdssettings.resume_des_seuils_d_escalade" fallback="Résumé des Seuils d'Escalade" /></CardTitle>
           <p className="text-sm text-muted-foreground">
             {thresholds.length} seuils référencés · {thresholds.filter(t => t.is_active).length} actifs ·{' '}
             {thresholds.filter(t => t.severity_level === 'critical').length} critiques
@@ -295,9 +296,9 @@ const EscalationThresholdsSettings: React.FC = () => {
                     {type.label}
                   </h4>
                   <div className="space-y-1 text-sm">
-                    <div>Total: <Badge variant="outline">{typeThresholds.length}</Badge></div>
-                    <div>Actifs: <Badge variant="secondary">{activeThresholds.length}</Badge></div>
-                    <div>Critiques: <Badge variant="destructive">{criticalThresholds.length}</Badge></div>
+                    <div><T k="auto.escalationthresholdssettings.total" fallback="Total:" /> <Badge variant="outline">{typeThresholds.length}</Badge></div>
+                    <div><T k="auto.escalationthresholdssettings.actifs" fallback="Actifs:" /> <Badge variant="secondary">{activeThresholds.length}</Badge></div>
+                    <div><T k="auto.escalationthresholdssettings.critiques" fallback="Critiques:" /> <Badge variant="destructive">{criticalThresholds.length}</Badge></div>
                   </div>
                 </div>
               );

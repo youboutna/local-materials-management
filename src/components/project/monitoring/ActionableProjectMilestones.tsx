@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { T } from '@/components/i18n/T';
 
 interface ActionableProjectMilestonesProps {
   projectId: string;
@@ -326,7 +327,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                   <Target className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Points de Contrôle</CardTitle>
+                  <CardTitle className="text-lg"><T k="auto.actionableprojectmilestones.points_de_controle" fallback="Points de Contrôle" /></CardTitle>
                   <p className="text-sm text-muted-foreground">
                     {completedCount}/{milestones.length} terminés
                   </p>
@@ -367,7 +368,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
           {actionableMilestones.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <CheckCircle className="h-12 w-12 mx-auto mb-3 text-success/40" />
-              <p>Tous les jalons sont terminés !</p>
+              <p><T k="auto.actionableprojectmilestones.tous_les_jalons_sont_termines" fallback="Tous les jalons sont terminés !" /></p>
             </div>
           ) : (
             <ScrollArea className="max-h-[400px]">
@@ -472,7 +473,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
               className="w-full mt-3"
               onClick={() => onMilestoneClick?.('', undefined)}
             >
-              Voir tous les jalons
+              <T k="auto.actionableprojectmilestones.voir_tous_les_jalons" fallback="Voir tous les jalons" />
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           )}
@@ -487,19 +488,19 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
               {actionDialog.action === 'inspection' && (
                 <>
                   <ClipboardCheck className="h-5 w-5 text-primary" />
-                  Déclencher une Inspection
+                  <T k="auto.actionableprojectmilestones.declencher_une_inspection" fallback="Déclencher une Inspection" />
                 </>
               )}
               {actionDialog.action === 'payment' && (
                 <>
                   <DollarSign className="h-5 w-5 text-success" />
-                  Déclencher un Paiement
+                  <T k="auto.actionableprojectmilestones.declencher_un_paiement" fallback="Déclencher un Paiement" />
                 </>
               )}
               {actionDialog.action === 'complete' && (
                 <>
                   <CheckCircle className="h-5 w-5 text-success" />
-                  Terminer le Jalon
+                  <T k="auto.actionableprojectmilestones.terminer_le_jalon" fallback="Terminer le Jalon" />
                 </>
               )}
             </DialogTitle>
@@ -522,8 +523,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 >
                   <CalendarPlus className="h-5 w-5 text-primary" />
                   <div className="text-left">
-                    <p className="font-medium">Programmer une inspection</p>
-                    <p className="text-xs text-muted-foreground">Créer une notification de programmation</p>
+                    <p className="font-medium"><T k="auto.actionableprojectmilestones.programmer_une_inspection" fallback="Programmer une inspection" /></p>
+                    <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.creer_une_notification_de_programmation" fallback="Créer une notification de programmation" /></p>
                   </div>
                 </Button>
                 
@@ -534,8 +535,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 >
                   <Play className="h-5 w-5 text-success" />
                   <div className="text-left">
-                    <p className="font-medium">Exécuter une inspection</p>
-                    <p className="text-xs text-muted-foreground">Lancer une inspection déjà programmée</p>
+                    <p className="font-medium"><T k="auto.actionableprojectmilestones.executer_une_inspection" fallback="Exécuter une inspection" /></p>
+                    <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.lancer_une_inspection_deja_programmee" fallback="Lancer une inspection déjà programmée" /></p>
                   </div>
                 </Button>
                 
@@ -546,7 +547,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 >
                   <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   <div className="text-left">
-                    <p className="font-medium">Ouvrir le service Inspections</p>
+                    <p className="font-medium"><T k="auto.actionableprojectmilestones.ouvrir_le_service_inspections" fallback="Ouvrir le service Inspections" /></p>
                     <p className="text-xs text-muted-foreground">Naviguer vers /inspection-monitoring</p>
                   </div>
                 </Button>
@@ -563,8 +564,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 >
                   <CalendarPlus className="h-5 w-5 text-success" />
                   <div className="text-left">
-                    <p className="font-medium">Programmer un paiement</p>
-                    <p className="text-xs text-muted-foreground">Créer une notification de programmation</p>
+                    <p className="font-medium"><T k="auto.actionableprojectmilestones.programmer_un_paiement" fallback="Programmer un paiement" /></p>
+                    <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.creer_une_notification_de_programmation" fallback="Créer une notification de programmation" /></p>
                   </div>
                 </Button>
                 
@@ -575,8 +576,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 >
                   <Play className="h-5 w-5 text-primary" />
                   <div className="text-left">
-                    <p className="font-medium">Traiter un paiement</p>
-                    <p className="text-xs text-muted-foreground">Exécuter un paiement programmé</p>
+                    <p className="font-medium"><T k="auto.actionableprojectmilestones.traiter_un_paiement" fallback="Traiter un paiement" /></p>
+                    <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.executer_un_paiement_programme" fallback="Exécuter un paiement programmé" /></p>
                   </div>
                 </Button>
                 
@@ -587,7 +588,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 >
                   <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   <div className="text-left">
-                    <p className="font-medium">Ouvrir le contrôle Paiements</p>
+                    <p className="font-medium"><T k="auto.actionableprojectmilestones.ouvrir_le_controle_paiements" fallback="Ouvrir le contrôle Paiements" /></p>
                     <p className="text-xs text-muted-foreground">Naviguer vers /payment-control</p>
                   </div>
                 </Button>
@@ -608,14 +609,14 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                     className="flex-1"
                     onClick={() => setActionDialog({ open: false, milestone: null, action: null })}
                   >
-                    Annuler
+                    <T k="auto.actionableprojectmilestones.annuler" fallback="Annuler" />
                   </Button>
                   <Button
                     className="flex-1 bg-success hover:bg-success/90"
                     onClick={handleMarkComplete}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Confirmer
+                    <T k="auto.actionableprojectmilestones.confirmer" fallback="Confirmer" />
                   </Button>
                 </div>
               </div>
@@ -628,7 +629,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 variant="ghost" 
                 onClick={() => setActionDialog({ open: false, milestone: null, action: null })}
               >
-                Fermer
+                <T k="auto.actionableprojectmilestones.fermer" fallback="Fermer" />
               </Button>
             </DialogFooter>
           )}

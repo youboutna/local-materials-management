@@ -49,6 +49,7 @@ import { useDocumentStorage } from "@/hooks/useDocumentStorage";
 import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/useInvoicesHex";
 import { parsePdf } from "@/utils/btpCalculations";
 import type { BtpTables } from "@/integrations/supabase/btp-types";
+import { T } from '@/components/i18n/T';
 
 type SupplierNotificationRow = BtpTables<"supplier_notifications">;
 import { useQuery } from "@tanstack/react-query";
@@ -481,9 +482,9 @@ const UnifiedSupplierPortal = () => {
             <div className="flex items-center gap-3">
               <CheckCircle className="h-6 w-6 text-success" />
               <div>
-                <h1 className="text-xl font-semibold">Accès sécurisé fournisseur</h1>
+                <h1 className="text-xl font-semibold"><T k="auto.unifiedsupplierportal.acces_securise_fournisseur" fallback="Accès sécurisé fournisseur" /></h1>
                 <p className="text-sm text-muted-foreground">
-                  Consultez l'appel d'offres et les documents partagés.
+                  <T k="auto.unifiedsupplierportal.consultez_l_appel_d_offres_et_les_documents_part" fallback="Consultez l'appel d'offres et les documents partagés." />
                 </p>
               </div>
             </div>
@@ -495,14 +496,14 @@ const UnifiedSupplierPortal = () => {
               }}
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Quitter
+              <T k="auto.unifiedsupplierportal.quitter" fallback="Quitter" />
             </Button>
           </div>
 
           <Tabs value={guestTab} onValueChange={setGuestTab} className="space-y-4">
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-              <TabsTrigger value="tenders">Appel d'offres</TabsTrigger>
-              <TabsTrigger value="documents">Documents partagés</TabsTrigger>
+              <TabsTrigger value="tenders"><T k="auto.unifiedsupplierportal.appel_d_offres" fallback="Appel d'offres" /></TabsTrigger>
+              <TabsTrigger value="documents"><T k="auto.unifiedsupplierportal.documents_partages" fallback="Documents partagés" /></TabsTrigger>
             </TabsList>
             <TabsContent value="tenders">
               <EnhancedSupplierTenderPortal />
@@ -536,7 +537,7 @@ const UnifiedSupplierPortal = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email"><T k="auto.unifiedsupplierportal.email" fallback="Email" /></Label>
               <Input
                 id="email"
                 type="email"
@@ -546,7 +547,7 @@ const UnifiedSupplierPortal = () => {
               />
             </div>
             <div>
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password"><T k="auto.unifiedsupplierportal.mot_de_passe" fallback="Mot de passe" /></Label>
               <Input
                 id="password"
                 type="password"
@@ -589,7 +590,7 @@ const UnifiedSupplierPortal = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-primary mb-2">
-                Portail Fournisseur
+                <T k="auto.unifiedsupplierportal.portail_fournisseur" fallback="Portail Fournisseur" />
               </h1>
               <p className="text-muted-foreground">
                 Bienvenue {supplierProfile?.name || user.email}
@@ -597,7 +598,7 @@ const UnifiedSupplierPortal = () => {
             </div>
             <Button onClick={handleLogout} variant="outline" className="gap-2">
               <LogOut className="h-4 w-4" />
-              Déconnexion
+              <T k="auto.unifiedsupplierportal.deconnexion" fallback="Déconnexion" />
             </Button>
           </div>
 
@@ -606,7 +607,7 @@ const UnifiedSupplierPortal = () => {
             <Card className="border-l-4 border-l-green-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Paiements Total
+                  <T k="auto.unifiedsupplierportal.paiements_total" fallback="Paiements Total" />
                 </CardTitle>
                 <DollarSign className="h-4 w-4 text-success" />
               </CardHeader>
@@ -623,7 +624,7 @@ const UnifiedSupplierPortal = () => {
             <Card className="border-l-4 border-l-orange-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Paiements en Attente
+                  <T k="auto.unifiedsupplierportal.paiements_en_attente" fallback="Paiements en Attente" />
                 </CardTitle>
                 <TrendingUp className="h-4 w-4 text-warning" />
               </CardHeader>
@@ -631,14 +632,14 @@ const UnifiedSupplierPortal = () => {
                 <div className="text-2xl font-bold text-warning">
                   {pendingPayments}
                 </div>
-                <p className="text-xs text-muted-foreground">En traitement</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.unifiedsupplierportal.en_traitement" fallback="En traitement" /></p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-blue-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Notifications
+                  <T k="auto.unifiedsupplierportal.notifications" fallback="Notifications" />
                 </CardTitle>
                 <Bell className="h-4 w-4 text-primary" />
               </CardHeader>
@@ -646,20 +647,20 @@ const UnifiedSupplierPortal = () => {
                 <div className="text-2xl font-bold text-primary">
                   {unreadNotifications}
                 </div>
-                <p className="text-xs text-muted-foreground">Non lues</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.unifiedsupplierportal.non_lues" fallback="Non lues" /></p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-purple-500">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Documents</CardTitle>
+                <CardTitle className="text-sm font-medium"><T k="auto.unifiedsupplierportal.documents" fallback="Documents" /></CardTitle>
                 <FileText className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">
                   {documents.length}
                 </div>
-                <p className="text-xs text-muted-foreground">Disponibles</p>
+                <p className="text-xs text-muted-foreground"><T k="auto.unifiedsupplierportal.disponibles" fallback="Disponibles" /></p>
               </CardContent>
             </Card>
           </div>
@@ -667,11 +668,11 @@ const UnifiedSupplierPortal = () => {
           {/* Main Content */}
           <Tabs defaultValue="documents" className="space-y-6" value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-9 overflow-x-auto">
-              <TabsTrigger value="tenders">Appels d'Offres</TabsTrigger>
-              <TabsTrigger value="devis">Devis</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="upload">Télécharger</TabsTrigger>
-              <TabsTrigger value="payments">Paiements</TabsTrigger>
+              <TabsTrigger value="tenders"><T k="auto.unifiedsupplierportal.appels_d_offres" fallback="Appels d'Offres" /></TabsTrigger>
+              <TabsTrigger value="devis"><T k="auto.unifiedsupplierportal.devis" fallback="Devis" /></TabsTrigger>
+              <TabsTrigger value="documents"><T k="auto.unifiedsupplierportal.documents" fallback="Documents" /></TabsTrigger>
+              <TabsTrigger value="upload"><T k="auto.unifiedsupplierportal.telecharger" fallback="Télécharger" /></TabsTrigger>
+              <TabsTrigger value="payments"><T k="auto.unifiedsupplierportal.paiements" fallback="Paiements" /></TabsTrigger>
               <TabsTrigger value="notifications">
                 Notifications
                 {paymentInitiationsCount > 0 && (
@@ -680,9 +681,9 @@ const UnifiedSupplierPortal = () => {
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="tasks">Tâches</TabsTrigger>
-              <TabsTrigger value="inspections">Inspections</TabsTrigger>
-              <TabsTrigger value="invoices">Factures</TabsTrigger>
+              <TabsTrigger value="tasks"><T k="auto.unifiedsupplierportal.taches" fallback="Tâches" /></TabsTrigger>
+              <TabsTrigger value="inspections"><T k="auto.unifiedsupplierportal.inspections" fallback="Inspections" /></TabsTrigger>
+              <TabsTrigger value="invoices"><T k="auto.unifiedsupplierportal.factures" fallback="Factures" /></TabsTrigger>
             </TabsList>
 
             {/* ✅ ONGLET DOCUMENTS – Utilise le GED centralisé */}
@@ -693,9 +694,9 @@ const UnifiedSupplierPortal = () => {
                   heading={
                     <div className="flex items-center justify-between px-4 py-2 border-b">
                       <div>
-                        <h2 className="text-sm font-semibold">GED Fournisseur</h2>
+                        <h2 className="text-sm font-semibold"><T k="auto.unifiedsupplierportal.ged_fournisseur" fallback="GED Fournisseur" /></h2>
                         <p className="text-xs text-muted-foreground">
-                          Tous les documents liés à votre compte fournisseur
+                          <T k="auto.unifiedsupplierportal.tous_les_documents_lies_a_votre_compte_fournisse" fallback="Tous les documents liés à votre compte fournisseur" />
                         </p>
                       </div>
                     </div>
@@ -704,7 +705,7 @@ const UnifiedSupplierPortal = () => {
               ) : (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
-                    Chargement du hub documentaire...
+                    <T k="auto.unifiedsupplierportal.chargement_du_hub_documentaire" fallback="Chargement du hub documentaire..." />
                   </CardContent>
                 </Card>
               )}
@@ -730,7 +731,7 @@ const UnifiedSupplierPortal = () => {
                   <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Sélectionnez un appel d'offres dans l'onglet « Appels d'Offres » puis cliquez « Créer un devis » pour démarrer le chiffrage.</p></CardContent></Card>
                 )
               ) : (
-                <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
+                <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground"><T k="auto.unifiedsupplierportal.profil_fournisseur_requis" fallback="Profil fournisseur requis." /></p></CardContent></Card>
               )}
             </TabsContent>
 
@@ -740,7 +741,7 @@ const UnifiedSupplierPortal = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Upload className="h-5 w-5" />
-                    Télécharger un Document
+                    <T k="auto.unifiedsupplierportal.telecharger_un_document" fallback="Télécharger un Document" />
                   </CardTitle>
                   <CardDescription>
                     Les documents seront également visibles dans l'onglet "Documents" via le hub GED.
@@ -748,7 +749,7 @@ const UnifiedSupplierPortal = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="upload-title">Titre du document</Label>
+                    <Label htmlFor="upload-title"><T k="auto.unifiedsupplierportal.titre_du_document" fallback="Titre du document" /></Label>
                     <Input
                       id="upload-title"
                       value={uploadTitle}
@@ -758,7 +759,7 @@ const UnifiedSupplierPortal = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="document-type">Type de document</Label>
+                    <Label htmlFor="document-type"><T k="auto.unifiedsupplierportal.type_de_document" fallback="Type de document" /></Label>
                     <Select
                       value={documentType}
                       onValueChange={setDocumentType}
@@ -767,29 +768,29 @@ const UnifiedSupplierPortal = () => {
                         <SelectValue placeholder="Sélectionner le type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="inspection">Inspection</SelectItem>
-                        <SelectItem value="plan">Plan</SelectItem>
-                        <SelectItem value="photo">Photo</SelectItem>
-                        <SelectItem value="invoice">Facture</SelectItem>
+                        <SelectItem value="inspection"><T k="auto.unifiedsupplierportal.inspection" fallback="Inspection" /></SelectItem>
+                        <SelectItem value="plan"><T k="auto.unifiedsupplierportal.plan" fallback="Plan" /></SelectItem>
+                        <SelectItem value="photo"><T k="auto.unifiedsupplierportal.photo" fallback="Photo" /></SelectItem>
+                        <SelectItem value="invoice"><T k="auto.unifiedsupplierportal.facture" fallback="Facture" /></SelectItem>
                         <SelectItem value="purchase_order">
-                          Bon de commande
+                          <T k="auto.unifiedsupplierportal.bon_de_commande" fallback="Bon de commande" />
                         </SelectItem>
-                        <SelectItem value="inquiry">Demande</SelectItem>
-                        <SelectItem value="contract">Contrat</SelectItem>
-                        <SelectItem value="report">Rapport</SelectItem>
-                        <SelectItem value="certificate">Certificat</SelectItem>
+                        <SelectItem value="inquiry"><T k="auto.unifiedsupplierportal.demande" fallback="Demande" /></SelectItem>
+                        <SelectItem value="contract"><T k="auto.unifiedsupplierportal.contrat" fallback="Contrat" /></SelectItem>
+                        <SelectItem value="report"><T k="auto.unifiedsupplierportal.rapport" fallback="Rapport" /></SelectItem>
+                        <SelectItem value="certificate"><T k="auto.unifiedsupplierportal.certificat" fallback="Certificat" /></SelectItem>
                         <SelectItem value="specification">
-                          Spécification
+                          <T k="auto.unifiedsupplierportal.specification" fallback="Spécification" />
                         </SelectItem>
                         <SelectItem value="supplier_info">
-                          Informations fournisseur
+                          <T k="auto.unifiedsupplierportal.informations_fournisseur" fallback="Informations fournisseur" />
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label htmlFor="upload-description">Description</Label>
+                    <Label htmlFor="upload-description"><T k="auto.unifiedsupplierportal.description" fallback="Description" /></Label>
                     <Textarea
                       id="upload-description"
                       value={uploadDescription}
@@ -799,7 +800,7 @@ const UnifiedSupplierPortal = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="upload-file">Fichier</Label>
+                    <Label htmlFor="upload-file"><T k="auto.unifiedsupplierportal.fichier" fallback="Fichier" /></Label>
                     <Input
                       id="upload-file"
                       type="file"
@@ -848,10 +849,10 @@ const UnifiedSupplierPortal = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5" />
-                      Mes demandes de paiement
+                      <T k="auto.unifiedsupplierportal.mes_demandes_de_paiement" fallback="Mes demandes de paiement" />
                     </CardTitle>
                     <CardDescription>
-                      Historique et suivi de vos demandes de paiement
+                      <T k="auto.unifiedsupplierportal.historique_et_suivi_de_vos_demandes_de_paiement" fallback="Historique et suivi de vos demandes de paiement" />
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -874,7 +875,7 @@ const UnifiedSupplierPortal = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bell className="h-5 w-5" />
-                    Notifications
+                    <T k="auto.unifiedsupplierportal.notifications" fallback="Notifications" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -897,10 +898,10 @@ const UnifiedSupplierPortal = () => {
                                 <div className="flex items-center gap-2">
                                   <DollarSign className="h-5 w-5 text-success" />
                                   <h3 className="font-semibold text-success">
-                                    Demande de Paiement Initiée
+                                    <T k="auto.unifiedsupplierportal.demande_de_paiement_initiee" fallback="Demande de Paiement Initiée" />
                                   </h3>
                                   {!notification.used_at && (
-                                    <Badge className="bg-success">Action requise</Badge>
+                                    <Badge className="bg-success"><T k="auto.unifiedsupplierportal.action_requise" fallback="Action requise" /></Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-2">
@@ -929,7 +930,7 @@ const UnifiedSupplierPortal = () => {
                                   className="bg-success hover:bg-success"
                                 >
                                   <Send className="h-4 w-4 mr-2" />
-                                  Compléter la demande
+                                  <T k="auto.unifiedsupplierportal.completer_la_demande" fallback="Compléter la demande" />
                                 </Button>
                               )}
                             </div>
@@ -973,7 +974,7 @@ const UnifiedSupplierPortal = () => {
                                 variant="secondary"
                                 className="bg-primary/10 text-primary"
                               >
-                                Nouveau
+                                <T k="auto.unifiedsupplierportal.nouveau" fallback="Nouveau" />
                               </Badge>
                             )}
                           </div>
@@ -982,7 +983,7 @@ const UnifiedSupplierPortal = () => {
 
                     {notifications.length === 0 && (
                       <p className="text-muted-foreground text-center py-8">
-                        Aucune notification
+                        <T k="auto.unifiedsupplierportal.aucune_notification" fallback="Aucune notification" />
                       </p>
                     )}
                   </div>
@@ -996,7 +997,7 @@ const UnifiedSupplierPortal = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ClipboardCheck className="h-5 w-5" />
-                    Tâches Assignées
+                    <T k="auto.unifiedsupplierportal.taches_assignees" fallback="Tâches Assignées" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1046,14 +1047,14 @@ const UnifiedSupplierPortal = () => {
                                   }
                                 >
                                   <MessageCircle className="h-4 w-4 mr-1" />
-                                  Commenter
+                                  <T k="auto.unifiedsupplierportal.commenter" fallback="Commenter" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   onClick={() => handleTaskCompletion(task.id)}
                                 >
                                   <CheckCircle className="h-4 w-4 mr-1" />
-                                  Marquer terminé
+                                  <T k="auto.unifiedsupplierportal.marquer_termine" fallback="Marquer terminé" />
                                 </Button>
                               </div>
 
@@ -1073,7 +1074,7 @@ const UnifiedSupplierPortal = () => {
                                     disabled={!taskComment.trim()}
                                   >
                                     <Send className="h-4 w-4 mr-1" />
-                                    Envoyer
+                                    <T k="auto.unifiedsupplierportal.envoyer" fallback="Envoyer" />
                                   </Button>
                                 </div>
                               )}
@@ -1082,7 +1083,7 @@ const UnifiedSupplierPortal = () => {
                         ))
                     ) : (
                       <p className="text-muted-foreground text-center py-8">
-                        Aucune tâche assignée
+                        <T k="auto.unifiedsupplierportal.aucune_tache_assignee" fallback="Aucune tâche assignée" />
                       </p>
                     )}
                   </div>
@@ -1110,7 +1111,7 @@ const UnifiedSupplierPortal = () => {
                   recipientEmail={supplierProfile.email ?? undefined}
                 />
               ) : (
-                <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground">Profil fournisseur requis.</p></CardContent></Card>
+                <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground"><T k="auto.unifiedsupplierportal.profil_fournisseur_requis" fallback="Profil fournisseur requis." /></p></CardContent></Card>
               )}
             </TabsContent>
           </Tabs>

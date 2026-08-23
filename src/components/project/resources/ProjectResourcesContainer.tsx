@@ -21,6 +21,7 @@ import type {
   ResourceFamilyBucketDTO,
   ResourceLineDTO,
 } from '@/dtos/entities/ProjectResourceContainerDTO';
+import { T } from '@/components/i18n/T';
 
 interface ProjectResourcesContainerProps {
   projectId: string;
@@ -44,21 +45,21 @@ const originLabel: Record<ResourceLineDTO['origin'], string> = {
 const BucketSummary: React.FC<{ bucket: ResourceFamilyBucketDTO }> = ({ bucket }) => (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
     <div className="p-3 border rounded-lg">
-      <p className="text-xs text-muted-foreground">Planifié</p>
+      <p className="text-xs text-muted-foreground"><T k="auto.projectresourcescontainer.planifie" fallback="Planifié" /></p>
       <p className="font-semibold">{money(bucket.plannedCost)}</p>
     </div>
     <div className="p-3 border rounded-lg">
-      <p className="text-xs text-muted-foreground">Consommé</p>
+      <p className="text-xs text-muted-foreground"><T k="auto.projectresourcescontainer.consomme" fallback="Consommé" /></p>
       <p className="font-semibold">{money(bucket.actualCost)}</p>
     </div>
     <div className="p-3 border rounded-lg">
-      <p className="text-xs text-muted-foreground">Écart</p>
+      <p className="text-xs text-muted-foreground"><T k="auto.projectresourcescontainer.ecart" fallback="Écart" /></p>
       <p className={`font-semibold ${bucket.costVariance > 0 ? 'text-destructive' : 'text-primary'}`}>
         {money(bucket.costVariance)}
       </p>
     </div>
     <div className="p-3 border rounded-lg">
-      <p className="text-xs text-muted-foreground">Taux de consommation</p>
+      <p className="text-xs text-muted-foreground"><T k="auto.projectresourcescontainer.taux_de_consommation" fallback="Taux de consommation" /></p>
       <p className="font-semibold">{bucket.consumptionRate}%</p>
       <Progress value={Math.min(bucket.consumptionRate, 100)} className="h-1.5 mt-1" />
     </div>
@@ -78,14 +79,14 @@ const BucketTable: React.FC<{ bucket: ResourceFamilyBucketDTO }> = ({ bucket }) 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Désignation</TableHead>
-            <TableHead>Origine</TableHead>
-            <TableHead>Unité</TableHead>
-            <TableHead className="text-right">Qté planifiée</TableHead>
-            <TableHead className="text-right">Coût planifié</TableHead>
-            <TableHead className="text-right">Qté consommée</TableHead>
-            <TableHead className="text-right">Coût consommé</TableHead>
-            <TableHead className="text-right">Écart</TableHead>
+            <TableHead><T k="auto.projectresourcescontainer.designation" fallback="Désignation" /></TableHead>
+            <TableHead><T k="auto.projectresourcescontainer.origine" fallback="Origine" /></TableHead>
+            <TableHead><T k="auto.projectresourcescontainer.unite" fallback="Unité" /></TableHead>
+            <TableHead className="text-right"><T k="auto.projectresourcescontainer.qte_planifiee" fallback="Qté planifiée" /></TableHead>
+            <TableHead className="text-right"><T k="auto.projectresourcescontainer.cout_planifie" fallback="Coût planifié" /></TableHead>
+            <TableHead className="text-right"><T k="auto.projectresourcescontainer.qte_consommee" fallback="Qté consommée" /></TableHead>
+            <TableHead className="text-right"><T k="auto.projectresourcescontainer.cout_consomme" fallback="Coût consommé" /></TableHead>
+            <TableHead className="text-right"><T k="auto.projectresourcescontainer.ecart" fallback="Écart" /></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -145,7 +146,7 @@ const ProjectResourcesContainer: React.FC<ProjectResourcesContainerProps> = ({
         <CardTitle className="flex flex-wrap items-center justify-between gap-2">
           <span className="flex items-center gap-2">
             <LayoutGrid className="h-5 w-5" />
-            Ressources du projet
+            <T k="auto.projectresourcescontainer.ressources_du_projet" fallback="Ressources du projet" />
           </span>
           <span className="text-sm font-normal text-muted-foreground">
             {container.totals.lineCount} ligne(s) — planifié {money(container.totals.plannedCost)} / consommé{' '}
@@ -156,18 +157,18 @@ const ProjectResourcesContainer: React.FC<ProjectResourcesContainerProps> = ({
       <CardContent>
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs sm:text-sm"><T k="auto.projectresourcescontainer.vue_d_ensemble" fallback="Vue d'ensemble" /></TabsTrigger>
             <TabsTrigger value="human" className="text-xs sm:text-sm">
-              <Users className="h-3.5 w-3.5 mr-1" /> Humaines
+              <Users className="h-3.5 w-3.5 mr-1" /> <T k="auto.projectresourcescontainer.humaines" fallback="Humaines" />
             </TabsTrigger>
             <TabsTrigger value="materials" className="text-xs sm:text-sm">
-              <Package className="h-3.5 w-3.5 mr-1" /> Matériaux
+              <Package className="h-3.5 w-3.5 mr-1" /> <T k="auto.projectresourcescontainer.materiaux" fallback="Matériaux" />
             </TabsTrigger>
             <TabsTrigger value="equipment" className="text-xs sm:text-sm">
-              <Wrench className="h-3.5 w-3.5 mr-1" /> Équipements
+              <Wrench className="h-3.5 w-3.5 mr-1" /> <T k="auto.projectresourcescontainer.equipements" fallback="Équipements" />
             </TabsTrigger>
             <TabsTrigger value="assignments" className="text-xs sm:text-sm">
-              <ClipboardList className="h-3.5 w-3.5 mr-1" /> Affectations
+              <ClipboardList className="h-3.5 w-3.5 mr-1" /> <T k="auto.projectresourcescontainer.affectations" fallback="Affectations" />
             </TabsTrigger>
           </TabsList>
 

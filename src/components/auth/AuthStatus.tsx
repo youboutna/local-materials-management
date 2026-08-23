@@ -11,6 +11,7 @@ import { CheckCircle, XCircle, AlertTriangle, Shield, User, Clock, RefreshCw } f
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { AUTH_PROVIDERS } from '@/config/auth';
+import { T } from '@/components/i18n/T';
 
 interface AuthStatusProps {
   className?: string;
@@ -49,12 +50,12 @@ export function AuthStatus({
 
   const getStatusBadge = () => {
     if (loading) {
-      return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Loading...</Badge>;
+      return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30"><T k="auto.authstatus.loading" fallback="Loading..." /></Badge>;
     }
     if (isAuthenticated) {
-      return <Badge variant="outline" className="bg-success-soft text-success border-success/30">Authenticated</Badge>;
+      return <Badge variant="outline" className="bg-success-soft text-success border-success/30"><T k="auto.authstatus.authenticated" fallback="Authenticated" /></Badge>;
     }
-    return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Not Authenticated</Badge>;
+    return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30"><T k="auto.authstatus.not_authenticated" fallback="Not Authenticated" /></Badge>;
   };
 
   const getProviderInfo = () => {
@@ -86,7 +87,7 @@ export function AuthStatus({
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Authentication Status
+            <T k="auto.authstatus.authentication_status" fallback="Authentication Status" />
           </div>
           <div className="flex items-center gap-2">
             {getStatusIcon()}
@@ -94,7 +95,7 @@ export function AuthStatus({
           </div>
         </CardTitle>
         <CardDescription>
-          Current authentication state and user information
+          <T k="auto.authstatus.current_authentication_state_and_user_informatio" fallback="Current authentication state and user information" />
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -102,7 +103,7 @@ export function AuthStatus({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">User:</span>
+            <span className="font-medium"><T k="auto.authstatus.user" fallback="User:" /></span>
             {user ? (
               <div className="flex items-center gap-2">
                 <span>{user.email}</span>
@@ -113,14 +114,14 @@ export function AuthStatus({
                 )}
               </div>
             ) : (
-              <span className="text-muted-foreground">No user</span>
+              <span className="text-muted-foreground"><T k="auto.authstatus.no_user" fallback="No user" /></span>
             )}
           </div>
           
           {showProvider && (
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Provider:</span>
+              <span className="font-medium"><T k="auto.authstatus.provider" fallback="Provider:" /></span>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                 {getProviderInfo().label}
               </Badge>
@@ -136,7 +137,7 @@ export function AuthStatus({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Roles:</span>
+              <span className="font-medium"><T k="auto.authstatus.roles" fallback="Roles:" /></span>
             </div>
             {userRoles.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -154,7 +155,7 @@ export function AuthStatus({
                 ))}
               </div>
             ) : (
-              <span className="text-muted-foreground">No roles assigned</span>
+              <span className="text-muted-foreground"><T k="auto.authstatus.no_roles_assigned" fallback="No roles assigned" /></span>
             )}
           </div>
         )}
@@ -164,20 +165,20 @@ export function AuthStatus({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Session:</span>
+              <span className="font-medium"><T k="auto.authstatus.session" fallback="Session:" /></span>
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
               <div>
-                <span className="font-medium">Provider:</span> {session.provider}
+                <span className="font-medium"><T k="auto.authstatus.provider" fallback="Provider:" /></span> {session.provider}
               </div>
               {session.expires_at && (
                 <div>
-                  <span className="font-medium">Expires:</span>{' '}
+                  <span className="font-medium"><T k="auto.authstatus.expires" fallback="Expires:" /></span>{' '}
                   {new Date(session.expires_at).toLocaleString()}
                 </div>
               )}
               <div>
-                <span className="font-medium">User ID:</span> {user?.id}
+                <span className="font-medium"><T k="auto.authstatus.user_id" fallback="User ID:" /></span> {user?.id}
               </div>
             </div>
           </div>
@@ -188,7 +189,7 @@ export function AuthStatus({
           <Alert className="mt-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              You are not authenticated. Please sign in to access protected features.
+              <T k="auto.authstatus.you_are_not_authenticated_please_sign_in_to_acce" fallback="You are not authenticated. Please sign in to access protected features." />
             </AlertDescription>
           </Alert>
         )}
@@ -206,7 +207,7 @@ export function AuthStatus({
           <Alert className="mt-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              You have limited access. Some features may require additional permissions.
+              <T k="auto.authstatus.you_have_limited_access_some_features_may_requir" fallback="You have limited access. Some features may require additional permissions." />
             </AlertDescription>
           </Alert>
         )}

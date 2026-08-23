@@ -19,6 +19,7 @@ import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
 import { i18nService } from '@/application/services/I18nService';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface PhaseInspectionsProps {
   phaseId: string;
   projectId: string;
@@ -195,7 +196,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
   const getStatusLabel = (status: string) => i18nService.translateStatus(status);
 
   if (isLoading) {
-    return <div className="animate-pulse">Chargement des inspections...</div>;
+    return <div className="animate-pulse"><T k="auto.phaseinspections.chargement_des_inspections" fallback="Chargement des inspections..." /></div>;
   }
 
   const averageProgress = inspections && inspections.length > 0 
@@ -220,18 +221,18 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
               onClick={() => navigate('/inspection-monitoring')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Voir toutes les inspections
+              <T k="auto.phaseinspections.voir_toutes_les_inspections" fallback="Voir toutes les inspections" />
             </Button>
             <Dialog open={isAdding} onOpenChange={setIsAdding}>
               <DialogTrigger asChild>
                 <Button onClick={resetForm}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Ajouter une inspection
+                  <T k="auto.phaseinspections.ajouter_une_inspection" fallback="Ajouter une inspection" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Nouvelle inspection</DialogTitle>
+                <DialogTitle><T k="auto.phaseinspections.nouvelle_inspection" fallback="Nouvelle inspection" /></DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -261,7 +262,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="status">Statut</Label>
+                    <Label htmlFor="status"><T k="auto.phaseinspections.statut" fallback="Statut" /></Label>
                     <Select
                       value={formData.status}
                       onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -278,7 +279,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="progressAtInspection">Progression observée (%)</Label>
+                    <Label htmlFor="progressAtInspection"><T k="auto.phaseinspections.progression_observee" fallback="Progression observée (%)" /></Label>
                     <Input
                       id="progressAtInspection"
                       type="number"
@@ -291,7 +292,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                 </div>
 
                 <div>
-                  <Label htmlFor="comments">Commentaires</Label>
+                  <Label htmlFor="comments"><T k="auto.phaseinspections.commentaires" fallback="Commentaires" /></Label>
                   <Textarea
                     id="comments"
                     value={formData.comments}
@@ -302,7 +303,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                 </div>
 
                 <div>
-                  <Label htmlFor="documents">Documents de validation</Label>
+                  <Label htmlFor="documents"><T k="auto.phaseinspections.documents_de_validation" fallback="Documents de validation" /></Label>
                   <div className="border-2 border-dashed rounded-lg p-4 text-center">
                     <input
                       id="documents"
@@ -328,7 +329,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
-                    Annuler
+                    <T k="auto.phaseinspections.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit" disabled={addInspectionMutation.isPending}>
                     {addInspectionMutation.isPending ? 'Ajout en cours...' : 'Ajouter l\'inspection'}
@@ -372,7 +373,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                         title="Exécuter l'inspection"
                       >
                         <Play className="h-4 w-4 mr-1" />
-                        Exécuter
+                        <T k="auto.phaseinspections.executer" fallback="Exécuter" />
                       </Button>
                     )}
                     <Button
@@ -433,7 +434,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">Aucune inspection enregistrée pour cette phase.</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.phaseinspections.aucune_inspection_enregistree_pour_cette_phase" fallback="Aucune inspection enregistrée pour cette phase." /></p>
           </div>
         )}
       </CardContent>

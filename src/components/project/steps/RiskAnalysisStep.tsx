@@ -17,6 +17,7 @@ import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
 // Import hexagonal hook for employees (Rule #5: UI Layer Separation)
 import { useActiveEmployeesHex } from "@/hooks/hexagonal/useActiveEmployeesHex";
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface RiskAnalysisStepProps {
   workflowData: ProjectWorkflowData | null;
@@ -137,7 +138,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-destructive" />
-          Analyse des Risques
+          <T k="auto.riskanalysisstep.analyse_des_risques" fallback="Analyse des Risques" />
         </CardTitle>
         
         {/* Risk Metrics Dashboard */}
@@ -145,7 +146,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
           <div className="p-3 bg-primary/10 rounded-lg">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Total</span>
+              <span className="text-sm font-medium"><T k="auto.riskanalysisstep.total" fallback="Total" /></span>
             </div>
             <p className="text-2xl font-bold text-primary">{metrics.totalRisks}</p>
           </div>
@@ -153,7 +154,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
           <div className="p-3 bg-destructive/10 rounded-lg">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-destructive" />
-              <span className="text-sm font-medium">Critiques</span>
+              <span className="text-sm font-medium"><T k="auto.riskanalysisstep.critiques" fallback="Critiques" /></span>
             </div>
             <p className="text-2xl font-bold text-destructive">{metrics.highRisks}</p>
           </div>
@@ -161,14 +162,14 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
           <div className="p-3 bg-success-soft rounded-lg">
             <div className="flex items-center gap-2">
               <TrendingDown className="h-4 w-4 text-success" />
-              <span className="text-sm font-medium">Mitigés</span>
+              <span className="text-sm font-medium"><T k="auto.riskanalysisstep.mitiges" fallback="Mitigés" /></span>
             </div>
             <p className="text-2xl font-bold text-success">{metrics.mitigatedRisks}</p>
           </div>
           
           <div className="p-3 bg-warning/10 rounded-lg">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Score moyen</span>
+              <span className="text-sm font-medium"><T k="auto.riskanalysisstep.score_moyen" fallback="Score moyen" /></span>
             </div>
             <p className="text-2xl font-bold text-warning">{metrics.averageScore.toFixed(1)}</p>
           </div>
@@ -178,10 +179,10 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
       <CardContent>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h4 className="text-lg font-medium">Registre des risques</h4>
+            <h4 className="text-lg font-medium"><T k="auto.riskanalysisstep.registre_des_risques" fallback="Registre des risques" /></h4>
             <Button onClick={addRisk} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Ajouter un risque
+              <T k="auto.riskanalysisstep.ajouter_un_risque" fallback="Ajouter un risque" />
             </Button>
           </div>
 
@@ -202,7 +203,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Catégorie</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.categorie" fallback="Catégorie" /></label>
                         <Select
                           value={risk.category}
                           onValueChange={(value) => updateRisk(risk.id, { category: value as any })}
@@ -222,7 +223,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Description détaillée</label>
+                      <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.description_detaillee" fallback="Description détaillée" /></label>
                       <textarea
                         placeholder="Décrivez le risque et ses causes potentielles"
                         className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent min-h-[80px]"
@@ -233,7 +234,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">Probabilité</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.probabilite" fallback="Probabilité" /></label>
                         <Select
                           value={risk.probability.toString()}
                           onValueChange={(value) => updateRisk(risk.id, { probability: parseInt(value) })}
@@ -252,7 +253,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-1">Impact</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.impact" fallback="Impact" /></label>
                         <Select
                           value={risk.impact.toString()}
                           onValueChange={(value) => updateRisk(risk.id, { impact: parseInt(value) })}
@@ -271,7 +272,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-1">Responsable</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.responsable" fallback="Responsable" /></label>
                         <Select
                           value={risk.owner}
                           onValueChange={(value) => updateRisk(risk.id, { owner: value })}
@@ -292,7 +293,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">Plan de mitigation</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.plan_de_mitigation" fallback="Plan de mitigation" /></label>
                         <textarea
                           placeholder="Actions pour réduire la probabilité ou l'impact"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent min-h-[60px]"
@@ -302,7 +303,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-1">Plan de contingence</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.plan_de_contingence" fallback="Plan de contingence" /></label>
                         <textarea
                           placeholder="Actions si le risque se réalise"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent min-h-[60px]"
@@ -314,7 +315,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">Statut</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.statut" fallback="Statut" /></label>
                         <Select
                           value={risk.status}
                           onValueChange={(value) => updateRisk(risk.id, { status: value as any })}
@@ -323,17 +324,17 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="identified">Identifié</SelectItem>
-                            <SelectItem value="assessed">Évalué</SelectItem>
-                            <SelectItem value="mitigated">Mitigé</SelectItem>
-                            <SelectItem value="monitoring">Surveillance</SelectItem>
+                            <SelectItem value="identified"><T k="auto.riskanalysisstep.identifie" fallback="Identifié" /></SelectItem>
+                            <SelectItem value="assessed"><T k="auto.riskanalysisstep.evalue" fallback="Évalué" /></SelectItem>
+                            <SelectItem value="mitigated"><T k="auto.riskanalysisstep.mitige" fallback="Mitigé" /></SelectItem>
+                            <SelectItem value="monitoring"><T k="auto.riskanalysisstep.surveillance" fallback="Surveillance" /></SelectItem>
                             <SelectItem value="closed"><TranslatedStatus code="closed" /></SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-1">Date de révision</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.date_de_revision" fallback="Date de révision" /></label>
                         <input
                           type="date"
                           className="w-full p-2 border rounded focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -354,7 +355,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-1">Impact délai (jours)</label>
+                        <label className="block text-sm font-medium mb-1"><T k="auto.riskanalysisstep.impact_delai_jours" fallback="Impact délai (jours)" /></label>
                         <input
                           type="number"
                           placeholder="0"
@@ -371,7 +372,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                       </Badge>
                       
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Score de risque:</span>
+                        <span className="text-sm font-medium"><T k="auto.riskanalysisstep.score_de_risque" fallback="Score de risque:" /></span>
                         <div className={`px-2 py-1 rounded text-white text-sm font-medium ${getRiskScoreColor(risk.riskScore)}`}>
                           {risk.riskScore || 0} - {getRiskScoreLabel(risk.riskScore)}
                         </div>
@@ -395,13 +396,13 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
           {risks.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <AlertTriangle className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Aucun risque identifié</h3>
+              <h3 className="text-lg font-medium mb-2"><T k="auto.riskanalysisstep.aucun_risque_identifie" fallback="Aucun risque identifié" /></h3>
               <p className="text-sm mb-4">
-                Commencez par identifier les risques potentiels de votre projet
+                <T k="auto.riskanalysisstep.commencez_par_identifier_les_risques_potentiels_" fallback="Commencez par identifier les risques potentiels de votre projet" />
               </p>
               <Button onClick={addRisk} className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Ajouter le premier risque
+                <T k="auto.riskanalysisstep.ajouter_le_premier_risque" fallback="Ajouter le premier risque" />
               </Button>
             </div>
           )}
@@ -409,7 +410,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
           {/* Risk Matrix Visualization */}
           {risks.length > 0 && (
             <div className="space-y-4">
-              <h4 className="font-medium">Matrice des risques</h4>
+              <h4 className="font-medium"><T k="auto.riskanalysisstep.matrice_des_risques" fallback="Matrice des risques" /></h4>
               <div className="grid grid-cols-5 gap-1 max-w-md">
                 {[5, 4, 3, 2, 1].map(impact => (
                   [1, 2, 3, 4, 5].map(probability => {

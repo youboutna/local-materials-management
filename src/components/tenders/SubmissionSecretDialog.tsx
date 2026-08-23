@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 interface SubmissionSecretDialogProps {
   isOpen: boolean;
@@ -136,10 +137,10 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            Code Secret de Soumission
+            <T k="auto.submissionsecretdialog.code_secret_de_soumission" fallback="Code Secret de Soumission" />
           </DialogTitle>
           <DialogDescription>
-            Générez et gérez le code d'accès sécurisé pour l'évaluation de: <strong>{supplierName}</strong>
+            <T k="auto.submissionsecretdialog.generez_et_gerez_le_code_d_acces_securise_pour_l" fallback="Générez et gérez le code d'accès sécurisé pour l'évaluation de:" /> <strong>{supplierName}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -155,10 +156,10 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Key className="h-5 w-5" />
-                    Code Secret Actif
+                    <T k="auto.submissionsecretdialog.code_secret_actif" fallback="Code Secret Actif" />
                   </CardTitle>
                   <CardDescription>
-                    Code d'accès pour la commission d'évaluation
+                    <T k="auto.submissionsecretdialog.code_d_acces_pour_la_commission_d_evaluation" fallback="Code d'accès pour la commission d'évaluation" />
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -178,11 +179,11 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
 
                   {/* Status Badge */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Statut:</span>
+                    <span className="text-sm font-medium"><T k="auto.submissionsecretdialog.statut" fallback="Statut:" /></span>
                     {secretValid.valid ? (
                       <Badge className="bg-success-soft text-success">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Actif
+                        <T k="auto.submissionsecretdialog.actif" fallback="Actif" />
                       </Badge>
                     ) : (
                       <Badge variant="destructive">
@@ -197,7 +198,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Eye className="h-4 w-4" />
-                        Accès utilisés
+                        <T k="auto.submissionsecretdialog.acces_utilises" fallback="Accès utilisés" />
                       </div>
                       <div className="text-lg font-bold">
                         {submission.secret_access_count} / {submission.max_secret_access}
@@ -208,7 +209,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          Expire le
+                          <T k="auto.submissionsecretdialog.expire_le" fallback="Expire le" />
                         </div>
                         <div className="text-lg font-bold">
                           {format(new Date(submission.secret_expires_at), 'dd MMM yyyy', { locale: fr })}
@@ -226,7 +227,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                       disabled={regenerateSecretMutation.isPending}
                     >
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      Régénérer
+                      <T k="auto.submissionsecretdialog.regenerer" fallback="Régénérer" />
                     </Button>
                     <Button
                       variant="destructive"
@@ -235,7 +236,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                       disabled={deactivateSecretMutation.isPending || !submission.is_secret_active}
                     >
                       <Ban className="h-4 w-4 mr-2" />
-                      Désactiver
+                      <T k="auto.submissionsecretdialog.desactiver" fallback="Désactiver" />
                     </Button>
                   </div>
                 </CardContent>
@@ -248,7 +249,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                     <AlertCircle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-amber-900">
-                        Instructions de sécurité
+                        <T k="auto.submissionsecretdialog.instructions_de_securite" fallback="Instructions de sécurité" />
                       </p>
                       <p className="text-sm text-warning">
                         Partagez ce code uniquement avec les membres autorisés de la commission d'évaluation.
@@ -264,15 +265,15 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
               {/* Create Secret Form */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Générer un Code Secret</CardTitle>
+                  <CardTitle className="text-lg"><T k="auto.submissionsecretdialog.generer_un_code_secret" fallback="Générer un Code Secret" /></CardTitle>
                   <CardDescription>
-                    Configurez les paramètres de sécurité pour l'accès au dossier
+                    <T k="auto.submissionsecretdialog.configurez_les_parametres_de_securite_pour_l_acc" fallback="Configurez les paramètres de sécurité pour l'accès au dossier" />
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="expiry-days">
-                      Durée de validité (jours)
+                      <T k="auto.submissionsecretdialog.duree_de_validite_jours" fallback="Durée de validité (jours)" />
                     </Label>
                     <Input
                       id="expiry-days"
@@ -289,7 +290,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
 
                   <div className="space-y-2">
                     <Label htmlFor="max-access">
-                      Nombre d'accès maximum
+                      <T k="auto.submissionsecretdialog.nombre_d_acces_maximum" fallback="Nombre d'accès maximum" />
                     </Label>
                     <Input
                       id="max-access"
@@ -300,7 +301,7 @@ export const SubmissionSecretDialog: React.FC<SubmissionSecretDialogProps> = ({
                       onChange={(e) => setMaxAccess(parseInt(e.target.value) || 10)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Limite le nombre de fois où le code peut être utilisé
+                      <T k="auto.submissionsecretdialog.limite_le_nombre_de_fois_ou_le_code_peut_etre_ut" fallback="Limite le nombre de fois où le code peut être utilisé" />
                     </p>
                   </div>
 

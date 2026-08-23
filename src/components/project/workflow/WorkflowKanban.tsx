@@ -43,6 +43,7 @@ import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import type { StepItem } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 interface StepWorkflowStatus {
   inspectionStatus: 'approved' | 'pending' | 'none';
@@ -136,7 +137,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
     }
     return (
       <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs">
-        Non planifiée
+        <T k="auto.workflowkanban.non_planifiee" fallback="Non planifiée" />
       </Badge>
     );
   }, []);
@@ -221,9 +222,9 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
       <Card>
         <CardContent className="py-12 text-center">
           <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-          <h3 className="text-lg font-medium mb-2">Aucune étape définie</h3>
+          <h3 className="text-lg font-medium mb-2"><T k="auto.workflowkanban.aucune_etape_definie" fallback="Aucune étape définie" /></h3>
           <p className="text-sm text-muted-foreground">
-            Ajoutez des étapes à cette phase pour suivre le workflow
+            <T k="auto.workflowkanban.ajoutez_des_etapes_a_cette_phase_pour_suivre_le_" fallback="Ajoutez des étapes à cette phase pour suivre le workflow" />
           </p>
         </CardContent>
       </Card>
@@ -237,7 +238,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <Zap className="h-5 w-5 text-primary" />
-              Tableau de bord des étapes
+              <T k="auto.workflowkanban.tableau_de_bord_des_etapes" fallback="Tableau de bord des étapes" />
             </CardTitle>
             <Badge variant="secondary">
               {steps.filter(s => s.status === 'completed').length}/{steps.length} terminées
@@ -248,11 +249,11 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
         <CardContent className="p-0">
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-muted/50 text-xs font-medium text-muted-foreground border-b">
-            <div className="col-span-4">Étape</div>
-            <div className="col-span-2 text-center">Statut</div>
-            <div className="col-span-2 text-center">Progression</div>
-            <div className="col-span-2 text-center">Inspection</div>
-            <div className="col-span-2 text-center">Paiement</div>
+            <div className="col-span-4"><T k="auto.workflowkanban.etape" fallback="Étape" /></div>
+            <div className="col-span-2 text-center"><T k="auto.workflowkanban.statut" fallback="Statut" /></div>
+            <div className="col-span-2 text-center"><T k="auto.workflowkanban.progression" fallback="Progression" /></div>
+            <div className="col-span-2 text-center"><T k="auto.workflowkanban.inspection" fallback="Inspection" /></div>
+            <div className="col-span-2 text-center"><T k="auto.workflowkanban.paiement" fallback="Paiement" /></div>
           </div>
 
           {/* Table Rows */}
@@ -358,7 +359,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                           ))}
                           {actions.length === 0 && (
                             <DropdownMenuItem disabled>
-                              Aucune action disponible
+                              <T k="auto.workflowkanban.aucune_action_disponible" fallback="Aucune action disponible" />
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -376,7 +377,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                           if (desc) {
                             return (
                               <div className="md:col-span-2">
-                                <h5 className="text-sm font-medium mb-2">Description</h5>
+                                <h5 className="text-sm font-medium mb-2"><T k="auto.workflowkanban.description" fallback="Description" /></h5>
                                 <p className="text-sm text-muted-foreground">{desc}</p>
                               </div>
                             );
@@ -386,14 +387,14 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
 
                         {/* Quick Stats */}
                         <div className="space-y-2">
-                          <h5 className="text-sm font-medium">Détails</h5>
+                          <h5 className="text-sm font-medium"><T k="auto.workflowkanban.details" fallback="Détails" /></h5>
                           <div className="space-y-1 text-sm">
                             {(() => {
                               const est = getEstimatedDuration(step);
                               if (est) {
                                 return (
                                   <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Durée estimée:</span>
+                                    <span className="text-muted-foreground"><T k="auto.workflowkanban.duree_estimee" fallback="Durée estimée:" /></span>
                                     <span>{est} jours</span>
                                   </div>
                                 );
@@ -402,7 +403,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                             })()}
                             {workflowStatus.totalPaid > 0 && (
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Montant payé:</span>
+                                <span className="text-muted-foreground"><T k="auto.workflowkanban.montant_paye" fallback="Montant payé:" /></span>
                                 <span className="text-success font-medium">
                                   {formatCurrency(workflowStatus.totalPaid)}
                                 </span>

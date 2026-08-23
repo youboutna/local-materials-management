@@ -33,6 +33,7 @@ import {
 } from '@/hooks/hexagonal'
 import { TenderDTO } from '@/dtos/entities/TenderDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
+import { T } from '@/components/i18n/T';
 
 // Local type aliases for backward compatibility
 type Tender = TenderDTO & {
@@ -253,17 +254,17 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Workflow className="h-5 w-5" />
-          Gestion des Appels d'Offres
+          <T k="auto.tendercrud.gestion_des_appels_d_offres" fallback="Gestion des Appels d'Offres" />
         </CardTitle>
         <Button onClick={openCreateDialog} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Nouvel Appel d'Offres
+          <T k="auto.tendercrud.nouvel_appel_d_offres" fallback="Nouvel Appel d'Offres" />
         </Button>
       </CardHeader>
 
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8">Chargement...</div>
+          <div className="text-center py-8"><T k="auto.tendercrud.chargement" fallback="Chargement..." /></div>
         ) : (
           <TenderListView
             tenders={tenders as any[]}
@@ -297,7 +298,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               </div>
               
               <div>
-                <Label htmlFor="project_id">Projet associé</Label>
+                <Label htmlFor="project_id"><T k="auto.tendercrud.projet_associe" fallback="Projet associé" /></Label>
                 <Select 
                   value={formData.project_id} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
@@ -329,7 +330,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="launch_date">Date de lancement</Label>
+                <Label htmlFor="launch_date"><T k="auto.tendercrud.date_de_lancement" fallback="Date de lancement" /></Label>
                 <Input
                   id="launch_date"
                   type="datetime-local"
@@ -339,7 +340,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               </div>
               
               <div>
-                <Label htmlFor="submission_deadline">Date limite de soumission</Label>
+                <Label htmlFor="submission_deadline"><T k="auto.tendercrud.date_limite_de_soumission" fallback="Date limite de soumission" /></Label>
                 <Input
                   id="submission_deadline"
                   type="datetime-local"
@@ -351,7 +352,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="selection_mode">Mode de sélection</Label>
+                <Label htmlFor="selection_mode"><T k="auto.tendercrud.mode_de_selection" fallback="Mode de sélection" /></Label>
                 <Select 
                   value={formData.selection_mode} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, selection_mode: value }))}
@@ -360,15 +361,15 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                     <SelectValue placeholder="Mode de sélection" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="open">Ouvert</SelectItem>
-                    <SelectItem value="restricted">Restreint</SelectItem>
-                    <SelectItem value="negotiated">Négocié</SelectItem>
+                    <SelectItem value="open"><T k="auto.tendercrud.ouvert" fallback="Ouvert" /></SelectItem>
+                    <SelectItem value="restricted"><T k="auto.tendercrud.restreint" fallback="Restreint" /></SelectItem>
+                    <SelectItem value="negotiated"><T k="auto.tendercrud.negocie" fallback="Négocié" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div>
-                <Label htmlFor="market_type">Type de marché</Label>
+                <Label htmlFor="market_type"><T k="auto.tendercrud.type_de_marche" fallback="Type de marché" /></Label>
                 <Select 
                   value={formData.market_type} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, market_type: value }))}
@@ -377,15 +378,15 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                     <SelectValue placeholder="Type de marché" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Privé</SelectItem>
-                    <SelectItem value="mixed">Mixte</SelectItem>
+                    <SelectItem value="public"><T k="auto.tendercrud.public" fallback="Public" /></SelectItem>
+                    <SelectItem value="private"><T k="auto.tendercrud.prive" fallback="Privé" /></SelectItem>
+                    <SelectItem value="mixed"><T k="auto.tendercrud.mixte" fallback="Mixte" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div>
-                <Label htmlFor="estimated_value">Valeur estimée (MRU)</Label>
+                <Label htmlFor="estimated_value"><T k="auto.tendercrud.valeur_estimee_mru" fallback="Valeur estimée (MRU)" /></Label>
                 <Input
                   id="estimated_value"
                   type="number"
@@ -396,7 +397,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
             </div>
 
             <div>
-              <Label>Workflow de passation</Label>
+              <Label><T k="auto.tendercrud.workflow_de_passation" fallback="Workflow de passation" /></Label>
               <Button
                 type="button"
                 variant="outline"
@@ -412,7 +413,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Annuler
+                <T k="auto.tendercrud.annuler" fallback="Annuler" />
               </Button>
               <Button type="submit" disabled={tenderMutation.isPending}>
                 {tenderMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}

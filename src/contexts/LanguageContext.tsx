@@ -1,5 +1,11 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { getI18nService } from '@/application/services/I18nService';
+import autoFr from '@/locales/auto.fr.json';
+import autoAr from '@/locales/auto.ar.json';
+import autoEn from '@/locales/auto.en.json';
+
+/** Libellés UI générés (codemod Phase 6) — codes techniques exclus. */
+const AUTO_UI_LABELS = { fr: autoFr, ar: autoAr, en: autoEn } as const;
 
 export type Language = 'fr' | 'ar' | 'en';
 
@@ -5564,6 +5570,20 @@ const PHASE_STRUCTURE_KEYS = {
         expandFlatKeys(PHASE_STRUCTURE_KEYS[lang])
     );
 });
+
+/**
+ * Phase 6 — libellés d'interface extraits des composants *.tsx par le codemod
+ * (`scripts/i18n-codemod.cjs`) et traduits fr/ar/en (`scripts/i18n-translate.cjs`).
+ * Namespace `auto.*` : uniquement des chaînes d'UI, jamais des données de la base.
+ */
+(['fr', 'ar', 'en'] as const).forEach((lang) => {
+    deepMergeMissing(
+        (translations as unknown as Record<string, Record<string, unknown>>)[lang],
+        expandFlatKeys(AUTO_UI_LABELS[lang] as Record<string, string>)
+    );
+});
+
+
 
 /**
  * Phase 6 — alias canoniques exigés par la spécification d'intégration.

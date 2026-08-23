@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { usePagination } from '@/hooks/usePagination';
 import type { InspectionData } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 interface InspectionsListProps {
   projectId: string;
@@ -94,7 +95,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Chargement des inspections...</CardTitle>
+          <CardTitle><T k="auto.inspectionslist.chargement_des_inspections" fallback="Chargement des inspections..." /></CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center">
           <div className="animate-spin h-6 w-6 border-2 border-terracotta-500 border-t-transparent rounded-full"></div>
@@ -107,12 +108,12 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Historique des inspections</CardTitle>
+          <CardTitle><T k="auto.inspectionslist.historique_des_inspections" fallback="Historique des inspections" /></CardTitle>
         </CardHeader>
         <CardContent>
           {inspections.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Aucune inspection n'a encore été effectuée pour ce projet.</p>
+              <p className="text-muted-foreground"><T k="auto.inspectionslist.aucune_inspection_n_a_encore_ete_effectuee_pour_" fallback="Aucune inspection n'a encore été effectuée pour ce projet." /></p>
             </div>
            ) : (
             <div className="space-y-6">
@@ -138,7 +139,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                     </div>
                     
                     <Button size="sm" variant="outline" onClick={() => handleViewDetails(inspection)}>
-                      Voir les détails
+                      <T k="auto.inspectionslist.voir_les_details" fallback="Voir les détails" />
                     </Button>
                   </div>
                 </div>
@@ -163,7 +164,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
       <Dialog open={showDetails} onOpenChange={(open) => !open && setShowDetails(false)}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Détails de l'inspection</DialogTitle>
+            <DialogTitle><T k="auto.inspectionslist.details_de_l_inspection" fallback="Détails de l'inspection" /></DialogTitle>
             <DialogDescription>
               {selectedInspection && (
                 <span>Inspection effectuée le {new Date(selectedInspection.date).toLocaleDateString()}</span>
@@ -183,7 +184,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">Inspecteur</h4>
+                  <h4 className="font-medium mb-2"><T k="auto.inspectionslist.inspecteur" fallback="Inspecteur" /></h4>
                   <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span>{selectedInspection.inspector}</span>
@@ -191,7 +192,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">Progression au moment de l'inspection</h4>
+                  <h4 className="font-medium mb-2"><T k="auto.inspectionslist.progression_au_moment_de_l_inspection" fallback="Progression au moment de l'inspection" /></h4>
                   <div className="bg-muted rounded-md p-4 text-center">
                     <span className="text-2xl font-bold">
                       {selectedInspection.progressAtInspection ?? selectedInspection.progress_at_inspection ?? 0}%
@@ -200,19 +201,19 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">Commentaires</h4>
+                  <h4 className="font-medium mb-2"><T k="auto.inspectionslist.commentaires" fallback="Commentaires" /></h4>
                   <div className="bg-muted rounded-md p-4">
                     {selectedInspection.comments ? (
                       <p className="whitespace-pre-line">{selectedInspection.comments}</p>
                     ) : (
-                      <p className="text-center text-muted-foreground">Aucun commentaire</p>
+                      <p className="text-center text-muted-foreground"><T k="auto.inspectionslist.aucun_commentaire" fallback="Aucun commentaire" /></p>
                     )}
                   </div>
                 </div>
                 
                 {selectedInspection.documents && selectedInspection.documents.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Documents</h4>
+                    <h4 className="font-medium mb-2"><T k="auto.inspectionslist.documents" fallback="Documents" /></h4>
                     <div className="space-y-2">
                       {selectedInspection.documents.map((doc, index) => {
                         const docData = typeof doc === 'string' ? { name: doc, url: doc } : doc;
@@ -224,7 +225,7 @@ export const InspectionsList = ({ projectId }: InspectionsListProps) => {
                             </div>
                             <Button size="sm" variant="outline" asChild>
                               <a href={docData.url} target="_blank" rel="noopener noreferrer">
-                                Voir
+                                <T k="auto.inspectionslist.voir" fallback="Voir" />
                               </a>
                             </Button>
                           </div>

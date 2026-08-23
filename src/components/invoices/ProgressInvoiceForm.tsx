@@ -18,6 +18,7 @@ import {
   type InvoiceFormData,
   type WorkflowRequirements
 } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 const invoiceSchema = z.object({
   project_id: z.string().min(1, 'Le projet est requis'),
@@ -96,7 +97,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
   if (isLoading && selectedProjectId) {
     return (
       <div className="text-center py-8">
-        Chargement des données du projet...
+        <T k="auto.progressinvoiceform.chargement_des_donnees_du_projet" fallback="Chargement des données du projet..." />
       </div>
     );
   }
@@ -105,7 +106,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Nouvelle Facture d'Avancement</CardTitle>
+          <CardTitle><T k="auto.progressinvoiceform.nouvelle_facture_d_avancement" fallback="Nouvelle Facture d'Avancement" /></CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {projectData && (
@@ -113,8 +114,8 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-1">
-                  <div>Type de projet: <strong>{projectData.project_type || 'infrastructure'}</strong></div>
-                  <div>Source de financement: <strong>{projectData.funding_source || 'N/A'}</strong></div>
+                  <div><T k="auto.progressinvoiceform.type_de_projet" fallback="Type de projet:" /> <strong>{projectData.project_type || 'infrastructure'}</strong></div>
+                  <div><T k="auto.progressinvoiceform.source_de_financement" fallback="Source de financement:" /> <strong>{projectData.funding_source || 'N/A'}</strong></div>
                   {workflowRequirements.requiresConsultant && (
                     <div className="text-warning">âœ“ Validation ingénieur conseil requise</div>
                   )}
@@ -144,7 +145,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
           {selectedProjectId && (
             <>
               <div>
-                <Label htmlFor="inspection_id">Inspection (optionnel)</Label>
+                <Label htmlFor="inspection_id"><T k="auto.progressinvoiceform.inspection_optionnel" fallback="Inspection (optionnel)" /></Label>
                 <Select 
                   value={selectedInspectionId || ''} 
                   onValueChange={(value) => setValue('inspection_id', value)}
@@ -210,7 +211,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
               </div>
 
               <div>
-                <Label>Documents de support</Label>
+                <Label><T k="auto.progressinvoiceform.documents_de_support" fallback="Documents de support" /></Label>
                 <div className="mt-2">
                   <input
                     type="file"
@@ -226,7 +227,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                     className="flex items-center gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    Ajouter un document
+                    <T k="auto.progressinvoiceform.ajouter_un_document" fallback="Ajouter un document" />
                   </Button>
                 </div>
                 {uploadedDocs.length > 0 && (
@@ -249,7 +250,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
                     // Reset form logic here if needed
                   }}
                 >
-                  Annuler
+                  <T k="auto.progressinvoiceform.annuler" fallback="Annuler" />
                 </Button>
                 <Button type="submit" disabled={loading}>
                   {loading ? 'Création...' : 'Créer la facture'}

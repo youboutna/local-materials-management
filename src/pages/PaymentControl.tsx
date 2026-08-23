@@ -31,20 +31,21 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Alert as AlertEntity } from '@/domain/entities/Alert';
 import { EscalationRoles } from '@/domain/entities/Hierarchy';
 import { ProjectData } from '@/dtos/entities/ProjectAggregateDTO';
+import { T } from '@/components/i18n/T';
 
 const PaymentControlActionsContainer = () => {
   const { userId } = useAuthUserHex();
   const { state, alerts, loading } = useProjectManager();
   const allAlerts = state?.alerts || alerts || [];
 
-  if (loading) return <div className="text-center py-4">Chargement des paiements...</div>;
+  if (loading) return <div className="text-center py-4"><T k="auto.paymentcontrol.chargement_des_paiements" fallback="Chargement des paiements..." /></div>;
 
   return (
     <div className="space-y-4">
       {allAlerts.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Aucun paiement en attente de validation</p>
+          <p><T k="auto.paymentcontrol.aucun_paiement_en_attente_de_validation" fallback="Aucun paiement en attente de validation" /></p>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">{allAlerts.length} alerte(s) en cours</p>
@@ -119,7 +120,7 @@ const PaymentControlContent = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Alert className="max-w-md">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>Accès restreint. Vous n'avez pas les permissions nécessaires.</AlertDescription>
+          <AlertDescription><T k="auto.paymentcontrol.acces_restreint_vous_n_avez_pas_les_permissions_" fallback="Accès restreint. Vous n'avez pas les permissions nécessaires." /></AlertDescription>
         </Alert>
       </div>
     );
@@ -139,10 +140,10 @@ const PaymentControlContent = () => {
         <div className="max-w-6xl mx-auto">
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Contrôle des Paiements</h1>
-              <p className="text-muted-foreground mt-2">Gestion et validation des paiements avec notifications en temps réel</p>
+              <h1 className="text-3xl font-bold text-foreground"><T k="auto.paymentcontrol.controle_des_paiements" fallback="Contrôle des Paiements" /></h1>
+              <p className="text-muted-foreground mt-2"><T k="auto.paymentcontrol.gestion_et_validation_des_paiements_avec_notific" fallback="Gestion et validation des paiements avec notifications en temps réel" /></p>
             </div>
-            <Button variant="outline" onClick={runChecks}>Actualiser</Button>
+            <Button variant="outline" onClick={runChecks}><T k="auto.paymentcontrol.actualiser" fallback="Actualiser" /></Button>
           </div>
 
           <Breadcrumb className="mb-4" items={[{ label: 'Finance' }, { label: 'Contrôle des Paiements' }]} />
@@ -152,16 +153,16 @@ const PaymentControlContent = () => {
               <TabsTrigger value="surveillance" className="flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 <span className="hidden sm:inline">Surveillance &amp; Alertes</span>
-                <span className="sm:hidden">Alertes</span>
+                <span className="sm:hidden"><T k="auto.paymentcontrol.alertes" fallback="Alertes" /></span>
               </TabsTrigger>
               <TabsTrigger value="gestion" className="flex items-center gap-2">
                 <ListChecks className="h-4 w-4" />
-                <span className="hidden sm:inline">Gestion des Paiements</span>
-                <span className="sm:hidden">Gestion</span>
+                <span className="hidden sm:inline"><T k="auto.paymentcontrol.gestion_des_paiements" fallback="Gestion des Paiements" /></span>
+                <span className="sm:hidden"><T k="auto.paymentcontrol.gestion" fallback="Gestion" /></span>
               </TabsTrigger>
               <TabsTrigger value="documents" className="flex items-center gap-2">
                 <FolderOpen className="h-4 w-4" />
-                <span>Documents</span>
+                <span><T k="auto.paymentcontrol.documents" fallback="Documents" /></span>
               </TabsTrigger>
             </TabsList>
 
@@ -179,11 +180,11 @@ const PaymentControlContent = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Bell className="h-5 w-5" />
-                    <h3 className="font-semibold">Notifications de paiement récentes</h3>
+                    <h3 className="font-semibold"><T k="auto.paymentcontrol.notifications_de_paiement_recentes" fallback="Notifications de paiement récentes" /></h3>
                     {unreadCount > 0 && <Badge variant="destructive">{unreadCount} nouveau(x)</Badge>}
                   </div>
                   {paymentNotifications.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">Aucune notification</p>
+                    <p className="text-muted-foreground text-center py-4"><T k="auto.paymentcontrol.aucune_notification" fallback="Aucune notification" /></p>
                   ) : (
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {paymentNotifications.map((n: any) => (
@@ -193,7 +194,7 @@ const PaymentControlContent = () => {
                               <div className="flex items-center gap-2 mb-1">
                                 {getPaymentStatusIcon(n.type)}
                                 <h4 className="font-medium">{n.title}</h4>
-                                {!n.read && <Badge variant="secondary">Nouveau</Badge>}
+                                {!n.read && <Badge variant="secondary"><T k="auto.paymentcontrol.nouveau" fallback="Nouveau" /></Badge>}
                                 <Badge className={getPaymentStatusColor(n.type)}>
                                   {n.type.replace('payment_', '').replace('_', ' ')}
                                 </Badge>
@@ -231,7 +232,7 @@ const PaymentControlContent = () => {
                   <CollapsibleTrigger className="flex w-full items-center justify-between px-6 py-4 text-left">
                     <span className="flex items-center gap-2 font-semibold">
                       <SlidersHorizontal className="h-4 w-4" />
-                      Seuils de contrôle
+                      <T k="auto.paymentcontrol.seuils_de_controle" fallback="Seuils de contrôle" />
                     </span>
                     <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
                   </CollapsibleTrigger>
@@ -345,7 +346,7 @@ const PaymentControlPage = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Chargement du projet...</p>
+          <p className="text-muted-foreground"><T k="auto.paymentcontrol.chargement_du_projet" fallback="Chargement du projet..." /></p>
         </div>
       </div>
     );

@@ -20,6 +20,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 interface DecompteData {
   phaseProgress: number;
@@ -100,11 +101,11 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Calculator className="h-5 w-5 text-primary" />
-            Décompte en cours
+            <T k="auto.paymentcalculator.decompte_en_cours" fallback="Décompte en cours" />
           </CardTitle>
           {hasAmountToPay && canRequestPayment && (
             <Badge className="bg-primary text-primary-foreground animate-pulse">
-              Paiement disponible
+              <T k="auto.paymentcalculator.paiement_disponible" fallback="Paiement disponible" />
             </Badge>
           )}
         </div>
@@ -125,7 +126,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground flex items-center gap-1">
                 <TrendingUp className="h-3 w-3" />
-                Avancement physique
+                <T k="auto.paymentcalculator.avancement_physique" fallback="Avancement physique" />
               </span>
               <span className="font-medium">{phaseProgress}%</span>
             </div>
@@ -136,7 +137,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground flex items-center gap-1">
                 <CheckCircle className="h-3 w-3" />
-                Pourcentage payable
+                <T k="auto.paymentcalculator.pourcentage_payable" fallback="Pourcentage payable" />
               </span>
               <span className="font-medium text-primary">{decompte.payablePercentage}%</span>
             </div>
@@ -145,7 +146,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
               className="h-2 bg-primary/20 [&>div]:bg-primary"
             />
             <p className="text-xs text-muted-foreground">
-              Selon calendrier financier (paliers de 25%)
+              <T k="auto.paymentcalculator.selon_calendrier_financier_paliers_de_25" fallback="Selon calendrier financier (paliers de 25%)" />
             </p>
           </div>
         </div>
@@ -155,12 +156,12 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
         {/* Financial Breakdown */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Montant du contrat</span>
+            <span className="text-muted-foreground"><T k="auto.paymentcalculator.montant_du_contrat" fallback="Montant du contrat" /></span>
             <span className="font-medium">{formatCurrency(decompte.totalContractAmount)}</span>
           </div>
           
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Déjà payé</span>
+            <span className="text-muted-foreground"><T k="auto.paymentcalculator.deja_paye" fallback="Déjà payé" /></span>
             <span className="font-medium text-success">
               {formatCurrency(decompte.previousPayments)}
             </span>
@@ -169,7 +170,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
           <Separator className="my-2" />
           
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Montant à décompter</span>
+            <span className="text-muted-foreground"><T k="auto.paymentcalculator.montant_a_decompter" fallback="Montant à décompter" /></span>
             <span className="font-bold">{formatCurrency(decompte.amountToDecompte)}</span>
           </div>
           
@@ -186,7 +187,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
           <Separator className="my-2" />
           
           <div className="flex justify-between items-center">
-            <span className="font-semibold">Net à payer</span>
+            <span className="font-semibold"><T k="auto.paymentcalculator.net_a_payer" fallback="Net à payer" /></span>
             <span className={cn(
               "text-xl font-bold",
               hasAmountToPay ? "text-primary" : "text-muted-foreground"
@@ -200,7 +201,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
         {decompte.remainingAmount > 0 && (
           <div className="p-3 rounded-lg bg-muted/30 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Reste à payer</span>
+              <span className="text-muted-foreground"><T k="auto.paymentcalculator.reste_a_payer" fallback="Reste à payer" /></span>
               <span className="font-medium">{formatCurrency(decompte.remainingAmount)}</span>
             </div>
           </div>
@@ -211,7 +212,7 @@ const PaymentCalculator: React.FC<PaymentCalculatorProps> = ({
           <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30">
             <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-warning">Aucun montant à décompter</p>
+              <p className="font-medium text-warning"><T k="auto.paymentcalculator.aucun_montant_a_decompter" fallback="Aucun montant à décompter" /></p>
               <p className="text-warning text-xs mt-1">
                 La progression validée ({validatedProgress}%) ne permet pas un nouveau paiement. 
                 Prochain palier à {Math.ceil(validatedProgress / 25) * 25}%.

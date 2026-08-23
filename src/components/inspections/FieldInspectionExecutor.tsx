@@ -29,6 +29,7 @@ import {
 import { InspectionDocumentsPanel } from '@/components/documents/panels';
 
 import { TranslatedCategory, TranslatedRole, TranslatedSeverity, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // Local types for UI-specific fields not in DTOs
 interface LocalMeasurement {
   id: string;
@@ -361,7 +362,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
             </div>
             {!isStarted ? (
               <Button onClick={handleStart} disabled={!location}>
-                <Play className="h-4 w-4 mr-2" />Démarrer
+                <Play className="h-4 w-4 mr-2" /><T k="auto.fieldinspectionexecutor.demarrer" fallback="Démarrer" />
               </Button>
             ) : (
               <Button onClick={handleSave} disabled={isSaving}>
@@ -371,7 +372,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
           </div>
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm mb-1">
-              <span>Progression de la saisie</span>
+              <span><T k="auto.fieldinspectionexecutor.progression_de_la_saisie" fallback="Progression de la saisie" /></span>
               <span>{getCompletionPercentage()}%</span>
             </div>
             <Progress value={getCompletionPercentage()} />
@@ -383,26 +384,26 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
             <TabsTrigger value="checklist" className="flex items-center gap-1">
-              <CheckCircle className="h-4 w-4" /><span className="hidden sm:inline">Checklist</span>
+              <CheckCircle className="h-4 w-4" /><span className="hidden sm:inline"><T k="auto.fieldinspectionexecutor.checklist" fallback="Checklist" /></span>
             </TabsTrigger>
             <TabsTrigger value="observations" className="flex items-center gap-1">
-              <AlertTriangle className="h-4 w-4" /><span className="hidden sm:inline">Observations</span>
+              <AlertTriangle className="h-4 w-4" /><span className="hidden sm:inline"><T k="auto.fieldinspectionexecutor.observations" fallback="Observations" /></span>
             </TabsTrigger>
             <TabsTrigger value="photos" className="flex items-center gap-1">
-              <Camera className="h-4 w-4" /><span className="hidden sm:inline">Photos</span>
+              <Camera className="h-4 w-4" /><span className="hidden sm:inline"><T k="auto.fieldinspectionexecutor.photos" fallback="Photos" /></span>
             </TabsTrigger>
             <TabsTrigger value="measurements" className="flex items-center gap-1">
-              <Ruler className="h-4 w-4" /><span className="hidden sm:inline">Mesures</span>
+              <Ruler className="h-4 w-4" /><span className="hidden sm:inline"><T k="auto.fieldinspectionexecutor.mesures" fallback="Mesures" /></span>
             </TabsTrigger>
             <TabsTrigger value="participants" className="flex items-center gap-1">
-              <Users className="h-4 w-4" /><span className="hidden sm:inline">Participants</span>
+              <Users className="h-4 w-4" /><span className="hidden sm:inline"><T k="auto.fieldinspectionexecutor.participants" fallback="Participants" /></span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="checklist">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Points de Contrôle</CardTitle>
+                <CardTitle className="text-base"><T k="auto.fieldinspectionexecutor.points_de_controle" fallback="Points de Contrôle" /></CardTitle>
                 <CardDescription>
                   {executionData.checklist?.filter(c => c.checked || c.completed).length || 0} / {executionData.checklist?.length || 0} vérifiés
                 </CardDescription>
@@ -440,26 +441,26 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
           <TabsContent value="observations">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Observations</CardTitle>
+                <CardTitle className="text-base"><T k="auto.fieldinspectionexecutor.observations" fallback="Observations" /></CardTitle>
                 <CardDescription>{executionData.observations?.length || 0} observation(s)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 p-4 border rounded-lg bg-muted/30">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label>Type</Label>
+                      <Label><T k="auto.fieldinspectionexecutor.type" fallback="Type" /></Label>
                       <Select value={newObservation.type} onValueChange={(v) => setNewObservation({ ...newObservation, type: v, category: '' })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="technical"><TranslatedCategory code="technical" /></SelectItem>
-                          <SelectItem value="safety">Sécurité</SelectItem>
-                          <SelectItem value="quality">Qualité</SelectItem>
-                          <SelectItem value="non_conformity">Non-conformité</SelectItem>
+                          <SelectItem value="safety"><T k="auto.fieldinspectionexecutor.securite" fallback="Sécurité" /></SelectItem>
+                          <SelectItem value="quality"><T k="auto.fieldinspectionexecutor.qualite" fallback="Qualité" /></SelectItem>
+                          <SelectItem value="non_conformity"><T k="auto.fieldinspectionexecutor.non_conformite" fallback="Non-conformité" /></SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>Catégorie</Label>
+                      <Label><T k="auto.fieldinspectionexecutor.categorie" fallback="Catégorie" /></Label>
                       <Select value={newObservation.category} onValueChange={(v) => setNewObservation({ ...newObservation, category: v })}>
                         <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                         <SelectContent>
@@ -469,24 +470,24 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                     </div>
                   </div>
                   <div>
-                    <Label>Description</Label>
+                    <Label><T k="auto.fieldinspectionexecutor.description" fallback="Description" /></Label>
                     <Textarea value={newObservation.description} onChange={(e) => setNewObservation({ ...newObservation, description: e.target.value })} placeholder="Décrivez l'observation..." rows={2} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label>Conformité</Label>
+                      <Label><T k="auto.fieldinspectionexecutor.conformite" fallback="Conformité" /></Label>
                       <Select value={newObservation.conformity} onValueChange={(v) => setNewObservation({ ...newObservation, conformity: v })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="conforme">Conforme</SelectItem>
-                          <SelectItem value="en_attente">Partiellement conforme</SelectItem>
-                          <SelectItem value="non_conforme">Non conforme</SelectItem>
+                          <SelectItem value="conforme"><T k="auto.fieldinspectionexecutor.conforme" fallback="Conforme" /></SelectItem>
+                          <SelectItem value="en_attente"><T k="auto.fieldinspectionexecutor.partiellement_conforme" fallback="Partiellement conforme" /></SelectItem>
+                          <SelectItem value="non_conforme"><T k="auto.fieldinspectionexecutor.non_conforme" fallback="Non conforme" /></SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     {newObservation.conformity !== 'conforme' && (
                       <div>
-                        <Label>Gravité</Label>
+                        <Label><T k="auto.fieldinspectionexecutor.gravite" fallback="Gravité" /></Label>
                         <Select value={newObservation.severity} onValueChange={(v) => setNewObservation({ ...newObservation, severity: v })}>
                           <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                           <SelectContent>
@@ -501,11 +502,11 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                   </div>
                   {newObservation.conformity !== 'conforme' && (
                     <div>
-                      <Label>Action corrective proposée</Label>
+                      <Label><T k="auto.fieldinspectionexecutor.action_corrective_proposee" fallback="Action corrective proposée" /></Label>
                       <Input value={newObservation.correctiveAction || ''} onChange={(e) => setNewObservation({ ...newObservation, correctiveAction: e.target.value })} placeholder="Action à entreprendre..." />
                     </div>
                   )}
-                  <Button onClick={handleAddObservation} className="w-full"><Plus className="h-4 w-4 mr-2" />Ajouter observation</Button>
+                  <Button onClick={handleAddObservation} className="w-full"><Plus className="h-4 w-4 mr-2" /><T k="auto.fieldinspectionexecutor.ajouter_observation" fallback="Ajouter observation" /></Button>
                 </div>
                 <ScrollArea className="h-[250px]">
                   <div className="space-y-2">
@@ -539,7 +540,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
               <CardHeader>
                 <CardTitle className="text-base">Photos & Documents</CardTitle>
                 <CardDescription>
-                  Pièces jointes gérées par la GED (chargement, visionneuse intégrée, filtres)
+                  <T k="auto.fieldinspectionexecutor.pieces_jointes_gerees_par_la_ged_chargement_visi" fallback="Pièces jointes gérées par la GED (chargement, visionneuse intégrée, filtres)" />
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -557,11 +558,11 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
               <CardContent className="space-y-4">
                 <div className="grid gap-3 p-4 border rounded-lg bg-muted/30">
                   <div className="grid grid-cols-3 gap-3">
-                    <div><Label>Paramètre</Label><Input value={newMeasurement.parameter} onChange={(e) => setNewMeasurement({ ...newMeasurement, parameter: e.target.value })} placeholder="ex: Épaisseur dalle" /></div>
-                    <div><Label>Valeur</Label><Input type="number" value={newMeasurement.value} onChange={(e) => setNewMeasurement({ ...newMeasurement, value: parseFloat(e.target.value) })} /></div>
-                    <div><Label>Unité</Label><Input value={newMeasurement.unit} onChange={(e) => setNewMeasurement({ ...newMeasurement, unit: e.target.value })} placeholder="cm, m, kg..." /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.parametre" fallback="Paramètre" /></Label><Input value={newMeasurement.parameter} onChange={(e) => setNewMeasurement({ ...newMeasurement, parameter: e.target.value })} placeholder="ex: Épaisseur dalle" /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.valeur" fallback="Valeur" /></Label><Input type="number" value={newMeasurement.value} onChange={(e) => setNewMeasurement({ ...newMeasurement, value: parseFloat(e.target.value) })} /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.unite" fallback="Unité" /></Label><Input value={newMeasurement.unit} onChange={(e) => setNewMeasurement({ ...newMeasurement, unit: e.target.value })} placeholder="cm, m, kg..." /></div>
                   </div>
-                  <Button onClick={handleAddMeasurement} className="w-full"><Plus className="h-4 w-4 mr-2" />Ajouter mesure</Button>
+                  <Button onClick={handleAddMeasurement} className="w-full"><Plus className="h-4 w-4 mr-2" /><T k="auto.fieldinspectionexecutor.ajouter_mesure" fallback="Ajouter mesure" /></Button>
                 </div>
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-2">
@@ -580,17 +581,17 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
           <TabsContent value="participants">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Participants</CardTitle>
+                <CardTitle className="text-base"><T k="auto.fieldinspectionexecutor.participants" fallback="Participants" /></CardTitle>
                 <CardDescription>{executionData.participants?.length || 0} participant(s)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-3 p-4 border rounded-lg bg-muted/30">
                   <div className="grid grid-cols-3 gap-3">
-                    <div><Label>Nom</Label><Input value={newParticipant.name} onChange={(e) => setNewParticipant({ ...newParticipant, name: e.target.value })} placeholder="Nom complet" /></div>
-                    <div><Label>Rôle</Label><Input value={newParticipant.role} onChange={(e) => setNewParticipant({ ...newParticipant, role: e.target.value })} placeholder="ex: Ingénieur" /></div>
-                    <div><Label>Organisation</Label><Input value={newParticipant.organization} onChange={(e) => setNewParticipant({ ...newParticipant, organization: e.target.value })} placeholder="Entreprise" /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.nom" fallback="Nom" /></Label><Input value={newParticipant.name} onChange={(e) => setNewParticipant({ ...newParticipant, name: e.target.value })} placeholder="Nom complet" /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.role" fallback="Rôle" /></Label><Input value={newParticipant.role} onChange={(e) => setNewParticipant({ ...newParticipant, role: e.target.value })} placeholder="ex: Ingénieur" /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.organisation" fallback="Organisation" /></Label><Input value={newParticipant.organization} onChange={(e) => setNewParticipant({ ...newParticipant, organization: e.target.value })} placeholder="Entreprise" /></div>
                   </div>
-                  <Button onClick={handleAddParticipant} className="w-full"><Plus className="h-4 w-4 mr-2" />Ajouter participant</Button>
+                  <Button onClick={handleAddParticipant} className="w-full"><Plus className="h-4 w-4 mr-2" /><T k="auto.fieldinspectionexecutor.ajouter_participant" fallback="Ajouter participant" /></Button>
                 </div>
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-2">
@@ -617,27 +618,27 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Progression observée (%)</Label>
+                <Label><T k="auto.fieldinspectionexecutor.progression_observee" fallback="Progression observée (%)" /></Label>
                 <Input type="number" min={0} max={100} value={executionData.progressPercentage || 0} onChange={(e) => setExecutionData({ ...executionData, progressPercentage: parseInt(e.target.value) })} />
               </div>
               <div>
-                <Label>Conformité globale</Label>
+                <Label><T k="auto.fieldinspectionexecutor.conformite_globale" fallback="Conformité globale" /></Label>
                 <Select value={executionData.overallConformity} onValueChange={(v) => setExecutionData({ ...executionData, overallConformity: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="conforme">Conforme</SelectItem>
-                    <SelectItem value="en_attente">Partiellement conforme</SelectItem>
-                    <SelectItem value="non_conforme">Non conforme</SelectItem>
+                    <SelectItem value="conforme"><T k="auto.fieldinspectionexecutor.conforme" fallback="Conforme" /></SelectItem>
+                    <SelectItem value="en_attente"><T k="auto.fieldinspectionexecutor.partiellement_conforme" fallback="Partiellement conforme" /></SelectItem>
+                    <SelectItem value="non_conforme"><T k="auto.fieldinspectionexecutor.non_conforme" fallback="Non conforme" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label>Résumé des observations</Label>
+              <Label><T k="auto.fieldinspectionexecutor.resume_des_observations" fallback="Résumé des observations" /></Label>
               <Textarea value={executionData.summary || ''} onChange={(e) => setExecutionData({ ...executionData, summary: e.target.value })} placeholder="Résumé général de l'inspection..." rows={3} />
             </div>
             <div>
-              <Label>Recommandations</Label>
+              <Label><T k="auto.fieldinspectionexecutor.recommandations" fallback="Recommandations" /></Label>
               <Textarea value={(executionData.recommendations || []).join('\n')} onChange={(e) => setExecutionData({ ...executionData, recommendations: e.target.value.split('\n').filter(Boolean) })} placeholder="Une recommandation par ligne..." rows={3} />
             </div>
           </CardContent>

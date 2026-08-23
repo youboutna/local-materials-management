@@ -20,6 +20,7 @@ import { CheckCircle, FileDown, Loader2, Mail, Upload } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
 import { formatNumber2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 // Mapping functions for type compatibility
 const mapTenderEstimateToEstimateData = (tenderEstimate: TenderEstimateDTO): EstimateData => {
@@ -245,25 +246,25 @@ export function QuantitativeEstimateExporter({
 
         <!-- Tender Information -->
         <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Informations Appel d'Offres</h3>
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;"><T k="auto.quantitativeestimateexporter.informations_appel_d_offres" fallback="Informations Appel d'Offres" /></h3>
           <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
-            <p style="margin: 5px 0;"><strong>Titre:</strong> ${tender?.title || 'Non défini'}</p>
-            <p style="margin: 5px 0;"><strong>Référence:</strong> ${tender?.projectReference || 'Non défini'}</p>
-            ${tender?.description ? `<p style="margin: 5px 0;"><strong>Description:</strong> ${tender.description}</p>` : ''}
+            <p style="margin: 5px 0;"><strong><T k="auto.quantitativeestimateexporter.titre" fallback="Titre:" /></strong> ${tender?.title || 'Non défini'}</p>
+            <p style="margin: 5px 0;"><strong><T k="auto.quantitativeestimateexporter.reference" fallback="Référence:" /></strong> ${tender?.projectReference || 'Non défini'}</p>
+            ${tender?.description ? `<p style="margin: 5px 0;"><strong><T k="auto.quantitativeestimateexporter.description" fallback="Description:" /></strong> ${tender.description}</p>` : ''}
           </div>
         </section>
 
         ${exportConfig.includeItemDetails && estimateItems.length > 0 ? `
         <!-- Detailed Items -->
         <section class="page-break-section" style="margin-bottom: 25px;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Détail des Postes</h3>
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;"><T k="auto.quantitativeestimateexporter.detail_des_postes" fallback="Détail des Postes" /></h3>
           <div style="page-break-inside: avoid;">
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto;">
               <thead>
                 <tr style="background: #f8fafc;">
-                  <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; font-weight: bold;">Description</th>
-                  <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; font-weight: bold;">Type</th>
-                  <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; font-weight: bold;">Qté</th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; font-weight: bold;"><T k="auto.quantitativeestimateexporter.description" fallback="Description" /></th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; font-weight: bold;"><T k="auto.quantitativeestimateexporter.type" fallback="Type" /></th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; font-weight: bold;"><T k="auto.quantitativeestimateexporter.qte" fallback="Qté" /></th>
                   <th style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 12px; font-weight: bold;">P.U. (${estimate.currency})</th>
                   <th style="border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 12px; font-weight: bold;">Total (${estimate.currency})</th>
                 </tr>
@@ -291,11 +292,11 @@ export function QuantitativeEstimateExporter({
         ${exportConfig.includePriceBreakdown ? `
         <!-- Price Breakdown -->
         <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Récapitulatif Financier</h3>
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;"><T k="auto.quantitativeestimateexporter.recapitulatif_financier" fallback="Récapitulatif Financier" /></h3>
           <div style="background: #f8fafc; padding: 20px; border-radius: 8px;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Matériaux:</strong></td>
+                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong><T k="auto.quantitativeestimateexporter.materiaux" fallback="Matériaux:" /></strong></td>
                 <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.materialsCost)} ${estimate.currency}</td>
               </tr>
               <tr>
@@ -303,17 +304,17 @@ export function QuantitativeEstimateExporter({
                 <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.laborCost)} ${estimate.currency}</td>
               </tr>
               <tr>
-                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Équipement:</strong></td>
+                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong><T k="auto.quantitativeestimateexporter.equipement" fallback="Équipement:" /></strong></td>
                 <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.equipmentCost)} ${estimate.currency}</td>
               </tr>
               ${totals.otherCost > 0 ? `
               <tr>
-                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong>Autres:</strong></td>
+                <td style="padding: 5px 0; border-bottom: 1px solid #ddd;"><strong><T k="auto.quantitativeestimateexporter.autres" fallback="Autres:" /></strong></td>
                 <td style="padding: 5px 0; text-align: right; border-bottom: 1px solid #ddd;">${formatNumber2(totals.otherCost)} ${estimate.currency}</td>
               </tr>
               ` : ''}
               <tr style="background: #f8f9fa;">
-                <td style="padding: 8px 0; font-weight: bold;"><strong>Sous-total HT:</strong></td>
+                <td style="padding: 8px 0; font-weight: bold;"><strong><T k="auto.quantitativeestimateexporter.sous_total_ht" fallback="Sous-total HT:" /></strong></td>
                 <td style="padding: 8px 0; text-align: right; font-weight: bold;">${formatNumber2(totals.subtotal)} ${estimate.currency}</td>
               </tr>
               <tr>
@@ -329,7 +330,7 @@ export function QuantitativeEstimateExporter({
                 <td style="padding: 5px 0; text-align: right; border-bottom: 2px solid #333;">${formatNumber2(totals.profitAmount)} ${estimate.currency}</td>
               </tr>
               <tr style="background: #dbeafe;">
-                <td style="padding: 12px 0; font-weight: bold; font-size: 16px; color: #2563eb;"><strong>TOTAL GÉNÉRAL TTC:</strong></td>
+                <td style="padding: 12px 0; font-weight: bold; font-size: 16px; color: #2563eb;"><strong><T k="auto.quantitativeestimateexporter.total_general_ttc" fallback="TOTAL GÉNÉRAL TTC:" /></strong></td>
                 <td style="padding: 12px 0; text-align: right; font-weight: bold; font-size: 16px; color: #2563eb;">${formatNumber2(totals.finalTotal)} ${estimate.currency}</td>
               </tr>
             </table>
@@ -340,7 +341,7 @@ export function QuantitativeEstimateExporter({
         ${exportConfig.includeTermsConditions ? `
         <!-- Terms and Conditions -->
         <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Conditions Générales</h3>
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;"><T k="auto.quantitativeestimateexporter.conditions_generales" fallback="Conditions Générales" /></h3>
           <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
             <pre style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4; margin: 0; white-space: pre-wrap;">${exportConfig.termsConditions}</pre>
           </div>
@@ -350,7 +351,7 @@ export function QuantitativeEstimateExporter({
         ${exportConfig.notes ? `
         <!-- Additional Notes -->
         <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Notes Complémentaires</h3>
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;"><T k="auto.quantitativeestimateexporter.notes_complementaires" fallback="Notes Complémentaires" /></h3>
           <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
             <p style="margin: 0; line-height: 1.6; font-size: 12px;">${exportConfig.notes}</p>
           </div>
@@ -360,17 +361,17 @@ export function QuantitativeEstimateExporter({
         ${exportConfig.includeSignature ? `
         <!-- Signature Section -->
         <section class="page-break-section" style="margin-bottom: 25px; page-break-inside: avoid;">
-          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;">Validation</h3>
+          <h3 style="color: #374151; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 15px;"><T k="auto.quantitativeestimateexporter.validation" fallback="Validation" /></h3>
           <div style="background: #f8fafc; padding: 20px; border-radius: 8px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
               <div>
-                <p style="margin: 0; font-size: 14px; color: #666;">Établi par:</p>
+                <p style="margin: 0; font-size: 14px; color: #666;"><T k="auto.quantitativeestimateexporter.etabli_par" fallback="Établi par:" /></p>
                 <p style="margin: 5px 0; font-weight: bold; font-size: 16px;">${exportConfig.signatoryName || 'Nom du signataire'}</p>
                 <p style="margin: 5px 0; color: #666; font-size: 14px;">${exportConfig.signatoryTitle || ''}</p>
                 <p style="margin: 15px 0 5px 0; font-size: 12px; color: #666;">Date: ${currentDate}</p>
               </div>
               <div style="border: 2px dashed #ccc; padding: 15px; text-align: center; min-height: 100px; display: flex; align-items: center; justify-content: center; background: white;">
-                ${signature ? `<img src="${signature}" style="max-width: 200px; max-height: 80px;" alt="Signature électronique" />` : '<p style="margin: 0; color: #999; font-style: italic;">Signature électronique</p>'}
+                ${signature ? `<img src="${signature}" style="max-width: 200px; max-height: 80px;" alt="Signature électronique" />` : '<p style="margin: 0; color: #999; font-style: italic;"><T k="auto.quantitativeestimateexporter.signature_electronique" fallback="Signature électronique" /></p>'}
               </div>
             </div>
           </div>
@@ -380,7 +381,7 @@ export function QuantitativeEstimateExporter({
         <!-- Footer -->
         <div style="border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 30px; text-align: center; color: #666; font-size: 11px;">
           <p style="margin: 0;">Ce devis quantitatif estimatif a été généré le ${currentDate}</p>
-          <p style="margin: 5px 0;">Document confidentiel - Ne pas reproduire sans autorisation</p>
+          <p style="margin: 5px 0;"><T k="auto.quantitativeestimateexporter.document_confidentiel_ne_pas_reproduire_sans_aut" fallback="Document confidentiel - Ne pas reproduire sans autorisation" /></p>
         </div>
       </div>
     `;
@@ -457,16 +458,16 @@ export function QuantitativeEstimateExporter({
         message: `Veuillez trouver ci-joint le devis quantitatif estimatif "${exportConfig.title}" pour l'appel d'offres "${tender?.projectReference || tender?.title}". Le devis a été généré le ${format(new Date(), 'dd/MM/yyyy')} et est valide jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')}.`,
         html: `
           <h2>Devis Quantitatif: ${exportConfig.title}</h2>
-          <p>Bonjour,</p>
-          <p>Veuillez trouver ci-joint le devis quantitatif estimatif pour l'appel d'offres <strong>${tender?.projectReference || tender?.title}</strong>.</p>
-          <p><strong>Référence:</strong> ${tender?.projectReference || 'N/A'}</p>
-          <p><strong>Date de génération:</strong> ${format(new Date(), 'dd/MM/yyyy')}</p>
-          <p><strong>Validité:</strong> ${exportConfig.validityPeriod} jours (jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')})</p>
-          <p><strong>Montant total:</strong> ${formatNumber2(calculateTotals().finalTotal)} MRU</p>
-          <p>Ce devis a été généré automatiquement par le système.</p>
+          <p><T k="auto.quantitativeestimateexporter.bonjour" fallback="Bonjour," /></p>
+          <p><T k="auto.quantitativeestimateexporter.veuillez_trouver_ci_joint_le_devis_quantitatif_e" fallback="Veuillez trouver ci-joint le devis quantitatif estimatif pour l'appel d'offres" /> <strong>${tender?.projectReference || tender?.title}</strong>.</p>
+          <p><strong><T k="auto.quantitativeestimateexporter.reference" fallback="Référence:" /></strong> ${tender?.projectReference || 'N/A'}</p>
+          <p><strong><T k="auto.quantitativeestimateexporter.date_de_generation" fallback="Date de génération:" /></strong> ${format(new Date(), 'dd/MM/yyyy')}</p>
+          <p><strong><T k="auto.quantitativeestimateexporter.validite" fallback="Validité:" /></strong> ${exportConfig.validityPeriod} jours (jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')})</p>
+          <p><strong><T k="auto.quantitativeestimateexporter.montant_total" fallback="Montant total:" /></strong> ${formatNumber2(calculateTotals().finalTotal)} MRU</p>
+          <p><T k="auto.quantitativeestimateexporter.ce_devis_a_ete_genere_automatiquement_par_le_sys" fallback="Ce devis a été généré automatiquement par le système." /></p>
           <br>
-          <p>Cordialement,</p>
-          <p>L'équipe de gestion des appels d'offres</p>
+          <p><T k="auto.quantitativeestimateexporter.cordialement" fallback="Cordialement," /></p>
+          <p><T k="auto.quantitativeestimateexporter.l_equipe_de_gestion_des_appels_d_offres" fallback="L'équipe de gestion des appels d'offres" /></p>
         `,
         actionType: 'quantitative-estimate',
         attachments: [
@@ -502,14 +503,14 @@ export function QuantitativeEstimateExporter({
       <DialogTrigger asChild>
         <Button variant="default" className="flex items-center gap-2">
           <FileDown className="h-4 w-4" />
-          Exporter PDF
+          <T k="auto.quantitativeestimateexporter.exporter_pdf" fallback="Exporter PDF" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileDown className="h-5 w-5" />
-            Export Devis Quantitatif Estimatif
+            <T k="auto.quantitativeestimateexporter.export_devis_quantitatif_estimatif" fallback="Export Devis Quantitatif Estimatif" />
           </DialogTitle>
         </DialogHeader>
         
@@ -518,7 +519,7 @@ export function QuantitativeEstimateExporter({
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="title">Titre du devis</Label>
+                <Label htmlFor="title"><T k="auto.quantitativeestimateexporter.titre_du_devis" fallback="Titre du devis" /></Label>
                 <Input
                   id="title"
                   value={exportConfig.title}
@@ -527,7 +528,7 @@ export function QuantitativeEstimateExporter({
               </div>
 
               <div>
-                <Label htmlFor="validityPeriod">Période de validité (jours)</Label>
+                <Label htmlFor="validityPeriod"><T k="auto.quantitativeestimateexporter.periode_de_validite_jours" fallback="Période de validité (jours)" /></Label>
                 <Input
                   id="validityPeriod"
                   type="number"
@@ -537,7 +538,7 @@ export function QuantitativeEstimateExporter({
               </div>
 
               <div>
-                <Label htmlFor="recipientEmail">Email destinataire (optionnel)</Label>
+                <Label htmlFor="recipientEmail"><T k="auto.quantitativeestimateexporter.email_destinataire_optionnel" fallback="Email destinataire (optionnel)" /></Label>
                 <Input
                   id="recipientEmail"
                   type="email"
@@ -549,10 +550,10 @@ export function QuantitativeEstimateExporter({
             </div>
 
             <div className="space-y-4">
-              <Label>Sections à inclure</Label>
+              <Label><T k="auto.quantitativeestimateexporter.sections_a_inclure" fallback="Sections à inclure" /></Label>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="includeCompanyHeader" className="text-sm">En-tête entreprise</Label>
+                  <Label htmlFor="includeCompanyHeader" className="text-sm"><T k="auto.quantitativeestimateexporter.en_tete_entreprise" fallback="En-tête entreprise" /></Label>
                   <Switch
                     id="includeCompanyHeader"
                     checked={exportConfig.includeCompanyHeader}
@@ -560,7 +561,7 @@ export function QuantitativeEstimateExporter({
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="includeItemDetails" className="text-sm">Détail des postes</Label>
+                  <Label htmlFor="includeItemDetails" className="text-sm"><T k="auto.quantitativeestimateexporter.detail_des_postes" fallback="Détail des postes" /></Label>
                   <Switch
                     id="includeItemDetails"
                     checked={exportConfig.includeItemDetails}
@@ -568,7 +569,7 @@ export function QuantitativeEstimateExporter({
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="includePriceBreakdown" className="text-sm">Récapitulatif financier</Label>
+                  <Label htmlFor="includePriceBreakdown" className="text-sm"><T k="auto.quantitativeestimateexporter.recapitulatif_financier" fallback="Récapitulatif financier" /></Label>
                   <Switch
                     id="includePriceBreakdown"
                     checked={exportConfig.includePriceBreakdown}
@@ -576,7 +577,7 @@ export function QuantitativeEstimateExporter({
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="includeTermsConditions" className="text-sm">Conditions générales</Label>
+                  <Label htmlFor="includeTermsConditions" className="text-sm"><T k="auto.quantitativeestimateexporter.conditions_generales" fallback="Conditions générales" /></Label>
                   <Switch
                     id="includeTermsConditions"
                     checked={exportConfig.includeTermsConditions}
@@ -584,7 +585,7 @@ export function QuantitativeEstimateExporter({
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="includeSignature" className="text-sm">Signature électronique</Label>
+                  <Label htmlFor="includeSignature" className="text-sm"><T k="auto.quantitativeestimateexporter.signature_electronique" fallback="Signature électronique" /></Label>
                   <Switch
                     id="includeSignature"
                     checked={exportConfig.includeSignature}
@@ -600,7 +601,7 @@ export function QuantitativeEstimateExporter({
           {/* Terms and Conditions */}
           {exportConfig.includeTermsConditions && (
             <div>
-              <Label htmlFor="termsConditions">Conditions générales</Label>
+              <Label htmlFor="termsConditions"><T k="auto.quantitativeestimateexporter.conditions_generales" fallback="Conditions générales" /></Label>
               <Textarea
                 id="termsConditions"
                 value={exportConfig.termsConditions}
@@ -613,7 +614,7 @@ export function QuantitativeEstimateExporter({
 
           {/* Additional Notes */}
           <div>
-            <Label htmlFor="notes">Notes complémentaires (optionnel)</Label>
+            <Label htmlFor="notes"><T k="auto.quantitativeestimateexporter.notes_complementaires_optionnel" fallback="Notes complémentaires (optionnel)" /></Label>
             <Textarea
               id="notes"
               value={exportConfig.notes}
@@ -628,7 +629,7 @@ export function QuantitativeEstimateExporter({
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="signatoryName">Nom du signataire</Label>
+                  <Label htmlFor="signatoryName"><T k="auto.quantitativeestimateexporter.nom_du_signataire" fallback="Nom du signataire" /></Label>
                   <Input
                     id="signatoryName"
                     value={exportConfig.signatoryName}
@@ -648,7 +649,7 @@ export function QuantitativeEstimateExporter({
               </div>
 
               <div>
-                <Label>Signature électronique</Label>
+                <Label><T k="auto.quantitativeestimateexporter.signature_electronique" fallback="Signature électronique" /></Label>
                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
                   <div className="flex gap-4 mb-4">
                     <Button
@@ -657,7 +658,7 @@ export function QuantitativeEstimateExporter({
                       size="sm"
                       onClick={clearSignature}
                     >
-                      Effacer
+                      <T k="auto.quantitativeestimateexporter.effacer" fallback="Effacer" />
                     </Button>
                     <div>
                       <input
@@ -676,7 +677,7 @@ export function QuantitativeEstimateExporter({
                         >
                           <span>
                             <Upload className="h-4 w-4 mr-2" />
-                            Importer
+                            <T k="auto.quantitativeestimateexporter.importer" fallback="Importer" />
                           </span>
                         </Button>
                       </Label>
@@ -684,7 +685,7 @@ export function QuantitativeEstimateExporter({
                     {isSignatureSigned && (
                       <Badge variant="default" className="flex items-center gap-1">
                         <CheckCircle className="h-3 w-3" />
-                        Signée
+                        <T k="auto.quantitativeestimateexporter.signee" fallback="Signée" />
                       </Badge>
                     )}
                   </div>
@@ -700,7 +701,7 @@ export function QuantitativeEstimateExporter({
                     style={{ touchAction: 'none' }}
                   />
                   <p className="text-sm text-muted-foreground mt-2">
-                    Dessinez votre signature avec la souris ou importez une image
+                    <T k="auto.quantitativeestimateexporter.dessinez_votre_signature_avec_la_souris_ou_impor" fallback="Dessinez votre signature avec la souris ou importez une image" />
                   </p>
                 </div>
               </div>
@@ -715,7 +716,7 @@ export function QuantitativeEstimateExporter({
               variant="outline"
               onClick={() => setIsOpen(false)}
             >
-              Annuler
+              <T k="auto.quantitativeestimateexporter.annuler" fallback="Annuler" />
             </Button>
             <Button
               variant="outline"

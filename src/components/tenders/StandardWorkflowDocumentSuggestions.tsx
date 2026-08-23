@@ -11,6 +11,7 @@ import {
   PROCUREMENT_PHASE_LABELS
 } from './PublicProcurementWorkflow';
 import type { TenderDocumentCategory } from '@/dtos/types/tender';
+import { T } from '@/components/i18n/T';
 
 interface StandardWorkflowDocumentSuggestionsProps {
   selectedPhase: ProcurementPhase;
@@ -64,14 +65,14 @@ const StandardWorkflowDocumentSuggestions = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Documents suggérés pour l'étape
+          <T k="auto.standardworkflowdocumentsuggestions.documents_suggeres_pour_l_etape" fallback="Documents suggérés pour l'étape" />
         </CardTitle>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm">
             Phase: {PROCUREMENT_PHASE_LABELS[selectedPhase] || selectedPhase}
           </Badge>
           <p className="text-sm text-muted-foreground">
-            Sélectionnez une étape pour voir les documents recommandés
+            <T k="auto.standardworkflowdocumentsuggestions.selectionnez_une_etape_pour_voir_les_documents_r" fallback="Sélectionnez une étape pour voir les documents recommandés" />
           </p>
         </div>
       </CardHeader>
@@ -79,7 +80,7 @@ const StandardWorkflowDocumentSuggestions = ({
         <div className="space-y-4">
           {/* Stage Selection */}
           <div className="mb-4">
-            <h4 className="font-medium text-sm mb-2">Sélectionnez une étape:</h4>
+            <h4 className="font-medium text-sm mb-2"><T k="auto.standardworkflowdocumentsuggestions.selectionnez_une_etape" fallback="Sélectionnez une étape:" /></h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {phaseStages.length > 0 ? (
                 phaseStages.map((stage) => (
@@ -96,7 +97,7 @@ const StandardWorkflowDocumentSuggestions = ({
               ) : (
                 <div className="col-span-2 text-center py-4 text-muted-foreground">
                   <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm">Aucune étape disponible pour cette phase.</p>
+                  <p className="text-sm"><T k="auto.standardworkflowdocumentsuggestions.aucune_etape_disponible_pour_cette_phase" fallback="Aucune étape disponible pour cette phase." /></p>
                 </div>
               )}
             </div>
@@ -134,7 +135,7 @@ const StandardWorkflowDocumentSuggestions = ({
                               </Badge>
                               {doc.isRequired && (
                                 <Badge variant="destructive" className="text-xs">
-                                  Requis
+                                  <T k="auto.standardworkflowdocumentsuggestions.requis" fallback="Requis" />
                                 </Badge>
                               )}
                             </div>
@@ -145,7 +146,7 @@ const StandardWorkflowDocumentSuggestions = ({
                           {isAdded ? (
                             <Badge variant="secondary" className="flex items-center gap-1">
                               <CheckCircle className="h-3 w-3" />
-                              Ajouté
+                              <T k="auto.standardworkflowdocumentsuggestions.ajoute" fallback="Ajouté" />
                             </Badge>
                           ) : (
                             <Button
@@ -156,7 +157,7 @@ const StandardWorkflowDocumentSuggestions = ({
                               className="whitespace-nowrap"
                             >
                               <Plus className="h-3 w-3 mr-1" />
-                              Ajouter
+                              <T k="auto.standardworkflowdocumentsuggestions.ajouter" fallback="Ajouter" />
                             </Button>
                           )}
                         </div>
@@ -166,9 +167,9 @@ const StandardWorkflowDocumentSuggestions = ({
                 ) : (
                   <div className="text-center py-4 text-muted-foreground">
                     <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm">Aucune suggestion de document pour cette étape.</p>
+                    <p className="text-sm"><T k="auto.standardworkflowdocumentsuggestions.aucune_suggestion_de_document_pour_cette_etape" fallback="Aucune suggestion de document pour cette étape." /></p>
                     <p className="text-xs mt-1">
-                      Vous pourrez ajouter des documents manuellement après avoir créé l'étape.
+                      <T k="auto.standardworkflowdocumentsuggestions.vous_pourrez_ajouter_des_documents_manuellement_" fallback="Vous pourrez ajouter des documents manuellement après avoir créé l'étape." />
                     </p>
                   </div>
                 )}
@@ -176,7 +177,7 @@ const StandardWorkflowDocumentSuggestions = ({
 
               <div className="p-3 bg-primary/10 rounded-lg">
                 <p className="text-xs text-primary">
-                  <strong>Note:</strong> Ces documents sont spécifiques à l'étape sélectionnée 
+                  <strong><T k="auto.standardworkflowdocumentsuggestions.note" fallback="Note:" /></strong> Ces documents sont spécifiques à l'étape sélectionnée 
                   et sont basés sur les standards des marchés publics mauritaniens.
                 </p>
               </div>
@@ -186,7 +187,7 @@ const StandardWorkflowDocumentSuggestions = ({
           {!selectedStage && phaseStages.length > 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-sm">Sélectionnez une étape pour voir les documents suggérés</p>
+              <p className="text-sm"><T k="auto.standardworkflowdocumentsuggestions.selectionnez_une_etape_pour_voir_les_documents_s" fallback="Sélectionnez une étape pour voir les documents suggérés" /></p>
             </div>
           )}
         </div>

@@ -31,6 +31,7 @@ import {
   Calendar,
   Building
 } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 interface SupplierPaymentInitiationsProps {
   supplierId: string;
@@ -140,7 +141,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
       <Card>
         <CardContent className="py-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Chargement...</p>
+          <p className="mt-2 text-muted-foreground"><T k="auto.supplierpaymentinitiations.chargement" fallback="Chargement..." /></p>
         </CardContent>
       </Card>
     );
@@ -152,14 +153,14 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-primary" />
-            Demandes de Paiement Initiées
+            <T k="auto.supplierpaymentinitiations.demandes_de_paiement_initiees" fallback="Demandes de Paiement Initiées" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           {initiations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucune demande de paiement initiée pour le moment</p>
+              <p><T k="auto.supplierpaymentinitiations.aucune_demande_de_paiement_initiee_pour_le_momen" fallback="Aucune demande de paiement initiée pour le moment" /></p>
             </div>
           ) : (
             <Tabs defaultValue="pending">
@@ -176,7 +177,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
               <TabsContent value="pending" className="space-y-4">
                 {pendingInitiations.length === 0 ? (
-                  <p className="text-center py-4 text-muted-foreground">Aucune demande en attente</p>
+                  <p className="text-center py-4 text-muted-foreground"><T k="auto.supplierpaymentinitiations.aucune_demande_en_attente" fallback="Aucune demande en attente" /></p>
                 ) : (
                   pendingInitiations.map(initiation => (
                     <InitiationCard 
@@ -191,7 +192,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
               <TabsContent value="completed" className="space-y-4">
                 {completedInitiations.length === 0 ? (
-                  <p className="text-center py-4 text-muted-foreground">Aucune demande traitée</p>
+                  <p className="text-center py-4 text-muted-foreground"><T k="auto.supplierpaymentinitiations.aucune_demande_traitee" fallback="Aucune demande traitée" /></p>
                 ) : (
                   completedInitiations.map(initiation => (
                     <InitiationCard 
@@ -210,7 +211,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
       <Dialog open={isCompletionDialogOpen} onOpenChange={setIsCompletionDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Compléter la demande de paiement</DialogTitle>
+            <DialogTitle><T k="auto.supplierpaymentinitiations.completer_la_demande_de_paiement" fallback="Compléter la demande de paiement" /></DialogTitle>
           </DialogHeader>
 
           {selectedInitiation && (
@@ -219,11 +220,11 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
               <Card className="bg-muted/50">
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Projet</span>
+                    <span className="text-sm text-muted-foreground"><T k="auto.supplierpaymentinitiations.projet" fallback="Projet" /></span>
                     <span className="font-medium">{selectedInitiation.projectTitle || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Montant estimé</span>
+                    <span className="text-sm text-muted-foreground"><T k="auto.supplierpaymentinitiations.montant_estime" fallback="Montant estimé" /></span>
                     <span className="font-medium text-primary">{selectedInitiation.estimatedAmount.toLocaleString()} MRU</span>
                   </div>
                   <div className="flex justify-between">
@@ -250,10 +251,10 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="progress_payment">Paiement d'avancement</SelectItem>
-                    <SelectItem value="inspection_fee">Frais d'inspection</SelectItem>
-                    <SelectItem value="final_payment">Paiement final</SelectItem>
-                    <SelectItem value="other">Autre</SelectItem>
+                    <SelectItem value="progress_payment"><T k="auto.supplierpaymentinitiations.paiement_d_avancement" fallback="Paiement d'avancement" /></SelectItem>
+                    <SelectItem value="inspection_fee"><T k="auto.supplierpaymentinitiations.frais_d_inspection" fallback="Frais d'inspection" /></SelectItem>
+                    <SelectItem value="final_payment"><T k="auto.supplierpaymentinitiations.paiement_final" fallback="Paiement final" /></SelectItem>
+                    <SelectItem value="other"><T k="auto.supplierpaymentinitiations.autre" fallback="Autre" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -269,7 +270,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
               </div>
 
               <div>
-                <Label>Notes additionnelles</Label>
+                <Label><T k="auto.supplierpaymentinitiations.notes_additionnelles" fallback="Notes additionnelles" /></Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -294,7 +295,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCompletionDialogOpen(false)}>
-              Annuler
+              <T k="auto.supplierpaymentinitiations.annuler" fallback="Annuler" />
             </Button>
             <Button onClick={handleComplete} disabled={submitting}>
               <Send className="h-4 w-4 mr-2" />
@@ -369,7 +370,7 @@ const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete,
             {showCompleteButton && !isExpired && (
               <Button size="sm" onClick={onComplete}>
                 <Send className="h-4 w-4 mr-1" />
-                Compléter
+                <T k="auto.supplierpaymentinitiations.completer" fallback="Compléter" />
               </Button>
             )}
           </div>

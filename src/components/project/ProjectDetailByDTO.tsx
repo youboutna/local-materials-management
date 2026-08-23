@@ -79,6 +79,7 @@ import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
+import { T } from '@/components/i18n/T';
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
 // ============================================================================
@@ -823,10 +824,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               }}
               variant="outline"
             >
-              Réessayer
+              <T k="auto.projectdetailbydto.reessayer" fallback="Réessayer" />
             </Button>
             <Button onClick={() => navigate("/projects")}>
-              Retour aux projets
+              <T k="auto.projectdetailbydto.retour_aux_projets" fallback="Retour aux projets" />
             </Button>
           </div>
         </div>
@@ -888,7 +889,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             <CardContent className="grid grid-cols-1 gap-x-8 gap-y-3 p-4 lg:grid-cols-2">
               <dl className="space-y-2 text-sm">
                 <div className="flex items-baseline justify-between gap-3">
-                  <dt className="text-muted-foreground">Période</dt>
+                  <dt className="text-muted-foreground"><T k="auto.projectdetailbydto.periode" fallback="Période" /></dt>
                   <dd className="text-right font-medium">
                     {project.startDate ? new Date(project.startDate).toLocaleDateString() : "—"}
                     {" → "}
@@ -896,15 +897,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-3">
-                  <dt className="text-muted-foreground">Financement</dt>
+                  <dt className="text-muted-foreground"><T k="auto.projectdetailbydto.financement" fallback="Financement" /></dt>
                   <dd className="text-right font-medium">{project.financingSource || "Non spécifié"}</dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-3">
-                  <dt className="text-muted-foreground">Type de marché</dt>
+                  <dt className="text-muted-foreground"><T k="auto.projectdetailbydto.type_de_marche" fallback="Type de marché" /></dt>
                   <dd className="text-right font-medium">{project.marketType || "Non spécifié"}</dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-3">
-                  <dt className="text-muted-foreground">Localisation</dt>
+                  <dt className="text-muted-foreground"><T k="auto.projectdetailbydto.localisation" fallback="Localisation" /></dt>
                   <dd className="text-right font-medium">
                     {project.location || "Non spécifiée"}
                     {(() => {
@@ -929,19 +930,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Phase actuelle</span>
+                  <span className="text-muted-foreground"><T k="auto.projectdetailbydto.phase_actuelle" fallback="Phase actuelle" /></span>
                   <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"} className="text-[11px]">
                     {currentPhaseInfo.currentPhase || "Aucune phase"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Étape actuelle</span>
+                  <span className="text-muted-foreground"><T k="auto.projectdetailbydto.etape_actuelle" fallback="Étape actuelle" /></span>
                   <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"} className="text-[11px]">
                     {currentPhaseInfo.currentStage || "N/A"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Méthodologie</span>
+                  <span className="text-muted-foreground"><T k="auto.projectdetailbydto.methodologie" fallback="Méthodologie" /></span>
                   <Badge variant="outline" className="text-[11px]">{projectMethodology}</Badge>
                 </div>
                 <Progress value={metrics?.progress ?? 0} className="h-2" />
@@ -952,7 +953,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-2 text-xs">
                   <span className="flex items-center gap-1.5">
                     <Target className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-muted-foreground">Jalons</span>
+                    <span className="text-muted-foreground"><T k="auto.projectdetailbydto.jalons" fallback="Jalons" /></span>
                     <span className="font-semibold">
                       {metrics?.milestoneProgress.completed ?? 0}/{metrics?.milestoneProgress.total ?? 0}
                     </span>
@@ -962,7 +963,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </span>
                   <span className="flex items-center gap-1.5">
                     <FileText className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-muted-foreground">Documents</span>
+                    <span className="text-muted-foreground"><T k="auto.projectdetailbydto.documents" fallback="Documents" /></span>
                     <span className="font-semibold">{documentsData.length}</span>
                   </span>
                 </div>
@@ -1019,7 +1020,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardTitle className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
-                  Échéancier de paiements
+                  <T k="auto.projectdetailbydto.echeancier_de_paiements" fallback="Échéancier de paiements" />
                 </span>
                 <PaymentDialog
                   project={{
@@ -1044,7 +1045,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <div className="space-y-4">
                 {(project as ProjectSummaryDTO).allowsInitialPayment && (
                   <div className="p-4 border rounded-lg bg-success-soft">
-                    <h4 className="font-medium">Avance initiale autorisée</h4>
+                    <h4 className="font-medium"><T k="auto.projectdetailbydto.avance_initiale_autorisee" fallback="Avance initiale autorisée" /></h4>
                     <p className="text-sm text-muted-foreground">
                       {(project as ProjectSummaryDTO).initialPaymentPercentage}% du montant total
                     </p>
@@ -1085,7 +1086,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">Aucun paiement enregistré</p>
+                  <p className="text-muted-foreground"><T k="auto.projectdetailbydto.aucun_paiement_enregistre" fallback="Aucun paiement enregistré" /></p>
                 )}
               </div>
             </CardContent>
@@ -1097,8 +1098,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           <Tabs defaultValue="wbs" className="space-y-4">
             <WorkspaceTabsList variant="underline">
               <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases ({translateTerm('wbs_short')})</TabsTrigger>
-              <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
-              <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
+              <TabsTrigger value="planning" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.planning" fallback="Planning" /></TabsTrigger>
+              <TabsTrigger value="milestones" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.jalons" fallback="Jalons" /></TabsTrigger>
             </WorkspaceTabsList>
 
             <TabsContent value="wbs" className="mt-6">
@@ -1106,9 +1107,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span>Génération des phases</span>
+                      <span><T k="auto.projectdetailbydto.generation_des_phases" fallback="Génération des phases" /></span>
                       <Button onClick={() => setShowPhaseManager(true)} variant="outline">
-                        Gestion avancée des phases
+                        <T k="auto.projectdetailbydto.gestion_avancee_des_phases" fallback="Gestion avancée des phases" />
                       </Button>
                     </CardTitle>
                   </CardHeader>
@@ -1134,7 +1135,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                       </div>
                       <div className="pt-8">
                         <Button onClick={handleGeneratePhasesFromReferential} disabled={!selectedReferential}>
-                          Générer les phases
+                          <T k="auto.projectdetailbydto.generer_les_phases" fallback="Générer les phases" />
                         </Button>
                       </div>
                     </div>
@@ -1159,7 +1160,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <DialogUI open={showPhaseManager} onOpenChange={setShowPhaseManager}>
                 <DialogContentUI className="max-w-6xl max-h-[90vh] overflow-y-auto">
                   <DialogHeaderUI>
-                    <DialogTitleUI>Gestion avancée des phases</DialogTitleUI>
+                    <DialogTitleUI><T k="auto.projectdetailbydto.gestion_avancee_des_phases" fallback="Gestion avancée des phases" /></DialogTitleUI>
                   </DialogHeaderUI>
                   <ConstructionPhaseManager
                     phases={phases}
@@ -1179,18 +1180,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </div>
               <Tabs defaultValue="gantt" className="space-y-4 mt-4">
                 <WorkspaceTabsList variant="underline">
-                  <TabsTrigger value="gantt" className="text-xs sm:text-sm">Gantt</TabsTrigger>
-                  <TabsTrigger value="pert" className="text-xs sm:text-sm">PERT</TabsTrigger>
-                  <TabsTrigger value="kanban" className="text-xs sm:text-sm">Kanban</TabsTrigger>
-                  <TabsTrigger value="critical" className="text-xs sm:text-sm">Chemin Critique</TabsTrigger>
-                  <TabsTrigger value="timeline" className="text-xs sm:text-sm">Timeline</TabsTrigger>
+                  <TabsTrigger value="gantt" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.gantt" fallback="Gantt" /></TabsTrigger>
+                  <TabsTrigger value="pert" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.pert" fallback="PERT" /></TabsTrigger>
+                  <TabsTrigger value="kanban" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.kanban" fallback="Kanban" /></TabsTrigger>
+                  <TabsTrigger value="critical" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.chemin_critique" fallback="Chemin Critique" /></TabsTrigger>
+                  <TabsTrigger value="timeline" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.timeline" fallback="Timeline" /></TabsTrigger>
                 </WorkspaceTabsList>
 
                 <TabsContent value="gantt">
                   {metrics ? (
                     <ProjectGanttTimeline gantt={metrics.gantt} />
                   ) : (
-                    <p className="text-sm text-muted-foreground">Chargement du Gantt...</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.projectdetailbydto.chargement_du_gantt" fallback="Chargement du Gantt..." /></p>
                   )}
                 </TabsContent>
 
@@ -1216,8 +1217,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <Tabs defaultValue="timeline" className="space-y-4">
                 <WorkspaceTabsList variant="underline">
                   <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
-                  <TabsTrigger value="gantt">Diagramme Gantt</TabsTrigger>
-                  <TabsTrigger value="pert">Analyse PERT</TabsTrigger>
+                  <TabsTrigger value="gantt"><T k="auto.projectdetailbydto.diagramme_gantt" fallback="Diagramme Gantt" /></TabsTrigger>
+                  <TabsTrigger value="pert"><T k="auto.projectdetailbydto.analyse_pert" fallback="Analyse PERT" /></TabsTrigger>
                 </WorkspaceTabsList>
 
                 <TabsContent value="timeline">
@@ -1236,7 +1237,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   {metrics ? (
                     <ProjectGanttTimeline gantt={metrics.gantt} />
                   ) : (
-                    <p className="text-sm text-muted-foreground">Chargement du Gantt...</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.projectdetailbydto.chargement_du_gantt" fallback="Chargement du Gantt..." /></p>
                   )}
                 </TabsContent>
 
@@ -1244,7 +1245,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   {metrics ? (
                     <UnifiedPERTAnalysis pert={metrics.pert} referenceDurationDays={metrics.referenceDurationDays} />
                   ) : (
-                    <p className="text-sm text-muted-foreground">Chargement de l'analyse PERT...</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.projectdetailbydto.chargement_de_l_analyse_pert" fallback="Chargement de l'analyse PERT..." /></p>
                   )}
                 </TabsContent>
               </Tabs>
@@ -1265,9 +1266,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             return (
               <Tabs defaultValue={defaultExecTab} className="space-y-4">
                 <WorkspaceTabsList variant="underline">
-                  <TabsTrigger value="tasks-exec">Tâches</TabsTrigger>
-                  <TabsTrigger value="inspections">Inspections</TabsTrigger>
-                  <TabsTrigger value="payments-exec">Paiements</TabsTrigger>
+                  <TabsTrigger value="tasks-exec"><T k="auto.projectdetailbydto.taches" fallback="Tâches" /></TabsTrigger>
+                  <TabsTrigger value="inspections"><T k="auto.projectdetailbydto.inspections" fallback="Inspections" /></TabsTrigger>
+                  <TabsTrigger value="payments-exec"><T k="auto.projectdetailbydto.paiements" fallback="Paiements" /></TabsTrigger>
                 </WorkspaceTabsList>
 
                 <TabsContent value="tasks-exec">
@@ -1283,7 +1284,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Shield className="h-5 w-5" />
-                        Inspections du projet
+                        <T k="auto.projectdetailbydto.inspections_du_projet" fallback="Inspections du projet" />
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -1297,12 +1298,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5" />
-                        Paiements en cours
+                        <T k="auto.projectdetailbydto.paiements_en_cours" fallback="Paiements en cours" />
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {paymentsSource.filter(p => p.status !== 'paid' && p.status !== 'cancelled').length === 0 ? (
-                        <p className="text-muted-foreground">Aucun paiement en cours pour ce projet.</p>
+                        <p className="text-muted-foreground"><T k="auto.projectdetailbydto.aucun_paiement_en_cours_pour_ce_projet" fallback="Aucun paiement en cours pour ce projet." /></p>
                       ) : (
                         <div className="grid gap-3">
                           {paymentsSource
@@ -1377,7 +1378,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  Garanties bancaires
+                  <T k="auto.projectdetailbydto.garanties_bancaires" fallback="Garanties bancaires" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1401,7 +1402,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-center py-4">Aucune garantie bancaire enregistrée</p>
+                  <p className="text-muted-foreground text-center py-4"><T k="auto.projectdetailbydto.aucune_garantie_bancaire_enregistree" fallback="Aucune garantie bancaire enregistrée" /></p>
                 )}
               </CardContent>
             </Card>
@@ -1410,7 +1411,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  Assurances
+                  <T k="auto.projectdetailbydto.assurances" fallback="Assurances" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1435,7 +1436,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-center py-4">Aucune assurance enregistrée</p>
+                  <p className="text-muted-foreground text-center py-4"><T k="auto.projectdetailbydto.aucune_assurance_enregistree" fallback="Aucune assurance enregistrée" /></p>
                 )}
               </CardContent>
             </Card>
@@ -1444,7 +1445,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5" />
-                  Documents de conformité
+                  <T k="auto.projectdetailbydto.documents_de_conformite" fallback="Documents de conformité" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1467,7 +1468,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-center py-4">Aucun document de conformité</p>
+                  <p className="text-muted-foreground text-center py-4"><T k="auto.projectdetailbydto.aucun_document_de_conformite" fallback="Aucun document de conformité" /></p>
                 )}
               </CardContent>
             </Card>
@@ -1476,24 +1477,24 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  Résumé de conformité
+                  <T k="auto.projectdetailbydto.resume_de_conformite" fallback="Résumé de conformité" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 border rounded-lg text-center">
                     <p className="text-xl font-semibold">{bankGuaranteesData.length}</p>
-                    <p className="text-sm text-muted-foreground">Garanties bancaires</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.projectdetailbydto.garanties_bancaires" fallback="Garanties bancaires" /></p>
                   </div>
                   <div className="p-4 border rounded-lg text-center">
                     <p className="text-xl font-semibold">{insuranceCertificatesData.length}</p>
-                    <p className="text-sm text-muted-foreground">Assurances</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.projectdetailbydto.assurances" fallback="Assurances" /></p>
                   </div>
                   <div className="p-4 border rounded-lg text-center">
                     <p className="text-xl font-semibold">
                       {documentsData.filter((d) => ["contract", "project_report", "tender"].includes(d.document_type)).length}
                     </p>
-                    <p className="text-sm text-muted-foreground">Documents</p>
+                    <p className="text-sm text-muted-foreground"><T k="auto.projectdetailbydto.documents" fallback="Documents" /></p>
                   </div>
                 </div>
               </CardContent>
@@ -1522,7 +1523,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         {/* ===== RAPPORTS ===== */}
         <TabsContent value="rapports" className="mt-6 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold">Rapports du projet</h2>
+            <h2 className="text-base font-semibold"><T k="auto.projectdetailbydto.rapports_du_projet" fallback="Rapports du projet" /></h2>
             <ReportManager
               data={{ project: (projectDataForReport ?? project) as any }}
               reportType="project"

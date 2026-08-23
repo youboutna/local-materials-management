@@ -16,6 +16,7 @@ import { AlertTriangle, Bell, CheckCircle, ExternalLink, Eye } from 'lucide-reac
 import { useCallback, useMemo } from 'react';
 
 import { TranslatedDocumentType, TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // ============================================================
 // Composant Dashboard
 // ============================================================
@@ -66,8 +67,8 @@ const EnhancedDashboardContent = () => {
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
-                <p className="text-muted-foreground mt-2">Vue d'ensemble des activités et alertes du projet</p>
+                <h1 className="text-3xl font-bold text-foreground"><T k="auto.enhanceddashboard.tableau_de_bord" fallback="Tableau de Bord" /></h1>
+                <p className="text-muted-foreground mt-2"><T k="auto.enhanceddashboard.vue_d_ensemble_des_activites_et_alertes_du_proje" fallback="Vue d'ensemble des activités et alertes du projet" /></p>
               </div>
               <div className="flex items-center gap-4">
                 {criticalAlerts.length > 0 && (
@@ -76,7 +77,7 @@ const EnhancedDashboardContent = () => {
                   </Badge>
                 )}
                 <Button variant="outline" onClick={runChecks}>
-                  Actualiser
+                  <T k="auto.enhanceddashboard.actualiser" fallback="Actualiser" />
                 </Button>
               </div>
             </div>
@@ -87,31 +88,31 @@ const EnhancedDashboardContent = () => {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-destructive">{stats.criticalAlerts}</div>
-                <p className="text-sm text-muted-foreground">Alertes critiques</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhanceddashboard.alertes_critiques" fallback="Alertes critiques" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-warning">{stats.highAlerts || 0}</div>
-                <p className="text-sm text-muted-foreground">Alertes élevées</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhanceddashboard.alertes_elevees" fallback="Alertes élevées" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-primary">{stats.openAlerts || 0}</div>
-                <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhanceddashboard.alertes_ouvertes" fallback="Alertes ouvertes" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-purple-500">{stats.activeRisks}</div>
-                <p className="text-sm text-muted-foreground">Risques actifs</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhanceddashboard.risques_actifs" fallback="Risques actifs" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-success">{stats.totalAlerts}</div>
-                <p className="text-sm text-muted-foreground">Total alertes</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhanceddashboard.total_alertes" fallback="Total alertes" /></p>
               </CardContent>
             </Card>
           </div>
@@ -122,7 +123,7 @@ const EnhancedDashboardContent = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-destructive">
                   <AlertTriangle className="h-5 w-5" />
-                  Alertes Critiques
+                  <T k="auto.enhanceddashboard.alertes_critiques" fallback="Alertes Critiques" />
                   <Badge variant="destructive">{criticalAlerts.length}</Badge>
                 </CardTitle>
               </CardHeader>
@@ -139,7 +140,7 @@ const EnhancedDashboardContent = () => {
                             </p>
                           </div>
                           <p className="text-sm text-destructive mt-1">
-                            Sévérité: <TranslatedSeverity code={alert.severity} /> | Type: <TranslatedDocumentType code={alert.type} />
+                            <T k="auto.enhanceddashboard.severite" fallback="Sévérité:" /> <TranslatedSeverity code={alert.severity} /> | Type: <TranslatedDocumentType code={alert.type} />
                           </p>
                           <p className="text-xs text-destructive mt-1">
                             Détecté le: {alert.formattedDate}
@@ -150,7 +151,7 @@ const EnhancedDashboardContent = () => {
                           variant="destructive"
                           onClick={() => handleAcknowledge(alert.id)}
                         >
-                          Traiter
+                          <T k="auto.enhanceddashboard.traiter" fallback="Traiter" />
                         </Button>
                       </div>
                     </div>
@@ -165,7 +166,7 @@ const EnhancedDashboardContent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
-                Toutes les Alertes
+                <T k="auto.enhanceddashboard.toutes_les_alertes" fallback="Toutes les Alertes" />
                 <Badge variant="secondary">{uiAlerts.length}</Badge>
               </CardTitle>
             </CardHeader>
@@ -173,7 +174,7 @@ const EnhancedDashboardContent = () => {
               {uiAlerts.length === 0 ? (
                 <div className="text-center py-8">
                   <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
-                  <p className="text-muted-foreground">Aucune alerte à afficher</p>
+                  <p className="text-muted-foreground"><T k="auto.enhanceddashboard.aucune_alerte_a_afficher" fallback="Aucune alerte à afficher" /></p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">

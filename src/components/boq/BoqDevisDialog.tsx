@@ -25,6 +25,7 @@ import { CommunicationService } from '@/application/services/CommunicationServic
 import { blobToBase64, textToBase64 } from '@/utils/fileEncoding';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { EstimateData, EstimateItem, ExportConfig } from '@/dtos/transforms/shared';
+import { T } from '@/components/i18n/T';
 
 export type BoqDevisMode = 'devis' | 'facture' | 'dqe';
 
@@ -199,7 +200,7 @@ export function BoqDevisDialog({
           subject: `${label} — ${config.title}`,
           message: `Veuillez trouver ci-joint le ${label.toLowerCase()} ${config.title}. Total TTC : ${totals.totalTtc.toLocaleString('fr-FR')} MRU.`,
           actionType: `boq-${mode}`,
-          html: `<p>Bonjour,</p>
+          html: `<p><T k="auto.boqdevisdialog.bonjour" fallback="Bonjour," /></p>
                  <p>Veuillez trouver ci-joint le ${label.toLowerCase()} <strong>${config.title}</strong>.</p>
                  <p>Total HT : ${totals.totalHt.toLocaleString('fr-FR')} MRU<br/>
                  TVA : ${totals.totalTva.toLocaleString('fr-FR')} MRU<br/>
@@ -236,27 +237,27 @@ export function BoqDevisDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><FileDown className="h-5 w-5" />Générer {label} PDF</DialogTitle>
-          <DialogDescription>Renseignez les informations du document avant génération du PDF.</DialogDescription>
+          <DialogDescription><T k="auto.boqdevisdialog.renseignez_les_informations_du_document_avant_ge" fallback="Renseignez les informations du document avant génération du PDF." /></DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div>
-                <Label>Titre</Label>
+                <Label><T k="auto.boqdevisdialog.titre" fallback="Titre" /></Label>
                 <Input value={config.title} onChange={(e) => setConfig(p => ({ ...p, title: e.target.value }))} />
               </div>
               <div>
-                <Label>Validité (jours)</Label>
+                <Label><T k="auto.boqdevisdialog.validite_jours" fallback="Validité (jours)" /></Label>
                 <Input type="number" value={config.validityPeriod} onChange={(e) => setConfig(p => ({ ...p, validityPeriod: parseInt(e.target.value) || 30 }))} />
               </div>
               <div>
-                <Label>Email destinataire (optionnel)</Label>
+                <Label><T k="auto.boqdevisdialog.email_destinataire_optionnel" fallback="Email destinataire (optionnel)" /></Label>
                 <Input type="email" value={config.recipientEmail} onChange={(e) => setConfig(p => ({ ...p, recipientEmail: e.target.value }))} placeholder="client@example.com" />
               </div>
             </div>
             <div className="space-y-3">
-              <Label>Sections</Label>
+              <Label><T k="auto.boqdevisdialog.sections" fallback="Sections" /></Label>
               {[
                 ['includeCompanyHeader', 'En-tête entreprise'],
                 ['includeItemDetails', 'Détail des postes'],
@@ -274,13 +275,13 @@ export function BoqDevisDialog({
 
           {config.includeTermsConditions && (
             <div>
-              <Label>Conditions générales</Label>
+              <Label><T k="auto.boqdevisdialog.conditions_generales" fallback="Conditions générales" /></Label>
               <Textarea value={config.termsConditions} onChange={(e) => setConfig(p => ({ ...p, termsConditions: e.target.value }))} rows={4} />
             </div>
           )}
 
           <div>
-            <Label>Notes complémentaires</Label>
+            <Label><T k="auto.boqdevisdialog.notes_complementaires" fallback="Notes complémentaires" /></Label>
             <Textarea value={config.notes} onChange={(e) => setConfig(p => ({ ...p, notes: e.target.value }))} rows={2} />
           </div>
 
@@ -289,19 +290,19 @@ export function BoqDevisDialog({
               <Separator />
               <div className="grid md:grid-cols-2 gap-3">
                 <div>
-                  <Label>Nom signataire</Label>
+                  <Label><T k="auto.boqdevisdialog.nom_signataire" fallback="Nom signataire" /></Label>
                   <Input value={config.signatoryName} onChange={(e) => setConfig(p => ({ ...p, signatoryName: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Fonction</Label>
+                  <Label><T k="auto.boqdevisdialog.fonction" fallback="Fonction" /></Label>
                   <Input value={config.signatoryTitle} onChange={(e) => setConfig(p => ({ ...p, signatoryTitle: e.target.value }))} />
                 </div>
               </div>
               <div className="border-2 border-dashed rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <PenTool className="h-4 w-4" />
-                  <span className="text-sm font-medium">Signature électronique</span>
-                  {signature && <Badge variant="default" className="ml-auto"><CheckCircle className="h-3 w-3 mr-1" />Signée</Badge>}
+                  <span className="text-sm font-medium"><T k="auto.boqdevisdialog.signature_electronique" fallback="Signature électronique" /></span>
+                  {signature && <Badge variant="default" className="ml-auto"><CheckCircle className="h-3 w-3 mr-1" /><T k="auto.boqdevisdialog.signee" fallback="Signée" /></Badge>}
                 </div>
                 <canvas
                   ref={canvasRef}
@@ -312,10 +313,10 @@ export function BoqDevisDialog({
                   style={{ touchAction: 'none' }}
                 />
                 <div className="flex gap-2 mt-2">
-                  <Button type="button" size="sm" variant="outline" onClick={clearSig}>Effacer</Button>
+                  <Button type="button" size="sm" variant="outline" onClick={clearSig}><T k="auto.boqdevisdialog.effacer" fallback="Effacer" /></Button>
                   <input id="sig-upload" type="file" accept="image/*" className="hidden" onChange={uploadSig} />
                   <Button type="button" size="sm" variant="outline" asChild>
-                    <label htmlFor="sig-upload" className="cursor-pointer"><Upload className="h-4 w-4 mr-1" />Importer</label>
+                    <label htmlFor="sig-upload" className="cursor-pointer"><Upload className="h-4 w-4 mr-1" /><T k="auto.boqdevisdialog.importer" fallback="Importer" /></label>
                   </Button>
                 </div>
               </div>
@@ -325,7 +326,7 @@ export function BoqDevisDialog({
           <Separator />
 
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setOpen(false)}>Annuler</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}><T k="auto.boqdevisdialog.annuler" fallback="Annuler" /></Button>
             <Button variant="outline" onClick={handleDownload} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileDown className="h-4 w-4 mr-1" />}Télécharger PDF
             </Button>

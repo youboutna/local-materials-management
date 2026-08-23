@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { PhaseDTO, PhaseStatus } from "@/dtos/types/phase-dto";
 import { CompletionValidationResult, getCompletionBlockReasons } from "@/utils/completionValidation";
+import { T } from '@/components/i18n/T';
 
 interface PhaseEditDialogProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
             <div className="p-2 rounded-lg bg-primary/10">
               <Edit className="h-5 w-5 text-primary" />
             </div>
-            Modifier la phase
+            <T k="auto.phaseeditdialog.modifier_la_phase" fallback="Modifier la phase" />
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Modifiez les informations de la phase "{phaseName}"
@@ -86,13 +87,13 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Building className="h-4 w-4" />
-              Informations générales
+              <T k="auto.phaseeditdialog.informations_generales" fallback="Informations générales" />
             </div>
             
             <div className="grid gap-4 pl-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
-                  Nom de la phase <span className="text-destructive">*</span>
+                  <T k="auto.phaseeditdialog.nom_de_la_phase" fallback="Nom de la phase" /> <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   value={editForm.phase_name || ""}
@@ -105,7 +106,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
               </div>
               
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Description</Label>
+                <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.description" fallback="Description" /></Label>
                 <Textarea
                   value={editForm.description || ""}
                   onChange={(e) =>
@@ -125,12 +126,12 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              Planification
+              <T k="auto.phaseeditdialog.planification" fallback="Planification" />
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Date de début</Label>
+                <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.date_de_debut" fallback="Date de début" /></Label>
                 <Input
                   type="date"
                   value={editForm.start_date || ""}
@@ -141,7 +142,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Date de fin</Label>
+                <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.date_de_fin" fallback="Date de fin" /></Label>
                 <Input
                   type="date"
                   value={editForm.end_date || ""}
@@ -152,7 +153,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label className="text-sm font-medium">Durée estimée</Label>
+                <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.duree_estimee" fallback="Durée estimée" /></Label>
                 <div className="relative">
                   <Input
                     type="number"
@@ -181,12 +182,12 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <DollarSign className="h-4 w-4" />
-              Budget
+              <T k="auto.phaseeditdialog.budget" fallback="Budget" />
             </div>
             
             <div className="grid grid-cols-1 gap-4 pl-6">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Coût estimé</Label>
+                <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.cout_estime" fallback="Coût estimé" /></Label>
                 <div className="relative">
                   <Input
                     type="number"
@@ -202,7 +203,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                     placeholder="0"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    MRU
+                    <T k="auto.phaseeditdialog.mru" fallback="MRU" />
                   </span>
                 </div>
               </div>
@@ -215,7 +216,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Target className="h-4 w-4" />
-              État et progression
+              <T k="auto.phaseeditdialog.etat_et_progression" fallback="État et progression" />
             </div>
             
             {/* Completion Validation Warning */}
@@ -223,7 +224,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
               <Alert className="ml-6 border-warning/30 bg-warning/10">
                 <AlertTriangle className="h-4 w-4 text-warning" />
                 <AlertDescription className="text-sm">
-                  <span className="font-medium">Impossible de marquer comme terminé</span>
+                  <span className="font-medium"><T k="auto.phaseeditdialog.impossible_de_marquer_comme_termine" fallback="Impossible de marquer comme terminé" /></span>
                   <ul className="mt-1 space-y-1 text-muted-foreground">
                     {getCompletionBlockReasons(completionValidation).map((reason, idx) => (
                       <li key={idx} className="flex items-center gap-1.5">
@@ -238,7 +239,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Statut</Label>
+                <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.statut" fallback="Statut" /></Label>
                 <Select
                   value={editForm.status || "pending"}
                   onValueChange={(value) => {
@@ -255,13 +256,13 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                     <SelectItem value="pending">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                        En attente
+                        <T k="auto.phaseeditdialog.en_attente" fallback="En attente" />
                       </div>
                     </SelectItem>
                     <SelectItem value="in_progress">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        En cours
+                        <T k="auto.phaseeditdialog.en_cours" fallback="En cours" />
                       </div>
                     </SelectItem>
                     <SelectItem 
@@ -286,7 +287,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                           </TooltipTrigger>
                           {!completionValidation.canComplete && (
                             <TooltipContent side="right" className="max-w-xs">
-                              <p className="text-xs">Conditions non remplies</p>
+                              <p className="text-xs"><T k="auto.phaseeditdialog.conditions_non_remplies" fallback="Conditions non remplies" /></p>
                             </TooltipContent>
                           )}
                         </Tooltip>
@@ -295,13 +296,13 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                     <SelectItem value="delayed">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-red-500" />
-                        En retard
+                        <T k="auto.phaseeditdialog.en_retard" fallback="En retard" />
                       </div>
                     </SelectItem>
                     <SelectItem value="cancelled">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-gray-500" />
-                        Annulé
+                        <T k="auto.phaseeditdialog.annule" fallback="Annulé" />
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -328,7 +329,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
         
         <DialogFooter className="pt-4 border-t gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
+            <T k="auto.phaseeditdialog.annuler" fallback="Annuler" />
           </Button>
           <Button onClick={onSave} disabled={isUpdating}>
             {isUpdating ? "Enregistrement..." : "Enregistrer"}

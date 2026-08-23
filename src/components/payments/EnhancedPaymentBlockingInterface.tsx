@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { usePaymentStatsHex } from '@/hooks/hexagonal';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { T } from '@/components/i18n/T';
 
 const EnhancedPaymentBlockingInterface = () => {
   const { t } = useLanguage();
@@ -22,7 +23,7 @@ const EnhancedPaymentBlockingInterface = () => {
   }> = [];
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des statistiques...</div>;
+    return <div className="text-center py-8"><T k="auto.enhancedpaymentblockinginterface.chargement_des_statistiques" fallback="Chargement des statistiques..." /></div>;
   }
 
   return (
@@ -30,29 +31,29 @@ const EnhancedPaymentBlockingInterface = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paiements Bloqués</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.enhancedpaymentblockinginterface.paiements_bloques" fallback="Paiements Bloqués" /></CardTitle>
             <Ban className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{stats.blockedPayments}</div>
-            <p className="text-xs text-muted-foreground">Ce mois</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.enhancedpaymentblockinginterface.ce_mois" fallback="Ce mois" /></p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assurances Expirées</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.enhancedpaymentblockinginterface.assurances_expirees" fallback="Assurances Expirées" /></CardTitle>
             <Shield className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{stats.expiredInsurances}</div>
-            <p className="text-xs text-muted-foreground">Entrepreneurs concernés</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.enhancedpaymentblockinginterface.entrepreneurs_concernes" fallback="Entrepreneurs concernés" /></p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projets en Retard</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.enhancedpaymentblockinginterface.projets_en_retard" fallback="Projets en Retard" /></CardTitle>
             <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
@@ -63,24 +64,24 @@ const EnhancedPaymentBlockingInterface = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents Manquants</CardTitle>
+            <CardTitle className="text-sm font-medium"><T k="auto.enhancedpaymentblockinginterface.documents_manquants" fallback="Documents Manquants" /></CardTitle>
             <FileText className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">{stats.missingDocuments}</div>
-            <p className="text-xs text-muted-foreground">Paiements en attente</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.enhancedpaymentblockinginterface.paiements_en_attente" fallback="Paiements en attente" /></p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Paiements Bloqués Récents</CardTitle>
-          <CardDescription>Historique des paiements bloqués par le système de contrôle automatique</CardDescription>
+          <CardTitle><T k="auto.enhancedpaymentblockinginterface.paiements_bloques_recents" fallback="Paiements Bloqués Récents" /></CardTitle>
+          <CardDescription><T k="auto.enhancedpaymentblockinginterface.historique_des_paiements_bloques_par_le_systeme_" fallback="Historique des paiements bloqués par le système de contrôle automatique" /></CardDescription>
         </CardHeader>
         <CardContent>
           {recentBlocks.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Aucun paiement bloqué récemment</p>
+            <p className="text-sm text-muted-foreground text-center py-4"><T k="auto.enhancedpaymentblockinginterface.aucun_paiement_bloque_recemment" fallback="Aucun paiement bloqué récemment" /></p>
           ) : (
             <div className="space-y-4">
               {recentBlocks.slice(0, 5).map((block) => (

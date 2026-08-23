@@ -10,6 +10,7 @@ import { MapPin, Building2, TrendingUp, Users } from "lucide-react";
 import { useProjectsHex } from '@/hooks/hexagonal';
 import { useMaterialsHex } from '@/hooks/hexagonal';
 import { useWorkspacesHex } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 const RegionalDashboard = () => {
   const { projects = [] } = useProjectsHex();
@@ -63,7 +64,7 @@ const RegionalDashboard = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-6">
         <MapPin className="h-6 w-6 text-terracotta-500" />
-        <h2 className="text-2xl font-bold text-adrar-900">Tableau de Bord Régional</h2>
+        <h2 className="text-2xl font-bold text-adrar-900"><T k="auto.regionaldashboard.tableau_de_bord_regional" fallback="Tableau de Bord Régional" /></h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -86,21 +87,21 @@ const RegionalDashboard = () => {
                     <Building2 className="h-4 w-4 text-terracotta-500" />
                     <span className="text-2xl font-bold text-adrar-800">{stat.projectCount}</span>
                   </div>
-                  <p className="text-xs text-adrar-600">Projets</p>
+                  <p className="text-xs text-adrar-600"><T k="auto.regionaldashboard.projets" fallback="Projets" /></p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <Users className="h-4 w-4 text-terracotta-500" />
                     <span className="text-2xl font-bold text-adrar-800">{stat.workspaceCount}</span>
                   </div>
-                  <p className="text-xs text-adrar-600">Espaces</p>
+                  <p className="text-xs text-adrar-600"><T k="auto.regionaldashboard.espaces" fallback="Espaces" /></p>
                 </div>
               </div>
 
               {stat.projectCount > 0 && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-adrar-600">Progression moyenne</span>
+                    <span className="text-adrar-600"><T k="auto.regionaldashboard.progression_moyenne" fallback="Progression moyenne" /></span>
                     <span className="font-medium text-adrar-800">{stat.avgProgress}%</span>
                   </div>
                   <Progress value={stat.avgProgress} className="h-2" />
@@ -111,11 +112,11 @@ const RegionalDashboard = () => {
                 <div className="flex justify-between text-sm">
                   <div className="text-center">
                     <div className="font-semibold text-primary">{stat.activeProjects}</div>
-                    <div className="text-xs text-adrar-600">En cours</div>
+                    <div className="text-xs text-adrar-600"><T k="auto.regionaldashboard.en_cours" fallback="En cours" /></div>
                   </div>
                   <div className="text-center">
                     <div className="font-semibold text-success">{stat.completedProjects}</div>
-                    <div className="text-xs text-adrar-600">Terminés</div>
+                    <div className="text-xs text-adrar-600"><T k="auto.regionaldashboard.termines" fallback="Terminés" /></div>
                   </div>
                 </div>
               )}
@@ -128,7 +129,7 @@ const RegionalDashboard = () => {
                       <div className="font-semibold text-adrar-800">
                         {stat.totalBudget.toLocaleString('fr-FR')} MRU
                       </div>
-                      <div className="text-xs text-adrar-600">Budget total</div>
+                      <div className="text-xs text-adrar-600"><T k="auto.regionaldashboard.budget_total" fallback="Budget total" /></div>
                     </div>
                   </div>
                 </div>
@@ -137,7 +138,7 @@ const RegionalDashboard = () => {
               {stat.materialCount > 0 && (
                 <div className="text-center pt-2 border-t border-sandstone-200">
                   <div className="font-semibold text-adrar-800">{stat.materialCount}</div>
-                  <div className="text-xs text-adrar-600">Matériaux disponibles</div>
+                  <div className="text-xs text-adrar-600"><T k="auto.regionaldashboard.materiaux_disponibles" fallback="Matériaux disponibles" /></div>
                 </div>
               )}
             </CardContent>
@@ -149,7 +150,7 @@ const RegionalDashboard = () => {
         <Card className="p-8 text-center">
           <MapPin className="h-12 w-12 text-adrar-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-adrar-800 mb-2">
-            Aucune donnée régionale disponible
+            <T k="auto.regionaldashboard.aucune_donnee_regionale_disponible" fallback="Aucune donnée régionale disponible" />
           </h3>
           <p className="text-adrar-600">
             Ajoutez des projets, matériaux ou espaces de travail pour voir les statistiques régionales.

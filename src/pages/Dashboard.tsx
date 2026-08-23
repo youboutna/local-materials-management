@@ -40,6 +40,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { buildLocationDistribution, getProjectCoordinates } from "@/utils/projectLocationBuckets";
 import { formatAmount2, formatNumber2 } from "@/utils/reportNumbers";
+import { T } from '@/components/i18n/T';
 
 
 const Dashboard: React.FC = () => {
@@ -161,7 +162,7 @@ const Dashboard: React.FC = () => {
       <Button variant="outline" size="sm" asChild>
         <Link to="/monitoring">
           <BarChart3 className="h-4 w-4 mr-2" />
-          Centre de Surveillance
+          <T k="auto.dashboard.centre_de_surveillance" fallback="Centre de Surveillance" />
         </Link>
       </Button>
       <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
@@ -216,7 +217,7 @@ const Dashboard: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger value="monitoring" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Monitoring</span>
+                <span className="hidden sm:inline"><T k="auto.dashboard.monitoring" fallback="Monitoring" /></span>
               </TabsTrigger>
               <TabsTrigger value="actions" className="flex items-center gap-2">
                 <ListTodo className="h-4 w-4" />
@@ -277,7 +278,7 @@ const Dashboard: React.FC = () => {
                           {formatNumber2(stats.totalBudget)}
                         </span>
                         <span className="ml-2 text-sm text-muted-foreground">
-                          MRU
+                          <T k="auto.dashboard.mru" fallback="MRU" />
                         </span>
                       </div>
                     </CardContent>
@@ -451,7 +452,7 @@ const Dashboard: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <BarChart3 className="h-5 w-5" />
-                      Centre de Surveillance
+                      <T k="auto.dashboard.centre_de_surveillance" fallback="Centre de Surveillance" />
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -459,25 +460,25 @@ const Dashboard: React.FC = () => {
                       <Button variant="outline" className="h-24 flex-col" asChild>
                         <Link to="/monitoring">
                           <Shield className="h-8 w-8 mb-2" />
-                          <span>Vue Complète</span>
+                          <span><T k="auto.dashboard.vue_complete" fallback="Vue Complète" /></span>
                         </Link>
                       </Button>
                       <Button variant="outline" className="h-24 flex-col" asChild>
                         <Link to="/bank-guarantee-monitor">
                           <BarChart3 className="h-8 w-8 mb-2" />
-                          <span>Garanties Bancaires</span>
+                          <span><T k="auto.dashboard.garanties_bancaires" fallback="Garanties Bancaires" /></span>
                         </Link>
                       </Button>
                       <Button variant="outline" className="h-24 flex-col" asChild>
                         <Link to="/payment-control">
                           <Calendar className="h-8 w-8 mb-2" />
-                          <span>Contrôle Paiements</span>
+                          <span><T k="auto.dashboard.controle_paiements" fallback="Contrôle Paiements" /></span>
                         </Link>
                       </Button>
                       <Button variant="outline" className="h-24 flex-col" asChild>
                         <Link to="/insurance-management">
                           <Shield className="h-8 w-8 mb-2" />
-                          <span>Assurances</span>
+                          <span><T k="auto.dashboard.assurances" fallback="Assurances" /></span>
                         </Link>
                       </Button>
                     </div>

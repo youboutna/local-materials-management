@@ -16,6 +16,7 @@ import { useBankGuaranteesList, useCreateBankGuarantee, useUpdateBankGuarantee, 
 import { BankGuaranteeType, BankGuaranteeStatus } from '@/dtos/entities/BankGuaranteeDTO';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
+import { T } from '@/components/i18n/T';
 
 const BankGuaranteeCrud = () => {
   const { t } = useLanguage();
@@ -200,7 +201,7 @@ const BankGuaranteeCrud = () => {
           <DialogTrigger asChild>
             <Button onClick={openCreateForm} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Nouvelle Garantie
+              <T k="auto.bankguaranteecrud.nouvelle_garantie" fallback="Nouvelle Garantie" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -309,7 +310,7 @@ const BankGuaranteeCrud = () => {
               </div>
 
               <div>
-                <Label htmlFor="status">Statut</Label>
+                <Label htmlFor="status"><T k="auto.bankguaranteecrud.statut" fallback="Statut" /></Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as BankGuaranteeStatus }))}
@@ -331,7 +332,7 @@ const BankGuaranteeCrud = () => {
               {!isViewMode && (
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
-                    Annuler
+                    <T k="auto.bankguaranteecrud.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit">
                     {isEditing ? 'Mettre à jour' : 'Créer'}
@@ -345,20 +346,20 @@ const BankGuaranteeCrud = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Garanties Bancaires</CardTitle>
+          <CardTitle><T k="auto.bankguaranteecrud.liste_des_garanties_bancaires" fallback="Liste des Garanties Bancaires" /></CardTitle>
         </CardHeader>
         <CardContent className="p-2 sm:p-6">
           <div className="table-container-responsive">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Projet</TableHead>
-                  <TableHead className="hidden sm:table-cell">Banque</TableHead>
-                  <TableHead className="hidden sm:table-cell">Type</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead className="hidden lg:table-cell">Expiration</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead><T k="auto.bankguaranteecrud.projet" fallback="Projet" /></TableHead>
+                  <TableHead className="hidden sm:table-cell"><T k="auto.bankguaranteecrud.banque" fallback="Banque" /></TableHead>
+                  <TableHead className="hidden sm:table-cell"><T k="auto.bankguaranteecrud.type" fallback="Type" /></TableHead>
+                  <TableHead><T k="auto.bankguaranteecrud.montant" fallback="Montant" /></TableHead>
+                  <TableHead className="hidden lg:table-cell"><T k="auto.bankguaranteecrud.expiration" fallback="Expiration" /></TableHead>
+                  <TableHead><T k="auto.bankguaranteecrud.statut" fallback="Statut" /></TableHead>
+                  <TableHead><T k="auto.bankguaranteecrud.actions" fallback="Actions" /></TableHead>
                 </TableRow>
               </TableHeader>
             <TableBody>
@@ -433,7 +434,7 @@ const BankGuaranteeCrud = () => {
               {guarantees.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Aucune garantie bancaire trouvée
+                    <T k="auto.bankguaranteecrud.aucune_garantie_bancaire_trouvee" fallback="Aucune garantie bancaire trouvée" />
                   </TableCell>
                 </TableRow>
               )}

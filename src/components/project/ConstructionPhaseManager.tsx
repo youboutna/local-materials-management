@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 
 import { CustomPhase, PhaseData } from '@/dtos/entities/PhaseDTO';
+import { T } from '@/components/i18n/T';
 
 
 // Types for procurement phases from referential
@@ -1038,7 +1039,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
               <Building className="h-5 w-5" />
 
-              Gestion des phases de construction
+              <T k="auto.constructionphasemanager.gestion_des_phases_de_construction" fallback="Gestion des phases de construction" />
 
             </CardTitle>
 
@@ -1050,7 +1051,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                   <Plus className="h-4 w-4 mr-2" />
 
-                  Ajouter une phase
+                  <T k="auto.constructionphasemanager.ajouter_une_phase" fallback="Ajouter une phase" />
 
                 </Button>
 
@@ -1060,7 +1061,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                 <DialogHeader>
 
-                  <DialogTitle>Ajouter une nouvelle phase</DialogTitle>
+                  <DialogTitle><T k="auto.constructionphasemanager.ajouter_une_nouvelle_phase" fallback="Ajouter une nouvelle phase" /></DialogTitle>
 
                 </DialogHeader>
 
@@ -1070,11 +1071,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                   <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
 
-                    <TabsTrigger value="standard">Phases standards</TabsTrigger>
+                    <TabsTrigger value="standard"><T k="auto.constructionphasemanager.phases_standards" fallback="Phases standards" /></TabsTrigger>
 
-                    <TabsTrigger value="procurement">Marchés publics</TabsTrigger>
+                    <TabsTrigger value="procurement"><T k="auto.constructionphasemanager.marches_publics" fallback="Marchés publics" /></TabsTrigger>
 
-                    <TabsTrigger value="custom">Phase personnalisée</TabsTrigger>
+                    <TabsTrigger value="custom"><T k="auto.constructionphasemanager.phase_personnalisee" fallback="Phase personnalisée" /></TabsTrigger>
 
                   </TabsList>
 
@@ -1641,7 +1642,7 @@ const StandardPhaseCreator: React.FC<{
 
       <div>
 
-        <Label>Phase de construction</Label>
+        <Label><T k="auto.constructionphasemanager.phase_de_construction" fallback="Phase de construction" /></Label>
 
         <Select value={selectedPhase} onValueChange={(value: string) => {
 
@@ -1681,7 +1682,7 @@ const StandardPhaseCreator: React.FC<{
 
         <div>
 
-          <Label>Étape</Label>
+          <Label><T k="auto.constructionphasemanager.etape" fallback="Étape" /></Label>
 
           <Select value={selectedStage} onValueChange={(value) => setSelectedStage(value)}>
 
@@ -1723,7 +1724,7 @@ const StandardPhaseCreator: React.FC<{
 
       >
 
-        Créer la phase
+        <T k="auto.constructionphasemanager.creer_la_phase" fallback="Créer la phase" />
 
       </Button>
 
@@ -1889,7 +1890,7 @@ const CustomPhaseCreator: React.FC<{
 
         <div>
 
-          <Label>Nom de la phase</Label>
+          <Label><T k="auto.constructionphasemanager.nom_de_la_phase" fallback="Nom de la phase" /></Label>
 
           <Input
 
@@ -1905,7 +1906,7 @@ const CustomPhaseCreator: React.FC<{
 
         <div>
 
-          <Label>Numéro de phase</Label>
+          <Label><T k="auto.constructionphasemanager.numero_de_phase" fallback="Numéro de phase" /></Label>
 
           <Input
 
@@ -1927,7 +1928,7 @@ const CustomPhaseCreator: React.FC<{
 
       <div>
 
-        <Label>Description</Label>
+        <Label><T k="auto.constructionphasemanager.description" fallback="Description" /></Label>
 
         <Textarea
 
@@ -1947,7 +1948,7 @@ const CustomPhaseCreator: React.FC<{
 
         <div>
 
-          <Label>Date de début</Label>
+          <Label><T k="auto.constructionphasemanager.date_de_debut" fallback="Date de début" /></Label>
 
           <Input
 
@@ -1963,7 +1964,7 @@ const CustomPhaseCreator: React.FC<{
 
         <div>
 
-          <Label>Date de fin</Label>
+          <Label><T k="auto.constructionphasemanager.date_de_fin" fallback="Date de fin" /></Label>
 
           <Input
 
@@ -1983,7 +1984,7 @@ const CustomPhaseCreator: React.FC<{
 
       <div>
 
-        <Label>Budget estimé (MRU)</Label>
+        <Label><T k="auto.constructionphasemanager.budget_estime_mru" fallback="Budget estimé (MRU)" /></Label>
 
         <Input
 
@@ -2005,7 +2006,7 @@ const CustomPhaseCreator: React.FC<{
 
       <div>
 
-        <Label>Étapes personnalisées</Label>
+        <Label><T k="auto.constructionphasemanager.etapes_personnalisees" fallback="Étapes personnalisées" /></Label>
 
         <div className="flex gap-2 mb-2">
 
@@ -2079,7 +2080,7 @@ const CustomPhaseCreator: React.FC<{
 
       >
 
-        Créer la phase personnalisée
+        <T k="auto.constructionphasemanager.creer_la_phase_personnalisee" fallback="Créer la phase personnalisée" />
 
       </Button>
 
@@ -2149,7 +2150,7 @@ const PhaseEditDialog: React.FC<{
                 className="text-sm flex items-center gap-1"
               >
                 <Eye className="h-4 w-4" />
-                Voir le détail de la phase
+                <T k="auto.constructionphasemanager.voir_le_detail_de_la_phase" fallback="Voir le détail de la phase" />
               </Button>
             )}
           </DialogTitle>
@@ -2164,7 +2165,7 @@ const PhaseEditDialog: React.FC<{
 
           <div>
 
-            <Label>Titre</Label>
+            <Label><T k="auto.constructionphasemanager.titre" fallback="Titre" /></Label>
 
             <Input
 
@@ -2180,7 +2181,7 @@ const PhaseEditDialog: React.FC<{
 
           <div>
 
-            <Label>Description</Label>
+            <Label><T k="auto.constructionphasemanager.description" fallback="Description" /></Label>
 
             <Textarea
 
@@ -2198,7 +2199,7 @@ const PhaseEditDialog: React.FC<{
 
             <div>
 
-              <Label>Date de début</Label>
+              <Label><T k="auto.constructionphasemanager.date_de_debut" fallback="Date de début" /></Label>
 
               <Input
 
@@ -2214,7 +2215,7 @@ const PhaseEditDialog: React.FC<{
 
             <div>
 
-              <Label>Date de fin</Label>
+              <Label><T k="auto.constructionphasemanager.date_de_fin" fallback="Date de fin" /></Label>
 
               <Input
 
@@ -2234,7 +2235,7 @@ const PhaseEditDialog: React.FC<{
 
           <div>
 
-            <Label>Budget (MRU)</Label>
+            <Label><T k="auto.constructionphasemanager.budget_mru" fallback="Budget (MRU)" /></Label>
 
             <Input
 
@@ -2252,7 +2253,7 @@ const PhaseEditDialog: React.FC<{
 
           <div>
 
-            <Label>Statut</Label>
+            <Label><T k="auto.constructionphasemanager.statut" fallback="Statut" /></Label>
 
             <Select 
 
@@ -2288,7 +2289,7 @@ const PhaseEditDialog: React.FC<{
 
           <div>
 
-            <Label>Progression (%)</Label>
+            <Label><T k="auto.constructionphasemanager.progression" fallback="Progression (%)" /></Label>
 
             <Input
 
@@ -2320,7 +2321,7 @@ const PhaseEditDialog: React.FC<{
           <div className="flex justify-end gap-2">
 
             <Button variant="outline" onClick={onClose} disabled={isSaving}>
-              Annuler
+              <T k="auto.constructionphasemanager.annuler" fallback="Annuler" />
             </Button>
 
             <Button onClick={handleSave} disabled={isSaving}>
@@ -2423,7 +2424,7 @@ const ProcurementPhaseCreator: React.FC<{
 
         <h4 className="font-medium text-primary mb-2">
 
-          Workflow des Marchés Publics en Mauritanie
+          <T k="auto.constructionphasemanager.workflow_des_marches_publics_en_mauritanie" fallback="Workflow des Marchés Publics en Mauritanie" />
 
         </h4>
 
@@ -2439,7 +2440,7 @@ const ProcurementPhaseCreator: React.FC<{
 
       <div>
 
-        <Label>Phase du marché public</Label>
+        <Label><T k="auto.constructionphasemanager.phase_du_marche_public" fallback="Phase du marché public" /></Label>
 
         <Select value={selectedPhase} onValueChange={(value: ProcurementPhase) => {
 
@@ -2479,7 +2480,7 @@ const ProcurementPhaseCreator: React.FC<{
 
         <div>
 
-          <Label>Étape</Label>
+          <Label><T k="auto.constructionphasemanager.etape" fallback="Étape" /></Label>
 
           <Select value={selectedStage} onValueChange={(value) => setSelectedStage(value as ProcurementStage)}>
 
@@ -2521,7 +2522,7 @@ const ProcurementPhaseCreator: React.FC<{
 
       >
 
-        Créer la phase de marché public
+        <T k="auto.constructionphasemanager.creer_la_phase_de_marche_public" fallback="Créer la phase de marché public" />
 
       </Button>
 

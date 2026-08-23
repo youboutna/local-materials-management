@@ -60,6 +60,7 @@ import WilayaBoundariesLayer from '@/components/gis/layers/WilayaBoundariesLayer
 import { toast } from 'sonner';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // -----------------------------------------------------------------------------
 // Marqueur Leaflet
 // -----------------------------------------------------------------------------
@@ -575,7 +576,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
             <div className="flex-1 min-w-[240px]">
               <Label className="text-xs flex items-center gap-1 mb-1">
                 <Search className="h-3 w-3" />
-                Rechercher une adresse
+                <T k="auto.geozoneeditor.rechercher_une_adresse" fallback="Rechercher une adresse" />
               </Label>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
@@ -614,7 +615,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                     }
                   }}
                 >
-                  <MapPin className="h-3.5 w-3.5 mr-1" /> Ajouter comme point
+                  <MapPin className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.ajouter_comme_point" fallback="Ajouter comme point" />
                 </Button>
               </div>
             </div>
@@ -627,16 +628,16 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
             {mode === 'idle' ? (
               <>
                 <Button size="sm" variant="outline" onClick={() => setMode('polygon')}>
-                  <Hexagon className="h-3.5 w-3.5 mr-1" /> Polygone
+                  <Hexagon className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.polygone" fallback="Polygone" />
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setMode('rectangle')}>
-                  <Square className="h-3.5 w-3.5 mr-1" /> Rectangle
+                  <Square className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.rectangle" fallback="Rectangle" />
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setMode('circle')}>
-                  <CircleIcon className="h-3.5 w-3.5 mr-1" /> Cercle
+                  <CircleIcon className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.cercle" fallback="Cercle" />
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setMode('point')}>
-                  <MapPin className="h-3.5 w-3.5 mr-1" /> Point
+                  <MapPin className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.point" fallback="Point" />
                 </Button>
                 <span className="mx-1 h-5 w-px bg-border" />
                 <Button
@@ -644,7 +645,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Upload className="h-3.5 w-3.5 mr-1" /> Importer GeoJSON
+                  <Upload className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.importer_geojson" fallback="Importer GeoJSON" />
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -663,7 +664,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                   onClick={exportGeoJSON}
                   disabled={zones.length === 0}
                 >
-                  <Download className="h-3.5 w-3.5 mr-1" /> Exporter
+                  <Download className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.exporter" fallback="Exporter" />
                 </Button>
                 <Button
                   size="sm"
@@ -671,7 +672,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                   onClick={() => setShowBoundaries((v) => !v)}
                   title="Afficher / masquer les limites administratives (wilayas)"
                 >
-                  <Map className="h-3.5 w-3.5 mr-1" /> Wilayas
+                  <Map className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.wilayas" fallback="Wilayas" />
                 </Button>
               </>
             ) : (
@@ -691,7 +692,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                       {draftCoords.length} sommet(s) — double-clic pour terminer
                     </span>
                     <Button size="sm" onClick={finishPolygon} disabled={draftCoords.length < 3}>
-                      <Check className="h-3.5 w-3.5 mr-1" /> Terminer
+                      <Check className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.terminer" fallback="Terminer" />
                     </Button>
                   </>
                 )}
@@ -709,7 +710,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                       onClick={finishRectangle}
                       disabled={!draftRect?.second}
                     >
-                      <Check className="h-3.5 w-3.5 mr-1" /> Terminer
+                      <Check className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.terminer" fallback="Terminer" />
                     </Button>
                   </>
                 )}
@@ -717,7 +718,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                   <>
                     {draftCircle ? (
                       <>
-                        <Label className="text-xs">Rayon (m)</Label>
+                        <Label className="text-xs"><T k="auto.geozoneeditor.rayon_m" fallback="Rayon (m)" /></Label>
                         <Input
                           type="number"
                           min={50}
@@ -731,23 +732,23 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                           className="h-8 w-24"
                         />
                         <Button size="sm" onClick={finishCircle}>
-                          <Check className="h-3.5 w-3.5 mr-1" /> Terminer
+                          <Check className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.terminer" fallback="Terminer" />
                         </Button>
                       </>
                     ) : (
                       <span className="text-xs text-muted-foreground">
-                        Cliquez pour placer le centre
+                        <T k="auto.geozoneeditor.cliquez_pour_placer_le_centre" fallback="Cliquez pour placer le centre" />
                       </span>
                     )}
                   </>
                 )}
                 {mode === 'point' && (
                   <span className="text-xs text-muted-foreground">
-                    Cliquez sur la carte
+                    <T k="auto.geozoneeditor.cliquez_sur_la_carte" fallback="Cliquez sur la carte" />
                   </span>
                 )}
                 <Button size="sm" variant="ghost" onClick={cancelDraft}>
-                  <X className="h-3.5 w-3.5 mr-1" /> Annuler
+                  <X className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.annuler" fallback="Annuler" />
                 </Button>
               </>
             )}
@@ -766,7 +767,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
             doubleClickZoom={mode !== 'polygon'}
           >
             <TileLayer
-              attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+              attribution='&copy; <a href="https://osm.org/copyright"><T k="auto.geozoneeditor.openstreetmap" fallback="OpenStreetMap" /></a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <WilayaBoundariesLayer visible={showBoundaries} showLabels={defaultZoom <= 8} />

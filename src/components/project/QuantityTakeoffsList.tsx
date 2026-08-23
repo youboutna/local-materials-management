@@ -10,6 +10,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { Calculator, DownloadCloud, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface QuantityTakeoffsListProps {
   projectId: string;
@@ -104,7 +105,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
-          Liste des Métrés
+          <T k="auto.quantitytakeoffslist.liste_des_metres" fallback="Liste des Métrés" />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -123,7 +124,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-[10px] text-muted-foreground">Quantité</label>
+                  <label className="text-[10px] text-muted-foreground"><T k="auto.quantitytakeoffslist.quantite" fallback="Quantité" /></label>
                   <Input
                     type="number"
                     className="h-8 w-24"
@@ -133,7 +134,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-[10px] text-muted-foreground">PU (MRU)</label>
+                  <label className="text-[10px] text-muted-foreground"><T k="auto.quantitytakeoffslist.pu_mru" fallback="PU (MRU)" /></label>
                   <Input
                     type="number"
                     className="h-8 w-28"
@@ -143,7 +144,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                 </div>
 
                 <div className="min-w-[110px] text-right">
-                  <div className="text-[10px] text-muted-foreground">Total</div>
+                  <div className="text-[10px] text-muted-foreground"><T k="auto.quantitytakeoffslist.total" fallback="Total" /></div>
                   <div className="font-semibold">{total.toLocaleString('fr-FR')} MRU</div>
                 </div>
 
@@ -184,7 +185,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
           {paginatedTakeoffs.length === 0 && (
             <div className="text-center py-8">
               <Calculator className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground mt-2">Aucun métré trouvé pour ce projet</p>
+              <p className="text-muted-foreground mt-2"><T k="auto.quantitytakeoffslist.aucun_metre_trouve_pour_ce_projet" fallback="Aucun métré trouvé pour ce projet" /></p>
             </div>
           )}
         </div>
@@ -192,7 +193,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
         <div className="mt-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <h5 className="font-medium">Total par unité</h5>
+              <h5 className="font-medium"><T k="auto.quantitytakeoffslist.total_par_unite" fallback="Total par unité" /></h5>
               <div className="space-y-2">
                 {TAKEOFF_UNIT_CODES.map((unit) => {
                   const quantity = getTotalQuantityByUnit(unit);
@@ -214,12 +215,12 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
               const ras = totalHt * profile.withholdingRate;
               return (
                 <div className="md:col-span-2">
-                  <h5 className="font-medium">Valeur totale (fiscalité MR)</h5>
+                  <h5 className="font-medium"><T k="auto.quantitytakeoffslist.valeur_totale_fiscalite_mr" fallback="Valeur totale (fiscalité MR)" /></h5>
                   <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                    <div className="flex justify-between"><span>Total HT</span><span className="font-semibold">{totalHt.toLocaleString('fr-FR')} MRU</span></div>
-                    <div className="flex justify-between"><span>TVA 16%</span><span>{tva.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
-                    <div className="flex justify-between"><span>RAS BIC 3%</span><span className="text-destructive">-{ras.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
-                    <div className="flex justify-between border-t pt-1"><span className="font-medium">Total TTC</span><span className="font-bold text-success">{ttc.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
+                    <div className="flex justify-between"><span><T k="auto.quantitytakeoffslist.total_ht" fallback="Total HT" /></span><span className="font-semibold">{totalHt.toLocaleString('fr-FR')} MRU</span></div>
+                    <div className="flex justify-between"><span><T k="auto.quantitytakeoffslist.tva_16" fallback="TVA 16%" /></span><span>{tva.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
+                    <div className="flex justify-between"><span><T k="auto.quantitytakeoffslist.ras_bic_3" fallback="RAS BIC 3%" /></span><span className="text-destructive">-{ras.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
+                    <div className="flex justify-between border-t pt-1"><span className="font-medium"><T k="auto.quantitytakeoffslist.total_ttc" fallback="Total TTC" /></span><span className="font-bold text-success">{ttc.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} MRU</span></div>
                   </div>
                 </div>
               );

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectCheckpoints } from '@/hooks/useProjectCheckpoints';
+import { T } from '@/components/i18n/T';
 
 interface ProjectCheckpointsDashboardProps {
   projectId: string;
@@ -59,7 +60,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
       <Card>
         <CardContent className="py-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-          <p className="text-sm text-muted-foreground mt-2">Chargement...</p>
+          <p className="text-sm text-muted-foreground mt-2"><T k="auto.projectcheckpointsdashboard.chargement" fallback="Chargement..." /></p>
         </CardContent>
       </Card>
     );
@@ -70,7 +71,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
       <Card>
         <CardContent className="py-8 text-center">
           <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Aucune donnée de vérification disponible</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.projectcheckpointsdashboard.aucune_donnee_de_verification_disponible" fallback="Aucune donnée de vérification disponible" /></p>
         </CardContent>
       </Card>
     );
@@ -95,9 +96,9 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               )}
             >
               {projectVerification.allVerified ? (
-                <><CheckCircle className="h-3 w-3 mr-1" /> Vérifié</>
+                <><CheckCircle className="h-3 w-3 mr-1" /> <T k="auto.projectcheckpointsdashboard.verifie" fallback="Vérifié" /></>
               ) : (
-                <><Clock className="h-3 w-3 mr-1" /> En cours</>
+                <><Clock className="h-3 w-3 mr-1" /> <T k="auto.projectcheckpointsdashboard.en_cours" fallback="En cours" /></>
               )}
             </Badge>
           </div>
@@ -105,19 +106,19 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="p-3 rounded-lg bg-primary/5 border text-center">
-              <p className="text-xs text-muted-foreground">Progression globale</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.progression_globale" fallback="Progression globale" /></p>
               <p className="text-xl font-bold text-primary">{canonicalProgress}%</p>
             </div>
             <div className="p-3 rounded-lg bg-success-soft dark:bg-success/20 border border-success/30 text-center">
-              <p className="text-xs text-muted-foreground">Total payé</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.total_paye" fallback="Total payé" /></p>
               <p className="text-lg font-bold text-success">{formatCurrency(metrics.totalPaid)}</p>
             </div>
             <div className="p-3 rounded-lg bg-warning/10 dark:bg-amber-900/20 border border-warning/30 text-center">
-              <p className="text-xs text-muted-foreground">Retenue garantie</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.retenue_garantie" fallback="Retenue garantie" /></p>
               <p className="text-lg font-bold text-warning">{formatCurrency(metrics.totalRetained)}</p>
             </div>
             <div className="p-3 rounded-lg bg-muted/30 border text-center">
-              <p className="text-xs text-muted-foreground">Checkpoints</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.checkpoints" fallback="Checkpoints" /></p>
               <p className="text-lg font-bold">
                 <span className="text-success">{metrics.completedCheckpoints}</span>
                 <span className="text-muted-foreground">/{metrics.completedCheckpoints + metrics.pendingCheckpoints}</span>
@@ -133,7 +134,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                   Paiement disponible: {formatCurrency(projectDecompte.netPayable)}
                 </span>
                 <Button size="sm" className="bg-success hover:bg-success">
-                  Demander
+                  <T k="auto.projectcheckpointsdashboard.demander" fallback="Demander" />
                 </Button>
               </div>
             </div>
@@ -172,7 +173,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
             <div className="p-4 rounded-lg bg-primary/5 border">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Progression</span>
+                <span className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.progression" fallback="Progression" /></span>
               </div>
               <p className="text-2xl font-bold text-primary">{canonicalProgress}%</p>
               <Progress value={canonicalProgress} className="h-1 mt-2" />
@@ -180,28 +181,28 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
             <div className="p-4 rounded-lg bg-muted/30 border">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-4 w-4" />
-                <span className="text-xs text-muted-foreground">Budget total</span>
+                <span className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.budget_total" fallback="Budget total" /></span>
               </div>
               <p className="text-xl font-bold">{formatCurrency(metrics.totalBudget)}</p>
             </div>
             <div className="p-4 rounded-lg bg-success-soft dark:bg-success/20 border border-success/30">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle className="h-4 w-4 text-success" />
-                <span className="text-xs text-muted-foreground">Payé</span>
+                <span className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.paye" fallback="Payé" /></span>
               </div>
               <p className="text-xl font-bold text-success">{formatCurrency(metrics.totalPaid)}</p>
             </div>
             <div className="p-4 rounded-lg bg-warning/10 dark:bg-amber-900/20 border border-warning/30">
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="h-4 w-4 text-warning" />
-                <span className="text-xs text-muted-foreground">Retenue</span>
+                <span className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.retenue" fallback="Retenue" /></span>
               </div>
               <p className="text-xl font-bold text-warning">{formatCurrency(metrics.totalRetained)}</p>
             </div>
             <div className="p-4 rounded-lg bg-primary/10 dark:bg-blue-900/20 border border-primary/30">
               <div className="flex items-center gap-2 mb-2">
                 <FileCheck className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Checkpoints</span>
+                <span className="text-xs text-muted-foreground"><T k="auto.projectcheckpointsdashboard.checkpoints" fallback="Checkpoints" /></span>
               </div>
               <p className="text-xl font-bold">
                 <span className="text-success">{metrics.completedCheckpoints}</span>
@@ -217,7 +218,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               (projectVerification as any).inspectionVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
               <ClipboardCheck className={cn('h-4 w-4', (projectVerification as any).inspectionVerified ? 'text-success' : 'text-muted-foreground')} />
-              <span className="text-sm">Inspections</span>
+              <span className="text-sm"><T k="auto.projectcheckpointsdashboard.inspections" fallback="Inspections" /></span>
               {(projectVerification as any).inspectionVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
             <div className={cn(
@@ -225,7 +226,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               (projectVerification as any).documentVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
               <FileCheck className={cn('h-4 w-4', (projectVerification as any).documentVerified ? 'text-success' : 'text-muted-foreground')} />
-              <span className="text-sm">Documents</span>
+              <span className="text-sm"><T k="auto.projectcheckpointsdashboard.documents" fallback="Documents" /></span>
               {(projectVerification as any).documentVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
             <div className={cn(
@@ -233,7 +234,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               (projectVerification as any).approvalVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
               <Shield className={cn('h-4 w-4', (projectVerification as any).approvalVerified ? 'text-success' : 'text-muted-foreground')} />
-              <span className="text-sm">Approbations</span>
+              <span className="text-sm"><T k="auto.projectcheckpointsdashboard.approbations" fallback="Approbations" /></span>
               {(projectVerification as any).approvalVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
             <div className={cn(
@@ -241,7 +242,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
               (projectVerification as any).pvVerified ? 'bg-success-soft border-success/30' : 'bg-muted/30'
             )}>
               <FileCheck className={cn('h-4 w-4', (projectVerification as any).pvVerified ? 'text-success' : 'text-muted-foreground')} />
-              <span className="text-sm">PV Service Fait</span>
+              <span className="text-sm"><T k="auto.projectcheckpointsdashboard.pv_service_fait" fallback="PV Service Fait" /></span>
               {(projectVerification as any).pvVerified && <CheckCircle className="h-3 w-3 text-success ml-auto" />}
             </div>
           </div>
@@ -251,7 +252,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
             <div className="p-4 rounded-lg bg-success-soft dark:bg-success/20 border border-success/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-success">Paiement disponible</p>
+                  <p className="font-medium text-success"><T k="auto.projectcheckpointsdashboard.paiement_disponible" fallback="Paiement disponible" /></p>
                   <p className="text-sm text-success">
                     Net à payer: {formatCurrency(projectDecompte.netPayable)} 
                     (après retenue de {formatCurrency(projectDecompte.retentionAmount)})
@@ -259,7 +260,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                 </div>
                 <Button className="bg-success hover:bg-success">
                   <DollarSign className="h-4 w-4 mr-2" />
-                  Demander le paiement
+                  <T k="auto.projectcheckpointsdashboard.demander_le_paiement" fallback="Demander le paiement" />
                 </Button>
               </div>
             </div>
@@ -283,7 +284,7 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
       {/* Phase-by-phase breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Détail par phase</CardTitle>
+          <CardTitle className="text-base"><T k="auto.projectcheckpointsdashboard.detail_par_phase" fallback="Détail par phase" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -309,11 +310,11 @@ const ProjectCheckpointsDashboard: React.FC<ProjectCheckpointsDashboardProps> = 
                     <div className="flex items-center gap-2">
                       {phaseVerif?.allVerified ? (
                         <Badge className="bg-success-soft text-success border-success/30">
-                          <CheckCircle className="h-3 w-3 mr-1" /> Vérifié
+                          <CheckCircle className="h-3 w-3 mr-1" /> <T k="auto.projectcheckpointsdashboard.verifie" fallback="Vérifié" />
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
-                          <Clock className="h-3 w-3 mr-1" /> En cours
+                          <Clock className="h-3 w-3 mr-1" /> <T k="auto.projectcheckpointsdashboard.en_cours" fallback="En cours" />
                         </Badge>
                       )}
                       {phaseDecompte?.canRequestPayment && (

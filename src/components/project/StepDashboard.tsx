@@ -11,6 +11,7 @@ import { AuditEntry } from '@/hooks/useAuditEntries';
 import { StepItem } from '@/dtos/workflows/UnifiedWorkflowDTO';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // Local metric and helper types to avoid loose Record usage
 type Metrics = {
   overallProgress?: number;
@@ -177,7 +178,7 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <div className="text-sm text-muted-foreground">Progression</div>
+              <div className="text-sm text-muted-foreground"><T k="auto.stepdashboard.progression" fallback="Progression" /></div>
               <div className="text-2xl font-bold text-primary">{Math.round(overall)}%</div>
             </div>
             <div className="w-44">
@@ -190,12 +191,12 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
       <CardContent className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Zone 2 - Synthetic state & indicators */}
         <div className="lg:col-span-1 p-3 border rounded-lg">
-          <h4 className="text-sm font-semibold">État synthétique</h4>
+          <h4 className="text-sm font-semibold"><T k="auto.stepdashboard.etat_synthetique" fallback="État synthétique" /></h4>
           <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-            <div>Physique: <strong className="text-foreground">{(physical).toFixed(1)}%</strong></div>
-            <div>Qualité: <strong className="text-foreground">{(quality).toFixed(1)}%</strong></div>
-            <div>Conformité: <strong className="text-foreground">{progressMetrics?.compliance ?? 90}%</strong></div>
-            <div>Sécurité: <strong className="text-foreground">{progressMetrics?.safety ?? 95}%</strong></div>
+            <div><T k="auto.stepdashboard.physique" fallback="Physique:" /> <strong className="text-foreground">{(physical).toFixed(1)}%</strong></div>
+            <div><T k="auto.stepdashboard.qualite" fallback="Qualité:" /> <strong className="text-foreground">{(quality).toFixed(1)}%</strong></div>
+            <div><T k="auto.stepdashboard.conformite" fallback="Conformité:" /> <strong className="text-foreground">{progressMetrics?.compliance ?? 90}%</strong></div>
+            <div><T k="auto.stepdashboard.securite" fallback="Sécurité:" /> <strong className="text-foreground">{progressMetrics?.safety ?? 95}%</strong></div>
           </div>
           <div className="mt-3">
             <Badge className="bg-primary/10 text-primary">{phase?.status || 'En cours'}</Badge>
@@ -205,7 +206,7 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
           </div>
             <div className="mt-3 space-y-2">
               {phaseCosts?.isOverBudget && (
-                <div className="flex items-center gap-2 text-sm text-destructive"><AlertTriangle className="h-4 w-4" /> Sur budget</div>
+                <div className="flex items-center gap-2 text-sm text-destructive"><AlertTriangle className="h-4 w-4" /> <T k="auto.stepdashboard.sur_budget" fallback="Sur budget" /></div>
               )}
               {typeof phaseCosts?.unlockable === 'number' && (
                 <div className="flex items-center gap-2 text-sm text-success"><DollarSign className="h-4 w-4" /> Déblocable: {formatCurrency(phaseCosts.unlockable)}</div>
@@ -215,24 +216,24 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
 
         {/* Zone 3 - Calculation detail (big) */}
         <div className="lg:col-span-2 p-3 border rounded-lg">
-          <h4 className="text-sm font-semibold">Détail du calcul de progression</h4>
+          <h4 className="text-sm font-semibold"><T k="auto.stepdashboard.detail_du_calcul_de_progression" fallback="Détail du calcul de progression" /></h4>
           <div className="mt-3 text-sm text-muted-foreground">
             <p>1. Avancement physique (poids 60%)</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <div>
-                <div className="text-xs">Préparation site</div>
+                <div className="text-xs"><T k="auto.stepdashboard.preparation_site" fallback="Préparation site" /></div>
                 <div className="font-medium">{progressMetrics?.prep ?? 100}% • Poids 20%</div>
               </div>
               <div>
-                <div className="text-xs">Pose câbles</div>
+                <div className="text-xs"><T k="auto.stepdashboard.pose_cables" fallback="Pose câbles" /></div>
                 <div className="font-medium">{progressMetrics?.cables ?? 90}% • Poids 35%</div>
               </div>
               <div>
-                <div className="text-xs">Connexions</div>
+                <div className="text-xs"><T k="auto.stepdashboard.connexions" fallback="Connexions" /></div>
                 <div className="font-medium">{progressMetrics?.connections ?? 50}% • Poids 30%</div>
               </div>
               <div>
-                <div className="text-xs">Tests</div>
+                <div className="text-xs"><T k="auto.stepdashboard.tests" fallback="Tests" /></div>
                 <div className="font-medium">{progressMetrics?.tests ?? 0}% • Poids 15%</div>
               </div>
             </div>
@@ -251,16 +252,16 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
             <div className="mt-4 font-medium">Calcul final: {(overall).toFixed(1)}%</div>
             <div className="mt-2 text-xs text-muted-foreground">Ajustement chef de projet: {progressMetrics?.managerAdjustment ?? '+0.0%'}</div>
             <div className="mt-3 flex gap-2">
-              <Button aria-label="Générer décompte" size="sm" onClick={() => onGenerateDecompte && onGenerateDecompte()}>Générer décompte</Button>
-              <Button aria-label="Programmer inspection" size="sm" variant="outline" onClick={() => onScheduleInspection && onScheduleInspection()}>Programmer inspection</Button>
-              <Button aria-label="Générer PV" size="sm" variant="ghost" onClick={() => onGeneratePV && onGeneratePV()}>Générer PV</Button>
+              <Button aria-label="Générer décompte" size="sm" onClick={() => onGenerateDecompte && onGenerateDecompte()}><T k="auto.stepdashboard.generer_decompte" fallback="Générer décompte" /></Button>
+              <Button aria-label="Programmer inspection" size="sm" variant="outline" onClick={() => onScheduleInspection && onScheduleInspection()}><T k="auto.stepdashboard.programmer_inspection" fallback="Programmer inspection" /></Button>
+              <Button aria-label="Générer PV" size="sm" variant="ghost" onClick={() => onGeneratePV && onGeneratePV()}><T k="auto.stepdashboard.generer_pv" fallback="Générer PV" /></Button>
             </div>
 
             <div className="mt-4">
               <details>
-                <summary className="cursor-pointer text-sm font-medium">Simulation d'impact</summary>
+                <summary className="cursor-pointer text-sm font-medium"><T k="auto.stepdashboard.simulation_d_impact" fallback="Simulation d'impact" /></summary>
                 <div className="mt-2 grid grid-cols-1 gap-2">
-                  <label className="text-xs">Ajout d'électriciens</label>
+                  <label className="text-xs"><T k="auto.stepdashboard.ajout_d_electriciens" fallback="Ajout d'électriciens" /></label>
                   <input
                     type="number"
                     min={0}
@@ -270,8 +271,8 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
                     aria-label="Nombre d'électriciens à ajouter pour simulation"
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={runSimulation} aria-label="Exécuter la simulation">Exécuter</Button>
-                    <Button size="sm" variant="outline" onClick={() => { setSimWorkers(0); setSimResult(null); }} aria-label="Réinitialiser la simulation">Réinitialiser</Button>
+                    <Button size="sm" onClick={runSimulation} aria-label="Exécuter la simulation"><T k="auto.stepdashboard.executer" fallback="Exécuter" /></Button>
+                    <Button size="sm" variant="outline" onClick={() => { setSimWorkers(0); setSimResult(null); }} aria-label="Réinitialiser la simulation"><T k="auto.stepdashboard.reinitialiser" fallback="Réinitialiser" /></Button>
                   </div>
                   {simResult && <div className="text-xs text-muted-foreground">{simResult}</div>}
                 </div>
@@ -285,7 +286,7 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
                       <div key={i}>{e.date ? new Date(e.date).toLocaleString('fr-FR') : ''} - {e.summary || e.message || e.action}</div>
                     ))
                   ) : (
-                    <div>Aucun historique disponible</div>
+                    <div><T k="auto.stepdashboard.aucun_historique_disponible" fallback="Aucun historique disponible" /></div>
                   )}
                 </div>
               </details>
@@ -296,11 +297,11 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
         {/* Zone 4 & 5 - Actions/workflow + Impacts */}
         <div className="lg:col-span-1 space-y-3">
           <div className="p-3 border rounded-lg">
-            <h4 className="text-sm font-semibold">Actions rapides</h4>
+            <h4 className="text-sm font-semibold"><T k="auto.stepdashboard.actions_rapides" fallback="Actions rapides" /></h4>
             <div className="mt-3 space-y-2">
-              <Button size="sm" onClick={() => onUpdateProgress && onUpdateProgress()} className="w-full">Saisir progression</Button>
-              <Button size="sm" variant="outline" onClick={() => onRequestPayment && onRequestPayment(undefined, true)} className="w-full">Préparer paiement</Button>
-              <Button size="sm" variant="ghost" onClick={() => console.log('Affecter ressources')} className="w-full">Affecter ressources</Button>
+              <Button size="sm" onClick={() => onUpdateProgress && onUpdateProgress()} className="w-full"><T k="auto.stepdashboard.saisir_progression" fallback="Saisir progression" /></Button>
+              <Button size="sm" variant="outline" onClick={() => onRequestPayment && onRequestPayment(undefined, true)} className="w-full"><T k="auto.stepdashboard.preparer_paiement" fallback="Préparer paiement" /></Button>
+              <Button size="sm" variant="ghost" onClick={() => console.log('Affecter ressources')} className="w-full"><T k="auto.stepdashboard.affecter_ressources" fallback="Affecter ressources" /></Button>
             </div>
           </div>
 

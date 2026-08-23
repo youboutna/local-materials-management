@@ -38,6 +38,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface Tender {
   id: string;
   title: string;
@@ -173,7 +174,7 @@ const TenderManagement = () => {
             </Badge>
             <Button variant="default" size="sm" onClick={() => setSecureSharingOpen(true)}>
               <Users className="h-4 w-4 mr-2" />
-              Partage Sécurisé
+              <T k="auto.tendermanagement.partage_securise" fallback="Partage Sécurisé" />
             </Button>
           </div>
         )
@@ -221,9 +222,9 @@ const TenderManagement = () => {
                   <div className="border-b px-6 bg-muted/30">
                     <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-7 max-w-4xl">
                       <TabsTrigger value="workflow" className="text-xs">
-                        <Layers className="h-3 w-3 mr-1" /> Workflow
+                        <Layers className="h-3 w-3 mr-1" /> <T k="auto.tendermanagement.workflow" fallback="Workflow" />
                       </TabsTrigger>
-                      <TabsTrigger value="lots" className="text-xs">Lots</TabsTrigger>
+                      <TabsTrigger value="lots" className="text-xs"><T k="auto.tendermanagement.lots" fallback="Lots" /></TabsTrigger>
                       <TabsTrigger value="documents" className="text-xs">
                         <FileText className="h-3 w-3 mr-1" /> Docs
                         {docsCount > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{docsCount}</Badge>}
@@ -232,12 +233,12 @@ const TenderManagement = () => {
                         <Inbox className="h-3 w-3 mr-1" /> Réception
                         {(submissions as any[]).length > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">{(submissions as any[]).length}</Badge>}
                       </TabsTrigger>
-                      <TabsTrigger value="evaluation" className="text-xs">Évaluation</TabsTrigger>
+                      <TabsTrigger value="evaluation" className="text-xs"><T k="auto.tendermanagement.evaluation" fallback="Évaluation" /></TabsTrigger>
                       <TabsTrigger value="decision" className="text-xs">
-                        <Gavel className="h-3 w-3 mr-1" /> Décision
+                        <Gavel className="h-3 w-3 mr-1" /> <T k="auto.tendermanagement.decision" fallback="Décision" />
                       </TabsTrigger>
                       <TabsTrigger value="secrets" className="text-xs">
-                        <KeyRound className="h-3 w-3 mr-1" /> Codes
+                        <KeyRound className="h-3 w-3 mr-1" /> <T k="auto.tendermanagement.codes" fallback="Codes" />
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -282,7 +283,7 @@ const TenderManagement = () => {
                     <TabsContent value="evaluation" className="mt-0 space-y-4">
                       {verifiedSubs.length === 0 ? (
                         <div className="text-sm text-muted-foreground p-6 border rounded-md">
-                          Aucune soumission vérifiée. Validez les codes secrets dans l'onglet <b>Réception</b>.
+                          <T k="auto.tendermanagement.aucune_soumission_verifiee_validez_les_codes_sec" fallback="Aucune soumission vérifiée. Validez les codes secrets dans l'onglet" /> <b><T k="auto.tendermanagement.reception" fallback="Réception" /></b>.
                         </div>
                       ) : (
                         verifiedSubs.map((s: any) => (
@@ -299,21 +300,21 @@ const TenderManagement = () => {
                       <Card>
                         <CardHeader>
                           <CardTitle className="text-base flex items-center gap-2">
-                            <Gavel className="h-4 w-4" /> Décision d'attribution
+                            <Gavel className="h-4 w-4" /> <T k="auto.tendermanagement.decision_d_attribution" fallback="Décision d'attribution" />
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           {winnerSub ? (
                             <div className="p-3 border rounded-md bg-success-soft border-success/30">
-                              <div className="text-sm font-medium">Lauréat proposé</div>
+                              <div className="text-sm font-medium"><T k="auto.tendermanagement.laureat_propose" fallback="Lauréat proposé" /></div>
                               <div className="text-lg">{winnerSub.supplier_name}</div>
                               <div className="text-xs text-muted-foreground">
-                                Statut: <TranslatedStatus code={winnerSub.status} /> · Score: {winnerSub.total_score ?? '—'}
+                                <T k="auto.tendermanagement.statut" fallback="Statut:" /> <TranslatedStatus code={winnerSub.status} /> · Score: {winnerSub.total_score ?? '—'}
                               </div>
                             </div>
                           ) : (
                             <p className="text-sm text-muted-foreground">
-                              Aucun lauréat désigné. Utilisez l'onglet <b>Réception</b> puis <b>Évaluation</b> pour proposer un lauréat.
+                              <T k="auto.tendermanagement.aucun_laureat_designe_utilisez_l_onglet" fallback="Aucun lauréat désigné. Utilisez l'onglet" /> <b><T k="auto.tendermanagement.reception" fallback="Réception" /></b> puis <b><T k="auto.tendermanagement.evaluation" fallback="Évaluation" /></b> pour proposer un lauréat.
                             </p>
                           )}
                           <TenderWorkflowPanel
@@ -341,14 +342,14 @@ const TenderManagement = () => {
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                     <FileText className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">Aucun appel d'offres sélectionné</h3>
+                  <h3 className="text-lg font-medium mb-2"><T k="auto.tendermanagement.aucun_appel_d_offres_selectionne" fallback="Aucun appel d'offres sélectionné" /></h3>
                   <p className="text-sm text-muted-foreground max-w-md">
                     Sélectionnez un appel d'offres à gauche pour voir ses détails et gérer son workflow.
                   </p>
                   <Button variant="outline" className="mt-4" size="sm" asChild>
                     <Link to="/tender-import">
                       <Upload className="h-4 w-4 mr-2" />
-                      Importer un appel d'offres
+                      <T k="auto.tendermanagement.importer_un_appel_d_offres" fallback="Importer un appel d'offres" />
                     </Link>
                   </Button>
                 </CardContent>

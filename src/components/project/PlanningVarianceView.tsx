@@ -14,6 +14,7 @@ import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRep
 import { useQuery } from '@tanstack/react-query';
 import { Download, FileText, Loader2, TrendingDown, TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   projectId: string;
@@ -55,13 +56,13 @@ export function PlanningVarianceView({ projectId, groupBy = 'phaseId' }: Props) 
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Réalisé vs Planifié</CardTitle>
+          <CardTitle className="text-lg"><T k="auto.planningvarianceview.realise_vs_planifie" fallback="Réalisé vs Planifié" /></CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <FileText className="h-4 w-4 mr-1" /> PDF
+              <FileText className="h-4 w-4 mr-1" /> <T k="auto.planningvarianceview.pdf" fallback="PDF" />
             </Button>
             <Button variant="outline" size="sm" onClick={downloadCsv}>
-              <Download className="h-4 w-4 mr-1" /> CSV
+              <Download className="h-4 w-4 mr-1" /> <T k="auto.planningvarianceview.csv" fallback="CSV" />
             </Button>
           </div>
         </div>
@@ -75,22 +76,22 @@ export function PlanningVarianceView({ projectId, groupBy = 'phaseId' }: Props) 
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               <div className="border rounded p-3">
-                <div className="text-xs text-muted-foreground">Planifié</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.planningvarianceview.planifie" fallback="Planifié" /></div>
                 <div className="text-xl font-semibold">{fmt(report.totals.plannedCost)}</div>
               </div>
               <div className="border rounded p-3">
-                <div className="text-xs text-muted-foreground">Réalisé</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.planningvarianceview.realise" fallback="Réalisé" /></div>
                 <div className="text-xl font-semibold">{fmt(report.totals.actualCost)}</div>
               </div>
               <div className="border rounded p-3">
-                <div className="text-xs text-muted-foreground">Écart</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.planningvarianceview.ecart" fallback="Écart" /></div>
                 <div className={`text-xl font-semibold flex items-center gap-1 ${report.totals.costDelta > 0 ? 'text-destructive' : 'text-success'}`}>
                   {report.totals.costDelta > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                   {fmt(report.totals.costDelta)}
                 </div>
               </div>
               <div className="border rounded p-3">
-                <div className="text-xs text-muted-foreground">Écart %</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.planningvarianceview.ecart" fallback="Écart %" /></div>
                 <div className="text-xl font-semibold">{fmtPct(report.totals.costDeltaPct)}</div>
               </div>
             </div>
@@ -99,10 +100,10 @@ export function PlanningVarianceView({ projectId, groupBy = 'phaseId' }: Props) 
               <TableHeader>
                 <TableRow>
                   <TableHead>{groupBy}</TableHead>
-                  <TableHead className="text-right">Qté planif.</TableHead>
-                  <TableHead className="text-right">Qté réal.</TableHead>
-                  <TableHead className="text-right">Coût planif.</TableHead>
-                  <TableHead className="text-right">Coût réal.</TableHead>
+                  <TableHead className="text-right"><T k="auto.planningvarianceview.qte_planif" fallback="Qté planif." /></TableHead>
+                  <TableHead className="text-right"><T k="auto.planningvarianceview.qte_real" fallback="Qté réal." /></TableHead>
+                  <TableHead className="text-right"><T k="auto.planningvarianceview.cout_planif" fallback="Coût planif." /></TableHead>
+                  <TableHead className="text-right"><T k="auto.planningvarianceview.cout_real" fallback="Coût réal." /></TableHead>
                   <TableHead className="text-right">Δ Coût</TableHead>
                   <TableHead className="text-right">Δ %</TableHead>
                 </TableRow>
@@ -111,12 +112,12 @@ export function PlanningVarianceView({ projectId, groupBy = 'phaseId' }: Props) 
                 {report.rows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
-                      Aucune donnée disponible.
+                      <T k="auto.planningvarianceview.aucune_donnee_disponible" fallback="Aucune donnée disponible." />
                     </TableCell>
                   </TableRow>
                 ) : report.rows.map((r) => (
                   <TableRow key={r.key}>
-                    <TableCell>{r.key === '__unassigned__' ? <Badge variant="outline">Non affecté</Badge> : r.key}</TableCell>
+                    <TableCell>{r.key === '__unassigned__' ? <Badge variant="outline"><T k="auto.planningvarianceview.non_affecte" fallback="Non affecté" /></Badge> : r.key}</TableCell>
                     <TableCell className="text-right">{fmt(r.plannedQuantity)}</TableCell>
                     <TableCell className="text-right">{fmt(r.actualQuantity)}</TableCell>
                     <TableCell className="text-right">{fmt(r.plannedCost)}</TableCell>

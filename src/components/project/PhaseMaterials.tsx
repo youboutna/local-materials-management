@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface PhaseMaterialsProps {
   phaseId: string;
   projectId: string;
@@ -108,7 +109,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
   };
 
   if (isLoading) {
-    return <div className="animate-pulse">Chargement des matériaux...</div>;
+    return <div className="animate-pulse"><T k="auto.phasematerials.chargement_des_materiaux" fallback="Chargement des matériaux..." /></div>;
   }
 
   const totalCost = phaseMaterials?.reduce((sum, pm) => 
@@ -127,16 +128,16 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter un matériau
+                <T k="auto.phasematerials.ajouter_un_materiau" fallback="Ajouter un matériau" />
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Ajouter un matériau à la phase</DialogTitle>
+                <DialogTitle><T k="auto.phasematerials.ajouter_un_materiau_a_la_phase" fallback="Ajouter un matériau à la phase" /></DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddMaterial} className="space-y-4">
                 <div>
-                  <Label htmlFor="material">Matériau</Label>
+                  <Label htmlFor="material"><T k="auto.phasematerials.materiau" fallback="Matériau" /></Label>
                   <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionnez un matériau" />
@@ -152,7 +153,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
                 </div>
 
                 <div>
-                  <Label htmlFor="quantity">Quantité</Label>
+                  <Label htmlFor="quantity"><T k="auto.phasematerials.quantite" fallback="Quantité" /></Label>
                   <Input
                     id="quantity"
                     type="number"
@@ -166,9 +167,9 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
-                    Annuler
+                    <T k="auto.phasematerials.annuler" fallback="Annuler" />
                   </Button>
-                  <Button type="submit">Ajouter</Button>
+                  <Button type="submit"><T k="auto.phasematerials.ajouter" fallback="Ajouter" /></Button>
                 </div>
               </form>
             </DialogContent>
@@ -225,7 +226,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Aucun matériau assigné à cette phase.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.phasematerials.aucun_materiau_assigne_a_cette_phase" fallback="Aucun matériau assigné à cette phase." /></p>
         )}
       </CardContent>
     </Card>

@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { AUTH_PROVIDERS, AUTH_ERROR_MESSAGES, AUTH_SUCCESS_MESSAGES } from '@/config/auth';
 import { AuthProvider } from '@/config/app';
+import { T } from '@/components/i18n/T';
 
 interface ProviderSwitcherProps {
   className?: string;
@@ -112,15 +113,15 @@ export function ProviderSwitcher({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge variant="outline" className="bg-success-soft text-success border-success/30">Available</Badge>;
+        return <Badge variant="outline" className="bg-success-soft text-success border-success/30"><T k="auto.providerswitcher.available" fallback="Available" /></Badge>;
       case 'unavailable':
-        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Unavailable</Badge>;
+        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30"><T k="auto.providerswitcher.unavailable" fallback="Unavailable" /></Badge>;
       case 'error':
-        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Error</Badge>;
+        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30"><T k="auto.providerswitcher.error" fallback="Error" /></Badge>;
       case 'testing':
-        return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Testing...</Badge>;
+        return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30"><T k="auto.providerswitcher.testing" fallback="Testing..." /></Badge>;
       default:
-        return <Badge variant="outline" className="bg-muted text-foreground border-border">Unknown</Badge>;
+        return <Badge variant="outline" className="bg-muted text-foreground border-border"><T k="auto.providerswitcher.unknown" fallback="Unknown" /></Badge>;
     }
   };
 
@@ -129,7 +130,7 @@ export function ProviderSwitcher({
       <div className={`flex items-center gap-2 ${className}`}>
         {showCurrentProvider && (
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Provider:</span>
+            <span className="text-sm font-medium"><T k="auto.providerswitcher.provider" fallback="Provider:" /></span>
             <Select value={selectedProvider} onValueChange={handleSwitchProvider} disabled={isSwitching}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Select provider" />
@@ -161,7 +162,7 @@ export function ProviderSwitcher({
     <Card className={`w-full ${className}`}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Authentication Provider</span>
+          <span><T k="auto.providerswitcher.authentication_provider" fallback="Authentication Provider" /></span>
           {showCurrentProvider && (
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
               Current: {currentProvider}
@@ -170,7 +171,7 @@ export function ProviderSwitcher({
         </CardTitle>
         {showStatus && (
           <CardDescription>
-            Switch between authentication providers. Current provider: <strong>{currentProvider}</strong>
+            <T k="auto.providerswitcher.switch_between_authentication_providers_current_" fallback="Switch between authentication providers. Current provider:" /> <strong>{currentProvider}</strong>
           </CardDescription>
         )}
       </CardHeader>
@@ -191,7 +192,7 @@ export function ProviderSwitcher({
                       <div className="flex items-center gap-2">
                         {getStatusBadge(providerStatus[provider.value])}
                         {provider.value === currentProvider && (
-                          <Badge variant="default" className="bg-blue-500 text-white text-xs">Current</Badge>
+                          <Badge variant="default" className="bg-blue-500 text-white text-xs"><T k="auto.providerswitcher.current" fallback="Current" /></Badge>
                         )}
                       </div>
                     </div>
@@ -211,12 +212,12 @@ export function ProviderSwitcher({
             {isSwitching ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Switching...
+                <T k="auto.providerswitcher.switching" fallback="Switching..." />
               </>
             ) : (
               <>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Switch
+                <T k="auto.providerswitcher.switch" fallback="Switch" />
               </>
             )}
           </Button>
@@ -240,7 +241,7 @@ export function ProviderSwitcher({
               <div className="flex items-center justify-between">
                 {getStatusBadge(providerStatus[provider.value])}
                 {provider.value === currentProvider && (
-                  <Badge variant="default" className="bg-blue-500 text-white text-xs">Current</Badge>
+                  <Badge variant="default" className="bg-blue-500 text-white text-xs"><T k="auto.providerswitcher.current" fallback="Current" /></Badge>
                 )}
               </div>
               <div className="text-xs text-muted-foreground">

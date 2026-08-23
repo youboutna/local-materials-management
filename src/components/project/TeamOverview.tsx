@@ -14,6 +14,7 @@ import { useProjectResourcesCrudHex } from '@/hooks/hexagonal/useProjectResource
 import { useProjectPhasesForTasks } from '@/hooks/hexagonal/useEnhancedTasksHex';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface TeamOverviewProps {
   resources?: any[];
   setResources?: (resources: any[]) => void;
@@ -208,7 +209,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
         <CardContent className="p-6">
           <div className="text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-semibold text-foreground">Aucune phase trouvée</h3>
+            <h3 className="mt-2 text-sm font-semibold text-foreground"><T k="auto.teamoverview.aucune_phase_trouvee" fallback="Aucune phase trouvée" /></h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des ressources.
             </p>
@@ -222,7 +223,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h3 className="text-lg font-semibold">Équipe et ressources (délégation publique)</h3>
+          <h3 className="text-lg font-semibold"><T k="auto.teamoverview.equipe_et_ressources_delegation_publique" fallback="Équipe et ressources (délégation publique)" /></h3>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <User className="h-3 w-3" />
@@ -243,7 +244,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
           <DialogTrigger asChild>
             <Button size="sm" onClick={() => resetForm()}>
               <Plus className="h-4 w-4 mr-2" />
-              Nouvelle ressource
+              <T k="auto.teamoverview.nouvelle_ressource" fallback="Nouvelle ressource" />
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -256,7 +257,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="resourceName">Nom de la ressource</Label>
+                  <Label htmlFor="resourceName"><T k="auto.teamoverview.nom_de_la_ressource" fallback="Nom de la ressource" /></Label>
                   <Input
                     id="resourceName"
                     value={formData.name}
@@ -267,15 +268,15 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                 </div>
                 
                 <div>
-                  <Label htmlFor="resourceType">Type</Label>
+                  <Label htmlFor="resourceType"><T k="auto.teamoverview.type" fallback="Type" /></Label>
                   <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="human">Ressource humaine</SelectItem>
-                      <SelectItem value="equipment">Équipement</SelectItem>
-                      <SelectItem value="material">Matériel</SelectItem>
+                      <SelectItem value="human"><T k="auto.teamoverview.ressource_humaine" fallback="Ressource humaine" /></SelectItem>
+                      <SelectItem value="equipment"><T k="auto.teamoverview.equipement" fallback="Équipement" /></SelectItem>
+                      <SelectItem value="material"><T k="auto.teamoverview.materiel" fallback="Matériel" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -288,15 +289,15 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                     checked={formData.applyToAllPhases}
                     onCheckedChange={(checked) => setFormData({ ...formData, applyToAllPhases: checked as boolean })}
                   />
-                  <Label htmlFor="applyToAllPhases">Appliquer à toutes les phases</Label>
+                  <Label htmlFor="applyToAllPhases"><T k="auto.teamoverview.appliquer_a_toutes_les_phases" fallback="Appliquer à toutes les phases" /></Label>
                 </div>
 
                 {!formData.applyToAllPhases && (
                   <div>
-                    <Label htmlFor="phaseSelect">Sélectionner une ou plusieurs phases</Label>
+                    <Label htmlFor="phaseSelect"><T k="auto.teamoverview.selectionner_une_ou_plusieurs_phases" fallback="Sélectionner une ou plusieurs phases" /></Label>
                     <div className="border rounded-md p-3 max-h-48 overflow-y-auto bg-background">
                       {currentPhases.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Aucune phase disponible</p>
+                        <p className="text-sm text-muted-foreground"><T k="auto.teamoverview.aucune_phase_disponible" fallback="Aucune phase disponible" /></p>
                       ) : (
                         <div className="space-y-2">
                           {currentPhases.map((phase) => (
@@ -345,7 +346,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                     </div>
                     {currentPhases.length === 0 && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases.
+                        <T k="auto.teamoverview.aucune_phase_trouvee_creez_d_abord_des_phases_da" fallback="Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases." />
                       </p>
                     )}
                   </div>
@@ -364,7 +365,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="costPerUnit">Coût par unité (MRU)</Label>
+                  <Label htmlFor="costPerUnit"><T k="auto.teamoverview.cout_par_unite_mru" fallback="Coût par unité (MRU)" /></Label>
                   <Input
                     id="costPerUnit"
                     type="number"
@@ -377,7 +378,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                 </div>
                 
                 <div>
-                  <Label htmlFor="quantity">Quantité</Label>
+                  <Label htmlFor="quantity"><T k="auto.teamoverview.quantite" fallback="Quantité" /></Label>
                   <Input
                     id="quantity"
                     type="number"
@@ -389,7 +390,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="unit">Unité</Label>
+                  <Label htmlFor="unit"><T k="auto.teamoverview.unite" fallback="Unité" /></Label>
                   <Input
                     id="unit"
                     value={formData.unit}
@@ -401,7 +402,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                  Annuler
+                  <T k="auto.teamoverview.annuler" fallback="Annuler" />
                 </Button>
                 <Button type="submit">
                   {editingId ? 'Mettre à jour' : 'Créer'}
@@ -441,7 +442,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
           </div>
           {humanResources.length === 0 && (
             <p className="text-muted-foreground text-center py-4">
-              Aucune ressource humaine assignée
+              <T k="auto.teamoverview.aucune_ressource_humaine_assignee" fallback="Aucune ressource humaine assignée" />
             </p>
           )}
         </CardContent>
@@ -476,7 +477,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
           </div>
           {equipmentResources.length === 0 && (
             <p className="text-muted-foreground text-center py-4">
-              Aucun équipement assigné
+              <T k="auto.teamoverview.aucun_equipement_assigne" fallback="Aucun équipement assigné" />
             </p>
           )}
         </CardContent>
@@ -511,7 +512,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
           </div>
           {materialResources.length === 0 && (
             <p className="text-muted-foreground text-center py-4">
-              Aucun matériau assigné
+              <T k="auto.teamoverview.aucun_materiau_assigne" fallback="Aucun matériau assigné" />
             </p>
           )}
         </CardContent>

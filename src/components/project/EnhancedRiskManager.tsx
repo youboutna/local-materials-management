@@ -20,6 +20,7 @@ import {
   Employee,
   Supplier
 } from '@/hooks/hexagonal/useEnhancedRiskManagerHex';
+import { T } from '@/components/i18n/T';
 
 interface EnhancedRiskManagerProps {
   projectId: string;
@@ -201,21 +202,21 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des Risques</h1>
+          <h1 className="text-3xl font-bold"><T k="auto.enhancedriskmanager.gestion_des_risques" fallback="Gestion des Risques" /></h1>
           <p className="text-muted-foreground">
-            Identification et suivi des risques du projet
+            <T k="auto.enhancedriskmanager.identification_et_suivi_des_risques_du_projet" fallback="Identification et suivi des risques du projet" />
           </p>
         </div>
         <Button onClick={() => setIsCreating(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nouveau Risque
+          <T k="auto.enhancedriskmanager.nouveau_risque" fallback="Nouveau Risque" />
         </Button>
       </div>
 
       {/* Risk Level Filter */}
       <Card>
         <CardHeader>
-          <CardTitle>Filtre par niveau de risque</CardTitle>
+          <CardTitle><T k="auto.enhancedriskmanager.filtre_par_niveau_de_risque" fallback="Filtre par niveau de risque" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -266,28 +267,28 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Probabilité:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedriskmanager.probabilite" fallback="Probabilité:" /></span>
                   <span className="ml-2">{risk.probability}/5</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Impact:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedriskmanager.impact" fallback="Impact:" /></span>
                   <span className="ml-2">{risk.impact}/5</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Responsable:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedriskmanager.responsable" fallback="Responsable:" /></span>
                   <span className="ml-2">
                     {employees.find(emp => emp.id === risk.ownerId)?.fullName || 'Non assigné'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Date limite:</span>
+                  <span className="text-muted-foreground"><T k="auto.enhancedriskmanager.date_limite" fallback="Date limite:" /></span>
                   <span className="ml-2">{risk.dueDate || 'Non définie'}</span>
                 </div>
               </div>
 
               {risk.mitigationPlan && (
                 <div className="mt-4">
-                  <h4 className="font-medium mb-2">Plan de mitigation:</h4>
+                  <h4 className="font-medium mb-2"><T k="auto.enhancedriskmanager.plan_de_mitigation" fallback="Plan de mitigation:" /></h4>
                   <p className="text-sm text-muted-foreground">{risk.mitigationPlan}</p>
                 </div>
               )}
@@ -307,7 +308,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label htmlFor="title">Titre du risque</Label>
+                <Label htmlFor="title"><T k="auto.enhancedriskmanager.titre_du_risque" fallback="Titre du risque" /></Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -316,7 +317,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description"><T k="auto.enhancedriskmanager.description" fallback="Description" /></Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -325,7 +326,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="probability">Probabilité (1-5)</Label>
+                <Label htmlFor="probability"><T k="auto.enhancedriskmanager.probabilite_1_5" fallback="Probabilité (1-5)" /></Label>
                 <Select value={String(formData.probability)} onValueChange={(value) => setFormData(prev => ({ ...prev, probability: value }))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -340,7 +341,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="impact">Impact (1-5)</Label>
+                <Label htmlFor="impact"><T k="auto.enhancedriskmanager.impact_1_5" fallback="Impact (1-5)" /></Label>
                 <Select value={String(formData.impact)} onValueChange={(value) => setFormData(prev => ({ ...prev, impact: value }))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -355,7 +356,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="ownerId">Responsable</Label>
+                <Label htmlFor="ownerId"><T k="auto.enhancedriskmanager.responsable" fallback="Responsable" /></Label>
                 <Select value={formData.ownerId} onValueChange={(value) => setFormData(prev => ({ ...prev, ownerId: value }))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -370,7 +371,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="dueDate">Date limite</Label>
+                <Label htmlFor="dueDate"><T k="auto.enhancedriskmanager.date_limite" fallback="Date limite" /></Label>
                 <Input
                   id="dueDate"
                   type="date"
@@ -379,7 +380,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="phaseId">Phase</Label>
+                <Label htmlFor="phaseId"><T k="auto.enhancedriskmanager.phase" fallback="Phase" /></Label>
                 <Select value={formData.phaseId} onValueChange={(value) => setFormData(prev => ({ ...prev, phaseId: value }))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -394,21 +395,21 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="status">Statut</Label>
+                <Label htmlFor="status"><T k="auto.enhancedriskmanager.statut" fallback="Statut" /></Label>
                 <Select value={String(formData.status)} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="identified">Identifié</SelectItem>
-                    <SelectItem value="mitigated">Mitigé</SelectItem>
+                    <SelectItem value="identified"><T k="auto.enhancedriskmanager.identifie" fallback="Identifié" /></SelectItem>
+                    <SelectItem value="mitigated"><T k="auto.enhancedriskmanager.mitige" fallback="Mitigé" /></SelectItem>
                     <SelectItem value="accepted"><TranslatedStatus code="accepted" /></SelectItem>
                     <SelectItem value="closed"><TranslatedStatus code="closed" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label htmlFor="mitigationPlan">Plan de mitigation</Label>
+                <Label htmlFor="mitigationPlan"><T k="auto.enhancedriskmanager.plan_de_mitigation" fallback="Plan de mitigation" /></Label>
                 <Textarea
                   id="mitigationPlan"
                   value={formData.mitigationPlan}
@@ -419,7 +420,7 @@ const EnhancedRiskManager: React.FC<EnhancedRiskManagerProps> = ({
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                Annuler
+                <T k="auto.enhancedriskmanager.annuler" fallback="Annuler" />
               </Button>
               <Button type="submit" disabled={createRiskMutation.isPending || updateRiskMutation.isPending}>
                 {editingId ? 'Mettre à jour' : 'Créer'}

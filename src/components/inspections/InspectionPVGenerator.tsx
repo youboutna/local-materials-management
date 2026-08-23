@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface InspectionPVGeneratorProps {
   inspection: {
     id: string;
@@ -129,7 +130,7 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Génération de PV
+          <T k="auto.inspectionpvgenerator.generation_de_pv" fallback="Génération de PV" />
         </CardTitle>
         <CardDescription>
           Projet: {projectTitle} {phaseName && `- Phase: ${phaseName}`}
@@ -141,7 +142,7 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <p className="font-medium">Vérification préalable requise:</p>
+              <p className="font-medium"><T k="auto.inspectionpvgenerator.verification_prealable_requise" fallback="Vérification préalable requise:" /></p>
               <ul className="list-disc list-inside mt-1">
                 {readinessCheck.missing.map((item, i) => (
                   <li key={i} className="text-sm">{item}</li>
@@ -152,7 +153,7 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
         )}
 
         <div>
-          <Label>Type de PV</Label>
+          <Label><T k="auto.inspectionpvgenerator.type_de_pv" fallback="Type de PV" /></Label>
           <Select value={pvType} onValueChange={(v) => setPvType(v as PVType)}>
             <SelectTrigger>
               <SelectValue />
@@ -169,19 +170,19 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <Label className="text-muted-foreground">Date d'inspection</Label>
+            <Label className="text-muted-foreground"><T k="auto.inspectionpvgenerator.date_d_inspection" fallback="Date d'inspection" /></Label>
             <p>{format(new Date(inspection.date), 'dd MMMM yyyy', { locale: fr })}</p>
           </div>
           <div>
-            <Label className="text-muted-foreground">Inspecteur</Label>
+            <Label className="text-muted-foreground"><T k="auto.inspectionpvgenerator.inspecteur" fallback="Inspecteur" /></Label>
             <p>{inspection.inspector}</p>
           </div>
           <div>
-            <Label className="text-muted-foreground">Statut</Label>
+            <Label className="text-muted-foreground"><T k="auto.inspectionpvgenerator.statut" fallback="Statut" /></Label>
             <Badge variant="outline"><TranslatedStatus code={inspection.status} /></Badge>
           </div>
           <div>
-            <Label className="text-muted-foreground">Progression</Label>
+            <Label className="text-muted-foreground"><T k="auto.inspectionpvgenerator.progression" fallback="Progression" /></Label>
             <p>{inspection.progress_at_inspection}%</p>
           </div>
         </div>
@@ -208,12 +209,12 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Génération...
+                <T k="auto.inspectionpvgenerator.generation" fallback="Génération..." />
               </>
             ) : (
               <>
                 <FileText className="h-4 w-4 mr-2" />
-                Générer le PV
+                <T k="auto.inspectionpvgenerator.generer_le_pv" fallback="Générer le PV" />
               </>
             )}
           </Button>
@@ -221,11 +222,11 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
           <>
             <Button variant="outline" onClick={handleDownload} disabled={isDownloading}>
               <Download className="h-4 w-4 mr-2" />
-              Télécharger
+              <T k="auto.inspectionpvgenerator.telecharger" fallback="Télécharger" />
             </Button>
             <Button onClick={handleSave} disabled={isDownloading}>
               <Send className="h-4 w-4 mr-2" />
-              Sauvegarder
+              <T k="auto.inspectionpvgenerator.sauvegarder" fallback="Sauvegarder" />
             </Button>
           </>
         )}

@@ -23,6 +23,7 @@ import {
   ProjectTask,
   ProjectPhase
 } from '@/hooks/hexagonal/useEnhancedTasksHex';
+import { T } from '@/components/i18n/T';
 
 interface EnhancedTaskListProps {
   projectId: string;
@@ -134,7 +135,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
   };
 
   if (isLoading) {
-    return <div className="animate-pulse">Chargement des tâches...</div>;
+    return <div className="animate-pulse"><T k="auto.enhancedtasklist.chargement_des_taches" fallback="Chargement des tâches..." /></div>;
   }
 
   return (
@@ -152,7 +153,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                 <SelectValue placeholder="Filtrer par phase" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Toutes les phases</SelectItem>
+                <SelectItem value="all"><T k="auto.enhancedtasklist.toutes_les_phases" fallback="Toutes les phases" /></SelectItem>
                 {phases?.map((phase) => (
                   <SelectItem key={phase.id} value={phase.id}>
                     {phase.name}
@@ -167,7 +168,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                 <SelectValue placeholder="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="all"><T k="auto.enhancedtasklist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
                 <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
                 <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
                 <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
@@ -179,7 +180,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
               <DialogTrigger asChild>
                 <Button onClick={() => { resetForm(); setEditingId(null); }}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle tâche
+                  <T k="auto.enhancedtasklist.nouvelle_tache" fallback="Nouvelle tâche" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
@@ -200,7 +201,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                   </div>
 
                   <div>
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description"><T k="auto.enhancedtasklist.description" fallback="Description" /></Label>
                     <Textarea
                       id="description"
                       value={formData.description}
@@ -210,7 +211,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="phase_id">Phase</Label>
+                      <Label htmlFor="phase_id"><T k="auto.enhancedtasklist.phase" fallback="Phase" /></Label>
                       <Select
                         value={formData.phaseId}
                         onValueChange={(value) => setFormData({ ...formData, phaseId: value })}
@@ -219,7 +220,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                           <SelectValue placeholder="Sélectionner une phase" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="no_phase">Aucune phase</SelectItem>
+                          <SelectItem value="no_phase"><T k="auto.enhancedtasklist.aucune_phase" fallback="Aucune phase" /></SelectItem>
                           {phases?.map((phase) => (
                             <SelectItem key={phase.id} value={phase.id}>
                               {phase.name}
@@ -229,7 +230,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="assigned_to">Assigné à</Label>
+                      <Label htmlFor="assigned_to"><T k="auto.enhancedtasklist.assigne_a" fallback="Assigné à" /></Label>
                       <Input
                         id="assigned_to"
                         value={formData.assignedTo}
@@ -241,7 +242,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="priority">Priorité</Label>
+                      <Label htmlFor="priority"><T k="auto.enhancedtasklist.priorite" fallback="Priorité" /></Label>
                       <Select
                         value={formData.priority}
                         onValueChange={(value) => setFormData({ ...formData, priority: value })}
@@ -258,7 +259,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="status">Statut</Label>
+                      <Label htmlFor="status"><T k="auto.enhancedtasklist.statut" fallback="Statut" /></Label>
                       <Select
                         value={formData.status}
                         onValueChange={(value) => setFormData({ ...formData, status: value })}
@@ -275,7 +276,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="due_date">Date d'échéance</Label>
+                      <Label htmlFor="due_date"><T k="auto.enhancedtasklist.date_d_echeance" fallback="Date d'échéance" /></Label>
                       <Input
                         id="due_date"
                         type="date"
@@ -286,7 +287,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                   </div>
 
                   <div>
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="notes"><T k="auto.enhancedtasklist.notes" fallback="Notes" /></Label>
                     <Textarea
                       id="notes"
                       value={formData.notes}
@@ -296,7 +297,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
 
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                      Annuler
+                      <T k="auto.enhancedtasklist.annuler" fallback="Annuler" />
                     </Button>
                     <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                       {editingId ? 'Mettre à jour' : 'Créer'}
@@ -361,7 +362,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       
                       {task.notes && (
                         <p className="text-xs text-muted-foreground mt-2">
-                          <span className="font-medium">Notes:</span> {task.notes}
+                          <span className="font-medium"><T k="auto.enhancedtasklist.notes" fallback="Notes:" /></span> {task.notes}
                         </p>
                       )}
                     </div>
@@ -387,7 +388,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            Aucune tâche trouvée
+            <T k="auto.enhancedtasklist.aucune_tache_trouvee" fallback="Aucune tâche trouvée" />
           </div>
         )}
       </CardContent>

@@ -23,6 +23,7 @@ import { useProjectPhasesHex } from '@/hooks/hexagonal/useProjectPhasesHex';
 import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface QuantityTakeoffFormProps {
   projectId: string;
   onSubmitSuccess?: () => void;
@@ -174,12 +175,12 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Nouveau Calcul Métré</CardTitle>
+        <CardTitle><T k="auto.quantitytakeoffform.nouveau_calcul_metre" fallback="Nouveau Calcul Métré" /></CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="material">Matériau</Label>
+            <Label htmlFor="material"><T k="auto.quantitytakeoffform.materiau" fallback="Matériau" /></Label>
             <Select value={formData.materialId} onValueChange={(v) => updateFormData('materialId', v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un matériau..." />
@@ -203,7 +204,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
           </div>
 
           <div>
-            <Label htmlFor="elementType">Type d'élément</Label>
+            <Label htmlFor="elementType"><T k="auto.quantitytakeoffform.type_d_element" fallback="Type d'élément" /></Label>
             <Input
               id="elementType"
               type="text"
@@ -219,7 +220,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
           {/* WBS cascade — Phase / Jalon / Tâche */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <Label>Phase</Label>
+              <Label><T k="auto.quantitytakeoffform.phase" fallback="Phase" /></Label>
               <Select value={formData.phaseId} onValueChange={(v) => updateFormData('phaseId', v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Phase..." />
@@ -234,7 +235,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
               </Select>
             </div>
             <div>
-              <Label>Jalon</Label>
+              <Label><T k="auto.quantitytakeoffform.jalon" fallback="Jalon" /></Label>
               <Select
                 value={formData.milestoneId}
                 onValueChange={(v) => updateFormData('milestoneId', v)}
@@ -253,7 +254,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
               </Select>
             </div>
             <div>
-              <Label>Tâche</Label>
+              <Label><T k="auto.quantitytakeoffform.tache" fallback="Tâche" /></Label>
               <Select
                 value={formData.taskId}
                 onValueChange={(v) => updateFormData('taskId', v)}
@@ -274,7 +275,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
           </div>
 
           <div>
-            <Label htmlFor="unit">Unité</Label>
+            <Label htmlFor="unit"><T k="auto.quantitytakeoffform.unite" fallback="Unité" /></Label>
             <Select value={formData.unit} onValueChange={(v) => updateFormData('unit', v as BoqUnit)}>
               <SelectTrigger>
                 <SelectValue />
@@ -291,7 +292,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
           </div>
 
           <div>
-            <Label htmlFor="length">Longueur (m)</Label>
+            <Label htmlFor="length"><T k="auto.quantitytakeoffform.longueur_m" fallback="Longueur (m)" /></Label>
             <Input
               id="length"
               type="number"
@@ -304,7 +305,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
 
           {unitDef.requires.width && (
             <div>
-              <Label htmlFor="width">Largeur (m)</Label>
+              <Label htmlFor="width"><T k="auto.quantitytakeoffform.largeur_m" fallback="Largeur (m)" /></Label>
               <Input
                 id="width"
                 type="number"
@@ -318,7 +319,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
 
           {unitDef.requires.height && (
             <div>
-              <Label htmlFor="height">Hauteur (m)</Label>
+              <Label htmlFor="height"><T k="auto.quantitytakeoffform.hauteur_m" fallback="Hauteur (m)" /></Label>
               <Input
                 id="height"
                 type="number"
@@ -331,7 +332,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
           )}
 
           <div>
-            <Label htmlFor="note">Note (optionnel)</Label>
+            <Label htmlFor="note"><T k="auto.quantitytakeoffform.note_optionnel" fallback="Note (optionnel)" /></Label>
             <Textarea
               id="note"
               value={formData.note}

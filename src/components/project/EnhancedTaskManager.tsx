@@ -31,6 +31,7 @@ import { getSupplierService } from '@/application/services/SupplierService';
 import { getProjectService } from '@/application/services/ProjectService';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // supabase removed - using hexagonal hooks and services
 
 interface Task {
@@ -481,7 +482,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
         <CardContent className="p-6">
           <div className="text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-semibold text-foreground">Aucune phase trouvée</h3>
+            <h3 className="mt-2 text-sm font-semibold text-foreground"><T k="auto.enhancedtaskmanager.aucune_phase_trouvee" fallback="Aucune phase trouvée" /></h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des tâches.
             </p>
@@ -496,7 +497,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       {/* Header with controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h3 className="text-lg font-semibold">Gestion des tâches</h3>
+          <h3 className="text-lg font-semibold"><T k="auto.enhancedtaskmanager.gestion_des_taches" fallback="Gestion des tâches" /></h3>
           <p className="text-sm text-muted-foreground">
             {filteredTasks.length} tâche(s) • {currentPhases.length} phase(s)
           </p>
@@ -508,7 +509,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               <SelectValue placeholder="Toutes les phases" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes les phases</SelectItem>
+              <SelectItem value="all"><T k="auto.enhancedtaskmanager.toutes_les_phases" fallback="Toutes les phases" /></SelectItem>
               {currentPhases.map((phase) => (
                 <SelectItem key={phase.id} value={phase.id}>
                   {phase.name}
@@ -522,7 +523,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               <SelectValue placeholder="Tous statuts" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous statuts</SelectItem>
+              <SelectItem value="all"><T k="auto.enhancedtaskmanager.tous_statuts" fallback="Tous statuts" /></SelectItem>
               <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
               <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
               <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
@@ -534,7 +535,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
-                Nouvelle tâche
+                <T k="auto.enhancedtaskmanager.nouvelle_tache" fallback="Nouvelle tâche" />
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -547,7 +548,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="title">Titre de la tâche</Label>
+                    <Label htmlFor="title"><T k="auto.enhancedtaskmanager.titre_de_la_tache" fallback="Titre de la tâche" /></Label>
                     <Input
                       id="title"
                       value={formData.title}
@@ -558,7 +559,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   </div>
                   
                   <div>
-                    <Label htmlFor="priority">Priorité</Label>
+                    <Label htmlFor="priority"><T k="auto.enhancedtaskmanager.priorite" fallback="Priorité" /></Label>
                     <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
                       <SelectTrigger>
                         <SelectValue />
@@ -574,7 +575,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description"><T k="auto.enhancedtaskmanager.description" fallback="Description" /></Label>
                   <Textarea
                     id="description"
                     value={formData.description}
@@ -591,15 +592,15 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       checked={formData.applyToAllPhases}
                       onCheckedChange={(checked) => setFormData({ ...formData, applyToAllPhases: checked as boolean })}
                     />
-                    <Label htmlFor="applyToAllPhases">Appliquer à toutes les phases</Label>
+                    <Label htmlFor="applyToAllPhases"><T k="auto.enhancedtaskmanager.appliquer_a_toutes_les_phases" fallback="Appliquer à toutes les phases" /></Label>
                   </div>
 
                   {!formData.applyToAllPhases && (
                     <div>
-                      <Label htmlFor="phaseSelect">Sélectionner une ou plusieurs phases</Label>
+                      <Label htmlFor="phaseSelect"><T k="auto.enhancedtaskmanager.selectionner_une_ou_plusieurs_phases" fallback="Sélectionner une ou plusieurs phases" /></Label>
                       <div className="border rounded-md p-3 max-h-48 overflow-y-auto bg-background">
                         {currentPhases.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">Aucune phase disponible</p>
+                          <p className="text-sm text-muted-foreground"><T k="auto.enhancedtaskmanager.aucune_phase_disponible" fallback="Aucune phase disponible" /></p>
                         ) : (
                           <div className="space-y-2">
                             {currentPhases.map((phase) => (
@@ -648,7 +649,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       </div>
                       {currentPhases.length === 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases.
+                          <T k="auto.enhancedtaskmanager.aucune_phase_trouvee_creez_d_abord_des_phases_da" fallback="Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases." />
                         </p>
                       )}
                     </div>
@@ -656,14 +657,14 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="assignedTo">Assigné </Label>
+                  <Label htmlFor="assignedTo"><T k="auto.enhancedtaskmanager.assigne" fallback="Assigné" /> </Label>
                   <Select value={formData.assignedTo} onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un profil" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectLabel>Employés (Internes)</SelectLabel>
+                        <SelectLabel><T k="auto.enhancedtaskmanager.employes_internes" fallback="Employés (Internes)" /></SelectLabel>
                         {employees.map((emp) => (
                           <SelectItem key={emp.id} value={emp.id}>
                             {emp.fullName} {emp.position ? `(${emp.position})` : ''}
@@ -680,7 +681,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       </SelectGroup>
                       {projectData?.mainContractor && (
                         <SelectGroup>
-                          <SelectLabel>Contractant principal</SelectLabel>
+                          <SelectLabel><T k="auto.enhancedtaskmanager.contractant_principal" fallback="Contractant principal" /></SelectLabel>
                           <SelectItem value={projectData.mainContractor}>
                             {projectData.mainContractor}
                           </SelectItem>
@@ -692,7 +693,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="due_date">Date d'échéance</Label>
+                    <Label htmlFor="due_date"><T k="auto.enhancedtaskmanager.date_d_echeance" fallback="Date d'échéance" /></Label>
                     <Input
                       id="due_date"
                       type="date"
@@ -702,7 +703,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   </div>
                   
                   <div>
-                    <Label htmlFor="status">Statut</Label>
+                    <Label htmlFor="status"><T k="auto.enhancedtaskmanager.statut" fallback="Statut" /></Label>
                     <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
                       <SelectTrigger>
                         <SelectValue />
@@ -719,7 +720,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                    Annuler
+                    <T k="auto.enhancedtaskmanager.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit">
                     {editingId ? 'Mettre à jour' : 'Créer'}
@@ -773,7 +774,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   {task.progress !== null && (
                     <div className="mt-3">
                       <div className="flex justify-between text-xs mb-1">
-                        <span>Progression</span>
+                        <span><T k="auto.enhancedtaskmanager.progression" fallback="Progression" /></span>
                         <span>{task.progress}%</span>
                       </div>
                       <Progress value={task.progress} className="h-2" />
@@ -807,9 +808,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             <CardContent className="p-6">
               <div className="text-center">
                 <Target className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-2 text-sm font-semibold text-foreground">Aucune tâche trouvée</h3>
+                <h3 className="mt-2 text-sm font-semibold text-foreground"><T k="auto.enhancedtaskmanager.aucune_tache_trouvee" fallback="Aucune tâche trouvée" /></h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Commencez par créer une nouvelle tâche pour ce projet.
+                  <T k="auto.enhancedtaskmanager.commencez_par_creer_une_nouvelle_tache_pour_ce_p" fallback="Commencez par créer une nouvelle tâche pour ce projet." />
                 </p>
               </div>
             </CardContent>

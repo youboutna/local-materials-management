@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Building2, Check, Loader2, Mail, Pencil, Search, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   open: boolean;
@@ -135,7 +136,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Partager le code avec un fournisseur</DialogTitle>
+          <DialogTitle><T k="auto.sharesecretwithsupplierdialog.partager_le_code_avec_un_fournisseur" fallback="Partager le code avec un fournisseur" /></DialogTitle>
           <DialogDescription>
             Le fournisseur recevra le code d’accès et le lien du portail sécurisé pour «{' '}
             {tenderTitle} ».
@@ -156,13 +157,13 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
                   {user.email}
                 </p>
               </div>
-              <Badge variant="outline" className="text-xs">Émetteur</Badge>
+              <Badge variant="outline" className="text-xs"><T k="auto.sharesecretwithsupplierdialog.emetteur" fallback="Émetteur" /></Badge>
             </div>
           )}
 
           {/* Sélecteur de fournisseur */}
           <div className="space-y-2">
-            <Label htmlFor="share-supplier-search">Fournisseur destinataire</Label>
+            <Label htmlFor="share-supplier-search"><T k="auto.sharesecretwithsupplierdialog.fournisseur_destinataire" fallback="Fournisseur destinataire" /></Label>
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -177,7 +178,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
               {isLoading ? (
                 <div className="p-3 text-sm text-muted-foreground">Chargement…</div>
               ) : suppliers.length === 0 ? (
-                <div className="p-3 text-sm text-muted-foreground">Aucun fournisseur trouvé.</div>
+                <div className="p-3 text-sm text-muted-foreground"><T k="auto.sharesecretwithsupplierdialog.aucun_fournisseur_trouve" fallback="Aucun fournisseur trouvé." /></div>
               ) : (
                 <ul className="divide-y">
                   {suppliers.map((s) => (
@@ -209,7 +210,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
           {/* Email modifiable */}
           <div className="space-y-2">
             <Label htmlFor="share-supplier-email" className="flex items-center gap-2">
-              E-mail destinataire
+              <T k="auto.sharesecretwithsupplierdialog.e_mail_destinataire" fallback="E-mail destinataire" />
               <span className="text-xs text-muted-foreground font-normal">(modifiable)</span>
             </Label>
             <div className="relative">
@@ -226,14 +227,14 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
             {selected && email !== selected.email && selected.email && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <Pencil className="h-3 w-3" />
-                Email modifié manuellement. L'UUID du fournisseur est conservé pour le suivi.
+                <T k="auto.sharesecretwithsupplierdialog.email_modifie_manuellement_l_uuid_du_fournisseur" fallback="Email modifié manuellement. L'UUID du fournisseur est conservé pour le suivi." />
               </p>
             )}
           </div>
 
           {/* Message optionnel */}
           <div className="space-y-2">
-            <Label htmlFor="share-supplier-message">Message (optionnel)</Label>
+            <Label htmlFor="share-supplier-message"><T k="auto.sharesecretwithsupplierdialog.message_optionnel" fallback="Message (optionnel)" /></Label>
             <Textarea
               id="share-supplier-message"
               rows={3}
@@ -256,7 +257,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>
-            Annuler
+            <T k="auto.sharesecretwithsupplierdialog.annuler" fallback="Annuler" />
           </Button>
           <Button onClick={handleSend} disabled={sending || !email.trim()}>
             {sending ? (

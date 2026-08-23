@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { Building2, Calendar, Camera, ClipboardList, Download, ExternalLink, FileBarChart, FileCheck, FileText, FolderOpen, RotateCw, User, Users, ZoomIn } from 'lucide-react';
 import { useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface Document {
   id: string;
@@ -163,7 +164,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
         <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
           <div className="text-center text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-2" />
-            <p>Aucun fichier disponible</p>
+            <p><T k="auto.documentviewer.aucun_fichier_disponible" fallback="Aucun fichier disponible" /></p>
           </div>
         </div>
       );
@@ -196,7 +197,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
           </Button>
           <div className="hidden text-center text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-2" />
-            <p>Impossible de charger l'image</p>
+            <p><T k="auto.documentviewer.impossible_de_charger_l_image" fallback="Impossible de charger l'image" /></p>
           </div>
         </div>
       );
@@ -236,7 +237,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
               });
             }}
           >
-            Votre navigateur ne supporte pas la lecture vidéo.
+            <T k="auto.documentviewer.votre_navigateur_ne_supporte_pas_la_lecture_vide" fallback="Votre navigateur ne supporte pas la lecture vidéo." />
           </video>
         </div>
       );
@@ -246,7 +247,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
       <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
         <div className="text-center text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-2" />
-          <p>Prévisualisation non disponible pour ce type de fichier</p>
+          <p><T k="auto.documentviewer.previsualisation_non_disponible_pour_ce_type_de_" fallback="Prévisualisation non disponible pour ce type de fichier" /></p>
           <p className="text-sm mt-1">Type: {document.mime_type || 'Non spécifié'}</p>
           <Button
             variant="outline"
@@ -254,7 +255,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
             onClick={handleViewInNewTab}
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            Ouvrir dans un nouvel onglet
+            <T k="auto.documentviewer.ouvrir_dans_un_nouvel_onglet" fallback="Ouvrir dans un nouvel onglet" />
           </Button>
         </div>
       </div>
@@ -284,7 +285,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
         <CardContent className="space-y-6">
           {/* Document Content */}
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Contenu du document</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3"><T k="auto.documentviewer.contenu_du_document" fallback="Contenu du document" /></h3>
             {renderDocumentContent()}
           </div>
 
@@ -293,24 +294,24 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
           {/* Document Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-medium text-foreground mb-2">Informations</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2"><T k="auto.documentviewer.informations" fallback="Informations" /></h3>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Type:</span>
+                  <span className="text-muted-foreground"><T k="auto.documentviewer.type" fallback="Type:" /></span>
                   <span className="font-medium">{getDocumentTypeLabel(document.document_type)}</span>
                 </div>
                 {document.file_size && (
                   <div className="flex items-center gap-2">
                     <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Taille:</span>
+                    <span className="text-muted-foreground"><T k="auto.documentviewer.taille" fallback="Taille:" /></span>
                     <span className="font-medium">{formatFileSize(document.file_size)}</span>
                   </div>
                 )}
                 {document.mime_type && (
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Format:</span>
+                    <span className="text-muted-foreground"><T k="auto.documentviewer.format" fallback="Format:" /></span>
                     <span className="font-medium">{document.mime_type}</span>
                   </div>
                 )}
@@ -318,11 +319,11 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-foreground mb-2">Métadonnées</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2"><T k="auto.documentviewer.metadonnees" fallback="Métadonnées" /></h3>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Créé le:</span>
+                  <span className="text-muted-foreground"><T k="auto.documentviewer.cree_le" fallback="Créé le:" /></span>
                   <span className="font-medium">
                     {new Date(document.created_at).toLocaleDateString('fr-FR', {
                       year: 'numeric',
@@ -333,7 +334,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Par:</span>
+                  <span className="text-muted-foreground"><T k="auto.documentviewer.par" fallback="Par:" /></span>
                   <span className="font-medium">{document.uploaded_by}</span>
                 </div>
               </div>
@@ -345,7 +346,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
             <>
               <Separator />
               <div>
-                <h3 className="text-sm font-medium text-foreground mb-2">Description</h3>
+                <h3 className="text-sm font-medium text-foreground mb-2"><T k="auto.documentviewer.description" fallback="Description" /></h3>
                 <p className="text-sm text-muted-foreground">{document.description}</p>
               </div>
             </>
@@ -370,7 +371,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
                   className="flex items-center gap-2"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Ouvrir dans un nouvel onglet
+                  <T k="auto.documentviewer.ouvrir_dans_un_nouvel_onglet" fallback="Ouvrir dans un nouvel onglet" />
                 </Button>
               </>
             )}

@@ -57,6 +57,7 @@ import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { T } from '@/components/i18n/T';
 
 interface IntegratedWorkflowTimelineProps {
   projectId: string;
@@ -353,7 +354,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 </Badge>
               )}
               <Button size="sm" variant="outline" onClick={handleAddMilestone}>
-                <Plus className="h-3 w-3 mr-1" /> Jalon
+                <Plus className="h-3 w-3 mr-1" /> <T k="auto.integratedworkflowtimeline.jalon" fallback="Jalon" />
               </Button>
             </div>
           </div>
@@ -362,7 +363,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
           {progress && (
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Progression pondérée</span>
+                <span className="text-muted-foreground"><T k="auto.integratedworkflowtimeline.progression_ponderee" fallback="Progression pondérée" /></span>
                 <span className="font-medium">{progress.weightedProgress}%</span>
               </div>
               <Progress value={progress.weightedProgress} className="h-2" />
@@ -408,7 +409,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
           {timelineItems.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Target className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>Aucune étape ou jalon défini</p>
+              <p><T k="auto.integratedworkflowtimeline.aucune_etape_ou_jalon_defini" fallback="Aucune étape ou jalon défini" /></p>
             </div>
           ) : (
             <div className="relative">
@@ -464,7 +465,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                               {item.title}
                             </p>
                             {item.isCritical && (
-                              <Badge variant="destructive" className="text-xs">Critique</Badge>
+                              <Badge variant="destructive" className="text-xs"><T k="auto.integratedworkflowtimeline.critique" fallback="Critique" /></Badge>
                             )}
                           </div>
 
@@ -505,11 +506,11 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Nouveau jalon</DialogTitle>
+            <DialogTitle><T k="auto.integratedworkflowtimeline.nouveau_jalon" fallback="Nouveau jalon" /></DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
-              <Label htmlFor="title">Titre</Label>
+              <Label htmlFor="title"><T k="auto.integratedworkflowtimeline.titre" fallback="Titre" /></Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -518,7 +519,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description"><T k="auto.integratedworkflowtimeline.description" fallback="Description" /></Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -530,7 +531,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             {/* Type and Priority */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type"><T k="auto.integratedworkflowtimeline.type" fallback="Type" /></Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value) => applyPreset(value as MilestoneType)}
@@ -546,7 +547,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="priority">Priorité</Label>
+                <Label htmlFor="priority"><T k="auto.integratedworkflowtimeline.priorite" fallback="Priorité" /></Label>
                 <Select
                   value={formData.priority}
                   onValueChange={(value) => setFormData({ ...formData, priority: value as MilestonePriority })}
@@ -565,7 +566,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="target_date">Date cible</Label>
+                <Label htmlFor="target_date"><T k="auto.integratedworkflowtimeline.date_cible" fallback="Date cible" /></Label>
                 <Input
                   id="target_date"
                   type="date"
@@ -574,7 +575,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="weight">Poids (0.1 - 1.0)</Label>
+                <Label htmlFor="weight"><T k="auto.integratedworkflowtimeline.poids_0_1_1_0" fallback="Poids (0.1 - 1.0)" /></Label>
                 <Input
                   id="weight"
                   type="number"
@@ -587,7 +588,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
               </div>
             </div>
             <div>
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes"><T k="auto.integratedworkflowtimeline.notes" fallback="Notes" /></Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
@@ -597,10 +598,10 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Annuler
+                <T k="auto.integratedworkflowtimeline.annuler" fallback="Annuler" />
               </Button>
               <Button onClick={handleSaveMilestone} disabled={!formData.title || !formData.target_date}>
-                Ajouter
+                <T k="auto.integratedworkflowtimeline.ajouter" fallback="Ajouter" />
               </Button>
             </div>
           </div>

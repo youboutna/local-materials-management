@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUploadBusinessDocument, BusinessDocumentFormData } from '@/hooks/hexagonal/useBusinessDocumentsHex';
 import { parseInvoiceFromPdf } from '@/utils/btpCalculations';
 import { InvoiceLine } from '@/utils/types';
+import { T } from '@/components/i18n/T';
 
 interface BusinessDocumentsProps {
   projectId?: string;
@@ -156,7 +157,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Documents Justificatifs et Factures
+          <T k="auto.businessdocuments.documents_justificatifs_et_factures" fallback="Documents Justificatifs et Factures" />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -192,7 +193,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                   />
                 </div>
                 <div>
-                  <Label htmlFor="reference">Référence</Label>
+                  <Label htmlFor="reference"><T k="auto.businessdocuments.reference" fallback="Référence" /></Label>
                   <Input
                     id="reference"
                     value={formData.reference || ''}
@@ -216,7 +217,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                   />
                 </div>
                 <div>
-                  <Label htmlFor="amount">Montant (MRU)</Label>
+                  <Label htmlFor="amount"><T k="auto.businessdocuments.montant_mru" fallback="Montant (MRU)" /></Label>
                   <Input
                     id="amount"
                     type="number"
@@ -241,7 +242,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                   />
                 </div>
                 <div>
-                  <Label htmlFor="supplier">Fournisseur</Label>
+                  <Label htmlFor="supplier"><T k="auto.businessdocuments.fournisseur" fallback="Fournisseur" /></Label>
                   <Input
                     id="supplier"
                     value={formData.supplier}
@@ -252,7 +253,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="amount">Montant (MRU)</Label>
+                  <Label htmlFor="amount"><T k="auto.businessdocuments.montant_mru" fallback="Montant (MRU)" /></Label>
                   <Input
                     id="amount"
                     type="number"
@@ -262,7 +263,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                   />
                 </div>
                 <div>
-                  <Label htmlFor="due_date">Date d'échéance</Label>
+                  <Label htmlFor="due_date"><T k="auto.businessdocuments.date_d_echeance" fallback="Date d'échéance" /></Label>
                   <Input
                     id="due_date"
                     type="date"
@@ -276,7 +277,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                 <div className="p-4 border rounded-lg bg-muted/50">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
                     <FileCheck className="h-4 w-4 text-success" />
-                    Analyse automatique de la facture
+                    <T k="auto.businessdocuments.analyse_automatique_de_la_facture" fallback="Analyse automatique de la facture" />
                   </h4>
                   <div className="text-sm text-muted-foreground mb-2">
                     {parsedInvoice.length} lignes détectées
@@ -298,7 +299,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
             </TabsContent>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description"><T k="auto.businessdocuments.description" fallback="Description" /></Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -321,7 +322,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                 {analyzing && (
                   <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Analyse automatique en cours...
+                    <T k="auto.businessdocuments.analyse_automatique_en_cours" fallback="Analyse automatique en cours..." />
                   </div>
                 )}
               </div>
@@ -335,7 +336,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
+                  <T k="auto.businessdocuments.enregistrement" fallback="Enregistrement..." />
                 </>
               ) : (
                 <>

@@ -7,6 +7,7 @@ import { WorkflowStepDTO, StepDocumentDTO } from '@/dtos/types/workflow-dto';
 import { FileText, Plus, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface StepDocumentsSectionProps {
   step: WorkflowStepDTO;
   readonly?: boolean;
@@ -54,11 +55,11 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium">Documents</h4>
+        <h4 className="font-medium"><T k="auto.stepdocumentssection.documents" fallback="Documents" /></h4>
         {!readonly && canUpload && (
           <Button size="sm" variant="outline" onClick={() => onOpenAddDocument(step)}>
             <Plus className="h-4 w-4 mr-1" />
-            Ajouter
+            <T k="auto.stepdocumentssection.ajouter" fallback="Ajouter" />
           </Button>
         )}
       </div>
@@ -66,14 +67,14 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
       {!canUpload && (
         <div className="p-3 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
-            Upload de documents non disponible pour cette étape (statut: <TranslatedStatus code={step.status} />)
+            <T k="auto.stepdocumentssection.upload_de_documents_non_disponible_pour_cette_et" fallback="Upload de documents non disponible pour cette étape (statut:" /> <TranslatedStatus code={step.status} />)
           </p>
         </div>
       )}
 
       {step.required_documents && step.required_documents.length > 0 && (
         <div className="space-y-2">
-          <h5 className="text-sm font-medium text-muted-foreground">Documents requis:</h5>
+          <h5 className="text-sm font-medium text-muted-foreground"><T k="auto.stepdocumentssection.documents_requis" fallback="Documents requis:" /></h5>
           <div className="grid gap-2">
             {step.required_documents.map((docType, index) => {
               const hasDocument = stepDocuments.some(doc =>
@@ -87,7 +88,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
                     <AlertTriangle className="h-4 w-4 text-warning" />
                   )}
                   <span className="text-sm">{docType}</span>
-                  {hasDocument && <Badge variant="secondary" className="ml-auto">Fourni</Badge>}
+                  {hasDocument && <Badge variant="secondary" className="ml-auto"><T k="auto.stepdocumentssection.fourni" fallback="Fourni" /></Badge>}
                 </div>
               );
             })}
@@ -98,7 +99,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
       {isLoading ? (
         <div className="flex items-center justify-center p-4">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-          <span className="ml-2 text-sm">Chargement des documents...</span>
+          <span className="ml-2 text-sm"><T k="auto.stepdocumentssection.chargement_des_documents" fallback="Chargement des documents..." /></span>
         </div>
       ) : stepDocuments.length > 0 ? (
         <div className="grid gap-2">
@@ -139,11 +140,11 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
       ) : (
         <div className="text-center py-4">
           <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground">Aucun document pour cette étape.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.stepdocumentssection.aucun_document_pour_cette_etape" fallback="Aucun document pour cette étape." /></p>
           {canUpload && !readonly && (
             <Button size="sm" variant="outline" className="mt-2" onClick={() => onOpenAddDocument(step)}>
               <Plus className="h-4 w-4 mr-1" />
-              Ajouter le premier document
+              <T k="auto.stepdocumentssection.ajouter_le_premier_document" fallback="Ajouter le premier document" />
             </Button>
           )}
         </div>

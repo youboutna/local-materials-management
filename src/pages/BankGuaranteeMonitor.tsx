@@ -27,6 +27,7 @@ import { useBankGuaranteesHex, useProjectsHex } from '@/hooks/hexagonal';
 import { useProjectManager } from '@/hooks/useProjectManager';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useCallback, useEffect, useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 // ============================================================
 // Composant contenu (utilise le hook)
@@ -96,16 +97,16 @@ const BankGuaranteeContent = () => {
           <TabsTrigger value="surveillance" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             <span className="hidden sm:inline">Surveillance &amp; Alertes</span>
-            <span className="sm:hidden">Alertes</span>
+            <span className="sm:hidden"><T k="auto.bankguaranteemonitor.alertes" fallback="Alertes" /></span>
           </TabsTrigger>
           <TabsTrigger value="gestion" className="flex items-center gap-2">
             <ListChecks className="h-4 w-4" />
-            <span className="hidden sm:inline">Gestion des Garanties</span>
-            <span className="sm:hidden">Gestion</span>
+            <span className="hidden sm:inline"><T k="auto.bankguaranteemonitor.gestion_des_garanties" fallback="Gestion des Garanties" /></span>
+            <span className="sm:hidden"><T k="auto.bankguaranteemonitor.gestion" fallback="Gestion" /></span>
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <FolderOpen className="h-4 w-4" />
-            <span>Documents</span>
+            <span><T k="auto.bankguaranteemonitor.documents" fallback="Documents" /></span>
           </TabsTrigger>
         </TabsList>
 
@@ -115,25 +116,25 @@ const BankGuaranteeContent = () => {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-destructive">{stats.criticalAlerts}</div>
-                <p className="text-sm text-muted-foreground">Alertes critiques</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.bankguaranteemonitor.alertes_critiques" fallback="Alertes critiques" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-warning">{stats.highAlerts || 0}</div>
-                <p className="text-sm text-muted-foreground">Alertes élevées</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.bankguaranteemonitor.alertes_elevees" fallback="Alertes élevées" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-primary">{stats.openAlerts || 0}</div>
-                <p className="text-sm text-muted-foreground">Alertes ouvertes</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.bankguaranteemonitor.alertes_ouvertes" fallback="Alertes ouvertes" /></p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-2xl font-bold text-success">{stats.totalAlerts}</div>
-                <p className="text-sm text-muted-foreground">Total alertes</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.bankguaranteemonitor.total_alertes" fallback="Total alertes" /></p>
               </CardContent>
             </Card>
           </div>
@@ -162,7 +163,7 @@ const BankGuaranteeContent = () => {
                           </p>
                         </div>
                         <Button size="sm" variant="destructive" onClick={() => handleAcknowledge(alert.id)}>
-                          Acquitter
+                          <T k="auto.bankguaranteemonitor.acquitter" fallback="Acquitter" />
                         </Button>
                       </div>
                     </div>
@@ -292,7 +293,7 @@ const BankGuaranteeMonitorPage = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement du projet et de l'organisation...</p>
+          <p className="text-muted-foreground"><T k="auto.bankguaranteemonitor.chargement_du_projet_et_de_l_organisation" fallback="Chargement du projet et de l'organisation..." /></p>
         </div>
       </div>
     );

@@ -19,6 +19,7 @@ import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 import { getStorageService } from '@/application/services/StorageService';
 
 import { TranslatedDocumentType, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface EnhancedValidationStepProps {
   formData: ProjectDTO & { 
     compliance?: ComplianceItemDTO[];
@@ -292,13 +293,13 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Award className="h-5 w-5 text-success" />
-            Validation et Conformité Finale
+            <T k="auto.enhancedvalidationstep.validation_et_conformite_finale" fallback="Validation et Conformité Finale" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Progression globale</span>
+              <span className="text-sm font-medium"><T k="auto.enhancedvalidationstep.progression_globale" fallback="Progression globale" /></span>
               <span className="text-sm text-muted-foreground">{Math.round(overallProgress)}%</span>
             </div>
             <Progress value={overallProgress} className="h-2" />
@@ -320,36 +321,36 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
       {/* Validation Tabs */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
-          <TabsTrigger value="overview">Aperçu</TabsTrigger>
-          <TabsTrigger value="reception">Réceptions</TabsTrigger>
-          <TabsTrigger value="compliance">Conformité</TabsTrigger>
-          <TabsTrigger value="validation">Validation</TabsTrigger>
+          <TabsTrigger value="overview"><T k="auto.enhancedvalidationstep.apercu" fallback="Aperçu" /></TabsTrigger>
+          <TabsTrigger value="reception"><T k="auto.enhancedvalidationstep.receptions" fallback="Réceptions" /></TabsTrigger>
+          <TabsTrigger value="compliance"><T k="auto.enhancedvalidationstep.conformite" fallback="Conformité" /></TabsTrigger>
+          <TabsTrigger value="validation"><T k="auto.enhancedvalidationstep.validation" fallback="Validation" /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Statut du Projet</CardTitle>
+              <CardTitle><T k="auto.enhancedvalidationstep.statut_du_projet" fallback="Statut du Projet" /></CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="project-status">Statut du Projet</Label>
+                <Label htmlFor="project-status"><T k="auto.enhancedvalidationstep.statut_du_projet" fallback="Statut du Projet" /></Label>
                 <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value } as any)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le statut" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="draft"><TranslatedStatus code="draft" /></SelectItem>
-                    <SelectItem value="en cours">En cours</SelectItem>
-                    <SelectItem value="en attente">En attente</SelectItem>
-                    <SelectItem value="terminé">Terminé</SelectItem>
-                    <SelectItem value="suspendu">Suspendu</SelectItem>
-                    <SelectItem value="annulé">Annulé</SelectItem>
+                    <SelectItem value="en cours"><T k="auto.enhancedvalidationstep.en_cours" fallback="En cours" /></SelectItem>
+                    <SelectItem value="en attente"><T k="auto.enhancedvalidationstep.en_attente" fallback="En attente" /></SelectItem>
+                    <SelectItem value="terminé"><T k="auto.enhancedvalidationstep.termine" fallback="Terminé" /></SelectItem>
+                    <SelectItem value="suspendu"><T k="auto.enhancedvalidationstep.suspendu" fallback="Suspendu" /></SelectItem>
+                    <SelectItem value="annulé"><T k="auto.enhancedvalidationstep.annule" fallback="Annulé" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="closure-notes">Notes de Clôture</Label>
+                <Label htmlFor="closure-notes"><T k="auto.enhancedvalidationstep.notes_de_cloture" fallback="Notes de Clôture" /></Label>
                 <Textarea
                   id="closure-notes"
                   placeholder="Notes finales, observations, recommandations..."
@@ -359,7 +360,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="certificate-number">Numéro de Certificat</Label>
+                <Label htmlFor="certificate-number"><T k="auto.enhancedvalidationstep.numero_de_certificat" fallback="Numéro de Certificat" /></Label>
                 <Input
                   id="certificate-number"
                   placeholder="Numéro de certificat de réception"
@@ -376,30 +377,30 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileCheck className="h-5 w-5" />
-                Gestion des Réceptions
+                <T k="auto.enhancedvalidationstep.gestion_des_receptions" fallback="Gestion des Réceptions" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Create New Reception */}
               <div className="border rounded-lg p-4 space-y-4">
-                <h3 className="font-medium">Créer une nouvelle réception</h3>
+                <h3 className="font-medium"><T k="auto.enhancedvalidationstep.creer_une_nouvelle_reception" fallback="Créer une nouvelle réception" /></h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="reception-type">Type de Réception</Label>
+                    <Label htmlFor="reception-type"><T k="auto.enhancedvalidationstep.type_de_reception" fallback="Type de Réception" /></Label>
                     <Select value={selectedReceptionType} onValueChange={(value) => setSelectedReceptionType(value as ReceptionType | '')}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner le type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={ReceptionType.PROVISIONAL}>Réception Provisoire</SelectItem>
-                        <SelectItem value={ReceptionType.DEFINITIVE}>Réception Définitive</SelectItem>
+                        <SelectItem value={ReceptionType.PROVISIONAL}><T k="auto.enhancedvalidationstep.reception_provisoire" fallback="Réception Provisoire" /></SelectItem>
+                        <SelectItem value={ReceptionType.DEFINITIVE}><T k="auto.enhancedvalidationstep.reception_definitive" fallback="Réception Définitive" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div>
-                    <Label htmlFor="reception-date">Date de Réception</Label>
+                    <Label htmlFor="reception-date"><T k="auto.enhancedvalidationstep.date_de_reception" fallback="Date de Réception" /></Label>
                     <Input
                       id="reception-date"
                       type="date"
@@ -410,7 +411,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="chairman">Président du Comité</Label>
+                  <Label htmlFor="chairman"><T k="auto.enhancedvalidationstep.president_du_comite" fallback="Président du Comité" /></Label>
                   <Input
                     id="chairman"
                     placeholder="Nom du président"
@@ -420,7 +421,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="committee-members">Membres du Comité</Label>
+                  <Label htmlFor="committee-members"><T k="auto.enhancedvalidationstep.membres_du_comite" fallback="Membres du Comité" /></Label>
                   <Input
                     id="committee-members"
                     placeholder="Noms des membres (séparés par des virgules)"
@@ -430,7 +431,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="reception-notes">Notes de Réception</Label>
+                  <Label htmlFor="reception-notes"><T k="auto.enhancedvalidationstep.notes_de_reception" fallback="Notes de Réception" /></Label>
                   <Textarea
                     id="reception-notes"
                     placeholder="Notes et observations de la réception..."
@@ -441,7 +442,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 </div>
 
                 <div>
-                  <Label htmlFor="documents">Documents</Label>
+                  <Label htmlFor="documents"><T k="auto.enhancedvalidationstep.documents" fallback="Documents" /></Label>
                   <Input
                     id="documents"
                     type="file"
@@ -463,14 +464,14 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
 
                 <Button onClick={handleCreateReception} className="w-full">
                   <Upload className="h-4 w-4 mr-2" />
-                  Créer la Réception
+                  <T k="auto.enhancedvalidationstep.creer_la_reception" fallback="Créer la Réception" />
                 </Button>
               </div>
 
               {/* Existing Receptions */}
               {formData?.receptions && formData.receptions.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="font-medium">Réceptions existantes</h3>
+                  <h3 className="font-medium"><T k="auto.enhancedvalidationstep.receptions_existantes" fallback="Réceptions existantes" /></h3>
                   {formData.receptions.map((reception) => (
                     <Card key={reception.id} className="p-4">
                       <div className="flex justify-between items-start">
@@ -499,12 +500,12 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Conformité Réglementaire
+                <T k="auto.enhancedvalidationstep.conformite_reglementaire" fallback="Conformité Réglementaire" />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                La conformité réglementaire est gérée à travers l'étape 6 du workflow.
+                <T k="auto.enhancedvalidationstep.la_conformite_reglementaire_est_geree_a_travers_" fallback="La conformité réglementaire est gérée à travers l'étape 6 du workflow." />
               </p>
             </CardContent>
           </Card>
@@ -515,7 +516,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5" />
-                Validation des Champs
+                <T k="auto.enhancedvalidationstep.validation_des_champs" fallback="Validation des Champs" />
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -526,7 +527,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                     <p className="text-sm text-muted-foreground">{field.description}</p>
                     {field.required && (
                       <Badge variant="outline" className="text-destructive">
-                        Obligatoire
+                        <T k="auto.enhancedvalidationstep.obligatoire" fallback="Obligatoire" />
                       </Badge>
                     )}
                   </div>
@@ -540,7 +541,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                       onClick={() => handleValidation(field.id)}
                       disabled={field.status === 'in_progress'}
                     >
-                      Valider
+                      <T k="auto.enhancedvalidationstep.valider" fallback="Valider" />
                     </Button>
                   </div>
                 </div>

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { AlertTriangle, Download, Server, Database, Cloud, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { T } from '@/components/i18n/T';
 
 export default function KeycloakConfigurationTab() {
   const [activeTab, setActiveTab] = useState('development');
@@ -172,10 +173,10 @@ jobs:
     <Tabs defaultValue="development" value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 mb-6 sm:grid sm:grid-cols-2">
         <TabsTrigger value="development" className="flex items-center gap-2">
-          <Server className="h-4 w-4" /> Développement
+          <Server className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.developpement" fallback="Développement" />
         </TabsTrigger>
         <TabsTrigger value="production" className="flex items-center gap-2">
-          <Cloud className="h-4 w-4" /> Production
+          <Cloud className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.production" fallback="Production" />
         </TabsTrigger>
       </TabsList>
       
@@ -190,7 +191,7 @@ jobs:
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" /> Docker Compose
+              <Database className="h-5 w-5" /> <T k="auto.keycloakconfigurationtab.docker_compose" fallback="Docker Compose" />
             </CardTitle>
             <CardDescription>
               Configuration Docker Compose pour déployer Keycloak avec PostgreSQL en environnement de développement.
@@ -215,7 +216,7 @@ jobs:
               onClick={() => handleDownload(dockerComposeContent, 'docker-compose.yml')}
               className="flex items-center gap-2"
             >
-              <Download className="h-4 w-4" /> Télécharger
+              <Download className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.telecharger" fallback="Télécharger" />
             </Button>
             <Button 
               onClick={() => handleDeploy('development')}
@@ -230,7 +231,7 @@ jobs:
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Code className="h-5 w-5" /> Dockerfile (Optionnel)
+              <Code className="h-5 w-5" /> <T k="auto.keycloakconfigurationtab.dockerfile_optionnel" fallback="Dockerfile (Optionnel)" />
             </CardTitle>
             <CardDescription>
               Dockerfile pour créer une image Keycloak personnalisée avec des thèmes ou des fournisseurs personnalisés.
@@ -238,7 +239,7 @@ jobs:
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Label htmlFor="dockerfile">Dockerfile</Label>
+              <Label htmlFor="dockerfile"><T k="auto.keycloakconfigurationtab.dockerfile" fallback="Dockerfile" /></Label>
               <Textarea 
                 id="dockerfile" 
                 value={dockerfileContent}
@@ -253,7 +254,7 @@ jobs:
               onClick={() => handleDownload(dockerfileContent, 'Dockerfile')}
               className="flex items-center gap-2"
             >
-              <Download className="h-4 w-4" /> Télécharger
+              <Download className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.telecharger" fallback="Télécharger" />
             </Button>
           </CardFooter>
         </Card>
@@ -270,10 +271,10 @@ jobs:
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Code className="h-5 w-5" /> Script Shell
+              <Code className="h-5 w-5" /> <T k="auto.keycloakconfigurationtab.script_shell" fallback="Script Shell" />
             </CardTitle>
             <CardDescription>
-              Script bash pour configurer Keycloak avec PostgreSQL sur un serveur Linux.
+              <T k="auto.keycloakconfigurationtab.script_bash_pour_configurer_keycloak_avec_postgr" fallback="Script bash pour configurer Keycloak avec PostgreSQL sur un serveur Linux." />
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -293,7 +294,7 @@ jobs:
               onClick={() => handleDownload(setupScriptContent, 'setup_keycloak_prod.sh')}
               className="flex items-center gap-2"
             >
-              <Download className="h-4 w-4" /> Télécharger
+              <Download className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.telecharger" fallback="Télécharger" />
             </Button>
           </CardFooter>
         </Card>
@@ -301,10 +302,10 @@ jobs:
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Code className="h-5 w-5" /> Script Python
+              <Code className="h-5 w-5" /> <T k="auto.keycloakconfigurationtab.script_python" fallback="Script Python" />
             </CardTitle>
             <CardDescription>
-              Script Python pour automatiser le déploiement de Keycloak en production.
+              <T k="auto.keycloakconfigurationtab.script_python_pour_automatiser_le_deploiement_de" fallback="Script Python pour automatiser le déploiement de Keycloak en production." />
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -324,7 +325,7 @@ jobs:
               onClick={() => handleDownload(pythonScriptContent, 'deploy_keycloak.py')}
               className="flex items-center gap-2"
             >
-              <Download className="h-4 w-4" /> Télécharger
+              <Download className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.telecharger" fallback="Télécharger" />
             </Button>
           </CardFooter>
         </Card>
@@ -335,7 +336,7 @@ jobs:
               <Code className="h-5 w-5" /> GitHub Actions CI/CD
             </CardTitle>
             <CardDescription>
-              Configuration de GitHub Actions pour le déploiement automatisé de Keycloak.
+              <T k="auto.keycloakconfigurationtab.configuration_de_github_actions_pour_le_deploiem" fallback="Configuration de GitHub Actions pour le déploiement automatisé de Keycloak." />
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -355,7 +356,7 @@ jobs:
               onClick={() => handleDownload(githubWorkflowContent, '.github/workflows/keycloak-deployment.yml')}
               className="flex items-center gap-2"
             >
-              <Download className="h-4 w-4" /> Télécharger
+              <Download className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.telecharger" fallback="Télécharger" />
             </Button>
             <Button 
               onClick={() => handleDeploy('production')}

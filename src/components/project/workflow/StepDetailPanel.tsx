@@ -39,6 +39,7 @@ import PhasePayments from '@/components/project/PhasePayments';
 import AdvancedInspectionScheduler from '@/components/inspections/AdvancedInspectionScheduler';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface StepDetailPanelProps {
   step: PhaseStepDTO;
   phaseId: string;
@@ -166,7 +167,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           {/* Progress Section */}
           <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Progression</span>
+              <span className="text-sm font-medium"><T k="auto.stepdetailpanel.progression" fallback="Progression" /></span>
               {isEditingProgress ? (
                 <div className="flex items-center gap-2">
                   <Input
@@ -179,10 +180,10 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                   />
                   <span className="text-sm">%</span>
                   <Button size="sm" onClick={handleSaveProgress}>
-                    <Save className="h-3 w-3 mr-1" /> Valider
+                    <Save className="h-3 w-3 mr-1" /> <T k="auto.stepdetailpanel.valider" fallback="Valider" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setIsEditingProgress(false)}>
-                    Annuler
+                    <T k="auto.stepdetailpanel.annuler" fallback="Annuler" />
                   </Button>
                 </div>
               ) : (
@@ -200,21 +201,21 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           {/* Quick info */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="p-3 rounded-lg bg-muted/20 border">
-              <p className="text-muted-foreground text-xs">Dates</p>
+              <p className="text-muted-foreground text-xs"><T k="auto.stepdetailpanel.dates" fallback="Dates" /></p>
               <p className="font-medium">
                 {step.start_date ? new Date(step.start_date).toLocaleDateString('fr-FR') : '—'} →{' '}
                 {step.end_date ? new Date(step.end_date).toLocaleDateString('fr-FR') : '—'}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-muted/20 border">
-              <p className="text-muted-foreground text-xs">Budget</p>
+              <p className="text-muted-foreground text-xs"><T k="auto.stepdetailpanel.budget" fallback="Budget" /></p>
               <p className="font-medium">{formatCurrency((step as any).estimated_cost || (step as any).budget || 0)}</p>
             </div>
           </div>
 
           {step.description && (
             <div className="p-3 rounded-lg bg-muted/10 border">
-              <p className="text-muted-foreground text-xs mb-1">Description</p>
+              <p className="text-muted-foreground text-xs mb-1"><T k="auto.stepdetailpanel.description" fallback="Description" /></p>
               <p className="text-sm">{step.description}</p>
             </div>
           )}
@@ -222,16 +223,16 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           {/* Quick Actions */}
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => setShowInspectionScheduler(true)}>
-              <CalendarPlus className="h-3 w-3 mr-1" /> Programmer Inspection
+              <CalendarPlus className="h-3 w-3 mr-1" /> <T k="auto.stepdetailpanel.programmer_inspection" fallback="Programmer Inspection" />
             </Button>
             {onGeneratePV && (
               <Button size="sm" variant="outline" onClick={() => onGeneratePV(step.id)}>
-                <FileText className="h-3 w-3 mr-1" /> Générer PV
+                <FileText className="h-3 w-3 mr-1" /> <T k="auto.stepdetailpanel.generer_pv" fallback="Générer PV" />
               </Button>
             )}
             {onRequestPayment && (
               <Button size="sm" variant="outline" onClick={() => onRequestPayment(step.id)}>
-                <DollarSign className="h-3 w-3 mr-1" /> Demander Paiement
+                <DollarSign className="h-3 w-3 mr-1" /> <T k="auto.stepdetailpanel.demander_paiement" fallback="Demander Paiement" />
               </Button>
             )}
           </div>
@@ -270,11 +271,11 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
           <TabsTrigger value="overview" className="text-xs flex items-center gap-1">
             <ListTodo className="h-3 w-3" />
-            Tâches
+            <T k="auto.stepdetailpanel.taches" fallback="Tâches" />
           </TabsTrigger>
           <TabsTrigger value="inspections" className="text-xs flex items-center gap-1">
             <ClipboardCheck className="h-3 w-3" />
-            Inspections
+            <T k="auto.stepdetailpanel.inspections" fallback="Inspections" />
           </TabsTrigger>
           <TabsTrigger value="resources" className="text-xs flex items-center gap-1">
             <Users className="h-3 w-3" />
@@ -282,11 +283,11 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           </TabsTrigger>
           <TabsTrigger value="materials" className="text-xs flex items-center gap-1">
             <Package className="h-3 w-3" />
-            Matériaux
+            <T k="auto.stepdetailpanel.materiaux" fallback="Matériaux" />
           </TabsTrigger>
           <TabsTrigger value="payments" className="text-xs flex items-center gap-1">
             <DollarSign className="h-3 w-3" />
-            Paiements
+            <T k="auto.stepdetailpanel.paiements" fallback="Paiements" />
           </TabsTrigger>
         </TabsList>
 
@@ -328,17 +329,17 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
           <div className="grid grid-cols-2 gap-2">
             {onGeneratePV && (
               <Button size="sm" variant="outline" onClick={() => onGeneratePV(step.id)} className="justify-start">
-                <FileText className="h-3 w-3 mr-2" /> PV Service Fait
+                <FileText className="h-3 w-3 mr-2" /> <T k="auto.stepdetailpanel.pv_service_fait" fallback="PV Service Fait" />
               </Button>
             )}
             <Button size="sm" variant="outline" className="justify-start">
-              <FileText className="h-3 w-3 mr-2" /> PV Main Levée
+              <FileText className="h-3 w-3 mr-2" /> <T k="auto.stepdetailpanel.pv_main_levee" fallback="PV Main Levée" />
             </Button>
             <Button size="sm" variant="outline" className="justify-start">
-              <FileText className="h-3 w-3 mr-2" /> Attachement
+              <FileText className="h-3 w-3 mr-2" /> <T k="auto.stepdetailpanel.attachement" fallback="Attachement" />
             </Button>
             <Button size="sm" variant="outline" className="justify-start">
-              <FileText className="h-3 w-3 mr-2" /> Décompte
+              <FileText className="h-3 w-3 mr-2" /> <T k="auto.stepdetailpanel.decompte" fallback="Décompte" />
             </Button>
           </div>
         </CardContent>

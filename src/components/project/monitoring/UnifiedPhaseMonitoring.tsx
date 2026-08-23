@@ -61,6 +61,7 @@ import PhaseTasks from '@/components/project/PhaseTasks';
 import { InspectionFormWithContext } from '@/components/project/inspection';
 import { MilestoneActionContext } from '@/components/project/milestones';
 import { PaymentFormWithContext } from '@/components/project/payment';
+import { T } from '@/components/i18n/T';
 
 interface UnifiedPhaseMonitoringProps {
   phaseId: string;
@@ -398,7 +399,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           {/* Progress Section */}
           <div className="space-y-3 mb-6">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground font-medium">Progression pondérée</span>
+              <span className="text-muted-foreground font-medium"><T k="auto.unifiedphasemonitoring.progression_ponderee" fallback="Progression pondérée" /></span>
               <span className="font-bold text-lg">{progress?.weighted_progress || 0}%</span>
             </div>
             <Progress value={progress?.weighted_progress || 0} className="h-3" />
@@ -418,7 +419,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <CheckSquare className="h-4 w-4 text-primary" />
                 </div>
-                <span className="font-medium text-sm">Tâches</span>
+                <span className="font-medium text-sm"><T k="auto.unifiedphasemonitoring.taches" fallback="Tâches" /></span>
               </div>
               <p className="text-3xl font-bold">{tasksSummary?.total || 0}</p>
               <div className="flex gap-2 mt-2">
@@ -443,7 +444,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <div className="p-2 bg-warning/10 rounded-lg">
                   <ClipboardCheck className="h-4 w-4 text-warning" />
                 </div>
-                <span className="font-medium text-sm">Inspections</span>
+                <span className="font-medium text-sm"><T k="auto.unifiedphasemonitoring.inspections" fallback="Inspections" /></span>
               </div>
               <p className="text-3xl font-bold">{inspectionsSummary?.total || 0}</p>
               <div className="flex gap-2 mt-2">
@@ -468,7 +469,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <div className="p-2 bg-success-soft rounded-lg">
                   <DollarSign className="h-4 w-4 text-success" />
                 </div>
-                <span className="font-medium text-sm">Paiements</span>
+                <span className="font-medium text-sm"><T k="auto.unifiedphasemonitoring.paiements" fallback="Paiements" /></span>
               </div>
               <p className="text-3xl font-bold">{paymentsSummary?.total || 0}</p>
               <p className="text-xs text-muted-foreground mt-2 font-medium">
@@ -488,7 +489,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <Target className="h-4 w-4 text-purple-600" />
                 </div>
-                <span className="font-medium text-sm">Jalons</span>
+                <span className="font-medium text-sm"><T k="auto.unifiedphasemonitoring.jalons" fallback="Jalons" /></span>
               </div>
               <p className="text-3xl font-bold">{milestones.length}</p>
               <p className="text-xs text-muted-foreground mt-2 font-medium">
@@ -527,7 +528,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                     <Target className="h-5 w-5 text-primary" />
-                    Points de contrôle actionnables
+                    <T k="auto.unifiedphasemonitoring.points_de_controle_actionnables" fallback="Points de contrôle actionnables" />
                   </CardTitle>
                 </div>
               </CardHeader>
@@ -589,7 +590,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                             onClick={() => handleMilestoneAction(milestone, 'inspection')}
                           >
                             <ClipboardCheck className="h-4 w-4 text-warning" />
-                            <span className="hidden sm:inline">Inspection</span>
+                            <span className="hidden sm:inline"><T k="auto.unifiedphasemonitoring.inspection" fallback="Inspection" /></span>
                           </Button>
                           <Button
                             variant="outline"
@@ -598,7 +599,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                             onClick={() => handleMilestoneAction(milestone, 'payment')}
                           >
                             <DollarSign className="h-4 w-4 text-success" />
-                            <span className="hidden sm:inline">Paiement</span>
+                            <span className="hidden sm:inline"><T k="auto.unifiedphasemonitoring.paiement" fallback="Paiement" /></span>
                           </Button>
                           <Button
                             variant="ghost"
@@ -622,13 +623,13 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             <Card className="border-dashed border-2">
               <CardContent className="p-8 text-center">
                 <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
-                <h3 className="text-lg font-semibold mb-2">Aucun jalon défini</h3>
+                <h3 className="text-lg font-semibold mb-2"><T k="auto.unifiedphasemonitoring.aucun_jalon_defini" fallback="Aucun jalon défini" /></h3>
                 <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
                   Créez des jalons par défaut (démarrage, point d'avancement, achèvement) pour cette phase.
                 </p>
                 <Button onClick={generateDefaultMilestones} className="gap-2">
                   <Target className="h-4 w-4" />
-                  Créer les jalons par défaut
+                  <T k="auto.unifiedphasemonitoring.creer_les_jalons_par_defaut" fallback="Créer les jalons par défaut" />
                 </Button>
               </CardContent>
             </Card>
@@ -640,7 +641,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <CheckSquare className="h-5 w-5 text-primary" />
-                  Tâches de la phase
+                  <T k="auto.unifiedphasemonitoring.taches_de_la_phase" fallback="Tâches de la phase" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -654,7 +655,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <ClipboardCheck className="h-5 w-5 text-warning" />
-                  Inspections de la phase
+                  <T k="auto.unifiedphasemonitoring.inspections_de_la_phase" fallback="Inspections de la phase" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -668,7 +669,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-success" />
-                  Paiements de la phase
+                  <T k="auto.unifiedphasemonitoring.paiements_de_la_phase" fallback="Paiements de la phase" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -823,9 +824,9 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                     <PlusCircle className="h-5 w-5 text-white" />
                   </div>
                   <div className="text-left text-white">
-                    <p className="font-semibold">Créer une inspection maintenant</p>
+                    <p className="font-semibold"><T k="auto.unifiedphasemonitoring.creer_une_inspection_maintenant" fallback="Créer une inspection maintenant" /></p>
                     <p className="text-xs opacity-80">
-                      Formulaire pré-rempli avec le contexte du jalon
+                      <T k="auto.unifiedphasemonitoring.formulaire_pre_rempli_avec_le_contexte_du_jalon" fallback="Formulaire pré-rempli avec le contexte du jalon" />
                     </p>
                   </div>
                 </Button>
@@ -841,7 +842,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                     <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold">Accéder au service inspection</p>
+                    <p className="font-semibold"><T k="auto.unifiedphasemonitoring.acceder_au_service_inspection" fallback="Accéder au service inspection" /></p>
                     <p className="text-xs text-muted-foreground">
                       Programmer ou exécuter via /inspection-monitoring
                     </p>
@@ -868,9 +869,9 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                     <PlusCircle className="h-5 w-5 text-white" />
                   </div>
                   <div className="text-left text-white">
-                    <p className="font-semibold">Effectuer un paiement maintenant</p>
+                    <p className="font-semibold"><T k="auto.unifiedphasemonitoring.effectuer_un_paiement_maintenant" fallback="Effectuer un paiement maintenant" /></p>
                     <p className="text-xs opacity-80">
-                      Formulaire pré-rempli avec le contexte du jalon
+                      <T k="auto.unifiedphasemonitoring.formulaire_pre_rempli_avec_le_contexte_du_jalon" fallback="Formulaire pré-rempli avec le contexte du jalon" />
                     </p>
                   </div>
                 </Button>
@@ -886,7 +887,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                     <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold">Accéder au contrôle paiements</p>
+                    <p className="font-semibold"><T k="auto.unifiedphasemonitoring.acceder_au_controle_paiements" fallback="Accéder au contrôle paiements" /></p>
                     <p className="text-xs text-muted-foreground">
                       Valider et exécuter via /payment-control
                     </p>
@@ -905,9 +906,9 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                   <CheckCircle className="h-5 w-5 text-success" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold">Confirmer la complétion</p>
+                  <p className="font-semibold"><T k="auto.unifiedphasemonitoring.confirmer_la_completion" fallback="Confirmer la complétion" /></p>
                   <p className="text-xs text-muted-foreground">
-                    Marquer ce jalon comme terminé
+                    <T k="auto.unifiedphasemonitoring.marquer_ce_jalon_comme_termine" fallback="Marquer ce jalon comme terminé" />
                   </p>
                 </div>
               </Button>
@@ -916,7 +917,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setActionDialog({ open: false, milestone: null, action: null })}>
-              Annuler
+              <T k="auto.unifiedphasemonitoring.annuler" fallback="Annuler" />
             </Button>
           </DialogFooter>
         </DialogContent>

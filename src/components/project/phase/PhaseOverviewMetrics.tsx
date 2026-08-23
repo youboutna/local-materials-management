@@ -26,6 +26,7 @@ import {
   getStatusColor,
   getStatusLabel,
 } from "@/utils/phaseDisplayHelpers";
+import { T } from '@/components/i18n/T';
 
 interface ProgressMetrics {
   overallProgress: number;
@@ -80,7 +81,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
           </div>
           <div className="mt-3">
             <p className="text-3xl font-bold">{progressMetrics?.overallProgress || phase.progress}%</p>
-            <p className="text-sm text-muted-foreground">Progression globale</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.phaseoverviewmetrics.progression_globale" fallback="Progression globale" /></p>
           </div>
           <Progress value={progressMetrics?.overallProgress || phase.progress} className="h-1.5 mt-3" />
           {progressMetrics && (
@@ -110,7 +111,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
           
           <div className="mt-3">
             <p className="text-2xl font-bold">{formatCurrency(phase.estimatedCost)}</p>
-            <p className="text-sm text-muted-foreground">Budget estimé</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.phaseoverviewmetrics.budget_estime" fallback="Budget estimé" /></p>
           </div>
           
           {loadingCosts ? (
@@ -121,14 +122,14 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
           ) : phaseCosts ? (
             <div className="mt-3 pt-3 border-t border-success/30/30 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Payé:</span>
+                <span className="text-muted-foreground"><T k="auto.phaseoverviewmetrics.paye" fallback="Payé:" /></span>
                 <span className="font-medium text-primary">
                   {formatCurrency(phaseCosts.totalPayments)}
                 </span>
               </div>
               
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Dépenses:</span>
+                <span className="text-muted-foreground"><T k="auto.phaseoverviewmetrics.depenses" fallback="Dépenses:" /></span>
                 <span className="font-medium text-warning">
                   {formatCurrency(phaseCosts.totalExpenses)}
                 </span>
@@ -137,7 +138,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
               <Separator className="my-1" />
               
               <div className="flex justify-between font-medium">
-                <span>Total:</span>
+                <span><T k="auto.phaseoverviewmetrics.total" fallback="Total:" /></span>
                 <span className={cn(
                   "font-bold",
                   phaseCosts.totalSpent > (phase.estimatedCost || 0) 
@@ -149,7 +150,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground mt-3">Aucune donnée</p>
+            <p className="text-sm text-muted-foreground mt-3"><T k="auto.phaseoverviewmetrics.aucune_donnee" fallback="Aucune donnée" /></p>
           )}
         </div>
       </Card>
@@ -164,7 +165,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
           </div>
           <div className="mt-3">
             <p className="text-2xl font-bold">{calculateRemainingDays(phase.endDate)}</p>
-            <p className="text-sm text-muted-foreground">Jours restants</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.phaseoverviewmetrics.jours_restants" fallback="Jours restants" /></p>
           </div>
           <p className="text-xs text-primary mt-2">
             Fin: {formatDate(phase.endDate)}
@@ -186,7 +187,7 @@ const PhaseOverviewMetrics: React.FC<PhaseOverviewMetricsProps> = ({
           </div>
           <div className="mt-3">
             <p className="text-2xl font-bold">{metrics.completedSteps}/{metrics.stepsCount}</p>
-            <p className="text-sm text-muted-foreground">Workflow</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.phaseoverviewmetrics.workflow" fallback="Workflow" /></p>
           </div>
           <Progress 
             value={metrics.stepsCount > 0 ? (metrics.completedSteps / metrics.stepsCount) * 100 : 0} 

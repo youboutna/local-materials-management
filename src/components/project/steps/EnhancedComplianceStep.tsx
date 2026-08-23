@@ -58,6 +58,7 @@ import RegulatoryComplianceChecklist from '@/components/project/compliance/Regul
 
 
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // ============================================================
 // Types
 // ============================================================
@@ -475,11 +476,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       <div className="py-8">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erreur</AlertTitle>
+          <AlertTitle><T k="auto.enhancedcompliancestep.erreur" fallback="Erreur" /></AlertTitle>
           <AlertDescription>{loadError}</AlertDescription>
         </Alert>
         <Button onClick={loadComplianceData} className="mt-4">
-          Réessayer
+          <T k="auto.enhancedcompliancestep.reessayer" fallback="Réessayer" />
         </Button>
       </div>
     );
@@ -496,13 +497,13 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Shield className="h-5 w-5" />
-              Configuration de la Conformité
+              <T k="auto.enhancedcompliancestep.configuration_de_la_conformite" fallback="Configuration de la Conformité" />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Alert className="mb-4 border-primary/30 bg-primary/10">
               <Info className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-primary">Mode Création - Aperçu</AlertTitle>
+              <AlertTitle className="text-primary"><T k="auto.enhancedcompliancestep.mode_creation_apercu" fallback="Mode Création - Aperçu" /></AlertTitle>
               <AlertDescription className="text-primary">
                 Les éléments de conformité (documents, assurances, garanties bancaires) 
                 seront disponibles <strong>après la sauvegarde du projet</strong>.
@@ -515,14 +516,14 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               <Card className="border-dashed">
                 <CardContent className="pt-6 text-center">
                   <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="font-medium">Documents</p>
+                  <p className="font-medium"><T k="auto.enhancedcompliancestep.documents" fallback="Documents" /></p>
                   <p className="text-sm text-muted-foreground">{documents.length} document(s)</p>
                   <div className="mt-2">
-                    <Badge variant="outline" className="text-xs">À compléter après création</Badge>
+                    <Badge variant="outline" className="text-xs"><T k="auto.enhancedcompliancestep.a_completer_apres_creation" fallback="À compléter après création" /></Badge>
                   </div>
                   <Button variant="outline" size="sm" className="mt-2 opacity-50 cursor-not-allowed" disabled>
                     <Plus className="h-4 w-4 mr-1" />
-                    Ajouter (désactivé)
+                    <T k="auto.enhancedcompliancestep.ajouter_desactive" fallback="Ajouter (désactivé)" />
                   </Button>
                 </CardContent>
               </Card>
@@ -531,14 +532,14 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               <Card className="border-dashed">
                 <CardContent className="pt-6 text-center">
                   <Shield className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="font-medium">Assurances</p>
+                  <p className="font-medium"><T k="auto.enhancedcompliancestep.assurances" fallback="Assurances" /></p>
                   <p className="text-sm text-muted-foreground">{insurancePolicies.length} police(s)</p>
                   <div className="mt-2">
-                    <Badge variant="outline" className="text-xs">À compléter après création</Badge>
+                    <Badge variant="outline" className="text-xs"><T k="auto.enhancedcompliancestep.a_completer_apres_creation" fallback="À compléter après création" /></Badge>
                   </div>
                   <Button variant="outline" size="sm" className="mt-2 opacity-50 cursor-not-allowed" disabled>
                     <Plus className="h-4 w-4 mr-1" />
-                    Ajouter (désactivé)
+                    <T k="auto.enhancedcompliancestep.ajouter_desactive" fallback="Ajouter (désactivé)" />
                   </Button>
                 </CardContent>
               </Card>
@@ -547,14 +548,14 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               <Card className="border-dashed">
                 <CardContent className="pt-6 text-center">
                   <Building className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="font-medium">Garanties Bancaires</p>
+                  <p className="font-medium"><T k="auto.enhancedcompliancestep.garanties_bancaires" fallback="Garanties Bancaires" /></p>
                   <p className="text-sm text-muted-foreground">{bankGuarantees.length} garantie(s)</p>
                   <div className="mt-2">
-                    <Badge variant="outline" className="text-xs">À compléter après création</Badge>
+                    <Badge variant="outline" className="text-xs"><T k="auto.enhancedcompliancestep.a_completer_apres_creation" fallback="À compléter après création" /></Badge>
                   </div>
                   <Button variant="outline" size="sm" className="mt-2 opacity-50 cursor-not-allowed" disabled>
                     <Plus className="h-4 w-4 mr-1" />
-                    Ajouter (désactivé)
+                    <T k="auto.enhancedcompliancestep.ajouter_desactive" fallback="Ajouter (désactivé)" />
                   </Button>
                 </CardContent>
               </Card>
@@ -576,13 +577,13 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Shield className="h-5 w-5" />
-            Vue d'Ensemble de la Conformité
+            <T k="auto.enhancedcompliancestep.vue_d_ensemble_de_la_conformite" fallback="Vue d'Ensemble de la Conformité" />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Progression Générale</span>
+              <span className="text-sm font-medium"><T k="auto.enhancedcompliancestep.progression_generale" fallback="Progression Générale" /></span>
               <span className="text-2xl font-bold">{calculateComplianceProgress().toFixed(0)}%</span>
             </div>
             <Progress value={calculateComplianceProgress()} className="h-2" />
@@ -590,19 +591,19 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
             <div className="grid grid-cols-4 gap-2 mt-4 text-sm">
               <div className="text-center">
                 <div className="font-bold text-success">{stats.approved}</div>
-                <div className="text-xs text-muted-foreground">Approuvés</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.enhancedcompliancestep.approuves" fallback="Approuvés" /></div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-warning">{stats.pending}</div>
-                <div className="text-xs text-muted-foreground">En attente</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.enhancedcompliancestep.en_attente" fallback="En attente" /></div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-destructive">{stats.rejected}</div>
-                <div className="text-xs text-muted-foreground">Rejetés</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.enhancedcompliancestep.rejetes" fallback="Rejetés" /></div>
               </div>
               <div className="text-center">
                 <div className="font-bold text-primary">{stats.total}</div>
-                <div className="text-xs text-muted-foreground">Total</div>
+                <div className="text-xs text-muted-foreground"><T k="auto.enhancedcompliancestep.total" fallback="Total" /></div>
               </div>
             </div>
           </div>
@@ -612,7 +613,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
-          <TabsTrigger value="overview" className="flex-1 text-xs sm:text-sm">Vue d'Ensemble</TabsTrigger>
+          <TabsTrigger value="overview" className="flex-1 text-xs sm:text-sm"><T k="auto.enhancedcompliancestep.vue_d_ensemble" fallback="Vue d'Ensemble" /></TabsTrigger>
           <TabsTrigger value="documents" className="flex-1 text-xs sm:text-sm">Documents ({documents.length})</TabsTrigger>
           <TabsTrigger value="insurance" className="flex-1 text-xs sm:text-sm">Assurances ({insurancePolicies.length})</TabsTrigger>
           <TabsTrigger value="bank-guarantees" className="flex-1 text-xs sm:text-sm">Garanties ({bankGuarantees.length})</TabsTrigger>
@@ -628,16 +629,16 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  Documents
+                  <T k="auto.enhancedcompliancestep.documents" fallback="Documents" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{documents.length}</div>
-                <p className="text-sm text-muted-foreground">Documents chargés</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhancedcompliancestep.documents_charges" fallback="Documents chargés" /></p>
                 <div className="flex gap-2 mt-3">
                   <Button onClick={() => setIsDocumentDialogOpen(true)} variant="outline" size="sm" className="flex-1">
                     <Plus className="h-4 w-4 mr-1" />
-                    Ajouter
+                    <T k="auto.enhancedcompliancestep.ajouter" fallback="Ajouter" />
                   </Button>
                   <Button onClick={navigateToDocumentPage} variant="ghost" size="sm">
                     <ExternalLink className="h-4 w-4" />
@@ -651,16 +652,16 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Shield className="h-4 w-4" />
-                  Assurances
+                  <T k="auto.enhancedcompliancestep.assurances" fallback="Assurances" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{insurancePolicies.length}</div>
-                <p className="text-sm text-muted-foreground">Polices actives</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhancedcompliancestep.polices_actives" fallback="Polices actives" /></p>
                 <div className="flex gap-2 mt-3">
                   <Button onClick={() => setIsInsuranceDialogOpen(true)} variant="outline" size="sm" className="flex-1">
                     <Plus className="h-4 w-4 mr-1" />
-                    Ajouter
+                    <T k="auto.enhancedcompliancestep.ajouter" fallback="Ajouter" />
                   </Button>
                   <Button onClick={navigateToInsurancePage} variant="ghost" size="sm">
                     <ExternalLink className="h-4 w-4" />
@@ -674,16 +675,16 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Building className="h-4 w-4" />
-                  Garanties
+                  <T k="auto.enhancedcompliancestep.garanties" fallback="Garanties" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{bankGuarantees.length}</div>
-                <p className="text-sm text-muted-foreground">Garanties actives</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhancedcompliancestep.garanties_actives" fallback="Garanties actives" /></p>
                 <div className="flex gap-2 mt-3">
                   <Button onClick={() => setIsBankGuaranteeDialogOpen(true)} variant="outline" size="sm" className="flex-1">
                     <Plus className="h-4 w-4 mr-1" />
-                    Ajouter
+                    <T k="auto.enhancedcompliancestep.ajouter" fallback="Ajouter" />
                   </Button>
                   <Button onClick={navigateToBankGuaranteePage} variant="ghost" size="sm">
                     <ExternalLink className="h-4 w-4" />
@@ -697,12 +698,12 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <FileCheck className="h-4 w-4" />
-                  Réglementaire
+                  <T k="auto.enhancedcompliancestep.reglementaire" fallback="Réglementaire" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{complianceItems.length}</div>
-                <p className="text-sm text-muted-foreground">Exigences réglementaires</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.enhancedcompliancestep.exigences_reglementaires" fallback="Exigences réglementaires" /></p>
               </CardContent>
             </Card>
           </div>
@@ -720,11 +721,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="flex gap-2">
                   <Button onClick={() => setIsDocumentDialogOpen(true)} size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Ajouter
+                    <T k="auto.enhancedcompliancestep.ajouter" fallback="Ajouter" />
                   </Button>
                   <Button onClick={navigateToDocumentPage} variant="outline" size="sm">
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Voir tout
+                    <T k="auto.enhancedcompliancestep.voir_tout" fallback="Voir tout" />
                   </Button>
                 </div>
               </div>
@@ -761,11 +762,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="flex gap-2">
                   <Button onClick={() => setIsInsuranceDialogOpen(true)} size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Ajouter
+                    <T k="auto.enhancedcompliancestep.ajouter" fallback="Ajouter" />
                   </Button>
                   <Button onClick={navigateToInsurancePage} variant="outline" size="sm">
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Gérer
+                    <T k="auto.enhancedcompliancestep.gerer" fallback="Gérer" />
                   </Button>
                 </div>
               </div>
@@ -774,7 +775,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               {insurancePolicies.length === 0 ? (
                 <div className="text-center py-8">
                   <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Aucune assurance trouvée</p>
+                  <p className="text-muted-foreground"><T k="auto.enhancedcompliancestep.aucune_assurance_trouvee" fallback="Aucune assurance trouvée" /></p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Utilisez « Ajouter » en haut à droite pour créer une police.
                   </p>
@@ -821,11 +822,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                 <div className="flex gap-2">
                   <Button onClick={() => setIsBankGuaranteeDialogOpen(true)} size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Ajouter
+                    <T k="auto.enhancedcompliancestep.ajouter" fallback="Ajouter" />
                   </Button>
                   <Button onClick={navigateToBankGuaranteePage} variant="outline" size="sm">
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Gérer
+                    <T k="auto.enhancedcompliancestep.gerer" fallback="Gérer" />
                   </Button>
                 </div>
               </div>
@@ -834,7 +835,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               {bankGuarantees.length === 0 ? (
                 <div className="text-center py-8">
                   <Building className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Aucune garantie bancaire trouvée</p>
+                  <p className="text-muted-foreground"><T k="auto.enhancedcompliancestep.aucune_garantie_bancaire_trouvee" fallback="Aucune garantie bancaire trouvée" /></p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Utilisez « Ajouter » en haut à droite pour créer une garantie.
                   </p>
@@ -910,9 +911,9 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
 
                 <div className="text-center py-8">
                   <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Aucun élément réglementaire</p>
+                  <p className="text-muted-foreground"><T k="auto.enhancedcompliancestep.aucun_element_reglementaire" fallback="Aucun élément réglementaire" /></p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Les éléments réglementaires sont gérés via les interfaces spécialisées
+                    <T k="auto.enhancedcompliancestep.les_elements_reglementaires_sont_geres_via_les_i" fallback="Les éléments réglementaires sont gérés via les interfaces spécialisées" />
                   </p>
                 </div>
               ) : (
@@ -968,9 +969,9 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       <Dialog open={isDocumentDialogOpen} onOpenChange={setIsDocumentDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Ajouter un Document</DialogTitle>
+            <DialogTitle><T k="auto.enhancedcompliancestep.ajouter_un_document" fallback="Ajouter un Document" /></DialogTitle>
             <DialogDescription>
-              Téléchargez un nouveau document pour le projet
+              <T k="auto.enhancedcompliancestep.telechargez_un_nouveau_document_pour_le_projet" fallback="Téléchargez un nouveau document pour le projet" />
             </DialogDescription>
           </DialogHeader>
           <ProjectDocumentUpload
@@ -989,9 +990,9 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       <Dialog open={isInsuranceDialogOpen} onOpenChange={setIsInsuranceDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Gestion des Assurances</DialogTitle>
+            <DialogTitle><T k="auto.enhancedcompliancestep.gestion_des_assurances" fallback="Gestion des Assurances" /></DialogTitle>
             <DialogDescription>
-              Gérez les polices d'assurance du projet
+              <T k="auto.enhancedcompliancestep.gerez_les_polices_d_assurance_du_projet" fallback="Gérez les polices d'assurance du projet" />
             </DialogDescription>
           </DialogHeader>
           <ProjectInsuranceForm
@@ -1005,7 +1006,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
           />
           <div className="border-t pt-4">
             <p className="mb-3 text-sm text-muted-foreground">
-              Vous pouvez également joindre des pièces justificatives d'assurance au projet.
+              <T k="auto.enhancedcompliancestep.vous_pouvez_egalement_joindre_des_pieces_justifi" fallback="Vous pouvez également joindre des pièces justificatives d'assurance au projet." />
             </p>
             <ProjectDocumentUpload
               projectId={projectId}
@@ -1023,7 +1024,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               }}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Ouvrir la Gestion des Assurances
+              <T k="auto.enhancedcompliancestep.ouvrir_la_gestion_des_assurances" fallback="Ouvrir la Gestion des Assurances" />
             </Button>
           </div>
         </DialogContent>
@@ -1033,9 +1034,9 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
       <Dialog open={isBankGuaranteeDialogOpen} onOpenChange={setIsBankGuaranteeDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Gestion des Garanties Bancaires</DialogTitle>
+            <DialogTitle><T k="auto.enhancedcompliancestep.gestion_des_garanties_bancaires" fallback="Gestion des Garanties Bancaires" /></DialogTitle>
             <DialogDescription>
-              Gérez les garanties bancaires du projet
+              <T k="auto.enhancedcompliancestep.gerez_les_garanties_bancaires_du_projet" fallback="Gérez les garanties bancaires du projet" />
             </DialogDescription>
           </DialogHeader>
           <div className="py-6 text-center">
@@ -1048,7 +1049,7 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
               navigateToBankGuaranteePage();
             }}>
               <ExternalLink className="h-4 w-4 mr-2" />
-              Ouvrir la Gestion des Garanties
+              <T k="auto.enhancedcompliancestep.ouvrir_la_gestion_des_garanties" fallback="Ouvrir la Gestion des Garanties" />
             </Button>
           </div>
           <ProjectDocumentUpload

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { DocumentItem, DocumentHubContract, formatBytes, getPreviewKind } from './types';
 import { MimeIcon } from './MimeIcon';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   item: DocumentItem | null;
@@ -110,7 +111,7 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
                   title="Accès sécurisé via passerelle — l'URL de stockage n'est pas exposée"
                   className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
                 >
-                  <ShieldCheck className="h-3 w-3" /> Proxy
+                  <ShieldCheck className="h-3 w-3" /> <T k="auto.documenthubpreview.proxy" fallback="Proxy" />
                 </span>
               )}
             </div>
@@ -158,17 +159,17 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
                 <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                   <MimeIcon mime={item.mimeType} className="h-16 w-16 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
-                    Aperçu indisponible pour ce type de fichier.
+                    <T k="auto.documenthubpreview.apercu_indisponible_pour_ce_type_de_fichier" fallback="Aperçu indisponible pour ce type de fichier." />
                   </p>
                   <Button onClick={triggerDownload}>
                     <Download className="mr-2 h-4 w-4" />
-                    Télécharger le fichier
+                    <T k="auto.documenthubpreview.telecharger_le_fichier" fallback="Télécharger le fichier" />
                   </Button>
                 </div>
               )
             ) : (
               <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
-                Fichier introuvable.
+                <T k="auto.documenthubpreview.fichier_introuvable" fallback="Fichier introuvable." />
               </div>
             )}
           </div>
@@ -176,21 +177,21 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
           <div className="border-t border-border bg-card px-6 py-3">
             <dl className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <dt className="text-muted-foreground">Taille</dt>
+                <dt className="text-muted-foreground"><T k="auto.documenthubpreview.taille" fallback="Taille" /></dt>
                 <dd className="font-medium">{formatBytes(item.fileSize)}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Type</dt>
+                <dt className="text-muted-foreground"><T k="auto.documenthubpreview.type" fallback="Type" /></dt>
                 <dd className="truncate font-medium">{item.mimeType ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Ajouté le</dt>
+                <dt className="text-muted-foreground"><T k="auto.documenthubpreview.ajoute_le" fallback="Ajouté le" /></dt>
                 <dd className="font-medium">
                   {new Date(item.createdAt).toLocaleString('fr-FR')}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Mis à jour</dt>
+                <dt className="text-muted-foreground"><T k="auto.documenthubpreview.mis_a_jour" fallback="Mis à jour" /></dt>
                 <dd className="font-medium">
                   {new Date(item.updatedAt).toLocaleString('fr-FR')}
                 </dd>
@@ -202,14 +203,14 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
                 <Button variant="outline" size="sm" asChild>
                   <a href={displayUrl} target="_blank" rel="noreferrer">
                     <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                    Ouvrir
+                    <T k="auto.documenthubpreview.ouvrir" fallback="Ouvrir" />
                   </a>
                 </Button>
               )}
               {displayUrl && (
                 <Button variant="outline" size="sm" onClick={triggerDownload}>
                   <Download className="mr-1 h-3.5 w-3.5" />
-                  Télécharger
+                  <T k="auto.documenthubpreview.telecharger" fallback="Télécharger" />
                 </Button>
               )}
               {onDelete && (
@@ -223,7 +224,7 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
                   }}
                 >
                   <Trash2 className="mr-1 h-3.5 w-3.5" />
-                  Supprimer
+                  <T k="auto.documenthubpreview.supprimer" fallback="Supprimer" />
                 </Button>
               )}
             </div>

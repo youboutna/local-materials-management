@@ -17,6 +17,7 @@ import { DollarSign, Download, Loader2, Mail } from 'lucide-react';
 import React, { useState } from 'react';
 import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
 import { formatNumber2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 interface SupplierPaymentReportGeneratorProps {
   supplier: SupplierDTO;
@@ -95,43 +96,43 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
 
         <!-- Supplier Information -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;">Informations Fournisseur</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #10b981; padding-left: 15px;"><T k="auto.supplierpaymentreportgenerator.informations_fournisseur" fallback="Informations Fournisseur" /></h2>
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div>
-                <p style="margin: 5px 0;"><strong>Nom:</strong> ${supplier.name || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Contact:</strong> ${supplier.contactPerson || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> ${supplier.email || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.supplierpaymentreportgenerator.nom" fallback="Nom:" /></strong> ${supplier.name || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.supplierpaymentreportgenerator.contact" fallback="Contact:" /></strong> ${supplier.contactPerson || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.supplierpaymentreportgenerator.email" fallback="Email:" /></strong> ${supplier.email || 'Non défini'}</p>
               </div>
               <div>
-                <p style="margin: 5px 0;"><strong>Téléphone:</strong> ${supplier.phone || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Catégorie:</strong> ${supplier.category || 'Non défini'}</p>
-                <p style="margin: 5px 0;"><strong>Statut:</strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px; background: ${supplier.isActive ? '#dcfce7; color: #166534' : '#fee2e2; color: #991b1b'};">${supplier.isActive ? 'Actif' : 'Inactif'}</span></p>
+                <p style="margin: 5px 0;"><strong><T k="auto.supplierpaymentreportgenerator.telephone" fallback="Téléphone:" /></strong> ${supplier.phone || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.supplierpaymentreportgenerator.categorie" fallback="Catégorie:" /></strong> ${supplier.category || 'Non défini'}</p>
+                <p style="margin: 5px 0;"><strong><T k="auto.supplierpaymentreportgenerator.statut" fallback="Statut:" /></strong> <span style="padding: 2px 8px; border-radius: 4px; font-size: 12px; background: ${supplier.isActive ? '#dcfce7; color: #166534' : '#fee2e2; color: #991b1b'};">${supplier.isActive ? 'Actif' : 'Inactif'}</span></p>
               </div>
             </div>
-            ${supplier.address ? `<p style="margin: 15px 0 5px 0;"><strong>Adresse:</strong></p><p style="margin: 5px 0;">${supplier.address}</p>` : ''}
+            ${supplier.address ? `<p style="margin: 15px 0 5px 0;"><strong><T k="auto.supplierpaymentreportgenerator.adresse" fallback="Adresse:" /></strong></p><p style="margin: 5px 0;">${supplier.address}</p>` : ''}
           </div>
         </section>
 
         <!-- Financial Summary -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;">Résumé Financier</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 15px;"><T k="auto.supplierpaymentreportgenerator.resume_financier" fallback="Résumé Financier" /></h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
             <div style="background: #eff6ff; padding: 15px; border-radius: 8px; text-align: center;">
-              <h3 style="color: #1d4ed8; margin: 0; font-size: 14px;">Total</h3>
+              <h3 style="color: #1d4ed8; margin: 0; font-size: 14px;"><T k="auto.supplierpaymentreportgenerator.total" fallback="Total" /></h3>
               <p style="color: #1e40af; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(totalAmount)} MRU</p>
             </div>
             <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; text-align: center;">
-              <h3 style="color: #065f46; margin: 0; font-size: 14px;">Payé</h3>
+              <h3 style="color: #065f46; margin: 0; font-size: 14px;"><T k="auto.supplierpaymentreportgenerator.paye" fallback="Payé" /></h3>
               <p style="color: #047857; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(paidAmount)} MRU</p>
             </div>
             <div style="background: #fffbeb; padding: 15px; border-radius: 8px; text-align: center;">
-              <h3 style="color: #92400e; margin: 0; font-size: 14px;">En Attente</h3>
+              <h3 style="color: #92400e; margin: 0; font-size: 14px;"><T k="auto.supplierpaymentreportgenerator.en_attente" fallback="En Attente" /></h3>
               <p style="color: #d97706; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(pendingAmount)} MRU</p>
             </div>
             ${overdueAmount > 0 ? `
             <div style="background: #fef2f2; padding: 15px; border-radius: 8px; text-align: center;">
-              <h3 style="color: #991b1b; margin: 0; font-size: 14px;">En Retard</h3>
+              <h3 style="color: #991b1b; margin: 0; font-size: 14px;"><T k="auto.supplierpaymentreportgenerator.en_retard" fallback="En Retard" /></h3>
               <p style="color: #dc2626; font-size: 20px; font-weight: bold; margin: 5px 0;">${formatNumber2(overdueAmount)} MRU</p>
             </div>
             ` : ''}
@@ -141,15 +142,15 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         ${reportConfig.includeDetails ? `
         <!-- Payment Details -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;">Détail des Paiements</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #8b5cf6; padding-left: 15px;"><T k="auto.supplierpaymentreportgenerator.detail_des_paiements" fallback="Détail des Paiements" /></h2>
           <div style="background: #f9fafb; border-radius: 8px; overflow: hidden;">
             <table style="width: 100%; border-collapse: collapse;">
               <thead>
                 <tr style="background: #f3f4f6;">
-                  <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Date</th>
-                  <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Description</th>
-                  <th style="padding: 12px 8px; text-align: right; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Montant</th>
-                  <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;">Statut</th>
+                  <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;"><T k="auto.supplierpaymentreportgenerator.date" fallback="Date" /></th>
+                  <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;"><T k="auto.supplierpaymentreportgenerator.description" fallback="Description" /></th>
+                  <th style="padding: 12px 8px; text-align: right; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;"><T k="auto.supplierpaymentreportgenerator.montant" fallback="Montant" /></th>
+                  <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #374151; font-size: 14px; border-bottom: 1px solid #e5e7eb;"><T k="auto.supplierpaymentreportgenerator.statut" fallback="Statut" /></th>
                 </tr>
               </thead>
               <tbody>
@@ -172,7 +173,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         ${reportConfig.notes ? `
         <!-- Additional Notes -->
         <section style="margin-bottom: 30px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;">Notes</h2>
+          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 15px;"><T k="auto.supplierpaymentreportgenerator.notes" fallback="Notes" /></h2>
           <div style="background: #fffbeb; padding: 20px; border-radius: 8px; border: 1px solid #fbbf24;">
             <p style="margin: 0; line-height: 1.6; color: #374151;">${reportConfig.notes}</p>
           </div>
@@ -182,7 +183,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         <!-- Footer -->
         <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 30px; text-align: center; color: #6b7280; font-size: 12px;">
           <p style="margin: 0;">Ce rapport de paiements a été généré automatiquement le ${currentDate}</p>
-          <p style="margin: 5px 0 0 0;">Document confidentiel - Usage interne uniquement</p>
+          <p style="margin: 5px 0 0 0;"><T k="auto.supplierpaymentreportgenerator.document_confidentiel_usage_interne_uniquement" fallback="Document confidentiel - Usage interne uniquement" /></p>
         </div>
       </div>
     `;
@@ -259,16 +260,16 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         message: `Veuillez trouver ci-joint le rapport de paiements "${reportConfig.title}" pour le fournisseur ${supplier.name}. Le rapport couvre la période du ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}.`,
         html: `
           <h2>Rapport de paiements: ${reportConfig.title}</h2>
-          <p>Bonjour,</p>
-          <p>Veuillez trouver ci-joint le rapport de paiements pour le fournisseur <strong>${supplier.name}</strong>.</p>
-          <p><strong>Période:</strong> ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}</p>
-          <p><strong>Total des paiements:</strong> ${formatNumber2(calculateTotals().totalAmount)} MRU</p>
-          <p><strong>Montants payés:</strong> ${formatNumber2(calculateTotals().paidAmount)} MRU</p>
-          <p><strong>Montants en attente:</strong> ${formatNumber2(calculateTotals().pendingAmount)} MRU</p>
-          <p>Ce rapport a été généré automatiquement par le système.</p>
+          <p><T k="auto.supplierpaymentreportgenerator.bonjour" fallback="Bonjour," /></p>
+          <p><T k="auto.supplierpaymentreportgenerator.veuillez_trouver_ci_joint_le_rapport_de_paiement" fallback="Veuillez trouver ci-joint le rapport de paiements pour le fournisseur" /> <strong>${supplier.name}</strong>.</p>
+          <p><strong><T k="auto.supplierpaymentreportgenerator.periode" fallback="Période:" /></strong> ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}</p>
+          <p><strong><T k="auto.supplierpaymentreportgenerator.total_des_paiements" fallback="Total des paiements:" /></strong> ${formatNumber2(calculateTotals().totalAmount)} MRU</p>
+          <p><strong><T k="auto.supplierpaymentreportgenerator.montants_payes" fallback="Montants payés:" /></strong> ${formatNumber2(calculateTotals().paidAmount)} MRU</p>
+          <p><strong><T k="auto.supplierpaymentreportgenerator.montants_en_attente" fallback="Montants en attente:" /></strong> ${formatNumber2(calculateTotals().pendingAmount)} MRU</p>
+          <p><T k="auto.supplierpaymentreportgenerator.ce_rapport_a_ete_genere_automatiquement_par_le_s" fallback="Ce rapport a été généré automatiquement par le système." /></p>
           <br>
-          <p>Cordialement,</p>
-          <p>L'équipe de gestion des paiements</p>
+          <p><T k="auto.supplierpaymentreportgenerator.cordialement" fallback="Cordialement," /></p>
+          <p><T k="auto.supplierpaymentreportgenerator.l_equipe_de_gestion_des_paiements" fallback="L'équipe de gestion des paiements" /></p>
         `,
         actionType: 'supplier-payment-report',
         attachments: [
@@ -310,7 +311,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="reportTitle">Titre du rapport</Label>
+              <Label htmlFor="reportTitle"><T k="auto.supplierpaymentreportgenerator.titre_du_rapport" fallback="Titre du rapport" /></Label>
               <Input
                 id="reportTitle"
                 value={reportConfig.title}
@@ -319,7 +320,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
             </div>
 
             <div>
-              <Label htmlFor="reportType">Type de rapport</Label>
+              <Label htmlFor="reportType"><T k="auto.supplierpaymentreportgenerator.type_de_rapport" fallback="Type de rapport" /></Label>
               <Select
                 value={reportConfig.reportType}
                 onValueChange={(value: 'summary' | 'detailed' | 'outstanding') => 
@@ -330,15 +331,15 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="summary">Résumé</SelectItem>
-                  <SelectItem value="detailed">Détaillé</SelectItem>
-                  <SelectItem value="outstanding">Impayés</SelectItem>
+                  <SelectItem value="summary"><T k="auto.supplierpaymentreportgenerator.resume" fallback="Résumé" /></SelectItem>
+                  <SelectItem value="detailed"><T k="auto.supplierpaymentreportgenerator.detaille" fallback="Détaillé" /></SelectItem>
+                  <SelectItem value="outstanding"><T k="auto.supplierpaymentreportgenerator.impayes" fallback="Impayés" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="recipientEmail">Email destinataire</Label>
+              <Label htmlFor="recipientEmail"><T k="auto.supplierpaymentreportgenerator.email_destinataire" fallback="Email destinataire" /></Label>
               <Input
                 id="recipientEmail"
                 type="email"
@@ -350,7 +351,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
           </div>
 
           <div className="space-y-4">
-            <Label>Options du rapport</Label>
+            <Label><T k="auto.supplierpaymentreportgenerator.options_du_rapport" fallback="Options du rapport" /></Label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <input
@@ -361,7 +362,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
                   className="rounded"
                 />
                 <Label htmlFor="includeDetails" className="text-sm">
-                  Inclure les détails des paiements
+                  <T k="auto.supplierpaymentreportgenerator.inclure_les_details_des_paiements" fallback="Inclure les détails des paiements" />
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -373,7 +374,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
                   className="rounded"
                 />
                 <Label htmlFor="includeBankInfo" className="text-sm">
-                  Inclure les informations bancaires
+                  <T k="auto.supplierpaymentreportgenerator.inclure_les_informations_bancaires" fallback="Inclure les informations bancaires" />
                 </Label>
               </div>
             </div>
@@ -381,7 +382,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         </div>
 
         <div>
-          <Label htmlFor="notes">Notes additionnelles</Label>
+          <Label htmlFor="notes"><T k="auto.supplierpaymentreportgenerator.notes_additionnelles" fallback="Notes additionnelles" /></Label>
           <Textarea
             id="notes"
             value={reportConfig.notes}
@@ -394,19 +395,19 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
         {/* Payment Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.supplierpaymentreportgenerator.total" fallback="Total" /></p>
             <p className="font-bold text-lg">{formatNumber2(calculateTotals().totalAmount)} MRU</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Payé</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.supplierpaymentreportgenerator.paye" fallback="Payé" /></p>
             <p className="font-bold text-lg text-success">{formatNumber2(calculateTotals().paidAmount)} MRU</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">En attente</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.supplierpaymentreportgenerator.en_attente" fallback="En attente" /></p>
             <p className="font-bold text-lg text-warning">{formatNumber2(calculateTotals().pendingAmount)} MRU</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Retard</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.supplierpaymentreportgenerator.retard" fallback="Retard" /></p>
             <p className="font-bold text-lg text-destructive">{formatNumber2(calculateTotals().overdueAmount)} MRU</p>
           </div>
         </div>
@@ -438,7 +439,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
           
           {onClose && (
             <Button onClick={onClose} variant="ghost">
-              Fermer
+              <T k="auto.supplierpaymentreportgenerator.fermer" fallback="Fermer" />
             </Button>
           )}
         </div>

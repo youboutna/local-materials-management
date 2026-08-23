@@ -21,6 +21,7 @@ import GanttChart from './GanttChart';
 import PERTDiagram from './PERTDiagram';
 import KanbanBoard from './KanbanBoard';
 import CriticalPathView from './CriticalPathView';
+import { T } from '@/components/i18n/T';
 
 type ViewMode = 'gantt' | 'pert' | 'kanban' | 'critical';
 
@@ -119,23 +120,23 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
           <div className="flex items-center justify-center gap-6 text-sm">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-primary" />
-              <span className="text-muted-foreground">Gantt:</span>
-              <span className="font-medium">Timeline projet</span>
+              <span className="text-muted-foreground"><T k="auto.projecttimeline.gantt" fallback="Gantt:" /></span>
+              <span className="font-medium"><T k="auto.projecttimeline.timeline_projet" fallback="Timeline projet" /></span>
             </div>
             <div className="flex items-center gap-2">
               <GitBranch className="h-4 w-4 text-warning" />
-              <span className="text-muted-foreground">PERT:</span>
-              <span className="font-medium">Analyse risques</span>
+              <span className="text-muted-foreground"><T k="auto.projecttimeline.pert" fallback="PERT:" /></span>
+              <span className="font-medium"><T k="auto.projecttimeline.analyse_risques" fallback="Analyse risques" /></span>
             </div>
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 text-purple-500" />
-              <span className="text-muted-foreground">Kanban:</span>
-              <span className="font-medium">Gestion tâches</span>
+              <span className="text-muted-foreground"><T k="auto.projecttimeline.kanban" fallback="Kanban:" /></span>
+              <span className="font-medium"><T k="auto.projecttimeline.gestion_taches" fallback="Gestion tâches" /></span>
             </div>
             <div className="flex items-center gap-2">
               <Route className="h-4 w-4 text-destructive" />
-              <span className="text-muted-foreground">Critique:</span>
-              <span className="font-medium">Délai incompressible</span>
+              <span className="text-muted-foreground"><T k="auto.projecttimeline.critique" fallback="Critique:" /></span>
+              <span className="font-medium"><T k="auto.projecttimeline.delai_incompressible" fallback="Délai incompressible" /></span>
             </div>
           </div>
         </CardContent>

@@ -44,6 +44,7 @@ import EmployeeSelector from "@/components/selectors/EmployeeSelector";
 import SimpleSupplierSelector from "@/components/selectors/SimpleSupplierSelector";
 import { METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 
 interface PhaseStepResourceDialogProps {
   projectId: string;
@@ -193,13 +194,13 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
         {trigger ?? (
           <Button variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Ajouter ressource
+            <T k="auto.phasestepresourcedialog.ajouter_ressource" fallback="Ajouter ressource" />
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Ajouter une ressource</DialogTitle>
+          <DialogTitle><T k="auto.phasestepresourcedialog.ajouter_une_ressource" fallback="Ajouter une ressource" /></DialogTitle>
           <DialogDescription>
             {stepName ? `Étape : ${stepName}` : "Étape sélectionnée"}
           </DialogDescription>
@@ -207,14 +208,14 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
-            <TabsTrigger value="material">Matériau</TabsTrigger>
+            <TabsTrigger value="material"><T k="auto.phasestepresourcedialog.materiau" fallback="Matériau" /></TabsTrigger>
             <TabsTrigger value="employee">Main d'œuvre</TabsTrigger>
-            <TabsTrigger value="service">Prestation</TabsTrigger>
+            <TabsTrigger value="service"><T k="auto.phasestepresourcedialog.prestation" fallback="Prestation" /></TabsTrigger>
           </TabsList>
 
           <TabsContent value="material" className="space-y-3 pt-4">
             <div>
-              <Label>Matériau</Label>
+              <Label><T k="auto.phasestepresourcedialog.materiau" fallback="Matériau" /></Label>
               <Select value={matId} onValueChange={setMatId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un matériau" />
@@ -230,7 +231,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Unité</Label>
+                <Label><T k="auto.phasestepresourcedialog.unite" fallback="Unité" /></Label>
                 <Select value={unit} onValueChange={(v) => setUnit(v as any)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -245,7 +246,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 </Select>
               </div>
               <div>
-                <Label>Prix unitaire (MRU)</Label>
+                <Label><T k="auto.phasestepresourcedialog.prix_unitaire_mru" fallback="Prix unitaire (MRU)" /></Label>
                 <Input
                   type="number"
                   value={unitPrice ?? ""}
@@ -259,7 +260,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label>Longueur</Label>
+                <Label><T k="auto.phasestepresourcedialog.longueur" fallback="Longueur" /></Label>
                 <Input
                   type="number"
                   value={length || ""}
@@ -267,7 +268,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 />
               </div>
               <div>
-                <Label>Largeur</Label>
+                <Label><T k="auto.phasestepresourcedialog.largeur" fallback="Largeur" /></Label>
                 <Input
                   type="number"
                   value={width ?? ""}
@@ -280,7 +281,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 />
               </div>
               <div>
-                <Label>Hauteur</Label>
+                <Label><T k="auto.phasestepresourcedialog.hauteur" fallback="Hauteur" /></Label>
                 <Input
                   type="number"
                   value={height ?? ""}
@@ -309,7 +310,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
             />
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Rôle sur l'étape</Label>
+                <Label><T k="auto.phasestepresourcedialog.role_sur_l_etape" fallback="Rôle sur l'étape" /></Label>
                 <Input
                   value={empRole}
                   onChange={(e) => setEmpRole(e.target.value)}
@@ -317,7 +318,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 />
               </div>
               <div>
-                <Label>Taux journalier (MRU)</Label>
+                <Label><T k="auto.phasestepresourcedialog.taux_journalier_mru" fallback="Taux journalier (MRU)" /></Label>
                 <Input
                   type="number"
                   value={dailyRate ?? ""}
@@ -329,7 +330,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 />
               </div>
               <div>
-                <Label>Début</Label>
+                <Label><T k="auto.phasestepresourcedialog.debut" fallback="Début" /></Label>
                 <Input
                   type="date"
                   value={startDate}
@@ -337,7 +338,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 />
               </div>
               <div>
-                <Label>Fin</Label>
+                <Label><T k="auto.phasestepresourcedialog.fin" fallback="Fin" /></Label>
                 <Input
                   type="date"
                   value={endDate}
@@ -354,7 +355,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
               onChange={(id) => setSupplierId(id || "")}
             />
             <div>
-              <Label>Montant (MRU)</Label>
+              <Label><T k="auto.phasestepresourcedialog.montant_mru" fallback="Montant (MRU)" /></Label>
               <Input
                 type="number"
                 value={amount ?? ""}
@@ -370,11 +371,11 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
-            Annuler
+            <T k="auto.phasestepresourcedialog.annuler" fallback="Annuler" />
           </Button>
           {tab === "material" && (
             <Button onClick={submitMaterial} disabled={!canSubmitMaterial || createTakeoff.isPending}>
-              Ajouter matériau
+              <T k="auto.phasestepresourcedialog.ajouter_materiau" fallback="Ajouter matériau" />
             </Button>
           )}
           {tab === "employee" && (
@@ -384,7 +385,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
           )}
           {tab === "service" && (
             <Button onClick={submitService} disabled={!supplierId}>
-              Ajouter prestation
+              <T k="auto.phasestepresourcedialog.ajouter_prestation" fallback="Ajouter prestation" />
             </Button>
           )}
         </DialogFooter>

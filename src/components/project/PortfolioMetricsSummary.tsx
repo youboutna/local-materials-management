@@ -13,6 +13,7 @@ import {
 import { Activity, AlertTriangle, TrendingUp, Wallet } from 'lucide-react';
 import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 import { formatAmount2, formatIndex2, formatPercent2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 
 /**
@@ -98,12 +99,12 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
     >
       <span className="flex items-center gap-1.5">
         <TrendingUp className="h-3.5 w-3.5 text-primary" />
-        <span className="text-muted-foreground">Avancement</span>
+        <span className="text-muted-foreground"><T k="auto.portfoliometricssummary.avancement" fallback="Avancement" /></span>
         <span className="font-semibold">{formatPercent2(summary.weightedProgress)}</span>
       </span>
       <span className="flex items-center gap-1.5">
         <Wallet className="h-3.5 w-3.5 text-primary" />
-        <span className="text-muted-foreground">Budget</span>
+        <span className="text-muted-foreground"><T k="auto.portfoliometricssummary.budget" fallback="Budget" /></span>
         <span className="font-semibold">{formatAmount2(summary.totalBudget)}</span>
       </span>
       <span className="flex items-center gap-1.5">
@@ -116,7 +117,7 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
       </span>
       <span className="flex items-center gap-1.5">
         <AlertTriangle className="h-3.5 w-3.5 text-primary" />
-        <span className="text-muted-foreground">Alertes</span>
+        <span className="text-muted-foreground"><T k="auto.portfoliometricssummary.alertes" fallback="Alertes" /></span>
         <span className="font-semibold">{totalAlerts}</span>
       </span>
       <span className="ml-auto flex items-center gap-2">
@@ -124,12 +125,12 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-              Détails
+              <T k="auto.portfoliometricssummary.details" fallback="Détails" />
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
             <SheetHeader>
-              <SheetTitle>Synthèse du portefeuille</SheetTitle>
+              <SheetTitle><T k="auto.portfoliometricssummary.synthese_du_portefeuille" fallback="Synthèse du portefeuille" /></SheetTitle>
               <SheetDescription>
                 Indicateurs agrégés sur {summary.count} projet(s) — source unique :
                 ProjectMetricsOrchestrator.
@@ -141,7 +142,7 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Avancement pondéré (portefeuille)</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.portfoliometricssummary.avancement_pondere_portefeuille" fallback="Avancement pondéré (portefeuille)" /></p>
               <p className="text-lg font-semibold">{formatPercent2(summary.weightedProgress)}</p>
             </div>
             <TrendingUp className="h-6 w-6 text-primary" />
@@ -154,7 +155,7 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Budget cumulé</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.portfoliometricssummary.budget_cumule" fallback="Budget cumulé" /></p>
               <p className="text-lg font-semibold">{formatAmount2(summary.totalBudget)}</p>
             </div>
             <Wallet className="h-6 w-6 text-primary" />
@@ -187,7 +188,7 @@ export const PortfolioMetricsSummary: React.FC<Props> = ({ projects, className }
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Alertes actives</p>
+              <p className="text-xs text-muted-foreground"><T k="auto.portfoliometricssummary.alertes_actives" fallback="Alertes actives" /></p>
               <p className="text-lg font-semibold">{summary.criticalCount + summary.warningCount}</p>
             </div>
             <AlertTriangle className="h-6 w-6 text-primary" />

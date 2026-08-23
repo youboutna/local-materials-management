@@ -18,6 +18,7 @@ import {
   type TenderEstimatorLineInput,
   type TenderCategory,
 } from '@/application/services/boq/TenderEstimatorService';
+import { T } from '@/components/i18n/T';
 
 const CATEGORIES: { value: TenderCategory; label: string }[] = [
   { value: 'material', label: 'Matériau' },
@@ -100,13 +101,13 @@ export function TenderEstimatorForm({ tenderId, projectId, onCommitted, seedLine
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Désignation</TableHead>
-                <TableHead className="w-40">Catégorie</TableHead>
-                <TableHead className="w-24">Unité</TableHead>
-                <TableHead className="w-24">Qté</TableHead>
+                <TableHead><T k="auto.tenderestimatorform.designation" fallback="Désignation" /></TableHead>
+                <TableHead className="w-40"><T k="auto.tenderestimatorform.categorie" fallback="Catégorie" /></TableHead>
+                <TableHead className="w-24"><T k="auto.tenderestimatorform.unite" fallback="Unité" /></TableHead>
+                <TableHead className="w-24"><T k="auto.tenderestimatorform.qte" fallback="Qté" /></TableHead>
                 <TableHead className="w-28">PU</TableHead>
-                <TableHead className="w-24">TVA</TableHead>
-                <TableHead className="w-32 text-right">Total HT</TableHead>
+                <TableHead className="w-24"><T k="auto.tenderestimatorform.tva" fallback="TVA" /></TableHead>
+                <TableHead className="w-32 text-right"><T k="auto.tenderestimatorform.total_ht" fallback="Total HT" /></TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
@@ -183,12 +184,12 @@ export function TenderEstimatorForm({ tenderId, projectId, onCommitted, seedLine
 
           <div className="flex justify-between items-center pt-2">
             <Button variant="outline" size="sm" onClick={() => setLines((p) => [...p, emptyLine()])}>
-              <Plus className="h-4 w-4 mr-1" /> Ajouter une ligne
+              <Plus className="h-4 w-4 mr-1" /> <T k="auto.tenderestimatorform.ajouter_une_ligne" fallback="Ajouter une ligne" />
             </Button>
             <div className="text-sm space-y-1 text-right">
-              <div>Total HT : <span className="font-semibold">{fmt(summary.totals.totalHt)}</span></div>
-              <div>TVA : <span className="font-semibold">{fmt(summary.totals.totalTva)}</span></div>
-              <div>Total TTC : <span className="font-bold text-primary">{fmt(summary.totals.totalTtc)}</span></div>
+              <div><T k="auto.tenderestimatorform.total_ht" fallback="Total HT :" /> <span className="font-semibold">{fmt(summary.totals.totalHt)}</span></div>
+              <div><T k="auto.tenderestimatorform.tva" fallback="TVA :" /> <span className="font-semibold">{fmt(summary.totals.totalTva)}</span></div>
+              <div><T k="auto.tenderestimatorform.total_ttc" fallback="Total TTC :" /> <span className="font-bold text-primary">{fmt(summary.totals.totalTtc)}</span></div>
             </div>
           </div>
         </CardContent>

@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toDateInput } from '@/lib/utils';
 import { getDocumentService } from '@/application/services/DocumentService';
+import { T } from '@/components/i18n/T';
 
 interface PaymentCrudProps {
   onCreatePayment?: () => void;
@@ -170,8 +171,8 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
     return 'bg-red-500';
   };
 
-  if (loading || projectsLoading) return <div className="py-8 text-center">Chargement des paiements...</div>;
-  if (!payments) return <div className="py-8 text-center text-destructive">Erreur de chargement</div>;
+  if (loading || projectsLoading) return <div className="py-8 text-center"><T k="auto.paymentcrud.chargement_des_paiements" fallback="Chargement des paiements..." /></div>;
+  if (!payments) return <div className="py-8 text-center text-destructive"><T k="auto.paymentcrud.erreur_de_chargement" fallback="Erreur de chargement" /></div>;
 
   return (
     <div>
@@ -183,14 +184,14 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
           className="w-64"
         />
         <ToggleGroup type="single" value={statusFilter} onValueChange={(val) => setStatusFilter(val || 'all')}>
-          <ToggleGroupItem value="all">Tous</ToggleGroupItem>
-          <ToggleGroupItem value="pending">En attente</ToggleGroupItem>
-          <ToggleGroupItem value="approved">Validés</ToggleGroupItem>
-          <ToggleGroupItem value="blocked">Bloqués</ToggleGroupItem>
-          <ToggleGroupItem value="rejected">Rejetés</ToggleGroupItem>
+          <ToggleGroupItem value="all"><T k="auto.paymentcrud.tous" fallback="Tous" /></ToggleGroupItem>
+          <ToggleGroupItem value="pending"><T k="auto.paymentcrud.en_attente" fallback="En attente" /></ToggleGroupItem>
+          <ToggleGroupItem value="approved"><T k="auto.paymentcrud.valides" fallback="Validés" /></ToggleGroupItem>
+          <ToggleGroupItem value="blocked"><T k="auto.paymentcrud.bloques" fallback="Bloqués" /></ToggleGroupItem>
+          <ToggleGroupItem value="rejected"><T k="auto.paymentcrud.rejetes" fallback="Rejetés" /></ToggleGroupItem>
         </ToggleGroup>
         <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-1" /> Exporter CSV
+          <Download className="h-4 w-4 mr-1" /> <T k="auto.paymentcrud.exporter_csv" fallback="Exporter CSV" />
         </Button>
         {onCreatePayment && (
           <Button onClick={onCreatePayment} className="ml-auto">
@@ -202,21 +203,21 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Projet</TableHead>
-            <TableHead>Contractant</TableHead>
-            <TableHead>Montant</TableHead>
-            <TableHead>Méthode</TableHead>
-            <TableHead>Délai (jours)</TableHead>
-            <TableHead>Progression</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Origine</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead><T k="auto.paymentcrud.date" fallback="Date" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.projet" fallback="Projet" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.contractant" fallback="Contractant" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.montant" fallback="Montant" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.methode" fallback="Méthode" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.delai_jours" fallback="Délai (jours)" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.progression" fallback="Progression" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.statut" fallback="Statut" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.origine" fallback="Origine" /></TableHead>
+            <TableHead><T k="auto.paymentcrud.actions" fallback="Actions" /></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredData.length === 0 ? (
-            <TableRow><TableCell colSpan={10} className="text-center">Aucun paiement enregistré</TableCell></TableRow>
+            <TableRow><TableCell colSpan={10} className="text-center"><T k="auto.paymentcrud.aucun_paiement_enregistre" fallback="Aucun paiement enregistré" /></TableCell></TableRow>
           ) : (
             filteredData.map((payment) => {
               const projectInfo = payment.projectId ? projectLabelMap.get(payment.projectId) : null;

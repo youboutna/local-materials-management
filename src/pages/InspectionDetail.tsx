@@ -16,6 +16,7 @@ import FieldInspectionExecutor from '@/components/inspections/FieldInspectionExe
 import InspectionPVGenerator from '@/components/inspections/InspectionPVGenerator';
 import { useQueryClient } from '@tanstack/react-query';
 import { AssociatedPaymentsPanel } from '@/components/common/AssociatedPaymentsPanel'; // ✅ Import ajouté
+import { T } from '@/components/i18n/T';
 
 const InspectionDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,7 +51,7 @@ const InspectionDetail = () => {
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8 pt-20">
           <div className="max-w-4xl mx-auto">
-            <p className="text-muted-foreground">Chargement...</p>
+            <p className="text-muted-foreground"><T k="auto.inspectiondetail.chargement" fallback="Chargement..." /></p>
           </div>
         </div>
       </div>
@@ -64,10 +65,10 @@ const InspectionDetail = () => {
           <div className="max-w-4xl mx-auto">
             <Card>
               <CardContent className="pt-6">
-                <p className="text-destructive">Erreur lors du chargement de l'inspection</p>
+                <p className="text-destructive"><T k="auto.inspectiondetail.erreur_lors_du_chargement_de_l_inspection" fallback="Erreur lors du chargement de l'inspection" /></p>
                 <Button onClick={() => navigate(-1)} className="mt-4">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Retour
+                  <T k="auto.inspectiondetail.retour" fallback="Retour" />
                 </Button>
               </CardContent>
             </Card>
@@ -108,18 +109,18 @@ const InspectionDetail = () => {
           <div className="mb-6 flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
+              <T k="auto.inspectiondetail.retour" fallback="Retour" />
             </Button>
             <div className="flex gap-2">
               {canExecute && (inspection.status === 'scheduled' || inspection.status === 'in_progress') && (
                 <Button variant="outline" onClick={() => setActiveTab('execution')}>
                   <Play className="h-4 w-4 mr-2" />
-                  Exécuter
+                  <T k="auto.inspectiondetail.executer" fallback="Exécuter" />
                 </Button>
               )}
               <Button onClick={() => navigate(`/inspections/${id}/edit`)}>
                 <Edit className="h-4 w-4 mr-2" />
-                Modifier
+                <T k="auto.inspectiondetail.modifier" fallback="Modifier" />
               </Button>
             </div>
           </div>
@@ -128,25 +129,25 @@ const InspectionDetail = () => {
             <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5 mb-6">
               <TabsTrigger value="details" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Détails
+                <T k="auto.inspectiondetail.details" fallback="Détails" />
               </TabsTrigger>
               {canExecute && (
                 <TabsTrigger value="execution" className="flex items-center gap-2">
                   <ClipboardList className="h-4 w-4" />
-                  Exécution Terrain
+                  <T k="auto.inspectiondetail.execution_terrain" fallback="Exécution Terrain" />
                 </TabsTrigger>
               )}
               <TabsTrigger value="pv" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Procès-Verbal
+                <T k="auto.inspectiondetail.proces_verbal" fallback="Procès-Verbal" />
               </TabsTrigger>
               <TabsTrigger value="payments" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Paiements
+                <T k="auto.inspectiondetail.paiements" fallback="Paiements" />
               </TabsTrigger>
               <TabsTrigger value="documents" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Documents
+                <T k="auto.inspectiondetail.documents" fallback="Documents" />
               </TabsTrigger>
             </TabsList>
 
@@ -159,7 +160,7 @@ const InspectionDetail = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-2xl mb-2">Détail de l'inspection</CardTitle>
+                      <CardTitle className="text-2xl mb-2"><T k="auto.inspectiondetail.detail_de_l_inspection" fallback="Détail de l'inspection" /></CardTitle>
                       <CardDescription>{projectTitle}</CardDescription>
                     </div>
                     {getStatusBadge(inspection.status)}
@@ -171,7 +172,7 @@ const InspectionDetail = () => {
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4 mr-2" />
-                        Date d'inspection
+                        <T k="auto.inspectiondetail.date_d_inspection" fallback="Date d'inspection" />
                       </div>
                       <p className="text-lg font-medium">
                         {format(new Date(inspection.date), 'PPP', { locale: fr })}
@@ -180,7 +181,7 @@ const InspectionDetail = () => {
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-muted-foreground">
                         <User className="h-4 w-4 mr-2" />
-                        Inspecteur
+                        <T k="auto.inspectiondetail.inspecteur" fallback="Inspecteur" />
                       </div>
                       <p className="text-lg font-medium">{inspection.inspector}</p>
                     </div>
@@ -188,7 +189,7 @@ const InspectionDetail = () => {
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-muted-foreground">
                           <TrendingUp className="h-4 w-4 mr-2" />
-                          Progression lors de l'inspection
+                          <T k="auto.inspectiondetail.progression_lors_de_l_inspection" fallback="Progression lors de l'inspection" />
                         </div>
                         <p className="text-lg font-medium">{inspection.progressAtInspection}%</p>
                       </div>
@@ -200,7 +201,7 @@ const InspectionDetail = () => {
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-muted-foreground">
                           <FileText className="h-4 w-4 mr-2" />
-                          Commentaires
+                          <T k="auto.inspectiondetail.commentaires" fallback="Commentaires" />
                         </div>
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">{inspection.comments}</p>
                       </div>
@@ -209,11 +210,11 @@ const InspectionDetail = () => {
                   <Separator />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                     <div>
-                      <span className="font-medium">Créé le:</span>{' '}
+                      <span className="font-medium"><T k="auto.inspectiondetail.cree_le" fallback="Créé le:" /></span>{' '}
                       {format(new Date(inspection.createdAt), 'PPP à HH:mm', { locale: fr })}
                     </div>
                     <div>
-                      <span className="font-medium">Modifié le:</span>{' '}
+                      <span className="font-medium"><T k="auto.inspectiondetail.modifie_le" fallback="Modifié le:" /></span>{' '}
                       {format(new Date(inspection.updatedAt), 'PPP à HH:mm', { locale: fr })}
                     </div>
                   </div>
@@ -222,14 +223,14 @@ const InspectionDetail = () => {
                     {inspection.projectId && (
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/projects/${inspection.projectId}`}>
-                          Projet <ExternalLink className="h-3 w-3 ml-1" />
+                          <T k="auto.inspectiondetail.projet" fallback="Projet" /> <ExternalLink className="h-3 w-3 ml-1" />
                         </Link>
                       </Button>
                     )}
                     {inspection.phaseId && inspection.projectId && (
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/projects/${inspection.projectId}/phases/${inspection.phaseId}`}>
-                          Phase <ExternalLink className="h-3 w-3 ml-1" />
+                          <T k="auto.inspectiondetail.phase" fallback="Phase" /> <ExternalLink className="h-3 w-3 ml-1" />
                         </Link>
                       </Button>
                     )}

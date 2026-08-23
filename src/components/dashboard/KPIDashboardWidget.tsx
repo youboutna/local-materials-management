@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { useKPIMetricsHex, CriticalAlert } from '@/hooks/hexagonal';
 import { formatNumber2, formatAmount2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
+import { T } from '@/components/i18n/T';
 
 interface KPIDashboardWidgetProps {
   onAlertClick?: (alert: CriticalAlert) => void;
@@ -92,7 +93,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Gauge className="h-5 w-5 text-primary" />
-            Indicateurs de Performance
+            <T k="auto.kpidashboardwidget.indicateurs_de_performance" fallback="Indicateurs de Performance" />
           </span>
           {kpiMetrics.criticalAlerts.length > 0 && (
             <Badge variant="destructive" className="animate-pulse">
@@ -108,7 +109,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           {/* SPI Card */}
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">SPI</span>
+              <span className="text-sm text-muted-foreground"><T k="auto.kpidashboardwidget.spi" fallback="SPI" /></span>
               {kpiMetrics.spi >= 1 ? (
                 <TrendingUp className="h-4 w-4 text-success" />
               ) : (
@@ -119,14 +120,14 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
               {formatRatio2(kpiMetrics.spi)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              Schedule Performance Index
+              <T k="auto.kpidashboardwidget.schedule_performance_index" fallback="Schedule Performance Index" />
             </div>
           </div>
 
           {/* CPI Card */}
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">CPI</span>
+              <span className="text-sm text-muted-foreground"><T k="auto.kpidashboardwidget.cpi" fallback="CPI" /></span>
               {kpiMetrics.cpi >= 1 ? (
                 <TrendingUp className="h-4 w-4 text-success" />
               ) : (
@@ -137,14 +138,14 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
               {formatRatio2(kpiMetrics.cpi)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              Cost Performance Index
+              <T k="auto.kpidashboardwidget.cost_performance_index" fallback="Cost Performance Index" />
             </div>
           </div>
         </div>
 
         {/* Project Status Summary */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">État des Projets</h4>
+          <h4 className="text-sm font-medium"><T k="auto.kpidashboardwidget.etat_des_projets" fallback="État des Projets" /></h4>
           <div className="flex gap-2">
             <Badge variant="outline" className="bg-success-soft text-success border-success/30 flex-1 justify-center py-2">
               <CheckCircle className="h-3 w-3 mr-1" />
@@ -163,7 +164,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
 
         {/* Milestones Summary */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Jalons</h4>
+          <h4 className="text-sm font-medium"><T k="auto.kpidashboardwidget.jalons" fallback="Jalons" /></h4>
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <Progress 
@@ -188,7 +189,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           <div className="space-y-2">
             <h4 className="text-sm font-medium flex items-center gap-2">
               <Bell className="h-4 w-4 text-destructive" />
-              Alertes Critiques
+              <T k="auto.kpidashboardwidget.alertes_critiques" fallback="Alertes Critiques" />
             </h4>
             <div className="space-y-2">
               {kpiMetrics.criticalAlerts.map((alert) => (
@@ -220,7 +221,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
         {!compact && (
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium">Budget Global</span>
+              <span className="text-sm font-medium"><T k="auto.kpidashboardwidget.budget_global" fallback="Budget Global" /></span>
               <span className="text-xs text-muted-foreground">
                 {formatPercent2((kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100)} consommé
               </span>
@@ -231,11 +232,11 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             />
             <div className="flex justify-between text-sm">
               <div>
-                <span className="text-muted-foreground">Dépensé: </span>
+                <span className="text-muted-foreground"><T k="auto.kpidashboardwidget.depense" fallback="Dépensé:" /> </span>
                 <span className="font-medium">{formatNumber2(kpiMetrics.totalSpent / 1000000)}M</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Budget: </span>
+                <span className="text-muted-foreground"><T k="auto.kpidashboardwidget.budget" fallback="Budget:" /> </span>
                 <span className="font-medium">{formatNumber2(kpiMetrics.totalBudget / 1000000)}M</span>
               </div>
             </div>

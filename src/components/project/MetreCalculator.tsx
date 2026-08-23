@@ -16,6 +16,7 @@ import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqServi
 import { getUnitOptions, METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // Local Material interface for UI usage
 interface LocalMaterial {
   id: string;
@@ -280,7 +281,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
         <CardTitle className="flex items-center gap-2 text-primary">
           <Calculator className="h-5 w-5" />
-          Calcul des métrés
+          <T k="auto.metrecalculator.calcul_des_metres" fallback="Calcul des métrés" />
         </CardTitle>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div>
@@ -297,29 +298,29 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
       <CardContent className="space-y-6 pt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-            <TabsTrigger value="automatic">Calcul automatique</TabsTrigger>
-            <TabsTrigger value="manual">Calcul manuel</TabsTrigger>
+            <TabsTrigger value="automatic"><T k="auto.metrecalculator.calcul_automatique" fallback="Calcul automatique" /></TabsTrigger>
+            <TabsTrigger value="manual"><T k="auto.metrecalculator.calcul_manuel" fallback="Calcul manuel" /></TabsTrigger>
           </TabsList>
 
           <TabsContent value="automatic" className="space-y-4">
             <div className="bg-primary/10 p-4 rounded-lg">
-              <h3 className="font-medium text-primary mb-2">Calcul automatique des métrés</h3>
+              <h3 className="font-medium text-primary mb-2"><T k="auto.metrecalculator.calcul_automatique_des_metres" fallback="Calcul automatique des métrés" /></h3>
               <p className="text-sm text-primary mb-4">
                 Les métrés seront calculés automatiquement en fonction des matériaux du projet et de leurs catégories.
               </p>
               <Button onClick={generateAutomaticCalculations} className="bg-blue-600 hover:bg-blue-700">
                 <Calculator className="mr-2 h-4 w-4" />
-                Générer les calculs automatiques
+                <T k="auto.metrecalculator.generer_les_calculs_automatiques" fallback="Générer les calculs automatiques" />
               </Button>
             </div>
           </TabsContent>
 
           <TabsContent value="manual" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="font-medium">Calculs manuels</h3>
+              <h3 className="font-medium"><T k="auto.metrecalculator.calculs_manuels" fallback="Calculs manuels" /></h3>
               <Button onClick={addNewCalculation} variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
-                Ajouter un calcul
+                <T k="auto.metrecalculator.ajouter_un_calcul" fallback="Ajouter un calcul" />
               </Button>
             </div>
           </TabsContent>
@@ -328,14 +329,14 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
         {/* Calculations List */}
         {calculations.length > 0 && (
           <div className="space-y-4">
-            <h4 className="font-medium">Calculs de métré</h4>
+            <h4 className="font-medium"><T k="auto.metrecalculator.calculs_de_metre" fallback="Calculs de métré" /></h4>
             {calculations.map((calc, index) => (
               <Card key={index} className="border border-border">
                 <CardContent className="p-4 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Material Selection */}
                     <div className="space-y-2">
-                      <Label>Matériau</Label>
+                      <Label><T k="auto.metrecalculator.materiau" fallback="Matériau" /></Label>
                       <Select
                         value={calc.materialId}
                         onValueChange={(value) => updateCalculation(index, 'materialId', value)}
@@ -355,7 +356,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
                     {/* Element Type */}
                     <div className="space-y-2">
-                      <Label>Type d'élément</Label>
+                      <Label><T k="auto.metrecalculator.type_d_element" fallback="Type d'élément" /></Label>
                       <Select
                         value={calc.elementType}
                         onValueChange={(value) => updateCalculation(index, 'elementType', value)}
@@ -375,7 +376,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
                     {/* Unit */}
                     <div className="space-y-2">
-                      <Label>Unité</Label>
+                      <Label><T k="auto.metrecalculator.unite" fallback="Unité" /></Label>
                       <Select
                         value={calc.unit}
                         onValueChange={(value) => updateCalculation(index, 'unit', value as 'm³' | 'm²' | 'm' | 'unité')}
@@ -410,7 +411,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                   {/* Dimensions */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
-                      <Label>Longueur (m)</Label>
+                      <Label><T k="auto.metrecalculator.longueur_m" fallback="Longueur (m)" /></Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -421,7 +422,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                     
                     {calc.unit !== 'm' && calc.unit !== 'unité' && (
                       <div className="space-y-2">
-                        <Label>Largeur (m)</Label>
+                        <Label><T k="auto.metrecalculator.largeur_m" fallback="Largeur (m)" /></Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -433,7 +434,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                     
                     {calc.unit === 'm³' && (
                       <div className="space-y-2">
-                        <Label>Hauteur (m)</Label>
+                        <Label><T k="auto.metrecalculator.hauteur_m" fallback="Hauteur (m)" /></Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -444,7 +445,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                     )}
 
                     <div className="space-y-2">
-                      <Label>Quantité calculée</Label>
+                      <Label><T k="auto.metrecalculator.quantite_calculee" fallback="Quantité calculée" /></Label>
                       <Input
                         type="number"
                         value={calc.quantity.toFixed(2)}
@@ -456,7 +457,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
 
                   {/* Note */}
                   <div className="space-y-2">
-                    <Label>Note (optionnel)</Label>
+                    <Label><T k="auto.metrecalculator.note_optionnel" fallback="Note (optionnel)" /></Label>
                     <Input
                       value={calc.note || ''}
                       onChange={(e) => updateCalculation(index, 'note', e.target.value)}
@@ -473,7 +474,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                           const cost = material ? calc.quantity * material.price_per_unit : 0;
                           return (
                             <>
-                              <span className="font-medium">Coût estimé: </span>
+                              <span className="font-medium"><T k="auto.metrecalculator.cout_estime" fallback="Coût estimé:" /> </span>
                               {cost.toLocaleString('fr-FR')} MRU
                               {material && (
                                 <span className="text-success ml-2">

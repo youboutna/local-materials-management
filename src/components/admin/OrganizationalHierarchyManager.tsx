@@ -15,6 +15,7 @@ import React, { useState } from 'react';
 
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface OrganizationTemplate {
   id: string;
   name: string;
@@ -311,9 +312,9 @@ const OrganizationalHierarchyManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Gestion de l'Organigramme</h2>
+          <h2 className="text-2xl font-bold"><T k="auto.organizationalhierarchymanager.gestion_de_l_organigramme" fallback="Gestion de l'Organigramme" /></h2>
           <p className="text-muted-foreground">
-            Configurez la structure organisationnelle de votre entreprise
+            <T k="auto.organizationalhierarchymanager.configurez_la_structure_organisationnelle_de_vot" fallback="Configurez la structure organisationnelle de votre entreprise" />
           </p>
         </div>
         <Button onClick={handleSaveTemplate} disabled={isSaving} className="flex items-center gap-2">
@@ -328,10 +329,10 @@ const OrganizationalHierarchyManager: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Ajouter une Position
+              <T k="auto.organizationalhierarchymanager.ajouter_une_position" fallback="Ajouter une Position" />
             </CardTitle>
             <CardDescription>
-              Définissez un nouveau poste dans l'organigramme
+              <T k="auto.organizationalhierarchymanager.definissez_un_nouveau_poste_dans_l_organigramme" fallback="Définissez un nouveau poste dans l'organigramme" />
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -374,7 +375,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="level">Niveau hiérarchique</Label>
+                <Label htmlFor="level"><T k="auto.organizationalhierarchymanager.niveau_hierarchique" fallback="Niveau hiérarchique" /></Label>
                 <Select
                   value={newPosition.level.toString()}
                   onValueChange={(value) => setNewPosition(prev => ({ ...prev, level: parseInt(value) }))}
@@ -393,7 +394,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="parent">Supérieur hiérarchique</Label>
+              <Label htmlFor="parent"><T k="auto.organizationalhierarchymanager.superieur_hierarchique" fallback="Supérieur hiérarchique" /></Label>
               <Select
                 value={newPosition.parent}
                 onValueChange={(value) => setNewPosition(prev => ({ ...prev, parent: value }))}
@@ -410,7 +411,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Autorisations</Label>
+              <Label><T k="auto.organizationalhierarchymanager.autorisations" fallback="Autorisations" /></Label>
               <div className="flex flex-wrap gap-2">
                 <label className="flex items-center space-x-2 text-sm">
                   <input
@@ -421,7 +422,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                       permissions: { ...prev.permissions, can_approve_projects: e.target.checked }
                     }))}
                   />
-                  <span>Approuver projets</span>
+                  <span><T k="auto.organizationalhierarchymanager.approuver_projets" fallback="Approuver projets" /></span>
                 </label>
                 <label className="flex items-center space-x-2 text-sm">
                   <input
@@ -432,7 +433,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                       permissions: { ...prev.permissions, can_approve_payments: e.target.checked }
                     }))}
                   />
-                  <span>Approuver paiements</span>
+                  <span><T k="auto.organizationalhierarchymanager.approuver_paiements" fallback="Approuver paiements" /></span>
                 </label>
                 <label className="flex items-center space-x-2 text-sm">
                   <input
@@ -443,14 +444,14 @@ const OrganizationalHierarchyManager: React.FC = () => {
                       permissions: { ...prev.permissions, can_escalate_to_director: e.target.checked }
                     }))}
                   />
-                  <span>Escalader au directeur</span>
+                  <span><T k="auto.organizationalhierarchymanager.escalader_au_directeur" fallback="Escalader au directeur" /></span>
                 </label>
               </div>
             </div>
 
             <Button onClick={handleAddPosition} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter la Position
+              <T k="auto.organizationalhierarchymanager.ajouter_la_position" fallback="Ajouter la Position" />
             </Button>
           </CardContent>
         </Card>
@@ -460,7 +461,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Structure Actuelle
+              <T k="auto.organizationalhierarchymanager.structure_actuelle" fallback="Structure Actuelle" />
             </CardTitle>
             <CardDescription>
               {template.positions.length} positions définies
@@ -483,13 +484,13 @@ const OrganizationalHierarchyManager: React.FC = () => {
                     </div>
                     <div className="flex gap-1 mt-1">
                       {position.permissions.can_approve_projects && (
-                        <Badge variant="outline" className="text-xs">Projets</Badge>
+                        <Badge variant="outline" className="text-xs"><T k="auto.organizationalhierarchymanager.projets" fallback="Projets" /></Badge>
                       )}
                       {position.permissions.can_approve_payments && (
-                        <Badge variant="outline" className="text-xs">Paiements</Badge>
+                        <Badge variant="outline" className="text-xs"><T k="auto.organizationalhierarchymanager.paiements" fallback="Paiements" /></Badge>
                       )}
                       {position.permissions.can_escalate_to_director && (
-                        <Badge variant="outline" className="text-xs">Escalade</Badge>
+                        <Badge variant="outline" className="text-xs"><T k="auto.organizationalhierarchymanager.escalade" fallback="Escalade" /></Badge>
                       )}
                     </div>
                   </div>

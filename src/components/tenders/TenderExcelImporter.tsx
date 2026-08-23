@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/hexagonal';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { T } from '@/components/i18n/T';
 
 interface ImportedTender {
   ordre: number;
@@ -267,7 +268,7 @@ const TenderExcelImporter: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
-            Import Excel des Appels d'Offres
+            <T k="auto.tenderexcelimporter.import_excel_des_appels_d_offres" fallback="Import Excel des Appels d'Offres" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -286,14 +287,14 @@ const TenderExcelImporter: React.FC = () => {
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
-              Télécharger Template
+              <T k="auto.tenderexcelimporter.telecharger_template" fallback="Télécharger Template" />
             </Button>
           </div>
 
           {file && (
             <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
               <p className="text-sm text-primary">
-                <strong>Fichier sélectionné:</strong> {file.name}
+                <strong><T k="auto.tenderexcelimporter.fichier_selectionne" fallback="Fichier sélectionné:" /></strong> {file.name}
               </p>
             </div>
           )}
@@ -324,10 +325,10 @@ const TenderExcelImporter: React.FC = () => {
                       <div className="flex-1">
                         <h4 className="font-medium text-sm">{item.ordre}. {item.objet}</h4>
                         <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-muted-foreground">
-                          <span><strong>Type:</strong> {item.type_contrat}</span>
-                          <span><strong>Mode:</strong> {item.mode_selection}</span>
-                          <span><strong>Lancement:</strong> {item.date_lancement}</span>
-                          <span><strong>Attribution:</strong> {item.date_attribution}</span>
+                          <span><strong><T k="auto.tenderexcelimporter.type" fallback="Type:" /></strong> {item.type_contrat}</span>
+                          <span><strong><T k="auto.tenderexcelimporter.mode" fallback="Mode:" /></strong> {item.mode_selection}</span>
+                          <span><strong><T k="auto.tenderexcelimporter.lancement" fallback="Lancement:" /></strong> {item.date_lancement}</span>
+                          <span><strong><T k="auto.tenderexcelimporter.attribution" fallback="Attribution:" /></strong> {item.date_attribution}</span>
                         </div>
                       </div>
                       <Badge variant="outline" className="text-xs">
@@ -363,21 +364,21 @@ const TenderExcelImporter: React.FC = () => {
             <div className="grid grid-cols-3 gap-4 text-center mb-4">
               <div>
                 <div className="text-2xl font-bold text-success">{importResults.success}</div>
-                <div className="text-sm text-muted-foreground">Succès</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.tenderexcelimporter.succes" fallback="Succès" /></div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-destructive">{importResults.errors}</div>
-                <div className="text-sm text-muted-foreground">Erreurs</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.tenderexcelimporter.erreurs" fallback="Erreurs" /></div>
               </div>
               <div>
                 <div className="text-2xl font-bold">{importResults.total}</div>
-                <div className="text-sm text-muted-foreground">Total</div>
+                <div className="text-sm text-muted-foreground"><T k="auto.tenderexcelimporter.total" fallback="Total" /></div>
               </div>
             </div>
             
             {importResults.errorMessages.length > 0 && (
               <div className="mt-4">
-                <h4 className="font-medium text-sm mb-2">Détails des erreurs:</h4>
+                <h4 className="font-medium text-sm mb-2"><T k="auto.tenderexcelimporter.details_des_erreurs" fallback="Détails des erreurs:" /></h4>
                 <div className="max-h-32 overflow-auto bg-destructive/10 border border-destructive/30 rounded p-2">
                   {importResults.errorMessages.map((error, index) => (
                     <div key={index} className="text-xs text-destructive mb-1">
