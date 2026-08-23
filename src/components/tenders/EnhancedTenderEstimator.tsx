@@ -110,7 +110,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         unit: item.unit,
         quantity: item.estimatedQuantity || 1,
         unitPrice: item.estimatedUnitPrice,
-        vatRate: 0.2,
+        vatRate: (BOQ_FISCAL_PROFILES[template.fiscalProfileCode] ?? BOQ_FISCAL_PROFILES.MR_STANDARD).vatRate,
       })),
     );
     setActiveTab('devis');

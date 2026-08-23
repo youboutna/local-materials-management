@@ -45,8 +45,10 @@ import { ProjectStakeholderService, getProjectStakeholderService} from '@/applic
 import { useProjectHierarchy } from '@/hooks/useProjectHierarchy';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useProjectPhasesHex } from '@/hooks/hexagonal/useProjectPhasesHex';
+import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
+import { usePhaseCountsHex } from '@/hooks/hexagonal/usePhaseCountsHex';
+import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 
 interface Phase {
   id: string;
@@ -103,39 +105,37 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
   
   const { hierarchy, loading: hierarchyLoading } = useProjectHierarchy(projectId);
 
-  // Load phases data
-  const { data: phases, isLoading, refetch } = useQuery({
-    queryKey: ['project-phases', projectId],
-    queryFn: async (): Promise<Phase[]> => {
-      const { data, error } = await btpClient.from('project_phases')
-        .select(`
-          *,
-          documents_count:documents(count),
-          tasks_count:tasks(count),
-          inspections_count:inspections(count),
-          payments_count:payments(count)
-        `)
-        .eq('project_id', projectId)
-        .order('start_date', { ascending: true });
+  // Load phases data via hexagonal hooks (no direct Supabase access)
+  const { phases: rawPhases, isLoading, refetch: refetchPhases } = useProjectPhasesHex(projectId);
+  const { updatePhase } = usePhasesHex(projectId);
+  const { getCounts } = usePhaseCountsHex(projectId);
 
-      if (error) throw error;
-      
-      return (data || []).filter(phase => phase.id).map(phase => ({
-        ...phase,
-        id: phase.id!,
-        name: phase.phase_name || '',
-        status: phase.status || 'planned',
-        documents_count: Array.isArray(phase.documents_count) ? phase.documents_count?.[0]?.count || 0 : 0,
-        tasks_count: Array.isArray(phase.tasks_count) ? phase.tasks_count?.[0]?.count || 0 : 0,
-        inspections_count: Array.isArray(phase.inspections_count) ? phase.inspections_count?.[0]?.count || 0 : 0,
-        payments_count: Array.isArray(phase.payments_count) ? phase.payments_count?.[0]?.count || 0 : 0,
-        location: (phase as any).location || null,
-        stakeholders: [],
-        team_delegation: (phase as any).team_delegation || {},
-      })) as Phase[];
-    },
-    enabled: !!projectId && projectId !== 'new-project',
-  });
+  const phases: Phase[] = React.useMemo(() => {
+    return [...rawPhases]
+      .sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''))
+      .map((p) => {
+        const counts = getCounts(p.id);
+        const customData = (p.custom_phase_data || {}) as { team_delegation?: TeamDelegation; location?: any };
+        return {
+          id: p.id,
+          phase_name: p.phaseName || p.name || '',
+          description: p.description,
+          start_date: p.start_date,
+          end_date: p.end_date,
+          status: p.status || 'planned',
+          progress: p.progress,
+          documents_count: counts.documents,
+          tasks_count: counts.tasks,
+          inspections_count: counts.inspections,
+          payments_count: counts.payments,
+          location: customData.location || null,
+          stakeholders: [],
+          team_delegation: customData.team_delegation || {},
+        } as Phase;
+      });
+  }, [rawPhases, getCounts]);
+
+  const refetch = refetchPhases;
 
   // Load stakeholders for the project
   const stakeholderService = React.useMemo(() => getProjectStakeholderService(), []);
@@ -147,19 +147,8 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
     enabled: !!projectId && projectId !== 'new-project',
   });
 
-  // Load employees for selectors
-  const { data: employees } = useQuery({
-    queryKey: ['employees'],
-    queryFn: async () => {
-      const { data, error } = await btpClient.from('employees')
-        .select('*')
-        .eq('is_active', true)
-        .order('full_name');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Load employees for selectors via hexagonal hook
+  const { data: employees } = useActiveEmployeesHex();
 
   // Load stakeholders when selected phase changes
   useEffect(() => {
@@ -200,11 +189,10 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
     if (!selectedPhase) return;
 
     try {
-      const { error } = await btpClient.from('project_phases')
-        .update({ custom_phase_data: { team_delegation: teamDelegation } } as any)
-        .eq('id', selectedPhase.id);
-
-      if (error) throw error;
+      const ok = await updatePhase(selectedPhase.id, {
+        custom_phase_data: { team_delegation: teamDelegation },
+      });
+      if (!ok) throw new Error('Update failed');
 
       // Update stakeholders using service instance
       for (const s of stakeholders.filter(s => s.stakeholder_entity_type === 'supplier')) {
@@ -238,11 +226,10 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
     if (!selectedPhase) return;
 
     try {
-      const { error } = await btpClient.from('project_phases')
-        .update({ custom_phase_data: { location: phaseLocation } } as any)
-        .eq('id', selectedPhase.id);
-
-      if (error) throw error;
+      const ok = await updatePhase(selectedPhase.id, {
+        custom_phase_data: { location: phaseLocation },
+      });
+      if (!ok) throw new Error('Update failed');
 
       toast({
         title: "Localisation sauvegardée",
@@ -470,7 +457,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
-                          <Users className="h-5 w-5 text-purple-500" />
+                          <Users className="h-5 w-5 text-accent-foreground" />
                           <div>
                             <p className="text-2xl font-bold">{stakeholders.length}</p>
                             <p className="text-sm text-muted-foreground">Parties prenantes</p>
