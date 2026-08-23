@@ -29,7 +29,6 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { getOrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { TranslatedDepartment, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
-import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 
 const NONE = '__none__';
 

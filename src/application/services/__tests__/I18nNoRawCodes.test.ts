@@ -23,7 +23,10 @@ const stripNonRendered = (source: string): string =>
   source
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:])\/\/.*$/gm, '$1')
-    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+    // Chaînes techniques (toasts, logs, messages d'erreur) : hors rendu de code métier.
+    .replace(/`[^`]*`/g, '``')
+    .replace(/\{\s*fieldErrors\.[\w$?.]+\s*\}/g, '{}');
 
 const files = listTsx(ROOT);
 
