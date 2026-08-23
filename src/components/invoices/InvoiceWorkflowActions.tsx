@@ -31,7 +31,7 @@ import { InvoiceGenerationService } from '@/application/services/invoice/Invoice
 import { InvoiceBudgetGuardService } from '@/application/services/invoice/InvoiceBudgetGuardService';
 import { InvoiceDeviationService } from '@/application/services/invoice/InvoiceDeviationService';
 import { InvoiceLifecycleTimeline } from './InvoiceLifecycleTimeline';
-import { DeviationBadges } from '@/components/common/DeviationBadges';
+import DeviationBadges from '@/components/common/DeviationBadges';
 import {
   getInvoiceDocumentType,
   type InvoiceActor,
