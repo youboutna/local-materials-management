@@ -1,6 +1,6 @@
 /**
  * EvaluationQuestionnaire
- * Questionnaire d'évaluation d'offre piloté par référentiel (critères pondérés).
+ * Questionnaire d'auto.evaluationquestionnaire.evaluation_d'offre piloté par référentiel (critères pondérés).
  * Réutilisable : soumissions d'appel d'offres, pré-qualification fournisseur, audit conformité.
  *
  * Le composant est purement présentationnel : il calcule les scores via le référentiel

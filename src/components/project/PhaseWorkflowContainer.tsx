@@ -73,7 +73,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
       }
     } catch (err) {
       console.error('Erreur scheduleInspection', err);
-      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: 'Impossible de programmer l\'inspection', variant: 'destructive' });
+      toast({ title: t('auto.phaseworkflowcontainer.erreur'), description: t('auto.phaseworkflowcontainer.impossible_de_programmer_l')inspection', variant: 'destructive' });
     }
   };
 
@@ -99,7 +99,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
           amount: decompte.netPayable,
           paymentDate: new Date().toISOString(),
           paymentMethod: 'manual',
-          contractorName: rawPhaseData?.contractor_name || 'Contractor',
+          contractorName: rawPhaseData?.contractor_name || t('auto.phaseworkflowcontainer.contractor'),
           contractorContact: rawPhaseData?.contractor_contact || '',
         },
       });
@@ -123,7 +123,7 @@ const PhaseWorkflowContainer: React.FC<PhaseWorkflowContainerProps> = ({
     try {
       const pvResult = await generatePVPDF({
         title: `PV - ${rawPhaseData.phase_name}`,
-        phaseName: rawPhaseData.phase_name || 'Phase',
+        phaseName: rawPhaseData.phase_name || t('auto.phaseworkflowcontainer.phase'),
         decompte: { netPayable: 0, payablePercentage: rawPhaseData.progress || 0 },
         autoSave: false,
       });

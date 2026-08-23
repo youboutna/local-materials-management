@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import ProjectDocumentUpload from '../ProjectDocumentUpload';
 
@@ -14,12 +15,13 @@ const StakeholderDocumentUpload = ({
   stakeholderName, 
   onDocumentUploaded 
 }: StakeholderDocumentUploadProps) => {
+  const { t } = useLanguage();
   return (
     <ProjectDocumentUpload
       projectId={projectId}
       stakeholderId={stakeholderId}
       context="stakeholder"
-      contextLabel={stakeholderName ? `Partie prenante: ${stakeholderName}` : 'Documents partie prenante'}
+      contextLabel={stakeholderName ? `Partie prenante: ${stakeholderName}` : t('auto.stakeholderdocumentupload.documents_partie_prenante')}
       onDocumentUploaded={onDocumentUploaded}
     />
   );

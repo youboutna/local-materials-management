@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * EnhancedScheduleInspectionModal - Modal amélioré avec workflow multi-étapes
  * Supporte deux modes: 'request' (demande) et 'schedule' (programmation)
@@ -56,6 +57,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
   mode = 'schedule',
   onSuccess,
 }) => {
+  const { t } = useLanguage();
   // Workflow state
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('type');
   const [inspectionType, setInspectionType] = useState<string>('');
@@ -115,7 +117,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
   // Submit inspection
   const handleSubmit = async () => {
     if (!details || !inspectionType) {
-      toast.error('Données manquantes');
+      toast.error(t('auto.enhancedscheduleinspectionmodal.donnees_manquantes'));
       return;
     }
 
@@ -137,7 +139,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
             notes: details.requirements,
           });
 
-          toast.success('Demande d\'inspection soumise avec succès');
+          toast.success(t('auto.enhancedscheduleinspectionmodal.demande_d')inspection soumise avec succès');
           handleOpenChange(false);
           onSuccess?.();
         } catch (err) {
@@ -154,7 +156,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
             notes: details.requirements,
           });
 
-          toast.success('Inspection programmée avec succès');
+          toast.success(t('auto.enhancedscheduleinspectionmodal.inspection_programmee_avec_succes'));
           handleOpenChange(false);
           onSuccess?.();
         } catch (err) {
@@ -163,7 +165,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
       }
     } catch (error) {
       console.error('Error submitting inspection:', error);
-      toast.error((error as Error).message || 'Erreur lors de la soumission');
+      toast.error((error as Error).message || t('auto.enhancedscheduleinspectionmodal.erreur_lors_de_la_soumission'));
     } finally {
       setIsSubmitting(false);
     }
@@ -186,7 +188,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
             )}
             <div>
               <DialogTitle className="flex items-center gap-2">
-                {mode === 'request' ? 'Demander une Inspection' : 'Programmer une Inspection'}
+                {mode === 'request' ? t('auto.enhancedscheduleinspectionmodal.demander_une_inspection') : t('auto.enhancedscheduleinspectionmodal.programmer_une_inspection')}
               </DialogTitle>
               <DialogDescription className="mt-1">
                 {projectName && <span className="font-medium">{projectName}</span>}

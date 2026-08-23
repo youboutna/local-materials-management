@@ -65,10 +65,10 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
         value: status, 
-        label: status === 'active' ? 'Actif' :
-               status === 'inactive' ? 'Inactif' :
-               status === 'pending' ? 'En attente' :
-               status === 'blocked' ? 'Bloqué' : status
+        label: status === 'active' ? t('auto.supplierfilters.actif') :
+               status === 'inactive' ? t('auto.supplierfilters.inactif') :
+               status === 'pending' ? t('auto.supplierfilters.en_attente') :
+               status === 'blocked' ? t('auto.supplierfilters.bloque') : status
       }))
     },
     {

@@ -28,9 +28,9 @@ class NetworkErrorBoundary extends Component<Props, State> {
     // Détecter les erreurs de réseau
     const isNetworkError = 
       error.message.includes('fetch') ||
-      error.message.includes('Network') ||
+      error.message.includes('auto.networkerrorboundary.network') ||
       error.message.includes('connection') ||
-      error.name === 'NetworkError';
+      error.name === 'auto.networkerrorboundary.networkerror';
 
     return {
       hasError: true,

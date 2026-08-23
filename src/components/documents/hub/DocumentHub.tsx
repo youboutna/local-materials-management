@@ -113,7 +113,7 @@ export function DocumentHub({ contract, heading, className }: Props) {
       await contract.onDelete(item);
       toast({ title: t('auto.documenthub.document_supprime') });
     } catch (err: any) {
-      toast({ title: t('auto.documenthub.erreur'), description: err?.message ?? 'Suppression impossible', variant: 'destructive' });
+      toast({ title: t('auto.documenthub.erreur'), description: err?.message ?? t('auto.documenthub.suppression_impossible'), variant: 'destructive' });
     }
   };
 
@@ -152,11 +152,11 @@ export function DocumentHub({ contract, heading, className }: Props) {
             </div>
           ) : filtered.length === 0 ? (
             <DocumentHubEmpty
-              title={rawItems.length === 0 ? 'Aucun document' : 'Aucun résultat'}
+              title={rawItems.length === 0 ? t('auto.documenthub.aucun_document') : t('auto.documenthub.aucun_resultat')}
               description={
                 rawItems.length === 0
                   ? `Ajoutez le premier document à ${contract.scopeLabel.toLowerCase()}.`
-                  : 'Ajustez les filtres ou la recherche.'
+                  : t('auto.documenthub.ajustez_les_filtres_ou_la_recherche')
               }
               canUpload={contract.canUpload && rawItems.length === 0}
               onUploadClick={() => setUploadOpen(true)}

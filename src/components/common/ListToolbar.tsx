@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * ListToolbar
  * Barre d'outils partagée (recherche libre + filtres rapides) pour les listes
@@ -13,10 +14,10 @@ import { ExpiryFilter } from '@/lib/expiryUx';
 import { cn } from '@/lib/utils';
 
 const EXPIRY_FILTERS: { value: ExpiryFilter; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'active', label: 'Actifs' },
-  { value: 'expiring', label: 'Expire bientôt' },
-  { value: 'expired', label: 'Expirés' },
+  { value: 'all', label: 'auto.listtoolbar.tous' },
+  { value: 'active', label: 'auto.listtoolbar.actifs' },
+  { value: 'expiring', label: 'auto.listtoolbar.expire_bientot' },
+  { value: 'expired', label: 'auto.listtoolbar.expires' },
 ];
 
 interface ListToolbarProps {
@@ -32,9 +33,10 @@ interface ListToolbarProps {
 }
 
 export function ListToolbar({
+  const { t } = useLanguage();
   search,
   onSearchChange,
-  searchPlaceholder = 'Rechercher…',
+  searchPlaceholder = t('auto.listtoolbar.rechercher'),
   expiryFilter,
   onExpiryFilterChange,
   children,

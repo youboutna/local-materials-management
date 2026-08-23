@@ -20,13 +20,13 @@ export interface OfficialWorkflowStep {
 export const OFFICIAL_WORKFLOW_STEPS: OfficialWorkflowStep[] = [
   {
     id: 1,
-    title: "Planification des achats",
+    title: 'auto.officialworkflowsteps.planification_des_achats',
     description: "Élaboration du Plan Annuel d'Achats (PAA) et du Plan de Passation des Marchés (PPM)",
     requiredDocuments: [
       "Plan Annuel d'Achats (PAA)",
-      "Plan de Passation des Marchés (PPM)",
-      "Estimation des ressources financières",
-      "Définition des modalités de planification"
+      'auto.officialworkflowsteps.plan_de_passation_des_marches_ppm',
+      'auto.officialworkflowsteps.estimation_des_ressources_financieres',
+      'auto.officialworkflowsteps.definition_des_modalites_de_planification'
     ],
     estimatedDuration: 30,
     category: 'planning'
@@ -34,12 +34,12 @@ export const OFFICIAL_WORKFLOW_STEPS: OfficialWorkflowStep[] = [
   {
     id: 2,
     title: "Publicité et appel d'offres",
-    description: "Publication des avis selon les procédures formalisées ou adaptées",
+    description: 'auto.officialworkflowsteps.publication_des_avis_selon_les_procedures_formal',
     requiredDocuments: [
       "Avis d'appel d'offres",
       "Dossier d'appel d'offres",
-      "Cahier des charges",
-      "Publication au Portail National des Marchés Publics",
+      'auto.officialworkflowsteps.cahier_des_charges',
+      'auto.officialworkflowsteps.publication_au_portail_national_des_marches_publ',
       "Publication dans les journaux d'annonces légales"
     ],
     estimatedDuration: 45,
@@ -47,13 +47,13 @@ export const OFFICIAL_WORKFLOW_STEPS: OfficialWorkflowStep[] = [
   },
   {
     id: 3,
-    title: "Réception et analyse des offres",
-    description: "Analyse des offres par la Commission de Passation des Marchés Publics (CPMP)",
+    title: 'auto.officialworkflowsteps.reception_et_analyse_des_offres',
+    description: 'auto.officialworkflowsteps.analyse_des_offres_par_la_commission_de_passatio',
     requiredDocuments: [
-      "Dossiers techniques des candidats",
+      'auto.officialworkflowsteps.dossiers_techniques_des_candidats',
       "Rapport d'analyse de la CPMP",
       "Procès-verbal d'ouverture des plis",
-      "Évaluation de conformité des offres",
+      'auto.officialworkflowsteps.evaluation_de_conformite_des_offres',
       "Rapport de la sous-commission d'analyse"
     ],
     estimatedDuration: 30,
@@ -61,27 +61,27 @@ export const OFFICIAL_WORKFLOW_STEPS: OfficialWorkflowStep[] = [
   },
   {
     id: 4,
-    title: "Attribution du marché",
+    title: 'auto.officialworkflowsteps.attribution_du_marche',
     description: "Attribution au soumissionnaire présentant l'offre économiquement la plus avantageuse",
     requiredDocuments: [
       "Rapport d'attribution",
       "Décision d'attribution",
       "Avis d'attribution",
-      "Contrat de marché",
-      "Garanties bancaires"
+      'auto.officialworkflowsteps.contrat_de_marche',
+      'auto.officialworkflowsteps.garanties_bancaires'
     ],
     estimatedDuration: 15,
     category: 'attribution'
   },
   {
     id: 5,
-    title: "Contrôle et régulation",
+    title: 'auto.officialworkflowsteps.controle_et_regulation',
     description: "Contrôle par la CNCMP et régulation par l'ARMP",
     requiredDocuments: [
-      "Rapport de contrôle CNCMP",
-      "Certificat de régularité",
+      'auto.officialworkflowsteps.rapport_de_controle_cncmp',
+      'auto.officialworkflowsteps.certificat_de_regularite',
       "Rapport d'audit",
-      "Procès-verbal de réception",
+      'auto.officialworkflowsteps.proces_verbal_de_reception',
       "Rapport final d'exécution"
     ],
     estimatedDuration: 20,

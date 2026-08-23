@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import ProjectDocumentUpload from '../ProjectDocumentUpload';
 
@@ -16,13 +17,14 @@ const StepDocumentUpload = ({
   stepTitle, 
   onDocumentUploaded 
 }: StepDocumentUploadProps) => {
+  const { t } = useLanguage();
   return (
     <ProjectDocumentUpload
       projectId={projectId}
       phaseId={phaseId}
       stepId={stepId}
       context="step"
-      contextLabel={stepTitle ? `Étape: ${stepTitle}` : 'Documents d\'étape'}
+      contextLabel={stepTitle ? `Étape: ${stepTitle}` : t('auto.stepdocumentupload.documents_d')étape'}
       onDocumentUploaded={onDocumentUploaded}
     />
   );

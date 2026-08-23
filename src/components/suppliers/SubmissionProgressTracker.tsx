@@ -78,10 +78,10 @@ export function SubmissionProgressTracker({
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium">
             {currentStep === 'completed' 
-              ? 'Soumission complétée' 
+              ? t('auto.submissionprogresstracker.soumission_completee') 
               : currentStep === 'error'
-              ? 'Erreur lors de la soumission'
-              : 'Soumission en cours...'}
+              ? t('auto.submissionprogresstracker.erreur_lors_de_la_soumission')
+              : t('auto.submissionprogresstracker.soumission_en_cours')}
           </span>
           <span className="text-muted-foreground">
             {Math.round(progressPercentage)}%

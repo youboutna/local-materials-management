@@ -43,10 +43,10 @@ const TenderFilters: React.FC<TenderFiltersProps> = ({
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
         value: status, 
-        label: status === 'draft' ? 'Brouillon' :
-               status === 'published' ? 'Publié' :
-               status === 'closed' ? 'Fermé' :
-               status === 'awarded' ? 'Attribué' : status
+        label: status === 'draft' ? t('auto.tenderfilters.brouillon') :
+               status === 'published' ? t('auto.tenderfilters.publie') :
+               status === 'closed' ? t('auto.tenderfilters.ferme') :
+               status === 'awarded' ? t('auto.tenderfilters.attribue') : status
       }))
     },
     {

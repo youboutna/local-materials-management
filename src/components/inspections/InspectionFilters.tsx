@@ -49,10 +49,10 @@ const InspectionFilters: React.FC<InspectionFiltersProps> = ({
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
         value: status, 
-        label: status === 'scheduled' ? 'Programmé' :
-               status === 'in_progress' ? 'En cours' :
-               status === 'completed' ? 'Terminé' :
-               status === 'cancelled' ? 'Annulé' : status
+        label: status === 'scheduled' ? t('auto.inspectionfilters.programme') :
+               status === 'in_progress' ? t('auto.inspectionfilters.en_cours') :
+               status === 'completed' ? t('auto.inspectionfilters.termine') :
+               status === 'cancelled' ? t('auto.inspectionfilters.annule') : status
       }))
     },
     {

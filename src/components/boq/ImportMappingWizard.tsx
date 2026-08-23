@@ -16,17 +16,17 @@ interface Props {
 }
 
 const FIELDS: { key: keyof ImportMapping; label: string }[] = [
-  { key: 'designation', label: 'Désignation' },
-  { key: 'unit', label: 'Unité' },
-  { key: 'quantity', label: 'Quantité' },
-  { key: 'unitPrice', label: 'Prix unitaire (PU)' },
-  { key: 'length', label: 'Longueur' },
-  { key: 'width', label: 'Largeur' },
-  { key: 'height', label: 'Hauteur / épaisseur' },
-  { key: 'material', label: 'Matériau' },
-  { key: 'elementType', label: 'Type / ouvrage' },
-  { key: 'category', label: 'Catégorie / poste' },
-  { key: 'phaseId', label: 'Phase / lot' },
+  { key: 'designation', label: 'auto.importmappingwizard.designation' },
+  { key: 'unit', label: 'auto.importmappingwizard.unite' },
+  { key: 'quantity', label: 'auto.importmappingwizard.quantite' },
+  { key: 'unitPrice', label: 'auto.importmappingwizard.prix_unitaire_pu' },
+  { key: 'length', label: 'auto.importmappingwizard.longueur' },
+  { key: 'width', label: 'auto.importmappingwizard.largeur' },
+  { key: 'height', label: 'auto.importmappingwizard.hauteur_epaisseur' },
+  { key: 'material', label: 'auto.importmappingwizard.materiau' },
+  { key: 'elementType', label: 'auto.importmappingwizard.type_ouvrage' },
+  { key: 'category', label: 'auto.importmappingwizard.categorie_poste' },
+  { key: 'phaseId', label: 'auto.importmappingwizard.phase_lot' },
 ];
 
 const NONE = '__none__';

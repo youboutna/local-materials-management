@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * Onglet « Documents » des pages de surveillance (garanties bancaires / assurances).
  * Présentation uniquement : réutilise le DocumentHub standard + visionneuse intégrée.
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function MonitoringDocumentsPanel({ scope, heading }: Props) {
+  const { t } = useLanguage();
   const contract = useMonitoringDocumentAdapter(scope);
 
   return (
@@ -24,10 +26,10 @@ export function MonitoringDocumentsPanel({ scope, heading }: Props) {
           <h2 className="text-base font-semibold text-foreground">
             {heading ??
               (scope === 'bank_guarantee'
-                ? 'Documents associés aux garanties bancaires'
+                ? t('auto.monitoringdocumentspanel.documents_associes_aux_garanties_bancaires')
                 : scope === 'insurance'
                   ? "Documents associés aux polices d'assurance"
-                  : 'Documents associés aux paiements')}
+                  : t('auto.monitoringdocumentspanel.documents_associes_aux_paiements'))}
           </h2>
           <p className="text-sm text-muted-foreground">
             Attestations, contrats de caution, certificats et avenants — consultables via la

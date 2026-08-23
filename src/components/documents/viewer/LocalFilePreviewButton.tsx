@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * LocalFilePreviewButton
  * Permet de consulter le contenu d'un fichier AVANT son enregistrement / mise à jour.
@@ -20,9 +21,10 @@ interface Props {
 }
 
 export function LocalFilePreviewButton({
+  const { t } = useLanguage();
   file,
   title,
-  label = 'Aperçu',
+  label = t('auto.localfilepreviewbutton.apercu'),
   documentType,
   className,
   size = 'sm',

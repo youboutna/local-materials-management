@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/layout";
 
 const Organizations = () => (
   <AppLayout
-    pageTitle="Organisations"
+    pageTitle='auto.organizations.organisations'
     pageDescription="Créer, modifier et hiérarchiser les organisations ; définir l'organisation propriétaire par défaut des projets"
   >
     <motion.div

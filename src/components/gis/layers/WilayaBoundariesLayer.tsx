@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * WilayaBoundariesLayer — couche react-leaflet des frontières / limites administratives.
  *
@@ -28,6 +29,7 @@ const WilayaBoundariesLayer: React.FC<WilayaBoundariesLayerProps> = ({
   fillOpacity = 0.12,
   onWilayaClick,
 }) => {
+  const { t } = useLanguage();
   const { boundaries } = useAdministrativeBoundaries(visible);
 
   const collections = useMemo(
@@ -35,10 +37,10 @@ const WilayaBoundariesLayer: React.FC<WilayaBoundariesLayerProps> = ({
       boundaries.map((boundary) => ({
         boundary,
         data: {
-          type: 'FeatureCollection',
+          type: t('auto.wilayaboundarieslayer.featurecollection'),
           features: [
             {
-              type: 'Feature',
+              type: t('auto.wilayaboundarieslayer.feature'),
               properties: { id: boundary.featureId },
               geometry: boundary.geometry,
             },

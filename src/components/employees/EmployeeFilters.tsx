@@ -65,10 +65,10 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
         value: status, 
-        label: status === 'active' ? 'Actif' :
-               status === 'inactive' ? 'Inactif' :
-               status === 'on_leave' ? 'En congé' :
-               status === 'terminated' ? 'Terminé' : status
+        label: status === 'active' ? t('auto.employeefilters.actif') :
+               status === 'inactive' ? t('auto.employeefilters.inactif') :
+               status === 'on_leave' ? t('auto.employeefilters.en_conge') :
+               status === 'terminated' ? t('auto.employeefilters.termine') : status
       }))
     },
     {
@@ -80,7 +80,7 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
       options: [
         { value: 'name-asc', label: t('auto.employeefilters.nom_a_z') },
         { value: 'name-desc', label: t('auto.employeefilters.nom_z_a') },
-        { value: 'hire-date', label: 'Date d\'embauche' },
+        { value: 'hire-date', label: t('auto.employeefilters.date_d')embauche' },
         { value: 'department', label: t('auto.employeefilters.departement') },
         { value: 'position', label: t('auto.employeefilters.poste') }
       ]

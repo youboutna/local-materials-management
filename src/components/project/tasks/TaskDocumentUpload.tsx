@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import ProjectDocumentUpload from '../ProjectDocumentUpload';
 
@@ -18,6 +19,7 @@ const TaskDocumentUpload = ({
   taskTitle, 
   onDocumentUploaded 
 }: TaskDocumentUploadProps) => {
+  const { t } = useLanguage();
   return (
     <ProjectDocumentUpload
       projectId={projectId}
@@ -25,7 +27,7 @@ const TaskDocumentUpload = ({
       stepId={stepId}
       taskId={taskId}
       context="task"
-      contextLabel={taskTitle ? `Tâche: ${taskTitle}` : 'Documents de tâche'}
+      contextLabel={taskTitle ? `Tâche: ${taskTitle}` : t('auto.taskdocumentupload.documents_de_tache')}
       onDocumentUploaded={onDocumentUploaded}
     />
   );

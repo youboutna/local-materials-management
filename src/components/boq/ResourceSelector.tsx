@@ -27,9 +27,9 @@ interface Props {
 }
 
 const TYPE_LABEL: Record<BoqResourceType, string> = {
-  material: 'Matériau',
+  material: 'auto.resourceselector.materiau',
   labor: "Main d'œuvre",
-  equipment: 'Équipement',
+  equipment: 'auto.resourceselector.equipement',
 };
 
 export const ResourceSelector: React.FC<Props> = ({
@@ -59,7 +59,7 @@ export const ResourceSelector: React.FC<Props> = ({
         }}
         disabled={disabled || options.length === 0}
       >
-        <SelectTrigger><SelectValue placeholder={options.length ? 'Ressource…' : 'Aucune ressource'} /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder={options.length ? t('auto.resourceselector.ressource') : t('auto.resourceselector.aucune_ressource')} /></SelectTrigger>
         <SelectContent>
           {options.map((o) => (
             <SelectItem key={o.id} value={o.id}>

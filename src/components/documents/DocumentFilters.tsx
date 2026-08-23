@@ -43,14 +43,14 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
       onChange: onTypeChange,
       options: availableTypes.map(type => ({ 
         value: type, 
-        label: type === 'inspection_report' ? 'Rapport d\'inspection' :
-               type === 'location_photo' ? 'Photo de lieu' :
-               type === 'project_report' ? 'Rapport de projet' :
-               type === 'contract' ? 'Contrat' :
-               type === 'supplier_info' ? 'Info fournisseur' :
-               type === 'task_assignment' ? 'Affectation de tâche' :
-               type === 'employee_record' ? 'Dossier employé' :
-               type === 'tender_documents' ? 'Documents d\'appel d\'offres' : type
+        label: type === 'inspection_report' ? t('auto.documentfilters.rapport_d')inspection' :
+               type === 'location_photo' ? t('auto.documentfilters.photo_de_lieu') :
+               type === 'project_report' ? t('auto.documentfilters.rapport_de_projet') :
+               type === 'contract' ? t('auto.documentfilters.contrat') :
+               type === 'supplier_info' ? t('auto.documentfilters.info_fournisseur') :
+               type === 'task_assignment' ? t('auto.documentfilters.affectation_de_tache') :
+               type === 'employee_record' ? t('auto.documentfilters.dossier_employe') :
+               type === 'tender_documents' ? t('auto.documentfilters.documents_d')appel d\'offres' : type
       }))
     },
     {
@@ -61,10 +61,10 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
       onChange: onStatusChange,
       options: availableStatuses.map(status => ({ 
         value: status, 
-        label: status === 'draft' ? 'Brouillon' :
-               status === 'approved' ? 'Approuvé' :
-               status === 'pending' ? 'En attente' :
-               status === 'rejected' ? 'Rejeté' : status
+        label: status === 'draft' ? t('auto.documentfilters.brouillon') :
+               status === 'approved' ? t('auto.documentfilters.approuve') :
+               status === 'pending' ? t('auto.documentfilters.en_attente') :
+               status === 'rejected' ? t('auto.documentfilters.rejete') : status
       }))
     },
     {
