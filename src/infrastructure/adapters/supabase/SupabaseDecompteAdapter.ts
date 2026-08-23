@@ -278,10 +278,10 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
   async validateDecompte(decompte: AutomaticDecompteDTO): Promise<boolean> {
     // Validation basique du décompte
     return (
-      decompte.current_period_amount > 0 &&
+      decompte.currentPeriodAmount > 0 &&
       decompte.lines.length > 0 &&
-      decompte.progress_at_decompte >= 0 &&
-      decompte.progress_at_decompte <= 100
+      decompte.progressAtDecompte >= 0 &&
+      decompte.progressAtDecompte <= 100
     );
   }
 
@@ -295,14 +295,14 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
 
     const payment = new Payment(
       id,
-      decompte.project_id ? ({ id: decompte.project_id } as any) : null,
-      decompte.phase_id ? ({ id: decompte.phase_id } as any) : null,
+      decompte.projectId ? ({ id: decompte.projectId } as any) : null,
+      decompte.phaseId ? ({ id: decompte.phaseId } as any) : null,
       null,
-      decompte.net_payable,
+      decompte.netPayable,
       now,
       'bank_transfer',
       'pending',
-      decompte.progress_at_decompte,
+      decompte.progressAtDecompte,
       null,
       '',
       '',
@@ -324,7 +324,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     return {
       ...decompte,
       id: payment.id,
-      calculated_at: now,
+      calculatedAt: now,
     };
   }
 
