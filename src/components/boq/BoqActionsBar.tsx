@@ -155,8 +155,34 @@ export const BoqActionsBar: React.FC<Props> = ({
     };
   }, [isSupplierContext, parties.senderName, ownerOrg]);
 
+  // === En-tête éditable (émetteur / destinataire) ===
+  // Éditable tant que le document n'est pas signé ; les valeurs saisies
+  // alimentent le PDF ET le XML Factur-X.
+  const [partiesOpen, setPartiesOpen] = useState(false);
+  const [partiesOverride, setPartiesOverride] = useState<DocumentPartiesValue | null>(null);
+
+  const effectiveParties: DocumentPartiesValue = React.useMemo(() => ({
+    senderName: partiesOverride?.senderName ?? company?.name ?? parties.senderName,
+    senderAddress: partiesOverride?.senderAddress ?? company?.address,
+    senderPhone: partiesOverride?.senderPhone ?? company?.phone,
+    senderEmail: partiesOverride?.senderEmail ?? company?.email,
+    recipientName: partiesOverride?.recipientName ?? parties.recipientName,
+    recipientEmail: partiesOverride?.recipientEmail ?? recipientEmail,
+  }), [partiesOverride, company, parties.senderName, parties.recipientName, recipientEmail]);
+
+  const effectiveCompany = React.useMemo(() => (
+    effectiveParties.senderName
+      ? {
+          name: effectiveParties.senderName,
+          address: effectiveParties.senderAddress,
+          phone: effectiveParties.senderPhone,
+          email: effectiveParties.senderEmail,
+        }
+      : company
+  ), [effectiveParties, company]);
+
   const baseDocCtx = {
-    company,
+    company: effectiveCompany,
     docPrefix: ctx.docPrefix,
     title: ctx.title,
     source: ctx.source,
