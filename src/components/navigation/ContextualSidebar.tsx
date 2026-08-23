@@ -207,7 +207,7 @@ function NavItemComponent({
         {IconComponent && (
           <IconComponent className={cn("h-4 w-4 flex-shrink-0", isActive && "text-primary")} />
         )}
-        {!collapsed && <span className="truncate">{item.label}</span>}
+        {!collapsed && <span className="truncate">{t(item.label)}</span>}
         {item.badge && !collapsed && (
           <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
             {item.badge}
@@ -236,7 +236,7 @@ function NavItemComponent({
           )}
           {!collapsed && (
             <>
-              <span className="truncate flex-1 text-left">{item.label}</span>
+              <span className="truncate flex-1 text-left">{t(item.label)}</span>
               {isOpen ? (
                 <ChevronDown className="h-4 w-4 flex-shrink-0" />
               ) : (
