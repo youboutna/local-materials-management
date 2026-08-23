@@ -510,7 +510,7 @@ export default function ProjectFileImporter({
             </Label>
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Référentiel projet</Label>
+                <Label className="text-xs text-muted-foreground">{t('referential.project')}</Label>
                 <Select
                   value={templateReferential}
                   onValueChange={(v) => setTemplateReferential(v as ReferentialType)}

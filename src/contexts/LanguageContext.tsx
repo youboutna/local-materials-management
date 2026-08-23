@@ -5271,6 +5271,34 @@ const PHASE_STRUCTURE_KEYS = {
     );
 });
 
+/**
+ * Phase 6 — alias canoniques exigés par la spécification d'intégration.
+ * Un seul code source de vérité (PHASE_STRUCTURE_KEYS) ; ces alias exposent
+ * les clés contractuelles `wbs.*`, `referential.*`, `phase.*`, `step.*`, `progress.*`.
+ */
+const CANONICAL_ALIASES: Record<string, string> = {
+    'wbs.generateStructure': 'phase_structure.generate_structure',
+    'wbs.generateMilestones': 'phase_structure.generate_milestones',
+    'referential.label': 'phase_structure.referential',
+    'referential.select': 'phase_structure.select_referential',
+    'referential.project': 'phase_structure.referential',
+    'phase.none': 'phase_structure.no_phase_defined',
+    'phase.noneForProject': 'phase_structure.no_phase_for_project',
+    'phase.measurementNotice': 'phase_structure.takeoff_after_step1',
+    'step.label': 'workflow.step_counter',
+    'progress.percent': 'workflow.progress_percent',
+};
+
+(['fr', 'ar', 'en'] as const).forEach((lang) => {
+    const bucket = (translations as unknown as Record<string, Record<string, unknown>>)[lang];
+    const flat: Record<string, string> = {};
+    Object.entries(CANONICAL_ALIASES).forEach(([alias, source]) => {
+        const value = (PHASE_STRUCTURE_KEYS[lang] as Record<string, string>)[source];
+        if (value) flat[alias] = value;
+    });
+    deepMergeMissing(bucket, expandFlatKeys(flat));
+});
+
 
 
 interface LanguageProviderProps {

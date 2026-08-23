@@ -86,7 +86,7 @@ export function BoqWorkspace({
   referentialCode, estimateId,
   emptyLabel, importLabel, documentId,
 }: Props) {
-  const { translateTerm } = useI18n();
+  const { translateTerm, t } = useI18n();
   const doc = useBoqDocument({ source, contextId, projectId, documentId });
   const { toast } = useToast();
   const labels = LABELS[mode];
@@ -470,7 +470,7 @@ export function BoqWorkspace({
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Référentiel</Label>
+            <Label className="text-xs text-muted-foreground">{t('referential.label')}</Label>
             <Select
               value={activeReferential ?? '__project__'}
               onValueChange={(v) => setActiveReferential(v === '__project__' ? referentialCode : (v as ReferentialType))}

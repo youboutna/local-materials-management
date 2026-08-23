@@ -1472,9 +1472,9 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                       <div>
 
-                        <p className="text-xs text-muted-foreground">Analyse métré</p>
+                        <p className="text-xs text-muted-foreground">{t('phase_structure.takeoff_analysis')}</p>
 
-                        <p className="text-sm">{getPhaseCounts(phase.id).takeoffs} métré(s)</p>
+                        <p className="text-sm">{t('phase_structure.takeoff_count', { count: getPhaseCounts(phase.id).takeoffs })}</p>
 
                       </div>
 

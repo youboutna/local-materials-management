@@ -31,6 +31,7 @@ import { useProjectStructureHex } from '@/hooks/hexagonal/useProjectStructureHex
 
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { useI18n } from '@/hooks/useI18n';
 interface TenderProjectStructureProps {
   projectId: string;
   onPhaseSelect?: (phaseId: string) => void;
@@ -44,6 +45,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
   onStepSelect,
   compact = false
 }) => {
+  const { t } = useI18n();
   const [selectedPhases, setSelectedPhases] = useState<Set<string>>(new Set());
 
   // Lecture via la chaîne hexagonale (repositories) — aucun accès Supabase direct.
@@ -289,7 +291,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
         ) : (
           <div className="text-center py-6 text-muted-foreground">
             <Package className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p>Aucune phase définie pour ce projet</p>
+            <p>{t('phase.noneForProject')}</p>
           </div>
         )}
 

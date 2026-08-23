@@ -15,6 +15,7 @@ import { PhaseNode } from "./PhaseNode";
 import { cn } from "@/lib/utils";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { useI18n } from '@/hooks/useI18n';
 interface Phase {
   id: string;
   title?: string;
@@ -57,6 +58,7 @@ export const ProjectHierarchyView: React.FC<ProjectHierarchyViewProps> = ({
   onGenerateReport,
   onConfigure,
 }) => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [expandedPhases, setExpandedPhases] = useState<string[]>([]);
 
@@ -154,7 +156,7 @@ export const ProjectHierarchyView: React.FC<ProjectHierarchyViewProps> = ({
           </div>
         ) : (
           <div className="ml-6 p-6 border-2 border-dashed rounded-lg text-center">
-            <p className="text-muted-foreground mb-3">Aucune phase définie</p>
+            <p className="text-muted-foreground mb-3">{t('phase.none')}</p>
             {onAddPhase && (
               <Button size="sm" variant="outline" onClick={onAddPhase}>
                 <Plus className="h-4 w-4 mr-2" />
