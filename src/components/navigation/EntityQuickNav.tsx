@@ -89,7 +89,7 @@ export function EntityQuickNav({
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p className="text-xs">Précédent: {previousEntity.name}</p>
+                  <p className="text-xs">{t('nav.previous')}: {previousEntity.name}</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -104,7 +104,7 @@ export function EntityQuickNav({
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p className="text-xs">Suivant: {nextEntity.name}</p>
+                  <p className="text-xs">{t('nav.next')}: {nextEntity.name}</p>
                 </TooltipContent>
               </Tooltip>
             )}
