@@ -447,8 +447,8 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <h4 className="font-medium truncate">{stakeholder.name}</h4>
                     <p className="text-sm text-muted-foreground truncate">
                       <TranslatedRole code={stakeholder.role} /> • {getEntityName(stakeholder)}
-                      {stakeholder.type && (
-                        <> • <EnumBadge enumName="StakeholderType" code={String(stakeholder.type)} variant="outline" /></>
+                      {stakeholder.entityType && (
+                        <> • <EnumBadge enumName="StakeholderEntityType" code={String(stakeholder.entityType)} variant="outline" /></>
                       )}
                     </p>
                   </div>
