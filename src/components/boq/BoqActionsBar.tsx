@@ -162,14 +162,18 @@ export const BoqActionsBar: React.FC<Props> = ({
     source: ctx.source,
     contextId: ctx.contextId,
     projectId: ctx.projectId,
+    // D1 — libellé métier du projet (jamais l'identifiant technique).
+    projectTitle: projectName,
     tenderId: ctx.tenderId,
     submissionId: ctx.submissionId,
+    documentId: lines.find((l) => l.documentId)?.documentId ?? null,
     signed: !!signedInfo,
     signedBy: signedInfo?.by,
     signedAt: signedInfo?.at,
     senderName: parties.senderName,
     recipientName: parties.recipientName,
   };
+
 
   const handleGenerate = () => withGuard('pdf', async () => {
     const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
