@@ -4319,5 +4319,16 @@
   "auto.pagination.plus_de_pages": "Plus de pages",
   "auto.sheet.panel_content": "Panel content",
   "auto.sheet.close": "Close",
-  "auto.sidebar.toggle_sidebar": "Toggle Sidebar"
+  "auto.sidebar.toggle_sidebar": "Toggle Sidebar",
+  "auto.resourceselector.type": "Type",
+  "auto.documentfilters.rechercher_des_documents": "Rechercher des documents...",
+  "auto.employeefilters.rechercher_des_employes": "Rechercher des employés...",
+  "auto.inspectionfilters.rechercher_des_inspections": "Rechercher des inspections...",
+  "auto.interactivematerialfilters.recherche_fulltext_nom_description_categorie_reg": "Recherche fulltext: nom, description, catégorie, région, type...",
+  "auto.materialfilters.rechercher_des_materiaux": "Rechercher des matériaux...",
+  "auto.interventionzonespicker.zones_d_intervention": "Zones d'intervention",
+  "auto.interventionzonespicker.zones_du_projet": "Zones du projet",
+  "auto.projectfilters.rechercher_projets": "Rechercher projets...",
+  "auto.supplierfilters.rechercher_des_fournisseurs": "Rechercher des fournisseurs...",
+  "auto.tenderfilters.rechercher_des_appels_d_offres": "Rechercher des appels d'offres..."
 }

@@ -2,6 +2,7 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
 import { AutocompleteOption } from '@/components/ui/autocomplete';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'progress';
 
@@ -40,6 +41,7 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
   autocompleteOptions,
   onAutocompleteSelect
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'status',
@@ -90,7 +92,7 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
       onSearchSubmit={onSearchSubmit}
-      searchPlaceholder="Rechercher projets..."
+      searchPlaceholder={t('auto.projectfilters.rechercher_projets')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

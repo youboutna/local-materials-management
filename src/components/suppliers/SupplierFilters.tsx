@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type SupplierSortOption = 'name-asc' | 'name-desc' | 'newest' | 'oldest' | 'rating';
 
@@ -38,6 +39,7 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'category',
@@ -89,7 +91,7 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Rechercher des fournisseurs..."
+      searchPlaceholder={t('auto.supplierfilters.rechercher_des_fournisseurs')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

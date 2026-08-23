@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MaterialFiltersProps {
   searchTerm: string;
@@ -28,6 +29,7 @@ const MaterialFilters: React.FC<MaterialFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'category',
@@ -52,7 +54,7 @@ const MaterialFilters: React.FC<MaterialFiltersProps> = ({
       searchValue={searchTerm}
       onSearchChange={onSearchChange}
       onSearchSubmit={onSearchSubmit}
-      searchPlaceholder="Rechercher des matériaux..."
+      searchPlaceholder={t('auto.materialfilters.rechercher_des_materiaux')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

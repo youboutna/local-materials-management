@@ -2,6 +2,7 @@ import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InteractiveMaterialFiltersProps {
   searchTerm: string;
@@ -36,6 +37,7 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
   materialCount,
   gpsCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'category',
@@ -85,7 +87,7 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
         searchValue={searchTerm}
         onSearchChange={onSearchChange}
         onSearchSubmit={onSearchSubmit}
-        searchPlaceholder="Recherche fulltext: nom, description, catégorie, région, type..."
+        searchPlaceholder={t('auto.interactivematerialfilters.recherche_fulltext_nom_description_categorie_reg')}
         filters={filters}
         onReset={onReset}
         resultCount={materialCount}

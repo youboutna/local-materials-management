@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type InspectionSortOption = 'newest' | 'oldest' | 'project' | 'inspector' | 'status';
 
@@ -38,6 +39,7 @@ const InspectionFilters: React.FC<InspectionFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'status',
@@ -89,7 +91,7 @@ const InspectionFilters: React.FC<InspectionFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Rechercher des inspections..."
+      searchPlaceholder={t('auto.inspectionfilters.rechercher_des_inspections')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

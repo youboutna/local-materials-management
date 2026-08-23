@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type EmployeeSortOption = 'name-asc' | 'name-desc' | 'hire-date' | 'department' | 'position';
 
@@ -38,6 +39,7 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'department',
@@ -89,7 +91,7 @@ const EmployeeFilters: React.FC<EmployeeFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Rechercher des employés..."
+      searchPlaceholder={t('auto.employeefilters.rechercher_des_employes')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

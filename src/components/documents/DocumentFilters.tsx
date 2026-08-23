@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type DocumentSortOption = 'newest' | 'oldest' | 'name-asc' | 'name-desc' | 'size-desc';
 
@@ -32,6 +33,7 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'type',
@@ -85,7 +87,7 @@ const DocumentFilters: React.FC<DocumentFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Rechercher des documents..."
+      searchPlaceholder={t('auto.documentfilters.rechercher_des_documents')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}

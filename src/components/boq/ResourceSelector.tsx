@@ -8,6 +8,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface ResourceOption {
   id: string;
@@ -39,10 +40,11 @@ export const ResourceSelector: React.FC<Props> = ({
   onChange,
   disabled,
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="grid grid-cols-2 gap-2">
       <Select value={resourceType} onValueChange={(v) => onResourceTypeChange(v as BoqResourceType)} disabled={disabled}>
-        <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder={t('auto.resourceselector.type')} /></SelectTrigger>
         <SelectContent>
           {(Object.keys(TYPE_LABEL) as BoqResourceType[]).map((k) => (
             <SelectItem key={k} value={k}>{TYPE_LABEL[k]}</SelectItem>

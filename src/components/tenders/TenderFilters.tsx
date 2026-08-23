@@ -1,5 +1,6 @@
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type TenderSortOption = 'newest' | 'oldest' | 'deadline' | 'budget-high' | 'budget-low';
 
@@ -32,6 +33,7 @@ const TenderFilters: React.FC<TenderFiltersProps> = ({
   onReset,
   resultCount
 }) => {
+  const { t } = useLanguage();
   const filters: FilterField[] = [
     {
       key: 'status',
@@ -75,7 +77,7 @@ const TenderFilters: React.FC<TenderFiltersProps> = ({
     <ResponsiveFilters
       searchValue={searchQuery}
       onSearchChange={onSearchChange}
-      searchPlaceholder="Rechercher des appels d'offres..."
+      searchPlaceholder={t('auto.tenderfilters.rechercher_des_appels_d_offres')}
       filters={filters}
       onReset={onReset}
       resultCount={resultCount}
