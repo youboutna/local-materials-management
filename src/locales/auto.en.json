@@ -4724,6 +4724,7 @@
   "common.edit": "Edit",
   "common.error": "Error",
   "common.loading": "Loading…",
+  "common.save": "Save",
   "common.success": "Success",
   "common.unknown": "Unknown",
   "dashboard.kpi.alerts_suffix": "alert(s)",
