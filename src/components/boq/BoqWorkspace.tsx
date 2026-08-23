@@ -347,6 +347,10 @@ export function BoqWorkspace({
     } finally { setFinalizing(false); }
   };
 
+  // Édition inline d'une ligne déjà persistée : active le bouton « Enregistrer ».
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => { setDirty(false); }, [documentId]);
+
   const draftLineIds = useMemo(
     () => doc.lines.filter((l) => l.status === 'draft' && l.id).map((l) => l.id!),
     [doc.lines]
@@ -358,11 +362,13 @@ export function BoqWorkspace({
     if (!persisted) return false;
     // 2) puis passe tous les brouillons DB en submitted
     if (draftLineIds.length === 0) {
-    if (!silent) toast({ title: `${labels.docPrefix.toUpperCase()} enregistré` });
+      setDirty(false);
+      if (!silent) toast({ title: `${labels.docPrefix.toUpperCase()} enregistré` });
       return true;
     }
     try {
       await doc.updateStatus(draftLineIds, 'submitted', source);
+      setDirty(false);
       if (!silent) toast({ title: `${draftLineIds.length} ligne(s) finalisée(s)` });
       return true;
     } catch (e) {
@@ -383,6 +389,8 @@ export function BoqWorkspace({
   const persistedCount = doc.lines.length;
 
   const handlePatch = async (index: number, patch: Partial<BoqLineDTO>) => {
+    // Toute édition (ligne persistée ou tampon) rend le document « à enregistrer ».
+    setDirty(true);
     if (index >= persistedCount) {
       setPendingLines((prev) => prev.map((l, i) => (i === index - persistedCount ? { ...l, ...patch } : l)));
       return;
@@ -460,9 +468,21 @@ export function BoqWorkspace({
     }
     return null;
   }, [doc.lines]);
-  const locked = !!signatureInfo;
+  // Document déjà transmis (soumis / publié / facturé) : plus aucune modification.
+  const transmittedInfo = useMemo(() => {
+    const finalStatuses: BoqStatus[] = ['validated', 'invoiced', 'paid', 'archived'];
+    for (const l of doc.lines) {
+      const tr = (l.metadata as { transfer?: { transferredAt?: string; stage?: string } } | null)?.transfer;
+      if (tr?.transferredAt) {
+        return { at: new Date(tr.transferredAt).toLocaleString('fr-FR'), stage: tr.stage ?? null };
+      }
+      if (l.status && finalStatuses.includes(l.status)) return { at: null, stage: l.status };
+    }
+    return null;
+  }, [doc.lines]);
+  const locked = !!signatureInfo || !!transmittedInfo;
   const pendingCount = pendingLines.length + draftLineIds.length;
-  const docStatus = pendingCount > 0 ? t('dqe.doc_status.to_save') : (doc.lines.length > 0 ? t('dqe.doc_status.validated') : t('dqe.doc_status.new'));
+  const docStatus = pendingCount > 0 || dirty ? t('dqe.doc_status.to_save') : (doc.lines.length > 0 ? t('dqe.doc_status.validated') : t('dqe.doc_status.new'));
   const isDocumentEmpty = displayedLines.length === 0;
   const handleParsedImport = (lines: BoqLineDTO[]) => {
     setPendingLines((prev) => [...prev, ...lines.map((line) => ({
@@ -482,10 +502,15 @@ export function BoqWorkspace({
             <div className="text-xs font-medium uppercase text-muted-foreground"><T k="auto.boqworkspace.document" fallback="Document" /></div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-lg font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</span>
-              <Badge variant={pendingCount > 0 ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
-              {locked && (
+              <Badge variant={pendingCount > 0 || dirty ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
+              {signatureInfo && (
                 <Badge variant="outline" className="border-primary text-primary">
-                  {t('dqe.locked_signed')} · {signatureInfo?.at} — {signatureInfo?.by}
+                  {t('dqe.locked_signed')} · {signatureInfo.at} — {signatureInfo.by}
+                </Badge>
+              )}
+              {!signatureInfo && transmittedInfo && (
+                <Badge variant="outline" className="border-primary text-primary">
+                  {t('dqe.locked_transmitted')}{transmittedInfo.at ? ` · ${transmittedInfo.at}` : ''}
                 </Badge>
               )}
             </div>
@@ -535,8 +560,16 @@ export function BoqWorkspace({
           <div className="flex lg:justify-end">
             <Button
               onClick={() => finalizeDraftLines(false)}
-              disabled={locked || pendingCount === 0 || finalizing || doc.isPending}
-              title={locked ? t('dqe.locked_signed') : pendingCount === 0 ? t('dqe.save_hint_no_pending') : undefined}
+              disabled={locked || (pendingCount === 0 && !dirty) || finalizing || doc.isPending}
+              title={
+                transmittedInfo
+                  ? t('dqe.locked_transmitted')
+                  : signatureInfo
+                    ? t('dqe.locked_signed')
+                    : pendingCount === 0 && !dirty
+                      ? t('dqe.save_hint_no_pending')
+                      : undefined
+              }
             >
               {finalizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-2" />}
               {t('dqe.action.save')}{pendingCount > 0 ? ` (${pendingCount})` : ''}
