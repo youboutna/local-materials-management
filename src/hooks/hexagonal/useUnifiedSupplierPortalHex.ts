@@ -102,10 +102,9 @@ export const useSupplierLoginHex = () => {
   
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      return data;
+      return await getAuthService().login({ email, password });
     },
+
     onSuccess: () => {
       toast({ title: 'Connexion réussie' });
       queryClient.invalidateQueries({ queryKey: ['supplier-portal-profile'] });
@@ -121,10 +120,9 @@ export const useSupplierSignUpHex = () => {
   
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      return data;
+      return await getAuthService().signUp({ email, password });
     },
+
     onSuccess: () => {
       toast({ title: 'Inscription réussie' });
       queryClient.invalidateQueries({ queryKey: ['supplier-portal-profile'] });
@@ -140,8 +138,9 @@ export const useSupplierLogoutHex = () => {
   
   return useMutation({
     mutationFn: async () => {
-      await supabase.auth.signOut();
+      await getAuthService().logout();
     },
+
     onSuccess: () => {
       toast({ title: 'Déconnexion réussie' });
       queryClient.clear();
