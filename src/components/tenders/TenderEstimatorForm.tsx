@@ -4,7 +4,7 @@
  * live HT / TVA / TTC preview via TenderEstimatorService, single
  * "Envoyer vers le devis" button that persists through the BOQ kernel.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,8 @@ interface Props {
   tenderId: string;
   projectId?: string;
   onCommitted?: (count: number) => void;
+  /** Lignes injectées depuis un template ou un parseur : ajoutées au brouillon. */
+  seedLines?: TenderEstimatorLineInput[] | null;
 }
 
 function emptyLine(): TenderEstimatorLineInput {
@@ -47,10 +49,20 @@ function emptyLine(): TenderEstimatorLineInput {
   };
 }
 
-export function TenderEstimatorForm({ tenderId, projectId, onCommitted }: Props) {
+export function TenderEstimatorForm({ tenderId, projectId, onCommitted, seedLines }: Props) {
   const { toast } = useToast();
   const [lines, setLines] = useState<TenderEstimatorLineInput[]>([emptyLine()]);
   const [busy, setBusy] = useState(false);
+
+  const seededRef = useRef<TenderEstimatorLineInput[] | null>(null);
+  useEffect(() => {
+    if (!seedLines || !seedLines.length || seededRef.current === seedLines) return;
+    seededRef.current = seedLines;
+    setLines((prev) => {
+      const kept = prev.filter((l) => (l.designation || '').trim().length > 0);
+      return [...kept, ...seedLines];
+    });
+  }, [seedLines]);
 
   const summary = useMemo(() => TenderEstimatorService.summarize(lines), [lines]);
 
