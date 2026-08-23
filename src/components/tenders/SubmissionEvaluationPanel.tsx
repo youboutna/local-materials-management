@@ -26,6 +26,7 @@ import {
   Send
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
   useTenderSubmission, 
   useSubmissionDocuments, 
@@ -162,7 +163,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
               </CardDescription>
             </div>
             <Badge variant={submission?.status === 'submitted' ? 'default' : 'secondary'}>
-              {submission?.status}
+              <TranslatedStatus code={submission?.status} />
             </Badge>
           </div>
         </CardHeader>

@@ -29,6 +29,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { getOrganizationHierarchyService } from '@/application/services/OrganizationHierarchyService';
 import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { TranslatedDepartment, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 
 const NONE = '__none__';
 
@@ -616,7 +617,7 @@ const EmployeeManagement = () => {
                       </div>
                       <div>
                         <p className="text-sm">{employee.position}</p>
-                        <p className="text-sm text-muted-foreground">{employee.department}</p>
+                        <p className="text-sm text-muted-foreground"><TranslatedDepartment code={employee.department} /></p>
                       </div>
                       {employee.organizationId && (
                         <Badge variant="outline" className="gap-1">

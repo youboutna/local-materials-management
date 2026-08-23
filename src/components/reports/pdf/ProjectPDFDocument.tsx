@@ -12,6 +12,7 @@ import { PDFCard, PDFCol, PDFDocument, PDFMetricCard, PDFRow, PDFSection, PDFTab
 import { ProjectMiniMap } from './ProjectMiniMap';
 import { PhaseGanttBars } from './PhaseGanttBars';
 import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
+import { i18nService } from '@/application/services/I18nService';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -375,7 +376,7 @@ export function ProjectPDFDocument({
           {healthScore && typeof healthScore === 'object' && (
             <PDFText
               label="Score de santé global"
-              value={`${healthScore.overallScore ?? healthScore.score ?? '—'}${healthScore.category ? ` (${healthScore.category})` : ''}`}
+              value={`${healthScore.overallScore ?? healthScore.score ?? '—'}${healthScore.category ? ` (${i18nService.translateCategory(healthScore.category)})` : ''}`}
             />
           )}
         </PDFSection>

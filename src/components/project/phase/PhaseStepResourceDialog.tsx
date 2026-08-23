@@ -43,6 +43,7 @@ import { calculateQuantity } from "@/dtos/types/quantityTakeoff";
 import EmployeeSelector from "@/components/selectors/EmployeeSelector";
 import SimpleSupplierSelector from "@/components/selectors/SimpleSupplierSelector";
 import { METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
+import { i18nService } from '@/application/services/I18nService';
 
 interface PhaseStepResourceDialogProps {
   projectId: string;
@@ -221,7 +222,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 <SelectContent>
                   {materials.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.name} {m.unit ? `(${m.unit})` : ""}
+                      {m.name} {m.unit ? `(${i18nService.translateUnit(m.unit)})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>

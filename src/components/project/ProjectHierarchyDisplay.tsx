@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Mail, Phone, Building, Users } from 'lucide-react';
+import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 
 interface HierarchyMember {
   hierarchy_id: string;
@@ -117,7 +118,7 @@ const ProjectHierarchyDisplay: React.FC<ProjectHierarchyDisplayProps> = ({
                                 {member.position_title}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {member.department} • {member.organization_name}
+                                <TranslatedDepartment code={member.department} /> • {member.organization_name}
                               </p>
                               
                               <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">

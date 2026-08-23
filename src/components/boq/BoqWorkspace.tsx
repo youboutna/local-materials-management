@@ -47,6 +47,7 @@ import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import type { StakeholderOption } from './BoqLineTable';
 import { useI18n } from '@/hooks/useI18n';
+import { i18nService } from '@/application/services/I18nService';
 
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
@@ -577,7 +578,7 @@ export function BoqWorkspace({
                           <SelectItem value="__none__">— Saisie libre —</SelectItem>
                           {filteredMaterials.slice(0, 200).map((m) => (
                             <SelectItem key={m.id} value={m.id}>
-                              {m.name}{m.unit ? ` · ${m.unit}` : ''}{m.pricePerUnit ? ` · ${m.pricePerUnit} MRU` : ''}
+                              {m.name}{m.unit ? ` · ${i18nService.translateUnit(m.unit)}` : ''}{m.pricePerUnit ? ` · ${m.pricePerUnit} MRU` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>

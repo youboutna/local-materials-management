@@ -9,6 +9,7 @@ import { useQuantityTakeoffsHex } from '@/hooks/hexagonal';
 import { usePagination } from '@/hooks/usePagination';
 import { Calculator, DownloadCloud, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 
 interface QuantityTakeoffsListProps {
   projectId: string;
@@ -147,7 +148,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">{takeoff.material?.category}</Badge>
+                  <Badge variant="outline"><TranslatedCategory code={takeoff.material?.category} /></Badge>
                   <Button
                     size="sm"
                     variant="outline"
