@@ -21,6 +21,8 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 
 interface RelatedEntity {
   type: "project" | "phase" | "material" | "document" | "inspection" | "payment" | "supplier" | "employee";
@@ -72,7 +74,9 @@ export function EntityQuickNav({
   nextEntity,
   className,
 }: EntityQuickNavProps) {
+  const { t } = useLanguage();
   return (
+
     <div className={cn("flex flex-wrap items-center gap-3 py-2", className)}>
       {/* Previous/Next navigation */}
       {(previousEntity || nextEntity) && (
