@@ -23,6 +23,42 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+/** Résolution hors provider : lecture directe des tables de traduction. */
+const resolveOutsideProvider = (key: string, params?: Record<string, string | number>): string => {
+    type Nested = Record<string, unknown>;
+    let value: unknown = (translations as unknown as Record<string, Nested>).fr;
+    for (const k of key.split('.')) {
+        if (value && typeof value === 'object' && k in (value as Nested)) {
+            value = (value as Nested)[k];
+        } else {
+            value = null;
+            break;
+        }
+    }
+    let result =
+        typeof value === 'string'
+            ? value
+            : (() => {
+                  const last = key.split('.').pop() ?? key;
+                  const words = last.replace(/[_-]+/g, ' ').trim();
+                  return words.charAt(0).toUpperCase() + words.slice(1);
+              })();
+    if (params) {
+        Object.entries(params).forEach(([paramKey, paramValue]) => {
+            result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+        });
+    }
+    return result;
+};
+
+const FALLBACK_LANGUAGE_CONTEXT: LanguageContextType = {
+    language: 'fr',
+    setLanguage: () => undefined,
+    t: resolveOutsideProvider,
+};
+
+
+
 export const useLanguage = () => {
     const context = useContext(LanguageContext);
     if (!context) {
