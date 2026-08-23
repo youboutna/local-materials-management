@@ -28,7 +28,6 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useProjectStructureHex } from '@/hooks/hexagonal/useProjectStructureHex';
-import type { Phase, Step } from '@/hooks/hexagonal/useProjectStructureHex';
 
 
 interface TenderProjectStructureProps {

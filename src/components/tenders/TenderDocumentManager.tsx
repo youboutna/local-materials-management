@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useDocumentViewer } from "@/components/documents/viewer";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,11 +18,16 @@ import { BoqLineTable, BoqImportDialog, useBoqDocument } from '@/components/boq'
 import TenderLotDocumentsManager, { LotOption } from './TenderLotDocumentsManager';
 import { useTenderLots } from '@/hooks/hexagonal/useTenderLotsHex';
 import { useTenderLotDocuments } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
+import {
+  useTenderDocumentsList,
+  useWorkflowStepDocumentsList,
+  useUploadTenderDocument,
+} from '@/hooks/hexagonal/useTenderDocumentsHex';
+import { TenderEstimateService } from '@/application/services/TenderEstimateService';
 import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsHex';
 import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 /**
  * TenderEstimateBoq — remplace le legacy TenderQuantitativeEstimate.
