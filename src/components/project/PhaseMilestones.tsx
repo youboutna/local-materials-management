@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Milestone, useMilestonesHex, usePhaseInspectionsHex } from "@/hooks/hexagonal";
+import { Milestone, useMilestonesHex, usePhaseInspectionsListHex } from "@/hooks/hexagonal";
 import { usePhasePayments } from "@/hooks/hexagonal/usePhasePaymentsHex";
 import { toast } from "@/hooks/use-toast";
 import { CalendarDays, CheckCircle, Clock, Plus, Sparkles, Target } from "lucide-react";
@@ -41,7 +41,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
   } = useMilestonesHex(projectId, phaseId);
 
   // Phase-context enrichment: link sibling inspections + payments for visibility
-  const { inspections: phaseInspections = [] } = usePhaseInspectionsHex(phaseId, projectId);
+  const { data: phaseInspections = [] } = usePhaseInspectionsListHex(phaseId);
   const phasePaymentsQuery = usePhasePayments(phaseId);
   const phasePayments = phasePaymentsQuery.data || [];
 
