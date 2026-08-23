@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Camera, MapPin, CheckCircle, AlertTriangle, Upload } from 'lucide-react';
 import { createDigitalInspection, MANDATORY_INSPECTION_FIELDS } from '@/application/services/InspectionMonitoringService';
 import { toast } from '@/hooks/use-toast';
+import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 
 interface DigitalInspectionFormProps {
   projectId: string;
@@ -300,10 +301,10 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Faible</SelectItem>
-                        <SelectItem value="medium">Moyen</SelectItem>
-                        <SelectItem value="high">Élevé</SelectItem>
-                        <SelectItem value="critical">Critique</SelectItem>
+                        <SelectItem value="low"><TranslatedSeverity code="low" /></SelectItem>
+                        <SelectItem value="medium"><TranslatedSeverity code="medium" /></SelectItem>
+                        <SelectItem value="high"><TranslatedSeverity code="high" /></SelectItem>
+                        <SelectItem value="critical"><TranslatedSeverity code="critical" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

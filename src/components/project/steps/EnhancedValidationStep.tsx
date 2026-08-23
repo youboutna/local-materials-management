@@ -339,7 +339,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                     <SelectValue placeholder="Sélectionner le statut" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Brouillon</SelectItem>
+                    <SelectItem value="draft"><TranslatedStatus code="draft" /></SelectItem>
                     <SelectItem value="en cours">En cours</SelectItem>
                     <SelectItem value="en attente">En attente</SelectItem>
                     <SelectItem value="terminé">Terminé</SelectItem>

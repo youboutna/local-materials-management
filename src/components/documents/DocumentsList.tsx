@@ -12,6 +12,7 @@ import { useDocumentViewer } from '@/components/documents/viewer';
 import { useDocumentChanges } from '@/components/documents/viewer/documentEvents';
 
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface DocumentsListProps {
   onDocumentSelect?: (document: DocumentDTO) => void;
@@ -205,9 +206,9 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="draft">Brouillon</SelectItem>
-                  <SelectItem value="pending_review">En attente de révision</SelectItem>
-                  <SelectItem value="approved">Approuvé</SelectItem>
+                  <SelectItem value="draft"><TranslatedStatus code="draft" /></SelectItem>
+                  <SelectItem value="pending_review"><TranslatedStatus code="pending_review" /></SelectItem>
+                  <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>

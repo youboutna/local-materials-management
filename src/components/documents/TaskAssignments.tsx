@@ -451,10 +451,10 @@ const TaskAssignmentsComponent = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="completed">Terminé</SelectItem>
-                  <SelectItem value="cancelled">Annulé</SelectItem>
+                  <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                  <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                  <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                  <SelectItem value="cancelled"><TranslatedStatus code="cancelled" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -469,10 +469,10 @@ const TaskAssignmentsComponent = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes</SelectItem>
-                  <SelectItem value="low">Faible</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                  <SelectItem value="high">Élevée</SelectItem>
-                  <SelectItem value="urgent">Urgente</SelectItem>
+                  <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                  <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
+                  <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
+                  <SelectItem value="urgent"><TranslatedPriority code="urgent" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -586,10 +586,10 @@ const TaskAssignmentsComponent = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Faible</SelectItem>
-                      <SelectItem value="medium">Moyenne</SelectItem>
-                      <SelectItem value="high">Élevée</SelectItem>
-                      <SelectItem value="urgent">Urgente</SelectItem>
+                      <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                      <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
+                      <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
+                      <SelectItem value="urgent"><TranslatedPriority code="urgent" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -660,10 +660,10 @@ const TaskAssignmentsComponent = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">En attente</SelectItem>
-                      <SelectItem value="in_progress">En cours</SelectItem>
-                      <SelectItem value="completed">Terminé</SelectItem>
-                      <SelectItem value="cancelled">Annulé</SelectItem>
+                      <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
+                      <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                      <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
+                      <SelectItem value="cancelled"><TranslatedStatus code="cancelled" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -16,6 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Calendar, CheckCircle2, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
+import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 
 interface InspectionDetailsStepProps {
   projectId: string;
@@ -303,9 +304,9 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Basse</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                  <SelectItem value="high">Haute</SelectItem>
+                  <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                  <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
+                  <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>

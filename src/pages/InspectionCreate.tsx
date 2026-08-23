@@ -18,6 +18,7 @@ import { useInspectionsHex } from '@/hooks/hexagonal';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AppLayout } from '@/components/layout';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 const InspectionCreate: React.FC = () => {
   const { t } = useLanguage();
@@ -151,9 +152,9 @@ const InspectionCreate: React.FC = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="scheduled">Planifiée</SelectItem>
-                      <SelectItem value="in_progress">En cours</SelectItem>
-                      <SelectItem value="completed">Terminée</SelectItem>
+                      <SelectItem value="scheduled"><TranslatedStatus code="scheduled" /></SelectItem>
+                      <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
+                      <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

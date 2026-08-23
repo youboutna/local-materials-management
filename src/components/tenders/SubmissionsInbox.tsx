@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { AwardedTenderPreviewDialog } from './AwardedTenderPreviewDialog';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 export interface SubmissionsInboxProps {
   tenderId: string;
@@ -97,10 +98,10 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
             <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous statuts</SelectItem>
-              <SelectItem value="submitted">Soumises</SelectItem>
-              <SelectItem value="under_review">En revue</SelectItem>
-              <SelectItem value="approved">Approuvées</SelectItem>
-              <SelectItem value="rejected">Rejetées</SelectItem>
+              <SelectItem value="submitted"><TranslatedStatus code="submitted" /></SelectItem>
+              <SelectItem value="under_review"><TranslatedStatus code="under_review" /></SelectItem>
+              <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
+              <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
             </SelectContent>
           </Select>
         </div>

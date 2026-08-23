@@ -517,10 +517,10 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Faible</SelectItem>
-                          <SelectItem value="medium">Moyenne</SelectItem>
-                          <SelectItem value="high">Élevée</SelectItem>
-                          <SelectItem value="critical">Critique</SelectItem>
+                          <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                          <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
+                          <SelectItem value="high"><TranslatedPriority code="high" /></SelectItem>
+                          <SelectItem value="critical"><TranslatedPriority code="critical" /></SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

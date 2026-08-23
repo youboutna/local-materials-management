@@ -28,6 +28,7 @@ import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsHex';
 import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 
 /**
  * TenderEstimateBoq — remplace le legacy TenderQuantitativeEstimate.
@@ -667,9 +668,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="administrative">Administratifs</SelectItem>
-                  <SelectItem value="technical">Techniques</SelectItem>
-                  <SelectItem value="financial">Financières</SelectItem>
+                  <SelectItem value="administrative"><TranslatedCategory code="administrative" /></SelectItem>
+                  <SelectItem value="technical"><TranslatedCategory code="technical" /></SelectItem>
+                  <SelectItem value="financial"><TranslatedCategory code="financial" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>

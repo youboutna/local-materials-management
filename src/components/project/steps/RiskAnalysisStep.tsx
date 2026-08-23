@@ -16,6 +16,7 @@ import { EmployeeDTO } from "@/dtos/entities/EmployeeDTO";
 
 // Import hexagonal hook for employees (Rule #5: UI Layer Separation)
 import { useActiveEmployeesHex } from "@/hooks/hexagonal/useActiveEmployeesHex";
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 
 interface RiskAnalysisStepProps {
   workflowData: ProjectWorkflowData | null;
@@ -326,7 +327,7 @@ const RiskAnalysisStep: React.FC<RiskAnalysisStepProps> = ({
                             <SelectItem value="assessed">Évalué</SelectItem>
                             <SelectItem value="mitigated">Mitigé</SelectItem>
                             <SelectItem value="monitoring">Surveillance</SelectItem>
-                            <SelectItem value="closed">Fermé</SelectItem>
+                            <SelectItem value="closed"><TranslatedStatus code="closed" /></SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

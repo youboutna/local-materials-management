@@ -23,6 +23,7 @@ import {
 } from '../hub/types';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 
 const TENDER_CATEGORY_LABELS: Record<string, string> = {
   administrative: 'Administratif',
@@ -260,7 +261,7 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tender">Global appel d'offres</SelectItem>
+                <SelectItem value="tender"><TranslatedCategory code="tender" /></SelectItem>
                 <SelectItem value="common">Commun à tous les lots</SelectItem>
                 <SelectItem value="lot" disabled={lotOptions.length === 0}>
                   Lot spécifique

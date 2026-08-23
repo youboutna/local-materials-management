@@ -451,7 +451,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                       <Select value={newObservation.type} onValueChange={(v) => setNewObservation({ ...newObservation, type: v, category: '' })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="technical">Technique</SelectItem>
+                          <SelectItem value="technical"><TranslatedCategory code="technical" /></SelectItem>
                           <SelectItem value="safety">Sécurité</SelectItem>
                           <SelectItem value="quality">Qualité</SelectItem>
                           <SelectItem value="non_conformity">Non-conformité</SelectItem>
@@ -490,10 +490,10 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                         <Select value={newObservation.severity} onValueChange={(v) => setNewObservation({ ...newObservation, severity: v })}>
                           <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="low">Mineure</SelectItem>
-                            <SelectItem value="medium">Moyenne</SelectItem>
-                            <SelectItem value="high">Majeure</SelectItem>
-                            <SelectItem value="critical">Critique</SelectItem>
+                            <SelectItem value="low"><TranslatedSeverity code="low" /></SelectItem>
+                            <SelectItem value="medium"><TranslatedSeverity code="medium" /></SelectItem>
+                            <SelectItem value="high"><TranslatedSeverity code="high" /></SelectItem>
+                            <SelectItem value="critical"><TranslatedSeverity code="critical" /></SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

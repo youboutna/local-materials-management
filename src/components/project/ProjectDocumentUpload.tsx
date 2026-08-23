@@ -13,6 +13,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { LocalFilePreviewButton } from '@/components/documents/viewer';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { getDocumentService } from '@/application/services/DocumentService';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import {
   DOCUMENT_TYPE_LABELS,
   getDocumentCategoriesForContext,
@@ -282,9 +283,9 @@ const ProjectDocumentUpload = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="draft">Brouillon</SelectItem>
-                <SelectItem value="pending_review">En attente de révision</SelectItem>
-                <SelectItem value="approved">Approuvé</SelectItem>
+                <SelectItem value="draft"><TranslatedStatus code="draft" /></SelectItem>
+                <SelectItem value="pending_review"><TranslatedStatus code="pending_review" /></SelectItem>
+                <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
               </SelectContent>
             </Select>
           </div>

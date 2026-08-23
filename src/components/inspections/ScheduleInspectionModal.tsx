@@ -28,6 +28,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Bell, Calendar, CheckCircle2, FileText, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 
 // Local type for inspection type selection
 type InspectionTypeId = 'technical' | 'safety' | 'quality';
@@ -345,8 +346,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Basse</SelectItem>
-                    <SelectItem value="medium">Moyenne</SelectItem>
+                    <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
+                    <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
                     <SelectItem value="high" disabled={!permissions?.canSetHighPriority}>
                       Haute {!permissions?.canSetHighPriority && '(Requiert approbation)'}
                     </SelectItem>
