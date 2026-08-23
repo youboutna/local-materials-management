@@ -128,6 +128,11 @@ export class AuthService {
     return this.authRepository.setSession(params);
   }
 
+  /** Souscription réactive à la session (unique voie autorisée côté UI/hooks). */
+  onAuthStateChange(callback: (session: AuthSession | null) => void): () => void {
+    return this.authRepository.onAuthStateChange(callback);
+  }
+
   async assignUserRole(userId: string, role: string): Promise<void> {
     const result = await this.authRepository.updateUserRole(userId, role);
     if (result.error) {

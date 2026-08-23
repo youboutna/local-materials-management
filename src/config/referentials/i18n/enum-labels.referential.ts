@@ -507,3 +507,27 @@ export function getEnumOptions(enumName: string, lang: SupportedLang = 'fr'): Ar
     const map = ENUM_LABELS[enumName] ?? {};
     return Object.keys(map).map((value) => ({ value, label: map[value][lang] || map[value].fr }));
 }
+
+/**
+ * Index global code -> libellé, agrégé sur les 38 ENUM.
+ * Sert de filet de sécurité : aucun code technique ne doit s'afficher brut dans l'UI,
+ * même lorsque le composant n'indique pas explicitement le nom de l'ENUM.
+ * Premier ENUM déclarant le code gagne (les codes sont homogènes entre ENUM).
+ */
+const ENUM_CODE_INDEX: Record<string, EnumLabel> = (() => {
+    const index: Record<string, EnumLabel> = {};
+    Object.values(ENUM_LABELS).forEach((map) => {
+        Object.entries(map).forEach(([code, label]) => {
+            if (!index[code]) index[code] = label;
+        });
+    });
+    return index;
+})();
+
+/** Résout un code technique sans connaître son ENUM d'origine. Retourne `null` si inconnu. */
+export function resolveAnyEnumLabel(code: string | null | undefined, lang: SupportedLang = 'fr'): string | null {
+    if (!code) return null;
+    const entry = ENUM_CODE_INDEX[code] ?? ENUM_CODE_INDEX[code.toLowerCase()];
+    return entry ? entry[lang] || entry.fr : null;
+}
+

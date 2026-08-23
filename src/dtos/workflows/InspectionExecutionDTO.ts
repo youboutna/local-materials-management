@@ -23,10 +23,10 @@ export interface InspectionObservation {
   location?: string;
   severity?: SeverityLevel;
   conformity: ConformityStatus;
-  corrective_action?: string;
+  correctiveAction?: string;
   deadline?: string;
   photos?: string[];
-  created_at: string;
+  createdAt: string;
 }
 
 // Document attached to inspection
@@ -36,15 +36,15 @@ export interface InspectionDocument {
   type: 'photo' | 'scan' | 'report' | 'certificate' | 'checklist';
   url: string;
   size: number;
-  mime_type: string;
+  mimeType: string;
   metadata?: {
     latitude?: number;
     longitude?: number;
-    captured_at?: string;
+    capturedAt?: string;
     caption?: string;
   };
-  uploaded_at: string;
-  uploaded_by?: string;
+  uploadedAt: string;
+  uploadedBy?: string;
 }
 
 // Checklist item
@@ -55,7 +55,7 @@ export interface ChecklistItem {
   required: boolean;
   checked: boolean;
   notes?: string;
-  checked_at?: string;
+  checkedAt?: string;
 }
 
 // Measurement/reading
@@ -64,9 +64,9 @@ export interface InspectionMeasurement {
   parameter: string;
   value: number;
   unit: string;
-  min_acceptable?: number;
-  max_acceptable?: number;
-  is_within_range: boolean;
+  minAcceptable?: number;
+  maxAcceptable?: number;
+  isWithinRange: boolean;
   notes?: string;
 }
 
@@ -78,23 +78,23 @@ export interface InspectionParticipant {
   organization?: string;
   email?: string;
   phone?: string;
-  signature_url?: string;
-  signed_at?: string;
+  signatureUrl?: string;
+  signedAt?: string;
 }
 
 // Complete inspection execution data
 export interface InspectionExecutionData {
   // Timing
-  started_at?: string;
-  completed_at?: string;
-  duration_minutes?: number;
+  startedAt?: string;
+  completedAt?: string;
+  durationMinutes?: number;
 
   // Location
   location?: {
     latitude: number;
     longitude: number;
     address?: string;
-    captured_at: string;
+    capturedAt: string;
   };
 
   // Content
@@ -105,15 +105,15 @@ export interface InspectionExecutionData {
   participants: InspectionParticipant[];
 
   // Results
-  overall_conformity: ConformityStatus;
-  quality_score?: number;
-  progress_percentage: number;
+  overallConformity: ConformityStatus;
+  qualityScore?: number;
+  progressPercentage: number;
 
   // Conclusions
   summary: string;
   recommendations: string[];
-  corrective_actions_required: boolean;
-  next_inspection_date?: string;
+  correctiveActionsRequired: boolean;
+  nextInspectionDate?: string;
 }
 
 // PV (Procès-Verbal) Template types
@@ -128,8 +128,8 @@ export interface PVTemplate {
   type: PVType;
   title: string;
   sections: PVSection[];
-  required_signatures: string[];
-  footer_text?: string;
+  requiredSignatures: string[];
+  footerText?: string;
 }
 
 export interface PVSection {
@@ -143,24 +143,24 @@ export interface PVSection {
 // Generated PV
 export interface GeneratedPV {
   id: string;
-  inspection_id: string;
-  pv_type: PVType;
-  pv_number: string;
+  inspectionId: string;
+  pvType: PVType;
+  pvNumber: string;
   title: string;
 
   // Content
   header: {
-    project_title: string;
-    phase_name?: string;
-    inspection_date: string;
-    inspection_type: string;
+    projectTitle: string;
+    phaseName?: string;
+    inspectionDate: string;
+    inspectionType: string;
     location: string;
   };
 
   participants: InspectionParticipant[];
   object: string;
-  observations_summary: string;
-  observations_table: Array<{
+  observationsSummary: string;
+  observationsTable: Array<{
     category: string;
     observation: string;
     conformity: ConformityStatus;
@@ -168,7 +168,7 @@ export interface GeneratedPV {
   }>;
 
   conclusions: {
-    overall_status: ConformityStatus;
+    overallStatus: ConformityStatus;
     summary: string;
     conditions?: string[];
   };
@@ -184,23 +184,23 @@ export interface GeneratedPV {
   signatures: Array<{
     role: string;
     name: string;
-    signature_url?: string;
-    signed_at?: string;
+    signatureUrl?: string;
+    signedAt?: string;
     order: number;
   }>;
 
   annexes: Array<{
     title: string;
-    document_url: string;
+    documentUrl: string;
   }>;
 
   // Metadata
   status: 'draft' | 'finalized' | 'signed' | 'archived';
-  generated_at: string;
-  generated_by: string;
-  finalized_at?: string;
+  generatedAt: string;
+  generatedBy: string;
+  finalizedAt?: string;
   version: number;
-  pdf_url?: string;
+  pdfUrl?: string;
 }
 
 // Validation workflow
@@ -208,20 +208,20 @@ export type ValidationLevel = 'inspector' | 'quality_manager' | 'project_manager
 
 export interface ValidationStep {
   level: ValidationLevel;
-  validator_id?: string;
-  validator_name?: string;
+  validatorId?: string;
+  validatorName?: string;
   status: 'pending' | 'approved' | 'rejected' | 'changes_requested';
   comments?: string;
-  validated_at?: string;
+  validatedAt?: string;
 }
 
 export interface InspectionValidationWorkflow {
-  inspection_id: string;
-  current_level: ValidationLevel;
+  inspectionId: string;
+  currentLevel: ValidationLevel;
   steps: ValidationStep[];
-  is_complete: boolean;
-  final_status?: 'approved' | 'rejected';
-  completed_at?: string;
+  isComplete: boolean;
+  finalStatus?: 'approved' | 'rejected';
+  completedAt?: string;
 }
 
 // Default checklist templates by inspection type

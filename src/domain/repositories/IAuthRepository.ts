@@ -72,4 +72,12 @@ export interface IAuthRepository {
 
   // Email change without active session
   updateEmail(oldEmail: string, newEmail: string): Promise<{ error: Error | null }>;
+
+  /**
+   * Souscription aux changements de session (port réactif).
+   * Retourne une fonction de désinscription. Les providers qui ne diffusent pas
+   * d'évènements renvoient un noop (voir BaseAuthAdapter).
+   */
+  onAuthStateChange(callback: (session: AuthSession | null) => void): () => void;
+
 }

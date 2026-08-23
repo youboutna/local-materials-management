@@ -34,7 +34,7 @@ export interface InspectionWithProjectDTO {
     location?: string;
   } | null;
   project_phases?: {
-    phase_name: string;
+    phaseName: string;
   } | null;
 }
 
@@ -94,33 +94,33 @@ export class PVGeneratorService {
       // Create GeneratedPV object
       const generatedPV: GeneratedPV = {
         id: `pv-${Date.now()}`,
-        inspection_id: request.inspectionId,
-        pv_type: request.pvType,
-        pv_number: pvNumber,
+        inspectionId: request.inspectionId,
+        pvType: request.pvType,
+        pvNumber: pvNumber,
         title: request.customTitle || `Procès-Verbal - ${inspection.projects?.title || 'Projet'}`,
         header: {
-          project_title: inspection.projects?.title || 'Projet',
-          phase_name: inspection.project_phases?.phase_name,
-          inspection_date: inspection.date,
-          inspection_type: request.pvType,
+          projectTitle: inspection.projects?.title || 'Projet',
+          phaseName: inspection.project_phases?.phaseName,
+          inspectionDate: inspection.date,
+          inspectionType: request.pvType,
           location: inspection.projects?.location || 'Non spécifié'
         },
         participants: [],
         object: `Inspection ${request.pvType === 'technical_inspection' ? 'technique' : 'de sécurité'}`,
-        observations_summary: request.customContent || inspection.comments || 'Aucune observation particulière',
-        observations_table: [],
+        observationsSummary: request.customContent || inspection.comments || 'Aucune observation particulière',
+        observationsTable: [],
         conclusions: {
-          overall_status: inspection.status === 'approved' ? 'conform' : 'non_conform',
+          overallStatus: inspection.status === 'approved' ? 'conform' : 'non_conform',
           summary: `Progression: ${inspection.progress_at_inspection}%`
         },
         recommendations: [],
         signatures: [],
         annexes: [],
         status: 'draft',
-        generated_at: new Date().toISOString(),
-        generated_by: inspection.inspector,
+        generatedAt: new Date().toISOString(),
+        generatedBy: inspection.inspector,
         version: 1,
-        pdf_url: pdfUrl
+        pdfUrl: pdfUrl
       };
 
       // Persist PV via repository
@@ -133,10 +133,10 @@ export class PVGeneratorService {
           content: pvContent,
           pdf_url: pdfUrl,
           status: generatedPV.status,
-          generated_by: generatedPV.generated_by,
+          generated_by: generatedPV.generatedBy,
           version: generatedPV.version,
           metadata: { header: generatedPV.header, conclusions: generatedPV.conclusions },
-          generated_at: generatedPV.generated_at,
+          generated_at: generatedPV.generatedAt,
         });
         if (saved && saved.id) {
           generatedPV.id = saved.id;
@@ -208,7 +208,7 @@ export class PVGeneratorService {
           location: project.location
         },
         project_phases: phase && typeof phase === 'object' && phase !== null && 'name' in phase ? {
-          phase_name: (phase as { name?: string }).name || 'Phase'
+          phaseName: (phase as { name?: string }).name || 'Phase'
         } : undefined
       };
     } catch (error) {
@@ -232,7 +232,7 @@ export class PVGeneratorService {
       content = `
 PROCÈS-VERBAL D'INSPECTION TECHNIQUE
 ${inspection.projects?.title || 'Projet'} - ${inspection.projects?.location || 'Lieu'}
-${inspection.project_phases?.phase_name ? `Phase: ${inspection.project_phases.phase_name}` : ''}
+${inspection.project_phases?.phaseName ? `Phase: ${inspection.project_phases.phaseName}` : ''}
 
 Date: ${date}
 Inspecteur: ${inspection.inspector}
@@ -252,7 +252,7 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       content = `
 PROCÈS-VERBAL D'INSPECTION SÉCURITÉ
 ${inspection.projects?.title || 'Projet'} - ${inspection.projects?.location || 'Lieu'}
-${inspection.project_phases?.phase_name ? `Phase: ${inspection.project_phases.phase_name}` : ''}
+${inspection.project_phases?.phaseName ? `Phase: ${inspection.project_phases.phaseName}` : ''}
 
 Date: ${date}
 Inspecteur: ${inspection.inspector}
@@ -325,32 +325,32 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
     const metadata = (record.metadata as Record<string, unknown> | null) || {};
     return {
       id: String(record.id),
-      inspection_id: String(record.inspection_id),
-      pv_type: record.pv_type as PVType,
-      pv_number: String(record.pv_number),
+      inspectionId: String(record.inspection_id),
+      pvType: record.pv_type as PVType,
+      pvNumber: String(record.pv_number),
       title: (record.title as string) || '',
       header: (metadata.header as GeneratedPV['header']) || {
-        project_title: '',
-        inspection_date: '',
-        inspection_type: record.pv_type as PVType,
+        projectTitle: '',
+        inspectionDate: '',
+        inspectionType: record.pv_type as PVType,
         location: '',
       },
       participants: [],
       object: '',
-      observations_summary: (record.content as string) || '',
-      observations_table: [],
+      observationsSummary: (record.content as string) || '',
+      observationsTable: [],
       conclusions: (metadata.conclusions as GeneratedPV['conclusions']) || {
-        overall_status: 'conform' as ConformityStatus,
+        overallStatus: 'conform' as ConformityStatus,
         summary: '',
       },
       recommendations: [],
       signatures: [],
       annexes: [],
       status: (record.status as GeneratedPV['status']) || 'draft',
-      generated_at: String(record.generated_at),
-      generated_by: (record.generated_by as string) || '',
+      generatedAt: String(record.generated_at),
+      generatedBy: (record.generated_by as string) || '',
       version: Number(record.version) || 1,
-      pdf_url: (record.pdf_url as string) || undefined,
+      pdfUrl: (record.pdf_url as string) || undefined,
     };
   }
 }

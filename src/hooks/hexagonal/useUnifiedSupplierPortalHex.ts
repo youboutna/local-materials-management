@@ -9,8 +9,9 @@ import { StorageService } from '@/application/services/StorageService';
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { getAuthService } from '@/application/services/AuthService';
+import type { AuthSession, AuthUser } from '@/domain/repositories/IAuthRepository';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
@@ -31,30 +32,39 @@ export interface Supplier {
 }
 
 export const useSupplierPortalAuthHex = () => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const authService = getAuthService();
+
+    const unsubscribe = authService.onAuthStateChange((nextSession) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    authService
+      .getCurrentSession()
+      .then(({ session: currentSession, user: currentUser }) => {
+        setSession(currentSession);
+        setUser(currentUser);
+      })
+      .catch(() => {
+        setSession(null);
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   return { user, session, loading };
 };
 
-export const useFetchSupplierProfileHex = (user: SupabaseUser | null) => {
+export const useFetchSupplierProfileHex = (user: AuthUser | null) => {
+
   const supplierService = getSupplierService();
   
   return useQuery({
@@ -92,10 +102,9 @@ export const useSupplierLoginHex = () => {
   
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      return data;
+      return await getAuthService().login({ email, password });
     },
+
     onSuccess: () => {
       toast({ title: 'Connexion réussie' });
       queryClient.invalidateQueries({ queryKey: ['supplier-portal-profile'] });
@@ -111,10 +120,9 @@ export const useSupplierSignUpHex = () => {
   
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      return data;
+      return await getAuthService().signUp({ email, password });
     },
+
     onSuccess: () => {
       toast({ title: 'Inscription réussie' });
       queryClient.invalidateQueries({ queryKey: ['supplier-portal-profile'] });
@@ -130,8 +138,9 @@ export const useSupplierLogoutHex = () => {
   
   return useMutation({
     mutationFn: async () => {
-      await supabase.auth.signOut();
+      await getAuthService().logout();
     },
+
     onSuccess: () => {
       toast({ title: 'Déconnexion réussie' });
       queryClient.clear();
