@@ -327,7 +327,10 @@ export const BoqPdfRenderer = {
     doc.setFontSize(11); doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold');
     doc.text(sanitizeNumberSpaces(ctx.signedBy ?? ctx.senderName ?? ctx.company?.name ?? '—'), 55, y + 36);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 116, 139);
-    const signedAtIso = ctx.signedAt ? new Date(ctx.signedAt).toISOString().slice(0, 10) : issueDate;
+    const parsedSignedAt = ctx.signedAt ? new Date(ctx.signedAt) : null;
+    const signedAtIso = parsedSignedAt && !Number.isNaN(parsedSignedAt.getTime())
+      ? parsedSignedAt.toISOString().slice(0, 10)
+      : issueDate;
     doc.text(
       ctx.signed
         ? `Signature électronique — ${signedAtIso}`

@@ -235,8 +235,10 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             <BoqActionsBar
               ctx={ctx}
               lines={actionableLines}
+              projectName={props.projectName}
               recipientEmail={props.recipientEmail}
               disabled={doc.isLoading || noActionableLines}
+
               onAttachToSubmission={props.onAttachToSubmission}
               onSubmitInvoice={props.onSubmitInvoice}
               onDistribute={props.onDistribute}

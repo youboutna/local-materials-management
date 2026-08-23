@@ -128,7 +128,7 @@ export const BoqActionsBar: React.FC<Props> = ({
       if (sig?.signedAt) {
         return {
           by: sig.signedBy ?? '—',
-          at: new Date(sig.signedAt).toLocaleString('fr-FR'),
+          at: new Date(sig.signedAt).toISOString(),
         };
       }
     }
@@ -198,7 +198,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     try {
       const res = await DocumentService.sign(lines, { ...baseDocCtx, signedBy: signer.trim() });
       if (res.ok) {
-        setSignedInfo({ by: signer.trim(), at: new Date().toLocaleString('fr-FR') });
+        setSignedInfo({ by: signer.trim(), at: new Date().toISOString() });
         toast({ title: 'Document signé', description: `Par ${signer.trim()}` });
         setSignOpen(false);
       } else toast({ title: 'Signature échouée', description: res.message, variant: 'destructive' });
