@@ -67,10 +67,16 @@ function toPdfCtx(ctx: DocumentContext): BoqPdfContext {
     title: ctx.title,
     docPrefix: ctx.docPrefix,
     projectId: ctx.projectId,
+    projectTitle: ctx.projectTitle,
     tenderId: ctx.tenderId,
+    tenderTitle: ctx.tenderTitle,
     submissionId: ctx.submissionId,
+    documentId: ctx.documentId ?? null,
     senderName: ctx.senderName,
     recipientName: ctx.recipientName,
+    currency: ctx.currency,
+    fiscalProfileCode: ctx.fiscalProfileCode ?? null,
+    issueDate: ctx.issueDate ?? null,
     signed: ctx.signed,
     signedBy: ctx.signedBy,
     signedAt: ctx.signedAt,
@@ -83,6 +89,7 @@ function toPdfCtx(ctx: DocumentContext): BoqPdfContext {
     docNumber: ctx.reference,
   };
 }
+
 
 
 export const DocumentService = {
