@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import UserSelector from '@/components/selectors/UserSelector';
 import { EnhancedActionService, UnifiedActionRequest, EnhancedActionServiceStatic } from '@/application/services/enhancedActionService';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 const actionFormSchema = z.object({
   actionType: z.enum(['task_assignment', 'hierarchy_notification', 'sms', 'call', 'email', 'mail']),
@@ -63,6 +64,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const form = useForm<z.infer<typeof actionFormSchema>>({
     resolver: zodResolver(actionFormSchema),
