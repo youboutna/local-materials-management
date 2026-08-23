@@ -7,6 +7,11 @@
 
 import type { AlertData } from '@/dtos/entities/AlertDTO';
 import {
+    alertCategoryOf,
+    canonicalAlertType,
+    resolveAlertSeverity,
+} from '@/config/referentials/notifications/alerts.referential';
+import {
     CreateMonitoringAlertDTO,
     IMonitoringAlertRepository,
     MonitoringAlertDTO,
@@ -38,7 +43,8 @@ function transformToAlertData(dto: MonitoringAlertDTO): AlertData {
     severity: mapPriorityToSeverity(dto.priority),
     title: dto.title,
     message: dto.description || '',
-    projectId: dto.stationId || '',
+    projectId: dto.projectId || '',
+    phaseId: dto.phaseId || undefined,
     relatedEntityId: dto.id,
     source: 'notification',
     timestamp: dto.createdAt,
@@ -51,8 +57,8 @@ function transformToAlertData(dto: MonitoringAlertDTO): AlertData {
     actionTakenBy: dto.resolvedBy || undefined,
     actionTakenAt: dto.resolvedAt || undefined,
     status: dto.status as AlertData['status'],
-    escalationLevel: 0,
-    availableActions: [],
+    escalationLevel: dto.escalationLevel,
+    availableActions: dto.assignedActions,
     actionProof: [],
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt ?? dto.createdAt,
@@ -60,29 +66,13 @@ function transformToAlertData(dto: MonitoringAlertDTO): AlertData {
 }
 
 function mapAlertType(dbType: string): AlertData['type'] {
-  const typeMap: Record<string, AlertData['type']> = {
-    'insurance': 'insurance_expiry',
-    'delay': 'project_delay',
-    'inspection': 'inspection_issue',
-    'financial': 'financial_risk',
-    'guarantee': 'bank_guarantee',
-    'payment': 'payment_blocked',
-    'compliance': 'compliance_violation',
-    'delivery': 'delivery',
-    'deadline': 'deadline',
-    'quality': 'quality'
-  };
-  return typeMap[dbType] || 'project_delay';
+  // Résolution via le référentiel (code canonique + alias historiques),
+  // sans fallback trompeur vers 'project_delay'.
+  return canonicalAlertType(dbType) as AlertData['type'];
 }
 
 function mapPriorityToSeverity(priority: string): AlertData['severity'] {
-  const severityMap: Record<string, AlertData['severity']> = {
-    'critical': 'critical',
-    'high': 'high',
-    'medium': 'medium',
-    'low': 'low'
-  };
-  return severityMap[priority] || 'medium';
+  return resolveAlertSeverity(priority).code as AlertData['severity'];
 }
 
 export class MonitoringAlertService {
@@ -124,7 +114,8 @@ export class MonitoringAlertService {
       alertType: data.type || 'general',
       priority: data.severity || 'medium',
       description: data.message,
-      stationId: data.projectId
+      projectId: data.projectId,
+      phaseId: data.phaseId ?? null,
     };
 
     const created = await this.repository.create(createDto);
@@ -184,15 +175,21 @@ export class MonitoringAlertService {
    * Filter alerts by type
    */
   filterByType(alerts: AlertData[], type: string): AlertData[] {
-    if (type === 'all') return alerts;
-    
-    return alerts.filter(alert => {
-      if (type === 'delay') return alert.type === 'project_delay';
-      if (type === 'payment') return alert.type === 'payment_blocked' || alert.type === 'financial_risk';
-      if (type === 'inspection') return alert.type === 'inspection_issue' || alert.type === 'inspection_overdue';
-      if (type === 'guarantee') return alert.type === 'bank_guarantee';
-      return true;
-    });
+    if (!type || type === 'all') return alerts;
+    return alerts.filter((alert) => alertCategoryOf(alert.type) === type);
+  }
+
+  /** Alertes contextualisées projet */
+  async getAlertsByProject(projectId: string): Promise<AlertData[]> {
+    if (!projectId) return [];
+    const dtos = await this.repository.findByProjectId(projectId);
+    return dtos.map(transformToAlertData);
+  }
+
+  /** Alertes contextualisées phase */
+  async getAlertsByPhase(projectId: string, phaseId: string): Promise<AlertData[]> {
+    const alerts = await this.getAlertsByProject(projectId);
+    return phaseId ? alerts.filter((a) => a.phaseId === phaseId) : alerts;
   }
 }
 

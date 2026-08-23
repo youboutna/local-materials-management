@@ -19,6 +19,9 @@ import {
 
 // ===== DTO spécifiques à l'UI =====
 export interface AlertDTO extends Alert {
+  /** Contexte phase (metadata.phase_id en base) */
+  phaseId?: string;
+  phaseTitle?: string;
   displayName?: string;
   formattedDate?: string;
   formattedTriggerDate?: string;
@@ -53,6 +56,7 @@ export interface AlertFilter {
   source?: AlertSource;
   acknowledged?: boolean;
   projectId?: string;
+  phaseId?: string;
   dateRange?: {
     start: string;
     end: string;
@@ -72,6 +76,7 @@ export interface CreateAlertData {
   title: string;
   message: string;
   projectId: string;
+  phaseId?: string;
   projectTitle?: string;
   relatedEntityId?: string;
   source?: AlertSource;

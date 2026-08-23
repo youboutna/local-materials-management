@@ -18,6 +18,10 @@ import {
 import React from "react";
 
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import {
+  ALERT_CATEGORIES,
+  alertSeverityColor,
+} from '@/config/referentials/notifications/alerts.referential';
 import { T } from '@/components/i18n/T';
 const AlertsDashboard: React.FC = () => {
   const { t } = useLanguage();
@@ -29,20 +33,8 @@ const AlertsDashboard: React.FC = () => {
     filterAlertsByType 
   } = useAlertsHex();
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case "critical":
-        return "bg-red-500";
-      case "high":
-        return "bg-orange-500";
-      case "medium":
-        return "bg-yellow-500";
-      case "low":
-        return "bg-blue-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+  // Couleurs pilotées par le référentiel système des alertes (aucune couleur en dur)
+  const getSeverityColor = (severity: string) => alertSeverityColor(severity);
 
   const getSeverityIcon = (type: string) => {
     switch (type) {
@@ -152,15 +144,15 @@ const AlertsDashboard: React.FC = () => {
 
       {/* Alerts Tabs */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
-          <TabsTrigger value="all">{t('dashboard.management_tabs.alerts.tabs.all')}</TabsTrigger>
-          <TabsTrigger value="delay">{t('dashboard.management_tabs.alerts.tabs.delay')}</TabsTrigger>
-          <TabsTrigger value="payment">{t('dashboard.management_tabs.alerts.tabs.payment')}</TabsTrigger>
-          <TabsTrigger value="inspection">{t('dashboard.management_tabs.alerts.tabs.inspection')}</TabsTrigger>
-          <TabsTrigger value="guarantee">{t('dashboard.management_tabs.alerts.tabs.guarantee')}</TabsTrigger>
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+          {ALERT_CATEGORIES.map((category) => (
+            <TabsTrigger key={category.code} value={category.code}>
+              {t(`dashboard.management_tabs.alerts.tabs.${category.code}`)}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        {["all", "delay", "payment", "inspection", "guarantee"].map((type) => (
+        {ALERT_CATEGORIES.map((c) => c.code).map((type) => (
           <TabsContent key={type} value={type} className="mt-6">
             <div className="space-y-4">
               {filterAlertsByType(type).length === 0 ? (
