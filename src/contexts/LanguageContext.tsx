@@ -1,5 +1,11 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { getI18nService } from '@/application/services/I18nService';
+import autoFr from '@/locales/auto.fr.json';
+import autoAr from '@/locales/auto.ar.json';
+import autoEn from '@/locales/auto.en.json';
+
+/** Libellés UI générés (codemod Phase 6) — codes techniques exclus. */
+const AUTO_UI_LABELS = { fr: autoFr, ar: autoAr, en: autoEn } as const;
 
 export type Language = 'fr' | 'ar' | 'en';
 
