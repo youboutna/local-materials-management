@@ -64,6 +64,8 @@ export interface ProjectStakeholderEntityProps {
   hourlyRate?: number | null;
   contractType?: string | null;
   notes?: string | null;
+  /** Contexte phase (doctrine : toute entité métier porte projectId + phaseId). */
+  phaseId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,7 +92,8 @@ export class ProjectStakeholderEntity implements ProjectStakeholder {
     public readonly contractType: string | null,
     public readonly notes: string | null,
     public readonly createdAt: string,
-    public readonly updatedAt: string
+    public readonly updatedAt: string,
+    public readonly phaseId: string | null = null
   ) {}
 
   // ============= Factory Method =============
@@ -116,7 +119,8 @@ export class ProjectStakeholderEntity implements ProjectStakeholder {
       props.contractType ?? null,
       props.notes ?? null,
       props.createdAt,
-      props.updatedAt
+      props.updatedAt,
+      props.phaseId ?? null
     );
   }
 
