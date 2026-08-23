@@ -88,3 +88,43 @@ export const TranslatedStatus = ({ code }: { code?: string | null }) => {
   const { translateStatus } = useI18n();
   return <>{translateStatus(code)}</>;
 };
+
+export const TranslatedPriority = ({ code }: { code?: string | null }) => {
+  const { translatePriority } = useI18n();
+  return <>{translatePriority(code)}</>;
+};
+
+export const TranslatedCategory = ({ code }: { code?: string | null }) => {
+  const { translateCategory } = useI18n();
+  return <>{translateCategory(code)}</>;
+};
+
+export const TranslatedProjectType = ({ code }: { code?: string | null }) => {
+  const { translateProjectType } = useI18n();
+  return <>{translateProjectType(code)}</>;
+};
+
+export const TranslatedRole = ({ code }: { code?: string | null }) => {
+  const { translateRole } = useI18n();
+  return <>{translateRole(code)}</>;
+};
+
+export const TranslatedSeverity = ({ code }: { code?: string | null }) => {
+  const { translateSeverity } = useI18n();
+  return <>{translateSeverity(code)}</>;
+};
+
+export const TranslatedDocumentType = ({ code }: { code?: string | null }) => {
+  const { translateDocumentType } = useI18n();
+  return <>{translateDocumentType(code)}</>;
+};
+
+export const TranslatedDepartment = ({ code }: { code?: string | null }) => {
+  const { translateDepartment } = useI18n();
+  return <>{translateDepartment(code)}</>;
+};
+
+export const TranslatedTenderStep = ({ code }: { code?: string | null }) => {
+  const { translateTenderStep } = useI18n();
+  return <>{translateTenderStep(code)}</>;
+};
