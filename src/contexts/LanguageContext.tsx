@@ -5589,10 +5589,19 @@ const PHASE_STRUCTURE_KEYS = {
     );
 });
 
-
-
 /**
- * Phase 6 — alias canoniques exigés par la spécification d'intégration.
+ * Phase 6 — libellés multilingues des ENUM techniques
+ * (`scripts/enum-labels-gen.cjs` -> `src/config/referentials/i18n/enum-labels.referential.ts`).
+ * Clés `enum.<NomEnum>.<code>` : le code technique demeure l'unique valeur persistée.
+ */
+(['fr', 'ar', 'en'] as const).forEach((lang) => {
+    deepMergeMissing(
+        (translations as unknown as Record<string, Record<string, unknown>>)[lang],
+        expandFlatKeys(ENUM_UI_LABELS[lang] as Record<string, string>)
+    );
+});
+
+
  * Un seul code source de vérité (PHASE_STRUCTURE_KEYS) ; ces alias exposent
  * les clés contractuelles `wbs.*`, `referential.*`, `phase.*`, `step.*`, `progress.*`.
  */
