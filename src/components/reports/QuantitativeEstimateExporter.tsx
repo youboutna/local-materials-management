@@ -467,7 +467,7 @@ export function QuantitativeEstimateExporter({
           <br>
           <p>Cordialement,</p>
           <p>L'équipe de gestion des appels d'offres</p>
-        `
+        `,
         actionType: 'quantitative-estimate',
         attachments: [
           { filename: fileName, content: await blobToBase64(blob), contentType: 'application/pdf', encoding: 'base64' },

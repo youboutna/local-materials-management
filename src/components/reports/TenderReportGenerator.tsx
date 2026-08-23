@@ -304,7 +304,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
           <br>
           <p>Cordialement,</p>
           <p>L'équipe de gestion des projets</p>
-        `
+        `,
         actionType: 'tender-report',
         attachments: [
           { filename: fileName, content: await blobToBase64(blob), contentType: 'application/pdf', encoding: 'base64' },

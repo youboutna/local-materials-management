@@ -352,7 +352,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           <br>
           <p>Cordialement,</p>
           <p>L'équipe d'inspection qualité</p>
-        `
+        `,
         actionType: 'inspection-report',
         attachments: [
           { filename: fileName, content: await blobToBase64(blob), contentType: 'application/pdf', encoding: 'base64' },
