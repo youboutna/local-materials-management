@@ -107,6 +107,7 @@ export const STATUS_LABELS: Record<string, ReferentialLabel> = {
   pour_validation: label('pour_validation', 'Pour validation', 'للتحقق', 'For validation'),
   submitted: label('submitted', 'Soumis', 'تم الإرسال', 'Submitted'),
   soumis: label('soumis', 'Soumis', 'تم الإرسال', 'Submitted'),
+  en_analyse: label('en_analyse', "En cours d'analyse", 'قيد التحليل', 'Under review'),
   en_negociation: label('en_negociation', 'En négociation', 'قيد التفاوض', 'Under negotiation'),
   accepted: label('accepted', 'Accepté', 'مقبول', 'Accepted'),
   accepte: label('accepte', 'Accepté', 'مقبول', 'Accepted'),

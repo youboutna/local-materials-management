@@ -19,7 +19,7 @@ import { ArrowLeft, FileSpreadsheet, GitCompare, LayoutDashboard } from 'lucide-
 import { BoqWorkspace, type BoqWorkspaceMode } from './BoqWorkspace';
 import { BoqActionsBar } from './BoqActionsBar';
 import { InvoiceWorkflowActions } from '@/components/invoices/InvoiceWorkflowActions';
-import { getInvoiceTypeByDqeType } from '@/config/referentials/invoices/invoice-document-types.referential';
+import { resolveInvoiceDocumentType } from '@/config/referentials/invoices/invoice-document-types.referential';
 import { BoqDocumentList } from './BoqDocumentList';
 import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
@@ -215,7 +215,12 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   // passer à l'état soumis. Seules les lignes locales non sauvegardées sont exclues.
   const actionableLines = doc.lines ?? [];
   // Étape documentaire courante déduite du référentiel via le `dqeType` des lignes.
-  const invoiceDef = getInvoiceTypeByDqeType((doc.lines ?? [])[0]?.dqeType);
+  // La `source` BOQ fait foi : un DQE reste un DQE (jamais un devis).
+  const invoiceDef = resolveInvoiceDocumentType({
+    source: ctx.source,
+    documentType: (doc.lines ?? [])[0]?.documentType,
+    dqeType: (doc.lines ?? [])[0]?.dqeType,
+  });
   const noActionableLines = actionableLines.length === 0;
 
   return (
