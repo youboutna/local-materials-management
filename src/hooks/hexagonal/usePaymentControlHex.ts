@@ -2,7 +2,6 @@
  * Payment Control Hook - Hexagonal Architecture
  */
 
-import { PaymentControlService } from '@/application/services/PaymentControlServiceWorking';
 import {
     PaymentBlockingInterfaceDTO,
     PaymentControlDashboardDTO

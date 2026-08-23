@@ -1,4 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';

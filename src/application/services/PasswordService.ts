@@ -9,13 +9,14 @@ import {
   PasswordUpdateRequestDTO,
   PasswordValidationResultDTO
 } from '@/dtos/entities/PasswordDTO';
-import { supabase } from '@/integrations/supabase/client';
+import type { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 
 /**
  * Service for managing password operations with hexagonal architecture
- * Uses Supabase Auth directly for password operations
+ * Aucun accès provider direct : tout passe par le port IAuthRepository.
  */
 export class PasswordService {
+  constructor(private readonly authRepository: IAuthRepository) {}
   /**
    * Request password reset for user
    */
@@ -25,9 +26,8 @@ export class PasswordService {
 
       const redirectUrl = request.redirectUrl || `${window.location.origin}/reset-password`;
       
-      const { error } = await supabase.auth.resetPasswordForEmail(request.email, {
-        redirectTo: redirectUrl
-      });
+      void redirectUrl;
+      const { error } = await this.authRepository.resetPassword(request.email);
 
       if (error) {
         return { success: false, error: error.message };
@@ -53,18 +53,14 @@ export class PasswordService {
 
       if (request.resetToken) {
         // Use reset token flow - user already has session from email link
-        const { error } = await supabase.auth.updateUser({
-          password: request.newPassword
-        });
+        const { error } = await this.authRepository.updatePassword(request.newPassword);
 
         if (error) {
           return { success: false, error: error.message };
         }
       } else if (request.userId) {
         // Direct password update for authenticated user
-        const { error } = await supabase.auth.updateUser({
-          password: request.newPassword
-        });
+        const { error } = await this.authRepository.updatePassword(request.newPassword);
 
         if (error) {
           return { success: false, error: error.message };
@@ -107,9 +103,7 @@ export class PasswordService {
       }
 
       // Update password via Supabase Auth
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const { error } = await this.authRepository.updatePassword(newPassword);
 
       if (error) {
         return { success: false, error: error.message };
@@ -175,12 +169,14 @@ export class PasswordService {
   }
 }
 
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+
 // Factory function for service instance
 let passwordServiceInstance: PasswordService | null = null;
 
 export function getPasswordService(): PasswordService {
   if (!passwordServiceInstance) {
-    passwordServiceInstance = new PasswordService();
+    passwordServiceInstance = new PasswordService(RepositoryFactory.getAuthRepository());
   }
   return passwordServiceInstance;
 }

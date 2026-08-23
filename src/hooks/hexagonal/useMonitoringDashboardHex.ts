@@ -8,7 +8,7 @@
  * - Exposes clean interface to UI components
  */
 
-import { MonitoringDashboardService } from '@/application/services/MonitoringDashboardServiceWorking';
+import { getMonitoringDashboardService } from '@/application/services/MonitoringDashboardService';
 import { EventPerformanceMetrics, PerformanceMonitoringRecord, PerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
 import {
     ComprehensiveMonitoringDTO,
@@ -62,10 +62,7 @@ export function useMonitoringDashboardHex(userId: string): UseMonitoringDashboar
   const queryClient = useQueryClient();
 
   // Initialize services
-  const monitoringService = new MonitoringDashboardService(
-    RepositoryFactory.getMonitoringRepository(),
-    RepositoryFactory.getProjectRepository()
-  );
+  const monitoringService = getMonitoringDashboardService();
   const performanceService = new PerformanceMonitoringService();
 
   // Get dashboard query
@@ -199,10 +196,7 @@ export function useMonitoringDashboardHex(userId: string): UseMonitoringDashboar
 
 export function useComprehensiveMonitoringHex(userId: string, filters?: MonitoringFiltersDTO): UseComprehensiveMonitoringHexResult {
   // Initialize service
-  const monitoringService = new MonitoringDashboardService(
-    RepositoryFactory.getMonitoringRepository(),
-    RepositoryFactory.getProjectRepository()
-  );
+  const monitoringService = getMonitoringDashboardService();
 
   // Get comprehensive monitoring query
   const {

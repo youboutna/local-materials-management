@@ -233,15 +233,18 @@ export class MonitoringDashboardService {
         // Continuer avec des valeurs par défaut
       }
 
-      const overview = this.calculateMonitoringOverview(projects, filters, openTasks, overdueTasks);
+      const spentByProject = await this.getSpentByProject();
+
+      const overview = this.calculateMonitoringOverview(projects, filters, openTasks, overdueTasks, spentByProject);
 
       const projectMonitoring = projects.slice(0, 10).map(project => 
-        this.createProjectMonitoring(project)
+        this.createProjectMonitoring(project, spentByProject)
       );
 
       const alerts: MonitoringAlertDTO[] = [];
 
-      const performance = this.calculatePerformanceMetrics(projects);
+      const performance = this.calculatePerformanceMetrics(projects, spentByProject, openTasks, overdueTasks);
+
 
       return {
         id: crypto.randomUUID(),
@@ -375,11 +378,32 @@ export class MonitoringDashboardService {
     });
   }
 
+  /**
+   * Dépenses réelles par projet, calculées depuis les paiements effectivement payés.
+   * Aucune valeur placeholder : si aucun paiement, la dépense vaut 0.
+   */
+  private async getSpentByProject(): Promise<Map<string, number>> {
+    const spent = new Map<string, number>();
+    try {
+      const payments = await this.paymentRepository.findAll();
+      for (const payment of payments) {
+        if (payment.status !== 'paid') continue;
+        const projectId = payment.projectId;
+        if (!projectId) continue;
+        spent.set(projectId, (spent.get(projectId) ?? 0) + (payment.amount || 0));
+      }
+    } catch (error) {
+      console.warn('Failed to compute spent budget from payments:', error);
+    }
+    return spent;
+  }
+
   private calculateMonitoringOverview(
     projects: ProjectDTO[], 
     filters?: MonitoringFiltersDTO,
     openTasks: number = 0,
-    overdueTasks: number = 0
+    overdueTasks: number = 0,
+    spentByProject: Map<string, number> = new Map()
   ): MonitoringOverviewDTO {
     if (!projects || projects.length === 0) {
       return {
@@ -414,7 +438,7 @@ export class MonitoringDashboardService {
     }).length;
 
     const totalBudget = filteredProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
-    const spentBudget = Math.round(totalBudget * 0.65); // Placeholder
+    const spentBudget = filteredProjects.reduce((sum, p) => sum + (spentByProject.get(p.id) ?? 0), 0);
     const budgetUtilization = totalBudget > 0 ? (spentBudget / totalBudget) * 100 : 0;
     const teamSize = filteredProjects.reduce((sum, p) => sum + (p.teamSize || 0), 0);
 
@@ -444,7 +468,12 @@ export class MonitoringDashboardService {
     };
   }
 
-  private createProjectMonitoring(project: ProjectDTO): ProjectMonitoringDTO {
+  private createProjectMonitoring(
+    project: ProjectDTO,
+    spentByProject: Map<string, number> = new Map()
+  ): ProjectMonitoringDTO {
+    const budgetUtilization = this.calculateBudgetUtilization(project, spentByProject.get(project.id) ?? 0);
+    const healthScore = this.calculateProjectHealthScore(project, budgetUtilization);
     return {
       id: project.id,
       projectId: project.id,
@@ -455,35 +484,90 @@ export class MonitoringDashboardService {
       endDate: project.endDate || '',
       budget: project.budget || 0,
       progress: project.progress || 0,
-      healthScore: 80,
-      riskLevel: 'faible',
+      healthScore,
+      riskLevel: healthScore >= 80 ? 'faible' : healthScore >= 60 ? 'moyen' : healthScore >= 40 ? 'eleve' : 'critique',
       milestonesProgress: project.progress || 0,
-      budgetUtilization: (project.progress || 0) * 0.9,
-      teamPerformance: 85,
-      upcomingDeadlines: [],
+      budgetUtilization,
+      teamPerformance: healthScore,
+      upcomingDeadlines: this.getUpcomingDeadlines(project),
       recentActivities: [],
       createdAt: project.createdAt,
       updatedAt: project.updatedAt
     };
   }
 
-  private calculatePerformanceMetrics(projects: ProjectDTO[]): PerformanceMetricsDTO {
+  /**
+   * Score de santé dérivé des données réelles : avancement, retard et consommation budgétaire.
+   */
+  private calculateProjectHealthScore(project: ProjectDTO, budgetUtilization: number): number {
+    let score = 100;
+    const progress = project.progress || 0;
+
+    if (project.endDate && new Date(project.endDate) < new Date() && project.status !== 'termine') {
+      score -= 30;
+    }
+    // Dérive budgétaire : consommation supérieure à l'avancement
+    const drift = budgetUtilization - progress;
+    if (drift > 20) score -= 25;
+    else if (drift > 10) score -= 15;
+    else if (drift > 0) score -= 5;
+
+    if (progress < 25 && project.status !== 'en_attente') score -= 10;
+
+    return Math.max(0, Math.min(100, score));
+  }
+
+  /**
+   * Métriques de performance agrégées depuis les projets réels (aucune valeur figée).
+   */
+  private calculatePerformanceMetrics(
+    projects: ProjectDTO[],
+    spentByProject: Map<string, number> = new Map(),
+    openTasks: number = 0,
+    overdueTasks: number = 0
+  ): PerformanceMetricsDTO {
+    if (!projects || projects.length === 0) {
+      return { productivity: 0, quality: 0, safety: 0, budget: 0, schedule: 0, team: 0, overall: 0, trend: 'stable' };
+    }
+
+    const avg = (values: number[]) => Math.round(values.reduce((s, v) => s + v, 0) / values.length);
+
+    const productivity = avg(projects.map(p => p.progress || 0));
+
+    const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
+    const totalSpent = projects.reduce((sum, p) => sum + (spentByProject.get(p.id) ?? 0), 0);
+    const consumption = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+    // 100 = consommation alignée sur l'avancement, pénalité proportionnelle à la dérive
+    const budget = Math.max(0, Math.min(100, Math.round(100 - Math.abs(consumption - productivity))));
+
+    const onTime = projects.filter(p => !(p.endDate && new Date(p.endDate) < new Date() && p.status !== 'termine')).length;
+    const schedule = Math.round((onTime / projects.length) * 100);
+
+    const team = openTasks > 0
+      ? Math.max(0, Math.min(100, Math.round(((openTasks - overdueTasks) / openTasks) * 100)))
+      : schedule;
+
+    const quality = Math.round((productivity + schedule) / 2);
+    const safety = schedule;
+    const overall = avg([productivity, quality, safety, budget, schedule, team]);
+
     return {
-      productivity: 85,
-      quality: 90,
-      safety: 95,
-      budget: 75,
-      schedule: 80,
-      team: 88,
-      overall: 87,
-      trend: 'stable'
+      productivity,
+      quality,
+      safety,
+      budget,
+      schedule,
+      team,
+      overall,
+      trend: overall >= 75 ? 'improving' : overall >= 50 ? 'stable' : 'declining'
     };
   }
 
-  private calculateBudgetUtilization(project: ProjectDTO): number {
+  private calculateBudgetUtilization(project: ProjectDTO, spent: number = 0): number {
     if (!project.budget || project.budget === 0) return 0;
-    return (project.progress || 0) * 0.9;
+    return Math.round((spent / project.budget) * 100);
   }
+
 
   private getUpcomingDeadlines(project: ProjectDTO): string[] {
     const deadlines: string[] = [];
