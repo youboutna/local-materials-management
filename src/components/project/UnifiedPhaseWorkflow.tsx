@@ -54,6 +54,7 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
   onActionComplete,
   formatCurrency = (n: number) => (typeof n === 'number' ? `${n.toLocaleString('fr-FR')} MRU` : ''),
 }) => {
+  const { t } = useI18n();
   const nodes: DecisionNode[] = (milestones || []).map(mapMilestoneToDecisionNode);
 
   const steps: StepItem[] = (phase?.steps || []).map(mapStepToStepItem);

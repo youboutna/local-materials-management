@@ -39,6 +39,7 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
   onSelectNode,
   formatCurrency,
 }) => {
+  const { t } = useI18n();
   const [localSteps, setLocalSteps] = React.useState<(StepItem | PhaseStepDTO)[]>(() => steps || []);
 
   React.useEffect(() => {

@@ -49,6 +49,7 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
   readOnly = false,
   title = "Questionnaire d'évaluation",
 }) => {
+  const { t } = useI18n();
   const result = useMemo(() => computeGlobalScore(value, weights, criteria), [value, weights, criteria]);
 
   const handleScoreChange = (code: string, score: number) => {
