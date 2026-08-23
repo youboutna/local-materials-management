@@ -25,14 +25,27 @@ export interface AssignTaskPayload {
   metadata?: Record<string, unknown>;
 }
 
+export interface EmailAttachmentPayload {
+  filename: string;
+  /** Contenu encodé en base64 */
+  content: string;
+  contentType?: string;
+  encoding?: 'base64';
+}
+
 export interface SendEmailPayload {
   to: string;
   subject: string;
+  /** Corps texte (utilisé aussi comme fallback HTML si `html` absent) */
   message: string;
+  html?: string;
+  replyTo?: string;
+  attachments?: EmailAttachmentPayload[];
   priority?: CommunicationPriority;
   actionType?: string;
   metadata?: Record<string, unknown>;
 }
+
 
 export interface SendSmsPayload {
   to: string;
@@ -118,10 +131,14 @@ export class CommunicationService {
         to: payload.to,
         subject: payload.subject,
         message: payload.message,
+        html: payload.html,
+        replyTo: payload.replyTo,
+        attachments: payload.attachments,
         priority: payload.priority,
         actionType: payload.actionType,
         metadata: payload.metadata,
       });
+
 
       if (error || !data?.success) {
         const details = error?.message || data?.error || 'Unknown edge function error';

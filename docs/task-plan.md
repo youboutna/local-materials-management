@@ -731,3 +731,30 @@ Généré par `scripts/generate-refactor-plan.cjs` (tri : COMPONENT/UI d'abord, 
 
 - `projectManagerId` vs `projectResponsableId` dans l'import avancé (sémantique différente, pas un simple problème de casse).
 - Existence de DTOs dédiés pour garanties bancaires / attestations d'assurance côté détail projet.
+
+## 🔁 Itération — Unification des canaux de communication (email / SMS / appels)
+
+Règle : **aucun composant `.tsx` ni hook ne parle directement à une Edge Function d'envoi ni à `NotificationService.sendEmail/sendSMS/scheduleCall`**. Tous les envois passent par `src/application/services/CommunicationService.ts` (seul point d'entrée applicatif), qui délègue au serveur via l'Edge Function `send-email-notification` (aucune clé provider côté navigateur).
+
+### Fait
+
+- [x] `CommunicationService.sendEmail` accepte désormais `html`, `replyTo` et `attachments` (base64) en plus de `message` ; le résultat `{ success, channel, reference }` doit être vérifié par l'appelant.
+- [x] Edge Function `send-email-notification` : accepte `html` / `text` / `replyTo` / `attachments`, fallback `message` → HTML ; `ResendAdapter` relaie les pièces jointes, `reply_to` et `text`.
+- [x] `src/utils/fileEncoding.ts` : helpers partagés `blobToBase64` (PDF) et `textToBase64` (CSV) pour les pièces jointes.
+- [x] Composants alignés sur `CommunicationService` (et rapports PDF réellement joints à l'email) :
+  - `components/reports/InspectionReportGenerator.tsx`
+  - `components/reports/TenderReportGenerator.tsx`
+  - `components/reports/SupplierPaymentReportGenerator.tsx`
+  - `components/reports/QuantitativeEstimateExporter.tsx`
+  - `components/boq/BoqDevisDialog.tsx` (plus d'appel direct `invokeFunction`)
+- [x] `hooks/hexagonal/usePaymentActionsHex.ts` : `assignTask`, `sendSMS`, `scheduleCall`, `sendEmail` routés via `CommunicationService` (métadonnées d'action conservées).
+
+### Hors scope (légitime)
+
+- `SupplierNotificationService` / `SupplierPasswordReset` : RPC de jetons et Edge Functions dédiées côté service (pas d'envoi depuis l'UI).
+- `NotificationService.createNotification` reste l'API des notifications in-app (persistance), distincte des canaux sortants.
+
+### Reste à traiter
+
+- Adapters `SmtpAdapter` / `SendGridAdapter` : prise en charge des pièces jointes (aujourd'hui seul Resend les relaie).
+- Journaliser les envois sortants (canal, destinataire, référence provider) dans une table dédiée pour l'audit.

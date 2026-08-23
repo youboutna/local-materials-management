@@ -15,24 +15,27 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, message, priority, actionType, metadata } = await req.json();
+    const { to, subject, message, html, text, replyTo, attachments, priority, actionType } = await req.json();
 
-    if (!to || !subject || !message) {
+    if (!to || !subject || (!message && !html && !text)) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: to, subject, message" }),
+        JSON.stringify({ error: "Missing required fields: to, subject, and one of message/html/text" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Sending email via Edge Function:", { to, subject, actionType, priority });
+    console.log("Sending email via Edge Function:", { to, subject, actionType, priority, attachments: attachments?.length ?? 0 });
 
     const emailService = createEmailService();
     const result = await emailService.sendEmail({
       to,
       subject,
-      html: message.replace(/\n/g, '<br>'),
-      text: message,
+      html: html ?? (message ? String(message).replace(/\n/g, '<br>') : undefined),
+      text: text ?? message,
+      replyTo,
+      attachments,
     });
+
 
     return new Response(
       JSON.stringify({ success: true, messageId: result.messageId }),

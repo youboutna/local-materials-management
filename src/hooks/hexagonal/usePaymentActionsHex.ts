@@ -4,6 +4,7 @@
  */
 
 import { AuthService, getAuthService} from '@/application/services/AuthService';
+import { CommunicationService } from '@/application/services/CommunicationService';
 import { NotificationService } from '@/application/services/NotificationService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -99,12 +100,15 @@ export function usePaymentActionsHex() {
     mutationFn: async ({ values, metadata }: { values: TaskAssignmentRequest; metadata: ActionMetadata }) => {
       const user = await authService.getCurrentUser();
       
-      await notificationService.notifyUser(
-        values.assigneeId,
-        values.title,
-        values.message,
-        'info'
-      );
+      await CommunicationService.assignTask({
+        assigneeId: values.assigneeId,
+        title: values.title,
+        description: values.message,
+        priority: (values.priority as 'low' | 'medium' | 'high' | 'urgent') ?? 'medium',
+        dueDate: values.dueDate,
+        actionType: 'payment_action',
+        metadata: metadata as unknown as Record<string, unknown>,
+      });
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'Tâche assignée' });
@@ -117,10 +121,14 @@ export function usePaymentActionsHex() {
   // SMS notification via edge function
   const sendSmsMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: SmsRequest; metadata: ActionMetadata }) => {
-      await notificationService.sendSMS({
-        to: values.recipientIds,
-        message: values.message
-      });
+      for (const recipient of values.recipientIds) {
+        await CommunicationService.sendSMS({
+          to: recipient,
+          message: values.message,
+          actionType: 'payment_action',
+          metadata: metadata as unknown as Record<string, unknown>,
+        });
+      }
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'SMS envoyé' });
@@ -133,10 +141,14 @@ export function usePaymentActionsHex() {
   // Schedule call via edge function
   const scheduleCallMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: CallRequest; metadata: ActionMetadata }) => {
-      await notificationService.scheduleCall({
-        to: values.recipientIds[0],
+      await CommunicationService.scheduleCall({
+        recipientId: values.recipientIds[0],
+        recipientPhone: values.recipientIds[0],
+        subject: 'Appel de suivi paiement',
         message: values.message,
-        scheduled_at: values.dueDate
+        scheduledFor: values.dueDate,
+        actionType: 'payment_action',
+        metadata: metadata as unknown as Record<string, unknown>,
       });
     },
     onSuccess: () => {
@@ -150,11 +162,15 @@ export function usePaymentActionsHex() {
   // Email notification via edge function
   const sendEmailMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: EmailRequest; metadata: ActionMetadata }) => {
-      await notificationService.sendEmail({
-        to: values.recipientIds,
-        subject: values.subject,
-        body: values.body
-      });
+      for (const recipient of values.recipientIds) {
+        await CommunicationService.sendEmail({
+          to: recipient,
+          subject: values.subject,
+          message: values.body,
+          actionType: 'payment_action',
+          metadata: metadata as unknown as Record<string, unknown>,
+        });
+      }
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'Email envoyé' });
