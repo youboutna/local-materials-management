@@ -44,6 +44,13 @@ import {
 } from '@/config/referentials/invoices/sample-dqe-boucle33kv.referential';
 
 const CTX = 'ctx-boucle-33kv';
+
+/** Lignes source portant le statut de validation requis par le référentiel. */
+function srcLines(ctx: string, from: 'dqe' | 'devis' | 'contrat' | 'decompte') {
+  const status = InvoiceWorkflowService.definition(from).validationStatus;
+  return sampleDqeBoqLines(ctx).map((l) => ({ ...l, businessStatus: status }));
+}
+
 const seller = { name: 'HadraTech SARL', country: 'MR', taxId: '00012345' };
 const buyer = { name: 'SOMELEC', country: 'MR' };
 
@@ -146,14 +153,14 @@ describe('Groupe B — décompte et facture (T‑V‑04 → T‑V‑05)', () => 
   it('T‑V‑04b — un pourcentage invalide retombe sur 100 % et reste borné', async () => {
     const a = await InvoiceWorkflowService.transform({
       fromType: 'contrat',
-      lines: sampleDqeBoqLines(CTX),
+      lines: srcLines(CTX, 'contrat'),
       sourceContextId: CTX,
       percentage: 0,
       actor: 'manager',
     });
     const b = await InvoiceWorkflowService.transform({
       fromType: 'contrat',
-      lines: sampleDqeBoqLines(CTX),
+      lines: srcLines(CTX, 'contrat'),
       sourceContextId: CTX,
       percentage: 250,
       actor: 'manager',
@@ -243,7 +250,7 @@ describe('Groupe E — scénario fournisseur (T‑V‑10 → T‑V‑13)', () =>
   it('T‑V‑11 — le fournisseur produit un devis tracé à son nom', async () => {
     const res = await InvoiceWorkflowService.transform({
       fromType: 'dqe',
-      lines: sampleDqeBoqLines(CTX),
+      lines: srcLines(CTX, 'dqe'),
       sourceContextId: CTX,
       actor: 'supplier',
       reference: 'DEV-FOURN-01',
@@ -261,7 +268,7 @@ describe('Groupe E — scénario fournisseur (T‑V‑10 → T‑V‑13)', () =>
 
   it('T‑V‑13 — les statuts fournisseur restent bornés par le référentiel', () => {
     expect(InvoiceWorkflowService.transitionStatus('devis', 'accepte')).toBe('accepte');
-    expect(InvoiceWorkflowService.transitionStatus('devis', 'payee')).toBe('brouillon');
+    expect(InvoiceWorkflowService.transitionStatus('devis', 'payee')).toBe('recu');
     expect(InvoiceWorkflowService.transitionStatus('decompte', 'paye')).toBe('paye');
   });
 });
@@ -271,7 +278,7 @@ describe('Groupe F — appels d’offres, verrous et alertes (T‑V‑14 → T�
   it('T‑V‑14 — une estimation d’appel d’offres se transforme en devis sur son contexte', async () => {
     const res = await InvoiceWorkflowService.transform({
       fromType: 'dqe',
-      lines: sampleDqeBoqLines(CTX),
+      lines: srcLines(CTX, 'dqe'),
       sourceContextId: 'tender-001',
       targetSource: 'tender_estimate',
       targetContextId: 'tender-001',
@@ -285,7 +292,7 @@ describe('Groupe F — appels d’offres, verrous et alertes (T‑V‑14 → T�
   it('T‑V‑15 — le devis reste possible même hors plafond (étape non engageante)', async () => {
     const res = await InvoiceWorkflowService.transform({
       fromType: 'dqe',
-      lines: sampleDqeBoqLines(CTX),
+      lines: srcLines(CTX, 'dqe'),
       sourceContextId: CTX,
       projectBudget: 1,
       actor: 'manager',
@@ -298,7 +305,7 @@ describe('Groupe F — appels d’offres, verrous et alertes (T‑V‑14 → T�
     await expect(
       InvoiceWorkflowService.transform({
         fromType: 'contrat',
-        lines: sampleDqeBoqLines(CTX),
+        lines: srcLines(CTX, 'contrat'),
         sourceContextId: CTX,
         percentage: 100,
         projectBudget: 1_000,
@@ -312,7 +319,7 @@ describe('Groupe F — appels d’offres, verrous et alertes (T‑V‑14 → T�
     const total = InvoiceBudgetGuardService.totalHt(sampleDqeBoqLines(CTX));
     const res = await InvoiceWorkflowService.transform({
       fromType: 'contrat',
-      lines: sampleDqeBoqLines(CTX),
+      lines: srcLines(CTX, 'contrat'),
       sourceContextId: CTX,
       percentage: 30,
       projectBudget: total * 2,
