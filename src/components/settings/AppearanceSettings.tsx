@@ -16,6 +16,8 @@ import { useUiTheme } from '@/contexts/UiThemeContext';
 import { BrandBandsBackground, BrandIdentity } from '@/components/branding/BrandIdentity';
 import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 import { cn } from '@/lib/utils';
+import LanguageSelector from '@/components/LanguageSelector';
+
 
 export const AppearanceSettings: React.FC = () => {
   const {
@@ -38,6 +40,20 @@ export const AppearanceSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card>
+        <CardHeader>
+          <CardTitle>Langue de l'interface</CardTitle>
+          <CardDescription>
+            Français par défaut. Les statuts et libellés métier sont traduits depuis les référentiels
+            (français, arabe, anglais).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LanguageSelector className="w-full sm:w-[220px]" />
+        </CardContent>
+      </Card>
+
+      <Card>
+
         <CardHeader>
           <CardTitle>Thème de l'application</CardTitle>
           <CardDescription>

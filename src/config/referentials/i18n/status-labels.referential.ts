@@ -1,0 +1,241 @@
+/**
+ * status-labels.referential — labels multilingues (fr / ar / en)
+ *
+ * Source unique des libellés affichables pour les codes techniques métier :
+ * statuts génériques, workflow DQE → Facture, cycle appels d'offres,
+ * types de projets, unités de mesure et étapes de workflow.
+ *
+ * Règles :
+ * - Le Domain ne stocke que des codes techniques (`draft`, `en_cours_v2`, ...).
+ * - Aucun libellé n'est codé en dur dans l'UI : tout passe par ce référentiel
+ *   via `I18nService` / `useI18n`.
+ * - Le français est la langue par défaut (fallback systématique).
+ */
+
+export type ReferentialLanguage = 'fr' | 'ar' | 'en';
+
+export interface ReferentialLabel {
+  code: string;
+  fr: string;
+  ar: string;
+  en: string;
+}
+
+const label = (code: string, fr: string, ar: string, en: string): ReferentialLabel => ({
+  code,
+  fr,
+  ar,
+  en,
+});
+
+/** Normalise un code métier (accents, espaces, tirets, casse). */
+export function normalizeReferentialCode(value?: string | null): string {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[\s-]+/g, '_');
+}
+
+export const STATUS_LABELS: Record<string, ReferentialLabel> = {
+  // ── Statuts génériques ────────────────────────────────────────────────
+  active: label('active', 'Actif', 'نشط', 'Active'),
+  inactive: label('inactive', 'Inactif', 'غير نشط', 'Inactive'),
+  draft: label('draft', 'Brouillon', 'مسودة', 'Draft'),
+  pending: label('pending', 'En attente', 'قيد الانتظار', 'Pending'),
+  validated: label('validated', 'Validé', 'تم التحقق', 'Validated'),
+  valide: label('valide', 'Validé', 'تم التحقق', 'Validated'),
+  rejected: label('rejected', 'Rejeté', 'مرفوض', 'Rejected'),
+  rejete: label('rejete', 'Rejeté', 'مرفوض', 'Rejected'),
+  archived: label('archived', 'Archivé', 'مؤرشف', 'Archived'),
+  completed: label('completed', 'Complété', 'مكتمل', 'Completed'),
+  cancelled: label('cancelled', 'Annulé', 'ملغي', 'Canceled'),
+  canceled: label('canceled', 'Annulé', 'ملغي', 'Canceled'),
+  suspended: label('suspended', 'Suspendu', 'موقوف', 'Suspended'),
+
+  // ── Statuts projet (codes DTO ProjectStatus, y compris legacy) ────────
+  planned: label('planned', 'Planifié', 'مخطط', 'Planned'),
+  planifie: label('planifie', 'Planifié', 'مخطط', 'Planned'),
+  planifie_v2: label('planifie_v2', 'Planifié', 'مخطط', 'Planned'),
+  pre_qualification: label('pre_qualification', 'Pré-qualification', 'التأهيل المسبق', 'Pre-qualification'),
+  prequalification: label('prequalification', 'Pré-qualification', 'التأهيل المسبق', 'Pre-qualification'),
+  en_attente: label('en_attente', 'En attente', 'قيد الانتظار', 'Pending'),
+  enattente: label('enattente', 'En attente', 'قيد الانتظار', 'Pending'),
+  en_conception: label('en_conception', 'En conception', 'قيد التصميم', 'In design'),
+  enconception: label('enconception', 'En conception', 'قيد التصميم', 'In design'),
+  attribue: label('attribue', 'Attribué', 'مخصص', 'Awarded'),
+  attribue_v2: label('attribue_v2', 'Attribué', 'مخصص', 'Awarded'),
+  en_cours: label('en_cours', 'En cours', 'جاري العمل', 'In progress'),
+  encours: label('encours', 'En cours', 'جاري العمل', 'In progress'),
+  en_cours_v2: label('en_cours_v2', 'En cours', 'جاري العمل', 'In progress'),
+  in_progress: label('in_progress', 'En cours', 'جاري العمل', 'In progress'),
+  en_construction: label('en_construction', 'En construction', 'قيد الإنشاء', 'Under construction'),
+  enconstruction: label('enconstruction', 'En construction', 'قيد الإنشاء', 'Under construction'),
+  en_construction_v2: label('en_construction_v2', 'En construction', 'قيد الإنشاء', 'Under construction'),
+  en_inspection: label('en_inspection', 'En inspection', 'قيد التفتيش', 'Under inspection'),
+  eninspection: label('eninspection', 'En inspection', 'قيد التفتيش', 'Under inspection'),
+  en_inspection_v2: label('en_inspection_v2', 'En inspection', 'قيد التفتيش', 'Under inspection'),
+  en_review: label('en_review', 'En révision', 'قيد المراجعة', 'Under review'),
+  termine: label('termine', 'Terminé', 'منتهي', 'Completed'),
+  termine_v2: label('termine_v2', 'Terminé', 'منتهي', 'Completed'),
+  en_cloture: label('en_cloture', 'En clôture', 'قيد الإغلاق', 'Closing'),
+  encloture: label('encloture', 'En clôture', 'قيد الإغلاق', 'Closing'),
+  en_cloture_v2: label('en_cloture_v2', 'En clôture', 'قيد الإغلاق', 'Closing'),
+  suspendu: label('suspendu', 'Suspendu', 'موقوف', 'Suspended'),
+  suspendu_v2: label('suspendu_v2', 'Suspendu', 'موقوف', 'Suspended'),
+  en_retard: label('en_retard', 'En retard', 'متأخر', 'Delayed'),
+  enretard: label('enretard', 'En retard', 'متأخر', 'Delayed'),
+  en_retard_v2: label('en_retard_v2', 'En retard', 'متأخر', 'Delayed'),
+  annule: label('annule', 'Annulé', 'ملغي', 'Canceled'),
+  annule_v2: label('annule_v2', 'Annulé', 'ملغي', 'Canceled'),
+
+  // ── Workflow DQE → Devis → Contrat → Décompte → Facture ──────────────
+  pour_validation: label('pour_validation', 'Pour validation', 'للتحقق', 'For validation'),
+  submitted: label('submitted', 'Soumis', 'تم الإرسال', 'Submitted'),
+  soumis: label('soumis', 'Soumis', 'تم الإرسال', 'Submitted'),
+  en_negociation: label('en_negociation', 'En négociation', 'قيد التفاوض', 'Under negotiation'),
+  accepted: label('accepted', 'Accepté', 'مقبول', 'Accepted'),
+  accepte: label('accepte', 'Accepté', 'مقبول', 'Accepted'),
+  recu: label('recu', 'Reçu', 'مستلم', 'Received'),
+  signed: label('signed', 'Signé', 'موقع', 'Signed'),
+  signe: label('signe', 'Signé', 'موقع', 'Signed'),
+  requested: label('requested', 'Demandé', 'مطلوب', 'Requested'),
+  demande: label('demande', 'Demandé', 'مطلوب', 'Requested'),
+  programmed: label('programmed', 'Programmé', 'مبرمج', 'Programmed'),
+  programme: label('programme', 'Programmé', 'مبرمج', 'Programmed'),
+  approved: label('approved', 'Approuvé', 'موافق عليه', 'Approved'),
+  approuvee: label('approuvee', 'Approuvée', 'موافق عليه', 'Approved'),
+  emitted: label('emitted', 'Émise', 'صادر', 'Emitted'),
+  emise: label('emise', 'Émise', 'صادر', 'Emitted'),
+  invoiced: label('invoiced', 'Facturé', 'مفوتر', 'Invoiced'),
+  facture: label('facture', 'Facturé', 'مفوتر', 'Invoiced'),
+  paid: label('paid', 'Payée', 'مدفوع', 'Paid'),
+  paye: label('paye', 'Payée', 'مدفوع', 'Paid'),
+  payee: label('payee', 'Payée', 'مدفوع', 'Paid'),
+
+  // ── Appels d'offres ──────────────────────────────────────────────────
+  published: label('published', 'Publié', 'منشور', 'Published'),
+  open: label('open', 'Ouvert aux offres', 'مفتوح للعروض', 'Open for bids'),
+  under_evaluation: label('under_evaluation', 'En évaluation', 'قيد التقييم', 'Under evaluation'),
+  awarded: label('awarded', 'Attribué', 'مخصص', 'Awarded'),
+  contracted: label('contracted', 'Contractualisé', 'تم التعاقد', 'Contracted'),
+  closed: label('closed', 'Clôturé', 'مغلق', 'Closed'),
+
+  // ── Inspections ──────────────────────────────────────────────────────
+  modifications_requises: label('modifications_requises', 'Modifications requises', 'تعديلات مطلوبة', 'Changes requested'),
+  rejetee: label('rejetee', 'Rejetée', 'مرفوض', 'Rejected'),
+};
+
+/** Étapes du cycle de passation (appels d'offres). */
+export const TENDER_STEP_LABELS: Record<string, ReferentialLabel> = {
+  identification: label('identification', 'Identification', 'تحديد', 'Identification'),
+  framework_lots: label('framework_lots', 'Cadre & Lots', 'الإطار والدفعات', 'Framework & Lots'),
+  lots: label('lots', 'Cadre & Lots', 'الإطار والدفعات', 'Framework & Lots'),
+  dpao_docs: label('dpao_docs', 'DPAO & Pièces', 'وثائق العطاء', 'RFP & Documents'),
+  dpao: label('dpao', 'DPAO & Pièces', 'وثائق العطاء', 'RFP & Documents'),
+  planning: label('planning', 'Planning', 'التخطيط', 'Planning'),
+  publication: label('publication', 'Publication', 'النشر', 'Publication'),
+  evaluation: label('evaluation', 'Évaluation', 'التقييم', 'Evaluation'),
+  attribution: label('attribution', 'Attribution', 'الإسناد', 'Award'),
+};
+
+/** Types de projets. */
+export const PROJECT_TYPE_LABELS: Record<string, ReferentialLabel> = {
+  construction: label('construction', 'Construction', 'بناء', 'Construction'),
+  electrical: label('electrical', 'Électrique', 'كهربائي', 'Electrical'),
+  electrification: label('electrification', 'Électrification', 'كهربة', 'Electrification'),
+  infrastructure: label('infrastructure', 'Infrastructure', 'بنية تحتية', 'Infrastructure'),
+  rehabilitation: label('rehabilitation', 'Réhabilitation', 'إعادة تأهيل', 'Rehabilitation'),
+  maintenance: label('maintenance', 'Maintenance', 'صيانة', 'Maintenance'),
+  study: label('study', 'Étude', 'دراسة', 'Study'),
+  supply: label('supply', 'Fourniture', 'توريد', 'Supply'),
+  services: label('services', 'Services', 'خدمات', 'Services'),
+  other: label('other', 'Autre', 'أخرى', 'Other'),
+};
+
+/** Unités de mesure BOQ / métré. */
+export const UNIT_LABELS: Record<string, ReferentialLabel> = {
+  'm³': label('m³', 'm³ (volume)', 'م³ (حجم)', 'm³ (volume)'),
+  'm²': label('m²', 'm² (surface)', 'م² (مساحة)', 'm² (area)'),
+  m: label('m', 'm (linéaire)', 'م (طولي)', 'm (linear)'),
+  unite: label('unite', 'unité', 'وحدة', 'unit'),
+  jour: label('jour', 'jour (homme·jour)', 'يوم (رجل·يوم)', 'day (man-day)'),
+  forfait: label('forfait', 'forfait', 'مقطوعية', 'lump sum'),
+  kg: label('kg', 'kg', 'كغ', 'kg'),
+  t: label('t', 'tonne', 'طن', 'ton'),
+};
+
+/** Étapes documentaires DQE → Facture (types de document). */
+export const INVOICE_DOCUMENT_LABELS: Record<string, ReferentialLabel> = {
+  dqe: label('dqe', 'DQE / Expression de besoin', 'كشف الكميات التقديري', 'BoQ / Requirement'),
+  devis: label('devis', 'Devis', 'عرض سعر', 'Quotation'),
+  contrat: label('contrat', 'Contrat', 'عقد', 'Contract'),
+  decompte: label('decompte', 'Décompte', 'كشف حسابي', 'Statement'),
+  facture_doc: label('facture_doc', 'Facture finale', 'الفاتورة النهائية', 'Final invoice'),
+};
+
+/** Rôles applicatifs. */
+export const ROLE_LABELS: Record<string, ReferentialLabel> = {
+  admin: label('admin', 'Administrateur', 'مدير النظام', 'Administrator'),
+  director: label('director', 'Directeur', 'مدير', 'Director'),
+  manager: label('manager', 'Chef de projet', 'مدير المشروع', 'Project manager'),
+  consultant: label('consultant', 'Consultant', 'مستشار', 'Consultant'),
+  supplier: label('supplier', 'Fournisseur', 'مورد', 'Supplier'),
+  inspector: label('inspector', 'Inspecteur', 'مفتش', 'Inspector'),
+  employee: label('employee', 'Employé', 'موظف', 'Employee'),
+  user: label('user', 'Utilisateur', 'مستخدم', 'User'),
+};
+
+/** Dimensions/règles d'écart (DeviationEngine). */
+export const DEVIATION_LABELS: Record<string, ReferentialLabel> = {
+  duration_deviation: label('duration_deviation', 'Écart de durée', 'فارق المدة', 'Duration deviation'),
+  cost_deviation_pct: label('cost_deviation_pct', 'Écart de coût (%)', 'فارق التكلفة (%)', 'Cost deviation (%)'),
+  progress_deviation_pts: label('progress_deviation_pts', "Écart d'avancement (pts)", 'فارق التقدم (نقاط)', 'Progress gap (pts)'),
+  profit_margin_eter: label('profit_margin_eter', 'Marge bénéficiaire hors cible', 'هامش الربح خارج الهدف', 'Profit margin off target'),
+  info: label('info', 'Information', 'معلومة', 'Info'),
+  low: label('low', 'Faible', 'منخفض', 'Low'),
+  medium: label('medium', 'Moyen', 'متوسط', 'Medium'),
+  high: label('high', 'Élevé', 'مرتفع', 'High'),
+};
+
+/** Catégories de documents / d'appels d'offres. */
+export const CATEGORY_LABELS: Record<string, ReferentialLabel> = {
+  administrative: label('administrative', 'Administratif', 'إداري', 'Administrative'),
+  technical: label('technical', 'Technique', 'فني', 'Technical'),
+  financial: label('financial', 'Financier', 'مالي', 'Financial'),
+  compliance: label('compliance', 'Conformité', 'المطابقة', 'Compliance'),
+  inspection: label('inspection', 'Inspections & Rapports', 'التفتيش والتقارير', 'Inspections & Reports'),
+  tender: label('tender', "Appels d'offres", 'العطاءات', 'Tenders'),
+  delivery: label('delivery', 'Livraisons', 'التسليمات', 'Deliveries'),
+  media: label('media', 'Photos & Médias', 'الصور والوسائط', 'Photos & Media'),
+  hr: label('hr', 'Ressources humaines', 'الموارد البشرية', 'Human resources'),
+  other: label('other', 'Autres', 'أخرى', 'Other'),
+};
+
+/** Registre global des dictionnaires de labels métier. */
+export const REFERENTIAL_LABEL_REGISTRY = {
+  status: STATUS_LABELS,
+  tenderStep: TENDER_STEP_LABELS,
+  projectType: PROJECT_TYPE_LABELS,
+  unit: UNIT_LABELS,
+  invoiceDocument: INVOICE_DOCUMENT_LABELS,
+  role: ROLE_LABELS,
+  deviation: DEVIATION_LABELS,
+  category: CATEGORY_LABELS,
+} as const;
+
+export type ReferentialLabelDomain = keyof typeof REFERENTIAL_LABEL_REGISTRY;
+
+/** Résout un libellé traduit avec fallback français puis code brut. */
+export function resolveReferentialLabel(
+  domain: ReferentialLabelDomain,
+  code: string | null | undefined,
+  language: ReferentialLanguage = 'fr'
+): string {
+  if (!code) return '';
+  const dictionary = REFERENTIAL_LABEL_REGISTRY[domain] as Record<string, ReferentialLabel>;
+  const entry = dictionary[code] ?? dictionary[normalizeReferentialCode(code)];
+  if (!entry) return code;
+  return entry[language] || entry.fr;
+}
