@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import MaterialSelector from '@/components/MaterialSelector';
 
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface ProjectMaterial {
   id: string;
   quantity: number;
@@ -294,9 +295,9 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{item.material.category}</Badge>
+                    <Badge variant="secondary"><TranslatedCategory code={item.material.category} /></Badge>
                     <Badge variant="outline">
-                      {item.quantity} {item.material.unit}
+                      {item.quantity} <TranslatedUnit code={item.material.unit} />
                     </Badge>
                   </div>
 
@@ -304,7 +305,7 @@ const ProjectMaterials = ({ projectId, onUpdate }: ProjectMaterialsProps) => {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Prix unitaire:</span>
                       <span className="font-medium">
-                        {(item.material.price_per_unit || 0).toLocaleString('fr-FR')} MRU/{item.material.unit}
+                        {(item.material.price_per_unit || 0).toLocaleString('fr-FR')} MRU/<TranslatedUnit code={item.material.unit} />
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">

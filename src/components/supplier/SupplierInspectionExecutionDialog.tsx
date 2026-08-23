@@ -41,6 +41,7 @@ import { ProjectService, getProjectService} from '@/application/services/Project
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getEmployeeService } from '@/application/services/EmployeeService';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // ============================================================================
 // PROPS
 // ============================================================================
@@ -349,7 +350,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
             <div>
               <p className="text-sm font-medium">Statut actuel</p>
               <Badge variant="secondary" className="mt-1">
-                {inspection.status}
+                <TranslatedStatus code={inspection.status} />
               </Badge>
             </div>
             <div>

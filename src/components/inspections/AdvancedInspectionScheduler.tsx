@@ -16,6 +16,7 @@ import { NotificationService } from '@/application/services/NotificationService'
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface Project {
   id: string;
   title: string;
@@ -358,7 +359,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                     <div className="flex items-center justify-between">
                       {project.status && (
                         <Badge variant="outline" className="text-xs">
-                          {project.status}
+                          <TranslatedStatus code={project.status} />
                         </Badge>
                       )}
                       {project.progress !== undefined && (

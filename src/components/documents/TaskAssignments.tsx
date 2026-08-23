@@ -38,6 +38,7 @@ import UserSelector from '@/components/selectors/UserSelector';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
   useTaskAssignmentsHex, 
   useProjectsHex, 
@@ -727,10 +728,10 @@ const TaskAssignmentsComponent = () => {
             <CardContent className="space-y-2">
               <div className="flex flex-wrap gap-2">
                 <Badge className={getPriorityColor(task.priority)}>
-                  {task.priority}
+                  <TranslatedPriority code={task.priority} />
                 </Badge>
                 <Badge className={getStatusColor(task.status)}>
-                  {task.status}
+                  <TranslatedStatus code={task.status} />
                 </Badge>
               </div>
               <div className="text-sm text-muted-foreground space-y-1">

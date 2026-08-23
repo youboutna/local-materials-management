@@ -37,6 +37,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { DELAY_THRESHOLDS } from "../../dtos/entities/ProjectDTO";
 
+import { TranslatedDocumentType, TranslatedSeverity, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface ProjectDelay {
   projectId: string;
   projectName: string;
@@ -424,7 +425,7 @@ const BankGuaranteeMonitor: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3 mt-1">
                       <Badge variant="outline" className="text-xs">
-                        {alert.type}
+                        <TranslatedDocumentType code={alert.type} />
                       </Badge>
                       <Badge 
                         variant="outline" 
@@ -434,13 +435,13 @@ const BankGuaranteeMonitor: React.FC = () => {
                           'text-warning border-warning/30'
                         }`}
                       >
-                        {alert.severity}
+                        <TranslatedSeverity code={alert.severity} />
                       </Badge>
                       <span className="text-xs text-muted-foreground">
                         {new Date(alert.createdAt).toLocaleString('fr-FR')}
                       </span>
                       <Badge variant="secondary" className="text-xs">
-                        {alert.status}
+                        <TranslatedStatus code={alert.status} />
                       </Badge>
                     </div>
                   </div>

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useProjectsSelector } from '@/hooks/hexagonal'
 
 // Local type for project options from selector
@@ -105,7 +106,7 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                       {project.status && (
                         <Badge variant="outline" className={`text-xs ${getStatusColor(project.status)}`}>
-                          {project.status}
+                          <TranslatedStatus code={project.status} />
                         </Badge>
                       )}
                       {project.budget && (
@@ -128,7 +129,7 @@ const ProjectSelector = React.forwardRef<HTMLDivElement, ProjectSelectorProps>((
             <span className="font-medium">Projet sélectionné:</span>
             {!secureMode && selectedProject.status && (
               <Badge variant="outline" className={getStatusColor(selectedProject.status)}>
-                {selectedProject.status}
+                <TranslatedStatus code={selectedProject.status} />
               </Badge>
             )}
           </div>

@@ -5,6 +5,7 @@ import type { MilestoneItem, StepItem, DecisionNode } from '@/dtos/workflows/Uni
 import { mapMilestoneToDecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 type StepWorkflowStatus = {
   inspectionStatus?: string;
   paymentStatus?: string;
@@ -123,7 +124,7 @@ const IntegratedWorkflowBoard: React.FC<IntegratedWorkflowBoardProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium text-sm">{node.name}</p>
-                        <p className="text-xs text-muted-foreground">{node.type}</p>
+                        <p className="text-xs text-muted-foreground"><TranslatedDocumentType code={node.type} /></p>
                       </div>
                       <div className="text-xs text-muted-foreground">{node.status || 'unknown'}</div>
                     </div>

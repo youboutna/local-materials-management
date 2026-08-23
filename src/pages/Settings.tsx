@@ -47,6 +47,7 @@ import {
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import {
   Select,
   SelectContent,
@@ -156,7 +157,7 @@ const Settings = () => {
                 <div className="flex flex-col space-y-4">
                   <p className="font-medium">
                     {t("settings.current_role")}:{" "}
-                    <span className="text-warning">{activeDevRole.role}</span>
+                    <span className="text-warning"><TranslatedRole code={activeDevRole.role} /></span>
                   </p>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -175,7 +176,7 @@ const Settings = () => {
                         }
                         onClick={() => handleRoleChange(roleOption.role)}
                       >
-                        {roleOption.role}
+                        <TranslatedRole code={roleOption.role} />
                       </Button>
                     ))}
                   </div>

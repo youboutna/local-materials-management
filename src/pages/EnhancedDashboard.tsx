@@ -15,6 +15,7 @@ import { useProjectManager } from '@/hooks/useProjectManager';
 import { AlertTriangle, Bell, CheckCircle, ExternalLink, Eye } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
+import { TranslatedDocumentType, TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 // ============================================================
 // Composant Dashboard
 // ============================================================
@@ -138,7 +139,7 @@ const EnhancedDashboardContent = () => {
                             </p>
                           </div>
                           <p className="text-sm text-destructive mt-1">
-                            Sévérité: {alert.severity} | Type: {alert.type}
+                            Sévérité: <TranslatedSeverity code={alert.severity} /> | Type: <TranslatedDocumentType code={alert.type} />
                           </p>
                           <p className="text-xs text-destructive mt-1">
                             Détecté le: {alert.formattedDate}
@@ -191,7 +192,7 @@ const EnhancedDashboardContent = () => {
                             <span className="text-xl">{alert.icon}</span>
                             <h4 className="font-medium">{alert.displayName}</h4>
                             <Badge variant="outline" className="text-xs">
-                              {alert.type}
+                              <TranslatedDocumentType code={alert.type} />
                             </Badge>
                             <Badge 
                               variant="secondary"
@@ -201,7 +202,7 @@ const EnhancedDashboardContent = () => {
                                 'bg-primary/10 text-primary'
                               }
                             >
-                              {alert.severity}
+                              <TranslatedSeverity code={alert.severity} />
                             </Badge>
                           </div>
                           {alert.message && (

@@ -83,6 +83,7 @@ import {
 const ProjectDashboard: React.FC<any> = () => <div>Project Dashboard</div>;
 import { Skeleton } from '../ui/skeleton';
 
+import { TranslatedSeverity, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 /**
  * Comprehensive Project Management Page
  * Implements all project-related services with data-driven UI
@@ -617,7 +618,7 @@ const ProjectManagementPage: React.FC = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <Badge variant="outline">{workflow.status}</Badge>
+                      <Badge variant="outline"><TranslatedStatus code={workflow.status} /></Badge>
                     </div>
                   </div>
 
@@ -645,7 +646,7 @@ const ProjectManagementPage: React.FC = () => {
                         <ul className="mt-2 list-disc list-inside">
                           {workflow.blockers.map((blocker, index) => (
                             <li key={index}>
-                              <strong>{blocker.description}</strong> - {blocker.severity}
+                              <strong>{blocker.description}</strong> - <TranslatedSeverity code={blocker.severity} />
                             </li>
                           ))}
                         </ul>

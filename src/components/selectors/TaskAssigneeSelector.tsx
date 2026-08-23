@@ -26,6 +26,7 @@ import { EmployeeDTO } from '@/dtos/entities/EmployeeDTO';
 import { SupplierDTO } from '@/dtos/entities/SupplierDTO';
 import { StakeholderResponseDTO } from '@/dtos/entities/StakeholderDTO';
 
+import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 // ============================================================================
 // TYPES - ALIAS VERS LES DTOS
 // ============================================================================
@@ -224,7 +225,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                         <div className="flex-1">
                           <div className="font-medium">{assignee.name}</div>
                           {assignee.role && (
-                            <div className="text-xs text-muted-foreground">{assignee.role}</div>
+                            <div className="text-xs text-muted-foreground"><TranslatedRole code={assignee.role} /></div>
                           )}
                           {assignee.department && (
                             <div className="text-xs text-muted-foreground">{assignee.department}</div>
@@ -249,7 +250,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                         <div className="flex-1">
                           <div className="font-medium">{assignee.name}</div>
                           {assignee.role && (
-                            <div className="text-xs text-muted-foreground">{assignee.role}</div>
+                            <div className="text-xs text-muted-foreground"><TranslatedRole code={assignee.role} /></div>
                           )}
                         </div>
                       </div>

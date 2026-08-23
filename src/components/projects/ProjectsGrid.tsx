@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, Users, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface ProjectsGridProps {
   projects: ProjectDTO[];
   isLoading?: boolean;
@@ -55,7 +56,7 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects, isLoading }) => {
                   }
                   className="flex-shrink-0 whitespace-nowrap"
                 >
-                  {project.status}
+                  <TranslatedStatus code={project.status} />
                 </Badge>
               </div>
             </CardHeader>

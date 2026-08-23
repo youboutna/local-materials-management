@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react';
 import { useTaskAssignmentsHex } from '@/hooks/hexagonal';
 
+import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 interface Task {
   id: string;
   title: string;
@@ -114,7 +115,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={getPriorityColor(task.priority)}>
               {getPriorityIcon(task.priority)}
-              <span className="ml-1 capitalize">{task.priority}</span>
+              <span className="ml-1 capitalize"><TranslatedPriority code={task.priority} /></span>
             </Badge>
             <Badge variant="outline" className={getStatusColor(task.status)}>
               {task.status === 'completed' ? (

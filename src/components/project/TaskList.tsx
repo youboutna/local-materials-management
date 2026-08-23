@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 
+import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 interface TaskListProps {
   tasks: TaskAssignmentDTO[];
   projectId: string;
@@ -181,7 +182,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
                       task.priority === 'HIGH' ? 'default' :
                       task.priority === 'MEDIUM' ? 'secondary' : 'outline'
                     }>
-                      {task.priority}
+                      <TranslatedPriority code={task.priority} />
                     </Badge>
                   </div>
                 )}

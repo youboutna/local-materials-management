@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { EdbBudgetDecision, EdbValidationReport } from '@/dtos/boq/EdbValidationDTO';
 import { AlertTriangle, CheckCircle2, Wrench } from 'lucide-react';
 
+import { TranslatedStatus, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface Props {
   report: EdbValidationReport;
   decision: EdbBudgetDecision;
@@ -29,7 +30,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
           <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
           Validation de l’expression de besoin (EDB)
         </h4>
-        <Badge variant={report.status === 'READY' ? 'secondary' : 'outline'}>{report.status}</Badge>
+        <Badge variant={report.status === 'READY' ? 'secondary' : 'outline'}><TranslatedStatus code={report.status} /></Badge>
       </header>
 
       {errors.length > 0 ? (
@@ -48,7 +49,7 @@ export function EdbValidationPanel({ report, decision, onDecisionChange, onFixEr
               <li key={`${e.lotId}-${i}`}>
                 <strong>{e.lotId ?? '—'} – {e.designation}</strong> : {e.message}
                 <span className="block text-muted-foreground">
-                  ➜ Correction : unité = {e.suggestedFix.unit}, quantité = {e.suggestedFix.quantity}, PU = {fmt(e.suggestedFix.unitPrice)} MRU
+                  ➜ Correction : unité = <TranslatedUnit code={e.suggestedFix.unit} />, quantité = {e.suggestedFix.quantity}, PU = {fmt(e.suggestedFix.unitPrice)} MRU
                 </span>
               </li>
             ))}

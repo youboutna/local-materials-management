@@ -77,6 +77,7 @@ import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import { ProjectHeader } from "./hierarchy";
 import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
 // ============================================================================
@@ -1074,7 +1075,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                               variant={payment.status === "approved" ? "default" : "secondary"}
                               className={payment.status === "approved" ? "bg-success-soft text-success" : ""}
                             >
-                              {payment.status}
+                              <TranslatedStatus code={payment.status} />
                             </Badge>
                           </div>
                         </div>
@@ -1318,7 +1319,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                                 </div>
                                 <div className="text-right">
                                   <p className="font-semibold">{formatAmount2(p.amount || 0)}</p>
-                                  <Badge variant="secondary">{p.status}</Badge>
+                                  <Badge variant="secondary"><TranslatedStatus code={p.status} /></Badge>
                                 </div>
                               </a>
                             ))}
@@ -1391,7 +1392,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             <p className="text-sm text-muted-foreground">Échéance: {new Date(guarantee.expiry_date).toLocaleDateString()}</p>
                           </div>
                           <Badge className={guarantee.status === "active" ? "bg-success-soft text-success" : "bg-destructive/10 text-destructive"}>
-                            {guarantee.status}
+                            <TranslatedStatus code={guarantee.status} />
                           </Badge>
                         </div>
                       </div>
@@ -1457,7 +1458,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                             <p className="text-sm text-muted-foreground">Créé le: {new Date(doc.created_at).toLocaleDateString()}</p>
                           </div>
                           <Badge className={doc.status === "approved" ? "bg-success-soft text-success" : doc.status === "pending" ? "bg-warning/10 text-warning" : "bg-muted text-foreground"}>
-                            {doc.status}
+                            <TranslatedStatus code={doc.status} />
                           </Badge>
                         </div>
                       </div>

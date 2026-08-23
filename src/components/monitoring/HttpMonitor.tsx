@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Activity, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface HttpMetrics {
   totalRequests: number;
   successRequests: number;
@@ -146,7 +147,7 @@ const HttpMonitor: React.FC = () => {
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <Badge className={`${getStatusColor(error.status)} text-white`}>
-                      {error.status}
+                      <TranslatedStatus code={error.status} />
                     </Badge>
                     <div>
                       <p className="text-sm font-medium">{getStatusText(error.status)}</p>

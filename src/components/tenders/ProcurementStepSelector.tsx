@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Plus } from 'lucide-react';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { 
   PROCUREMENT_STAGES, 
   PROCUREMENT_PHASE_LABELS, 
@@ -229,7 +230,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
                       <div className="flex-1">
                         <p className="text-sm font-medium">{doc.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {doc.isRequired ? 'Requis' : 'Optionnel'} • {doc.category}
+                          {doc.isRequired ? 'Requis' : 'Optionnel'} • <TranslatedCategory code={doc.category} />
                         </p>
                       </div>
                     </label>

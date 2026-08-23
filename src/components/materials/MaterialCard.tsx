@@ -16,6 +16,7 @@ import {
 import { MapPin, Package, Trash2 } from 'lucide-react';
 import { MaterialUIDTO } from '@/dtos/transforms';
 
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface MaterialCardProps {
   material: MaterialUIDTO;
   onClick: () => void;
@@ -87,7 +88,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{material.category}</Badge>
+            <Badge variant="secondary"><TranslatedCategory code={material.category} /></Badge>
             {material.localType && (
               <Badge variant="outline">{material.localType}</Badge>
             )}
@@ -97,7 +98,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Prix:</span>
               <span className="font-semibold text-sm">
-                {(material.pricePerUnit || 0).toLocaleString()} MRU/{material.unit}
+                {(material.pricePerUnit || 0).toLocaleString()} MRU/<TranslatedUnit code={material.unit} />
               </span>
             </div>
             
@@ -106,7 +107,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
               <div className="flex items-center gap-1">
                 <Package className="h-3 w-3 text-muted-foreground" />
                 <span className="font-medium text-sm">
-                  {material.availableQuantity} {material.unit}
+                  {material.availableQuantity} <TranslatedUnit code={material.unit} />
                 </span>
               </div>
             </div>

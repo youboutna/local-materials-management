@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 const ProjectExporter = () => {
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'json' | 'excel' | 'csv'>('json');
@@ -658,7 +659,7 @@ const ProjectExporter = () => {
                     >
                       <div className="font-medium">{project.title}</div>
                       <div className="text-sm text-muted-foreground">
-                        {project.location} • {project.status}
+                        {project.location} • <TranslatedStatus code={project.status} />
                       </div>
                     </label>
                     <Badge variant="outline">{project.progress}%</Badge>

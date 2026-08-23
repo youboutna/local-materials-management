@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building2, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersSelector } from '@/hooks/hexagonal'
 
 interface SimpleSupplierSelectorProps {
@@ -84,7 +85,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
                   <span>{selectedSupplier.name}</span>
                   {selectedSupplier.category && (
                     <Badge variant="outline" className="text-xs">
-                      {selectedSupplier.category}
+                      <TranslatedCategory code={selectedSupplier.category} />
                     </Badge>
                   )}
                 </div>
@@ -112,7 +113,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
                   <div className="flex items-center gap-2">
                     {supplier.category && (
                       <Badge variant="outline" className="text-xs">
-                        {supplier.category}
+                        <TranslatedCategory code={supplier.category} />
                       </Badge>
                     )}
                     {supplier.rating && (

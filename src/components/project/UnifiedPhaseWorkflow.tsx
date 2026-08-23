@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DecisionNode, mapMilestoneToDecisionNode, StepItem, mapStepToStepItem } from '@/dtos/entities/UnifiedWorkflowDTO';
 import { PhaseDTO, PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 
+import { TranslatedDocumentType, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface UnifiedPhaseWorkflowProps {
   projectId: string;
   phaseId: string;
@@ -77,9 +78,9 @@ const UnifiedPhaseWorkflow: React.FC<UnifiedPhaseWorkflowProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{n.name}</p>
-                      <p className="text-xs text-muted-foreground">{n.type}</p>
+                      <p className="text-xs text-muted-foreground"><TranslatedDocumentType code={n.type} /></p>
                     </div>
-                    <div className="text-xs text-muted-foreground">{n.status}</div>
+                    <div className="text-xs text-muted-foreground"><TranslatedStatus code={n.status} /></div>
                   </div>
                 </div>
               ))}

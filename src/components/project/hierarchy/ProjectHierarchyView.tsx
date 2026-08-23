@@ -14,6 +14,7 @@ import {
 import { PhaseNode } from "./PhaseNode";
 import { cn } from "@/lib/utils";
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface Phase {
   id: string;
   title?: string;
@@ -110,7 +111,7 @@ export const ProjectHierarchyView: React.FC<ProjectHierarchyViewProps> = ({
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold truncate">{project.title}</h3>
                 <Badge variant={getProjectStatusVariant(project.status)}>
-                  {project.status}
+                  <TranslatedStatus code={project.status} />
                 </Badge>
               </div>
               {project.description && (

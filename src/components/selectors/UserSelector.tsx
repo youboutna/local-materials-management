@@ -8,6 +8,7 @@ import { useUsersSelector } from '@/hooks/hexagonal';
 import type { UserProfile } from '@/hooks/hexagonal/useSelectorsHex';
 import { useDebounce } from '@/hooks/useDebounce';
 
+import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 interface UserSelectorProps {
   value?: string;
   onChange: (userId: string) => void;
@@ -141,7 +142,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
                     </div>
                     {user.role && (
                       <Badge className={getRoleBadgeColor(user.role)} variant="outline">
-                        {user.role}
+                        <TranslatedRole code={user.role} />
                       </Badge>
                     )}
                   </div>

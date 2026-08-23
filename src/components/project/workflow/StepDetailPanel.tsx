@@ -38,6 +38,7 @@ import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhasePayments from '@/components/project/PhasePayments';
 import AdvancedInspectionScheduler from '@/components/inspections/AdvancedInspectionScheduler';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface StepDetailPanelProps {
   step: PhaseStepDTO;
   phaseId: string;
@@ -153,7 +154,7 @@ const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className={getStatusColor(step.status)}>{step.status}</Badge>
+              <Badge className={getStatusColor(step.status)}><TranslatedStatus code={step.status} /></Badge>
               <Button size="icon" variant="ghost" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>

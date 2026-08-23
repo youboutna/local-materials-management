@@ -59,6 +59,7 @@ import ZoneLocationEditor from '@/components/gis/ZoneLocationEditor';
 import WilayaBoundariesLayer from '@/components/gis/layers/WilayaBoundariesLayer';
 import { toast } from 'sonner';
 
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 // -----------------------------------------------------------------------------
 // Marqueur Leaflet
 // -----------------------------------------------------------------------------
@@ -835,7 +836,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                     <Popup>
                       <strong>{z.label ?? `Zone ${idx + 1}`}</strong>
                       <br />
-                      {z.type} · {z.coordinates.length} sommets
+                      <TranslatedDocumentType code={z.type} /> · {z.coordinates.length} sommets
                       {z.areaSqm ? (
                         <>
                           <br />
@@ -909,7 +910,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
               >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <Badge variant="outline" className="gap-1">
-                    {shapeIcon(z.type)} {z.type}
+                    {shapeIcon(z.type)} <TranslatedDocumentType code={z.type} />
                   </Badge>
                   <span className="truncate font-medium">
                     {z.label ?? `Zone ${idx + 1}`}

@@ -13,6 +13,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Building2, Plus, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 interface OrganizationTemplate {
   id: string;
   name: string;
@@ -472,7 +473,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm">{position.title}</span>
                       <Badge className={`text-xs ${getCategoryColor(position.category)}`}>
-                        {position.category}
+                        <TranslatedCategory code={position.category} />
                       </Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">

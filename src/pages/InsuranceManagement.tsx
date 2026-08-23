@@ -41,6 +41,7 @@ import type { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { InsuranceCertificateStatus } from '@/dtos/entities/InsuranceDTO';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
+import { TranslatedDocumentType, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // ============================================================
 // Types
 // ============================================================
@@ -368,7 +369,7 @@ const InsuranceContent = () => {
                           </div>
                           <div className="flex items-center gap-3 mt-1">
                             <Badge variant="outline" className="text-xs">
-                              {alert.type}
+                              <TranslatedDocumentType code={alert.type} />
                             </Badge>
                             <Badge 
                               variant="outline" 
@@ -384,7 +385,7 @@ const InsuranceContent = () => {
                               {new Date(alert.timestamp || alert.createdAt || Date.now()).toLocaleString('fr-FR')}
                             </span>
                             <Badge variant="secondary" className="text-xs">
-                              {alert.status}
+                              <TranslatedStatus code={alert.status} />
                             </Badge>
                           </div>
                         </div>

@@ -23,6 +23,7 @@ interface LocalPerformanceMetricsDTO { uptime?: number; responseTime?: number; e
 import { getHealthColor, getHealthBadgeVariant, formatMetric } from '@/utils/monitoringCalculations';
 import { useMonitoringStatsHex } from '@/hooks/hexagonal/useMonitoringStatsHex';
 
+import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 const SystemHealthOverview: React.FC = () => {
   const [stats, setStats] = useState<LocalPerformanceMetricsDTO | null>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -259,7 +260,7 @@ const SystemHealthOverview: React.FC = () => {
                       {alert.severity === 'critical' ? <XCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                       <span className="font-medium">{alert.title}</span>
                       <Badge variant="outline" className="text-xs">
-                        {alert.severity}
+                        <TranslatedSeverity code={alert.severity} />
                       </Badge>
                     </div>
                     <AlertDescription>{alert.message}</AlertDescription>

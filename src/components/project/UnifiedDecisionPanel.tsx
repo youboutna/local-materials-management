@@ -7,6 +7,7 @@ import { MilestoneService, getMilestoneService} from '@/application/services/Mil
 import type { DecisionNode } from '@/dtos/workflows/UnifiedWorkflowDTO';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 interface UnifiedDecisionPanelProps {
   decisionNode: DecisionNode | null;
   projectId?: string;
@@ -118,7 +119,7 @@ const UnifiedDecisionPanel: React.FC<UnifiedDecisionPanelProps> = ({ decisionNod
         <CardHeader>
           <CardTitle id={panelTitleId} className="flex items-center justify-between">
             <span>{node.name}</span>
-            <Badge>{node.type}</Badge>
+            <Badge><TranslatedDocumentType code={node.type} /></Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>

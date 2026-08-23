@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check, ChevronsUpDown, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { useInspectorsSelector, type Inspector } from '@/hooks/hexagonal'
 
 interface InspectorSelectorProps {
@@ -87,7 +88,7 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">Rôle: {inspector.role}</span>
+                          <span className="text-xs text-muted-foreground">Rôle: <TranslatedRole code={inspector.role} /></span>
                         )}
                       </div>
                     </CommandItem>
@@ -117,7 +118,7 @@ export function InspectorSelector({
                           <span className="text-xs text-muted-foreground">{inspector.position}</span>
                         )}
                         {inspector.role && (
-                          <span className="text-xs text-muted-foreground">Rôle: {inspector.role}</span>
+                          <span className="text-xs text-muted-foreground">Rôle: <TranslatedRole code={inspector.role} /></span>
                         )}
                       </div>
                     </CommandItem>

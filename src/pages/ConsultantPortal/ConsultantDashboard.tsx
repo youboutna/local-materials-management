@@ -31,6 +31,7 @@ import { MonitoringDocumentsPanel } from '@/components/documents/panels/Monitori
 import ConsultantProgressValidation from './components/ConsultantProgressValidation';
 import ConsultantAlertsPanel from './components/ConsultantAlertsPanel';
 
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 const KpiCard = ({
   label,
   value,
@@ -248,7 +249,7 @@ const ConsultantDashboard = () => {
                         <p className="text-xs text-muted-foreground">{n.message}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">{n.type}</Badge>
+                        <Badge variant="outline"><TranslatedDocumentType code={n.type} /></Badge>
                         {n.actionUrl && (
                           <Button size="sm" variant="outline" asChild>
                             <a href={n.actionUrl}>Ouvrir</a>

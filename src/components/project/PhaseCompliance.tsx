@@ -31,6 +31,7 @@ import { ElectricSpinner } from "../loading-page";
 import { useComplianceHex } from "@/hooks/hexagonal";
 import { ComplianceItemDTO, ComplianceType, ComplianceStatus, CompliancePriority } from "@/dtos/entities/ComplianceDTO";
 
+import { TranslatedCategory, TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface PhaseComplianceProps {
   phaseId: string;
   projectId: string;
@@ -354,7 +355,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                       {getStatusIcon(item.status)}
                       <h4 className="font-medium">{item.title}</h4>
                       <Badge className={getPriorityColor(item.priority)}>
-                        {item.priority}
+                        <TranslatedPriority code={item.priority} />
                       </Badge>
                     </div>
                     {item.description && (
@@ -364,9 +365,9 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                     )}
                     <div className="flex flex-wrap gap-2">
                       <Badge className={getStatusColor(item.status)}>
-                        {item.status}
+                        <TranslatedStatus code={item.status} />
                       </Badge>
-                      <Badge variant="outline">{item.category}</Badge>
+                      <Badge variant="outline"><TranslatedCategory code={item.category} /></Badge>
                       {item.deadline && (
                         <Badge variant="outline">
                           Échéance:{" "}

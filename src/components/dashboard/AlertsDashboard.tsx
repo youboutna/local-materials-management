@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import React from "react";
 
+import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 const AlertsDashboard: React.FC = () => {
   const { t } = useLanguage();
   const { 
@@ -185,7 +186,7 @@ const AlertsDashboard: React.FC = () => {
                           <Badge
                             className={`${getSeverityColor(alert.severity)}`}
                           >
-                            {alert.severity}
+                            <TranslatedSeverity code={alert.severity} />
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">

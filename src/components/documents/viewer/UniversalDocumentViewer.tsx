@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { MimeIcon } from '@/components/documents/hub/MimeIcon';
 import { formatBytes, getPreviewKind } from '@/components/documents/hub/types';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import {
   DocumentViewerOptions,
   VIEWER_STATUS_OPTIONS,
@@ -199,7 +200,7 @@ export function UniversalDocumentViewer({
             </div>
             <div className="flex flex-wrap gap-1.5">
               {doc.documentType && <Badge variant="secondary">{doc.documentType}</Badge>}
-              {doc.category && <Badge variant="outline">{doc.category}</Badge>}
+              {doc.category && <Badge variant="outline"><TranslatedCategory code={doc.category} /></Badge>}
               <Badge variant="outline">{viewerStatusLabel(status)}</Badge>
               {contextBadges.map(([k, v]) => (
                 <Badge key={k} variant="outline">

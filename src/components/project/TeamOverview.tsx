@@ -13,6 +13,7 @@ import { Plus, Users, Clock, DollarSign, Settings, User, Wrench, Package, AlertC
 import { useProjectResourcesCrudHex } from '@/hooks/hexagonal/useProjectResourcesCrudHex';
 import { useProjectPhasesForTasks } from '@/hooks/hexagonal/useEnhancedTasksHex';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface TeamOverviewProps {
   resources?: any[];
   setResources?: (resources: any[]) => void;
@@ -333,7 +334,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                                 )}
                                 {phase.status && (
                                   <span className="text-xs text-success ml-2">
-                                    [{phase.status}]
+                                    [<TranslatedStatus code={phase.status} />]
                                   </span>
                                 )}
                               </label>

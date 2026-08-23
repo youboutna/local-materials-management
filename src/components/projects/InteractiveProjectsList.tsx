@@ -15,6 +15,7 @@ import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { usePagination } from '@/hooks/usePagination';
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface InteractiveProjectsListProps {
   projects: ProjectData[];
   onProjectSelect?: (project: ProjectData) => void;
@@ -106,7 +107,7 @@ const InteractiveProjectsList: React.FC<InteractiveProjectsListProps> = ({
                         {project.title}
                       </h4>
                       <Badge className={`text-xs ${getStatusColor(project.status)} shrink-0`}>
-                        {project.status}
+                        <TranslatedStatus code={project.status} />
                       </Badge>
                     </div>
 

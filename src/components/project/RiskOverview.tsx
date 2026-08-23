@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface RiskOverviewProps {
   risks: any[];
   projectId: string;
@@ -72,7 +73,7 @@ const RiskOverview: React.FC<RiskOverviewProps> = ({ risks, projectId }) => {
                   )}
 
                   <div className="flex justify-between items-center">
-                    <Badge variant="outline">{risk.status}</Badge>
+                    <Badge variant="outline"><TranslatedStatus code={risk.status} /></Badge>
                     <Button 
                       variant="ghost" 
                       size="sm"

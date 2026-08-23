@@ -37,6 +37,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface Tender {
   id: string;
   title: string;
@@ -168,7 +169,7 @@ const TenderManagement = () => {
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="px-3 py-1">
               <FileText className="h-3 w-3 mr-1" />
-              {selectedTender.status}
+              <TranslatedStatus code={selectedTender.status} />
             </Badge>
             <Button variant="default" size="sm" onClick={() => setSecureSharingOpen(true)}>
               <Users className="h-4 w-4 mr-2" />
@@ -205,7 +206,7 @@ const TenderManagement = () => {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <Badge variant={selectedTender.status === "published" ? "default" : "secondary"}>
-                        {selectedTender.status}
+                        <TranslatedStatus code={selectedTender.status} />
                       </Badge>
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/tenders/${selectedTender.id}`}>
@@ -307,7 +308,7 @@ const TenderManagement = () => {
                               <div className="text-sm font-medium">Lauréat proposé</div>
                               <div className="text-lg">{winnerSub.supplier_name}</div>
                               <div className="text-xs text-muted-foreground">
-                                Statut: {winnerSub.status} · Score: {winnerSub.total_score ?? '—'}
+                                Statut: <TranslatedStatus code={winnerSub.status} /> · Score: {winnerSub.total_score ?? '—'}
                               </div>
                             </div>
                           ) : (

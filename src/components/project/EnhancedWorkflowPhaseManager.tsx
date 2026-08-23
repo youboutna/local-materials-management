@@ -50,6 +50,7 @@ import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
 import { usePhaseCountsHex } from '@/hooks/hexagonal/usePhaseCountsHex';
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface Phase {
   id: string;
   phase_name: string;
@@ -304,7 +305,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <h4 className="font-medium text-sm">{phase.phase_name}</h4>
                         </div>
                         <Badge className={getStatusColor(phase.status)} variant="outline">
-                          {phase.status}
+                          <TranslatedStatus code={phase.status} />
                         </Badge>
                       </div>
                       
@@ -367,7 +368,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
               {selectedPhase && (
                 <div className="flex items-center gap-2">
                   <Badge className={getStatusColor(selectedPhase.status)}>
-                    {selectedPhase.status}
+                    <TranslatedStatus code={selectedPhase.status} />
                   </Badge>
                   
                   <Dialog open={isDelegationDialogOpen} onOpenChange={setIsDelegationDialogOpen}>

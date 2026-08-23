@@ -16,6 +16,7 @@ import {
 import { formatMetric } from '@/utils/monitoringCalculations';
 import { httpMetricsCollector } from '@/utils/httpMetricsCollector';
 import { getPerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import {
   classifyPerformance,
   PERFORMANCE_STATUS_TEXT_CLASS,
@@ -370,13 +371,13 @@ const PerformanceMetrics: React.FC = () => {
                 <div key={index} className="flex items-center justify-between p-2 bg-destructive/10 rounded">
                   <div className="flex-1">
                     <div className="text-sm font-medium">
-                      Status {error.status} - {error.url}
+                      Status <TranslatedStatus code={error.status} /> - {error.url}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(error.timestamp).toLocaleString()} - {error.responseTime}ms
                     </div>
                   </div>
-                  <Badge variant="destructive">{error.status}</Badge>
+                  <Badge variant="destructive"><TranslatedStatus code={error.status} /></Badge>
                 </div>
               ))}
             </div>

@@ -67,6 +67,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface StrategicLinkageStepProps {
   projectId: string;
   initialStrategyLinks?: CreateProjectStrategyLinkDTO[];
@@ -265,7 +266,7 @@ function CascadingAutocomplete({
               )}
               {selectedSuggestion.metadata && (
                 <div className="mt-1 text-muted-foreground">
-                  {selectedSuggestion.metadata.unit && <span>Unité: {selectedSuggestion.metadata.unit}</span>}
+                  {selectedSuggestion.metadata.unit && <span>Unité: <TranslatedUnit code={selectedSuggestion.metadata.unit} /></span>}
                   {selectedSuggestion.metadata.target2030 && (
                     <span className="ml-2">Cible 2030: {selectedSuggestion.metadata.target2030}</span>
                   )}

@@ -57,6 +57,7 @@ import DocumentsListPaginated from '@/components/documents/DocumentsListPaginate
 import RegulatoryComplianceChecklist from '@/components/project/compliance/RegulatoryComplianceChecklist';
 
 
+import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // ============================================================
 // Types
 // ============================================================
@@ -922,11 +923,11 @@ const EnhancedComplianceStep: React.FC<EnhancedComplianceStepProps> = ({
                         <div>
                           <h4 className="font-medium">{item.title}</h4>
                           <Badge className={`${getPriorityColor(item.priority)} ml-2`}>
-                            {item.priority}
+                            <TranslatedPriority code={item.priority} />
                           </Badge>
                         </div>
                         <Badge className={getStatusColor(item.status)}>
-                          {item.status}
+                          <TranslatedStatus code={item.status} />
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">{item.description}</p>

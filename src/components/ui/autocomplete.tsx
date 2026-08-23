@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 export interface AutocompleteOption {
   id: string;
   label: string;
@@ -232,7 +233,7 @@ const Autocomplete: React.FC<AutocompleteProps> = ({
                   )}
                   {option.category && (
                     <span className="text-xs text-muted-foreground mt-1">
-                      {option.category}
+                      <TranslatedCategory code={option.category} />
                     </span>
                   )}
                 </div>

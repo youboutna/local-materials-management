@@ -15,6 +15,7 @@ import { getQuantityTakeoffService } from '@/application/services/QuantityTakeof
 import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 import { getUnitOptions, METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 // Local Material interface for UI usage
 interface LocalMaterial {
   id: string;
@@ -345,7 +346,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                         <SelectContent>
                           {materials.map((material) => (
                             <SelectItem key={material.id} value={material.id}>
-                              {material.name} ({material.category})
+                              {material.name} (<TranslatedCategory code={material.category} />)
                             </SelectItem>
                           ))}
                         </SelectContent>

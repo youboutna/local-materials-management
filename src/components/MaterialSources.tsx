@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, MapPin } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 interface MaterialSource {
   id: string;
   name: string;
@@ -37,7 +38,7 @@ const MaterialSources = ({
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-medium text-adrar-700">{source.name}</h3>
-                    <p className="text-sm text-adrar-600">{source.type}</p>
+                    <p className="text-sm text-adrar-600"><TranslatedDocumentType code={source.type} /></p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full ${source.availability > 50 ? 'bg-success-soft text-success' : 'bg-warning/10 text-warning'}`}>
                     {source.availability}% {t('materials.available') || 'disponible'}

@@ -31,6 +31,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getProjectCoordinates } from "@/utils/projectLocationBuckets";
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 const Projects: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -373,7 +374,7 @@ const Projects: React.FC = () => {
                                     : "bg-muted text-foreground"
                                 }`}
                               >
-                                {location.status}
+                                <TranslatedStatus code={location.status} />
                               </span>
                             </p>
                             {project && (

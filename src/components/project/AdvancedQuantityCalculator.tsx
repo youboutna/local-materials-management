@@ -25,6 +25,7 @@ import Papa from "papaparse";
 import * as pdfjsLib from "pdfjs-dist";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -918,7 +919,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                   <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
                   <SelectContent>
                     {materials.map((m: any) => (
-                      <SelectItem key={m.id} value={m.id}>{m.name} ({m.unit})</SelectItem>
+                      <SelectItem key={m.id} value={m.id}>{m.name} (<TranslatedUnit code={m.unit} />)</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

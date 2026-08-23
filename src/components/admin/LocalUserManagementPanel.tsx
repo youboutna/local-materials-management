@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Download, Plus, Trash2, Upload, UserCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 const emptyDraft = (): DevUserProfile => ({
   id: crypto.randomUUID(),
   email: '',
@@ -172,7 +173,7 @@ export default function LocalUserManagementPanel() {
                 <TableRow key={key}>
                   <TableCell className="font-mono text-xs">{key}{isActive && <Badge className="ml-2">actif</Badge>}</TableCell>
                   <TableCell>{u.email}</TableCell>
-                  <TableCell><Badge variant="secondary">{u.user_metadata.role}</Badge></TableCell>
+                  <TableCell><Badge variant="secondary"><TranslatedRole code={u.user_metadata.role} /></Badge></TableCell>
                   <TableCell className="text-xs">{(u.permissions ?? []).join(', ') || '—'}</TableCell>
                   <TableCell className="text-xs">{(u.teams ?? []).join(', ') || '—'}</TableCell>
                   <TableCell>

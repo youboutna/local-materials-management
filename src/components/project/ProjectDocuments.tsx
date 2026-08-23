@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DocumentService, getDocumentService} from "@/application/services/DocumentService";
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface ProjectDocument {
   id: string;
   description?: string;
@@ -413,7 +414,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
                       <Badge variant="secondary">
                         {getDocumentTypeLabel(doc.document_type)}
                       </Badge>
-                      <Badge variant="outline">{doc.status}</Badge>
+                      <Badge variant="outline"><TranslatedStatus code={doc.status} /></Badge>
                     </div>
 
                     <div className="space-y-1 text-xs text-muted-foreground">

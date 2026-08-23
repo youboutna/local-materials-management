@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ReferentialType } from '@/config/referentials';
 import { useConstructionPhaseHex } from '@/hooks/hexagonal/useConstructionPhaseHex';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface ConstructionPhaseWithStepsProps {
   projectId: string;
   referentialCode?: ReferentialType;
@@ -123,7 +124,7 @@ export function ConstructionPhaseWithSteps({
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">{(phase as any).name || (phase as any).title}</CardTitle>
                 <Badge className={getPhaseStatusColor(phase.status)}>
-                  {phase.status}
+                  <TranslatedStatus code={phase.status} />
                 </Badge>
               </div>
             </CardHeader>
@@ -167,7 +168,7 @@ export function ConstructionPhaseWithSteps({
                       <div className="flex justify-between items-center">
                         <CardTitle className="text-base">{step.name}</CardTitle>
                         <Badge className={getStepStatusColor(step.status)}>
-                          {step.status}
+                          <TranslatedStatus code={step.status} />
                         </Badge>
                       </div>
                     </CardHeader>
@@ -220,7 +221,7 @@ export function ConstructionPhaseWithSteps({
                   <CardContent>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between"><span className="font-medium">Nom:</span><span>{(selectedPhase as any).name || (selectedPhase as any).title}</span></div>
-                      <div className="flex justify-between"><span className="font-medium">Statut:</span><Badge className={getPhaseStatusColor(selectedPhase.status)}>{selectedPhase.status}</Badge></div>
+                      <div className="flex justify-between"><span className="font-medium">Statut:</span><Badge className={getPhaseStatusColor(selectedPhase.status)}><TranslatedStatus code={selectedPhase.status} /></Badge></div>
                       <div className="flex justify-between"><span className="font-medium">Progression:</span><span>{selectedPhase.progress}%</span></div>
                       {selectedPhase.budget && <div className="flex justify-between"><span className="font-medium">Budget:</span><span>{selectedPhase.budget.toLocaleString()} MRU</span></div>}
                     </div>
