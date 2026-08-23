@@ -1,10 +1,13 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { MATERIAL_CATEGORIES, MaterialCategoryConfig, MaterialSubcategory } from '@/dtos/entities/MaterialCategoryDTO';
+import { MATERIAL_CATEGORIES } from '@/dtos/entities/MaterialCategoryDTO';
+import { useEnumLabel } from '@/hooks/useEnumLabel';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+
 interface MaterialCategorySelectorProps {
   selectedCategory?: string;
   selectedSubcategory?: string;
@@ -13,6 +16,10 @@ interface MaterialCategorySelectorProps {
   onUnitChange?: (unit: string) => void;
 }
 
+/**
+ * Sélecteur catégorie / sous-catégorie de matériau.
+ * Doctrine i18n : la valeur reste le code technique, l'affichage vient du référentiel fr/ar/en.
+ */
 const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   selectedCategory,
   selectedSubcategory,
@@ -20,6 +27,8 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   onSubcategoryChange,
   onUnitChange
 }: MaterialCategorySelectorProps) => {
+  const { label } = useEnumLabel();
+  const { t } = useLanguage();
   const currentCategory = MATERIAL_CATEGORIES.find(cat => cat.id === selectedCategory);
 
   const handleCategoryChange = (categoryId: string) => {
@@ -30,7 +39,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
 
   const handleSubcategoryChange = (subcategoryId: string) => {
     onSubcategoryChange(subcategoryId);
-    
+
     // Auto-set unit based on subcategory
     if (currentCategory && onUnitChange) {
       const subcategory = currentCategory.subcategories?.find(sub => sub.id === subcategoryId);
@@ -45,17 +54,17 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
       <div>
         <Label htmlFor="category"><T k="auto.materialcategoryselector.categorie" fallback="Catégorie" /></Label>
         <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Sélectionner une catégorie" />
+          <SelectTrigger id="category">
+            <SelectValue placeholder={t('auto.materialcategoryselector.select_category')} />
           </SelectTrigger>
           <SelectContent>
             {MATERIAL_CATEGORIES.map(category => (
               <SelectItem key={category.id} value={category.id}>
                 <div>
-                  <div className="font-medium">{category.name}</div>
-                  {category.description && (
-                    <div className="text-sm text-muted-foreground">{category.description}</div>
-                  )}
+                  <div className="font-medium">{label('MaterialCategory', category.id)}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {label('MaterialCategoryDescription', category.id)}
+                  </div>
                 </div>
               </SelectItem>
             ))}
@@ -67,15 +76,17 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         <div>
           <Label htmlFor="subcategory"><T k="auto.materialcategoryselector.sous_categorie" fallback="Sous-catégorie" /></Label>
           <Select value={selectedSubcategory} onValueChange={handleSubcategoryChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner une sous-catégorie" />
+            <SelectTrigger id="subcategory">
+              <SelectValue placeholder={t('auto.materialcategoryselector.select_subcategory')} />
             </SelectTrigger>
             <SelectContent>
               {currentCategory.subcategories.map(subcategory => (
                 <SelectItem key={subcategory.id} value={subcategory.id}>
                   <div>
-                    <div className="font-medium">{subcategory.name}</div>
-                    <div className="text-sm text-muted-foreground"><T k="auto.materialcategoryselector.unite" fallback="Unité:" /> <TranslatedUnit code={subcategory.unit} /></div>
+                    <div className="font-medium">{label('MaterialSubcategory', subcategory.id)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      <T k="auto.materialcategoryselector.unite" fallback="Unité:" /> <TranslatedUnit code={subcategory.unit} />
+                    </div>
                   </div>
                 </SelectItem>
               ))}
