@@ -118,7 +118,10 @@ function emitTs(enums, labels) {
         const { file, members } = enums.get(name);
         lines.push(`/** ${name} — ${file} */`);
         lines.push(`export const ${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_LABELS: EnumLabelMap = {`);
+        const seen = new Set();
         for (const [, value] of members) {
+            if (seen.has(value)) continue;
+            seen.add(value);
             const k = `enum.${name}.${value}`;
             const l = labels.fr[k] ? { fr: labels.fr[k], ar: labels.ar[k] || labels.fr[k], en: labels.en[k] || labels.fr[k] } : null;
             if (!l) continue;

@@ -401,7 +401,6 @@ export const TASK_PRIORITY_LABELS: EnumLabelMap = {
     'medium': { fr: 'Moyenne', ar: 'متوسطة', en: 'Medium' },
     'high': { fr: 'Haute', ar: 'عالية', en: 'High' },
     'urgent': { fr: 'Urgente', ar: 'مستعجلة', en: 'Urgent' },
-    'urgent': { fr: 'Urgente', ar: 'مستعجلة', en: 'Urgent' },
 };
 
 /** TaskStatus — src/dtos/entities/TaskAssignmentDTO.ts */
