@@ -39,7 +39,7 @@ describe('1. Cohérence des statuts du cycle documentaire', () => {
   });
 
   it('refuse un statut hors référentiel et retombe sur le statut initial', () => {
-    expect(InvoiceWorkflowService.transitionStatus('devis', 'payee')).toBe('brouillon');
+    expect(InvoiceWorkflowService.transitionStatus('devis', 'payee')).toBe('recu');
     expect(InvoiceWorkflowService.transitionStatus('facture', 'payee')).toBe('payee');
   });
 

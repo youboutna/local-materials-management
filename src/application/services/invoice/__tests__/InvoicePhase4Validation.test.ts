@@ -54,6 +54,13 @@ beforeEach(() => {
 
 /** Chaîne complète DQE → … → type demandé, en repartant du jeu « Boucle 33 kV ». */
 async function chainTo(target: 'devis' | 'contrat' | 'decompte' | 'facture', percentage = 30) {
+  // Le document source doit porter son statut de validation métier :
+  // un devis ne naît que d'un DQE validé, un contrat que d'un devis accepté.
+  const validated = (rows: typeof lines, type: 'dqe' | 'devis' | 'contrat' | 'decompte') =>
+    rows.map((l) => ({
+      ...l,
+      businessStatus: InvoiceWorkflowService.definition(type).validationStatus,
+    }));
   let lines = sampleDqeBoqLines(CTX);
   let from: 'dqe' | 'devis' | 'contrat' | 'decompte' = 'dqe';
   const steps: Array<Awaited<ReturnType<typeof InvoiceWorkflowService.transform>>> = [];
@@ -62,7 +69,7 @@ async function chainTo(target: 'devis' | 'contrat' | 'decompte' | 'facture', per
   for (const step of order) {
     const res = await InvoiceWorkflowService.transform({
       fromType: from,
-      lines,
+      lines: validated(lines, from),
       sourceContextId: CTX,
       targetSource: 'dqe',
       percentage: step === 'decompte' ? percentage : undefined,
