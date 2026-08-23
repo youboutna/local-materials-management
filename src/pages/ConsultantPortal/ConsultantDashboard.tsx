@@ -33,6 +33,8 @@ import ConsultantAlertsPanel from './components/ConsultantAlertsPanel';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { Gavel } from 'lucide-react';
+import { ConsultantTendersPanel } from '@/components/consultant/ConsultantTendersPanel';
 const KpiCard = ({
   label,
   value,
@@ -117,7 +119,7 @@ const ConsultantDashboard = () => {
           </p>
         </header>
 
-        <section aria-label="Indicateurs clés" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <section aria-label="Indicateurs clés" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           <KpiCard label="Projets suivis" value={kpis.projectCount} icon={FolderKanban} />
           <KpiCard
             label="Alertes ouvertes"
@@ -167,7 +169,15 @@ const ConsultantDashboard = () => {
               <FileText className="h-4 w-4" aria-hidden="true" />
               <T k="auto.consultantdashboard.documents" fallback="Documents" />
             </TabsTrigger>
+            <TabsTrigger value="tenders" className="flex items-center gap-2">
+              <Gavel className="h-4 w-4" aria-hidden="true" />
+              <T k="consultant.tenders.tab" fallback="Appels d'offres" />
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="tenders">
+            <ConsultantTendersPanel />
+          </TabsContent>
 
           <TabsContent value="validation">
             <ConsultantProgressValidation projects={projects} />

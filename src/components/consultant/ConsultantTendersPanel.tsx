@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CalendarClock, Gavel } from 'lucide-react';
 import { usePublicOpenTenders } from '@/hooks/hexagonal/usePublicTendersHex';
 import { useI18n } from '@/hooks/useI18n';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency } from '@/utils/phaseDisplayHelpers';
 
 export const ConsultantTendersPanel: React.FC = () => {
   const { t, language } = useI18n();
@@ -44,12 +44,12 @@ export const ConsultantTendersPanel: React.FC = () => {
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarClock className="h-3 w-3" aria-hidden="true" />
                 {t('consultant.tenders.deadline', 'Date limite')} :{' '}
-                {formatDate(tender.submissionDeadline ?? tender.deadlineDate ?? null)}
+                {formatDate(tender.deadlineDate ?? null)}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {typeof tender.estimatedValue === 'number' && tender.estimatedValue > 0 && (
-                <span className="text-sm font-semibold">{formatCurrency(tender.estimatedValue)}</span>
+              {typeof tender.budgetMax === 'number' && tender.budgetMax > 0 && (
+                <span className="text-sm font-semibold">{formatCurrency(tender.budgetMax)}</span>
               )}
               <Badge variant="secondary">{tender.status}</Badge>
             </div>
