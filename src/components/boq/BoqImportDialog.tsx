@@ -31,6 +31,7 @@ import { BoqLineTable } from './BoqLineTable';
 import { ImportDropzone } from './ImportDropzone';
 import { ImportMappingWizard } from './ImportMappingWizard';
 import { WbsSelector, type WbsValue } from './WbsSelector';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Props {
   source: BoqSource;
@@ -72,6 +73,7 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
 }
 
 export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true }: Props) {
+  const { translateTerm } = useI18n();
   const [open, setOpen] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
@@ -405,7 +407,7 @@ export function BoqImportDialog({ source, contextId, phaseId, defaultReferential
             )}
 
             <section>
-              <h4 className="text-sm font-medium mb-2">WBS par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
+              <h4 className="text-sm font-medium mb-2">{translateTerm('wbs_short')} par défaut (appliqué aux lignes sans phase/jalon/tâche)</h4>
               <WbsSelector
                 value={wbs}
                 onChange={setWbs}

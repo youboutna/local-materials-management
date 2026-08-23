@@ -112,7 +112,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
         await invalidate();
         window.dispatchEvent(new CustomEvent('boq-kpi-refresh'));
         toast({
-          title: 'DQE transféré vers le WBS',
+          title: 'DQE transféré vers le découpage des travaux',
           description: `${result.phasesCreated} phase(s) créée(s), ${result.phasesReused} réutilisée(s), ${result.milestonesCreated} jalon(s), ${result.tasksCreated} tâche(s), ${result.phaseMaterials} matériau(x), ${result.phaseEmployees} rôle(s), ${result.projectResources} ressource(s) projet.`,
         });
       } catch (error) {

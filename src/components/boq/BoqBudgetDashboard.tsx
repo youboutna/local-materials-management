@@ -17,6 +17,7 @@ import { getMilestone, getPhase } from '@/config/referentials/wbs/wbs.referentia
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BudgetConsistencyService } from '@/application/services/BudgetConsistencyService';
 import BudgetConsistencyAlerts from '@/components/project/BudgetConsistencyAlerts';
+import { i18nService } from '@/application/services/I18nService';
 
 interface Props {
   planned: BoqLineDTO[];      // quantity_takeoff
@@ -30,7 +31,7 @@ interface Props {
   projectBudget?: number | null;
 }
 
-const UNASSIGNED = 'Hors WBS (à affecter)';
+const UNASSIGNED = i18nService.translateTerm('wbs_unassigned');
 
 interface Row {
   key: string;

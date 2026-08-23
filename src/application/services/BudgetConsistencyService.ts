@@ -224,7 +224,7 @@ export class BudgetConsistencyService {
         code: residual.code,
         severity: residual.severity,
         label: residual.label,
-        message: `Résidu hors WBS : ${fmt(unassignedPlanned + unassignedActual)} ${ccy} (${(unassignedPct * 100).toFixed(1)} % du suivi). Affectez ces lignes à une phase / un jalon.`,
+        message: `Résidu hors découpage des travaux : ${fmt(unassignedPlanned + unassignedActual)} ${ccy} (${(unassignedPct * 100).toFixed(1)} % du suivi). Affectez ces lignes à une phase / un jalon.`,
         observed: unassignedPlanned + unassignedActual,
         reference: base,
       });

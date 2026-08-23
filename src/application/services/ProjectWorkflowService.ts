@@ -572,7 +572,7 @@ export class ProjectWorkflowService {
 
     }
     if (stepNumber === 4 && (!data.relatedData?.phases || data.relatedData.phases.length === 0)) {
-      errors.push('Au moins une phase WBS est requise avant de poursuivre.');
+      errors.push('Au moins une phase de découpage des travaux est requise avant de poursuivre.');
     }
 
     return { isValid: errors.length === 0, errors, warnings };

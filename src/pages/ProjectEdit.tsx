@@ -45,7 +45,7 @@ const WORKFLOW_STEPS = [
   { number: 1, title: 'Informations', required: true },
   { number: 2, title: 'Parties prenantes', required: false },
   { number: 3, title: 'Localisation', required: true },
-  { number: 4, title: 'Phases WBS', required: true },
+  { number: 4, title: 'Phases & découpage', required: true },
   { number: 5, title: 'Risques', required: false },
   { number: 6, title: 'Conformité', required: false },
   { number: 7, title: 'Stratégie', required: false },

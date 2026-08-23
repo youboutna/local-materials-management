@@ -46,6 +46,7 @@ import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import type { StakeholderOption } from './BoqLineTable';
+import { useI18n } from '@/hooks/useI18n';
 
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
@@ -84,6 +85,7 @@ export function BoqWorkspace({
   referentialCode, estimateId,
   emptyLabel, importLabel, documentId,
 }: Props) {
+  const { translateTerm } = useI18n();
   const doc = useBoqDocument({ source, contextId, projectId, documentId });
   const { toast } = useToast();
   const labels = LABELS[mode];
@@ -592,7 +594,7 @@ export function BoqWorkspace({
                 {/* Classification WBS projet (Phase → Jalon → Tâche) — dynamique */}
                 <div className="col-span-6">
                   <Label className="text-xs text-muted-foreground">
-                    Classification WBS {projectPhases.length > 0 ? '(phases du projet)' : '(référentiel)'}
+                    {translateTerm('wbs_classification')} {projectPhases.length > 0 ? '(phases du projet)' : '(référentiel)'}
                   </Label>
                   <WbsSelector
                     value={wbs}

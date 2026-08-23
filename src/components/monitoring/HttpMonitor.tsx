@@ -147,7 +147,7 @@ const HttpMonitor: React.FC = () => {
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <Badge className={`${getStatusColor(error.status)} text-white`}>
-                      <TranslatedStatus code={error.status} />
+                      {error.status}
                     </Badge>
                     <div>
                       <p className="text-sm font-medium">{getStatusText(error.status)}</p>
