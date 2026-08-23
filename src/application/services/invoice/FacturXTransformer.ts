@@ -9,6 +9,7 @@ import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorSe
 import { DocumentIdentityService } from '@/application/services/boq/DocumentIdentityService';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { documentUnitCefactCode } from '@/config/referentials/boq/unit-codes.referential';
+import { resolveLineTax, buildVatBuckets } from '@/config/referentials/boq/tax-regimes.referential';
 import {
   getInvoiceDocumentType,
   type InvoiceDocumentType,
@@ -91,8 +92,19 @@ export const FacturXTransformer = {
           profile,
         );
         const totalHt = l.totalHt ?? t.totalHt;
-        const vatRate = l.vatRate ?? profile.vatRate;
-        const rasRate = l.rasRate ?? profile.withholdingRate;
+        const tax = resolveLineTax(
+          {
+            vatRate: l.vatRate,
+            rasRate: l.rasRate,
+            resourceType: l.resourceType ?? null,
+            category: l.category ?? null,
+            elementType: l.elementType ?? null,
+            designation: l.designation ?? null,
+          },
+          profile,
+        );
+        const vatRate = tax.vatRate;
+        const rasRate = tax.rasRate;
         acc.totalHt += totalHt;
         acc.totalTva += totalHt * vatRate;
         acc.withholding += totalHt * rasRate;
@@ -111,12 +123,45 @@ export const FacturXTransformer = {
     const totals = this.computeTotals(lines, ctx.fiscalProfileCode);
     const profile = getFiscalProfile(ctx.fiscalProfileCode);
 
+    const vatBuckets = buildVatBuckets(
+      lines.map((l) => {
+        const tax = resolveLineTax(
+          {
+            vatRate: l.vatRate,
+            rasRate: l.rasRate,
+            resourceType: l.resourceType ?? null,
+            category: l.category ?? null,
+            elementType: l.elementType ?? null,
+            designation: l.designation ?? null,
+          },
+          profile,
+        );
+        return {
+          totalHt: l.totalHt ?? (l.quantity ?? 0) * (l.unitPrice ?? 0),
+          vatRate: tax.vatRate,
+          vatCategoryCode: tax.vatCategoryCode,
+          exemptionReason: tax.exemptionReason,
+        };
+      }),
+    );
+
     const lineItems = lines
       .map((l, i) => {
         const qty = l.quantity ?? 0;
         const pu = l.unitPrice ?? 0;
         const ht = l.totalHt ?? qty * pu;
-        const vat = (l.vatRate ?? profile.vatRate) * 100;
+        const tax = resolveLineTax(
+          {
+            vatRate: l.vatRate,
+            rasRate: l.rasRate,
+            resourceType: l.resourceType ?? null,
+            category: l.category ?? null,
+            elementType: l.elementType ?? null,
+            designation: l.designation ?? null,
+          },
+          profile,
+        );
+        const vat = tax.vatRate * 100;
         const label = DocumentIdentityService.lineLabel(l, i);
         const classification = DocumentIdentityService.lineCode(l);
         const description = [l.note, l.category].filter(Boolean).join(' — ');
@@ -151,7 +196,12 @@ export const FacturXTransformer = {
       <ram:SpecifiedLineTradeSettlement>
         <ram:ApplicableTradeTax>
           <ram:TypeCode>VAT</ram:TypeCode>
-          <ram:CategoryCode>S</ram:CategoryCode>
+          <ram:CategoryCode>${esc(tax.vatCategoryCode)}</ram:CategoryCode>${
+            tax.exemptionReason
+              ? `
+          <ram:ExemptionReason>${esc(tax.exemptionReason)}</ram:ExemptionReason>`
+              : ''
+          }
           <ram:RateApplicablePercent>${money(vat)}</ram:RateApplicablePercent>
         </ram:ApplicableTradeTax>
         <ram:SpecifiedTradeSettlementLineMonetarySummation>
@@ -191,13 +241,22 @@ ${partyXml('BuyerTradeParty', ctx.buyer)}
     <ram:ApplicableHeaderTradeDelivery/>
     <ram:ApplicableHeaderTradeSettlement>
       <ram:InvoiceCurrencyCode>${esc(currency)}</ram:InvoiceCurrencyCode>
-      <ram:ApplicableTradeTax>
-        <ram:CalculatedAmount>${money(totals.totalTva)}</ram:CalculatedAmount>
+${vatBuckets
+        .map(
+          (b) => `      <ram:ApplicableTradeTax>
+        <ram:CalculatedAmount>${money(b.taxAmount)}</ram:CalculatedAmount>
         <ram:TypeCode>VAT</ram:TypeCode>
-        <ram:BasisAmount>${money(totals.totalHt)}</ram:BasisAmount>
-        <ram:CategoryCode>S</ram:CategoryCode>
-        <ram:RateApplicablePercent>${money(profile.vatRate * 100)}</ram:RateApplicablePercent>
-      </ram:ApplicableTradeTax>
+        <ram:BasisAmount>${money(b.basisAmount)}</ram:BasisAmount>
+        <ram:CategoryCode>${esc(b.vatCategoryCode)}</ram:CategoryCode>${
+            b.exemptionReason
+              ? `
+        <ram:ExemptionReason>${esc(b.exemptionReason)}</ram:ExemptionReason>`
+              : ''
+          }
+        <ram:RateApplicablePercent>${money(b.vatRate * 100)}</ram:RateApplicablePercent>
+      </ram:ApplicableTradeTax>`,
+        )
+        .join('\n')}
       <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
         <ram:LineTotalAmount>${money(totals.totalHt)}</ram:LineTotalAmount>
         <ram:TaxBasisTotalAmount>${money(totals.totalHt)}</ram:TaxBasisTotalAmount>

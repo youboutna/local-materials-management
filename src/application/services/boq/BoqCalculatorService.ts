@@ -7,6 +7,7 @@
 
 import { BOQ_UNIT_BY_CODE, BoqUnit, isBoqUnit } from '@/config/referentials/boq/units.referential';
 import { DEFAULT_FISCAL_PROFILE, type BoqFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { resolveLineTax, buildVatBuckets, type VatBucket } from '@/config/referentials/boq/tax-regimes.referential';
 
 export interface BoqLineInput {
   unit: BoqUnit | string;
@@ -18,6 +19,13 @@ export interface BoqLineInput {
   vatRate?: number | null; // 0.16 = 16% (fallback to fiscal profile when null)
   rasRate?: number | null;
   fees?: number | null;
+  /** Régime de taxation explicite (référentiel tax-regimes). */
+  taxRegimeCode?: string | null;
+  /** Indices de rattachement au régime (nature de la prestation). */
+  resourceType?: string | null;
+  category?: string | null;
+  elementType?: string | null;
+  designation?: string | null;
 }
 
 export interface BoqLineTotals {
@@ -47,10 +55,11 @@ export class BoqCalculatorService {
   static computeTotals(input: BoqLineInput, profile?: BoqFiscalProfile): BoqLineTotals {
     const quantity = BoqCalculatorService.computeQuantity(input);
     const unitPrice = input.unitPrice ?? 0;
-    const vatRate = input.vatRate ?? profile?.vatRate ?? 0;
+    const tax = resolveLineTax(input, profile);
+    const vatRate = tax.vatRate;
     const totalHt = quantity * unitPrice + (input.fees ?? 0);
     const totalTva = totalHt * vatRate;
-    const withholding = totalHt * (input.rasRate ?? profile?.withholdingRate ?? 0);
+    const withholding = totalHt * tax.rasRate;
     const totalTtc = totalHt + totalTva;
     if (!profile && input.rasRate == null) return { quantity, totalHt, totalTva, totalTtc };
     const netToPay = totalTtc - withholding;
@@ -96,6 +105,45 @@ export class BoqCalculatorService {
       };
     }
     return out;
+  }
+
+  /**
+   * Ventilation TVA multi-taux : la TVA n'est pas uniforme sur un DQE
+   * (travaux / fourniture / consulting / exonéré bailleur).
+   */
+  static vatBuckets(lines: BoqLineInput[], profile?: BoqFiscalProfile): VatBucket[] {
+    return buildVatBuckets(
+      lines.map((l) => {
+        const tax = resolveLineTax(l, profile);
+        const t = BoqCalculatorService.computeTotals(l, profile);
+        return {
+          totalHt: t.totalHt,
+          vatRate: tax.vatRate,
+          vatCategoryCode: tax.vatCategoryCode,
+          exemptionReason: tax.exemptionReason,
+        };
+      }),
+    );
+  }
+
+  /**
+   * Contrôle de cohérence HT / TVA / TTC entre les lignes et le récapitulatif
+   * (tolérance d'arrondi 0,01). Ne lève jamais : retourne le diagnostic.
+   */
+  static checkConsistency(
+    lines: BoqLineInput[],
+    document: { totalHt?: number | null; totalTva?: number | null; totalTtc?: number | null },
+    profile?: BoqFiscalProfile,
+    tolerance = 0.01,
+  ): { consistent: boolean; expected: BoqLineTotals; deltas: { ht: number; tva: number; ttc: number } } {
+    const expected = BoqCalculatorService.aggregate(lines, profile);
+    const deltas = {
+      ht: Math.abs((document.totalHt ?? expected.totalHt) - expected.totalHt),
+      tva: Math.abs((document.totalTva ?? expected.totalTva) - expected.totalTva),
+      ttc: Math.abs((document.totalTtc ?? expected.totalTtc) - expected.totalTtc),
+    };
+    const consistent = deltas.ht <= tolerance && deltas.tva <= tolerance && deltas.ttc <= tolerance;
+    return { consistent, expected, deltas };
   }
 
   /** Convenience: default Mauritania profile. */
