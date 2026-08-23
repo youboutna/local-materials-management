@@ -16,6 +16,8 @@ import { useUiTheme } from '@/contexts/UiThemeContext';
 import { BrandBandsBackground, BrandIdentity } from '@/components/branding/BrandIdentity';
 import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 import { cn } from '@/lib/utils';
+import LanguageSelector from '@/components/LanguageSelector';
+
 
 export const AppearanceSettings: React.FC = () => {
   const {
