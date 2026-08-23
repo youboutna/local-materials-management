@@ -11,6 +11,7 @@ import { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { TaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { i18nService } from '@/application/services/I18nService';
 interface TaskListProps {
   tasks: TaskAssignmentDTO[];
   projectId: string;
@@ -70,16 +71,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case TaskStatus.COMPLETED: return 'Terminée';
-      case TaskStatus.IN_PROGRESS: return 'En cours';
-      case TaskStatus.BLOCKED: return 'Bloquée';
-      case TaskStatus.PENDING: return 'En attente';
-      case TaskStatus.CANCELLED: return 'Annulée';
-      default: return status;
-    }
-  };
+  const getStatusLabel = (status: string) => i18nService.translateStatus(status as string);
 
   return (
     <div className="space-y-4">

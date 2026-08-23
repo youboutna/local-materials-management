@@ -72,6 +72,7 @@ import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { toDateInput } from '@/lib/utils';
 import { usePhaseResourceCountsHex } from '@/hooks/hexagonal/usePhaseResourceCountsHex';
 
+import { i18nService } from '@/application/services/I18nService';
 // PhaseService instance for dynamic data
 const phaseService = getPhaseService();
 
@@ -558,21 +559,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
 
 
-  const getStatusLabel = (status: string) => {
-
-    switch (status) {
-
-      case 'completed': return 'Terminé';
-
-      case 'in_progress': return 'En cours';
-
-      case 'delayed': return 'Retardé';
-
-      default: return 'Non commencé';
-
-    }
-
-  };
+  const getStatusLabel = (status: string) => i18nService.translateStatus(status as string);
 
 
 
