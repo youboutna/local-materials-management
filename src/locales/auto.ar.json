@@ -4714,6 +4714,10 @@
   "auto.zonelocationeditor.rayon_m": "نصف القطر (متر)",
   "bank_guarantee.subtitle": "نظام آلي لكشف التأخير وتحصيل الضمانات",
   "bank_guarantee.title": "متابعة الضمانات البنكية",
+  "common": {
+    "cancel": "إلغاء",
+    "confirm": "تأكيد"
+  },
   "common.create": "إنشاء",
   "common.details": "التفاصيل",
   "common.edit": "تعديل",
@@ -4746,6 +4750,69 @@
   "dashboard.project.search_by_location": "البحث عن المشاريع حسب الموقع...",
   "dashboard.title": "لوحة القيادة",
   "documents.title": "الوثائق",
+  "dqe": {
+    "action": {
+      "add": "إضافة",
+      "add_line": "إضافة سطر",
+      "align_planning": "المواءمة مع التخطيط",
+      "attach_submission": "إرفاق بعرضي",
+      "clear_draft": "إفراغ المسودة",
+      "create_decompte": "إنشاء كشف مرحلي",
+      "dispatch_wbs": "التحويل إلى المراحل",
+      "distribute": "توزيع",
+      "download": "تنزيل",
+      "email": "إرسال",
+      "facturx": "PDF + Factur-X",
+      "generate_pdf": "إنشاء PDF",
+      "import": "استيراد كشف كمي",
+      "publish": "نشر",
+      "save": "حفظ المستند",
+      "sign": "توقيع",
+      "signed": "موقّع",
+      "submit_invoice": "تقديم للدفع",
+      "takeoff": "حساب الكميات",
+      "transfer": "تحويل",
+      "transform_to": "تحويل إلى",
+      "validate_gate": "اعتماد للإدخال"
+    },
+    "actions": {
+      "document_menu": "المستند",
+      "workflow_menu": "سير العمل"
+    },
+    "clear_draft": {
+      "confirm": "سيتم حذف السطور المعلّقة. لا يمكن التراجع عن هذا الإجراء."
+    },
+    "doc_status": {
+      "new": "مستند جديد",
+      "to_save": "في انتظار الحفظ",
+      "validated": "مستند مُعتمد"
+    },
+    "fiscal": {
+      "ht": "قبل الضريبة:"
+    },
+    "gate": {
+      "validated": "مُعتمد",
+      "validation_required": "الاعتماد مطلوب"
+    },
+    "lifecycle": {
+      "possible_statuses_label": "الحالات الممكنة:",
+      "status_label": "الحالة:"
+    },
+    "referential": {
+      "enrich": "إثراء:",
+      "hint": "المرجع الافتراضي هو مرجع المشروع؛ اختر مرجعاً آخر لإثراء تصنيف المرحلة / المعلم / المهمة.",
+      "project": "مرجع المشروع —"
+    },
+    "transfer": {
+      "project_dqe": "تقديم للاعتماد",
+      "supplier_bid": "إرفاق بعرضي",
+      "supplier_invoice": "تقديم للدفع",
+      "tender_estimate": "النشر للموردين"
+    },
+    "transform": {
+      "blocked": "الإصدار محجوب"
+    }
+  },
   "dqe.lifecycle.billed_progress": "نسبة التقدم المفوترة",
   "dqe.lifecycle.possible_statuses": "الحالات الممكنة",
   "dqe.lifecycle.status": "الحالة",
@@ -4905,5 +4972,9 @@
   "users.table.national_id": "الرقم الوطني",
   "users.table.role": "الدور",
   "users.updated": "تم تحديث المستخدم",
-  "users.updated_success": "تم تحديث المستخدم بنجاح"
+  "users.updated_success": "تم تحديث المستخدم بنجاح",
+  "wbs": {
+    "select_milestone_first": "اختر معلماً",
+    "select_phase_first": "اختر مرحلة"
+  }
 }
