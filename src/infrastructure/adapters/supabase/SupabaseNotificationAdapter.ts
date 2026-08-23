@@ -110,8 +110,6 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
           message: row.message as string,
           type: row.type as NotificationData['type'],
           read: row.read as boolean,
-        projectId: (row.project_id as string | null) ?? null,
-        phaseId: (row.phase_id as string | null) ?? null,
           projectId: (row.project_id as string | null) ?? null,
           phaseId: (row.phase_id as string | null) ?? null,
           createdAt: row.created_at as string,

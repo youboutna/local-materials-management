@@ -56,7 +56,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
 
   const { data: inspections, isLoading } = usePhaseInspectionsListHex(phaseId);
 
-  const addInspectionMutationBase = useAddPhaseInspectionHex(phaseId, projectId, syncProgress);
+  const addInspectionMutationBase = useAddPhaseInspectionHex(phaseId, projectId, async () => { await syncProgress(); });
   const addInspectionMutation = {
     ...addInspectionMutationBase,
     mutate: async (inspectionData: InspectionFormData) => {

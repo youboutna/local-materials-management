@@ -40,7 +40,7 @@ export function useAddPhaseInspectionHex(phaseId: string, projectId: string, syn
           progress_at_inspection: parseInt(inspectionData.progressAtInspection) || 0,
           comments: inspectionData.comments,
           documents: inspectionData.documentsData || {},
-        })
+        } as never)
         .select()
         .single();
 
