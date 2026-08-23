@@ -56,6 +56,7 @@ export interface AlertFilter {
   source?: AlertSource;
   acknowledged?: boolean;
   projectId?: string;
+  phaseId?: string;
   dateRange?: {
     start: string;
     end: string;
