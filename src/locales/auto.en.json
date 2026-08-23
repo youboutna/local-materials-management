@@ -1,4 +1,8 @@
 {
+  "alerts.detected_at": "Detected on",
+  "alerts.source_label": "Source",
+  "alerts.status_label": "Status",
+  "alerts.type_label": "Type",
   "app.name": "HadraTech-GPI",
   "auth.button.loading": "Loading...",
   "auth.email": "Email",
@@ -4717,6 +4721,7 @@
   "common.error": "Error",
   "common.loading": "Loading…",
   "common.success": "Success",
+  "common.unknown": "Unknown",
   "dashboard.management_tabs.alerts.acknowledge": "Acknowledge",
   "dashboard.management_tabs.alerts.acknowledge_description": "The alert has been marked as acknowledged.",
   "dashboard.management_tabs.alerts.acknowledge_success": "Alert acknowledged",

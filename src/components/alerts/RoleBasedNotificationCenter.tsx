@@ -10,11 +10,14 @@ import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { getNotificationLink } from '@/utils/notificationUtils';
 import { NotificationType } from '@/dtos/entities/NotificationTypeDTO';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 const RoleBasedNotificationCenter: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { notifications, isLoading, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { userRoles, hasRole } = useCurrentUserRoles();
+
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   const handleNotificationClick = async (notification: any) => {
@@ -164,7 +167,7 @@ const RoleBasedNotificationCenter: React.FC = () => {
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Centre de Notifications
+              {t('notifications_center.title')}
               {hasRole('director') && <Badge variant="outline"><T k="auto.rolebasednotificationcenter.vue_directeur" fallback="Vue Directeur" /></Badge>}
               {hasRole('project_manager') && <Badge variant="outline"><T k="auto.rolebasednotificationcenter.chef_de_projet" fallback="Chef de Projet" /></Badge>}
               {hasRole('engineering_consultant') && <Badge variant="outline"><T k="auto.rolebasednotificationcenter.consultant" fallback="Consultant" /></Badge>}
@@ -182,8 +185,9 @@ const RoleBasedNotificationCenter: React.FC = () => {
               size="sm"
               onClick={() => setSelectedFilter('all')}
             >
-              Toutes ({filteredNotifications.length})
+              {t('dashboard.management_tabs.alerts.tabs.all')} ({filteredNotifications.length})
             </Button>
+
             <Button
               variant={selectedFilter === 'bank_guarantee_trigger' ? 'default' : 'outline'}
               size="sm"

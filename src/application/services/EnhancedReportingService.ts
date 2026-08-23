@@ -135,10 +135,12 @@ export class EnhancedReportingService {
 
   private static async fetchEnhancedPhases(projectId: string): Promise<EnhancedPhaseDTO[]> {
     try {
-      const { data: phasesData } = await supabase
+      const { btpClient } = await import('@/integrations/supabase/schema-clients');
+      const { data: phasesData } = await btpClient
         .from('project_phases')
         .select('*')
         .eq('project_id', projectId);
+
 
       if (!phasesData || phasesData.length === 0) return [];
 

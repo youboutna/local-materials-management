@@ -36,18 +36,20 @@ export interface AlertTypeItem extends AlertLabelledItem {
 }
 
 export const ALERT_TYPE: AlertTypeItem[] = [
-  { code: 'project_delay', fr: 'Retard de projet', ar: 'تأخير المشروع', en: 'Project delay', category: 'delay', aliases: ['delay', 'deadline', 'retard'] },
-  { code: 'payment_blocked', fr: 'Paiement bloqué', ar: 'دفعة موقوفة', en: 'Payment blocked', category: 'payment', aliases: ['payment', 'paiement'] },
+  { code: 'project_delay', fr: 'Retard de projet', ar: 'تأخير المشروع', en: 'Project delay', category: 'delay', aliases: ['delay', 'deadline', 'retard', 'delay_warning'] },
+  { code: 'payment_blocked', fr: 'Paiement bloqué', ar: 'دفعة موقوفة', en: 'Payment blocked', category: 'payment', aliases: ['payment', 'paiement', 'payment_due', 'payment_failed', 'payment_warning', 'payment_pending', 'supplier_payment_request'] },
   { code: 'financial_risk', fr: 'Risque financier', ar: 'مخاطر مالية', en: 'Financial risk', category: 'payment', aliases: ['financial'] },
-  { code: 'inspection_issue', fr: 'Anomalie d’inspection', ar: 'ملاحظة تفتيش', en: 'Inspection issue', category: 'inspection', aliases: ['inspection'] },
+  { code: 'inspection_issue', fr: 'Anomalie d’inspection', ar: 'ملاحظة تفتيش', en: 'Inspection issue', category: 'inspection', aliases: ['inspection', 'inspection_required'] },
   { code: 'inspection_overdue', fr: 'Inspection en retard', ar: 'تفتيش متأخر', en: 'Inspection overdue', category: 'inspection', aliases: [] },
-  { code: 'bank_guarantee', fr: 'Garantie bancaire', ar: 'ضمان بنكي', en: 'Bank guarantee', category: 'guarantee', aliases: ['guarantee'] },
+  { code: 'bank_guarantee', fr: 'Garantie bancaire', ar: 'ضمان بنكي', en: 'Bank guarantee', category: 'guarantee', aliases: ['guarantee', 'bank_guarantee_trigger'] },
   { code: 'insurance_expiry', fr: 'Expiration d’assurance', ar: 'انتهاء التأمين', en: 'Insurance expiry', category: 'guarantee', aliases: ['insurance'] },
-  { code: 'compliance_violation', fr: 'Non-conformité', ar: 'عدم مطابقة', en: 'Compliance violation', category: 'compliance', aliases: ['compliance'] },
+  { code: 'compliance_violation', fr: 'Non-conformité', ar: 'عدم مطابقة', en: 'Compliance violation', category: 'compliance', aliases: ['compliance', 'compliance_alert'] },
   { code: 'quality', fr: 'Qualité', ar: 'الجودة', en: 'Quality', category: 'compliance', aliases: [] },
   { code: 'delivery', fr: 'Livraison', ar: 'التسليم', en: 'Delivery', category: 'other', aliases: [] },
   { code: 'deadline', fr: 'Échéance', ar: 'الموعد النهائي', en: 'Deadline', category: 'delay', aliases: [] },
+  { code: 'escalation_required', fr: 'Escalade requise', ar: 'تصعيد مطلوب', en: 'Escalation required', category: 'other', aliases: ['escalation'] },
 ];
+
 
 export const ALERT_CATEGORIES: Array<AlertLabelledItem & { code: AlertCategory | 'all' }> = [
   { code: 'all', fr: 'Toutes', ar: 'الكل', en: 'All' },
@@ -99,4 +101,56 @@ export function alertSeverityLabel(raw: string | null | undefined, lang: Lang = 
 
 export function alertSeverityColor(raw: string | null | undefined): string {
   return resolveAlertSeverity(raw).colorClass;
+}
+
+/**
+ * Types de notification métier qui constituent une alerte opérationnelle.
+ * Doctrine : la cohérence « notifications ↔ alertes » se décide ici, jamais
+ * dans un composant React ni dans un adapter.
+ */
+const NOTIFICATION_ALERT_TYPES = new Set<string>([
+  'inspection_overdue',
+  'inspection_required',
+  'delay_warning',
+  'payment_blocked',
+  'payment_due',
+  'payment_failed',
+  'payment_warning',
+  'bank_guarantee_trigger',
+  'insurance_expiry',
+  'compliance_alert',
+  'contractor_penalty',
+  'escalation_required',
+]);
+
+export function isAlertWorthyNotificationType(raw: string | null | undefined): boolean {
+  return NOTIFICATION_ALERT_TYPES.has(normalize(raw ?? ''));
+}
+
+/** Sévérité par défaut d'un type de notification promue en alerte. */
+const NOTIFICATION_DEFAULT_SEVERITY: Record<string, string> = {
+  inspection_overdue: 'high',
+  inspection_required: 'medium',
+  delay_warning: 'high',
+  payment_blocked: 'high',
+  payment_failed: 'high',
+  payment_due: 'medium',
+  payment_warning: 'medium',
+  bank_guarantee_trigger: 'critical',
+  insurance_expiry: 'high',
+  compliance_alert: 'critical',
+  contractor_penalty: 'high',
+  escalation_required: 'critical',
+};
+
+/** Sévérité d'alerte déduite d'une notification (priorité explicite prioritaire). */
+export function alertSeverityFromNotification(
+  type: string | null | undefined,
+  priority?: string | null
+): string {
+  const p = normalize(priority ?? '');
+  if (p === 'urgent' || p === 'critical') return 'critical';
+  if (p === 'high') return 'high';
+  if (p === 'low') return 'low';
+  return NOTIFICATION_DEFAULT_SEVERITY[normalize(type ?? '')] ?? 'medium';
 }

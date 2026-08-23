@@ -1,4 +1,8 @@
 {
+  "alerts.detected_at": "Détecté le",
+  "alerts.source_label": "Source",
+  "alerts.status_label": "Statut",
+  "alerts.type_label": "Type",
   "app.name": "HadraTech-GPI",
   "auth.button.loading": "Chargement...",
   "auth.email": "Email",
@@ -4714,6 +4718,7 @@
   "common.error": "Erreur",
   "common.loading": "Chargement…",
   "common.success": "Succès",
+  "common.unknown": "Inconnue",
   "dashboard.management_tabs.alerts.acknowledge": "Prendre en compte",
   "dashboard.management_tabs.alerts.acknowledge_description": "L'alerte a été marquée comme prise en compte.",
   "dashboard.management_tabs.alerts.acknowledge_success": "Alerte prise en compte",

@@ -1,4 +1,8 @@
 {
+  "alerts.detected_at": "تم الكشف في",
+  "alerts.source_label": "المصدر",
+  "alerts.status_label": "الحالة",
+  "alerts.type_label": "النوع",
   "app.name": "هدرتك-GPI",
   "auth.button.loading": "جار التحميل...",
   "auth.email": "البريد الإلكتروني",
@@ -4716,6 +4720,7 @@
   "common.error": "خطأ",
   "common.loading": "جار التحميل…",
   "common.success": "نجاح",
+  "common.unknown": "غير معروف",
   "dashboard.management_tabs.alerts.acknowledge": "إقرار",
   "dashboard.management_tabs.alerts.acknowledge_description": "تم تسجيل التنبيه كمقروء.",
   "dashboard.management_tabs.alerts.acknowledge_success": "تم إقرار التنبيه",

@@ -389,7 +389,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                     onChange={(loc) => {
                       console.info('[ProjectDashboard] location search', loc);
                     }}
-                    placeholder="Rechercher des projets par localisation..."
+                    placeholder={t('dashboard.project.search_by_location')}
                     filter="all"
                     className="w-full"
                     showCoordinates={false}

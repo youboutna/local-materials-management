@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { useKPIMetricsHex, CriticalAlert } from '@/hooks/hexagonal';
 import { formatNumber2, formatAmount2, formatPercent2, formatRatio2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 interface KPIDashboardWidgetProps {
   onAlertClick?: (alert: CriticalAlert) => void;
@@ -31,6 +32,8 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
   onAlertClick,
   compact = false
 }) => {
+  const { t } = useI18n();
+
   const { kpiMetrics, loading } = useKPIMetricsHex();
 
   const getSPIColor = (spi: number) => {
@@ -97,7 +100,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           </span>
           {kpiMetrics.criticalAlerts.length > 0 && (
             <Badge variant="destructive" className="animate-pulse">
-              {kpiMetrics.criticalAlerts.length} alerte(s)
+              {kpiMetrics.criticalAlerts.length} {t('dashboard.kpi.alerts_suffix')}
             </Badge>
           )}
         </CardTitle>
@@ -149,15 +152,15 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           <div className="flex gap-2">
             <Badge variant="outline" className="bg-success-soft text-success border-success/30 flex-1 justify-center py-2">
               <CheckCircle className="h-3 w-3 mr-1" />
-              {kpiMetrics.projectsOnTrack} En bonne voie
+              {kpiMetrics.projectsOnTrack} {t('dashboard.kpi.on_track')}
             </Badge>
             <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 flex-1 justify-center py-2">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              {kpiMetrics.projectsAtRisk} À risque
+              {kpiMetrics.projectsAtRisk} {t('dashboard.kpi.at_risk')}
             </Badge>
             <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 flex-1 justify-center py-2">
               <XCircle className="h-3 w-3 mr-1" />
-              {kpiMetrics.projectsDelayed} En retard
+              {kpiMetrics.projectsDelayed} {t('dashboard.kpi.delayed')}
             </Badge>
           </div>
         </div>
@@ -179,7 +182,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           {kpiMetrics.milestonesOverdue > 0 && (
             <div className="flex items-center gap-2 text-sm text-destructive">
               <AlertTriangle className="h-4 w-4" />
-              {kpiMetrics.milestonesOverdue} jalon(s) en retard
+              {kpiMetrics.milestonesOverdue} {t('dashboard.kpi.milestones_overdue_suffix')}
             </div>
           )}
         </div>
@@ -223,7 +226,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium"><T k="auto.kpidashboardwidget.budget_global" fallback="Budget Global" /></span>
               <span className="text-xs text-muted-foreground">
-                {formatPercent2((kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100)} consommé
+                {formatPercent2((kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100)} {t('dashboard.kpi.consumed')}
               </span>
             </div>
             <Progress 
