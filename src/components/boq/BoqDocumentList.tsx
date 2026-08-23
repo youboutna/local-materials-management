@@ -17,6 +17,7 @@ import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRep
 import { Eye, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Props {
   source: BoqSource;
@@ -42,6 +43,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: 'default' | 'second
 const fmt = (v: number) => v.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
+  const { t } = useI18n();
   const { toast } = useToast();
   const { documents, isLoading, invalidate } = useBoqDocumentList({ source, contextId, projectId });
   const [search, setSearch] = useState('');

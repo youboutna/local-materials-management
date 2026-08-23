@@ -4717,7 +4717,8 @@
   "bank_guarantee.title": "Bank Guarantee Monitoring",
   "common": {
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "delete": "Delete"
   },
   "common.create": "Create",
   "common.details": "Details",
@@ -4762,6 +4763,7 @@
       "dispatch_wbs": "Transfer to phases",
       "distribute": "Distribute",
       "download": "Download",
+      "edit": "Edit",
       "email": "Send",
       "facturx": "PDF + Factur-X",
       "generate_pdf": "Generate PDF",
@@ -4774,7 +4776,8 @@
       "takeoff": "Quantity take-off",
       "transfer": "Transfer",
       "transform_to": "Transform into",
-      "validate_gate": "Approve for injection"
+      "validate_gate": "Approve for injection",
+      "view": "View"
     },
     "actions": {
       "document_menu": "Document",
@@ -4799,6 +4802,7 @@
       "possible_statuses_label": "Possible statuses:",
       "status_label": "Status:"
     },
+    "locked_transmitted": "Document transmitted — read only",
     "referential": {
       "enrich": "Enrich:",
       "hint": "The project referential is used by default; pick another one to enrich the Phase / Milestone / Task classification.",

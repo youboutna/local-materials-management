@@ -4714,7 +4714,8 @@
   "bank_guarantee.title": "Suivi des garanties bancaires",
   "common": {
     "cancel": "Annuler",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "delete": "Supprimer"
   },
   "common.create": "Créer",
   "common.details": "Détails",
@@ -4759,6 +4760,7 @@
       "dispatch_wbs": "Transférer vers les phases",
       "distribute": "Diffuser",
       "download": "Télécharger",
+      "edit": "Modifier",
       "email": "Envoyer",
       "facturx": "PDF + Factur-X",
       "generate_pdf": "Générer le PDF",
@@ -4771,7 +4773,8 @@
       "takeoff": "Calcul métré",
       "transfer": "Transférer",
       "transform_to": "Transformer en",
-      "validate_gate": "Valider pour injection"
+      "validate_gate": "Valider pour injection",
+      "view": "Consulter"
     },
     "actions": {
       "document_menu": "Document",
@@ -4796,6 +4799,7 @@
       "possible_statuses_label": "Statuts possibles :",
       "status_label": "Statut :"
     },
+    "locked_transmitted": "Document transmis — lecture seule",
     "referential": {
       "enrich": "Enrichir :",
       "hint": "Par défaut le référentiel du projet ; sélectionnez-en un autre pour enrichir la classification Phase / Jalon / Tâche.",
