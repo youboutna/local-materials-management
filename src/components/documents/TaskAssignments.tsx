@@ -41,7 +41,8 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
   useTaskAssignmentsHex, 
-  useProjectsHex, 
+  useProjectsHex,
+  usePhasesHex,
   useAssigneeDetails,
   type TaskAssignment
 } from '@/hooks/hexagonal';
@@ -400,6 +401,27 @@ const TaskAssignmentsComponent = () => {
 
   };
 
+  // Filtrage local (recherche, priorité, projet) — statut/assigné sont filtrés côté service
+  const visibleTasks = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return ((tasks as any[]) || []).filter((task: any) => {
+      if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
+      const projectId = task.project_id || task.projectId || '';
+      if (filterProject !== 'all' && projectId !== filterProject) return false;
+      if (!term) return true;
+      const haystack = [
+        task.title,
+        task.description,
+        task.assignee_name || task.assigneeName,
+        getProjectTitle(projectId),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [tasks, searchTerm, filterPriority, filterProject, projects]);
+
   // Pagination
   const {
     currentData: paginatedTasks,
@@ -409,7 +431,7 @@ const TaskAssignmentsComponent = () => {
     itemsPerPage,
     goToPage,
   } = usePagination({
-    data: tasks || [],
+    data: visibleTasks,
     itemsPerPage: 12
   });
 
@@ -780,6 +802,17 @@ const TaskAssignmentsComponent = () => {
                 <Badge className={getStatusColor(task.status)}>
                   <TranslatedStatus code={task.status} />
                 </Badge>
+                {(task.project_id || task.projectId) && (
+                  <Badge variant="outline" className="max-w-[12rem] truncate">
+                    {getProjectTitle(task.project_id || task.projectId)}
+                  </Badge>
+                )}
+                {(task.phase_id || task.phaseId) && (
+                  <Badge variant="secondary" className="max-w-[12rem] truncate">
+                    {phaseNameById[task.phase_id || task.phaseId] ||
+                      (t('task.phase') || 'Phase')}
+                  </Badge>
+                )}
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
                 <div className="flex items-center gap-2">
@@ -798,7 +831,7 @@ const TaskAssignmentsComponent = () => {
         ))}
       </div>
 
-      {tasks?.length === 0 && (
+      {visibleTasks.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
             <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -814,7 +847,7 @@ const TaskAssignmentsComponent = () => {
         </Card>
       )}
 
-      {tasks && tasks.length > 0 && (
+      {visibleTasks.length > 0 && (
         <PaginationControls
           currentPage={currentPage}
           totalPages={totalPages}
