@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useMemo, useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,8 +16,8 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import AdvancedQuantityCalculator from '@/components/project/AdvancedQuantityCalculator';
 import TenderEstimatorForm from '@/components/tenders/TenderEstimatorForm';
 import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
+import type { TenderEstimatorLineInput, TenderCategory } from '@/application/services/boq/TenderEstimatorService';
 
 interface EnhancedTenderEstimatorProps {
   tenderId: string;
@@ -135,23 +135,25 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
+  const [seedLines, setSeedLines] = useState<TenderEstimatorLineInput[] | null>(null);
 
-  // Fetch existing estimates with enhanced data
-  const { data: estimates, isLoading } = useQuery({
-    queryKey: ['enhanced-tender-estimates', tenderId],
-    queryFn: async () => {
-      const { data, error } = await btpClient.from('tender_estimates')
-        .select(`
-          *,
-          items:tender_estimate_items(*)
-        `)
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: false });
+  // Lignes réelles du devis (source unique : btp.boq_lines via le noyau BOQ)
+  const { lines, isLoading } = useBoqDocument({ source: 'tender_estimate', contextId: tenderId });
 
-      if (error) throw error;
-      return data || [];
+  const analysis = useMemo(() => {
+    const byType = { material: 0, labor: 0, equipment: 0, other: 0 } as Record<string, number>;
+    let total = 0;
+    for (const l of lines) {
+      const ht = Number(l.totalHt ?? (l.quantity ?? 0) * (l.unitPrice ?? 0)) || 0;
+      total += ht;
+      const key = l.resourceType && byType[l.resourceType] !== undefined ? l.resourceType : 'other';
+      byType[key] += ht;
     }
-  });
+    const pct = (v: number) => (total > 0 ? Math.round((v / total) * 100) : 0);
+    return { total, byType, pct, lineCount: lines.length };
+  }, [lines]);
+
+  const fmt = (n: number) => `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n)} MRU`;
 
   const updateWorkflowStep = useCallback((stepId: string, updates: Partial<WorkflowStep>) => {
     setWorkflowSteps(prev => prev.map(step => 
@@ -171,18 +173,47 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
   };
 
   const applyTemplate = (template: EstimateTemplate) => {
+    const mapCategory = (c: EstimateTemplateItem['category']): TenderCategory =>
+      c === 'labor' ? 'labour' : c === 'equipment' ? 'equipment' : c === 'overhead' ? 'overhead' : 'material';
+    setSeedLines(
+      template.items.map((item) => ({
+        designation: item.description,
+        category: mapCategory(item.category),
+        unit: item.unit,
+        quantity: item.estimatedQuantity || 1,
+        unitPrice: item.estimatedUnitPrice,
+        vatRate: 0.2,
+      })),
+    );
+    setActiveTab('devis');
     toast({
       title: 'Template appliqué',
-      description: `Template "${template.name}" appliqué avec ${template.items.length} éléments.`,
+      description: `${template.items.length} ligne(s) ajoutée(s) au brouillon du devis.`,
     });
   };
 
   const exportEstimate = () => {
-    // Enhanced export functionality with detailed breakdown
-    toast({
-      title: 'Export réussi',
-      description: 'L\'estimation détaillée a été exportée.',
-    });
+    if (!lines.length) {
+      toast({ title: 'Aucune ligne', description: 'Le devis ne contient aucune ligne à exporter.', variant: 'destructive' });
+      return;
+    }
+    const header = ['Designation', 'Type', 'Unite', 'Quantite', 'PU', 'Total HT'];
+    const rows = lines.map((l) => [
+      (l.designation || '').replace(/;/g, ','),
+      l.resourceType ?? '',
+      l.unit ?? '',
+      String(l.quantity ?? 0),
+      String(l.unitPrice ?? 0),
+      String(l.totalHt ?? (l.quantity ?? 0) * (l.unitPrice ?? 0)),
+    ]);
+    const csv = [header, ...rows].map((r) => r.join(';')).join('\n');
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `devis-${tenderId}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Export réussi', description: `${lines.length} ligne(s) exportée(s).` });
   };
 
   const generateReport = async () => {
@@ -192,13 +223,27 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         description: 'Le rapport d\'estimation est en cours de génération...',
       });
 
-      // Simulate report generation
-      setTimeout(() => {
-        toast({
-          title: 'Rapport généré',
-          description: 'Le rapport d\'estimation a été généré avec succès.',
-        });
-      }, 2000);
+      if (!lines.length) {
+        toast({ title: 'Aucune ligne', description: 'Le devis ne contient aucune ligne.', variant: 'destructive' });
+        return;
+      }
+      const { BoqPdfRenderer } = await import('@/application/services/boq/BoqPdfRenderer');
+      const blob = BoqPdfRenderer.render(lines, {
+        title: 'Devis estimatif',
+        docPrefix: 'devis',
+        tenderId,
+        projectId,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `devis-${tenderId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({
+        title: 'Rapport généré',
+        description: 'Le rapport d\'estimation a été généré avec succès.',
+      });
     } catch (error) {
       toast({
         title: 'Erreur',
@@ -249,7 +294,8 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
               <TenderEstimatorForm
                 tenderId={tenderId}
                 projectId={projectId}
-                onCommitted={() => queryClient.invalidateQueries({ queryKey: ['enhanced-tender-estimates', tenderId] })}
+                seedLines={seedLines}
+                onCommitted={() => queryClient.invalidateQueries({ queryKey: ['boq'] })}
               />
             </TabsContent>
 
@@ -377,7 +423,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                       <DollarSign className="h-8 w-8 text-success" />
                       <div>
                         <p className="text-sm text-muted-foreground">Estimation Totale</p>
-                        <p className="text-2xl font-bold">2,450,000 MRU</p>
+                        <p className="text-2xl font-bold">{isLoading ? '…' : fmt(analysis.total)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -388,8 +434,8 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     <div className="flex items-center gap-3">
                       <Clock className="h-8 w-8 text-primary" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Durée Estimée</p>
-                        <p className="text-2xl font-bold">45 jours</p>
+                        <p className="text-sm text-muted-foreground">Lignes main-d'œuvre</p>
+                        <p className="text-2xl font-bold">{fmt(analysis.byType.labor)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -398,10 +444,10 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <Calculator className="h-8 w-8 text-purple-600" />
+                      <Calculator className="h-8 w-8 text-accent" />
                       <div>
                         <p className="text-sm text-muted-foreground">Éléments Calculés</p>
-                        <p className="text-2xl font-bold">23</p>
+                        <p className="text-2xl font-bold">{analysis.lineCount}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -417,22 +463,22 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                     <div className="flex justify-between items-center">
                       <span>Matériaux</span>
                       <div className="flex items-center gap-2">
-                        <Progress value={65} className="w-32" />
-                        <span className="font-medium">1,592,500 MRU</span>
+                        <Progress value={analysis.pct(analysis.byType.material)} className="w-32" />
+                        <span className="font-medium">{fmt(analysis.byType.material)}</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Main-d'œuvre</span>
-                      <div className="flex items-center gap-2">
-                        <Progress value={25} className="w-32" />
-                        <span className="font-medium">612,500 MRU</span>
+                      <div className="flex itemsagit-center gap-2">
+                        <Progress value={analysis.pct(analysis.byType.labor)} className="w-32" />
+                        <span className="font-medium">{fmt(analysis.byType.labor)}</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Équipement</span>
                       <div className="flex items-center gap-2">
-                        <Progress value={10} className="w-32" />
-                        <span className="font-medium">245,000 MRU</span>
+                        <Progress value={analysis.pct(analysis.byType.equipment)} className="w-32" />
+                        <span className="font-medium">{fmt(analysis.byType.equipment)}</span>
                       </div>
                     </div>
                   </div>

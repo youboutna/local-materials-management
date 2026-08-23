@@ -7,6 +7,7 @@ import { CreateHierarchyNodeDTO, HierarchyNode, HierarchyStatisticsDTO, UpdateHi
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 export interface UseProjectHierarchyResult {
   hierarchy: HierarchyNode[];
@@ -44,13 +45,14 @@ export function useProjectHierarchyHex(projectId: string): UseProjectHierarchyRe
     retry: 1,
   });
 
-  if (result.error) {
+  useEffect(() => {
+    if (!result.error) return;
     toast({
       title: 'Erreur de chargement',
       description: 'Impossible de charger la hiérarchie du projet',
       variant: 'destructive',
     });
-  }
+  }, [result.error, toast]);
 
   return {
     hierarchy: result.data || [],
@@ -85,13 +87,14 @@ export function useHierarchyStatisticsHex(projectId: string): UseHierarchyStatis
     staleTime: 10 * 60 * 1000,
   });
 
-  if (result.error) {
+  useEffect(() => {
+    if (!result.error) return;
     toast({
       title: 'Erreur de statistiques',
       description: 'Impossible de calculer les statistiques de hiérarchie',
       variant: 'destructive',
     });
-  }
+  }, [result.error, toast]);
 
   return {
     statistics: result.data || null,
