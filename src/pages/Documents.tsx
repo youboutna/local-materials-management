@@ -2,7 +2,16 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { AppLayout } from '@/components/layout';
 import { useProjectsHex, useTenders } from '@/hooks/hexagonal';
 import { TenderDocumentsPanel } from '@/components/tenders/TenderDocumentsPanel';
@@ -11,16 +20,19 @@ import {
   SupplierDocumentsPanel,
 } from '@/components/documents/panels';
 import { useSuppliersList } from '@/hooks/hexagonal/useSuppliersCrudHex';
-import { FolderKanban, Gavel, Truck, ShieldCheck } from 'lucide-react';
+import { FolderKanban, Gavel, Truck, ShieldCheck, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { T } from '@/components/i18n/T';
 
 type Scope = 'project' | 'tender' | 'supplier';
 
-const SCOPES: { id: Scope; label: string; icon: any; description: string }[] = [
-  { id: 'project', label: 'Projet', icon: FolderKanban, description: "Documents rattachés à un projet et ses phases." },
-  { id: 'tender', label: "Appel d'offres", icon: Gavel, description: 'DPAO, pièces techniques, financières et administratives par lot.' },
-  { id: 'supplier', label: 'Fournisseur', icon: Truck, description: 'RC, attestations, contrats fournisseurs.' },
+const SCOPES: { id: Scope; labelKey: string; icon: any; descriptionKey: string }[] = [
+  { id: 'project', labelKey: 'auto.documents.scope.project', icon: FolderKanban, descriptionKey: 'auto.documents.scope.project_desc' },
+  { id: 'tender', labelKey: 'auto.documents.scope.tender', icon: Gavel, descriptionKey: 'auto.documents.scope.tender_desc' },
+  { id: 'supplier', labelKey: 'auto.documents.scope.supplier', icon: Truck, descriptionKey: 'auto.documents.scope.supplier_desc' },
 ];
+
 
 function useSuppliers() {
   const { data: suppliers = [], ...rest } = useSuppliersList();
