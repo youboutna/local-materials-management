@@ -4,6 +4,56 @@
 
 import { TenderDocument, TenderDocumentCategory, TenderDocumentStatus } from '../entities/TenderDocument';
 
+// Read-model row shapes for joined queries (kept snake_case at the
+// repository boundary; services/DTOs expose camelCase to consumers).
+export interface TenderDocumentJoinedRow {
+  id: string;
+  tender_id: string;
+  document_id: string;
+  category: string;
+  subcategory?: string;
+  is_required?: boolean;
+  reviewer_notes?: string;
+  status?: string;
+  created_at: string;
+  updated_at?: string;
+  document?: {
+    id: string;
+    title?: string;
+    description?: string;
+    file_url?: string;
+    file_name?: string;
+    mime_type?: string;
+    file_size?: number;
+  } | null;
+}
+
+export interface TenderStepDocumentRow {
+  id: string;
+  tender_id: string;
+  document_id: string;
+  category: string;
+  subcategory: string;
+  is_required?: boolean;
+  reviewer_notes?: string;
+  status?: string;
+  created_at: string;
+  updated_at?: string;
+  document?: {
+    id: string;
+    title?: string;
+    description?: string;
+    file_url?: string;
+    file_name?: string;
+    mime_type?: string;
+    file_size?: number;
+  } | null;
+  step_info?: {
+    step_title?: string;
+    step_number?: number;
+  };
+}
+
 export interface ITenderDocumentRepository {
   // CRUD operations
   findById(id: string): Promise<TenderDocument | null>;
@@ -32,4 +82,8 @@ export interface ITenderDocumentRepository {
   // Statistics
   countByProject(projectId: string): Promise<number>;
   countByStatus(projectId: string): Promise<Record<TenderDocumentStatus, number>>;
+
+  // Joined read models (tender-scoped, used by tender document management UI)
+  findByTenderIdWithDocument(tenderId: string): Promise<TenderDocumentJoinedRow[]>;
+  findStepDocumentsByTenderId(tenderId: string): Promise<TenderStepDocumentRow[]>;
 }

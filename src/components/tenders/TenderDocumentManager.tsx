@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useDocumentViewer } from "@/components/documents/viewer";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,11 +18,16 @@ import { BoqLineTable, BoqImportDialog, useBoqDocument } from '@/components/boq'
 import TenderLotDocumentsManager, { LotOption } from './TenderLotDocumentsManager';
 import { useTenderLots } from '@/hooks/hexagonal/useTenderLotsHex';
 import { useTenderLotDocuments } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
+import {
+  useTenderDocumentsList,
+  useWorkflowStepDocumentsList,
+  useUploadTenderDocument,
+} from '@/hooks/hexagonal/useTenderDocumentsHex';
+import { TenderEstimateService } from '@/application/services/TenderEstimateService';
 import { parsePdf, calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { TenderDocumentWithDetails } from '@/hooks/hexagonal/useTenderDocumentsHex';
 import { TENDER_CATEGORY_LABELS, TENDER_DOCUMENT_LABELS, ADMINISTRATIVE_SUBCATEGORY_GROUPS } from '@/dtos';
 import { TenderDocumentCategory, TenderDocumentSubcategory } from './PublicProcurementWorkflow';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
 /**
  * TenderEstimateBoq — remplace le legacy TenderQuantitativeEstimate.
@@ -91,85 +96,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   // Check if user is bidder/supplier
   const isBidder = hasRole('supplier') || hasRole('agent');
 
-  // Fetch tender documents
-  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useQuery({
-    queryKey: ['tender-documents', tenderId],
-    queryFn: async () => {
-      // Query tender_documents with tender_id
-      const { data, error } = await supabase
-        .from('tender_documents')
-        .select(`
-          *,
-          document:documents(
-            id,
-            title,
-            description,
-            file_url,
-            file_name,
-            mime_type,
-            file_size
-          )
-        `)
-        .eq('tender_id', tenderId)
-        .order('created_at', { ascending: true });
-      
-      if (error) {
-        console.error('Query error:', error);
-        return [] as TenderDocumentWithDetails[];
-      }
-      
-      return (data || []) as TenderDocumentWithDetails[];
-    },
-    enabled: !!tenderId
-  });
+  // Fetch tender documents (joined with document metadata via hexagonal hook)
+  const { data: tenderDocuments, isLoading: isTenderDocsLoading } = useTenderDocumentsList(tenderId);
 
-  // Fetch workflow step documents
-  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useQuery({
-    queryKey: ['workflow-step-documents', tenderId],
-    queryFn: async () => {
-      // First get all steps for this tender
-      const { data: steps, error: stepsError } = await supabase
-        .from('tender_steps')
-        .select('id, title, step_number')
-        .eq('tender_id', tenderId);
-      
-      if (stepsError) throw stepsError;
-      if (!steps?.length) return [];
-
-      // Get all documents for these steps
-      const stepIds = steps.map(s => s.id);
-      const { data: stepDocs, error: docsError } = await supabase
-        .from('tender_step_documents')
-        .select(`
-          *,
-          document:documents(*),
-          step:tender_steps(title, step_number)
-        `)
-        .in('step_id', stepIds);
-
-      if (docsError) throw docsError;
-
-      // Transform to match TenderDocumentWithDetails format
-      return (stepDocs || []).map(doc => ({
-        id: doc.id,
-        tender_id: tenderId,
-        document_id: doc.document_id,
-        category: doc.document_type as TenderDocumentCategory || 'administrative',
-        subcategory: 'workflow_step' as any,
-        is_required: doc.is_required,
-        reviewer_notes: doc.reviewer_notes,
-        status: doc.status as any,
-        created_at: doc.created_at,
-        updated_at: doc.created_at,
-        document: doc.document,
-        step_info: {
-          step_title: (doc.step as any)?.title,
-          step_number: (doc.step as any)?.step_number
-        }
-      }));
-    },
-    enabled: !!tenderId,
-  });
+  // Fetch workflow step documents (via hexagonal hook)
+  const { data: workflowStepDocuments, isLoading: isWorkflowDocsLoading } = useWorkflowStepDocumentsList(tenderId);
 
   const { data: lotDocsRaw = [] } = useTenderLotDocuments(tenderId);
 
@@ -227,121 +158,45 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     ...lotDocumentsAsTenderDocs,
   ];
 
+  const uploadTenderDocument = useUploadTenderDocument(tenderId, projectId);
+  const tenderEstimateService = new TenderEstimateService();
+
   // Updated upload document mutation to use tender_id
   const uploadMutation = useMutation({
     mutationFn: async ({ file, documentData }: { file: File; documentData: any }) => {
-      console.log('Starting document upload...', { fileName: file.name, documentData });
-      
       // Upload file first
       const uploadResult = await uploadFile(file, `tender-documents/${tenderId}`);
-      
+
       if (!uploadResult.success) {
         throw new Error('File upload failed');
       }
 
-      console.log('File uploaded successfully:', uploadResult.url);
-
-      // Create document record without any foreign key constraints
-      const documentInsertData = {
-        title: documentData.title,
-        description: documentData.description,
-        file_url: uploadResult.url,
-        file_name: file.name,
-        mime_type: file.type,
-        file_size: file.size,
-        document_type: 'tender' as const
-      };
-
-      console.log('Creating document record:', documentInsertData);
-
-      const { data: document, error: docError } = await supabase
-        .from('documents')
-        .insert(documentInsertData)
-        .select()
-        .single();
-
-      if (docError) {
-        console.error('Document creation error:', docError);
-        throw docError;
-      }
-
-      console.log('Document created:', document);
-
-      // Create tender document record using tender_id
-      const tenderDocData = {
-        document_id: document.id,
-        tender_id: tenderId,
-        project_id: projectId || null, // Keep for legacy compatibility
-        category: documentData.category,
-        subcategory: documentData.subcategory,
-        is_required: documentData.is_required,
-        is_submitted: true,
-        submission_date: new Date().toISOString(),
-        status: 'pending'
-      };
-
-      console.log('Creating tender document record:', tenderDocData);
-
-      const { data: tenderDoc, error: tenderDocError } = await supabase
-        .from('tender_documents')
-        .insert(tenderDocData)
-        .select()
-        .single();
-
-      if (tenderDocError) {
-        console.error('Tender document creation error:', tenderDocError);
-        throw tenderDocError;
-      }
-
-      console.log('Tender document created:', tenderDoc);
+      // Create document + tender document records via the hexagonal hook
+      const { document, tenderDoc } = await uploadTenderDocument.mutateAsync({
+        fileUrl: uploadResult.url!,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        documentData: {
+          category: documentData.category,
+          subcategory: documentData.subcategory,
+          title: documentData.title,
+          description: documentData.description,
+          is_required: documentData.is_required,
+        }
+      });
 
       // Hook: if DQE PDF uploaded under financial category, parse and auto-add items
       let estimateId: string | null = null;
       let addedCount = 0;
       try {
-         const isDqePdf =
-           documentData.subcategory === 'devis_quantitatif_estimatif' &&
-           file.type === 'application/pdf';
+        const isDqePdf =
+          documentData.subcategory === 'devis_quantitatif_estimatif' &&
+          file.type === 'application/pdf';
 
         if (isDqePdf) {
-          // Find existing estimate or create one
-          const { data: existingEstimates, error: findErr } = await supabase
-            .from('tender_estimates')
-            .select('id')
-            .eq('tender_id', tenderId)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          if (findErr) console.warn('Failed to check existing estimates:', findErr);
-
-          if (existingEstimates && existingEstimates.length > 0) {
-            estimateId = existingEstimates[0].id as string;
-          } else {
-            const { data: newEst, error: createEstError } = await supabase
-              .from('tender_estimates')
-              .insert([
-                {
-                  tender_id: tenderId,
-                  project_id: projectId || null,
-                  title: 'Métré quantitatif',
-                  total_materials: 0,
-                  total_labor: 0,
-                  total_equipment: 0,
-                  subtotal: 0,
-                  tax_rate: 14,
-                  tax_amount: 0,
-                  total_amount: 0,
-                  overhead_percentage: 15,
-                  overhead_amount: 0,
-                  profit_percentage: 10,
-                  profit_amount: 0,
-                  status: 'draft'
-                }
-              ])
-              .select()
-              .single();
-            if (createEstError) throw createEstError;
-            estimateId = newEst?.id || null;
-          }
+          const estimate = await tenderEstimateService.findOrCreateDraftEstimateForTender(tenderId, projectId || null);
+          estimateId = estimate.id;
 
           if (estimateId) {
             const parsedResults = await parsePdf(file);
@@ -390,13 +245,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
               .filter((it) => it.quantity > 0);
 
             if (items.length > 0) {
-              const { error: addItemsError } = await supabase
-                .from('tender_estimate_items')
-                .insert(items);
-              if (addItemsError) {
+              try {
+                const created = await tenderEstimateService.addRawEstimateItems(items);
+                addedCount = created.length;
+              } catch (addItemsError) {
                 console.warn('Failed to insert estimate items from DQE:', addItemsError);
-              } else {
-                addedCount = items.length;
               }
             }
           }
@@ -570,7 +423,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                               {tenderDoc.subcategory === 'workflow_step' ? (
                                 tenderDoc.document?.title || 'Document workflow'
                               ) : (
-                                TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]
+                                TENDER_DOCUMENT_LABELS[tenderDoc.subcategory ?? '']
                               )}
                             </h4>
                             {tenderDoc.subcategory === 'workflow_step' ? (
@@ -592,9 +445,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                 Requis
                               </Badge>
                             )}
-                            <Badge className={getStatusColor(tenderDoc.status)}>
+                            <Badge className={getStatusColor(tenderDoc.status ?? 'pending')}>
                               <div className="flex items-center gap-1">
-                                {getStatusIcon(tenderDoc.status)}
+                                {getStatusIcon(tenderDoc.status ?? 'pending')}
                                 {tenderDoc.status === 'approved' ? 'Approuvé' : 
                                  tenderDoc.status === 'rejected' ? 'Rejeté' : 
                                  tenderDoc.status === 'requires_revision' ? 'Révision' : 'En attente'}
@@ -680,7 +533,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h4 className="font-medium text-sm mb-1">
-                                {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory]}
+                                {TENDER_DOCUMENT_LABELS[tenderDoc.subcategory ?? '']}
                               </h4>
                               {tenderDoc.document?.title && (
                                 <p className="text-xs text-muted-foreground mb-2">
@@ -694,9 +547,9 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
                                   Requis
                                 </Badge>
                               )}
-                              <Badge className={getStatusColor(tenderDoc.status)}>
+                              <Badge className={getStatusColor(tenderDoc.status ?? 'pending')}>
                                 <div className="flex items-center gap-1">
-                                  {getStatusIcon(tenderDoc.status)}
+                                  {getStatusIcon(tenderDoc.status ?? 'pending')}
                                   {tenderDoc.status === 'approved' ? 'Approuvé' : 
                                    tenderDoc.status === 'rejected' ? 'Rejeté' : 
                                    tenderDoc.status === 'requires_revision' ? 'Révision' : 'En attente'}
@@ -797,7 +650,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Ajouter un Document d'Appel d'Offres</DialogTitle>
+            <DialogDescription>
+              Sélectionnez la catégorie, la sous-catégorie et le fichier à joindre à cet appel d'offres.
+            </DialogDescription>
           </DialogHeader>
+
           
           <form onSubmit={handleUpload} className="space-y-4">
             <div>

@@ -18,6 +18,14 @@ import TenderEstimatorForm from '@/components/tenders/TenderEstimatorForm';
 import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import type { TenderEstimatorLineInput, TenderCategory } from '@/application/services/boq/TenderEstimatorService';
+import {
+  getTenderEstimationSteps,
+  TENDER_ESTIMATE_TEMPLATES,
+  type TenderEstimateTemplate,
+  type TenderEstimateTemplateItem,
+  type TenderEstimationStepCode,
+} from '@/config/referentials/tender/estimation-workflow.referential';
+import { BOQ_FISCAL_PROFILES } from '@/config/referentials/boq/default-values.referential';
 
 interface EnhancedTenderEstimatorProps {
   tenderId: string;
@@ -25,112 +33,32 @@ interface EnhancedTenderEstimatorProps {
 }
 
 interface WorkflowStep {
-  id: string;
+  id: TenderEstimationStepCode;
   title: string;
   description: string;
   status: 'pending' | 'in_progress' | 'completed' | 'skipped';
   progress: number;
 }
 
-interface EstimateTemplate {
-  id: string;
-  name: string;
-  description: string;
-  items: EstimateTemplateItem[];
-}
+type EstimateTemplate = TenderEstimateTemplate;
+type EstimateTemplateItem = TenderEstimateTemplateItem;
 
-interface EstimateTemplateItem {
-  description: string;
-  category: 'material' | 'labor' | 'equipment' | 'overhead';
-  unit: string;
-  estimatedQuantity: number;
-  estimatedUnitPrice: number;
-}
+/** Étapes d'estimation dérivées du référentiel (aucune liste codée en dur dans l'UI). */
+const buildWorkflowSteps = (): WorkflowStep[] =>
+  getTenderEstimationSteps().map((step, index) => ({
+    id: step.code,
+    title: step.title,
+    description: step.description,
+    status: index === 0 ? 'in_progress' : 'pending',
+    progress: 0,
+  }));
 
 const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimatorProps) => {
   const [activeTab, setActiveTab] = useState('workflow');
-  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([
-    {
-      id: 'analysis',
-      title: 'Analyse des Documents',
-      description: 'Analyser les documents du tender et extraire les informations',
-      status: 'in_progress',
-      progress: 65
-    },
-    {
-      id: 'quantitative',
-      title: 'Calcul Quantitatif',
-      description: 'Utiliser le calculateur pour estimer les quantités',
-      status: 'pending',
-      progress: 0
-    },
-    {
-      id: 'pricing',
-      title: 'Estimation des Prix',
-      description: 'Appliquer les prix unitaires et calculer les coûts',
-      status: 'pending',
-      progress: 0
-    },
-    {
-      id: 'review',
-      title: 'Révision et Validation',
-      description: 'Réviser l\'estimation complète avant soumission',
-      status: 'pending',
-      progress: 0
-    }
-  ]);
+  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>(() => buildWorkflowSteps());
 
-  const [estimateTemplates] = useState<EstimateTemplate[]>([
-    {
-      id: 'construction_building',
-      name: 'Construction Bâtiment',
-      description: 'Template pour construction de bâtiments résidentiels',
-      items: [
-        {
-          description: 'Dalle béton armé',
-          category: 'material',
-          unit: 'm³',
-          estimatedQuantity: 0,
-          estimatedUnitPrice: 95000
-        },
-        {
-          description: 'Mur en maçonnerie',
-          category: 'material',
-          unit: 'm²',
-          estimatedQuantity: 0,
-          estimatedUnitPrice: 8500
-        },
-        {
-          description: 'Main d\'œuvre spécialisée',
-          category: 'labor',
-          unit: 'h',
-          estimatedQuantity: 0,
-          estimatedUnitPrice: 1500
-        }
-      ]
-    },
-    {
-      id: 'road_infrastructure',
-      name: 'Infrastructure Routière',
-      description: 'Template pour projets routiers',
-      items: [
-        {
-          description: 'Terrassement',
-          category: 'material',
-          unit: 'm³',
-          estimatedQuantity: 0,
-          estimatedUnitPrice: 4500
-        },
-        {
-          description: 'Revêtement bitumineux',
-          category: 'material',
-          unit: 'm²',
-          estimatedQuantity: 0,
-          estimatedUnitPrice: 12000
-        }
-      ]
-    }
-  ]);
+  const estimateTemplates: EstimateTemplate[] = TENDER_ESTIMATE_TEMPLATES;
+
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -182,7 +110,7 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         unit: item.unit,
         quantity: item.estimatedQuantity || 1,
         unitPrice: item.estimatedUnitPrice,
-        vatRate: 0.2,
+        vatRate: (BOQ_FISCAL_PROFILES[template.fiscalProfileCode] ?? BOQ_FISCAL_PROFILES.MR_STANDARD).vatRate,
       })),
     );
     setActiveTab('devis');
@@ -322,9 +250,10 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                step.status === 'completed' ? 'bg-success text-white' :
-                                step.status === 'in_progress' ? 'bg-primary text-white' :
-                                'bg-gray-200 text-muted-foreground'
+                                step.status === 'completed' ? 'bg-success text-success-foreground' :
+                                step.status === 'in_progress' ? 'bg-primary text-primary-foreground' :
+                                'bg-muted text-muted-foreground'
+
                               }`}>
                                 {step.status === 'completed' ? (
                                   <CheckCircle className="w-4 h-4" />

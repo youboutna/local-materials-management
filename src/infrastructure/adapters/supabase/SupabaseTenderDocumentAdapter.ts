@@ -4,7 +4,7 @@
  */
 
 import { TenderDocument, TenderDocumentCategory, TenderDocumentStatus } from '@/domain/entities/TenderDocument';
-import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
+import { ITenderDocumentRepository, TenderDocumentJoinedRow, TenderStepDocumentRow } from '@/domain/repositories/ITenderDocumentRepository';
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
@@ -399,6 +399,88 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
     } catch (error) {
       console.error('Unexpected error counting tender documents by project:', error);
       return 0;
+    }
+  }
+
+  async findByTenderIdWithDocument(tenderId: string): Promise<TenderDocumentJoinedRow[]> {
+    try {
+      const { data, error } = await supabase
+        .from('tender_documents')
+        .select(`
+          *,
+          document:documents(
+            id,
+            title,
+            description,
+            file_url,
+            file_name,
+            mime_type,
+            file_size
+          )
+        `)
+        .eq('tender_id', tenderId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error finding tender documents with document by tender ID:', error);
+        return [];
+      }
+
+      return (data || []) as unknown as TenderDocumentJoinedRow[];
+    } catch (error) {
+      console.error('Unexpected error finding tender documents with document by tender ID:', error);
+      return [];
+    }
+  }
+
+  async findStepDocumentsByTenderId(tenderId: string): Promise<TenderStepDocumentRow[]> {
+    try {
+      const { data: steps, error: stepsError } = await supabase
+        .from('tender_steps')
+        .select('id, title, step_number')
+        .eq('tender_id', tenderId);
+
+      if (stepsError) {
+        console.error('Error finding tender steps by tender ID:', stepsError);
+        return [];
+      }
+      if (!steps?.length) return [];
+
+      const stepIds = steps.map((s) => s.id);
+      const { data: stepDocs, error: docsError } = await supabase
+        .from('tender_step_documents')
+        .select(`
+          *,
+          document:documents(*),
+          step:tender_steps(title, step_number)
+        `)
+        .in('step_id', stepIds);
+
+      if (docsError) {
+        console.error('Error finding tender step documents:', docsError);
+        return [];
+      }
+
+      return (stepDocs || []).map((doc: any) => ({
+        id: doc.id,
+        tender_id: tenderId,
+        document_id: doc.document_id,
+        category: (doc.document_type as string) || 'administrative',
+        subcategory: 'workflow_step',
+        is_required: doc.is_required,
+        reviewer_notes: doc.reviewer_notes,
+        status: doc.status,
+        created_at: doc.created_at,
+        updated_at: doc.created_at,
+        document: doc.document,
+        step_info: {
+          step_title: doc.step?.title,
+          step_number: doc.step?.step_number
+        }
+      }));
+    } catch (error) {
+      console.error('Unexpected error finding step documents by tender ID:', error);
+      return [];
     }
   }
 

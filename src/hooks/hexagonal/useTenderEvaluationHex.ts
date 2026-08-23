@@ -56,11 +56,28 @@ export function useTenderEvaluationHex(tenderId: string) {
   // Update evaluation mutation
   const updateEvaluationMutation = useMutation({
     mutationFn: async ({ submissionId, field, value }: { submissionId: string; field: string; value: string | number | boolean }) => {
-      const user = await authService.getCurrentUser();
-      
-      // Placeholder - would use TenderSubmissionService for updates
-      console.warn('Evaluation update via hexagonal not fully implemented');
-      return { success: true };
+      const fieldMap: Record<string, keyof Parameters<typeof TenderSubmissionService.updateEvaluation>[1]> = {
+        status: 'status',
+        administrative_score: 'administrativeScore',
+        technical_score: 'technicalScore',
+        financial_score: 'financialScore',
+        total_score: 'totalScore',
+        evaluator_notes: 'evaluatorNotes',
+        reviewer_id: 'reviewerId',
+        reviewed_at: 'reviewedAt'
+      };
+      const dtoField = fieldMap[field] || field;
+      const update: Record<string, unknown> = { [dtoField]: value };
+
+      if (field === 'status' && value !== 'submitted') {
+        const user = await authService.getCurrentUser();
+        if (user?.id) {
+          update.reviewerId = user.id;
+        }
+        update.reviewedAt = new Date().toISOString();
+      }
+
+      return await TenderSubmissionService.updateEvaluation(submissionId, update);
     },
     onSuccess: () => {
       toast({ title: 'Évaluation mise à jour', description: 'L\'évaluation a été mise à jour avec succès' });
@@ -74,9 +91,12 @@ export function useTenderEvaluationHex(tenderId: string) {
   // Submit evaluation mutation
   const submitEvaluationMutation = useMutation({
     mutationFn: async ({ submissionId, scores, notes }: { submissionId: string; scores: { administrative?: number; technical?: number; financial?: number; }; notes?: string; }) => {
-      const user = await authService.getCurrentUser();
-      console.warn('Evaluation submission via hexagonal not fully implemented');
-      return { success: true };
+      return await TenderSubmissionService.updateEvaluation(submissionId, {
+        administrativeScore: scores.administrative,
+        technicalScore: scores.technical,
+        financialScore: scores.financial,
+        evaluatorNotes: notes
+      });
     },
     onSuccess: () => {
       toast({ title: 'Évaluation soumise', description: 'L\'évaluation a été soumise avec succès' });
@@ -91,8 +111,11 @@ export function useTenderEvaluationHex(tenderId: string) {
   const approveRejectMutation = useMutation({
     mutationFn: async ({ submissionId, action }: { submissionId: string; action: 'approved' | 'rejected'; }) => {
       const user = await authService.getCurrentUser();
-      console.warn('Approve/reject via hexagonal not fully implemented');
-      return { success: true };
+      return await TenderSubmissionService.updateEvaluation(submissionId, {
+        status: action,
+        reviewerId: user?.id,
+        reviewedAt: new Date().toISOString()
+      });
     },
     onSuccess: (_, variables) => {
       const action = variables.action === 'approved' ? 'approuvée' : 'rejetée';

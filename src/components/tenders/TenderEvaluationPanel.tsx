@@ -15,11 +15,10 @@ import {
   Download,
   Eye
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/hexagonal';
-import { useToast } from '@/hooks/use-toast';
-import { getAuthService } from '@/application/services/AuthService';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useTenderEvaluationHex, TenderSubmission } from '@/hooks/hexagonal/useTenderEvaluationHex';
+import { DEFAULT_EVALUATION_CRITERIA } from '@/config/referentials/tender/evaluation-criteria.referential';
+import { TENDER_REQUIRED_ADMINISTRATIVE_DOCUMENTS } from '@/config/referentials/tender/document-categories.referential';
 
 interface TenderEvaluationPanelProps {
   tenderId: string;
@@ -27,101 +26,30 @@ interface TenderEvaluationPanelProps {
   verifiedSubmissions?: string[];
 }
 
-interface Submission {
-  id: string;
-  user_id: string;
-  tender_id: string;
-  supplier_name: string;
-  supplier_email: string;
-  submission_date: string;
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected';
-  administrative_score?: number;
-  technical_score?: number;
-  financial_score?: number;
-  total_score?: number;
-  evaluator_notes?: string;
-  reviewer_id?: string;
-  reviewed_at?: string;
-  submission_documents?: {
-    id: string;
-    category: 'administrative' | 'technical' | 'financial';
-    subcategory?: string;
-    document: {
-      id: string;
-      title: string;
-      file_url: string;
-      file_name: string;
-    };
-  }[];
-}
+type Submission = TenderSubmission;
 
 const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({ 
   tenderId, 
   onEvaluationUpdate, 
   verifiedSubmissions 
 }) => {
-  const { toast } = useToast();
   const { getUser } = useAuth();
   const [activeTab, setActiveTab] = useState('administrative');
   const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
 
-  // Fetch tender submissions grouped by bidder
-  const { data: submissions, isLoading, refetch } = useQuery({
-    queryKey: ['tender-submissions', tenderId],
-    queryFn: async () => {
-      const { data, error } = await btpClient.from('tender_submissions')
-        .select(`
-          *,
-          submission_documents:tender_submission_documents(
-            *,
-            document:documents(*)
-          )
-        `)
-        .eq('tender_id', tenderId)
-        .order('submission_date', { ascending: false });
-
-      if (error) throw error;
-      return data as Submission[];
-    },
-    enabled: !!tenderId
-  });
+  // Fetch tender submissions grouped by bidder via hexagonal hook
+  const { submissions, isLoading, updateEvaluation: updateEvaluationHex } = useTenderEvaluationHex(tenderId);
 
   const updateEvaluation = async (
-    submissionId: string, 
-    field: string, 
+    submissionId: string,
+    field: string,
     value: any
   ) => {
     try {
-      const updateData: any = { [field]: value };
-      
-      if (field === 'status' && value !== 'submitted') {
-        const currentUser = await getAuthService().getCurrentUser();
-        if (currentUser?.id) {
-          updateData.reviewer_id = currentUser.id;
-        }
-        updateData.reviewed_at = new Date().toISOString();
-      }
-
-      const { error } = await btpClient.from('tender_submissions')
-        .update(updateData)
-        .eq('id', submissionId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Évaluation mise à jour",
-        description: "Les modifications ont été sauvegardées avec succès."
-      });
-
-      refetch();
+      await updateEvaluationHex({ submissionId, field, value });
       onEvaluationUpdate?.();
     } catch (error) {
       console.error('Error updating evaluation:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder les modifications.",
-        variant: "destructive"
-      });
     }
   };
 
@@ -305,14 +233,7 @@ const AdministrativeEvaluation: React.FC<{
   console.log(submission.submission_documents);
 
   const adminDocuments = submission.submission_documents?.filter(doc => (doc.category === 'administrative'||doc.category === 'financial' )) || [];
-  const requiredDocs = [
-    'Garantie de soumission',
-    'Attestation fiscale',
-    'Attestation de régularité sociale',
-    'Copie du registre de commerce',
-    'Pouvoir du signataire',
-    'Devis quantitatif estimatif'
-  ];
+  const requiredDocs = TENDER_REQUIRED_ADMINISTRATIVE_DOCUMENTS.map(d => d.label);
 
   const completionRate = Math.min((adminDocuments.length / requiredDocs.length) * 100, 100);
   const isComplete = adminDocuments.length >= requiredDocs.length;
@@ -421,12 +342,9 @@ const TechnicalEvaluation: React.FC<{
   const [score, setScore] = useState(submission.technical_score || 0);
   const [notes, setNotes] = useState(submission.evaluator_notes || '');
 
-  const criteria = [
-    { name: 'Expérience et références', weight: 30 },
-    { name: 'Qualification du personnel', weight: 25 },
-    { name: 'Méthodologie proposée', weight: 25 },
-    { name: 'Planning et organisation', weight: 20 }
-  ];
+  const criteria = DEFAULT_EVALUATION_CRITERIA
+    .filter(c => c.category === 'technical')
+    .map(c => ({ name: c.label, weight: c.weight }));
 
   return (
     <div className="space-y-6">

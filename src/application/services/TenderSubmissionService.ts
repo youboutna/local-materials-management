@@ -4,6 +4,7 @@ import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { SubmissionSecretService } from './SubmissionSecretService';
+import { SupabaseTenderSubmissionEvaluationAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionEvaluationAdapter';
 
 export interface CreateTenderSubmissionDTO {
   tender_id: string;
@@ -12,6 +13,17 @@ export interface CreateTenderSubmissionDTO {
   supplier_email: string;
   submission_date?: string;
   status?: 'submitted' | 'under_review' | 'approved' | 'rejected';
+}
+
+export interface TenderEvaluationUpdateDTO {
+  status?: 'submitted' | 'under_review' | 'approved' | 'rejected';
+  administrativeScore?: number;
+  technicalScore?: number;
+  financialScore?: number;
+  totalScore?: number;
+  evaluatorNotes?: string;
+  reviewerId?: string;
+  reviewedAt?: string;
 }
 
 export interface UploadedDocument {
@@ -224,6 +236,36 @@ export class TenderSubmissionService {
     }
   }
 
+  /** Récupère les soumissions d'un AO avec leurs documents pour l'évaluation. */
+  static async getTenderSubmissions(tenderId: string) {
+    try {
+      return await SupabaseTenderSubmissionEvaluationAdapter.getSubmissionsForTender(tenderId);
+    } catch (error) {
+      console.error('Error fetching tender submissions:', error);
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération des soumissions');
+    }
+  }
+
+  /** Met à jour les scores/notes/statut d'évaluation d'une soumission (DTO camelCase). */
+  static async updateEvaluation(submissionId: string, update: TenderEvaluationUpdateDTO) {
+    try {
+      const dbUpdate: Record<string, unknown> = {};
+      if (update.status !== undefined) dbUpdate.status = update.status;
+      if (update.administrativeScore !== undefined) dbUpdate.administrative_score = update.administrativeScore;
+      if (update.technicalScore !== undefined) dbUpdate.technical_score = update.technicalScore;
+      if (update.financialScore !== undefined) dbUpdate.financial_score = update.financialScore;
+      if (update.totalScore !== undefined) dbUpdate.total_score = update.totalScore;
+      if (update.evaluatorNotes !== undefined) dbUpdate.evaluator_notes = update.evaluatorNotes;
+      if (update.reviewerId !== undefined) dbUpdate.reviewer_id = update.reviewerId;
+      if (update.reviewedAt !== undefined) dbUpdate.reviewed_at = update.reviewedAt;
+
+      return await SupabaseTenderSubmissionEvaluationAdapter.updateEvaluation(submissionId, dbUpdate);
+    } catch (error) {
+      console.error('Error updating tender evaluation:', error);
+      throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la mise à jour de l\'évaluation');
+    }
+  }
+
   static async createSubmission(submissionData: CreateTenderSubmissionDTO) {
     try {
       const hasExisting = await this.hasExistingSubmission(
@@ -343,21 +385,6 @@ export class TenderSubmissionService {
     } catch (error) {
       console.error('Error updating submission status:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la mise à jour du statut');
-    }
-  }
-
-  static async getTenderSubmissions(tenderId: string): Promise<unknown[]> {
-    try {
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .order('submission_date', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error getting tender submissions:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération des soumissions');
     }
   }
 

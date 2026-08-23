@@ -3,6 +3,7 @@
  * @see docs/ARCHITECTURE_REFERENTIELS.md
  */
 export * from './tender-workflow.referential';
+export * from './estimation-workflow.referential';
 export * from './document-categories.referential';
 export * from './evaluation-criteria.referential';
 export * from './dqe-mapping.referential';

@@ -24,3 +24,22 @@ export function getTenderDocumentCategoryLabel(code: string | null | undefined):
   if (!code) return '';
   return TENDER_DOCUMENT_CATEGORIES.find((c) => c.value === code)?.label ?? code;
 }
+
+/**
+ * Pièces administratives requises pour la recevabilité d'une soumission.
+ * Utilisé par le panneau d'évaluation (TenderEvaluationPanel) pour vérifier
+ * la complétude du dossier administratif d'un soumissionnaire.
+ */
+export interface RequiredAdministrativeDocument {
+  code: string;
+  label: string;
+}
+
+export const TENDER_REQUIRED_ADMINISTRATIVE_DOCUMENTS: RequiredAdministrativeDocument[] = [
+  { code: 'bid_bond', label: 'Garantie de soumission' },
+  { code: 'tax_certificate', label: 'Attestation fiscale' },
+  { code: 'social_certificate', label: 'Attestation de régularité sociale' },
+  { code: 'trade_register', label: 'Copie du registre de commerce' },
+  { code: 'signatory_power', label: 'Pouvoir du signataire' },
+  { code: 'boq_estimate', label: 'Devis quantitatif estimatif' },
+];
