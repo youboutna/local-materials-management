@@ -13,7 +13,10 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 
 /** Codes techniques non signifiants pour un lecteur métier. */
 const TECHNICAL_LABEL = /^(l|p|ligne|item|poste)?\s*[-_]?\d{1,4}$/i;
+/** Codes de nomenclature (« 1.1 », « 02.3.4 ») : appartiennent à la colonne Réf. */
+const NUMERIC_CODE = /^[\d]+([.\-][\d]+)*$/;
 const UUID_LIKE = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+
 
 function hash4(input: string): string {
   let h = 2166136261;
