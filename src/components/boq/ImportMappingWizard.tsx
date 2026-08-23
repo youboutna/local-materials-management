@@ -7,6 +7,7 @@ import type { ParseResult } from '@/application/services/boq/parsers/IDocumentPa
 import type { ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Props {
@@ -32,6 +33,7 @@ const FIELDS: { key: keyof ImportMapping; label: string }[] = [
 const NONE = '__none__';
 
 export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
+  const { t } = useLanguage();
   const preview = useMemo(() => parseResult.rows.slice(0, 10), [parseResult]);
   return (
     <div className="space-y-4">
