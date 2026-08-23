@@ -9,39 +9,27 @@ export type BankGuaranteeStatus = 'active' | 'expired' | 'claimed' | 'cancelled'
 export interface BankGuaranteeDTO {
   id: string;
   projectId: string;
-  project_id?: string;
   contractorId?: string;
-  contractor_id?: string;
   type: BankGuaranteeType;
   guaranteeType?: BankGuaranteeType;
-  guarantee_type?: string;
   number: string;
   guaranteeNumber?: string;
-  guarantee_number?: string;
   issuingBank: string;
-  issuing_bank?: string;
-  bank_name?: string;
+  bankName?: string;
   beneficiary?: string;
   issueDate: string;
-  issue_date?: string;
   expiryDate: string;
-  expiry_date?: string;
   amount: number;
   guaranteeAmount?: number;
-  guarantee_amount?: number;
   currency: string;
   exchangeRate?: number;
-  exchange_rate?: number;
   phaseId?: string;
-  phase_id?: string;
   status: BankGuaranteeStatus;
   conditions?: string[];
   documents: string[];
   actions?: BankGuaranteeActionDTO[];
   createdAt: string;
-  created_at?: string;
   updatedAt: string;
-  updated_at?: string;
 }
 
 export interface BankGuaranteeActionDTO {
@@ -60,14 +48,14 @@ export interface BankGuaranteeActionDTO {
 }
 
 export interface CreateBankGuaranteeActionRequestDto {
-  guarantee_id: string;
-  action_type: BankGuaranteeActionDTO['type'];
+  guaranteeId: string;
+  actionType: BankGuaranteeActionDTO['type'];
   title: string;
   description: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
-  assigned_to?: string;
-  created_by: string;
-  due_date?: string;
+  assignedTo?: string;
+  createdBy: string;
+  dueDate?: string;
   documents?: string[];
   notes?: string;
 }
@@ -77,8 +65,8 @@ export interface UpdateBankGuaranteeActionRequestDto {
   description?: string;
   status?: BankGuaranteeActionDTO['status'];
   priority?: 'low' | 'medium' | 'high' | 'urgent';
-  assigned_to?: string;
-  due_date?: string;
+  assignedTo?: string;
+  dueDate?: string;
   documents?: string[];
   notes?: string;
 }
@@ -86,13 +74,13 @@ export interface UpdateBankGuaranteeActionRequestDto {
 export interface BankGuaranteeActionStatistics {
   total: number;
   pending: number;
-  in_progress: number;
+  inProgress: number;
   completed: number;
   cancelled: number;
   failed: number;
   overdue: number;
-  by_type: Record<string, number>;
-  by_priority: Record<string, number>;
+  byType: Record<string, number>;
+  byPriority: Record<string, number>;
 }
 
 export interface BankGuaranteeStatsDTO {

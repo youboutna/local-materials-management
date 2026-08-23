@@ -89,13 +89,13 @@ export class UserTransformer {
     return new User(
       authUser.id,
       authUser.email || '',
-      authUser.full_name || '',
+      authUser.fullName || '',
       authUser.phone,
-      authUser.national_id,
+      authUser.nationalId,
       undefined,
       true,
-      authUser.created_at ? new Date(authUser.created_at) : new Date(),
-      authUser.updated_at ? new Date(authUser.updated_at) : new Date(),
+      authUser.createdAt ? new Date(authUser.createdAt) : new Date(),
+      authUser.updatedAt ? new Date(authUser.updatedAt) : new Date(),
       undefined,
       [],
       undefined

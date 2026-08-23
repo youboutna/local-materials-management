@@ -214,7 +214,7 @@ export class CommunicationService {
       if (repo && typeof repo.scheduleCall === 'function') {
         await repo.scheduleCall({
           to: payload.recipientPhone,
-          scheduled_at: payload.scheduledFor,
+          scheduledAt: payload.scheduledFor,
           message: payload.message,
         });
 

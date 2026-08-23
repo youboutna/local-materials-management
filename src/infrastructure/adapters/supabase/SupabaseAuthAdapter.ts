@@ -45,18 +45,18 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
       }
 
       const authSession: AuthSession = {
-        access_token: session.access_token,
-        refresh_token: session.refresh_token || '',
-        expires_at: session.expires_at?.toString() || '',
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token || '',
+        expiresAt: session.expires_at?.toString() || '',
         user: {
           id: session.user.id,
           email: session.user.email || undefined,
-          full_name: session.user.user_metadata?.full_name || undefined,
+          fullName: session.user.user_metadata?.full_name || undefined,
           role: session.user.user_metadata?.role || undefined,
           phone: session.user.phone || undefined,
-          national_id: session.user.user_metadata?.national_id || undefined,
-          created_at: session.user.created_at,
-          updated_at: session.user.updated_at
+          nationalId: session.user.user_metadata?.national_id || undefined,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at
         }
       };
 
@@ -89,18 +89,18 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
       }
 
       const authSession: AuthSession = {
-        access_token: session.access_token,
-        refresh_token: session.refresh_token || '',
-        expires_at: session.expires_at?.toString() || '',
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token || '',
+        expiresAt: session.expires_at?.toString() || '',
         user: {
           id: session.user.id,
           email: session.user.email || undefined,
-          full_name: session.user.user_metadata?.full_name || undefined,
+          fullName: session.user.user_metadata?.full_name || undefined,
           role: session.user.user_metadata?.role || undefined,
           phone: session.user.phone || undefined,
-          national_id: session.user.user_metadata?.national_id || undefined,
-          created_at: session.user.created_at,
-          updated_at: session.user.updated_at
+          nationalId: session.user.user_metadata?.national_id || undefined,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at
         }
       };
 
@@ -120,9 +120,9 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
         password: data.password,
         options: {
           data: {
-            full_name: data.full_name,
+            full_name: data.fullName,
             phone: data.phone,
-            national_id: data.national_id,
+            national_id: data.nationalId,
             role: data.role || 'user'
           }
         }
@@ -139,12 +139,12 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
       const authUser: AuthUser = {
         id: user.id,
         email: user.email || undefined,
-        full_name: user.user_metadata?.full_name || undefined,
+        fullName: user.user_metadata?.full_name || undefined,
         role: user.user_metadata?.role || undefined,
         phone: user.phone || undefined,
-        national_id: user.user_metadata?.national_id || undefined,
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        nationalId: user.user_metadata?.national_id || undefined,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at
       };
 
       return { user: authUser, error: null };
@@ -209,12 +209,12 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
       const authUser: AuthUser = {
         id: user.id,
         email: user.email || undefined,
-        full_name: user.user_metadata?.full_name || undefined,
+        fullName: user.user_metadata?.full_name || undefined,
         role: user.user_metadata?.role || undefined,
         phone: user.phone || undefined,
-        national_id: user.user_metadata?.national_id || undefined,
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        nationalId: user.user_metadata?.national_id || undefined,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at
       };
 
       return { user: authUser, error: null };
@@ -260,12 +260,12 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
       const authUser: AuthUser = {
         id: user.id,
         email: user.email || undefined,
-        full_name: user.user_metadata?.full_name || undefined,
+        fullName: user.user_metadata?.full_name || undefined,
         role: user.user_metadata?.role || undefined,
         phone: user.phone || undefined,
-        national_id: user.user_metadata?.national_id || undefined,
-        created_at: user.created_at,
-        updated_at: user.updated_at
+        nationalId: user.user_metadata?.national_id || undefined,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at
       };
 
       return { user: authUser, error: null };
@@ -323,7 +323,7 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
           created_at: session.user.created_at,
           updated_at: session.user.updated_at,
         },
-      } as AuthSession);
+      } as unknown as AuthSession);
     });
     return () => data.subscription.unsubscribe();
   }

@@ -7,11 +7,9 @@
 
 import { DecompteCalculationContext, IDecompteRepository, PhaseFinancials, ProjectFinancials, VerifiedMilestone } from '@/domain/repositories/IDecompteRepository';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
-import {
-    AutomaticDecompteDTO,
-    DecompteLineDTO,
-    DecompteStatus
-} from '@/dtos/types/checkpoint-dto';
+import { AutomaticDecompteDTO } from '@/dtos/entities/AutomaticDecompteDTO';
+import { AutomaticDecompteDTO as _AutomaticDecompteDTO, DecompteLineDTO } from '@/dtos/entities/AutomaticDecompteDTO';
+import { DecompteStatus } from '@/dtos/types/checkpoint-dto';
 import { Payment } from '@/domain/entities/Payment';
 import { InspectionStatus } from '@/domain/entities/Inspection';
 
@@ -229,11 +227,11 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
         description: milestone.title,
         quantity: 1,
         unit: 'forfait',
-        unit_price: milestoneAmount,
-        total_amount: milestoneAmount,
+        unitPrice: milestoneAmount,
+        totalAmount: milestoneAmount,
         category: 'works',
-        milestone_id: milestone.id,
-        verification_status: 'verified',
+        milestoneId: milestone.id,
+        verificationStatus: 'verified',
       });
 
       totalAmount += milestoneAmount;
@@ -248,40 +246,40 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
 
     return {
       id: `decompte-${Date.now()}`,
-      project_id: context.projectId,
-      decompte_number: context.previousDecomptes.length + 1,
-      decompte_type: 'progress',
-      contract_amount: context.projectFinancials.budget,
-      previous_cumulative: previousCumulative,
-      current_period_amount: totalAmount,
-      cumulative_amount: previousCumulative + totalAmount,
-      retention_rate: context.businessRules.retentionRate,
-      retention_amount: retentionAmount,
-      previous_retention_released: 0,
-      retention_to_release: 0,
-      net_payable: netAmount,
-      verified_milestones: context.verifiedMilestones.map(milestone => ({
-        milestone_id: milestone.id,
+      projectId: context.projectId,
+      decompteNumber: context.previousDecomptes.length + 1,
+      decompteType: 'progress',
+      contractAmount: context.projectFinancials.budget,
+      previousCumulative: previousCumulative,
+      currentPeriodAmount: totalAmount,
+      cumulativeAmount: previousCumulative + totalAmount,
+      retentionRate: context.businessRules.retentionRate,
+      retentionAmount: retentionAmount,
+      previousRetentionReleased: 0,
+      retentionToRelease: 0,
+      netPayable: netAmount,
+      verifiedMilestones: context.verifiedMilestones.map(milestone => ({
+        milestoneId: milestone.id,
         title: milestone.title,
         weight: milestone.weight,
         amount: (milestone.phaseEstimatedCost * milestone.weight) / 100,
-        verified_at: milestone.completionDate,
+        verifiedAt: milestone.completionDate,
       })),
       lines,
-      progress_at_decompte: this.calculateProgress(context),
+      progressAtDecompte: this.calculateProgress(context),
       status: 'draft',
-      calculated_at: new Date().toISOString(),
-      calculation_log: [],
+      calculatedAt: new Date().toISOString(),
+      calculationLog: [],
     };
   }
 
   async validateDecompte(decompte: AutomaticDecompteDTO): Promise<boolean> {
     // Validation basique du décompte
     return (
-      decompte.current_period_amount > 0 &&
+      decompte.currentPeriodAmount > 0 &&
       decompte.lines.length > 0 &&
-      decompte.progress_at_decompte >= 0 &&
-      decompte.progress_at_decompte <= 100
+      decompte.progressAtDecompte >= 0 &&
+      decompte.progressAtDecompte <= 100
     );
   }
 
@@ -295,14 +293,14 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
 
     const payment = new Payment(
       id,
-      decompte.project_id ? ({ id: decompte.project_id } as any) : null,
-      decompte.phase_id ? ({ id: decompte.phase_id } as any) : null,
+      decompte.projectId ? ({ id: decompte.projectId } as any) : null,
+      decompte.phaseId ? ({ id: decompte.phaseId } as any) : null,
       null,
-      decompte.net_payable,
+      decompte.netPayable,
       now,
       'bank_transfer',
       'pending',
-      decompte.progress_at_decompte,
+      decompte.progressAtDecompte,
       null,
       '',
       '',
@@ -324,7 +322,7 @@ export class SupabaseDecompteAdapter implements IDecompteRepository {
     return {
       ...decompte,
       id: payment.id,
-      calculated_at: now,
+      calculatedAt: now,
     };
   }
 

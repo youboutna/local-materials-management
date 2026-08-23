@@ -3,8 +3,8 @@ import { MaterialDTO as MaterialEntity } from '@/dtos/entities/MaterialDTO';
 // Local type for project_materials table rows
 interface ProjectMaterialEntity {
   id: string;
-  project_id: string;
-  material_id: string;
+  projectId: string;
+  materialId: string;
   quantity: number;
   [key: string]: unknown;
 }

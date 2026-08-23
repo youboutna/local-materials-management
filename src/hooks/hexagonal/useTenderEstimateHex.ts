@@ -45,19 +45,19 @@ export function useMaterialsForEstimateHex() {
       const materials = await materialService.getAllMaterials();
       return materials.map(material => ({
         id: material.id,
-        estimate_id: '',
-        material_id: material.id,
-        item_code: material.name || '',
+        estimateId: '',
+        materialId: material.id,
+        itemCode: material.name || '',
         description: material.description || '',
         unit: material.unit || '',
         quantity: 0,
-        unit_price: material.pricePerUnit || 0,
-        total_price: 0,
+        unitPrice: material.pricePerUnit || 0,
+        totalPrice: 0,
         category: material.category || '',
         specifications: '',
-        item_type: 'material',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        itemType: 'material',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }));
     }
   });
@@ -86,19 +86,19 @@ export function useAddEstimateItemHex(estimateId: string | null) {
     mutationFn: async (item: EstimateItem & { estimate_id: string }) => {
       const tenderEstimateItem: TenderEstimateItemDTO = {
         id: '',
-        estimate_id: item.estimate_id,
-        material_id: item.material_id || undefined,
-        item_code: item.material_id || '',
+        estimateId: item.estimate_id,
+        materialId: item.material_id || undefined,
+        itemCode: item.material_id || '',
         description: item.description || '',
         unit: 'unit',
         quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
+        unitPrice: item.unit_price,
+        totalPrice: item.total_price,
         category: item.item_type || 'material',
         specifications: '',
-        item_type: item.item_type || 'material',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        itemType: item.item_type || 'material',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       return await tenderEstimateService.createTenderEstimateItem(tenderEstimateItem);

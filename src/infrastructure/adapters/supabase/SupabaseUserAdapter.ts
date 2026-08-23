@@ -69,9 +69,9 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
         password: data.password,
         options: {
           data: {
-            full_name: data.full_name,
+            full_name: data.fullName,
             phone: data.phone,
-            national_id: data.national_id,
+            national_id: data.nationalId,
             role: data.role,
           },
         },
@@ -196,21 +196,21 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
     return {
       id: user.id,
       email: user.email,
-      full_name: user.user_metadata?.full_name,
+      fullName: user.user_metadata?.full_name,
       role: user.user_metadata?.role,
       phone: user.phone,
-      national_id: user.user_metadata?.national_id,
-      created_at: user.created_at,
-      updated_at: user.updated_at
+      nationalId: user.user_metadata?.national_id,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at
     };
   }
 
   private mapSession(session: any): AuthSession {
     const user = this.mapUser(session.user);
     return {
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-      expires_at: new Date(session.expires_at || '').toISOString(),
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+      expiresAt: new Date(session.expires_at || '').toISOString(),
       user
     };
   }

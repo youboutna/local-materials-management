@@ -7,100 +7,87 @@ import { TenderEstimateFinancialData, TenderEstimateCostBreakdown, TenderEstimat
 
 export interface TenderEstimateDTO {
   id: string;
-  tender_id: string;
-  submitted_by: string;
-  submission_date: string;
+  tenderId: string;
+  submittedBy: string;
+  submissionDate: string;
   status: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected';
-  total_amount: number;
+  totalAmount: number;
   currency: string;
-  validity_period: number; // in days
+  validityPeriod: number; // in days
   notes?: string;
   // Estimate type for compatibility with EstimateData
-  estimate_type: string;
+  estimateType: string;
   // Snake_case properties for EstimateData compatibility
-  total_materials_cost?: number | null;
-  total_labor_cost?: number | null;
-  total_equipment_cost?: number | null;
+  totalMaterialsCost?: number | null;
+  totalLaborCost?: number | null;
+  totalEquipmentCost?: number | null;
   subtotal?: number | null;
-  tax_rate?: number | null;
-  tax_amount?: number | null;
-  total_with_tax?: number | null;
-  overhead_percentage?: number | null;
-  overhead_amount?: number | null;
-  profit_margin_percentage?: number | null;
-  profit_margin_amount?: number | null;
-  final_total?: number | null;
+  taxRate?: number | null;
+  taxAmount?: number | null;
+  totalWithTax?: number | null;
+  overheadPercentage?: number | null;
+  overheadAmount?: number | null;
+  profitMarginPercentage?: number | null;
+  profitMarginAmount?: number | null;
+  finalTotal?: number | null;
   // Financial calculation fields (camelCase - PROMPTS.md Rule #2)
-  taxRate?: number;        // ✅ Changed from tax_rate
-  taxAmount?: number;      // ✅ Changed from tax_amount
-  totalWithTax?: number;   // ✅ Changed from total_with_tax
   discountRate?: number;   // ✅ Changed from discount_rate
   discountAmount?: number;  // ✅ Changed from discount_amount
-  overheadPercentage?: number;
-  overheadAmount?: number;
-  profitMarginPercentage?: number;
-  profitMarginAmount?: number;
-  finalTotal?: number;
   // Cost breakdown fields
-  totalMaterialsCost?: number;
-  totalLaborCost?: number;
-  totalEquipmentCost?: number;
   // Business logic calculated fields
-  margin_rules?: {
-    overhead_percentage: number;
-    profit_margin_percentage: number;
-    risk_multiplier: number;
+  marginRules?: {
+    overheadPercentage: number;
+    profitMarginPercentage: number;
+    riskMultiplier: number;
   };
-  risk_assessment?: {
+  riskAssessment?: {
     level: 'low' | 'medium' | 'high' | 'critical';
     factors: string[];
     score: number;
   };
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 
 export interface TenderEstimateItemDTO {
   id: string;
-  estimate_id: string;
-  material_id?: string;
-  item_code: string;
+  estimateId: string;
+  materialId?: string;
+  itemCode: string;
   description: string;
   unit: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
+  unitPrice: number;
+  totalPrice: number;
   category?: string;
   specifications?: string;
-  item_type?: string;
-  materialId?: string;  // ✅ Added for UI form support
-  itemType?: string;   // ✅ Added for UI form support
+  itemType?: string;
   // Business logic calculated fields
-  margin_percentage?: number;
-  line_total?: number;
+  marginPercentage?: number;
+  lineTotal?: number;
   // --- Ancrage RH / Prestataires (Plan v10 §3) ---
   /** Type de ressource pointée par la ligne DQE. */
-  resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
+  resourceKind?: 'internal_qualification' | 'external_provider' | 'material';
   /** Id qualification interne (organigramme) — coût horaire chargé hérité. */
-  employee_qualification_id?: string;
+  employeeQualificationId?: string;
   /** Id fournisseur externe rattaché à la ligne. */
-  supplier_id?: string;
+  supplierId?: string;
   /** Référence contractuelle appliquée (convention-cadre / marché). */
-  supplier_contract_ref?: string;
+  supplierContractRef?: string;
   /** Nb d'heures/jours estimé pour cette ressource (informatif). */
-  estimated_hours?: number;
-  created_at: string;
-  updated_at: string;
+  estimatedHours?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Service Request DTOs
 export interface CreateTenderEstimateRequestDto {
-  tender_id: string;
-  submitted_by: string;
-  total_amount: number;
+  tenderId: string;
+  submittedBy: string;
+  totalAmount: number;
   currency: string;
-  validity_period: number;
+  validityPeriod: number;
   notes?: string;
   // Financial calculation fields (camelCase - PROMPTS.md Rule #2)
   subtotal?: number;
@@ -122,34 +109,32 @@ export interface CreateTenderEstimateRequestDto {
 }
 
 export interface CreateTenderEstimateItemRequestDto {
-  estimate_id: string;
-  material_id?: string;
-  item_code: string;
+  estimateId: string;
+  itemCode: string;
   description: string;
   unit: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
+  unitPrice: number;
+  totalPrice: number;
   category?: string;
   specifications?: string;
-  item_type?: string;
+  // Ancrage RH/Prestataires (v10)
+  resourceKind?: 'internal_qualification' | 'external_provider' | 'material';
+  employeeQualificationId?: string;
+  supplierId?: string;
+  supplierContractRef?: string;
+  estimatedHours?: number;
   materialId?: string;
   itemType?: string;
-  // Ancrage RH/Prestataires (v10)
-  resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
-  employee_qualification_id?: string;
-  supplier_id?: string;
-  supplier_contract_ref?: string;
-  estimated_hours?: number;
 }
 
 export interface UpdateTenderEstimateRequestDto {
-  tender_id?: string;
-  submitted_by?: string;
+  tenderId?: string;
+  submittedBy?: string;
   status?: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected';
-  total_amount?: number;
+  totalAmount?: number;
   currency?: string;
-  validity_period?: number;
+  validityPeriod?: number;
   notes?: string;
   // Financial calculation fields (camelCase - PROMPTS.md Rule #2)
   subtotal?: number;
@@ -170,20 +155,20 @@ export interface UpdateTenderEstimateRequestDto {
 }
 
 export interface UpdateTenderEstimateItemRequestDto {
-  item_code?: string;
+  itemCode?: string;
   description?: string;
   unit?: string;
   quantity?: number;
-  unit_price?: number;
-  total_price?: number;
+  unitPrice?: number;
+  totalPrice?: number;
   category?: string;
   specifications?: string;
 }
 
 // Query DTOs
 export interface GetTenderEstimatesRequestDto {
-  tender_id?: string;
-  submitted_by?: string;
+  tenderId?: string;
+  submittedBy?: string;
   status?: string;
   limit?: number;
   offset?: number;
@@ -194,32 +179,32 @@ export interface GetTenderEstimateByIdRequestDto {
 }
 
 export interface GetTenderEstimateItemsRequestDto {
-  estimate_id: string;
+  estimateId: string;
 }
 
 export interface GetMyEstimatesRequestDto {
-  submitted_by: string;
+  submittedBy: string;
   status?: string;
 }
 
 export interface GetEstimatesByProjectIdRequestDto {
-  project_id: string;
+  projectId: string;
 }
 
 export interface GetEstimateStatsRequestDto {
-  tender_id: string;
+  tenderId: string;
 }
 
 export interface CalculateEstimateTotalsRequestDto {
-  estimate_id: string;
+  estimateId: string;
 }
 
 // Response DTOs
 export interface EstimateStatsDto {
-  total_estimates: number;
-  total_amount: number;
-  average_amount: number;
-  by_status: Record<string, number>;
+  totalEstimates: number;
+  totalAmount: number;
+  averageAmount: number;
+  byStatus: Record<string, number>;
 }
 
 export interface EstimateTotalsDto {
@@ -239,24 +224,24 @@ export interface TenderEstimateRiskDto {
 
 // Margin Rules DTO  
 export interface TenderEstimateMarginRulesDto {
-  overhead_percentage: number;
-  profit_margin_percentage: number;
-  risk_multiplier: number;
+  overheadPercentage: number;
+  profitMarginPercentage: number;
+  riskMultiplier: number;
 }
 
 export interface TenderEstimateStatsDto {
-  total_estimates: number;
-  total_amount: number;
-  average_amount: number;
-  estimates_by_status: Record<string, number>;
-  estimates_by_currency: Record<string, number>;
-  total_value: number;
-  recent_estimates: TenderEstimateDTO[];
+  totalEstimates: number;
+  totalAmount: number;
+  averageAmount: number;
+  estimatesByStatus: Record<string, number>;
+  estimatesByCurrency: Record<string, number>;
+  totalValue: number;
+  recentEstimates: TenderEstimateDTO[];
 }
 
 // Validation DTOs
 export interface TenderEstimateValidationDto {
-  is_valid: boolean;
+  isValid: boolean;
   errors: string[];
   warnings: string[];
 }
@@ -275,36 +260,36 @@ export interface TenderEstimateValidationWarningDto {
 
 // Comparison DTOs
 export interface TenderEstimateComparisonDto {
-  original_estimate: TenderEstimateDTO;
-  revised_estimate: TenderEstimateDTO;
+  originalEstimate: TenderEstimateDTO;
+  revisedEstimate: TenderEstimateDTO;
   differences: {
-    amount_change: number;
-    percentage_change: number;
-    changed_fields: string[];
+    amountChange: number;
+    percentageChange: number;
+    changedFields: string[];
   };
 }
 
 // Query DTOs
 export interface GetTenderEstimatesRequestDto {
-  tender_id?: string;
-  submitted_by?: string;
+  tenderId?: string;
+  submittedBy?: string;
   status?: string;
-  submission_date_from?: string;
-  submission_date_to?: string;
+  submissionDateFrom?: string;
+  submissionDateTo?: string;
 }
 
 export interface GetTenderEstimateItemsRequestDto {
-  estimate_id: string;
+  estimateId: string;
   category?: string;
 }
 
 // Response DTOs
 export interface TenderEstimateStatsDto {
-  total_estimates: number;
-  estimates_by_status: Record<string, number>;
-  total_value: number;
-  average_amount: number;
-  estimates_by_submitter: Record<string, number>;
+  totalEstimates: number;
+  estimatesByStatus: Record<string, number>;
+  totalValue: number;
+  averageAmount: number;
+  estimatesBySubmitter: Record<string, number>;
 }
 
 // TenderEstimateValidationDto already defined above
@@ -324,20 +309,20 @@ export interface TenderEstimateValidationWarningDto {
 
 // Business Logic DTOs
 export interface TenderEstimateComparisonDto {
-  estimate_1: TenderEstimateDTO;
-  estimate_2: TenderEstimateDTO;
-  price_difference: number;
-  price_difference_percentage: number;
-  item_differences: TenderEstimateItemDifferenceDto[];
+  estimate1: TenderEstimateDTO;
+  estimate2: TenderEstimateDTO;
+  priceDifference: number;
+  priceDifferencePercentage: number;
+  itemDifferences: TenderEstimateItemDifferenceDto[];
 }
 
 export interface TenderEstimateItemDifferenceDto {
-  item_code: string;
+  itemCode: string;
   description: string;
-  estimate_1_price: number;
-  estimate_2_price: number;
-  price_difference: number;
-  price_difference_percentage: number;
+  estimate1Price: number;
+  estimate2Price: number;
+  priceDifference: number;
+  priceDifferencePercentage: number;
 }
 
 // Validation-related DTOs

@@ -16,53 +16,53 @@ export type PaymentType = 'initial' | 'progress' | 'retention_release' | 'final'
  */
 export interface AutomaticDecompteDTO {
   id: string;
-  project_id: string;
-  phase_id?: string;
-  decompte_number: number; // Numéro séquentiel du décompte
-  decompte_type: PaymentType;
+  projectId: string;
+  phaseId?: string;
+  decompteNumber: number; // Numéro séquentiel du décompte
+  decompteType: PaymentType;
   
   // Montants
-  contract_amount: number;
-  previous_cumulative: number;
-  current_period_amount: number;
-  cumulative_amount: number;
+  contractAmount: number;
+  previousCumulative: number;
+  currentPeriodAmount: number;
+  cumulativeAmount: number;
   
   // Retenues Mauritanie
-  retention_rate: number; // 10% par défaut
-  retention_amount: number;
-  previous_retention_released: number;
-  retention_to_release: number;
+  retentionRate: number; // 10% par défaut
+  retentionAmount: number;
+  previousRetentionReleased: number;
+  retentionToRelease: number;
   
   // Montant net
-  net_payable: number;
+  netPayable: number;
   
   // Calcul basé sur jalons
-  verified_milestones: {
-    milestone_id: string;
+  verifiedMilestones: {
+    milestoneId: string;
     title: string;
     weight: number;
     amount: number;
-    verified_at: string;
+    verifiedAt: string;
   }[];
   
   // Lignes détaillées
   lines: DecompteLineDTO[];
   
   // Justification
-  progress_at_decompte: number;
-  inspection_reference?: string;
-  pv_reference?: string;
+  progressAtDecompte: number;
+  inspectionReference?: string;
+  pvReference?: string;
   
   // État
   status: DecompteStatus;
-  calculated_at: string;
-  submitted_at?: string;
-  approved_at?: string;
-  approved_by?: string;
-  paid_at?: string;
+  calculatedAt: string;
+  submittedAt?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  paidAt?: string;
   
   // Historique
-  calculation_log: {
+  calculationLog: {
     timestamp: string;
     action: string;
     details: Record<string, unknown>;
@@ -77,10 +77,10 @@ export interface DecompteLineDTO {
   description: string;
   quantity: number;
   unit: string;
-  unit_price: number;
-  total_amount: number;
+  unitPrice: number;
+  totalAmount: number;
   category: 'works' | 'materials' | 'services' | 'other';
-  milestone_id?: string;
-  checkpoint_id?: string;
-  verification_status: VerificationStatus;
+  milestoneId?: string;
+  checkpointId?: string;
+  verificationStatus: VerificationStatus;
 }

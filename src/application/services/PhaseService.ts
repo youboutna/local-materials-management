@@ -54,7 +54,7 @@ export class PhaseService {
       const phase = PhaseTransformer.fromCreateDTO({
         ...phaseData,
         name: resolvedName,
-        phase_name: resolvedName,
+        phaseName: resolvedName,
         projectId,
         status: (phaseData.status as PhaseStatus) || PhaseStatus.PENDING,
         progress: phaseData.progress ?? 0,
@@ -222,11 +222,11 @@ export class PhaseService {
         description: '', // ReferentialStep n'a pas de description
         status: PhaseStatus.PENDING,
         progress: 0,
-        order_index: step.order || 0,
-        estimated_duration_days: 0,
-        actual_duration_days: 0,
-        start_date: '',
-        end_date: '',
+        orderIndex: step.order || 0,
+        estimatedDurationDays: 0,
+        actualDurationDays: 0,
+        startDate: '',
+        endDate: '',
         tasks: this.convertReferentialTasks(step.tasks || [])
       };
     });
@@ -246,12 +246,12 @@ export class PhaseService {
         description: descStr,
         status: PhaseStatus.PENDING,
         progress: 0,
-        order_index: 0, // ReferentialTask n'a pas de order
-        estimated_duration_days: task.estimatedDurationDays || 0,
-        actual_duration_days: 0,
-        start_date: '',
-        end_date: '',
-        assigned_to: [],
+        orderIndex: 0, // ReferentialTask n'a pas de order
+        estimatedDurationDays: task.estimatedDurationDays || 0,
+        actualDurationDays: 0,
+        startDate: '',
+        endDate: '',
+        assignedTo: [],
         dependencies: []
       };
     });

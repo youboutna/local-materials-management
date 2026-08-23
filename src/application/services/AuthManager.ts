@@ -248,7 +248,7 @@ export class AuthManager {
         authenticate: async (_provider, credentials) => {
           const { session, error } = await local.signIn({ email: credentials.email, password: credentials.password });
           if (error || !session) return { success: false, error: { code: 'AUTH_FAILED', message: error?.message ?? 'Invalid credentials' } };
-          return { success: true, user: session.user as unknown as AuthUser, token: session.access_token };
+          return { success: true, user: session.user as unknown as AuthUser, token: session.accessToken };
         },
         getCurrentSession: () => local.getCurrentSession() as any,
         getCurrentUser: () => local.getCurrentUser() as any,

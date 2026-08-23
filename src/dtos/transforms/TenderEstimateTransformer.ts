@@ -19,15 +19,15 @@ export class TenderEstimateTransformer {
   static toTenderEstimateDTO(entity: TenderEstimate): TenderEstimateDTO {
     return {
       id: entity.id,
-      tender_id: entity.tenderId,
-      submitted_by: entity.submittedBy || '',
-      submission_date: entity.submissionDate,
+      tenderId: entity.tenderId,
+      submittedBy: entity.submittedBy || '',
+      submissionDate: entity.submissionDate,
       status: entity.status,
-      total_amount: entity.totalAmount,
+      totalAmount: entity.totalAmount,
       currency: entity.currency,
-      validity_period: entity.validityPeriod,
+      validityPeriod: entity.validityPeriod,
       notes: entity.notes,
-      estimate_type: entity.estimateType,
+      estimateType: entity.estimateType,
       // Financial fields
       subtotal: entity.subtotal,
       taxRate: entity.taxRate,
@@ -45,10 +45,10 @@ export class TenderEstimateTransformer {
       totalLaborCost: entity.totalLaborCost,
       totalEquipmentCost: entity.totalEquipmentCost,
       // Business logic calculated fields
-      margin_rules: undefined,
-      risk_assessment: entity.riskAssessment || undefined,
-      created_at: entity.createdAt,
-      updated_at: entity.updatedAt
+      marginRules: undefined,
+      riskAssessment: entity.riskAssessment || undefined,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt
     };
   }
 
@@ -58,14 +58,14 @@ export class TenderEstimateTransformer {
   static toTenderEstimateEntity(dto: TenderEstimateDTO): TenderEstimate {
     return new TenderEstimate(
       dto.id,
-      dto.tender_id,
+      dto.tenderId,
       dto.status,
       dto.currency as CurrencyCode,
-      dto.estimate_type || 'standard',
-      dto.created_at,
-      dto.updated_at,
+      dto.estimateType || 'standard',
+      dto.createdAt,
+      dto.updatedAt,
       {
-        submittedBy: dto.submitted_by,
+        submittedBy: dto.submittedBy,
         subtotal: dto.subtotal ?? undefined,
         taxRate: dto.taxRate ?? undefined,
         taxAmount: dto.taxAmount ?? undefined,
@@ -90,22 +90,21 @@ export class TenderEstimateTransformer {
   static toTenderEstimateItemDTO(entity: TenderEstimateItem): TenderEstimateItemDTO {
     return {
       id: entity.id,
-      estimate_id: entity.estimateId,
-      item_code: entity.itemCode,
+      estimateId: entity.estimateId,
+      itemCode: entity.itemCode,
       description: entity.description,
       unit: entity.unit,
       quantity: entity.quantity,
-      unit_price: entity.unitPrice,
-      total_price: entity.totalPrice,
+      unitPrice: entity.unitPrice,
+      totalPrice: entity.totalPrice,
       category: entity.category,
       specifications: entity.specifications,
-      item_type: entity.itemType || 'material',
-      materialId: entity.materialId,
       itemType: entity.itemType || 'material',
-      margin_percentage: 0,
-      line_total: entity.totalPrice,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      materialId: entity.materialId,
+      marginPercentage: 0,
+      lineTotal: entity.totalPrice,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
   }
 
@@ -115,13 +114,13 @@ export class TenderEstimateTransformer {
   static toTenderEstimateItemEntity(dto: TenderEstimateItemDTO): TenderEstimateItem {
     return new TenderEstimateItem(
       dto.id,
-      dto.estimate_id,
-      dto.item_code,
+      dto.estimateId,
+      dto.itemCode,
       dto.description,
       dto.unit,
       dto.quantity,
-      dto.unit_price,
-      dto.total_price,
+      dto.unitPrice,
+      dto.totalPrice,
       dto.category,
       dto.specifications,
       dto.materialId,
@@ -170,14 +169,14 @@ export class TenderEstimateTransformer {
     recentEstimates: TenderEstimateDTO[]
   }): TenderEstimateStatsDto {
     return {
-      total_estimates: stats.totalEstimates,
-      total_amount: stats.totalAmount,
-      average_amount: stats.averageAmount,
-      estimates_by_status: stats.byStatus,
-      estimates_by_currency: stats.byCurrency,
-      total_value: stats.totalValue,
-      recent_estimates: stats.recentEstimates,
-      estimates_by_submitter: {},
+      totalEstimates: stats.totalEstimates,
+      totalAmount: stats.totalAmount,
+      averageAmount: stats.averageAmount,
+      estimatesByStatus: stats.byStatus,
+      estimatesByCurrency: stats.byCurrency,
+      totalValue: stats.totalValue,
+      recentEstimates: stats.recentEstimates,
+      estimatesBySubmitter: {},
     };
   }
 
@@ -190,7 +189,7 @@ export class TenderEstimateTransformer {
     warnings: Array<{ field: string; message: string; recommendation?: string }>;
   }): TenderEstimateValidationDto {
     return {
-      is_valid: validation.isValid,
+      isValid: validation.isValid,
       errors: validation.errors.map(error => error.message),
       warnings: validation.warnings.map(warning => warning.message)
     };
@@ -200,11 +199,11 @@ export class TenderEstimateTransformer {
    * Transform comparison data to DTO
    */
   static toTenderEstimateComparisonDto(comparison: {
-    estimate_1: TenderEstimateDTO;
-    estimate_2: TenderEstimateDTO;
-    price_difference: number;
-    price_difference_percentage: number;
-    item_differences: Array<{
+    estimate1: TenderEstimateDTO;
+    estimate2: TenderEstimateDTO;
+    priceDifference: number;
+    priceDifferencePercentage: number;
+    itemDifferences: Array<{
       field: string;
       message: string;
       severity: "error" | "warning";
@@ -212,17 +211,17 @@ export class TenderEstimateTransformer {
     }>;
   }): TenderEstimateComparisonDto {
     return {
-      estimate_1: comparison.estimate_1,
-      estimate_2: comparison.estimate_2,
-      price_difference: comparison.price_difference,
-      price_difference_percentage: comparison.price_difference_percentage,
-      item_differences: comparison.item_differences.map(d => ({
-        item_code: d.field,
+      estimate1: comparison.estimate1,
+      estimate2: comparison.estimate2,
+      priceDifference: comparison.priceDifference,
+      priceDifferencePercentage: comparison.priceDifferencePercentage,
+      itemDifferences: comparison.itemDifferences.map(d => ({
+        itemCode: d.field,
         description: d.message,
-        estimate_1_price: 0,
-        estimate_2_price: 0,
-        price_difference: 0,
-        price_difference_percentage: 0,
+        estimate1Price: 0,
+        estimate2Price: 0,
+        priceDifference: 0,
+        priceDifferencePercentage: 0,
       })),
     } as TenderEstimateComparisonDto;
   }
@@ -231,7 +230,7 @@ export class TenderEstimateTransformer {
    * Calculate total amount from items
    */
   static calculateTotalAmount(items: TenderEstimateItemDTO[]): number {
-    return items.reduce((total, item) => total + item.total_price, 0);
+    return items.reduce((total, item) => total + item.totalPrice, 0);
   }
 
   /**
@@ -242,18 +241,18 @@ export class TenderEstimateTransformer {
     errors: string[];
   } {
     const errors: string[] = [];
-    const calculatedTotal = item.quantity * item.unit_price;
+    const calculatedTotal = item.quantity * item.unitPrice;
 
-    if (Math.abs(calculatedTotal - item.total_price) > 0.01) {
-      errors.push(`Item ${item.item_code}: Total price mismatch. Expected: ${calculatedTotal}, Got: ${item.total_price}`);
+    if (Math.abs(calculatedTotal - item.totalPrice) > 0.01) {
+      errors.push(`Item ${item.itemCode}: Total price mismatch. Expected: ${calculatedTotal}, Got: ${item.totalPrice}`);
     }
 
     if (item.quantity <= 0) {
-      errors.push(`Item ${item.item_code}: Quantity must be positive`);
+      errors.push(`Item ${item.itemCode}: Quantity must be positive`);
     }
 
-    if (item.unit_price <= 0) {
-      errors.push(`Item ${item.item_code}: Unit price must be positive`);
+    if (item.unitPrice <= 0) {
+      errors.push(`Item ${item.itemCode}: Unit price must be positive`);
     }
 
     return {

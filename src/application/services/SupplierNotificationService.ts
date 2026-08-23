@@ -82,7 +82,7 @@ export class SupplierNotificationService {
 
       // Create notification record using available repository
       const result = await this.notificationRepository.createNotification({
-        recipient_id: request.data.supplier_id || '',
+        recipientId: request.data.supplier_id || '',
         title: `Notification: ${request.data.type}`,
         message: `Notification sent to ${request.data.email}`,
         type: 'info' as const,

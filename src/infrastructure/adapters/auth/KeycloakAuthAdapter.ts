@@ -60,7 +60,7 @@ function toUser(u: any): AuthUser {
   return {
     id: u.sub ?? u.id,
     email: u.email,
-    full_name: u.name ?? u.preferred_username,
+    fullName: u.name ?? u.preferred_username,
     role: (u.realm_access?.roles ?? [])[0],
   };
 }
@@ -85,9 +85,9 @@ export class KeycloakAuthAdapter extends BaseAuthAdapter implements IAuthReposit
         headers: { Authorization: `Bearer ${tok.access_token}` },
       }).then((r) => r.json());
       const session: AuthSession = {
-        access_token: tok.access_token,
-        refresh_token: tok.refresh_token,
-        expires_at: String(Math.floor(Date.now() / 1000) + (tok.expires_in ?? 0)),
+        accessToken: tok.access_token,
+        refreshToken: tok.refresh_token,
+        expiresAt: String(Math.floor(Date.now() / 1000) + (tok.expires_in ?? 0)),
         user: toUser(info),
       };
       writeSession(session);
@@ -107,11 +107,11 @@ export class KeycloakAuthAdapter extends BaseAuthAdapter implements IAuthReposit
   async signOut() {
     try {
       const s = readSession();
-      if (s?.refresh_token) {
+      if (s?.refreshToken) {
         await form(logoutUrl(this.opts), {
           client_id: this.opts.clientId,
           ...(this.opts.clientSecret ? { client_secret: this.opts.clientSecret } : {}),
-          refresh_token: s.refresh_token,
+          refresh_token: s.refreshToken,
         }).catch(() => null);
       }
       writeSession(null);
@@ -133,7 +133,7 @@ export class KeycloakAuthAdapter extends BaseAuthAdapter implements IAuthReposit
       const s = readSession();
       if (!s) return { user: null, error: null };
       const info = await fetch(userinfoUrl(this.opts), {
-        headers: { Authorization: `Bearer ${s.access_token}` },
+        headers: { Authorization: `Bearer ${s.accessToken}` },
       }).then((r) => r.json());
       return { user: toUser(info), error: null };
     } catch (e) {

@@ -4,11 +4,11 @@
 
 export interface TaskDependencyRow {
   id: string;
-  task_id: string;
-  depends_on_task_id: string;
-  dependency_type?: string | null;
-  lag_days?: number | null;
-  created_at?: string | null;
+  taskId: string;
+  dependsOnTaskId: string;
+  dependencyType?: string | null;
+  lagDays?: number | null;
+  createdAt?: string | null;
 }
 
 export interface ITaskDependencyRepository {

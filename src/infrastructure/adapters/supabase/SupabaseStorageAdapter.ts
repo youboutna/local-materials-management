@@ -140,8 +140,8 @@ export class SupabaseStorageAdapter implements IStorageProvider {
     files?: Array<{
       name: string;
       size: number;
-      created_at: string;
-      updated_at: string;
+      createdAt: string;
+      updatedAt: string;
     }>;
     error?: string;
   }> {
@@ -157,8 +157,8 @@ export class SupabaseStorageAdapter implements IStorageProvider {
       const files = data.map((file) => ({
         name: file.name,
         size: file.metadata?.size || 0,
-        created_at: file.created_at || new Date().toISOString(),
-        updated_at: file.updated_at || new Date().toISOString(),
+        createdAt: file.created_at || new Date().toISOString(),
+        updatedAt: file.updated_at || new Date().toISOString(),
       }));
 
       return { success: true, files };

@@ -715,21 +715,21 @@ export class MilestoneService {
 
       // Create milestone entity from request
       const milestoneData: CreateMilestoneData = {
-        project_id: request.project_id,
-        phase_id: request.phase_id,
+        projectId: request.project_id,
+        phaseId: request.phase_id,
         title: request.title,
         description: request.description,
-        target_date: request.target_date,
+        targetDate: request.target_date,
         status: request.status || 'pending',
         priority: request.priority === 'medium' ? 'normal' : request.priority,
         type: request.type,
-        stage_type: request.stage_type,
+        stageType: request.stage_type,
         weight: request.weight,
         dependencies: request.dependencies || [],
         notes: request.notes
-        ,material_usage: request.material_usage
-        ,material_cost_estimate: request.material_cost_estimate
-        ,actual_material_cost: request.actual_material_cost
+        ,materialUsage: request.material_usage
+        ,materialCostEstimate: request.material_cost_estimate
+        ,actualMaterialCost: request.actual_material_cost
       };
 
       // Save through repository
@@ -766,18 +766,18 @@ export class MilestoneService {
       const updateData: UpdateMilestoneData = {
         title: updates.title,
         description: updates.description,
-        target_date: updates.target_date,
-        completion_date: updates.actual_completion_date,
+        targetDate: updates.target_date,
+        completionDate: updates.actual_completion_date,
         status: updates.status,
         priority: updates.priority === 'medium' ? 'normal' : updates.priority,
         type: updates.type,
-        stage_type: updates.stage_type,
+        stageType: updates.stage_type,
         weight: updates.weight,
         dependencies: updates.dependencies,
         notes: updates.notes
-        ,material_usage: updates.material_usage
-        ,material_cost_estimate: updates.material_cost_estimate
-        ,actual_material_cost: updates.actual_material_cost
+        ,materialUsage: updates.material_usage
+        ,materialCostEstimate: updates.material_cost_estimate
+        ,actualMaterialCost: updates.actual_material_cost
       };
 
       // Update through repository
@@ -1003,10 +1003,10 @@ export class MilestoneService {
         completedMilestones: completed.length,
         delayedMilestones: delayed.length,
         weightedProgress: totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0,
-        schedulePerformance_index: 1.0,
-        criticalPath_status: delayed.length > 0 ? 'at_risk' : 'on_track',
-        criticalPathFloat_days: 0,
-        next_milestone: nextMilestone,
+        schedulePerformanceIndex: 1.0,
+        criticalPathStatus: delayed.length > 0 ? 'at_risk' : 'on_track',
+        criticalPathFloatDays: 0,
+        nextMilestone: nextMilestone,
         overdueMilestones: overdueMilestones,
         upcomingMilestones: upcomingMilestones
       };
@@ -1149,7 +1149,7 @@ export class MilestoneService {
 
       for (const template of templates) {
         const targetDate = new Date(startDate);
-        targetDate.setDate(targetDate.getDate() + template.relative_offset_days);
+        targetDate.setDate(targetDate.getDate() + template.relativeOffsetDays);
 
         const milestoneData: CreateMilestoneRequestDto = {
           project_id: projectId,
@@ -1161,8 +1161,8 @@ export class MilestoneService {
           type: template.type,
           priority: this.transformPriorityFromForm(template.priority),
           weight: template.weight,
-          notes: template.approval_requirements?.join(', '),
-          dependencies: template.predecessor_ids,
+          notes: template.approvalRequirements?.join(', '),
+          dependencies: template.predecessorIds,
           deliverables: template.deliverables
         };
 
@@ -1187,43 +1187,43 @@ export class MilestoneService {
           id: `template-${phaseCode}-start`,
           name: 'Début de phase',
           description: 'Démarrage officiel de la phase',
-          relative_offset_days: 0,
+          relativeOffsetDays: 0,
           weight: 0.1,
-          is_critical: true,
+          isCritical: true,
           type: 'event',
           priority: 'high',
           tags: ['start', 'phase'],
-          predecessor_ids: [],
+          predecessorIds: [],
           deliverables: ['Plan de phase validé'],
-          approval_requirements: ['Validation chef de projet']
+          approvalRequirements: ['Validation chef de projet']
         },
         {
           id: `template-${phaseCode}-mid`,
           name: 'Contrôle intermédiaire',
           description: 'Vérification de l\'avancement',
-          relative_offset_days: 14,
+          relativeOffsetDays: 14,
           weight: 0.3,
-          is_critical: false,
+          isCritical: false,
           type: 'checkpoint',
           priority: 'normal',
           tags: ['review', 'progress'],
-          predecessor_ids: [`template-${phaseCode}-start`],
+          predecessorIds: [`template-${phaseCode}-start`],
           deliverables: ['Rapport d\'avancement'],
-          approval_requirements: []
+          approvalRequirements: []
         },
         {
           id: `template-${phaseCode}-end`,
           name: 'Fin de phase',
           description: 'Clôture et validation de la phase',
-          relative_offset_days: 28,
+          relativeOffsetDays: 28,
           weight: 0.6,
-          is_critical: true,
+          isCritical: true,
           type: 'gate',
           priority: 'high',
           tags: ['end', 'validation'],
-          predecessor_ids: [`template-${phaseCode}-mid`],
+          predecessorIds: [`template-${phaseCode}-mid`],
           deliverables: ['Livraison de phase', 'Rapport final'],
-          approval_requirements: ['Validation client', 'Validation technique']
+          approvalRequirements: ['Validation client', 'Validation technique']
         }
       ];
 

@@ -57,7 +57,7 @@ export class TenderService {
         id: item.id,
         title: item.fileName || `Appel d'offres ${index + 1}`,
         reference: `AO-${request.projectId}-${index + 1}`,
-        project_id: request.projectId as string,
+        projectId: request.projectId as string,
         status: 'active'
       }));
 
@@ -191,20 +191,20 @@ export class TenderService {
       
       const secret: TenderSharingSecretDTO = {
         id: crypto.randomUUID(),
-        tender_id: dto.tender_id,
-        secret_code: secretCode,
-        supplier_email: dto.supplier_email,
-        supplier_id: dto.supplier_id || '',
-        expires_at: dto.expires_at,
-        max_access_count: dto.max_access_count || 10,
-        current_access_count: 0,
-        workflow_phase: dto.workflow_phase,
-        workflow_stage: dto.workflow_stage,
-        allowed_document_ids: dto.allowed_document_ids,
+        tenderId: dto.tenderId,
+        secretCode: secretCode,
+        supplierEmail: dto.supplierEmail,
+        supplierId: dto.supplierId || '',
+        expiresAt: dto.expiresAt,
+        maxAccessCount: dto.maxAccessCount || 10,
+        currentAccessCount: 0,
+        workflowPhase: dto.workflowPhase,
+        workflowStage: dto.workflowStage,
+        allowedDocumentIds: dto.allowedDocumentIds,
         metadata: dto.metadata || {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_active: true
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isActive: true
       };
 
       return secret;

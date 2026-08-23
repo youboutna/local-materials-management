@@ -33,10 +33,8 @@ export interface RegisterData {
   email: string;
   password: string;
   fullName?: string;
-  full_name?: string;
   phone?: string;
   nationalId?: string;
-  national_id?: string;
   role?: string;
 }
 

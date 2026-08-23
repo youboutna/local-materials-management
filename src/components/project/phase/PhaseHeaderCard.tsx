@@ -44,7 +44,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
   onRefresh,
   isRefreshing = false,
 }) => {
-  const remainingDays = calculateRemainingDays(phase.end_date);
+  const remainingDays = calculateRemainingDays(phase.endDate);
   const stepsCount = phase.steps?.length || 0;
   const completedSteps = phase.steps?.filter(s => s.status === 'completed').length || 0;
 
@@ -65,7 +65,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
             <div>
               <div className="flex items-center gap-3">
                 <CardTitle className="text-xl lg:text-2xl font-bold">
-                  {phase.phase_name}
+                  {phase.phaseName}
                 </CardTitle>
                 <Badge 
                   className={cn(
@@ -140,7 +140,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
               <span><T k="auto.phaseheadercard.periode" fallback="Période" /></span>
             </div>
             <p className="text-sm font-medium">
-              {formatDate(phase.start_date)} — {formatDate(phase.end_date)}
+              {formatDate(phase.startDate)} — {formatDate(phase.endDate)}
             </p>
           </div>
 
@@ -167,7 +167,7 @@ const PhaseHeaderCard: React.FC<PhaseHeaderCardProps> = ({
               <span><T k="auto.phaseheadercard.budget_estime" fallback="Budget estimé" /></span>
             </div>
             <p className="text-sm font-medium">
-              {formatCurrency(phase.estimated_cost)}
+              {formatCurrency(phase.estimatedCost)}
             </p>
           </div>
 

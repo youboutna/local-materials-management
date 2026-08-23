@@ -24,10 +24,10 @@ export class TaskDependencyService {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'A task cannot depend on itself');
     }
     return this.repository.create({
-      task_id: taskId,
-      depends_on_task_id: dependsOnTaskId,
-      dependency_type: options?.dependencyType ?? 'finish-to-start',
-      lag_days: options?.lagDays ?? 0,
+      taskId: taskId,
+      dependsOnTaskId: dependsOnTaskId,
+      dependencyType: options?.dependencyType ?? 'finish-to-start',
+      lagDays: options?.lagDays ?? 0,
     });
   }
 

@@ -19,19 +19,19 @@ export interface PhaseTaskDTO {
   description?: string;
   status: PhaseStatusValue;
   // Legacy/compat aliases (snake_case) used by some consumers
-  requires_inspection?: boolean;
-  requires_engineer_approval?: boolean;
-  cost_estimate?: number;
-  actual_cost?: number;
+  requiresInspection?: boolean;
+  requiresEngineerApproval?: boolean;
+  costEstimate?: number;
+  actualCost?: number;
   progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  assigned_to?: string[];
+  estimatedDurationDays?: number;
+  actualDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  assignedTo?: string[];
   dependencies?: string[];
   weight?: number;
-  order_index: number;
+  orderIndex: number;
 }
 
 export interface PhaseStepDTO {
@@ -42,11 +42,11 @@ export interface PhaseStepDTO {
   description?: string;
   status: PhaseStatusValue;
   progress: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  order_index: number;
+  estimatedDurationDays?: number;
+  actualDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  orderIndex: number;
   tasks: PhaseTaskDTO[];
 }
 
@@ -195,22 +195,11 @@ export interface PhaseDTO extends BaseEntityDTO {
 
 
   // Legacy/compat snake_case aliases (project_phases table shape)
-  project_id?: string;
-  phase_name?: string;
-  construction_phase?: string | null;
-  construction_stage?: string | null;
-  estimated_cost?: number;
-  actual_cost?: number;
-  estimated_duration_days?: number;
-  actual_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  actual_start_date?: string;
-  actual_end_date?: string;
-  order_index?: number;
-  created_at?: string;
-  updated_at?: string;
-  created_by?: string | null;
+  phaseName?: string;
+  estimatedDurationDays?: number;
+  actualDurationDays?: number;
+  actualStartDate?: string;
+  actualEndDate?: string;
 }
 
 // Phase form data DTO for UI
@@ -437,52 +426,52 @@ export interface CustomPhase {
 
 export interface PhaseDTOLegacy {
   id: string;
-  project_id: string;
-  phase_name: string;
+  projectId: string;
+  phaseName: string;
   description: string;
   status: string;
   progress: number;
   budget: number;
-  actual_cost: number;
-  start_date: string;
-  end_date: string;
-  created_at: string;
-  updated_at: string;
-  phase_type?: string;
-  construction_phase?: string;
-  construction_stage?: string;
+  actualCost: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+  phaseType?: string;
+  constructionPhase?: string;
+  constructionStage?: string;
 }
 
 /**
  * Form data for creating/updating phases
  */
 export interface PhaseFormDTO {
-  phase_name: string;
+  phaseName: string;
   description?: string;
-  construction_phase?: string;
-  construction_stage?: string;
-  estimated_cost?: number;
-  estimated_duration_days?: number;
-  start_date?: string;
-  end_date?: string;
-  order_index?: number;
+  constructionPhase?: string;
+  constructionStage?: string;
+  estimatedCost?: number;
+  estimatedDurationDays?: number;
+  startDate?: string;
+  endDate?: string;
+  orderIndex?: number;
   steps?: PhaseStepFormDTO[];
 }
 
 export interface PhaseStepFormDTO {
   name: string;
   description?: string;
-  estimated_duration_days?: number;
-  order_index?: number;
+  estimatedDurationDays?: number;
+  orderIndex?: number;
   tasks?: PhaseTaskFormDTO[];
 }
 
 export interface PhaseTaskFormDTO {
   name: string;
   description?: string;
-  estimated_duration_days?: number;
-  assigned_to?: string[];
-  order_index?: number;
+  estimatedDurationDays?: number;
+  assignedTo?: string[];
+  orderIndex?: number;
 }
 
 // Enhanced resource types for UI display with semantic search support

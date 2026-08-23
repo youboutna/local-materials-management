@@ -16,24 +16,24 @@ export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface TaskData {
   id: string;
-  project_id: string;
-  phase_id: string | null;
-  step_id: string | null;
+  projectId: string;
+  phaseId: string | null;
+  stepId: string | null;
   title: string;
   description: string | null;
   status: TaskStatus;
   priority: TaskPriority;
   progress: number;
-  assigned_to: string[];
-  assigned_by: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  due_date: string | null;
-  completion_date: string | null;
-  estimated_duration: number | null;
-  actual_duration: number | null;
+  assignedTo: string[];
+  assignedBy: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  dueDate: string | null;
+  completionDate: string | null;
+  estimatedDuration: number | null;
+  actualDuration: number | null;
   dependencies: string[];
   notes: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }

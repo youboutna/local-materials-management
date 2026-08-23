@@ -12,7 +12,7 @@ export interface IInsuranceRepository {
   getActiveCertificates(): Promise<InsuranceCertificateEntity[]>;
   getByProjectId(projectId: string): Promise<InsuranceCertificateEntity[]>;
   getById(id: string): Promise<InsuranceCertificateEntity | null>;
-  create(certificate: Omit<InsuranceCertificateEntity, 'id' | 'created_at' | 'updated_at'>): Promise<InsuranceCertificateEntity>;
+  create(certificate: Omit<InsuranceCertificateEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<InsuranceCertificateEntity>;
   update(id: string, updates: Partial<InsuranceCertificateEntity>): Promise<InsuranceCertificateEntity>;
   delete(id: string): Promise<void>;
   getExpiringSoon(daysThreshold: number): Promise<InsuranceCertificateEntity[]>;
@@ -35,7 +35,7 @@ export class InsuranceRepository implements IInsuranceRepository {
     return this.adapter.getById(id);
   }
 
-  async create(certificate: Omit<InsuranceCertificateEntity, 'id' | 'created_at' | 'updated_at'>): Promise<InsuranceCertificateEntity> {
+  async create(certificate: Omit<InsuranceCertificateEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<InsuranceCertificateEntity> {
     return this.adapter.create(certificate);
   }
 

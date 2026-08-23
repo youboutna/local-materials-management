@@ -98,8 +98,8 @@ export class LocalStorageAdapter implements IStorageProvider {
       .map((f) => ({
         name: f.name,
         size: f.size,
-        created_at: f.created_at,
-        updated_at: f.updated_at,
+        createdAt: f.created_at,
+        updatedAt: f.updated_at,
       }));
     return { success: true, files };
   }

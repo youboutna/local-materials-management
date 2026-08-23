@@ -8,6 +8,7 @@ import type {
   ITaskDependencyRepository,
   TaskDependencyRow,
 } from '@/domain/repositories/ITaskDependencyRepository';
+import { camelizeRow, camelizeRows, snakeizeRow } from '@/infrastructure/adapters/rowMapping';
 
 export class SupabaseTaskDependencyAdapter implements ITaskDependencyRepository {
   async findByTaskIds(taskIds: string[]): Promise<TaskDependencyRow[]> {
@@ -18,18 +19,18 @@ export class SupabaseTaskDependencyAdapter implements ITaskDependencyRepository 
       .in('task_id', taskIds);
 
     if (error) throw error;
-    return (data || []) as TaskDependencyRow[];
+    return camelizeRows<TaskDependencyRow>(data);
   }
 
   async create(dependency: Partial<TaskDependencyRow>): Promise<TaskDependencyRow> {
     const { data, error } = await btpClient
       .from('task_dependencies')
-      .insert(dependency as BtpTablesInsert<'task_dependencies'>)
+      .insert(snakeizeRow(dependency) as BtpTablesInsert<'task_dependencies'>)
       .select()
       .single();
 
     if (error) throw error;
-    return data as TaskDependencyRow;
+    return camelizeRow<TaskDependencyRow>(data);
   }
 
   async delete(id: string): Promise<void> {

@@ -94,16 +94,16 @@ export function useBankGuaranteesHex(projectId?: string) {
       // Transform BankGuaranteeDTO to BankGuarantee
       const transformedData = data.map(dto => ({
         id: dto.id,
-        projectId: dto.project_id || '',
-        contractorId: dto.contractor_id || '',
-        bankName: dto.bank_name || '',
-        guaranteeType: dto.guarantee_type || '',
-        guaranteeAmount: dto.guarantee_amount || 0,
-        issueDate: dto.issue_date || '',
-        expiryDate: dto.expiry_date || '',
+        projectId: dto.projectId || '',
+        contractorId: dto.contractorId || '',
+        bankName: dto.bankName || '',
+        guaranteeType: dto.guaranteeType || '',
+        guaranteeAmount: dto.guaranteeAmount || 0,
+        issueDate: dto.issueDate || '',
+        expiryDate: dto.expiryDate || '',
         status: dto.status || '',
-        createdAt: dto.created_at || '',
-        updatedAt: dto.updated_at || '',
+        createdAt: dto.createdAt || '',
+        updatedAt: dto.updatedAt || '',
       }));
       setGuarantees(transformedData);
     } catch (err) {
@@ -167,15 +167,15 @@ export function usePaymentBlocksHex(projectId?: string) {
       
       setBlocks(data.map(b => ({
         id: b.id,
-        projectId: b.payment_request_id, // Map from payment_request_id
+        projectId: b.paymentRequestId, // Map from payment_request_id
         contractorId: '', // Not available in PaymentBlock interface
-        amount: b.blocked_amount, // Map from blocked_amount
-        blockingReasons: b.block_reason, // Map from block_reason
-        notes: b.resolution_notes || null, // Map from resolution_notes
-        blockedAt: b.created_at, // Map from created_at
+        amount: b.blockedAmount, // Map from blocked_amount
+        blockingReasons: b.blockReason, // Map from block_reason
+        notes: b.resolutionNotes || null, // Map from resolution_notes
+        blockedAt: b.createdAt, // Map from created_at
         blockedBy: null, // Not available in PaymentBlock interface
-        resolvedAt: b.resolved_at || null, // Map from resolved_at
-        resolvedBy: b.resolved_by || null, // Map from resolved_by
+        resolvedAt: b.resolvedAt || null, // Map from resolved_at
+        resolvedBy: b.resolvedBy || null, // Map from resolved_by
       })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load payment blocks');
@@ -244,18 +244,18 @@ export function useInsurancesHex(projectId?: string) {
 
       setInsurances(insuranceData.map(i => ({
         id: i.id,
-        projectId: i.projectId || i.project_id || '',
-        contractorId: i.contractorId || i.contractor_id || '',
-        contractorName: i.contractorName || i.contractor_name || '',
-        insuranceCompany: i.insuranceCompany || i.insurance_company || '',
-        policyNumber: i.policyNumber || i.policy_number || '',
+        projectId: i.projectId || i.projectId || '',
+        contractorId: i.contractorId || i.contractorId || '',
+        contractorName: i.contractorName || i.contractorName || '',
+        insuranceCompany: i.insuranceCompany || i.insuranceCompany || '',
+        policyNumber: i.policyNumber || i.policyNumber || '',
         coverageType: i.insuranceType || '',
-        coverageAmount: i.coverageAmount || i.coverage_amount || 0,
-        validFrom: i.validFrom || i.valid_from || '',
-        validUntil: i.validUntil || i.valid_until || '',
+        coverageAmount: i.coverageAmount || i.coverageAmount || 0,
+        validFrom: i.validFrom || i.validFrom || '',
+        validUntil: i.validUntil || i.validUntil || '',
         status: i.status || '',
-        createdAt: i.createdAt || i.created_at || '',
-        updatedAt: i.updatedAt || i.updated_at || '',
+        createdAt: i.createdAt || i.createdAt || '',
+        updatedAt: i.updatedAt || i.updatedAt || '',
       })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load insurances');

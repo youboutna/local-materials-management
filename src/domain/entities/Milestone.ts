@@ -150,7 +150,7 @@ export class Milestone {
   ): Milestone {
     // Calculate target date based on relative offset
     const targetDate = new Date(phaseStartDate);
-    targetDate.setDate(targetDate.getDate() + template.relative_offset_days);
+    targetDate.setDate(targetDate.getDate() + template.relativeOffsetDays);
 
     return new Milestone(
       template.id,
@@ -162,7 +162,7 @@ export class Milestone {
       'pending',
       template.priority,
       null,
-      template.predecessor_ids?.map(id => ({
+      template.predecessorIds?.map(id => ({
         id,
         type: 'finish_to_start' as const,
         description: `Dependency on ${id}`
@@ -182,14 +182,14 @@ export class Milestone {
         templateId: template.id,
         stageType: template.type,
         weight: template.weight,
-        isCritical: template.is_critical,
+        isCritical: template.isCritical,
         type: template.type,
         priority: template.priority,
         tags: template.tags || [],
-        predecessorIds: template.predecessor_ids || [],
+        predecessorIds: template.predecessorIds || [],
         expectedDeliverables: template.deliverables || [],
-        approvalRequirements: template.approval_requirements || [],
-        relativeOffsetDays: template.relative_offset_days
+        approvalRequirements: template.approvalRequirements || [],
+        relativeOffsetDays: template.relativeOffsetDays
       }
     );
   }

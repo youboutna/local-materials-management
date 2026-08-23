@@ -67,11 +67,11 @@ const EscalationThresholdsSettings: React.FC = () => {
         thresholds.map(threshold => ({
           id: threshold.id,
           updates: {
-            threshold_value: threshold.threshold_value,
-            severity_level: threshold.severity_level,
-            escalation_level: threshold.escalation_level,
+            threshold_value: threshold.thresholdValue,
+            severity_level: threshold.severityLevel,
+            escalation_level: threshold.escalationLevel,
             description: threshold.description,
-            is_active: threshold.is_active,
+            is_active: threshold.isActive,
           },
         }))
       );
@@ -106,7 +106,7 @@ const EscalationThresholdsSettings: React.FC = () => {
   };
 
   const getThresholdsByType = (type: string) => {
-    return thresholds.filter(t => t.threshold_type === type);
+    return thresholds.filter(t => t.thresholdType === type);
   };
 
 
@@ -192,29 +192,29 @@ const EscalationThresholdsSettings: React.FC = () => {
                         {getThresholdsByType(type.key).map(threshold => (
                           <TableRow key={threshold.id}>
                             <TableCell className="font-medium">
-                              {threshold.threshold_name}
+                              {threshold.thresholdName}
                             </TableCell>
                             <TableCell>
                               <Input
                                 type="number"
-                                value={threshold.threshold_value}
-                                onChange={(e) => updateThreshold(threshold.id, 'threshold_value', parseFloat(e.target.value))}
+                                value={threshold.thresholdValue}
+                                onChange={(e) => updateThreshold(threshold.id, 'thresholdValue', parseFloat(e.target.value))}
                                 className="w-20"
                                 min="0"
-                                step={threshold.threshold_unit === 'percentage' ? '1' : '0.1'}
+                                step={threshold.thresholdUnit === 'percentage' ? '1' : '0.1'}
                               />
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">
-                                {ESCALATION_UNIT_LABELS[threshold.threshold_unit as EscalationUnit] ??
-                                  threshold.threshold_unit}
+                                {ESCALATION_UNIT_LABELS[threshold.thresholdUnit as EscalationUnit] ??
+                                  threshold.thresholdUnit}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <select
-                                  value={threshold.severity_level}
-                                  onChange={(e) => updateThreshold(threshold.id, 'severity_level', e.target.value)}
+                                  value={threshold.severityLevel}
+                                  onChange={(e) => updateThreshold(threshold.id, 'severityLevel', e.target.value)}
                                   className="border border-input bg-background text-foreground rounded px-2 py-1 text-xs"
                                   aria-label="Sévérité du seuil"
                                 >
@@ -222,8 +222,8 @@ const EscalationThresholdsSettings: React.FC = () => {
                                     <option key={s.value} value={s.value}>{s.label}</option>
                                   ))}
                                 </select>
-                                <Badge variant={severityBadgeVariant(threshold.severity_level)} className="text-[10px]">
-                                  {ESCALATION_SEVERITIES.find(s => s.value === threshold.severity_level)?.label ?? threshold.severity_level}
+                                <Badge variant={severityBadgeVariant(threshold.severityLevel)} className="text-[10px]">
+                                  {ESCALATION_SEVERITIES.find(s => s.value === threshold.severityLevel)?.label ?? threshold.severityLevel}
                                 </Badge>
                               </div>
                             </TableCell>
@@ -231,8 +231,8 @@ const EscalationThresholdsSettings: React.FC = () => {
                             <TableCell>
                               <Input
                                 type="number"
-                                value={threshold.escalation_level}
-                                onChange={(e) => updateThreshold(threshold.id, 'escalation_level', parseInt(e.target.value))}
+                                value={threshold.escalationLevel}
+                                onChange={(e) => updateThreshold(threshold.id, 'escalationLevel', parseInt(e.target.value))}
                                 className="w-16"
                                 min="1"
                                 max="4"
@@ -249,8 +249,8 @@ const EscalationThresholdsSettings: React.FC = () => {
                             <TableCell>
                               <input
                                 type="checkbox"
-                                checked={!!threshold.is_active}
-                                onChange={(e) => updateThreshold(threshold.id, 'is_active', e.target.checked)}
+                                checked={!!threshold.isActive}
+                                onChange={(e) => updateThreshold(threshold.id, 'isActive', e.target.checked)}
                                 className="rounded"
                               />
                             </TableCell>
@@ -278,16 +278,16 @@ const EscalationThresholdsSettings: React.FC = () => {
         <CardHeader>
           <CardTitle><T k="auto.escalationthresholdssettings.resume_des_seuils_d_escalade" fallback="Résumé des Seuils d'Escalade" /></CardTitle>
           <p className="text-sm text-muted-foreground">
-            {thresholds.length} seuils référencés · {thresholds.filter(t => t.is_active).length} actifs ·{' '}
-            {thresholds.filter(t => t.severity_level === 'critical').length} critiques
+            {thresholds.length} seuils référencés · {thresholds.filter(t => t.isActive).length} actifs ·{' '}
+            {thresholds.filter(t => t.severityLevel === 'critical').length} critiques
           </p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {thresholdTypes.filter(t => t.highlighted).map(type => {
               const typeThresholds = getThresholdsByType(type.key);
-              const activeThresholds = typeThresholds.filter(t => t.is_active);
-              const criticalThresholds = typeThresholds.filter(t => t.severity_level === 'critical');
+              const activeThresholds = typeThresholds.filter(t => t.isActive);
+              const criticalThresholds = typeThresholds.filter(t => t.severityLevel === 'critical');
 
               return (
                 <div key={type.key} className="p-4 border rounded-lg bg-card">

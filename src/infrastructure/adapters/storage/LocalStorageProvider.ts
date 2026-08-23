@@ -182,8 +182,8 @@ export class LocalStorageProvider implements IStorageProvider {
       files?: Array<{
         name: string;
         size: number;
-        created_at: string;
-        updated_at: string;
+        createdAt: string;
+        updatedAt: string;
       }>;
       error?: string;
     }> {
@@ -197,8 +197,8 @@ export class LocalStorageProvider implements IStorageProvider {
           return {
             name: file.name,
             size: file.size,
-            created_at: file.uploadedAt,
-            updated_at: file.uploadedAt
+            createdAt: file.uploadedAt,
+            updatedAt: file.uploadedAt
           };
         });
 

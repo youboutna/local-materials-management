@@ -73,8 +73,8 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
         weightedProgress: Math.round(rawMilestones.filter((m) => m.status === 'completed').length / Math.max(1, rawMilestones.length) * 100),
         overdueMilestones: [],
         upcomingMilestones: [],
-        schedulePerformance_index: 1,
-        criticalPath_status: 'on_track',
+        schedulePerformanceIndex: 1,
+        criticalPathStatus: 'on_track',
       };
       setMilestones(milestonesData);
       setProgress(progressData);
@@ -204,17 +204,17 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
               <span className="text-muted-foreground"><T k="auto.projectmilestonetimeline.progression_des_jalons" fallback="Progression des jalons" /></span>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{progress.weightedProgress}%</span>
-                {progress.schedulePerformance_index !== undefined && (
+                {progress.schedulePerformanceIndex !== undefined && (
                   <Badge 
-                    variant={progress.schedulePerformance_index >= 1 ? 'default' : 'destructive'}
+                    variant={progress.schedulePerformanceIndex >= 1 ? 'default' : 'destructive'}
                     className="text-xs flex items-center gap-1"
                   >
-                    {progress.schedulePerformance_index >= 1 ? (
+                    {progress.schedulePerformanceIndex >= 1 ? (
                       <TrendingUp className="h-3 w-3" />
                     ) : (
                       <TrendingDown className="h-3 w-3" />
                     )}
-                    SPI: {progress.schedulePerformance_index}
+                    SPI: {progress.schedulePerformanceIndex}
                   </Badge>
                 )}
               </div>
@@ -235,13 +235,13 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                   {progress.upcomingMilestones.length} jalon(s) à venir (14j)
                 </div>
               )}
-              {progress.criticalPath_status !== 'on_track' && (
+              {progress.criticalPathStatus !== 'on_track' && (
                 <div className={cn(
                   "flex items-center gap-2",
-                  progress.criticalPath_status === 'delayed' ? 'text-destructive' : 'text-warning'
+                  progress.criticalPathStatus === 'delayed' ? 'text-destructive' : 'text-warning'
                 )}>
                   <ShieldCheck className="h-4 w-4" />
-                  Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}
+                  Chemin critique {progress.criticalPathStatus === 'delayed' ? 'en retard' : 'à risque'}
                 </div>
               )}
             </div>

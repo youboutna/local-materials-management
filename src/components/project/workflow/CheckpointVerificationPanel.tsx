@@ -149,15 +149,15 @@ const CheckpointVerificationPanel: React.FC<CheckpointVerificationPanelProps> = 
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.brut" fallback="Brut" /></p>
-                <p className="font-medium">{formatCurrency(decompteData.current_period_amount)}</p>
+                <p className="font-medium">{formatCurrency(decompteData.currentPeriodAmount)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.retenue" fallback="Retenue" /></p>
-                <p className="font-medium text-warning">{formatCurrency(decompteData.retention_amount)}</p>
+                <p className="font-medium text-warning">{formatCurrency(decompteData.retentionAmount)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground"><T k="auto.checkpointverificationpanel.net" fallback="Net" /></p>
-                <p className="font-bold text-primary">{formatCurrency(decompteData.net_payable)}</p>
+                <p className="font-bold text-primary">{formatCurrency(decompteData.netPayable)}</p>
               </div>
             </div>
             {canTriggerPayment && (

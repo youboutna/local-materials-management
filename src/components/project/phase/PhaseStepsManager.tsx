@@ -111,9 +111,9 @@ const StepEditDialog: React.FC<{
     description: step?.description || '',
     status: step?.status || 'pending',
     progress: step?.progress || 0,
-    estimated_duration_days: step?.estimated_duration_days,
-    start_date: step?.start_date || '',
-    end_date: step?.end_date || '',
+    estimatedDurationDays: step?.estimatedDurationDays,
+    startDate: step?.startDate || '',
+    endDate: step?.endDate || '',
   });
 
   React.useEffect(() => {
@@ -123,9 +123,9 @@ const StepEditDialog: React.FC<{
         description: step.description || '',
         status: step.status,
         progress: step.progress,
-        estimated_duration_days: step.estimated_duration_days,
-        start_date: step.start_date || '',
-        end_date: step.end_date || '',
+        estimatedDurationDays: step.estimatedDurationDays,
+        startDate: step.startDate || '',
+        endDate: step.endDate || '',
       });
     } else {
       setFormData({
@@ -133,9 +133,9 @@ const StepEditDialog: React.FC<{
         description: '',
         status: 'pending',
         progress: 0,
-        estimated_duration_days: undefined,
-        start_date: '',
-        end_date: '',
+        estimatedDurationDays: undefined,
+        startDate: '',
+        endDate: '',
       });
     }
   }, [step, open]);
@@ -204,10 +204,10 @@ const StepEditDialog: React.FC<{
               <Input
                 type="number"
                 min="1"
-                value={formData.estimated_duration_days || ''}
+                value={formData.estimatedDurationDays || ''}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  estimated_duration_days: parseInt(e.target.value) || undefined 
+                  estimatedDurationDays: parseInt(e.target.value) || undefined 
                 })}
               />
             </div>
@@ -230,16 +230,16 @@ const StepEditDialog: React.FC<{
               <Label><T k="auto.phasestepsmanager.date_de_debut" fallback="Date de début" /></Label>
               <Input
                 type="date"
-                value={formData.start_date || ''}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                value={formData.startDate || ''}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label><T k="auto.phasestepsmanager.date_de_fin" fallback="Date de fin" /></Label>
               <Input
                 type="date"
-                value={formData.end_date || ''}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                value={formData.endDate || ''}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
               />
             </div>
           </div>
@@ -270,7 +270,7 @@ const TaskEditDialog: React.FC<{
     description: task?.description || '',
     status: task?.status || 'pending',
     progress: task?.progress || 0,
-    estimated_duration_days: task?.estimated_duration_days,
+    estimatedDurationDays: task?.estimatedDurationDays,
   });
 
   React.useEffect(() => {
@@ -280,7 +280,7 @@ const TaskEditDialog: React.FC<{
         description: task.description || '',
         status: task.status,
         progress: task.progress,
-        estimated_duration_days: task.estimated_duration_days,
+        estimatedDurationDays: task.estimatedDurationDays,
       });
     } else {
       setFormData({
@@ -363,10 +363,10 @@ const TaskEditDialog: React.FC<{
               <Input
                 type="number"
                 min="1"
-                value={formData.estimated_duration_days || ''}
+                value={formData.estimatedDurationDays || ''}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  estimated_duration_days: parseInt(e.target.value) || undefined 
+                  estimatedDurationDays: parseInt(e.target.value) || undefined 
                 })}
               />
             </div>
@@ -698,7 +698,7 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
     if (!Array.isArray(steps)) return [];
     return (steps as Array<any>).map((s) => {
       // If it's already a PhaseStepDTO (has 'tasks' or 'order_index'), assume shape
-      if ((s as PhaseStepDTO).tasks !== undefined || (s as PhaseStepDTO).order_index !== undefined) {
+      if ((s as PhaseStepDTO).tasks !== undefined || (s as PhaseStepDTO).orderIndex !== undefined) {
         return s as PhaseStepDTO;
       }
       // Otherwise treat as unified StepItem and map fields
@@ -716,10 +716,10 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
         description: si.description || '',
         status: mapStatus(si.status as string),
         progress: si.progress ?? 0,
-        estimated_duration_days: (si.metadata && (si.metadata.estimated_duration_days as number)) || undefined,
-        start_date: undefined,
-        end_date: undefined,
-        order_index: si.order ?? 0,
+        estimatedDurationDays: (si.metadata && (si.metadata.estimatedDurationDays as number)) || undefined,
+        startDate: undefined,
+        endDate: undefined,
+        orderIndex: si.order ?? 0,
         tasks: [],
       } as PhaseStepDTO;
     });
@@ -754,10 +754,10 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
       description: data.description,
       status: data.status || 'pending',
       progress: data.progress || 0,
-      estimated_duration_days: data.estimated_duration_days,
-      start_date: data.start_date,
-      end_date: data.end_date,
-      order_index: normalizedSteps.length,
+      estimatedDurationDays: data.estimatedDurationDays,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      orderIndex: normalizedSteps.length,
       tasks: [],
     });
   };
@@ -773,8 +773,8 @@ const PhaseStepsManager: React.FC<PhaseStepsManagerProps> = ({
       description: data.description,
       status: data.status || 'pending',
       progress: data.progress || 0,
-      estimated_duration_days: data.estimated_duration_days,
-      order_index: step?.tasks.length || 0,
+      estimatedDurationDays: data.estimatedDurationDays,
+      orderIndex: step?.tasks.length || 0,
     });
   };
 

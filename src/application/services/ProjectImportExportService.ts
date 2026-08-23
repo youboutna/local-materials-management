@@ -231,7 +231,7 @@ export class ProjectImportExportService {
       const user = await this.authService.getCurrentUser();
       if (user) {
         this.currentUserId = user.id;
-        this.currentUserName = user.full_name || user.email?.split('@')[0] || 'Utilisateur';
+        this.currentUserName = user.fullName || user.email?.split('@')[0] || 'Utilisateur';
         this.currentUserEmail = user.email || '';
       }
     } catch (error) {

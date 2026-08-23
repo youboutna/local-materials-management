@@ -47,28 +47,28 @@ export class DecompteDomainTransformer {
   static toDTO(entity: DecompteEntity): AutomaticDecompteDTO {
     return {
       id: entity.id,
-      project_id: entity.projectId,
-      phase_id: entity.phaseId,
-      decompte_number: entity.decompteNumber,
-      decompte_type: 'progress', // Valeur par défaut
-      contract_amount: entity.totalAmount,
-      previous_cumulative: 0,
-      current_period_amount: entity.totalAmount,
-      cumulative_amount: entity.totalAmount,
-      retention_rate: 10, // 10% par défaut en Mauritanie
-      retention_amount: entity.retentionAmount,
-      previous_retention_released: 0,
-      retention_to_release: entity.retentionAmount,
-      net_payable: entity.netAmount,
-      verified_milestones: [], // À peupler depuis les jalons
+      projectId: entity.projectId,
+      phaseId: entity.phaseId,
+      decompteNumber: entity.decompteNumber,
+      decompteType: 'progress', // Valeur par défaut
+      contractAmount: entity.totalAmount,
+      previousCumulative: 0,
+      currentPeriodAmount: entity.totalAmount,
+      cumulativeAmount: entity.totalAmount,
+      retentionRate: 10, // 10% par défaut en Mauritanie
+      retentionAmount: entity.retentionAmount,
+      previousRetentionReleased: 0,
+      retentionToRelease: entity.retentionAmount,
+      netPayable: entity.netAmount,
+      verifiedMilestones: [], // À peupler depuis les jalons
       lines: [], // À peupler depuis les lignes
-      progress_at_decompte: entity.progressAtDecompte,
+      progressAtDecompte: entity.progressAtDecompte,
       status: entity.status as any,
-      calculated_at: entity.calculatedAt,
-      approved_at: undefined,
-      approved_by: undefined,
-      paid_at: undefined,
-      calculation_log: [{
+      calculatedAt: entity.calculatedAt,
+      approvedAt: undefined,
+      approvedBy: undefined,
+      paidAt: undefined,
+      calculationLog: [{
         timestamp: new Date().toISOString(),
         action: 'transform',
         details: { source: 'domain_entity' }
@@ -82,17 +82,17 @@ export class DecompteDomainTransformer {
   static toEntity(dto: AutomaticDecompteDTO): DecompteEntity {
     return {
       id: dto.id,
-      projectId: dto.project_id,
-      phaseId: dto.phase_id,
-      decompteNumber: dto.decompte_number,
+      projectId: dto.projectId,
+      phaseId: dto.phaseId,
+      decompteNumber: dto.decompteNumber,
       status: dto.status,
-      totalAmount: dto.current_period_amount,
-      retentionAmount: dto.retention_amount,
-      netAmount: dto.net_payable,
-      progressAtDecompte: dto.progress_at_decompte,
-      calculatedAt: dto.calculated_at,
-      createdAt: dto.calculated_at,
-      updatedAt: dto.calculated_at
+      totalAmount: dto.currentPeriodAmount,
+      retentionAmount: dto.retentionAmount,
+      netAmount: dto.netPayable,
+      progressAtDecompte: dto.progressAtDecompte,
+      calculatedAt: dto.calculatedAt,
+      createdAt: dto.calculatedAt,
+      updatedAt: dto.calculatedAt
     };
   }
 
@@ -105,12 +105,12 @@ export class DecompteDomainTransformer {
       description: entity.description,
       quantity: entity.quantity,
       unit: entity.unit,
-      unit_price: entity.unitPrice,
-      total_amount: entity.totalAmount,
+      unitPrice: entity.unitPrice,
+      totalAmount: entity.totalAmount,
       category: entity.category as any,
-      milestone_id: entity.milestoneId,
-      checkpoint_id: entity.checkpointId,
-      verification_status: entity.verificationStatus as any
+      milestoneId: entity.milestoneId,
+      checkpointId: entity.checkpointId,
+      verificationStatus: entity.verificationStatus as any
     };
   }
 
@@ -123,12 +123,12 @@ export class DecompteDomainTransformer {
       description: dto.description,
       quantity: dto.quantity,
       unit: dto.unit,
-      unitPrice: dto.unit_price,
-      totalAmount: dto.total_amount,
+      unitPrice: dto.unitPrice,
+      totalAmount: dto.totalAmount,
       category: dto.category,
-      milestoneId: dto.milestone_id,
-      checkpointId: dto.checkpoint_id,
-      verificationStatus: dto.verification_status
+      milestoneId: dto.milestoneId,
+      checkpointId: dto.checkpointId,
+      verificationStatus: dto.verificationStatus
     };
   }
 

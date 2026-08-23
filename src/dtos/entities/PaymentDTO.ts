@@ -181,54 +181,54 @@ export interface UpdatePaymentRequestDTO {
 // Payment Blocking Types
 export interface PaymentBlockDTO {
   id: string;
-  payment_request_id: string;
-  block_reason: string;
-  block_type: 'financial' | 'document' | 'compliance' | 'technical';
+  paymentRequestId: string;
+  blockReason: string;
+  blockType: 'financial' | 'document' | 'compliance' | 'technical';
   status: 'active' | 'resolved' | 'cancelled';
-  blocked_amount: number;
-  resolution_notes?: string;
-  resolved_by?: string;
-  resolved_at?: string;
-  created_at: string;
-  updated_at: string;
+  blockedAmount: number;
+  resolutionNotes?: string;
+  resolvedBy?: string;
+  resolvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   createdBy?: string;
   documentIds?: string[];
 }
 
 export interface PaymentControlActionDTO {
   id: string;
-  payment_block_id: string;
-  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
+  paymentBlockId: string;
+  actionType: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
   description: string;
-  assigned_to?: string;
-  due_date?: string;
+  assignedTo?: string;
+  dueDate?: string;
   status: 'pending' | 'completed' | 'cancelled';
-  created_by: string;
-  created_at: string;
-  completed_at?: string;
+  createdBy: string;
+  createdAt: string;
+  completedAt?: string;
 }
 
 // Service Request DTOs
 export interface CreatePaymentBlockRequestDto {
-  payment_request_id: string;
-  block_reason: string;
-  block_type: 'financial' | 'document' | 'compliance' | 'technical';
-  blocked_amount: number;
+  paymentRequestId: string;
+  blockReason: string;
+  blockType: 'financial' | 'document' | 'compliance' | 'technical';
+  blockedAmount: number;
 }
 
 export interface ResolvePaymentBlockRequestDto {
-  block_id: string;
-  resolution_notes: string;
-  resolved_by: string;
+  blockId: string;
+  resolutionNotes: string;
+  resolvedBy: string;
 }
 
 export interface CreatePaymentControlActionRequestDto {
-  payment_block_id: string;
-  action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
+  paymentBlockId: string;
+  actionType: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
   description: string;
-  assigned_to?: string;
-  due_date?: string;
-  created_by?: string;
+  assignedTo?: string;
+  dueDate?: string;
+  createdBy?: string;
 }
 
 export interface GetPaymentBlockStatsRequestDto {
@@ -267,13 +267,13 @@ export interface PaymentProcessingResultDto {
 }
 
 export interface GetPaymentBlocksRequestDto {
-  payment_request_id?: string;
+  paymentRequestId?: string;
   status?: string;
-  block_type?: string;
+  blockType?: string;
 }
 
 export interface GetPaymentControlActionsRequestDto {
-  payment_block_id: string;
+  paymentBlockId: string;
   status?: string;
 }
 
@@ -305,13 +305,6 @@ export interface LegacyCreatePaymentRequestDTO {
   documents?: PaymentDocumentDTO[];
   
   // Legacy snake_case
-  phase_id?: string;
-  milestone_id?: string;
-  payment_type?: 'bank_transfer' | 'cash' | 'check' | 'mobile_money' | 'crypto';
-  due_date?: string;
-  recipient_id?: string;
-  recipient_name?: string;
-  recipient_bank_info?: string;
 }
 
 export interface LegacyUpdatePaymentRequestDTO {
@@ -320,17 +313,8 @@ export interface LegacyUpdatePaymentRequestDTO {
   amount?: number;
   currency?: string;
   status?: 'pending' | 'approved' | 'rejected' | 'paid' | 'cancelled';
-  dueDate?: string;
   paidDate?: string;
-  recipientId?: string;
-  recipientName?: string;
-  recipientBankInfo?: string;
   documents?: PaymentDocumentDTO[];
   
   // Legacy snake_case
-  due_date?: string;
-  paid_date?: string;
-  recipient_id?: string;
-  recipient_name?: string;
-  recipient_bank_info?: string;
 }

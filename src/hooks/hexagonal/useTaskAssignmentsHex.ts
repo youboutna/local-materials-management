@@ -341,7 +341,7 @@ export function useTaskAssignmentsHex(filters?: {
 
       const user = await authService.getCurrentUser();
       const timestamp = new Date().toLocaleString('fr-FR');
-      const userName = user?.full_name || user?.email || 'Utilisateur';
+      const userName = user?.fullName || user?.email || 'Utilisateur';
       const noteWithMeta = `[${timestamp}] ${userName}: ${note}`;
       
       const currentNotes = task.notes || '';
@@ -585,7 +585,7 @@ export function useTaskAssignmentHex(taskId: string | undefined) {
       const authService = getAuthService();
       const user = await authService.getCurrentUser();
       const timestamp = new Date().toLocaleString('fr-FR');
-      const userName = user?.full_name || user?.email || 'Utilisateur';
+      const userName = user?.fullName || user?.email || 'Utilisateur';
       const noteWithMeta = `[${timestamp}] ${userName}: ${note}`;
       
       const currentNotes = task.notes || '';

@@ -96,7 +96,7 @@ export interface TenderOption {
   id: string;
   title: string;
   reference: string;
-  project_id: string;
+  projectId: string;
   status?: string;
 }
 

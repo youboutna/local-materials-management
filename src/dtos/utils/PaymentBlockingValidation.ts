@@ -11,31 +11,31 @@ export class PaymentBlockingValidation {
    * Validate create payment block request
    */
   static validateCreatePaymentBlockRequest(request: {
-    payment_request_id: string;
-    block_reason: string;
-    block_type: 'financial' | 'document' | 'compliance' | 'technical';
-    blocked_amount: number;
+    paymentRequestId: string;
+    blockReason: string;
+    blockType: 'financial' | 'document' | 'compliance' | 'technical';
+    blockedAmount: number;
   }): void {
-    if (!request.payment_request_id) {
+    if (!request.paymentRequestId) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment request ID is required');
     }
-    if (!request.block_reason || request.block_reason.trim().length === 0) {
+    if (!request.blockReason || request.blockReason.trim().length === 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Block reason is required');
     }
-    if (request.block_reason.length > 500) {
+    if (request.blockReason.length > 500) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Block reason too long (max 500 characters)');
     }
-    if (!request.block_type) {
+    if (!request.blockType) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Block type is required');
     }
     const validTypes = ['financial', 'document', 'compliance', 'technical'];
-    if (!validTypes.includes(request.block_type)) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid block type: ${request.block_type}`);
+    if (!validTypes.includes(request.blockType)) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid block type: ${request.blockType}`);
     }
-    if (request.blocked_amount < 0) {
+    if (request.blockedAmount < 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Blocked amount must be positive');
     }
-    if (request.blocked_amount > 999999999) {
+    if (request.blockedAmount > 999999999) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Blocked amount too large');
     }
   }
@@ -44,20 +44,20 @@ export class PaymentBlockingValidation {
    * Validate resolve payment block request
    */
   static validateResolvePaymentBlockRequest(request: {
-    block_id: string;
-    resolution_notes: string;
-    resolved_by: string;
+    blockId: string;
+    resolutionNotes: string;
+    resolvedBy: string;
   }): void {
-    if (!request.block_id) {
+    if (!request.blockId) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Block ID is required');
     }
-    if (!request.resolution_notes || request.resolution_notes.trim().length === 0) {
+    if (!request.resolutionNotes || request.resolutionNotes.trim().length === 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Resolution notes are required');
     }
-    if (request.resolution_notes.length > 1000) {
+    if (request.resolutionNotes.length > 1000) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Resolution notes too long (max 1000 characters)');
     }
-    if (!request.resolved_by) {
+    if (!request.resolvedBy) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Resolved by is required');
     }
   }
@@ -66,22 +66,22 @@ export class PaymentBlockingValidation {
    * Validate create payment control action request
    */
   static validateCreatePaymentControlActionRequest(request: {
-    payment_block_id: string;
-    action_type: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
+    paymentBlockId: string;
+    actionType: 'review' | 'approve' | 'reject' | 'request_document' | 'escalate';
     description: string;
-    assigned_to?: string;
-    due_date?: string;
-    created_by?: string;
+    assignedTo?: string;
+    dueDate?: string;
+    createdBy?: string;
   }): void {
-    if (!request.payment_block_id) {
+    if (!request.paymentBlockId) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment block ID is required');
     }
-    if (!request.action_type) {
+    if (!request.actionType) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Action type is required');
     }
     const validActionTypes = ['review', 'approve', 'reject', 'request_document', 'escalate'];
-    if (!validActionTypes.includes(request.action_type)) {
-      throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid action type: ${request.action_type}`);
+    if (!validActionTypes.includes(request.actionType)) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, `Invalid action type: ${request.actionType}`);
     }
     if (!request.description || request.description.trim().length === 0) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Description is required');
@@ -89,8 +89,8 @@ export class PaymentBlockingValidation {
     if (request.description.length > 1000) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Description too long (max 1000 characters)');
     }
-    if (request.due_date) {
-      const dueDate = new Date(request.due_date);
+    if (request.dueDate) {
+      const dueDate = new Date(request.dueDate);
       const now = new Date();
       if (dueDate <= now) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Due date must be in the future');
@@ -178,11 +178,11 @@ export class PaymentBlockingValidation {
    * Check for duplicate active blocks on the same payment request
    */
   static checkForDuplicateBlocks(existingBlocks: Array<{
-    payment_request_id: string;
+    paymentRequestId: string;
     status: string;
   }>, newPaymentRequestId: string): void {
     const activeBlocks = existingBlocks.filter(
-      block => block.payment_request_id === newPaymentRequestId && block.status === 'active'
+      block => block.paymentRequestId === newPaymentRequestId && block.status === 'active'
     );
     if (activeBlocks.length > 0) {
       throw new AppError(

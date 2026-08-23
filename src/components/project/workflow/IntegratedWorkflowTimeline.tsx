@@ -234,8 +234,8 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
         type: 'step',
         id: step.id,
         title: step.name,
-        date: step.start_date || phaseStartDate || '',
-        endDate: step.end_date,
+        date: step.startDate || phaseStartDate || '',
+        endDate: step.endDate,
         status: step.status,
         progress: step.progress,
         data: step,
@@ -319,7 +319,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       <Card className="overflow-hidden">
         <div className={cn(
           "p-4",
-          progress?.criticalPath_status === 'delayed' 
+          progress?.criticalPathStatus === 'delayed' 
             ? "bg-gradient-to-r from-destructive/10 to-transparent" 
             : "bg-gradient-to-r from-primary/10 to-transparent"
         )}>
@@ -337,20 +337,20 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {progress?.schedulePerformance_index !== undefined && (
+              {progress?.schedulePerformanceIndex !== undefined && (
                 <Badge 
-                  variant={progress.schedulePerformance_index >= 1 ? 'default' : 'destructive'}
+                  variant={progress.schedulePerformanceIndex >= 1 ? 'default' : 'destructive'}
                   className={cn(
                     "flex items-center gap-1",
-                    progress.schedulePerformance_index >= 1 && "bg-success"
+                    progress.schedulePerformanceIndex >= 1 && "bg-success"
                   )}
                 >
-                  {progress.schedulePerformance_index >= 1 ? (
+                  {progress.schedulePerformanceIndex >= 1 ? (
                     <TrendingUp className="h-3 w-3" />
                   ) : (
                     <TrendingDown className="h-3 w-3" />
                   )}
-                  SPI: {progress.schedulePerformance_index}
+                  SPI: {progress.schedulePerformanceIndex}
                 </Badge>
               )}
               <Button size="sm" variant="outline" onClick={handleAddMilestone}>
@@ -384,13 +384,13 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 <span>{progress.upcomingMilestones.length} à venir (14j)</span>
               </div>
             )}
-            {progress?.criticalPath_status && progress.criticalPath_status !== 'on_track' && (
+            {progress?.criticalPathStatus && progress.criticalPathStatus !== 'on_track' && (
               <div className={cn(
                 "flex items-center gap-1.5",
-                progress.criticalPath_status === 'delayed' ? 'text-destructive' : 'text-warning'
+                progress.criticalPathStatus === 'delayed' ? 'text-destructive' : 'text-warning'
               )}>
                 <ShieldCheck className="h-4 w-4" />
-                <span>Chemin critique {progress.criticalPath_status === 'delayed' ? 'en retard' : 'à risque'}</span>
+                <span>Chemin critique {progress.criticalPathStatus === 'delayed' ? 'en retard' : 'à risque'}</span>
               </div>
             )}
           </div>

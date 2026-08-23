@@ -200,7 +200,7 @@ export class WorkflowOrchestrator {
       };
       const decompte = await this.decompteCalculator.calculatePhaseDecompte(decompteRequest);
        
-       const netPayable = decompte.net_payable ?? 0;
+       const netPayable = decompte.netPayable ?? 0;
        if (netPayable <= 0) {
          return { success: false, error: 'Aucun montant payable' };
        }
@@ -236,7 +236,7 @@ export class WorkflowOrchestrator {
       this.emit(paymentEvent);
 
       // 4. Mettre à jour le budget restant
-      const remainingBudget = (decompte.contract_amount || 0) - (decompte.cumulative_amount || 0);
+      const remainingBudget = (decompte.contractAmount || 0) - (decompte.cumulativeAmount || 0);
       const budgetEvent: WorkflowEvent = {
         type: 'BUDGET_UPDATED',
         payload: { remaining: remainingBudget },
@@ -371,7 +371,7 @@ export class WorkflowOrchestrator {
       const milestoneDTO = MilestoneTransformer.toDTO(milestone);
       await this.milestoneRepository.update(milestone.id, {
         status: milestone.status as string,
-        completion_date: milestone.completionDate || undefined
+        completionDate: milestone.completionDate || undefined
       });
     } catch (error) {
       console.error('Failed to update milestone in repository:', error);

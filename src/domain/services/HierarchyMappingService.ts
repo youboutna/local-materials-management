@@ -6,9 +6,9 @@ import { HierarchyMember } from '@/domain/entities/Hierarchy';
 
 // Template permissions (from OrganizationalHierarchyManager)
 export interface TemplatePermissions {
-  can_approve_projects: boolean;
-  can_approve_payments: boolean;
-  can_escalate_to_director: boolean;
+  canApproveProjects: boolean;
+  canApprovePayments: boolean;
+  canEscalateToDirector: boolean;
 }
 
 // Position definition from template
@@ -64,8 +64,8 @@ export class HierarchyMappingService {
   static templateToDomainPermissions(template: TemplatePermissions): Permission[] {
     const permissions: Permission[] = [];
     
-    if (template.can_approve_projects) permissions.push('approve_projects');
-    if (template.can_approve_payments) permissions.push('approve_payments');
+    if (template.canApproveProjects) permissions.push('approve_projects');
+    if (template.canApprovePayments) permissions.push('approve_payments');
     // can_escalate_to_director is not a domain permission - it's organizational logic
     
     return permissions;

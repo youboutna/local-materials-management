@@ -126,17 +126,17 @@ export class PVGeneratorService {
       // Persist PV via repository
       try {
         const saved = await this.pvRepository.savePV({
-          inspection_id: request.inspectionId,
-          pv_number: pvNumber,
-          pv_type: request.pvType,
+          inspectionId: request.inspectionId,
+          pvNumber: pvNumber,
+          pvType: request.pvType,
           title: generatedPV.title,
           content: pvContent,
-          pdf_url: pdfUrl,
+          pdfUrl: pdfUrl,
           status: generatedPV.status,
-          generated_by: generatedPV.generatedBy,
+          generatedBy: generatedPV.generatedBy,
           version: generatedPV.version,
           metadata: { header: generatedPV.header, conclusions: generatedPV.conclusions },
-          generated_at: generatedPV.generatedAt,
+          generatedAt: generatedPV.generatedAt,
         });
         if (saved && saved.id) {
           generatedPV.id = saved.id;
@@ -298,7 +298,7 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
       const record = await this.pvRepository.getPVById(pvId);
-      return (record?.pdf_url as string | undefined) ?? null;
+      return (record?.pdfUrl as string | undefined) ?? null;
     } catch (error) {
       console.error('PVGeneratorService.downloadPV failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download PV');

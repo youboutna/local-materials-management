@@ -55,17 +55,6 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
       lastVerified: data.last_verified ?? undefined,
       verifiedBy: data.verified_by ?? undefined,
       // Legacy snake_case
-      project_id: data.project_id,
-      contractor_id: data.contractor_id,
-      contractor_name: data.contractor_name,
-      insurance_company: data.insurance_company,
-      policy_number: data.policy_number,
-      coverage_amount: data.coverage_amount,
-      coverage_type: data.coverage_type,
-      valid_from: data.valid_from,
-      valid_until: data.valid_until,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
     };
 
     // Utiliser le transformer pour convertir DTO → Entity
@@ -79,24 +68,24 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
     // `contractor_id` est un uuid en base : une chaîne vide provoque une 400
     // (invalid input syntax for type uuid). On normalise donc en null.
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const contractorId = entity.contractor_id && UUID_RE.test(entity.contractor_id)
-      ? entity.contractor_id
+    const contractorId = entity.contractorId && UUID_RE.test(entity.contractorId)
+      ? entity.contractorId
       : null;
 
     return {
-      project_id: entity.project_id,
+      project_id: entity.projectId,
       contractor_id: contractorId as unknown as string,
-      contractor_name: entity.contractor_name || null as unknown as string,
-      insurance_company: entity.insurance_company,
-      policy_number: entity.policy_number,
-      coverage_amount: entity.coverage_amount,
-      coverage_type: entity.coverage_type || entity.insurance_type || 'responsabilite_civile',
-      valid_from: entity.valid_from,
-      valid_until: entity.valid_until,
-      certificate_url: entity.certificate_url ?? null,
+      contractor_name: entity.contractorName || null as unknown as string,
+      insurance_company: entity.insuranceCompany,
+      policy_number: entity.policyNumber,
+      coverage_amount: entity.coverageAmount,
+      coverage_type: entity.coverageType || entity.insuranceType || 'responsabilite_civile',
+      valid_from: entity.validFrom,
+      valid_until: entity.validUntil,
+      certificate_url: entity.certificateUrl ?? null,
       status: entity.status,
-      last_verified: entity.last_verified ?? null,
-      verified_by: entity.verified_by ?? null,
+      last_verified: entity.lastVerified ?? null,
+      verified_by: entity.verifiedBy ?? null,
       notes: entity.notes ?? null,
     };
   }
@@ -153,7 +142,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
   }
 
   async create(
-    certificate: Omit<InsuranceCertificateEntity, 'id' | 'created_at' | 'updated_at'>
+    certificate: Omit<InsuranceCertificateEntity, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<InsuranceCertificateEntity> {
     try {
       const dbData = this.mapToDB(certificate as InsuranceCertificateEntity);

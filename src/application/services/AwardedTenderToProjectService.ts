@@ -59,7 +59,7 @@ export class AwardedTenderToProjectService {
       // Reload items pour l'étape plan de charge, sans bloquer si indisponibles.
       if (req.winningEstimateId) {
         try {
-          rawItems = await this.estimateService.getEstimateItems({ estimate_id: req.winningEstimateId });
+          rawItems = await this.estimateService.getEstimateItems({ estimateId: req.winningEstimateId });
         } catch (err) {
           warnings.push(`Items DQE non rechargés pour plan de charge : ${(err as Error).message}`);
         }
@@ -68,7 +68,7 @@ export class AwardedTenderToProjectService {
         projectId: req.projectId, phases: payload.phases.length, rawItems: rawItems.length,
       });
     } else {
-      rawItems = await this.estimateService.getEstimateItems({ estimate_id: req.winningEstimateId });
+      rawItems = await this.estimateService.getEstimateItems({ estimateId: req.winningEstimateId });
       if (!rawItems || rawItems.length === 0) {
         warnings.push('Le DQE du lauréat est vide — aucune phase ne sera générée.');
       }
@@ -162,26 +162,26 @@ export class AwardedTenderToProjectService {
 
       // Plan de charge RH / Prestataires (v10 §2 Lot 4) — insertion phase_employees.
       const lotKey = (phase.name || '').trim();
-      const lotItems = rawItems.filter((it) => (it.category || '').trim() === lotKey && it.resource_kind);
+      const lotItems = rawItems.filter((it) => (it.category || '').trim() === lotKey && it.resourceKind);
       for (const it of lotItems) {
         try {
           const row = {
             phase_id: phaseId!,
-            employee_name: it.resource_kind === 'internal_qualification'
-              ? (it.description || it.item_code || 'Qualification')
-              : (it.supplier_id ? `Prestataire ${it.supplier_id.slice(0, 8)}` : (it.description || 'Prestataire')),
-            employee_role: it.resource_kind === 'internal_qualification'
+            employee_name: it.resourceKind === 'internal_qualification'
+              ? (it.description || it.itemCode || 'Qualification')
+              : (it.supplierId ? `Prestataire ${it.supplierId.slice(0, 8)}` : (it.description || 'Prestataire')),
+            employee_role: it.resourceKind === 'internal_qualification'
               ? 'internal_qualification'
-              : (it.resource_kind === 'external_provider' ? 'external_provider' : 'material'),
-            employee_contact: it.supplier_contract_ref ?? null,
-            daily_rate: it.estimated_hours && it.unit_price
-              ? Number((it.unit_price * (it.estimated_hours / 8)).toFixed(2))
-              : it.unit_price ?? null,
-            is_primary_supplier: it.resource_kind === 'external_provider',
+              : (it.resourceKind === 'external_provider' ? 'external_provider' : 'material'),
+            employee_contact: it.supplierContractRef ?? null,
+            daily_rate: it.estimatedHours && it.unitPrice
+              ? Number((it.unitPrice * (it.estimatedHours / 8)).toFixed(2))
+              : it.unitPrice ?? null,
+            is_primary_supplier: it.resourceKind === 'external_provider',
           };
           await phaseRepo.insertPhaseEmployee(row);
         } catch (err) {
-          warnings.push(`Plan de charge (${it.item_code}) : ${(err as Error).message}`);
+          warnings.push(`Plan de charge (${it.itemCode}) : ${(err as Error).message}`);
         }
       }
     }

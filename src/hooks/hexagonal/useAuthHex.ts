@@ -60,22 +60,22 @@ function toUserDTO(authUser: (Partial<AuthUser> & { id: string }) | null): UserD
   return {
     id: authUser.id,
     email: authUser.email ?? '',
-    fullName: authUser.full_name || authUser.name || authUser.email || '',
+    fullName: authUser.fullName || authUser.name || authUser.email || '',
     primaryRole: authUser.role || 'user',
     phone: authUser.phone,
-    nationalId: authUser.national_id,
-    avatarUrl: authUser.avatar_url,
+    nationalId: authUser.nationalId,
+    avatarUrl: authUser.avatarUrl,
     isActive: true,
-    lastLogin: authUser.last_login,
-    lastLoginAt: authUser.last_login,
-    lastPasswordChange: authUser.last_password_change,
-    failedLoginAttempts: authUser.failed_login_attempts,
-    hasTwoFactor: authUser.two_factor_enabled,
-    emailVerified: authUser.email_verified,
-    phoneVerified: authUser.phone_verified,
+    lastLogin: authUser.lastLogin,
+    lastLoginAt: authUser.lastLogin,
+    lastPasswordChange: authUser.lastPasswordChange,
+    failedLoginAttempts: authUser.failedLoginAttempts,
+    hasTwoFactor: authUser.twoFactorEnabled,
+    emailVerified: authUser.emailVerified,
+    phoneVerified: authUser.phoneVerified,
     userRoles: [],
-    createdAt: authUser.created_at ?? new Date().toISOString(),
-    updatedAt: authUser.updated_at ?? new Date().toISOString(),
+    createdAt: authUser.createdAt ?? new Date().toISOString(),
+    updatedAt: authUser.updatedAt ?? new Date().toISOString(),
   };
 }
 
@@ -125,7 +125,7 @@ export function useAuthHex(): UseAuthHexResult {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      const userName = data.user?.full_name || data.user?.email || 'Utilisateur';
+      const userName = data.user?.fullName || data.user?.email || 'Utilisateur';
       toast.success(`Bienvenue ${userName}!`);
       navigate('/dashboard');
     },

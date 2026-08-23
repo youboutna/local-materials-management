@@ -463,21 +463,21 @@ export type EmployeeDepartmentLegacy = 'engineering' | 'construction' | 'quality
 
 // Legacy request DTOs for backward compatibility
 export interface CreateEmployeeRequestDTO {
-  full_name: string;
+  fullName: string;
   position?: string;
   department?: string;
   email?: string;
   phone?: string;
-  employee_id: string;
+  employeeId: string;
 }
 
 export interface UpdateEmployeeRequestDTO {
-  full_name?: string;
+  fullName?: string;
   position?: string;
   department?: string;
   email?: string;
   phone?: string;
-  is_active?: boolean;
+  isActive?: boolean;
 }
 
 export interface UserResponseDto {

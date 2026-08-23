@@ -7,13 +7,14 @@ import type { BtpTables, BtpTablesInsert, BtpTablesUpdate } from '@/integrations
  */
 
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { camelizeRow, snakeizeRow } from '@/infrastructure/adapters/rowMapping';
 import { IPVGeneratorRepository, SavedPVRecord } from '@/domain/repositories/IPVGeneratorRepository';
 import type { Database } from '@/integrations/supabase/types';
 
 type InspectionPVRow = BtpTables<'inspection_pvs'>;
 
 const toSavedPVRecord = (row: InspectionPVRow): SavedPVRecord => ({
-  ...row,
+  ...camelizeRow<SavedPVRecord>(row),
   metadata: (row.metadata ?? null) as Record<string, unknown> | null,
 });
 type InspectionPVInsert = BtpTablesInsert<'inspection_pvs'>;
@@ -38,25 +39,25 @@ export class PVGeneratorAdapter implements IPVGeneratorRepository {
 
 
   async savePV(pvData: {
-    inspection_id: string;
-    pv_number: string;
-    pv_type: string;
+    inspectionId: string;
+    pvNumber: string;
+    pvType: string;
     title?: string;
     content: string;
-    pdf_url?: string;
+    pdfUrl?: string;
     status?: string;
-    generated_by?: string;
+    generatedBy?: string;
     version?: number;
     metadata?: Record<string, unknown>;
-    generated_at?: string;
+    generatedAt?: string;
   }): Promise<SavedPVRecord> {
     const payload: InspectionPVInsert = {
-      ...pvData,
+      ...(snakeizeRow(pvData) as Record<string, unknown>),
       status: pvData.status ?? 'draft',
       version: pvData.version ?? 1,
-      generated_at: pvData.generated_at ?? new Date().toISOString(),
+      generated_at: pvData.generatedAt ?? new Date().toISOString(),
       metadata: (pvData.metadata ?? null) as InspectionPVInsert['metadata'],
-    };
+    } as InspectionPVInsert;
 
     const { data, error } = await btpClient
       .from('inspection_pvs')

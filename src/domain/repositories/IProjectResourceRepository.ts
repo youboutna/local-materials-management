@@ -4,16 +4,16 @@
 
 export interface ProjectResourceRow {
   id: string;
-  project_id: string;
-  phase_id?: string | null;
+  projectId: string;
+  phaseId?: string | null;
   name: string;
   type: string;
   notes?: string | null;
-  cost_per_unit?: number | null;
+  costPerUnit?: number | null;
   quantity?: number | null;
   unit?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface IProjectResourceRepository {

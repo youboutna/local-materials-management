@@ -112,15 +112,22 @@ export class TenderRepository {
   }
 
   async createSubmission(submissionData: {
-    tender_id: string;
-    user_id: string;
-    supplier_name?: string | null;
-    supplier_email?: string | null;
+    tenderId: string;
+    userId: string;
+    supplierName?: string | null;
+    supplierEmail?: string | null;
     status?: string;
-    submission_date?: string;
+    submissionDate?: string;
   }): Promise<TenderSubmissionRow> {
     const { data, error } = await btpClient.from('tender_submissions')
-      .insert(submissionData)
+      .insert({
+        tender_id: submissionData.tenderId,
+        user_id: submissionData.userId,
+        supplier_name: submissionData.supplierName ?? null,
+        supplier_email: submissionData.supplierEmail ?? null,
+        status: submissionData.status,
+        submission_date: submissionData.submissionDate,
+      } as never)
       .select()
       .single();
     

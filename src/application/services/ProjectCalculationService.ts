@@ -301,7 +301,7 @@ export class ProjectCalculationService {
       inspection.status === 'completed' || (inspection.status as string) === 'completed'
     );
     const passedInspections = inspections.filter(inspection => 
-      inspection.status === 'approved' || (inspection.progressAtInspection || inspection.progress_at_inspection || 0) >= 80
+      inspection.status === 'approved' || (inspection.progressAtInspection || inspection.progressAtInspection || 0) >= 80
     );
     
     const inspectionPassRate = completedInspections.length > 0 
@@ -309,7 +309,7 @@ export class ProjectCalculationService {
       : 0;
     
     const averageInspectionScore = completedInspections.length > 0
-      ? completedInspections.reduce((sum, inspection) => sum + (inspection.progressAtInspection || inspection.progress_at_inspection || 0), 0) / completedInspections.length
+      ? completedInspections.reduce((sum, inspection) => sum + (inspection.progressAtInspection || inspection.progressAtInspection || 0), 0) / completedInspections.length
       : 0;
 
     return {

@@ -201,8 +201,8 @@ export const calculatePaymentMetrics = async (
   // Get blocked payments via service
   const blockedPayments = await paymentBlockingService.getActivePaymentBlocks();
   const filteredBlocked = blockedPayments.filter(block => {
-    const blockedAt = new Date(block.created_at || '');
-    return blockedAt >= startDate && blockedAt <= endDate && !block.resolved_at;
+    const blockedAt = new Date(block.createdAt || '');
+    return blockedAt >= startDate && blockedAt <= endDate && !block.resolvedAt;
   });
 
   const totalPayments = filteredPayments.length;
@@ -224,7 +224,7 @@ export const calculatePaymentMetrics = async (
   // Count blocking reasons
   const blockingReasons: Record<string, number> = {};
   filteredBlocked.forEach(block => {
-    const reasonKey = block.block_reason || 'unknown';
+    const reasonKey = block.blockReason || 'unknown';
     blockingReasons[reasonKey] = (blockingReasons[reasonKey] || 0) + 1;
   });
 

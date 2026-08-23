@@ -395,8 +395,8 @@ export class Employee {
   static fromData(data: EmployeeData): Employee {
     return Employee.create({
       id: data.id,
-      employeeId: data.employee_id,
-      fullName: data.full_name,
+      employeeId: data.employeeId,
+      fullName: data.fullName,
       email: data.email || undefined,
       phone: data.phone || undefined,
       position: data.position || undefined,
@@ -407,15 +407,15 @@ export class Employee {
   toData(): EmployeeData {
     return {
       id: this._id,
-      full_name: this._fullName,
+      fullName: this._fullName,
       position: this._position,
       department: this._department,
       email: this._email,
       phone: this._phone,
-      employee_id: this._employeeId,
-      is_active: this._isActive,
-      created_at: this._createdAt,
-      updated_at: this._updatedAt
+      employeeId: this._employeeId,
+      isActive: this._isActive,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt
     };
   }
 
@@ -476,12 +476,12 @@ export class Employee {
     const displayNames: Record<string, string> = {
       admin: 'Administrateur',
       director: 'Directeur',
-      project_manager: 'Chef de projet',
-      technical_manager: 'Manager technique',
-      engineering_consultant: 'Ingénieur consultant',
+      projectManager: 'Chef de projet',
+      technicalManager: 'Manager technique',
+      engineeringConsultant: 'Ingénieur consultant',
       supervisor: 'Superviseur',
       inspector: 'Inspecteur',
-      finance_manager: 'Manager financier',
+      financeManager: 'Manager financier',
       legal: 'Juriste',
       worker: 'Employé',
       supplier: 'Fournisseur'
@@ -492,7 +492,7 @@ export class Employee {
   private static getRoleLevel(role: string): number {
     const levels: Record<string, number> = {
       admin: 10, director: 9, project_manager: 8,
-      technical_manager: 7, engineering_consultant: 6,
+      technicalManager: 7, engineering_consultant: 6,
       supervisor: 5, inspector: 5, finance_manager: 7,
       legal: 6, worker: 3, supplier: 2
     };
@@ -503,12 +503,12 @@ export class Employee {
     const permissions: Record<string, Permission[]> = {
       admin: ['approve_projects', 'approve_payments', 'schedule_inspections', 'execute_inspections', 'manage_team', 'manage_users', 'manage_system'],
       director: ['approve_projects', 'approve_payments', 'schedule_inspections', 'manage_team', 'manage_users'],
-      project_manager: ['approve_projects', 'schedule_inspections', 'execute_inspections', 'manage_team'],
-      technical_manager: ['schedule_inspections', 'execute_inspections', 'manage_team'],
-      engineering_consultant: ['schedule_inspections', 'execute_inspections'],
+      projectManager: ['approve_projects', 'schedule_inspections', 'execute_inspections', 'manage_team'],
+      technicalManager: ['schedule_inspections', 'execute_inspections', 'manage_team'],
+      engineeringConsultant: ['schedule_inspections', 'execute_inspections'],
       supervisor: ['execute_inspections', 'manage_team'],
       inspector: ['execute_inspections'],
-      finance_manager: ['approve_payments'],
+      financeManager: ['approve_payments'],
       legal: [], worker: [], supplier: []
     };
     return permissions[role] || [];

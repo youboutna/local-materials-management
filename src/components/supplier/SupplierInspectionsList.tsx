@@ -148,7 +148,7 @@ export const SupplierInspectionsList: React.FC<SupplierInspectionsListProps> = (
                           <CheckCircle className="h-4 w-4" />
                           <span className="font-medium"><T k="auto.supplierinspectionslist.progres" fallback="Progrès:" /></span>
                           <span className="font-semibold text-primary">
-                            {inspection.progress_at_inspection}%
+                            {inspection.progressAtInspection}%
                           </span>
                         </div>
 

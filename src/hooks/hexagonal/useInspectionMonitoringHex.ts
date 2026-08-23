@@ -116,7 +116,7 @@ export function useInspectionMonitoringHex(options?: {
       const authService = getAuthService();
       const user = await authService.getCurrentUser();
       if (!user) return null;
-      return { type: 'user', name: user.full_name || user.email || '' };
+      return { type: 'user', name: user.fullName || user.email || '' };
     }
   });
 

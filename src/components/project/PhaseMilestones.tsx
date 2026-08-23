@@ -59,7 +59,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
       const templates = getDefaultPhaseMilestones();
       const base = Date.now();
       for (const tpl of templates) {
-        const target = new Date(base + (tpl.relative_offset_days ?? 0) * 86400000);
+        const target = new Date(base + (tpl.relativeOffsetDays ?? 0) * 86400000);
         await createMilestone({
           projectId,
           phaseId,

@@ -63,7 +63,7 @@ export class PaymentControlActionsService {
       // Create task assignment notification for each recipient
       for (const recipientId of values.recipientIds) {
         await this.notificationRepository.createNotification({
-          recipient_id: recipientId,
+          recipientId: recipientId,
           title: values.title,
           message: values.message,
           type: 'info',
@@ -100,7 +100,7 @@ export class PaymentControlActionsService {
       // Create notification records for tracking
       for (const recipientId of values.recipientIds) {
         await this.notificationRepository.createNotification({
-          recipient_id: recipientId,
+          recipientId: recipientId,
           title: values.title,
           message: values.message,
           type: 'info',
@@ -136,7 +136,7 @@ export class PaymentControlActionsService {
       
       for (const recipientId of values.recipientIds) {
         await this.notificationRepository.createNotification({
-          recipient_id: recipientId,
+          recipientId: recipientId,
           title: `Appel programmé: ${values.title}`,
           message: values.message,
           type: 'info',
@@ -172,7 +172,7 @@ export class PaymentControlActionsService {
       
       for (const recipientId of values.recipientIds) {
         await this.notificationRepository.createNotification({
-          recipient_id: recipientId,
+          recipientId: recipientId,
           title: values.title,
           message: values.message,
           type: 'info',
@@ -203,7 +203,7 @@ export class PaymentControlActionsService {
       // Hierarchy notification logic
       for (const recipientId of values.recipientIds) {
         await this.notificationRepository.createNotification({
-          recipient_id: recipientId,
+          recipientId: recipientId,
           title: values.title,
           message: values.message,
           type: 'warning',
@@ -241,7 +241,7 @@ export class PaymentControlActionsService {
       
       for (const recipientId of values.recipientIds) {
         await this.notificationRepository.createNotification({
-          recipient_id: recipientId,
+          recipientId: recipientId,
           title: `Courrier: ${values.title}`,
           message: values.message,
           type: 'info',

@@ -139,12 +139,12 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       const now = new Date().toISOString();
       
       const milestoneData = {
-        project_id: data.project_id,
-        phase_id: data.phase_id || null,
+        project_id: data.projectId,
+        phase_id: data.phaseId || null,
         title: data.title,
         description: data.description || null,
-        target_date: data.target_date,
-        completion_date: data.completion_date || null,
+        target_date: data.targetDate,
+        completion_date: data.completionDate || null,
         status: data.status || 'pending',
         priority: data.priority || 'normal',
         milestone_type: data.type || 'checkpoint',
@@ -152,10 +152,10 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         predecessor_ids: data.dependencies || [],
 
         notes: data.notes || null,
-        stage_type: data.stage_type || data.type || null,
-        material_usage: (data.material_usage as unknown as Json) || [],
-        material_cost_estimate: data.material_cost_estimate || null,
-        actual_material_cost: data.actual_material_cost || null,
+        stage_type: data.stageType || data.type || null,
+        material_usage: (data.materialUsage as unknown as Json) || [],
+        material_cost_estimate: data.materialCostEstimate || null,
+        actual_material_cost: data.actualMaterialCost || null,
         created_at: now,
         updated_at: now
       };
@@ -188,8 +188,8 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         ...rest,
         ...(type !== undefined ? { milestone_type: type } : {}),
         ...(dependencies !== undefined ? { predecessor_ids: dependencies } : {}),
-        material_usage: data.material_usage !== undefined
-          ? (data.material_usage as unknown as Json)
+        material_usage: data.materialUsage !== undefined
+          ? (data.materialUsage as unknown as Json)
           : undefined,
         updated_at: new Date().toISOString()
       };
@@ -243,7 +243,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
     try {
       const updateData: UpdateMilestoneData = {
         status: 'completed',
-        completion_date: completionDate || new Date().toISOString(),
+        completionDate: completionDate || new Date().toISOString(),
       };
 
       return await this.update(id, updateData);

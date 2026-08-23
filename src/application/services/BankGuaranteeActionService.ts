@@ -94,26 +94,26 @@ export class BankGuaranteeActionService {
   async createBankGuaranteeAction(actionData: CreateBankGuaranteeActionRequestDto): Promise<BankGuaranteeActionDTO> {
     try {
       // Validate required fields
-      if (!actionData.guarantee_id || !actionData.action_type || !actionData.description || !actionData.created_by) {
+      if (!actionData.guaranteeId || !actionData.actionType || !actionData.description || !actionData.createdBy) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Missing required fields for action');
       }
 
       // Get the existing guarantee
-      const guarantee = await this.bankGuaranteeRepository.getById(actionData.guarantee_id);
+      const guarantee = await this.bankGuaranteeRepository.getById(actionData.guaranteeId);
       if (!guarantee) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Bank guarantee not found');
       }
 
       const now = new Date().toISOString();
-      const actionType = this.normalizeActionType(actionData.action_type);
+      const actionType = this.normalizeActionType(actionData.actionType);
 
       // Create full action record
       const actionRecord: BankGuaranteeActionDTO = {
         id: `action-${Date.now()}`,
-        guaranteeId: actionData.guarantee_id,
+        guaranteeId: actionData.guaranteeId,
         type: actionType,
         status: 'pending',
-        performedBy: actionData.created_by,
+        performedBy: actionData.createdBy,
         notes: actionData.description,
         createdAt: now,
         updatedAt: now
@@ -121,7 +121,7 @@ export class BankGuaranteeActionService {
 
       // Update guarantee with new action
       await this.bankGuaranteeRepository.update(
-        actionData.guarantee_id, 
+        actionData.guaranteeId, 
         {
           actions: [...(guarantee.actions || []), actionRecord]
         }
@@ -159,7 +159,7 @@ export class BankGuaranteeActionService {
         guaranteeId: '',
         type: 'notification' as const,
         status: updates.status || 'pending',
-        performedBy: updates.assigned_to || '',
+        performedBy: updates.assignedTo || '',
         notes: updates.description,
         createdAt: now,
         updatedAt: now
@@ -274,13 +274,13 @@ export class BankGuaranteeActionService {
       return {
         total: actions.length,
         pending: 0,
-        in_progress: 0,
+        inProgress: 0,
         completed: actions.length,
         cancelled: 0,
         failed: 0,
         overdue: 0,
-        by_type: {},
-        by_priority: {}
+        byType: {},
+        byPriority: {}
       };
     } catch (error) {
       console.error('BankGuaranteeActionService.getGuaranteeActionStats failed:', error);

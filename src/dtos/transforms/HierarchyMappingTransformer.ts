@@ -27,9 +27,9 @@ export class HierarchyMappingTransformer {
       level: dto.level,
       parent: dto.parent,
       permissions: {
-        can_approve_projects: dto.permissions.can_approve_projects,
-        can_approve_payments: dto.permissions.can_approve_payments,
-        can_escalate_to_director: dto.permissions.can_escalate_to_director
+        canApproveProjects: dto.permissions.canApproveProjects,
+        canApprovePayments: dto.permissions.canApprovePayments,
+        canEscalateToDirector: dto.permissions.canEscalateToDirector
       }
     };
   }
@@ -43,9 +43,9 @@ export class HierarchyMappingTransformer {
       level: domain.level,
       parent: domain.parent,
       permissions: {
-        can_approve_projects: domain.permissions.can_approve_projects,
-        can_approve_payments: domain.permissions.can_approve_payments,
-        can_escalate_to_director: domain.permissions.can_escalate_to_director
+        canApproveProjects: domain.permissions.canApproveProjects,
+        canApprovePayments: domain.permissions.canApprovePayments,
+        canEscalateToDirector: domain.permissions.canEscalateToDirector
       }
     };
   }
@@ -152,13 +152,13 @@ export class HierarchyMappingTransformer {
     if (typeof dto.permissions !== 'object') {
       errors.push('Les permissions sont obligatoires');
     } else {
-      if (typeof dto.permissions.can_approve_projects !== 'boolean') {
+      if (typeof dto.permissions.canApproveProjects !== 'boolean') {
         errors.push('can_approve_projects doit être un booléen');
       }
-      if (typeof dto.permissions.can_approve_payments !== 'boolean') {
+      if (typeof dto.permissions.canApprovePayments !== 'boolean') {
         errors.push('can_approve_payments doit être un booléen');
       }
-      if (typeof dto.permissions.can_escalate_to_director !== 'boolean') {
+      if (typeof dto.permissions.canEscalateToDirector !== 'boolean') {
         errors.push('can_escalate_to_director doit être un booléen');
       }
     }

@@ -14,17 +14,17 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
   private rowToEntity(row: any): TenderDocument {
     return TenderDocumentTransformer.toEntity({
       id: row.id,
-      project_id: row.project_id,
-      document_id: row.document_id,
+      projectId: row.project_id,
+      documentId: row.document_id,
       category: row.category,
       subcategory: row.subcategory,
-      is_required: row.is_required,
-      is_submitted: row.is_submitted,
-      submission_date: row.submission_date,
-      reviewer_notes: row.reviewer_notes,
+      isRequired: row.is_required,
+      isSubmitted: row.is_submitted,
+      submissionDate: row.submission_date,
+      reviewerNotes: row.reviewer_notes,
       status: row.status,
-      created_at: row.created_at,
-      updated_at: row.updated_at
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
     });
   }
 
@@ -463,19 +463,19 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
 
       return (stepDocs || []).map((doc: any) => ({
         id: doc.id,
-        tender_id: tenderId,
-        document_id: doc.document_id,
+        tenderId: tenderId,
+        documentId: doc.document_id,
         category: (doc.document_type as string) || 'administrative',
         subcategory: 'workflow_step',
-        is_required: doc.is_required,
-        reviewer_notes: doc.reviewer_notes,
+        isRequired: doc.is_required,
+        reviewerNotes: doc.reviewer_notes,
         status: doc.status,
-        created_at: doc.created_at,
-        updated_at: doc.created_at,
+        createdAt: doc.created_at,
+        updatedAt: doc.created_at,
         document: doc.document,
-        step_info: {
-          step_title: doc.step?.title,
-          step_number: doc.step?.step_number
+        stepInfo: {
+          stepTitle: doc.step?.title,
+          stepNumber: doc.step?.step_number
         }
       }));
     } catch (error) {

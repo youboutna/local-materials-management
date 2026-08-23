@@ -7,7 +7,7 @@ export interface TenderOption {
   id: string;
   title: string;
   reference: string;
-  project_id: string;
+  projectId: string;
   status?: string;
 }
 
@@ -31,45 +31,45 @@ export interface CreateTenderDocumentRequestDto {
 
 export interface TenderSharingSecretDTO {
   id: string;
-  tender_id: string;
-  secret_code: string;
-  supplier_email: string;
-  supplier_id: string;
-  expires_at: string;
-  max_access_count: number;
-  current_access_count?: number;
-  workflow_phase?: string;
-  workflow_stage?: string;
-  allowed_document_ids?: string[];
+  tenderId: string;
+  secretCode: string;
+  supplierEmail: string;
+  supplierId: string;
+  expiresAt: string;
+  maxAccessCount: number;
+  currentAccessCount?: number;
+  workflowPhase?: string;
+  workflowStage?: string;
+  allowedDocumentIds?: string[];
   metadata?: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-  is_active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  isActive?: boolean;
 }
 
 export interface CreateSharingSecretDTO {
-  tender_id: string;
-  supplier_email: string;
-  supplier_id?: string;
-  expires_at: string;
-  max_access_count?: number;
-  workflow_phase?: string;
-  workflow_stage?: string;
-  allowed_document_ids?: string[];
+  tenderId: string;
+  supplierEmail: string;
+  supplierId?: string;
+  expiresAt: string;
+  maxAccessCount?: number;
+  workflowPhase?: string;
+  workflowStage?: string;
+  allowedDocumentIds?: string[];
   metadata?: Record<string, unknown>;
 }
 
 export interface CreateAccessLogDTO {
-  secret_id: string;
-  accessed_at: string;
-  ip_address: string;
-  user_agent: string;
+  secretId: string;
+  accessedAt: string;
+  ipAddress: string;
+  userAgent: string;
 }
 
 export interface ValidateSecretResponseDTO {
   valid: boolean;
-  remaining_accesses?: number;
-  expires_at?: string;
-  tender_id?: string;
+  remainingAccesses?: number;
+  expiresAt?: string;
+  tenderId?: string;
   error?: string;
 }

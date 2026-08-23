@@ -33,8 +33,6 @@ export interface MauritaniaBusinessRulesDTO {
   createdAt?: string;
   updatedAt?: string;
   // Legacy snake_case aliases for compatibility
-  guarantee_retention_rate?: number;
-  retention_release_at_provisional?: number;
 }
 
 // Re-export business rules types with snake_case properties for compatibility
@@ -49,8 +47,6 @@ export const DEFAULT_MAURITANIA_RULES: MauritaniaBusinessRulesDTO = {
   guaranteeRetentionRate: 10,
   retentionReleaseAtProvisional: 50,
   // snake_case aliases
-  guarantee_retention_rate: 0.10,
-  retention_release_at_provisional: 0.50
 };
 
 export type PaymentType = 'initial' | 'progress' | 'retention_release' | 'final';
@@ -62,35 +58,32 @@ export interface DecompteLineDTO {
   quantity: number;
   unit?: string;
   unitPrice: number;
-  unit_price?: number;
   amount: number;
-  total_amount?: number;
+  totalAmount?: number;
   cumulativeAmount: number;
   previousAmount: number;
   category?: 'works' | 'materials' | 'services' | 'other';
-  milestone_id?: string;
-  verification_status?: string;
+  milestoneId?: string;
+  verificationStatus?: string;
 }
 
 export interface VerifiedMilestoneDTO {
-  milestone_id: string;
+  milestoneId: string;
   title: string;
   weight: number;
   amount: number;
-  verified_at: string;
+  verifiedAt: string;
 }
 
 export interface AutomaticDecompteDTO {
   id: string;
   projectId: string;
-  project_id?: string;
   phaseId?: string;
-  phase_id?: string;
   number: number;
-  decompte_number?: number;
+  decompteNumber?: number;
   date: string;
   paymentType: PaymentType;
-  decompte_type?: PaymentType;
+  decompteType?: PaymentType;
   lines: DecompteLineDTO[];
   totalAmount: number;
   retentionAmount: number;
@@ -99,25 +92,24 @@ export interface AutomaticDecompteDTO {
   createdAt: string;
   updatedAt: string;
   // Extended properties for detailed calculations
-  contract_amount?: number;
-  previous_cumulative?: number;
-  current_period_amount?: number;
-  cumulative_amount?: number;
-  retention_rate?: number;
-  retention_amount?: number;
-  previous_retention_released?: number;
-  retention_to_release?: number;
-  net_payable?: number;
-  verified_milestones?: VerifiedMilestoneDTO[];
-  progress_at_decompte?: number;
-  inspection_reference?: string;
-  pv_reference?: string;
-  calculated_at?: string;
-  submitted_at?: string;
-  approved_at?: string;
-  approved_by?: string;
-  paid_at?: string;
-  calculation_log?: Array<{
+  contractAmount?: number;
+  previousCumulative?: number;
+  currentPeriodAmount?: number;
+  cumulativeAmount?: number;
+  retentionRate?: number;
+  previousRetentionReleased?: number;
+  retentionToRelease?: number;
+  netPayable?: number;
+  verifiedMilestones?: VerifiedMilestoneDTO[];
+  progressAtDecompte?: number;
+  inspectionReference?: string;
+  pvReference?: string;
+  calculatedAt?: string;
+  submittedAt?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  paidAt?: string;
+  calculationLog?: Array<{
     timestamp: string;
     action: string;
     details: Record<string, unknown>;

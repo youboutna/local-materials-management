@@ -30,12 +30,12 @@ function toUser(u: any): AuthUser {
   return {
     id: u.id,
     email: u.email,
-    full_name: u.user_metadata?.full_name,
+    fullName: u.user_metadata?.full_name,
     role: u.user_metadata?.role ?? u.role,
     phone: u.phone,
-    national_id: u.user_metadata?.national_id,
-    created_at: u.created_at,
-    updated_at: u.updated_at,
+    nationalId: u.user_metadata?.national_id,
+    createdAt: u.created_at,
+    updatedAt: u.updated_at,
   };
 }
 
@@ -69,9 +69,9 @@ export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepositor
         password: credentials.password,
       });
       const session: AuthSession = {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-        expires_at: String(data.expires_at ?? ''),
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt: String(data.expires_at ?? ''),
         user: toUser(data.user),
       };
       writeSession(session);
@@ -87,9 +87,9 @@ export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepositor
         email: data.email,
         password: data.password,
         data: {
-          full_name: data.full_name,
+          full_name: data.fullName,
           phone: data.phone,
-          national_id: data.national_id,
+          national_id: data.nationalId,
           role: data.role,
         },
       });
@@ -102,8 +102,8 @@ export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepositor
   async signOut() {
     try {
       const s = readSession();
-      if (s?.access_token) {
-        await this.call('/logout', 'POST', {}, s.access_token).catch(() => null);
+      if (s?.accessToken) {
+        await this.call('/logout', 'POST', {}, s.accessToken).catch(() => null);
       }
       writeSession(null);
       return { error: null };
@@ -125,7 +125,7 @@ export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepositor
     try {
       const s = readSession();
       if (!s) throw new Error('No session');
-      const u = await this.call<any>('/user', 'PUT', { password: newPassword }, s.access_token);
+      const u = await this.call<any>('/user', 'PUT', { password: newPassword }, s.accessToken);
       s.user = toUser(u);
       writeSession(s);
       return { error: null };
@@ -138,7 +138,7 @@ export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepositor
     try {
       const s = readSession();
       if (!s) return { user: null, error: null };
-      const u = await this.call<any>('/user', 'GET', undefined, s.access_token);
+      const u = await this.call<any>('/user', 'GET', undefined, s.accessToken);
       return { user: toUser(u), error: null };
     } catch (e) {
       return { user: null, error: e as Error };
@@ -153,7 +153,7 @@ export class GoTrueAuthAdapter extends BaseAuthAdapter implements IAuthRepositor
         '/user',
         'PUT',
         { data: { role } },
-        s.access_token
+        s.accessToken
       );
       s.user = toUser(u);
       writeSession(s);

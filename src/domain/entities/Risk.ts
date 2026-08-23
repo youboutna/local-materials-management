@@ -334,19 +334,19 @@ export class Risk {
   toPlainObject(): Record<string, unknown> {
     return {
       id: this._id,
-      project_id: this._project?.id || null,
+      projectId: this._project?.id || null,
       title: this._title,
       description: this._description,
       probability: this._probability,
       impact: this._impact,
       status: this._status,
       category: this._category,
-      mitigation_strategy: this._mitigationStrategy,
-      identified_by: this._identifiedBy?.id || null,
-      identified_date: this._identifiedDate,
-      related_tasks: this._relatedTasks,
-      created_at: this._createdAt,
-      updated_at: this._updatedAt
+      mitigationStrategy: this._mitigationStrategy,
+      identifiedBy: this._identifiedBy?.id || null,
+      identifiedDate: this._identifiedDate,
+      relatedTasks: this._relatedTasks,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt
     };
   }
 

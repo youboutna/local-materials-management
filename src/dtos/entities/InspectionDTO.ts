@@ -102,12 +102,9 @@ export interface InspectionDTO extends BaseEntityDTO {
   photos?: string[]; // Photo URLs only for DTO
   
   // Legacy snake_case aliases for backward compatibility (Rule #9)
-  project_id?: string;        // Legacy: Use projectId instead
   date?: string;             // Legacy: Use scheduledDate instead
-  progress_at_inspection?: number; // Legacy: Use progress instead
-  phase_id?: string;          // Legacy: Use phaseId instead
-  created_at?: string;         // Legacy: Use createdAt from BaseEntityDTO instead
-  updated_at?: string;         // Legacy: Use updatedAt from BaseEntityDTO instead
+  createdAt: string;         // Legacy: Use createdAt from BaseEntityDTO instead
+  updatedAt: string;         // Legacy: Use updatedAt from BaseEntityDTO instead
   videos?: string[]; // Video URLs only for DTO
   reports?: string[]; // Report URLs only for DTO
   tags?: string[];
@@ -115,7 +112,7 @@ export interface InspectionDTO extends BaseEntityDTO {
 
   // Supabase table fields for adapter compatibility
   comments?: string | null;
-  payment_type?: string | null;
+  paymentType?: string | null;
 }
 
 /**
@@ -439,11 +436,11 @@ export interface InspectionExecutionDataDTO {
 export interface InspectionPaymentValidationDTO {
   status: string;
   comments: string;
-  payment_type: string;
-  payment_status?: string;
-  project_id?: string;
-  inspection_id?: string;
-  rejection_notes?: string;
+  paymentType: string;
+  paymentStatus?: string;
+  projectId?: string;
+  inspectionId?: string;
+  rejectionNotes?: string;
 }
 
 // Types moved from InspectionExecutionService
@@ -463,13 +460,13 @@ export interface InspectionExecutionData {
   measurements?: unknown[];
   participants?: unknown[];
   location?: { latitude: number; longitude: number; address?: string; captured_at?: string };
-  started_at?: Date | string;
-  completed_at?: string;
-  overall_conformity?: ConformityStatus;
-  progress_percentage?: number;
+  startedAt?: Date | string;
+  completedAt?: string;
+  overallConformity?: ConformityStatus;
+  progressPercentage?: number;
   summary?: string;
   recommendations?: string[];
-  corrective_actions_required?: boolean;
+  correctiveActionsRequired?: boolean;
 }
 
 export interface InspectionObservation {
@@ -484,7 +481,6 @@ export interface InspectionObservation {
   type?: string;
   category?: string;
   conformity?: string;
-  created_at?: string;
 }
 
 export interface ChecklistItem {
@@ -507,9 +503,7 @@ export interface InspectionDocumentEntity {
   uploadedAt: string;
   uploadedBy?: string;
   size?: number;
-  mime_type?: string;
-  uploaded_at?: string;
-  uploaded_by?: string;
+  mimeType?: string;
 }
 
 // Additional types for UI compatibility
@@ -530,7 +524,7 @@ export const OBSERVATION_CATEGORIES = {
     'Matériaux', 'Dimensions', 'Alignement', 'Nivellement',
     'Étanchéité', 'Isolation', 'Acoustique', 'Esthétique'
   ],
-  non_conformity: [
+  nonConformity: [
     'Matériaux non conformes', 'Dimensions incorrectes', 'Mauvaise exécution', 'Non-respect normes'
   ],
 };
