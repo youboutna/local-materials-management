@@ -13,7 +13,6 @@
  */
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { BoqCalculatorService } from './BoqCalculatorService';
 import { DocumentIdentityService } from './DocumentIdentityService';
 import { documentUnitLabel } from '@/config/referentials/boq/unit-codes.referential';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
@@ -89,7 +88,7 @@ function buildTerms(ctx: BoqPdfContext, args: { validity: number; validUntil: st
   const tender = ctx.tenderTitle ? ` — appel d’offres « ${ctx.tenderTitle} »` : '';
   return [
     'CONDITIONS GÉNÉRALES:',
-    `1. Document : ${ctx.title}${ctx.documentStage ? ` (${ctx.documentStage})` : ''} — référence ${args.reference}, rattaché au ${scope}${tender}.`,
+    `1. Document : ${ctx.title}${ctx.documentStage && !ctx.title.toLowerCase().includes(ctx.documentStage.toLowerCase()) ? ` (${ctx.documentStage})` : ''} — référence ${args.reference}, rattaché au ${scope}${tender}.`,
     `2. Validité de l'offre : ${args.validity} jours, soit jusqu'au ${args.validUntil}.`,
     `3. Devise et prix : montants exprimés en ${args.currency}, fermes et définitifs hors révision exceptionnelle.`,
     `4. Fiscalité appliquée : TVA ${formatNumber2(args.vatRate * 100)} % — retenue à la source ${formatNumber2(args.rasRate * 100)} % sur le montant hors taxes.`,
@@ -245,22 +244,10 @@ export const BoqPdfRenderer = {
     y += 20;
     if (y > 640) { doc.addPage(); y = 60; }
     y = section(doc, y, 'Récapitulatif financier', COLOR.primary);
-    const totals = BoqCalculatorService.aggregate(
-      normalized.map((n) => ({
-        unit: n.line.unit ?? 'u',
-        quantity: n.quantity,
-        unitPrice: n.unitPrice,
-        vatRate: n.vatRate,
-        rasRate: n.rasRate,
-        fees: n.line.fees ?? 0,
-      })),
-      profile,
-    );
     const totalHt = normalized.reduce((s, n) => s + n.totalHt, 0);
     const totalTva = normalized.reduce((s, n) => s + n.totalTva, 0);
     const ras = normalized.reduce((s, n) => s + n.totalHt * n.rasRate, 0);
     const totalTtc = totalHt + totalTva;
-    void totals;
 
     doc.setDrawColor(226, 232, 240);
     const boxH = ras > 0 ? 106 : 90;
