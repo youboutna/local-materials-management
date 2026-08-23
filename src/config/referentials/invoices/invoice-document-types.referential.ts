@@ -85,6 +85,9 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     dqeType: 'contrat',
     statuses: ['recu', 'signe', 'en_cours', 'termine'],
     initialStatus: 'signe',
+    validationStatus: 'signe',
+    requiredSourceStatus: 'accepte',
+    boqSources: ['supplier_bid'],
     next: 'decompte',
     actors: ['manager', 'supplier'],
     requiresPercentage: false,
@@ -99,6 +102,8 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     dqeType: 'decompte',
     statuses: ['demande', 'programme', 'valide', 'rejete', 'paye'],
     initialStatus: 'demande',
+    validationStatus: 'valide',
+    boqSources: ['invoice'],
     next: 'facture',
     actors: ['manager', 'supplier'],
     requiresPercentage: true,
@@ -113,11 +118,14 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     dqeType: 'facture',
     statuses: ['emise', 'approuvee', 'payee'],
     initialStatus: 'emise',
+    validationStatus: 'payee',
+    boqSources: ['invoice'],
     next: null,
     actors: ['manager', 'supplier'],
     requiresPercentage: false,
   },
 ];
+
 
 export const INVOICE_DOCUMENT_TYPE_BY_CODE: Record<InvoiceDocumentType, InvoiceDocumentTypeDef> =
   INVOICE_DOCUMENT_TYPES.reduce((acc, def) => {
