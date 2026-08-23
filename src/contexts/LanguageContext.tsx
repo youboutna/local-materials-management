@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { getI18nService } from '@/application/services/I18nService';
 
 export type Language = 'fr' | 'ar' | 'en';
 
@@ -4840,6 +4841,15 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         setLanguage(lang);
         localStorage.setItem('language', lang);
     };
+
+    /** Synchronise le service de traduction métier + la direction du document. */
+    useEffect(() => {
+        getI18nService().setLanguage(language);
+        if (typeof document !== 'undefined') {
+            document.documentElement.lang = language;
+            document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+        }
+    }, [language]);
 
     const t = (key: string, params?: Record<string, string | number>): string => {
         type Nested = Record<string, unknown>;
