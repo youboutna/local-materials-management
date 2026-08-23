@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/hooks/useI18n';
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -25,6 +26,7 @@ export function PaginationControls({
   showItemsPerPage = true,
   className
 }: PaginationControlsProps) {
+  const { t } = useI18n();
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -75,12 +77,12 @@ export function PaginationControls({
     <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-4 p-4", className)}>
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <span>
-          Affichage de {startItem} à {endItem} sur {totalItems} éléments
+          {t('pagination.showing', { start: startItem, end: endItem, total: totalItems })}
         </span>
         
         {showItemsPerPage && onItemsPerPageChange && (
           <div className="flex items-center gap-2">
-            <span>Éléments par page:</span>
+            <span>{t('pagination.items_per_page')}</span>
             <Select
               value={itemsPerPage.toString()}
               onValueChange={(value) => onItemsPerPageChange(parseInt(value))}
@@ -117,7 +119,7 @@ export function PaginationControls({
           disabled={currentPage === 1}
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only ml-1">Précédent</span>
+          <span className="sr-only sm:not-sr-only ml-1">{t('pagination.previous')}</span>
         </Button>
 
         <div className="flex items-center gap-1">
@@ -146,7 +148,7 @@ export function PaginationControls({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
-          <span className="sr-only sm:not-sr-only mr-1">Suivant</span>
+          <span className="sr-only sm:not-sr-only mr-1">{t('pagination.next')}</span>
           <ChevronRight className="h-4 w-4" />
         </Button>
         
