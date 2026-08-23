@@ -6,11 +6,14 @@
  */
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
+import { DocumentIdentityService } from '@/application/services/boq/DocumentIdentityService';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { documentUnitCefactCode } from '@/config/referentials/boq/unit-codes.referential';
 import {
   getInvoiceDocumentType,
   type InvoiceDocumentType,
 } from '@/config/referentials/invoices/invoice-document-types.referential';
+
 
 export interface FacturXParty {
   name: string;
@@ -114,14 +117,36 @@ export const FacturXTransformer = {
         const pu = l.unitPrice ?? 0;
         const ht = l.totalHt ?? qty * pu;
         const vat = (l.vatRate ?? profile.vatRate) * 100;
+        const label = DocumentIdentityService.lineLabel(l, i);
+        const classification = DocumentIdentityService.lineCode(l);
+        const description = [l.note, l.category].filter(Boolean).join(' — ');
         return `    <ram:IncludedSupplyChainTradeLineItem>
       <ram:AssociatedDocumentLineDocument><ram:LineID>${i + 1}</ram:LineID></ram:AssociatedDocumentLineDocument>
-      <ram:SpecifiedTradeProduct><ram:Name>${esc(l.designation)}</ram:Name></ram:SpecifiedTradeProduct>
+      <ram:SpecifiedTradeProduct>${
+        classification
+          ? `
+        <ram:SellerAssignedID>${esc(classification)}</ram:SellerAssignedID>`
+          : ''
+      }
+        <ram:Name>${esc(label)}</ram:Name>${
+          description
+            ? `
+        <ram:Description>${esc(description)}</ram:Description>`
+            : ''
+        }${
+          classification
+            ? `
+        <ram:DesignatedProductClassification>
+          <ram:ClassCode listID="ZZZ" listVersionID="BTP">${esc(classification)}</ram:ClassCode>
+        </ram:DesignatedProductClassification>`
+            : ''
+        }
+      </ram:SpecifiedTradeProduct>
       <ram:SpecifiedLineTradeAgreement>
         <ram:NetPriceProductTradePrice><ram:ChargeAmount>${money(pu)}</ram:ChargeAmount></ram:NetPriceProductTradePrice>
       </ram:SpecifiedLineTradeAgreement>
       <ram:SpecifiedLineTradeDelivery>
-        <ram:BilledQuantity unitCode="${esc(l.unit || 'C62')}">${qty}</ram:BilledQuantity>
+        <ram:BilledQuantity unitCode="${esc(documentUnitCefactCode(l.unit))}">${money(qty)}</ram:BilledQuantity>
       </ram:SpecifiedLineTradeDelivery>
       <ram:SpecifiedLineTradeSettlement>
         <ram:ApplicableTradeTax>
@@ -136,6 +161,7 @@ export const FacturXTransformer = {
     </ram:IncludedSupplyChainTradeLineItem>`;
       })
       .join('\n');
+
 
     const notes = [
       ctx.note,

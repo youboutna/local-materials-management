@@ -35,6 +35,8 @@ import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referent
 interface Props {
   ctx: BoqContext;
   lines: BoqLineDTO[];
+  /** Libellé métier du projet porté dans l'entête documentaire (D1). */
+  projectName?: string;
   recipientEmail?: string;
   disabled?: boolean;
   onAttachToSubmission?: () => void;
@@ -48,9 +50,10 @@ interface Props {
 
 
 export const BoqActionsBar: React.FC<Props> = ({
-  ctx, lines, recipientEmail, disabled = false,
+  ctx, lines, projectName, recipientEmail, disabled = false,
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
 }) => {
+
   const { toast } = useToast();
   const { t } = useI18n();
   const [busy, setBusy] = useState<string | null>(null);
@@ -125,7 +128,7 @@ export const BoqActionsBar: React.FC<Props> = ({
       if (sig?.signedAt) {
         return {
           by: sig.signedBy ?? '—',
-          at: new Date(sig.signedAt).toLocaleString('fr-FR'),
+          at: new Date(sig.signedAt).toISOString(),
         };
       }
     }
@@ -159,14 +162,18 @@ export const BoqActionsBar: React.FC<Props> = ({
     source: ctx.source,
     contextId: ctx.contextId,
     projectId: ctx.projectId,
+    // D1 — libellé métier du projet (jamais l'identifiant technique).
+    projectTitle: projectName,
     tenderId: ctx.tenderId,
     submissionId: ctx.submissionId,
+    documentId: lines.find((l) => l.documentId)?.documentId ?? null,
     signed: !!signedInfo,
     signedBy: signedInfo?.by,
     signedAt: signedInfo?.at,
     senderName: parties.senderName,
     recipientName: parties.recipientName,
   };
+
 
   const handleGenerate = () => withGuard('pdf', async () => {
     const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
@@ -191,7 +198,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     try {
       const res = await DocumentService.sign(lines, { ...baseDocCtx, signedBy: signer.trim() });
       if (res.ok) {
-        setSignedInfo({ by: signer.trim(), at: new Date().toLocaleString('fr-FR') });
+        setSignedInfo({ by: signer.trim(), at: new Date().toISOString() });
         toast({ title: 'Document signé', description: `Par ${signer.trim()}` });
         setSignOpen(false);
       } else toast({ title: 'Signature échouée', description: res.message, variant: 'destructive' });

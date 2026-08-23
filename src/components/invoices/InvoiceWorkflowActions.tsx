@@ -50,6 +50,8 @@ interface Props {
   contextId: string;
   targetSource?: BoqSource;
   projectId?: string;
+  /** Libellé métier du projet porté dans l'entête documentaire (D1). */
+  projectName?: string;
   tenderId?: string;
   sellerName?: string;
   buyerName?: string;
@@ -73,6 +75,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   contextId,
   targetSource,
   projectId,
+  projectName,
   tenderId,
   sellerName,
   buyerName,
@@ -182,8 +185,11 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
       title: def.label,
       docPrefix: docPrefix ?? def.code,
       projectId,
+      projectTitle: projectName,
       tenderId,
       contextId,
+      documentId: lines.find((l) => l.documentId)?.documentId ?? null,
+      fiscalProfileCode: fiscalProfileCode ?? null,
       businessStatus,
       recipientName: buyerName ?? recipientEmail,
       senderName: sellerName,
