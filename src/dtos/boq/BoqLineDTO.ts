@@ -46,6 +46,14 @@ export interface BoqLineDTO {
   status?: BoqStatus;
   /** Identifiant du document conteneur (regroupe N lignes en un DQE/Devis/Facture). */
   documentId?: string | null;
+  /** Étape du cycle documentaire (référentiel invoice-document-types). */
+  documentType?: string | null;
+  /** Statut métier de l'étape documentaire (ex. « demande », « signe », « payee »). */
+  businessStatus?: string | null;
+  /** TypeCode UNTDID 1001 (310 / 380) porté par le document. */
+  facturxTypeCode?: string | null;
+  /** Avancement facturé (décompte) en pourcentage. */
+  billedPercentage?: number | null;
   /** Titre libre du document (stocké dans metadata.title). */
   title?: string | null;
   /** Horodatage création (lecture seule). */

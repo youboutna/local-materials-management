@@ -59,6 +59,10 @@ export interface BoqDbRow {
   btp_code?: string | null;
   code?: string | null;
   dqe_type?: string | null;
+  document_type?: string | null;
+  business_status?: string | null;
+  facturx_type_code?: string | null;
+  billed_percentage?: number | null;
   line_status?: string | null;
   line_type?: string | null;
   status?: BoqLineDTO['status'] | null;
@@ -138,6 +142,10 @@ export class BoqLineMapper {
       code: row.code ?? row.item_code ?? null,
       category: row.category ?? null,
       dqeType: row.dqe_type ?? null,
+      documentType: row.document_type ?? row.dqe_type ?? null,
+      businessStatus: row.business_status ?? null,
+      facturxTypeCode: row.facturx_type_code ?? null,
+      billedPercentage: row.billed_percentage ?? null,
       metadata: row.metadata ?? null,
       status: row.status ?? 'draft',
       documentId: row.document_id ?? null,
@@ -187,6 +195,10 @@ export class BoqLineMapper {
       code: dto.code ?? dto.btpCode ?? null,
       category: dto.category ?? null,
       dqe_type: dto.dqeType ? normalizeDQEType(dto.dqeType) : null,
+      document_type: dto.documentType ?? (dto.dqeType ? normalizeDQEType(dto.dqeType) : null),
+      business_status: dto.businessStatus ?? null,
+      facturx_type_code: dto.facturxTypeCode ?? null,
+      billed_percentage: dto.billedPercentage ?? null,
       sender_id: dto.submittedBy ?? null,
       status: dto.status ?? 'draft',
       document_id: dto.documentId ?? null,
