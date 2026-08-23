@@ -55,6 +55,20 @@ export function useBoqDocument(filter: BoqLineFilter) {
     mutationFn: (p: { ids: string[]; status: NonNullable<BoqLineDTO['status']>; source: BoqLineDTO['source'] }) => boqRepository.updateStatus(p.ids, p.status, p.source),
   });
 
+  const commitChanges = async (changes: {
+    create: BoqLineDTO[];
+    update: Array<{ id: string; dto: Partial<BoqLineDTO> }>;
+    remove: Array<{ id: string; source: BoqLineDTO['source'] }>;
+  }) => {
+    await Promise.all([
+      changes.create.length ? boqRepository.bulkCreate(changes.create) : Promise.resolve([]),
+      ...changes.update.map(({ id, dto }) => boqRepository.update(id, dto)),
+      ...changes.remove.map(({ id, source }) => boqRepository.delete(id, source)),
+    ]);
+    await invalidate();
+    window.dispatchEvent(new Event('boq-kpi-refresh'));
+  };
+
   return {
     lines: query.data ?? [],
     isLoading: query.isLoading,
@@ -67,6 +81,7 @@ export function useBoqDocument(filter: BoqLineFilter) {
     updateLine: async (id: string, dto: Partial<BoqLineDTO>) => { const r = await updateMut.mutateAsync({ id, dto }); await invalidate(); return r; },
     updateStatus: async (ids: string[], status: NonNullable<BoqLineDTO['status']>, source: BoqLineDTO['source']) => { await updateStatusMut.mutateAsync({ ids, status, source }); await invalidate(); },
     deleteLine: async (id: string, source: BoqLineDTO['source']) => { await deleteMut.mutateAsync({ id, source }); await invalidate(); window.dispatchEvent(new Event('boq-kpi-refresh')); },
+    commitChanges,
     isPending: createMut.isPending || bulkCreateMut.isPending || updateMut.isPending || deleteMut.isPending || updateStatusMut.isPending,
   };
 }

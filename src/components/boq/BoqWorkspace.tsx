@@ -246,7 +246,21 @@ export function BoqWorkspace({
 
   // ---- Tampon local (batch) : « Ajouter » n'écrit PAS en DB.
   //      La persistance atomique se fait via « Enregistrer le DQE » (bulkCreate).
-  const [pendingLines, setPendingLines] = useState<BoqLineDTO[]>([]);
+  const [draftLines, setDraftLines] = useState<BoqLineDTO[]>([]);
+  const [baselineLines, setBaselineLines] = useState<BoqLineDTO[]>([]);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    if (dirty) return;
+    setDraftLines(doc.lines);
+    setBaselineLines(doc.lines);
+  }, [doc.lines, dirty]);
+
+  useEffect(() => {
+    setDirty(false);
+    setDraftLines([]);
+    setBaselineLines([]);
+  }, [documentId, contextId]);
 
   const handleCreate = () => {
     if (!form.designation?.trim()) {
@@ -301,7 +315,8 @@ export function BoqWorkspace({
       note: ['Recommandation', overheadNote].filter(Boolean).join(' • '),
       sourceType: 'avance',
     }));
-    setPendingLines((prev) => [...prev, draft, ...recoDrafts]);
+    setDraftLines((prev) => [...prev, draft, ...recoDrafts]);
+    setDirty(true);
     resetForm();
     setOpenManual(false);
     toast({
@@ -313,14 +328,13 @@ export function BoqWorkspace({
   };
 
 
-  const persistPending = async (silent = false): Promise<boolean> => {
-    if (pendingLines.length === 0) return true;
+  const saveDraftLines = async (silent = false): Promise<boolean> => {
     // Une ligne saisie manuellement n'est enregistrable que si elle est valorisée :
     // désignation obligatoire + quantité ou montant. Les lignes vides (clic sur
     // « Ajouter une ligne » sans saisie) sont écartées silencieusement.
     const isBlank = (l: BoqLineDTO) =>
       !String(l.designation ?? '').trim() && !l.quantity && !l.unitPrice && !l.totalHt;
-    const candidates = pendingLines.filter((l) => !isBlank(l));
+    const candidates = draftLines.filter((l) => !isBlank(l));
     const invalid = candidates.filter((l) => !String(l.designation ?? '').trim() || (!l.quantity && !l.totalHt));
     if (invalid.length) {
       toast({
@@ -330,12 +344,20 @@ export function BoqWorkspace({
       });
       return false;
     }
-    if (candidates.length === 0) { setPendingLines([]); return true; }
+    const baselineIds = new Set(baselineLines.flatMap((line) => line.id ? [line.id] : []));
+    const candidateIds = new Set(candidates.flatMap((line) => line.id ? [line.id] : []));
+    const create = candidates.filter((line) => !line.id);
+    const update = candidates.flatMap((line) => line.id ? [{ id: line.id, dto: line }] : []);
+    const remove = [...baselineIds]
+      .filter((id) => !candidateIds.has(id))
+      .map((id) => ({ id, source }));
     setFinalizing(true);
     try {
-      await doc.bulkCreate(candidates);
-      if (!silent) toast({ title: `${candidates.length} ligne(s) enregistrée(s)` });
-      setPendingLines([]);
+      await doc.commitChanges({ create, update, remove });
+      setBaselineLines(candidates);
+      setDraftLines(candidates);
+      setDirty(false);
+      if (!silent) toast({ title: t('dqe.save_success') });
       return true;
     } catch (e) {
       toast({
@@ -347,55 +369,16 @@ export function BoqWorkspace({
     } finally { setFinalizing(false); }
   };
 
-  // Édition inline d'une ligne déjà persistée : active le bouton « Enregistrer ».
-  const [dirty, setDirty] = useState(false);
-  useEffect(() => { setDirty(false); }, [documentId]);
+  // ---- Édition locale : aucune mutation distante avant « Enregistrer » ------
+  const displayedLines = draftLines;
 
-  const draftLineIds = useMemo(
-    () => doc.lines.flatMap((line) => line.status === 'draft' && line.id ? [line.id] : []),
-    [doc.lines]
-  );
-
-  const saveDraftLines = async (silent = false): Promise<boolean> => {
-    // Enregistrer conserve le statut brouillon. La transition vers `submitted`
-    // appartient exclusivement à l'action métier de transfert.
-    const persisted = await persistPending(true);
-    if (!persisted) return false;
-    setDirty(false);
-    if (!silent) toast({ title: t('dqe.save_success') });
-    return true;
-  };
-
-  // ---- Édition inline (persistée) + tampon (local) ---------------------------
-  const displayedLines = useMemo<BoqLineDTO[]>(
-    () => [...doc.lines, ...pendingLines],
-    [doc.lines, pendingLines],
-  );
-  const persistedCount = doc.lines.length;
-
-  const handlePatch = async (index: number, patch: Partial<BoqLineDTO>) => {
-    // Toute édition (ligne persistée ou tampon) rend le document « à enregistrer ».
+  const handlePatch = (index: number, patch: Partial<BoqLineDTO>) => {
     setDirty(true);
-    if (index >= persistedCount) {
-      setPendingLines((prev) => prev.map((l, i) => (i === index - persistedCount ? { ...l, ...patch } : l)));
-      return;
-    }
-    const line = doc.lines[index];
-    if (!line?.id) return;
-    try { await doc.updateLine(line.id, patch); } catch (e) {
-      toast({ title: 'Échec mise à jour', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
-    }
+    setDraftLines((prev) => prev.map((line, i) => i === index ? { ...line, ...patch } : line));
   };
-  const handleRemove = async (index: number) => {
-    if (index >= persistedCount) {
-      setPendingLines((prev) => prev.filter((_, i) => i !== index - persistedCount));
-      return;
-    }
-    const line = doc.lines[index];
-    if (!line?.id) return;
-    try { await doc.deleteLine(line.id, source); } catch (e) {
-      toast({ title: 'Échec suppression', variant: 'destructive' });
-    }
+  const handleRemove = (index: number) => {
+    setDirty(true);
+    setDraftLines((prev) => prev.filter((_, i) => i !== index));
   };
 
   // ---- Récap fiscal (inclut brouillons) --------------------------------------
@@ -421,7 +404,7 @@ export function BoqWorkspace({
   // ---- Ajout inline d'une ligne vide (édition dans le tableau) ---------------
   const addEmptyRow = () => {
     const profile = getFiscalProfile(fiscalCode);
-    setPendingLines((prev) => [...prev, {
+    setDraftLines((prev) => [...prev, {
       source, contextId,
       documentId: documentId ?? null,
       designation: '',
@@ -440,6 +423,7 @@ export function BoqWorkspace({
       sourceType: 'rapide',
       status: 'draft',
     }]);
+    setDirty(true);
   };
 
   // ---- Render ---------------------------------------------------------------
@@ -467,11 +451,11 @@ export function BoqWorkspace({
     return null;
   }, [doc.lines]);
   const locked = !!signatureInfo || !!transmittedInfo;
-  const pendingCount = pendingLines.length + draftLineIds.length;
-  const docStatus = pendingCount > 0 || dirty ? t('dqe.doc_status.to_save') : (doc.lines.length > 0 ? t('dqe.doc_status.validated') : t('dqe.doc_status.new'));
+  const pendingCount = dirty ? Math.abs(draftLines.length - baselineLines.length) || 1 : 0;
+  const docStatus = dirty ? t('dqe.doc_status.to_save') : (doc.lines.length > 0 ? t('dqe.doc_status.validated') : t('dqe.doc_status.new'));
   const isDocumentEmpty = displayedLines.length === 0;
   const handleParsedImport = (lines: BoqLineDTO[]) => {
-    setPendingLines((prev) => [...prev, ...lines.map((line) => ({
+    setDraftLines((prev) => [...prev, ...lines.map((line) => ({
       ...line,
       source,
       contextId,
@@ -479,6 +463,7 @@ export function BoqWorkspace({
       id: undefined,
        status: 'draft' as const,
     }))]);
+    setDirty(true);
   };
   return (
     <div className="space-y-4">
@@ -812,7 +797,7 @@ export function BoqWorkspace({
             {isDocumentEmpty ? null : (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="ghost" disabled={pendingLines.length === 0}>
+                  <Button size="sm" variant="ghost" disabled={!dirty || locked}>
                     <Trash2 className="h-4 w-4 mr-1" />{t('dqe.action.clear_draft')}
                   </Button>
                 </AlertDialogTrigger>
@@ -823,7 +808,7 @@ export function BoqWorkspace({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => setPendingLines([])}>{t('common.confirm')}</AlertDialogAction>
+                    <AlertDialogAction onClick={() => { setDraftLines(baselineLines); setDirty(false); }}>{t('common.confirm')}</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
