@@ -93,6 +93,37 @@ export const InvoiceWorkflowService = {
     return def.statuses.includes(target) ? target : def.initialStatus;
   },
 
+  /**
+   * Avance le statut métier du document (DQE : brouillon → soumis → validé ;
+   * devis : reçu → en analyse → accepté). Les statuts sont ceux du référentiel
+   * propre à l'étape : aucun statut de devis n'est applicable à un DQE.
+   */
+  async advanceStatus(input: {
+    type: InvoiceDocumentType;
+    lines: BoqLineDTO[];
+    target?: string;
+  }): Promise<{ status: string; updated: number }> {
+    const def = getInvoiceDocumentType(input.type);
+    const current = input.lines[0]?.businessStatus ?? def.initialStatus;
+    const target = input.target
+      ? this.transitionStatus(input.type, input.target)
+      : getNextBusinessStatus(input.type, current);
+    if (!target) throw new Error(`Aucun statut suivant pour « ${def.label} »`);
+
+    const persistable = input.lines.filter((l) => !!l.id);
+    await Promise.all(
+      persistable.map((l) =>
+        boqRepository.update(l.id as string, {
+          source: l.source,
+          documentType: def.code,
+          businessStatus: target,
+        } as Partial<BoqLineDTO>),
+      ),
+    );
+    return { status: target, updated: persistable.length };
+  },
+
+
   /** Construit (sans persister) les lignes du document cible. */
   build(input: InvoiceTransformInput, sourceLines: BoqLineDTO[]): { lines: BoqLineDTO[]; documentId: string; def: InvoiceDocumentTypeDef } {
     const nextType = this.nextType(input.fromType);
