@@ -29,7 +29,8 @@ const files = listTsx(ROOT);
 
 describe('i18n — aucun code technique rendu brut', () => {
   it('T-V-36 : pas de rendu brut de status/priority/severity/category/unit/role/department', () => {
-    const rawRender = /\{\s*[A-Za-z_$][\w$?.]*\.(status|priority|severity|category|unit|role|department)\s*\}/;
+    // Rendu JSX seulement : `>{x.status}<` ou `… {x.status} …` hors valeur d'attribut.
+    const rawRender = /(?<![=\w])\{\s*[A-Za-z_$][\w$?.]*\.(status|priority|severity|category|unit|role|department)\s*\}/;
     // Exceptions justifiées : codes HTTP numériques du monitoring technique.
     const allowed = ['HttpMonitor.tsx', 'PerformanceMetrics.tsx'];
     const offenders = files
