@@ -4828,5 +4828,6 @@
   "phase_structure": {
     "takeoff_analysis": "تحليل القياسات",
     "takeoff_count": "{{count}} قياسات"
-  }
+  },
+  "dashboard.management_tabs.alerts.tabs.compliance": "المطابقة"
 }

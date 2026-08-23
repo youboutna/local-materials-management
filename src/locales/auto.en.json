@@ -4829,5 +4829,6 @@
   "phase_structure": {
     "takeoff_analysis": "Takeoff analysis",
     "takeoff_count": "{{count}} takeoff(s)"
-  }
+  },
+  "dashboard.management_tabs.alerts.tabs.compliance": "Compliance"
 }

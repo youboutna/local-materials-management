@@ -4826,5 +4826,6 @@
   "phase_structure": {
     "takeoff_analysis": "Analyse des métrés",
     "takeoff_count": "{{count}} métré(s)"
-  }
+  },
+  "dashboard.management_tabs.alerts.tabs.compliance": "Conformité"
 }
