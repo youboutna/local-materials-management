@@ -81,30 +81,38 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
       return targetDate && targetDate < new Date() && m.status !== 'completed';
     }).length;
 
-    // EVM Calculations
-    const today = new Date();
-    const firstProject = projectsList[0];
-    const projectStart = firstProject?.start_date || firstProject?.startDate
-      ? new Date(firstProject.start_date || firstProject.startDate) 
-      : new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
-    const projectEnd = firstProject?.end_date || firstProject?.endDate
-      ? new Date(firstProject.end_date || firstProject.endDate)
-      : new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+    // ===== EVM portefeuille : agrégation projet par projet (pas de date « premier projet ») =====
+    const today = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+    const clampIndex = (value: number) => Math.min(3, Math.max(0, Number.isFinite(value) ? value : 0));
 
-    const totalDuration = Math.max(1, projectEnd.getTime() - projectStart.getTime());
-    const elapsedTime = Math.max(0, today.getTime() - projectStart.getTime());
-    const timeProgress = Math.min(1, elapsedTime / totalDuration);
+    let plannedValue = 0;
+    let earnedValue = 0;
+    for (const project of projectsList) {
+      const budget = Number(project.budget) || 0;
+      if (budget <= 0) continue;
 
-    const plannedValue = totalBudget * timeProgress;
-    const earnedValue = totalBudget * (totalProgress / 100);
+      const rawStart = project.startDate || project.start_date;
+      const rawEnd = project.endDate || project.end_date;
+      const start = rawStart ? new Date(rawStart).getTime() : today - 180 * DAY;
+      const end = rawEnd ? new Date(rawEnd).getTime() : start + 180 * DAY;
+      const duration = Math.max(DAY, end - start);
+      const timeProgress = Math.min(1, Math.max(0, (today - start) / duration));
+
+      plannedValue += budget * timeProgress;
+      earnedValue += budget * (Math.min(100, Math.max(0, Number(project.progress) || 0)) / 100);
+    }
+
     const scheduleVariance = earnedValue - plannedValue;
     const costVariance = earnedValue - totalSpent;
-    const schedulePerformanceIndex = plannedValue > 0 ? earnedValue / plannedValue : 1;
-    const costPerformanceIndex = totalSpent > 0 ? earnedValue / totalSpent : 1;
+    const schedulePerformanceIndex = plannedValue > 0 ? clampIndex(earnedValue / plannedValue) : 1;
+    const costPerformanceIndex = totalSpent > 0 ? clampIndex(earnedValue / totalSpent) : 1;
     const budgetAtCompletion = totalBudget;
-    const estimateAtCompletion = costPerformanceIndex > 0 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
+    const estimateAtCompletion =
+      costPerformanceIndex > 0.01 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
     const estimateToComplete = Math.max(0, estimateAtCompletion - totalSpent);
     const varianceAtCompletion = budgetAtCompletion - estimateAtCompletion;
+
 
     const evm: EVMCalculations = {
       plannedValue, earnedValue, actualCost: totalSpent, scheduleVariance, costVariance,

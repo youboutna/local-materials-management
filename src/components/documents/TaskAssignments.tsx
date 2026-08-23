@@ -41,7 +41,8 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
   useTaskAssignmentsHex, 
-  useProjectsHex, 
+  useProjectsHex,
+  usePhasesHex,
   useAssigneeDetails,
   type TaskAssignment
 } from '@/hooks/hexagonal';
@@ -62,6 +63,7 @@ interface TaskFormData {
   title: string;
   description: string;
   project_id: string;
+  phase_id: string;
   assigned_to: string;
   assignee_type: "supplier" | "employee" | "user" | "";
   assignee_name: string;
@@ -91,10 +93,12 @@ const TaskAssignmentsComponent = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterAssignee, setFilterAssignee] = useState<string>("all");
+  const [filterProject, setFilterProject] = useState<string>("all");
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
     project_id: "",
+    phase_id: "",
     assigned_to: "",
     assignee_type: "",
     assignee_name: "",
@@ -133,6 +137,20 @@ const TaskAssignmentsComponent = () => {
 
   const projectsHook = useProjectsHex();
   const projects = projectsHook.projects || [];
+
+  // Phases du projet sélectionné dans le formulaire (rattachement WBS de la tâche)
+  const { phases: formPhases } = usePhasesHex(formData.project_id || undefined);
+  // Phases de tous les projets pour afficher le libellé de phase sur les cartes
+  const { phases: filterPhases } = usePhasesHex(
+    filterProject !== 'all' ? filterProject : undefined,
+  );
+  const phaseNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    [...(formPhases ?? []), ...(filterPhases ?? [])].forEach((phase: any) => {
+      if (phase?.id) map[phase.id] = phase.name ?? phase.phaseName ?? '';
+    });
+    return map;
+  }, [formPhases, filterPhases]);
 
   // Fetch assignee details when assigned_to changes
   const assigneeResult = useAssigneeDetails(formData.assigned_to || '');
@@ -178,6 +196,7 @@ const TaskAssignmentsComponent = () => {
         taskData: {
           taskId: crypto.randomUUID(),
           projectId: taskData.project_id || '',
+          phaseId: taskData.phase_id || undefined,
           assignedTo: taskData.assigned_to || '',
           assignedBy: user?.id || '',
           assigneeType: (taskData.assignee_type || 'user') as any,
@@ -226,6 +245,7 @@ const TaskAssignmentsComponent = () => {
           title: data.title,
           description: data.description || undefined,
           projectId: data.project_id || undefined,
+          phaseId: data.phase_id || undefined,
           assignedTo: data.assigned_to ? [data.assigned_to] : [],
           assigneeType: (data.assignee_type || 'user') as any,
           assigneeName: data.assignee_name || undefined,
@@ -279,6 +299,7 @@ const TaskAssignmentsComponent = () => {
       title: "",
       description: "",
       project_id: "",
+      phase_id: "",
       assigned_to: "",
       assignee_type: "",
       assignee_name: "",
@@ -310,6 +331,7 @@ const TaskAssignmentsComponent = () => {
       title: task.title || "",
       description: task.description || "",
       project_id: task.project_id || task.projectId || "",
+      phase_id: task.phase_id || task.phaseId || "",
       assigned_to: firstAssignee(task),
       assignee_type: (task.assignee_type || task.assigneeType || "") as any,
       assignee_name: task.assignee_name || task.assigneeName || "",
@@ -379,6 +401,27 @@ const TaskAssignmentsComponent = () => {
 
   };
 
+  // Filtrage local (recherche, priorité, projet) — statut/assigné sont filtrés côté service
+  const visibleTasks = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return ((tasks as any[]) || []).filter((task: any) => {
+      if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
+      const projectId = task.project_id || task.projectId || '';
+      if (filterProject !== 'all' && projectId !== filterProject) return false;
+      if (!term) return true;
+      const haystack = [
+        task.title,
+        task.description,
+        task.assignee_name || task.assigneeName,
+        getProjectTitle(projectId),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [tasks, searchTerm, filterPriority, filterProject, projects]);
+
   // Pagination
   const {
     currentData: paginatedTasks,
@@ -388,7 +431,7 @@ const TaskAssignmentsComponent = () => {
     itemsPerPage,
     goToPage,
   } = usePagination({
-    data: tasks || [],
+    data: visibleTasks,
     itemsPerPage: 12
   });
 
@@ -494,7 +537,28 @@ const TaskAssignmentsComponent = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="filter-project">
+                <T k="auto.taskassignments.projet" fallback="Projet" />
+              </Label>
+              <Select value={filterProject} onValueChange={setFilterProject}>
+                <SelectTrigger id="filter-project">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <T k="auto.taskassignments.tous" fallback="Tous" />
+                  </SelectItem>
+                  {projects?.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
         </CardContent>
       </Card>
 
@@ -524,7 +588,9 @@ const TaskAssignmentsComponent = () => {
                   <Label htmlFor="project"><T k="auto.taskassignments.projet" fallback="Projet" /></Label>
                   <Select
                     value={formData.project_id}
-                    onValueChange={(value) => setFormData({ ...formData, project_id: value })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, project_id: value, phase_id: "" })
+                    }
                   >
                     <SelectTrigger id="project">
                       <SelectValue placeholder="Sélectionner un projet" />
@@ -533,6 +599,29 @@ const TaskAssignmentsComponent = () => {
                       {projects?.map((project) => (
                         <SelectItem key={project.id} value={project.id}>
                           {project.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phase">
+                    <T k="auto.taskassignments.phase" fallback="Phase / WBS" />
+                  </Label>
+                  <Select
+                    value={formData.phase_id}
+                    onValueChange={(value) => setFormData({ ...formData, phase_id: value })}
+                    disabled={!formData.project_id || (formPhases ?? []).length === 0}
+                  >
+                    <SelectTrigger id="phase">
+                      <SelectValue
+                        placeholder={t('task.select_phase') || 'Sélectionner une phase'}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(formPhases ?? []).map((phase: any) => (
+                        <SelectItem key={phase.id} value={phase.id}>
+                          {phase.name ?? phase.phaseName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -734,6 +823,17 @@ const TaskAssignmentsComponent = () => {
                 <Badge className={getStatusColor(task.status)}>
                   <TranslatedStatus code={task.status} />
                 </Badge>
+                {(task.project_id || task.projectId) && (
+                  <Badge variant="outline" className="max-w-[12rem] truncate">
+                    {getProjectTitle(task.project_id || task.projectId)}
+                  </Badge>
+                )}
+                {(task.phase_id || task.phaseId) && (
+                  <Badge variant="secondary" className="max-w-[12rem] truncate">
+                    {phaseNameById[task.phase_id || task.phaseId] ||
+                      (t('task.phase') || 'Phase')}
+                  </Badge>
+                )}
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
                 <div className="flex items-center gap-2">
@@ -752,7 +852,7 @@ const TaskAssignmentsComponent = () => {
         ))}
       </div>
 
-      {tasks?.length === 0 && (
+      {visibleTasks.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
             <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -768,7 +868,7 @@ const TaskAssignmentsComponent = () => {
         </Card>
       )}
 
-      {tasks && tasks.length > 0 && (
+      {visibleTasks.length > 0 && (
         <PaginationControls
           currentPage={currentPage}
           totalPages={totalPages}

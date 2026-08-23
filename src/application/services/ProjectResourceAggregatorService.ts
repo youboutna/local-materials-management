@@ -225,6 +225,38 @@ export class ProjectResourceAggregatorService {
       });
     }
 
+    // 5. EXÉCUTION — tâches affectées (main d'œuvre / matériaux / équipements)
+    for (const task of (input.executedTasks ?? []) as Row[]) {
+      const status = String(task.status ?? '').toLowerCase();
+      // Seules les tâches engagées consomment de la ressource.
+      if (status === 'cancelled' || status === 'pending') continue;
+
+      const progress = status === 'completed' ? 1 : Math.min(1, Math.max(0, num(task.progress) / 100));
+      if (progress <= 0) continue;
+
+      const quantity = num(task.quantity);
+      const duration = num(task.estimatedDuration ?? task.actualDuration);
+      const dailyRate = num(task.dailyRate);
+      const declaredCost = num(task.actualCost) || num(task.estimatedCost);
+      const cost = declaredCost > 0 ? declaredCost * progress : duration * dailyRate * progress;
+      const consumedQuantity = (quantity || duration || 1) * progress;
+
+      const family = normalizeResourceFamily(
+        task.type === 'material' || task.type === 'equipment' ? task.type : 'human',
+      );
+
+      acc.add({
+        family,
+        name: str(task.title) ?? str(task.name) ?? 'Tâche',
+        unit: str(task.unit) ?? (family === 'human' ? 'j' : undefined),
+        origin: 'execution',
+        phaseId: str(task.phaseId ?? task.phase_id),
+        actualQuantity: consumedQuantity,
+        actualCost: cost,
+      });
+    }
+
+
     const lines = acc.finalize();
     const human = buildBucket('human', lines);
     const materials = buildBucket('material', lines);

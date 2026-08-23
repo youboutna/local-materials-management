@@ -17,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Users, Package, Wrench, LayoutGrid, ClipboardList } from 'lucide-react';
 import TeamOverview from '@/components/project/TeamOverview';
 import { getProjectResourceAggregatorService } from '@/application/services/ProjectResourceAggregatorService';
+import { useTaskAssignmentsHex } from '@/hooks/hexagonal';
 import type {
   ResourceFamilyBucketDTO,
   ResourceLineDTO,
@@ -128,6 +129,9 @@ const ProjectResourcesContainer: React.FC<ProjectResourcesContainerProps> = ({
   resources,
   setResources,
 }) => {
+  // Les tâches affectées sont une source de consommation (main d'œuvre, matériaux, équipements).
+  const { tasks: projectTasks = [] } = useTaskAssignmentsHex({ projectId });
+
   const container = useMemo(
     () =>
       getProjectResourceAggregatorService().aggregate({
@@ -136,8 +140,9 @@ const ProjectResourcesContainer: React.FC<ProjectResourcesContainerProps> = ({
         boqLines,
         executedResources: executedResources.length > 0 ? executedResources : (resources ?? []),
         executedMaterials,
+        executedTasks: projectTasks as unknown as Array<Record<string, unknown>>,
       }),
-    [projectId, phases, boqLines, executedResources, executedMaterials, resources],
+    [projectId, phases, boqLines, executedResources, executedMaterials, resources, projectTasks],
   );
 
   return (
