@@ -66,3 +66,21 @@ Décompte 30 % : HT 26 505 600 · TTC 30 746 496.
 ## 4. Déploiement
 
 Voir `docs/DEPLOYMENT_PHASE4.md` et `scripts/deploy-phase4.sh` (migrations, variables d’environnement, vérifications post-déploiement).
+
+---
+
+## Phase 5 — Multilingue et labellisation des statuts (T17 → T25)
+
+| Tâche | Livrable |
+|-------|----------|
+| T17 | `src/config/referentials/i18n/status-labels.referential.ts` — `STATUS_LABELS` (générique, projet, DQE→Facture, AO, inspections) |
+| T18 | Dictionnaires `PROJECT_TYPE_LABELS`, `UNIT_LABELS`, `TENDER_STEP_LABELS`, `ROLE_LABELS`, `DEVIATION_LABELS`, `CATEGORY_LABELS`, `INVOICE_DOCUMENT_LABELS` + `REFERENTIAL_LABEL_REGISTRY` |
+| T19 | `src/application/services/I18nService.ts` (TS pur, fallback fr, persistance `preferred-language`, direction RTL) |
+| T20 | `src/hooks/useI18n.ts` + `StatusBadge` traduit via référentiel |
+| T21 | `src/components/LanguageSelector.tsx` intégré dans Paramètres → Apparence |
+| T22/T23 | Statuts DQE→Facture et étapes AO couverts par le référentiel (fr/ar/en) |
+| T24 | `src/application/services/__tests__/I18nService.test.ts` — T‑V‑19 → T‑V‑25 (8 tests verts) |
+| T25 | Présente section |
+
+Règles respectées : codes techniques seuls dans le Domain, aucun libellé codé en dur
+dans l'UI, français langue par défaut et fallback, `dir=rtl` automatique en arabe.
