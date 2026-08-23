@@ -76,7 +76,8 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
   return issues;
 }
 
-export function BoqImportDialog({ source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true }: Props) {
+export function BoqImportDialog(props: Props) {
+  const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
   const open = props.open ?? openInternal;
