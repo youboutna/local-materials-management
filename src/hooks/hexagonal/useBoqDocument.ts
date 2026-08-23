@@ -67,6 +67,9 @@ export function useBoqDocument(filter: BoqLineFilter) {
     ]);
     await invalidate();
     window.dispatchEvent(new Event('boq-kpi-refresh'));
+    // Retourner l'état canonique (avec les IDs générés en base) évite qu'une
+    // seconde sauvegarde recrée les nouvelles lignes du brouillon.
+    return boqRepository.list(filter);
   };
 
   return {
