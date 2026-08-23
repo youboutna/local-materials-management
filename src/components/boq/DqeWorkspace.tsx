@@ -224,17 +224,32 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
               {ctx.title}
             </CardTitle>
           </div>
-          <BoqActionsBar
-            ctx={ctx}
-            lines={actionableLines}
-            recipientEmail={props.recipientEmail}
-            disabled={doc.isLoading || noActionableLines}
-            onAttachToSubmission={props.onAttachToSubmission}
-            onSubmitInvoice={props.onSubmitInvoice}
-            onDistribute={props.onDistribute}
-            onPublish={props.onPublish}
-          />
-        </CardHeader>
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <BoqActionsBar
+              ctx={ctx}
+              lines={actionableLines}
+              recipientEmail={props.recipientEmail}
+              disabled={doc.isLoading || noActionableLines}
+              onAttachToSubmission={props.onAttachToSubmission}
+              onSubmitInvoice={props.onSubmitInvoice}
+              onDistribute={props.onDistribute}
+              onPublish={props.onPublish}
+            />
+            <InvoiceWorkflowActions
+              documentType={invoiceDef.code}
+              actor={props.routeContext === 'project-dqe' || props.routeContext === 'tender-estimate' ? 'manager' : 'supplier'}
+              lines={doc.lines ?? []}
+              contextId={ctx.contextId ?? ''}
+              targetSource={ctx.source}
+              projectId={props.projectId}
+              tenderId={props.tenderId}
+              sellerName={props.projectName}
+              buyerName={props.recipientName}
+              docPrefix={ctx.docPrefix}
+              disabled={doc.isLoading}
+            />
+          </div>
+
         <CardContent className="p-0">
           <BoqWorkspace
             source={ctx.source}
