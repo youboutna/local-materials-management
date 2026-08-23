@@ -23,12 +23,12 @@ export interface MaterialDocumentContext {
 export function useMaterialDocumentAdapter(
   materialId: string,
   context: MaterialDocumentContext = {},
-  const { t } = useLanguage();
 ): DocumentHubContract {
+  const { t } = useLanguage();
   const { materialName, supplierId, supplierName } = context;
 
   return useDocumentsTableAdapter({
-    scopeLabel: materialName ? `Documents — ${materialName}` : 'Documents du matériau',
+    scopeLabel: materialName ? `Documents — ${materialName}` : t('auto.materialdocumentadapter.documents_du_materiau'),
     queryKey: ['documents', 'material', materialId, supplierId ?? 'no-supplier'],
     filters: [{ column: 'metadata_material_id', value: materialId }],
     pathPrefix: `materials/${materialId}`,
