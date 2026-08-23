@@ -280,101 +280,115 @@ export const BoqActionsBar: React.FC<Props> = ({
   const L = DOC_LABELS[ctx.routeContext];
 
 
+  const docActions = [
+    can('generatePdf') && { key: 'generatePdf', icon: <FileDown className="h-4 w-4 mr-2" />, onSelect: handleGenerate },
+    can('email') && { key: 'email', icon: <Mail className="h-4 w-4 mr-2" />, onSelect: handleEmail },
+    can('download') && { key: 'download', icon: <Download className="h-4 w-4 mr-2" />, onSelect: handleDownload },
+  ].filter(Boolean) as { key: string; icon: React.ReactNode; onSelect: () => void }[];
+
+  const workflowActions = [
+    can('distribute') && onDistribute && { key: 'distribute', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onDistribute, disabled: false },
+    isProjectDqe && {
+      key: 'dispatchWbs',
+      icon: <Layers className="h-4 w-4 mr-2" />,
+      onSelect: handleDispatch,
+      disabled: !gate.allowed,
+    },
+    ctx.routeContext === 'supplier-bid' && {
+      key: 'decompte',
+      icon: <FileCheck2 className="h-4 w-4 mr-2" />,
+      onSelect: () => setDecompteOpen(true),
+      disabled: !lines.length,
+    },
+    can('attachToSubmission') && onAttachToSubmission && { key: 'attachToSubmission', icon: <Paperclip className="h-4 w-4 mr-2" />, onSelect: onAttachToSubmission, disabled: false },
+    can('submitInvoice') && onSubmitInvoice && { key: 'submitInvoice', icon: <FileCheck2 className="h-4 w-4 mr-2" />, onSelect: onSubmitInvoice, disabled: false },
+    can('publish') && onPublish && { key: 'publish', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onPublish, disabled: false },
+  ].filter(Boolean) as { key: string; icon: React.ReactNode; onSelect: () => void; disabled?: boolean }[];
+
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        {can('generatePdf') && (
-          <Button size="sm" variant="outline" onClick={handleGenerate} disabled={disabled || busy !== null} title={L.pdf}>
-            {iconOf('pdf') ?? <FileDown className="h-4 w-4 mr-2" />}
-            Générer PDF
-          </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        {docActions.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
+                {iconOf('pdf') ?? iconOf('email') ?? iconOf('download') ?? <FileDown className="h-4 w-4 mr-2" />}
+                {t('dqe.actions.document_menu')}
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {docActions.map((a) => (
+                <DropdownMenuItem key={a.key} onSelect={() => a.onSelect()}>
+                  {a.icon}
+                  {t(getDqeActionLabelKey(a.key))}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
+
         {can('sign') && (
-          <Button size="sm" variant={signedInfo ? 'default' : 'outline'} onClick={() => setSignOpen(true)} disabled={disabled || busy !== null} title={L.sign}>
+          <Button
+            size="sm"
+            variant={signedInfo ? 'default' : 'outline'}
+            onClick={() => setSignOpen(true)}
+            disabled={disabled || busy !== null}
+            title={`${t('dqe.action.sign')} — ${ctx.title}`}
+          >
             {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
-            {signedInfo ? 'Signé ✓' : 'Signer'}
+            {signedInfo ? t('dqe.action.signed') : t('dqe.action.sign')}
           </Button>
         )}
-        {can('email') && (
-          <Button size="sm" variant="outline" onClick={handleEmail} disabled={disabled || busy !== null} title={L.email}>
-            {iconOf('email') ?? <Mail className="h-4 w-4 mr-2" />}
-            Envoyer
-          </Button>
+
+        {workflowActions.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
+                {iconOf('dispatch') ?? iconOf('decompte') ?? <Layers className="h-4 w-4 mr-2" />}
+                {t('dqe.actions.workflow_menu')}
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {workflowActions.map((a) => (
+                <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
+                  {a.icon}
+                  {t(getDqeActionLabelKey(a.key))}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
-        {can('download') && (
-          <Button size="sm" variant="outline" onClick={handleDownload} disabled={disabled || busy !== null} title={L.download}>
-            {iconOf('download') ?? <Download className="h-4 w-4 mr-2" />}
-            Télécharger
-          </Button>
-        )}
-        {can('distribute') && onDistribute && (
-          <Button size="sm" variant="outline" onClick={onDistribute} disabled={disabled || busy !== null}>
-            <Send className="h-4 w-4 mr-2" />
-            <T k="auto.boqactionsbar.diffuser" fallback="Diffuser" />
-          </Button>
-        )}
-        {isProjectDqe && (
-          <Button size="sm" variant="outline" onClick={handleDispatch}
-            disabled={disabled || busy !== null || !gate.allowed}
-            title={gate.allowed
-              ? 'Créer les phases, jalons, tâches et ressources depuis les lignes DQE'
-              : gate.reasons.join(' ')}>
-            {iconOf('dispatch') ?? <Layers className="h-4 w-4 mr-2" />}
-            Transférer vers les phases
-          </Button>
-        )}
+
         {gateKind && !gate.allowed && (
           <>
             <Badge variant="destructive" className="self-center">
-              {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} — validation requise
+              {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} — {t('dqe.gate.validation_required')}
             </Badge>
             {canValidateGate && (
               <Button size="sm" onClick={handleApproveInjection} disabled={disabled || busy !== null}
                 title={BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].blockedMessage}>
                 {iconOf('gate') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
-                Valider pour injection
+                {t('dqe.action.validate_gate')}
               </Button>
             )}
           </>
         )}
         {gateKind && gate.allowed && (
           <Badge variant="outline" className="self-center">
-            {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} validé
+            {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} — {t('dqe.gate.validated')}
           </Badge>
         )}
-        {can('transfer') && (
-          <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null}>
-            {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
-            {TRANSFER_LABEL[ctx.routeContext]}
-          </Button>
-        )}
 
-        {ctx.routeContext === 'supplier-bid' && (
-          <Button size="sm" variant="outline" onClick={() => setDecompteOpen(true)} disabled={disabled || busy !== null || !lines.length}
-            title="Créer un décompte / facture depuis ce devis">
-            {iconOf('decompte') ?? <FileCheck2 className="h-4 w-4 mr-2" />}
-            Créer un décompte
-          </Button>
-        )}
-        {can('attachToSubmission') && onAttachToSubmission && (
-          <Button size="sm" variant="outline" onClick={onAttachToSubmission} disabled={disabled || busy !== null}>
-            <Paperclip className="h-4 w-4 mr-2" />
-            <T k="auto.boqactionsbar.joindre_a_ma_soumission" fallback="Joindre à ma soumission" />
-          </Button>
-        )}
-        {can('submitInvoice') && onSubmitInvoice && (
-          <Button size="sm" variant="outline" onClick={onSubmitInvoice} disabled={disabled || busy !== null}>
-            <FileCheck2 className="h-4 w-4 mr-2" />
-            <T k="auto.boqactionsbar.soumettre_pour_paiement" fallback="Soumettre pour paiement" />
-          </Button>
-        )}
-        {can('publish') && onPublish && (
-          <Button size="sm" variant="outline" onClick={onPublish} disabled={disabled || busy !== null}>
-            <Send className="h-4 w-4 mr-2" />
-            <T k="auto.boqactionsbar.publier" fallback="Publier" />
+        {can('transfer') && (
+          <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
+            {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
+            {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
           </Button>
         )}
       </div>
+
 
       <Dialog open={decompteOpen} onOpenChange={setDecompteOpen}>
         <DialogContent>
