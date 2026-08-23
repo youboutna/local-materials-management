@@ -349,7 +349,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                     <SelectItem value="low"><TranslatedPriority code="low" /></SelectItem>
                     <SelectItem value="medium"><TranslatedPriority code="medium" /></SelectItem>
                     <SelectItem value="high" disabled={!permissions?.canSetHighPriority}>
-                      Haute {!permissions?.canSetHighPriority && '(Requiert approbation)'}
+                      <TranslatedPriority code="high" /> {!permissions?.canSetHighPriority && '(Requiert approbation)'}
                     </SelectItem>
                   </SelectContent>
                 </Select>

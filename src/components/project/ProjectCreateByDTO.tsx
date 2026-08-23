@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 interface ProjectCreateByDTOProps {
   onSave: (project: ProjectData) => void;
   onCancel: () => void;
@@ -438,9 +439,9 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Faible</SelectItem>
-                          <SelectItem value="medium">Moyen</SelectItem>
-                          <SelectItem value="high">Élevé</SelectItem>
+                          <SelectItem value="low"><TranslatedSeverity code="low" /></SelectItem>
+                          <SelectItem value="medium"><TranslatedSeverity code="medium" /></SelectItem>
+                          <SelectItem value="high"><TranslatedSeverity code="high" /></SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
