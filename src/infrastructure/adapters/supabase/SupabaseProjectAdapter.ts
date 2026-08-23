@@ -310,22 +310,8 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       updatedAt: row.updated_at,
     }));
 
-    // Les contacts projet sont stockés en JSON dans `projects.contacts` (aucune
-    // table `project_contacts` : PostgREST renvoyait 42P01 et le query client
-    // multipliait les 404). Fallback : contacts externes des parties prenantes.
-    const jsonContacts = Array.isArray((projectResult.data as Record<string, any> | null)?.contacts)
-      ? ((projectResult.data as Record<string, any>).contacts as Array<Record<string, any>>).map((c, index) => ({
-          id: String(c.id ?? `${id}-contact-${index}`),
-          projectId: id,
-          name: c.name ?? '',
-          role: c.role ?? '',
-          email: c.email ?? undefined,
-          phone: c.phone ?? undefined,
-          company: c.company ?? undefined,
-          isPrimary: c.isPrimary ?? c.is_primary ?? false,
-        }))
-      : [];
-
+    // Source unique des contacts : project_stakeholders. Le JSON historique
+    // `projects.contacts` n'est plus prioritaire et ne peut plus diverger.
     const stakeholderContacts = (stakeholdersResult.data || [])
       .filter((row: Record<string, any>) => row.external_name || row.external_email || row.external_phone)
       .map((row: Record<string, any>) => ({
@@ -339,7 +325,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
         isPrimary: row.is_primary ?? false,
       }));
 
-    const contacts = jsonContacts.length > 0 ? jsonContacts : stakeholderContacts;
+    const contacts = stakeholderContacts;
 
 
     return {

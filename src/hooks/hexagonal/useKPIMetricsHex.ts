@@ -65,7 +65,15 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     const totalProgress = projectsList.length > 0 
       ? projectsList.reduce((sum, p) => sum + (p.progress || 0), 0) / projectsList.length 
       : 0;
-    const totalSpent = paymentsList.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const paidStatuses = new Set(['paid', 'completed']);
+    const committedStatuses = new Set(['approved', 'payment_processing', 'in_progress']);
+    const paidAmount = paymentsList
+      .filter((payment) => paidStatuses.has(String(payment.status ?? '').toLowerCase()))
+      .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+    const committedAmount = paymentsList
+      .filter((payment) => committedStatuses.has(String(payment.status ?? '').toLowerCase()))
+      .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+    const totalSpent = paidAmount;
 
     const projectsOnTrack = projectsList.filter(p => (p.status === 'en cours' || p.status === 'in_progress') && (p.progress || 0) >= 50).length;
     const projectsDelayed = projectsList.filter(p => p.status === 'en retard' || p.status === 'suspendu').length;
@@ -123,8 +131,8 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     };
 
     const budget: BudgetAnalytics = {
-      totalBudget, spentAmount: totalSpent, remainingBudget: totalBudget - totalSpent,
-      budgetUtilization: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0,
+      totalBudget, spentAmount: totalSpent, remainingBudget: totalBudget - paidAmount - committedAmount,
+      budgetUtilization: totalBudget > 0 ? ((paidAmount + committedAmount) / totalBudget) * 100 : 0,
       estimatedTotalCost: estimateAtCompletion, costVariance: totalBudget - totalSpent,
       tasksOverBudget: [], averageCostPerTask: paymentsList.length > 0 ? totalSpent / paymentsList.length : 0,
     };

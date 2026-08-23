@@ -836,12 +836,12 @@ export class ProjectWorkflowService {
     for (const phase of phases) {
       if (phase.id && this.milestoneService) {
         for (const milestone of phase.milestones || []) {
-          await this.milestoneService.createMilestone({ project_id: projectId, phase_id: phase.id, title: milestone.title, description: milestone.description, target_date: milestone.targetDate || new Date().toISOString(), status: milestone.status, progress: (milestone as any).progress || 0 } as any).catch(() => {});
+          await this.milestoneService.createMilestone({ project_id: projectId, phase_id: phase.id, title: milestone.title, description: milestone.description, target_date: milestone.targetDate || new Date().toISOString(), status: milestone.status, progress: (milestone as any).progress || 0 } as any);
         }
       }
       if (phase.id && this.taskAssignmentService) {
         for (const task of phase.tasks || []) {
-          await this.taskAssignmentService.create({ projectId, phaseId: phase.id, name: task.title || task.name || 'Tâche', title: task.title || task.name || 'Tâche', description: task.description, status: task.status || 'PENDING', priority: task.priority || 'MEDIUM', dueDate: task.dueDate || task.due_date, assigneeId: task.assignedTo } as any).catch(() => {});
+          await this.taskAssignmentService.create({ projectId, phaseId: phase.id, name: task.title || task.name || 'Tâche', title: task.title || task.name || 'Tâche', description: task.description, status: task.status || 'PENDING', priority: task.priority || 'MEDIUM', dueDate: task.dueDate || task.due_date, assigneeId: task.assignedTo } as any);
         }
       }
     }

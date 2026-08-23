@@ -40,7 +40,7 @@ import {
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { buildLocationDistribution, getProjectCoordinates } from "@/utils/projectLocationBuckets";
+import { getProjectCoordinates } from "@/utils/projectLocationBuckets";
 import { formatAmount2, formatNumber2 } from "@/utils/reportNumbers";
 import { T } from '@/components/i18n/T';
 
@@ -86,28 +86,19 @@ const Dashboard: React.FC = () => {
     }})
   , [hexProjects]);
 
-  // Compute location distribution from hexProjects as fallback
-  const locationDistributionFromProjects = useMemo(() => {
-    return buildLocationDistribution(hexProjects);
-  }, [hexProjects]);
-
-  // Use stats from hexagonal dashboard hook with safe defaults
+  // DashboardService is the single source for aggregates. A missing aggregate
+  // remains unavailable instead of being replaced by a synthetic zero.
   const stats = useMemo(() => {
     const baseStats = {
-      activeProjects: dashboardStats?.activeProjects ?? hexProjects.filter(p => {
-        const s = String(p.status);
-        return s === 'en cours' || s === 'in_progress' || s === 'en_cours_v2' || s === 'enCours';
-      }).length,
-      totalBudget: dashboardStats?.totalBudget ?? 0,
-      teamMembers: dashboardStats?.totalEmployees ?? 0,
-      materials: dashboardStats?.totalMaterials ?? 0,
+      activeProjects: dashboardStats?.activeProjects ?? null,
+      totalBudget: dashboardStats?.totalBudget ?? null,
+      teamMembers: dashboardStats?.totalEmployees ?? null,
+      materials: dashboardStats?.totalMaterials ?? null,
       statusDistribution: dashboardStats?.statusDistribution ?? [],
-      locationDistribution: (dashboardStats?.locationDistribution && dashboardStats.locationDistribution.length > 0) 
-        ? dashboardStats.locationDistribution 
-        : locationDistributionFromProjects,
+      locationDistribution: dashboardStats?.locationDistribution ?? [],
     };
     return baseStats;
-  }, [dashboardStats, hexProjects, locationDistributionFromProjects]);
+  }, [dashboardStats]);
 
   if (statsLoading) {
     return (
@@ -262,7 +253,7 @@ const Dashboard: React.FC = () => {
                     <CardContent>
                       <div className="flex items-baseline">
                         <span className="text-3xl font-bold">
-                          {stats.activeProjects}
+                          {stats.activeProjects ?? t('dashboard.kpi.not_evaluable')}
                         </span>
                         <span className="ml-2 text-sm text-muted-foreground">
                           {t("dashboard.cards.projects_label")}
@@ -283,7 +274,7 @@ const Dashboard: React.FC = () => {
                     <CardContent>
                       <div className="flex items-baseline">
                         <span className="text-3xl font-bold">
-                          {formatNumber2(stats.totalBudget)}
+                          {stats.totalBudget == null ? t('dashboard.kpi.not_evaluable') : formatNumber2(stats.totalBudget)}
                         </span>
                         <span className="ml-2 text-sm text-muted-foreground">
                           <T k="auto.dashboard.mru" fallback="MRU" />
@@ -299,7 +290,7 @@ const Dashboard: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">{stats.teamMembers}</span>
+                        <span className="text-3xl font-bold">{stats.teamMembers ?? t('dashboard.kpi.not_evaluable')}</span>
                         <span className="ml-2 text-sm text-muted-foreground">{t('dashboard.cards.members_label')}</span>
                       </div>
                     </CardContent>
@@ -312,7 +303,7 @@ const Dashboard: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">{stats.materials}</span>
+                        <span className="text-3xl font-bold">{stats.materials ?? t('dashboard.kpi.not_evaluable')}</span>
                         <span className="ml-2 text-sm text-muted-foreground">{t('dashboard.cards.types_label')}</span>
                       </div>
                     </CardContent>
