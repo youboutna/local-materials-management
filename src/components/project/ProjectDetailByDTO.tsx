@@ -78,6 +78,7 @@ import { ProjectHeader } from "./hierarchy";
 import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { useI18n } from '@/hooks/useI18n';
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
 // ============================================================================
@@ -116,6 +117,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const { projectId: routeProjectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { translateTerm } = useI18n();
   const projectId = propProjectId || routeProjectId;
   const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(null);
   const [showPhaseManager, setShowPhaseManager] = useState(false);
@@ -1094,7 +1096,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="phases" className="mt-6">
           <Tabs defaultValue="wbs" className="space-y-4">
             <WorkspaceTabsList variant="underline">
-              <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases (WBS)</TabsTrigger>
+              <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases ({translateTerm('wbs_short')})</TabsTrigger>
               <TabsTrigger value="planning" className="text-xs sm:text-sm">Planning</TabsTrigger>
               <TabsTrigger value="milestones" className="text-xs sm:text-sm">Jalons</TabsTrigger>
             </WorkspaceTabsList>

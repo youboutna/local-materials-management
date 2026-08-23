@@ -45,7 +45,7 @@ export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAs
       </p>
       {gantt.hasRealPhases === false && (
         <p className="text-xs text-warning">
-          Aucune phase datée : la frise affiche le calendrier projet. Ajoutez des phases WBS datées
+          Aucune phase datée : la frise affiche le calendrier projet. Ajoutez des phases datées
           pour obtenir le détail par phase.
         </p>
       )}

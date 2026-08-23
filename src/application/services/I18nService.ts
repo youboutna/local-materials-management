@@ -114,7 +114,16 @@ export class I18nService {
   translateDepartment(code?: string | null, lang?: ReferentialLanguage): string {
     return this.resolve('department', code, lang);
   }
+
+  /**
+   * Traduit un terme du glossaire métier (T36) : `wbs`, `wbs_short`, `boq`, ...
+   * Évite l'affichage d'anglicismes non explicites (ex. « WBS ») dans l'UI.
+   */
+  translateTerm(code?: string | null, lang?: ReferentialLanguage): string {
+    return this.resolve('glossary', code, lang);
+  }
 }
+
 
 let instance: I18nService | null = null;
 

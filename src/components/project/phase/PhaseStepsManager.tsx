@@ -96,8 +96,6 @@ const getStatusColor = (status: PhaseStatus | string) => {
 };
 
 const getStatusLabel = (status: PhaseStatus | string) => i18nService.translateStatus(status as string);
-  return labels[status] || status;
-};
 
 // Step Edit Form Component
 const StepEditDialog: React.FC<{

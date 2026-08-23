@@ -1,11 +1,14 @@
 /**
  * WbsSelector — cascade Phase → Jalon → Tâche, driven by config referential.
+ * Les libellés proviennent du glossaire i18n (jamais l'acronyme brut « WBS »).
  */
 import { useMemo } from 'react';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/hooks/useI18n';
+
 
 export interface WbsValue {
   phaseId?: string | null;
@@ -25,6 +28,7 @@ interface Props {
 const NONE = '__none__';
 
 export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride }: Props) {
+  const { translateTerm } = useI18n();
   const phases: WbsPhase[] = useMemo(() => {
     if (phasesOverride && phasesOverride.length > 0) return phasesOverride;
     if (!referentialCode) return WBS_REFERENTIAL;
@@ -50,7 +54,7 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
           onValueChange={(v) => onChange({ phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}
           disabled={disabled}
         >
-          <SelectTrigger><SelectValue placeholder="Phase WBS" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={translateTerm('wbs_phase')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE}>Non assignée</SelectItem>
             {phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}

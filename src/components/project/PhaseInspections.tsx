@@ -191,9 +191,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     }
   };
 
-  const getStatusLabel = (status: string) => i18nService.translateStatus(status as string);
-    return labels[status] || status;
-  };
+  const getStatusLabel = (status: string) => i18nService.translateStatus(status);
 
   if (isLoading) {
     return <div className="animate-pulse">Chargement des inspections...</div>;

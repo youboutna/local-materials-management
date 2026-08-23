@@ -135,7 +135,15 @@ export const STATUS_LABELS: Record<string, ReferentialLabel> = {
   // ── Inspections ──────────────────────────────────────────────────────
   modifications_requises: label('modifications_requises', 'Modifications requises', 'تعديلات مطلوبة', 'Changes requested'),
   rejetee: label('rejetee', 'Rejetée', 'مرفوض', 'Rejected'),
+
+  // ── Codes ENUM PostgreSQL (T38) : document_status, supply_request_status,
+  //    authorization_status, mission_status, vessel_status, movement_validation_status
+  pending_review: label('pending_review', 'En attente de revue', 'قيد المراجعة', 'Pending review'),
+  returned: label('returned', 'Retourné', 'أُعيد', 'Returned'),
+  under_review: label('under_review', 'En cours d’examen', 'قيد الفحص', 'Under review'),
+  in_transit: label('in_transit', 'En transit', 'قيد النقل', 'In transit'),
 };
+
 
 /** Étapes du cycle de passation (appels d'offres). */
 export const TENDER_STEP_LABELS: Record<string, ReferentialLabel> = {
@@ -187,6 +195,12 @@ export const INVOICE_DOCUMENT_LABELS: Record<string, ReferentialLabel> = {
 
 /** Rôles applicatifs. */
 export const ROLE_LABELS: Record<string, ReferentialLabel> = {
+  // Codes ENUM public.user_role (T38)
+  insurance_company: label('insurance_company', 'Compagnie d’assurance', 'شركة تأمين', 'Insurance company'),
+  practitioner: label('practitioner', 'Praticien', 'ممارس', 'Practitioner'),
+  patient: label('patient', 'Patient', 'مريض', 'Patient'),
+  agent: label('agent', 'Agent', 'وكيل', 'Agent'),
+
   admin: label('admin', 'Administrateur', 'مدير النظام', 'Administrator'),
   director: label('director', 'Directeur', 'مدير', 'Director'),
   manager: label('manager', 'Chef de projet', 'مدير المشروع', 'Project manager'),
@@ -255,6 +269,16 @@ export const SEVERITY_LABELS: Record<string, ReferentialLabel> = {
 
 /** Types de documents et d'alertes affichés dans les tableaux de bord. */
 export const DOCUMENT_TYPE_LABELS: Record<string, ReferentialLabel> = {
+  // Codes ENUM public.document_type (T38)
+  inspection_report: label('inspection_report', 'Rapport d’inspection', 'تقرير التفتيش', 'Inspection report'),
+  location_photo: label('location_photo', 'Photo de site', 'صورة الموقع', 'Site photo'),
+  project_report: label('project_report', 'Rapport de projet', 'تقرير المشروع', 'Project report'),
+  supplier_info: label('supplier_info', 'Information fournisseur', 'معلومات المورد', 'Supplier information'),
+  task_assignment: label('task_assignment', 'Affectation de tâche', 'تعيين مهمة', 'Task assignment'),
+  employee_record: label('employee_record', 'Dossier employé', 'ملف الموظف', 'Employee record'),
+  supplier_catalog: label('supplier_catalog', 'Catalogue fournisseur', 'كتالوج المورد', 'Supplier catalog'),
+  tender: label('tender', 'Appel d’offres', 'عطاء', 'Tender'),
+
   contract: label('contract', 'Contrat', 'عقد', 'Contract'),
   contrat: label('contrat', 'Contrat', 'عقد', 'Contract'),
   invoice: label('invoice', 'Facture', 'فاتورة', 'Invoice'),
@@ -288,10 +312,30 @@ export const DEPARTMENT_LABELS: Record<string, ReferentialLabel> = {
   other: label('other', 'Autre', 'أخرى', 'Other'),
 };
 
+/**
+ * Glossaire métier (T36) — termes techniques ou anglicismes affichés dans l'UI.
+ * « WBS » n'est pas explicite pour un francophone : le libellé long est utilisé
+ * pour les titres/labels, le libellé court pour les onglets et colonnes denses.
+ */
+export const GLOSSARY_LABELS: Record<string, ReferentialLabel> = {
+  wbs: label('wbs', 'Structure de découpage des travaux', 'هيكل تقسيم العمل', 'Work Breakdown Structure'),
+  wbs_short: label('wbs_short', 'Découpage des travaux', 'تقسيم الأعمال', 'Work breakdown'),
+  wbs_phase: label('wbs_phase', 'Phase de découpage', 'مرحلة التقسيم', 'Breakdown phase'),
+  wbs_classification: label('wbs_classification', 'Classification du découpage des travaux', 'تصنيف تقسيم الأعمال', 'Work breakdown classification'),
+  wbs_unassigned: label('wbs_unassigned', 'Hors découpage des travaux (à affecter)', 'خارج تقسيم الأعمال (للتعيين)', 'Outside work breakdown (to assign)'),
+  phase: label('phase', 'Phase', 'مرحلة', 'Phase'),
+  milestone: label('milestone', 'Jalon', 'مرحلة رئيسية', 'Milestone'),
+  task: label('task', 'Tâche', 'مهمة', 'Task'),
+  boq: label('boq', 'Devis quantitatif estimatif (DQE)', 'كشف الكميات التقديري', 'Bill of Quantities (BoQ)'),
+  takeoff: label('takeoff', 'Métré', 'حصر الكميات', 'Quantity takeoff'),
+};
+
 /** Registre global des dictionnaires de labels métier. */
 export const REFERENTIAL_LABEL_REGISTRY = {
   status: STATUS_LABELS,
+  glossary: GLOSSARY_LABELS,
   tenderStep: TENDER_STEP_LABELS,
+
   projectType: PROJECT_TYPE_LABELS,
   unit: UNIT_LABELS,
   invoiceDocument: INVOICE_DOCUMENT_LABELS,
