@@ -251,6 +251,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
               contextId={ctx.contextId ?? ''}
               targetSource={ctx.source}
               projectId={props.projectId}
+              projectName={props.projectName}
               tenderId={props.tenderId}
               sellerName={props.projectName}
               buyerName={props.recipientEmail}
