@@ -233,14 +233,7 @@ const AdministrativeEvaluation: React.FC<{
   console.log(submission.submission_documents);
 
   const adminDocuments = submission.submission_documents?.filter(doc => (doc.category === 'administrative'||doc.category === 'financial' )) || [];
-  const requiredDocs = [
-    'Garantie de soumission',
-    'Attestation fiscale',
-    'Attestation de régularité sociale',
-    'Copie du registre de commerce',
-    'Pouvoir du signataire',
-    'Devis quantitatif estimatif'
-  ];
+  const requiredDocs = TENDER_REQUIRED_ADMINISTRATIVE_DOCUMENTS.map(d => d.label);
 
   const completionRate = Math.min((adminDocuments.length / requiredDocs.length) * 100, 100);
   const isComplete = adminDocuments.length >= requiredDocs.length;
@@ -349,12 +342,9 @@ const TechnicalEvaluation: React.FC<{
   const [score, setScore] = useState(submission.technical_score || 0);
   const [notes, setNotes] = useState(submission.evaluator_notes || '');
 
-  const criteria = [
-    { name: 'Expérience et références', weight: 30 },
-    { name: 'Qualification du personnel', weight: 25 },
-    { name: 'Méthodologie proposée', weight: 25 },
-    { name: 'Planning et organisation', weight: 20 }
-  ];
+  const criteria = DEFAULT_EVALUATION_CRITERIA
+    .filter(c => c.category === 'technical')
+    .map(c => ({ name: c.label, weight: c.weight }));
 
   return (
     <div className="space-y-6">
