@@ -197,7 +197,7 @@ export const BoqBudgetDashboard: React.FC<Props> = ({
           <div className="mt-4 space-y-2">
             <BudgetConsistencyAlerts
               findings={reconciliation.findings}
-              okLabel="Réconciliation complète : toutes les lignes sont affectées à la WBS et les montants réels restent dans l'enveloppe."
+              okLabel={`Réconciliation complète : toutes les lignes sont affectées à la ${i18nService.translateTerm('wbs_short').toLowerCase()} et les montants réels restent dans l'enveloppe.`}
             />
           </div>
         )}

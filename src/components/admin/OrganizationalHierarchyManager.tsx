@@ -14,6 +14,7 @@ import { Building2, Plus, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
+import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 interface OrganizationTemplate {
   id: string;
   name: string;
@@ -477,7 +478,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                       </Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {position.department} • Niveau {position.level}
+                      <TranslatedDepartment code={position.department} /> • Niveau {position.level}
                       {position.parent && ` • Sous ${position.parent}`}
                     </div>
                     <div className="flex gap-1 mt-1">

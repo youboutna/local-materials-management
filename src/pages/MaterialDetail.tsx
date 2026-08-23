@@ -33,6 +33,7 @@ import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { i18nService } from '@/application/services/I18nService';
 /**
  * Composant de détail d'un matériau
  * Affiche les informations, la localisation et les zones de couverture
@@ -174,7 +175,7 @@ const MaterialDetail = () => {
   return (
     <AppLayout
       pageTitle={material.name}
-      pageDescription={material.category}
+      pageDescription={i18nService.translateCategory(material.category)}
       actions={
         <Button asChild>
           <Link to={`/materials/${material.id}/edit`} aria-label={`Modifier ${material.name}`}>
