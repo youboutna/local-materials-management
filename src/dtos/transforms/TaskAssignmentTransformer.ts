@@ -152,10 +152,10 @@ export class TaskAssignmentTransformer {
       step_id: entity.stepId ?? null,
       
       // Assignation (format PostgreSQL array: {uuid1,uuid2})
+      // NB: la colonne héritée `assignee_id` a été supprimée en base (migration de fusion)
       assigned_to: assignedTo.length > 0 ? `{${assignedTo.join(',')}}` : null,
-      // Colonne héritée pour compatibilité
-      assignee_id: assignedTo[0] ?? entity.assignedBy ?? null,
       assigned_by: entity.assignedBy ?? null,
+
       
       // Informations assigné
       assignee_type: entity.assigneeType ?? null,

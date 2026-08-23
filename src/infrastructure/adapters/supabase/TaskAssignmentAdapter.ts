@@ -101,8 +101,10 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
       .contains('assigned_to', [assigneeId])
       .order('created_at', { ascending: false });
     if (!error) return this.mapMany(data);
-    // Fallback colonne héritée
-    return this.findByColumn('assignee_id', assigneeId);
+    // La colonne héritée `assignee_id` n'existe plus : pas de fallback possible
+    console.warn('findByAssignee failed:', error.message);
+    return [];
+
   }
 
   findByAssignedTo(assigneeId: string): Promise<TaskAssignment[]> {

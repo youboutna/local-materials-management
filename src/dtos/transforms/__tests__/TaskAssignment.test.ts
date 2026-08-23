@@ -20,7 +20,7 @@ describe('TaskAssignment (source unique)', () => {
     const entity = TaskAssignment.create({ id: '1', title: 'T', assignedTo: ['u1', 'u2'] });
     const row = TaskAssignmentTransformer.toRepository(entity);
     expect(row.assigned_to).toBe('{u1,u2}');
-    expect(row.assignee_id).toBe('u1');
+    expect(row.assignee_id).toBeUndefined();
   });
 
   it('fait un aller-retour repository → entité', () => {
