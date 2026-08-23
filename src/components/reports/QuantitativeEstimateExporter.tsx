@@ -1,4 +1,5 @@
-import { getNotificationService } from '@/application/services/NotificationService';
+import { CommunicationService } from '@/application/services/CommunicationService';
+import { blobToBase64 } from '@/utils/fileEncoding';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -450,10 +451,7 @@ export function QuantitativeEstimateExporter({
     try {
       const { blob, fileName } = await generatePDF();
 
-      // Use NotificationService to send email 
-      const notificationService = getNotificationService();
-      
-      await notificationService.sendEmail({
+      const emailResult = await CommunicationService.sendEmail({
         to: exportConfig.recipientEmail!,
         subject: `Devis Quantitatif: ${exportConfig.title}`,
         body: `Veuillez trouver ci-joint le devis quantitatif estimatif "${exportConfig.title}" pour l'appel d'offres "${tender?.projectReference || tender?.title}". Le devis a été généré le ${format(new Date(), 'dd/MM/yyyy')} et est valide jusqu'au ${format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd/MM/yyyy')}.`,

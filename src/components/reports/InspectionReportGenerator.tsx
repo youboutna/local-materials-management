@@ -1,5 +1,6 @@
 import { InspectionMetrics, InspectionReportData, getInspectionReportingService } from '@/application/services/InspectionReportingService';
-import { getNotificationService } from '@/application/services/NotificationService';
+import { CommunicationService } from '@/application/services/CommunicationService';
+import { blobToBase64 } from '@/utils/fileEncoding';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -336,10 +337,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
     try {
       const { blob, fileName } = await generatePDF();
 
-      // Use NotificationService to send email 
-      const notificationService = getNotificationService();
-      
-      await notificationService.sendEmail({
+      const emailResult = await CommunicationService.sendEmail({
         to: reportConfig.recipientEmail!,
         subject: `Rapport d'inspection: ${reportConfig.title}`,
         body: `Veuillez trouver ci-joint le rapport d'inspection "${reportConfig.title}" pour l'inspection ${inspection.id}. Le rapport a été généré le ${format(new Date(), 'dd/MM/yyyy')}.`,

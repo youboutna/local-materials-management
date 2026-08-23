@@ -1,4 +1,5 @@
-import { getNotificationService } from '@/application/services/NotificationService';
+import { CommunicationService } from '@/application/services/CommunicationService';
+import { blobToBase64 } from '@/utils/fileEncoding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -252,10 +253,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
     try {
       const { blob, fileName } = await generatePDF();
 
-      // Use NotificationService to send email 
-      const notificationService = getNotificationService();
-      
-      await notificationService.sendEmail({
+      const emailResult = await CommunicationService.sendEmail({
         to: reportConfig.recipientEmail!,
         subject: `Rapport de paiements: ${reportConfig.title}`,
         body: `Veuillez trouver ci-joint le rapport de paiements "${reportConfig.title}" pour le fournisseur ${supplier.name}. Le rapport couvre la période du ${format(dateRange.startDate, 'dd/MM/yyyy')} au ${format(dateRange.endDate, 'dd/MM/yyyy')}.`,
