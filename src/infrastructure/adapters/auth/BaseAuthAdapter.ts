@@ -52,4 +52,9 @@ export abstract class BaseAuthAdapter {
   async updateUserRole(_userId: string, _role: string): Promise<{ user: AuthUser | null; error: Error | null }> {
     return { user: null, error: notSupported('updateUserRole') };
   }
+
+  /** Par défaut aucun flux d'évènements : désinscription noop. */
+  onAuthStateChange(_callback: (session: AuthSession | null) => void): () => void {
+    return () => undefined;
+  }
 }
