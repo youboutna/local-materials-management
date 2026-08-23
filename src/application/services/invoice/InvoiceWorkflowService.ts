@@ -18,6 +18,7 @@ import {
   type InvoiceDocumentTypeDef,
 } from '@/config/referentials/invoices/invoice-document-types.referential';
 import { FacturXTransformer } from './FacturXTransformer';
+import { reconcileLinePrice } from '@/application/services/boq/parsers/priceCoherence';
 
 export interface InvoiceTransformInput {
   /** Type du document source. */
@@ -118,6 +119,7 @@ export const InvoiceWorkflowService = {
             facturxTypeCode: def.facturxTypeCode,
             businessStatus: def.initialStatus,
             percentage: def.requiresPercentage ? clampPct(input.percentage) : null,
+            priceCorrected: coherent.corrected || undefined,
             fromType: input.fromType,
             fromLineId: l.id ?? null,
             fromDocumentId: l.documentId ?? null,
