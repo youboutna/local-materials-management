@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 export type { ProjectStatus } from "@/dtos/entities/ProjectAggregateDTO";
 
 interface ProjectMapProps {
@@ -256,7 +257,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                 <Popup>
                   <strong>{projectTitle}</strong>
                   <div className="text-xs">
-                    {zone.label ?? 'Zone'} · {zone.type} · {zone.coordinates.length} sommets
+                    {zone.label ?? 'Zone'} · <TranslatedDocumentType code={zone.type} /> · {zone.coordinates.length} sommets
                   </div>
                 </Popup>
               </Polygon>

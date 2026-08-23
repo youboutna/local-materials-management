@@ -26,6 +26,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Download, ExternalLink, FileText } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -192,7 +193,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
                         document.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
                         'bg-muted text-foreground'
                       }`}>
-                        {document.status}
+                        <TranslatedStatus code={document.status} />
                       </span>
                     )}
                   </div>

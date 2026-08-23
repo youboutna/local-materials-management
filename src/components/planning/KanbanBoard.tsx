@@ -23,6 +23,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useKanbanTasks, KanbanTask } from '@/hooks/hexagonal';
 
+import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 interface KanbanColumn {
   id: string;
   title: string;
@@ -186,7 +187,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                          <div className="flex items-center gap-1 mb-2">
                            <Badge className={cn("text-xs h-5", getPriorityColor(task.priority))}>
                              {getPriorityIcon(task.priority)}
-                             {task.priority}
+                             <TranslatedPriority code={task.priority} />
                            </Badge>
                            {(task.tags || [])?.slice(0, 2).map(tag => (
                              <Badge key={tag} variant="outline" className="text-xs h-5">

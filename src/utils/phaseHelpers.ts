@@ -1,6 +1,7 @@
 import { CheckCircle, RefreshCw, AlertTriangle, Clock, TrendingUp, Info } from 'lucide-react';
 import React from 'react';
 
+import { i18nService } from '@/application/services/I18nService';
 export type PhaseStatus = 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | 'not_started' | 'on_hold';
 
 export const getStatusColor = (status: PhaseStatus | string): string => {
@@ -34,17 +35,8 @@ export const getStatusIcon = (status: PhaseStatus | string): React.ReactNode => 
   }
 };
 
-export const getStatusLabel = (status: PhaseStatus | string): string => {
-  const labels: Record<string, string> = {
-    completed: "Terminé",
-    in_progress: "En cours",
-    delayed: "En retard",
-    pending: "En attente",
-    cancelled: "Annulé",
-    not_started: "Non commencé",
-  };
-  return labels[status] || status;
-};
+export const getStatusLabel = (status: PhaseStatus | string): string =>
+  i18nService.translateStatus(status);
 
 export const formatDate = (dateString?: string | null): string => {
   if (!dateString) return "Non définie";

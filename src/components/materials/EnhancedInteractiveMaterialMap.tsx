@@ -9,6 +9,7 @@ import L from 'leaflet';
 import { MaterialUIDTO } from '@/dtos/transforms';
 import { getMajorCities } from '@/utils/mauritania';
 
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 // Fix default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -198,7 +199,7 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2">
                           <Package className="h-4 w-4 text-primary" />
-                          <span>{material.category}</span>
+                          <span><TranslatedCategory code={material.category} /></span>
                         </div>
                         
                         <div className="flex items-center gap-2">
@@ -217,12 +218,12 @@ const EnhancedInteractiveMaterialMap: React.FC<EnhancedInteractiveMaterialMapPro
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-4 w-4 text-success" />
                             <span className="font-medium text-success text-sm">
-                              {formatPrice(material.pricePerUnit)}/{material.unit}
+                              {formatPrice(material.pricePerUnit)}/<TranslatedUnit code={material.unit} />
                             </span>
                           </div>
                           <div className="text-right">
                             <div className="font-medium text-sm">
-                              {material.availableQuantity} {material.unit}
+                              {material.availableQuantity} <TranslatedUnit code={material.unit} />
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {stockLevel === 'high' && 'Stock élevé'}

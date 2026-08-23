@@ -33,6 +33,7 @@ import { ProjectMetricsOrchestrator } from "@/application/services/ProjectMetric
 import { formatIndex2, formatAmount2, formatNumber2 } from "@/utils/reportNumbers";
 import type { ProjectDetailDTO } from "@/dtos/entities/ProjectDTO";
 
+import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 export interface MonitoringEvalPhaseInput {
   id: string;
   name: string;
@@ -272,7 +273,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={severityColor(r.severity)}>
-                              {r.severity}
+                              <TranslatedSeverity code={r.severity} />
                             </Badge>
                           </TableCell>
                         </TableRow>

@@ -98,6 +98,22 @@ export class I18nService {
   translateCategory(code?: string | null, lang?: ReferentialLanguage): string {
     return this.resolve('category', code, lang);
   }
+
+  translatePriority(code?: string | null, lang?: ReferentialLanguage): string {
+    return this.resolve('priority', code, lang);
+  }
+
+  translateSeverity(code?: string | null, lang?: ReferentialLanguage): string {
+    return this.resolve('severity', code, lang);
+  }
+
+  translateDocumentType(code?: string | null, lang?: ReferentialLanguage): string {
+    return this.resolve('documentType', code, lang);
+  }
+
+  translateDepartment(code?: string | null, lang?: ReferentialLanguage): string {
+    return this.resolve('department', code, lang);
+  }
 }
 
 let instance: I18nService | null = null;

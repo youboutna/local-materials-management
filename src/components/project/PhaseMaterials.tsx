@@ -15,6 +15,7 @@ import { Plus, Package, Edit2, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal';
 
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface PhaseMaterialsProps {
   phaseId: string;
   projectId: string;
@@ -143,7 +144,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
                     <SelectContent>
                       {availableMaterials?.map((material) => (
                         <SelectItem key={material.id} value={material.id}>
-                          {material.name} - {material.price_per_unit} MRU/{material.unit}
+                          {material.name} - {material.price_per_unit} MRU/<TranslatedUnit code={material.unit} />
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -189,9 +190,9 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
                   <h3 className="font-medium">{pm.material.name}</h3>
                   <p className="text-sm text-muted-foreground">{pm.material.description}</p>
                   <div className="flex gap-2 mt-2">
-                    <Badge variant="outline">{pm.material.category}</Badge>
+                    <Badge variant="outline"><TranslatedCategory code={pm.material.category} /></Badge>
                     <Badge variant="secondary">
-                      {pm.quantity} {pm.material.unit}
+                      {pm.quantity} <TranslatedUnit code={pm.material.unit} />
                     </Badge>
                     <Badge>
                       {(pm.quantity * (pm.material.price_per_unit || 0)).toLocaleString()} MRU

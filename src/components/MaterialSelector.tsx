@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { useMaterialsSelector, MaterialOption } from '@/hooks/hexagonal'
 
 interface SelectedMaterial {
@@ -180,7 +181,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                                   <div className="flex flex-col">
                                     <span className="font-medium">{m.name}</span>
                                     <span className="text-xs text-muted-foreground">
-                                      {m.category} • {Number(m.price_per_unit || 0).toLocaleString()} MRU/{m.unit}
+                                      <TranslatedCategory code={m.category} /> • {Number(m.price_per_unit || 0).toLocaleString()} MRU/<TranslatedUnit code={m.unit} />
                                     </span>
                                   </div>
                                 </SelectItem>
@@ -189,7 +190,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                           </Select>
                           {material && (
                             <div className="flex flex-wrap gap-1 mt-2">
-                              <Badge variant="outline" className="text-xs">{material.category}</Badge>
+                              <Badge variant="outline" className="text-xs"><TranslatedCategory code={material.category} /></Badge>
                               {material.origin_location && (
                                 <Badge variant="outline" className="text-xs">
                                   <MapPin className="h-3 w-3 mr-1" />{material.origin_location}
@@ -210,11 +211,11 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                               onChange={(e) => updateQuantity(index, parseFloat(e.target.value) || 0)}
                               className="w-24"
                             />
-                            {material && <span className="text-sm text-muted-foreground">{material.unit}</span>}
+                            {material && <span className="text-sm text-muted-foreground"><TranslatedUnit code={material.unit} /></span>}
                           </div>
                           {material && (
                             <div className="text-xs text-muted-foreground">
-                              Stock: {Number(material.available_quantity)} {material.unit}
+                              Stock: {Number(material.available_quantity)} <TranslatedUnit code={material.unit} />
                             </div>
                           )}
                         </div>

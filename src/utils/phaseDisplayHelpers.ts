@@ -6,6 +6,7 @@
 
 import { PhaseStatus } from "@/dtos/types/phase-dto";
 
+import { i18nService } from '@/application/services/I18nService';
 // Status display helpers
 export const getStatusColor = (status: PhaseStatus | string): string => {
   switch (status) {
@@ -25,17 +26,8 @@ export const getStatusColor = (status: PhaseStatus | string): string => {
   }
 };
 
-export const getStatusLabel = (status: PhaseStatus | string): string => {
-  const labels: Record<string, string> = {
-    completed: "Terminé",
-    in_progress: "En cours",
-    delayed: "En retard",
-    pending: "En attente",
-    cancelled: "Annulé",
-    not_started: "Non commencé",
-  };
-  return labels[status] || status;
-};
+export const getStatusLabel = (status: PhaseStatus | string): string =>
+  i18nService.translateStatus(status);
 
 // Financial health display helpers
 export const getFinancialHealthColor = (health: string): string => {

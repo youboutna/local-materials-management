@@ -19,6 +19,7 @@ import React, { useState } from "react";
 import { ElectricSpinner } from "../loading-page";
 import { getDefaultPhaseMilestones } from "@/config/referentials/milestones.referential";
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface PhaseMilestonesProps {
   phaseId: string;
   projectId: string;
@@ -359,7 +360,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                       {getStatusIcon(milestone.status)}
                       <h4 className="font-medium">{milestone.title}</h4>
                       <Badge className={getStatusColor(milestone.status)}>
-                        {milestone.status}
+                        <TranslatedStatus code={milestone.status} />
                       </Badge>
                       <Badge variant="outline">Poids: {milestone.weight}</Badge>
                     </div>

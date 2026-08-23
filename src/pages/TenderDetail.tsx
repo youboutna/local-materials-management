@@ -15,6 +15,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
     <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
@@ -81,7 +82,7 @@ const TenderDetail: React.FC = () => {
                 <CardTitle>{tender.title}</CardTitle>
                 <p className="text-sm text-muted-foreground font-mono">{tender.tenderNumber || tender.id}</p>
               </div>
-              <Badge>{tender.status}</Badge>
+              <Badge><TranslatedStatus code={tender.status} /></Badge>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Description" value={tender.description} />

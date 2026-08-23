@@ -26,6 +26,10 @@ export const useI18n = () => {
       translateRole: (code?: string | null) => service.translateRole(code, lang),
       translateDeviation: (code?: string | null) => service.translateDeviation(code, lang),
       translateCategory: (code?: string | null) => service.translateCategory(code, lang),
+      translatePriority: (code?: string | null) => service.translatePriority(code, lang),
+      translateSeverity: (code?: string | null) => service.translateSeverity(code, lang),
+      translateDocumentType: (code?: string | null) => service.translateDocumentType(code, lang),
+      translateDepartment: (code?: string | null) => service.translateDepartment(code, lang),
     };
   }, [lang]);
 };

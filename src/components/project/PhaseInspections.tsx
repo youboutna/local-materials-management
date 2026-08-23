@@ -17,6 +17,7 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useProjectProgressSync } from '@/hooks/useProjectProgressSync';
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 
+import { i18nService } from '@/application/services/I18nService';
 interface PhaseInspectionsProps {
   phaseId: string;
   projectId: string;
@@ -190,13 +191,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      approved: 'Approuvée',
-      pending: 'En attente',
-      rejected: 'Rejetée',
-      completed: 'Terminée',
-    };
+  const getStatusLabel = (status: string) => i18nService.translateStatus(status as string);
     return labels[status] || status;
   };
 

@@ -29,6 +29,7 @@ import { useProjectTaskDependenciesHex } from '@/hooks/hexagonal/useProjectTaskD
 import { getEmployeeService } from '@/application/services/EmployeeService';
 import { getSupplierService } from '@/application/services/SupplierService';
 import { getProjectService } from '@/application/services/ProjectService';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // supabase removed - using hexagonal hooks and services
 
 interface Task {
@@ -635,7 +636,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                                   )}
                                   {phase.status && (
                                     <span className="text-xs text-success ml-2">
-                                      [{phase.status}]
+                                      [<TranslatedStatus code={phase.status} />]
                                     </span>
                                   )}
                                 </label>

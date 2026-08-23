@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Package, AlertTriangle, CheckCircle } from 'lucide-react';
 
+import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface MaterialAvailabilityCardProps {
   material: {
     available_quantity: number;
@@ -56,7 +57,7 @@ const MaterialAvailabilityCard: React.FC<MaterialAvailabilityCardProps> = ({
               <p className="text-2xl font-bold text-primary">
                 {material.available_quantity.toLocaleString('fr-FR')}
               </p>
-              <p className="text-sm text-muted-foreground">{material.unit} en stock</p>
+              <p className="text-sm text-muted-foreground"><TranslatedUnit code={material.unit} /> en stock</p>
             </div>
           </div>
           {getStatusBadge()}

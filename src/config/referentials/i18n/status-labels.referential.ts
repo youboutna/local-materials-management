@@ -54,6 +54,16 @@ export const STATUS_LABELS: Record<string, ReferentialLabel> = {
   canceled: label('canceled', 'Annulé', 'ملغي', 'Canceled'),
   suspended: label('suspended', 'Suspendu', 'موقوف', 'Suspended'),
 
+  not_started: label('not_started', 'Non commencé', 'لم يبدأ', 'Not started'),
+  non_commence: label('non_commence', 'Non commencé', 'لم يبدأ', 'Not started'),
+  delayed: label('delayed', 'En retard', 'متأخر', 'Delayed'),
+  todo: label('todo', 'À faire', 'للتنفيذ', 'To do'),
+  blocked: label('blocked', 'Bloqué', 'محجوب', 'Blocked'),
+  on_hold: label('on_hold', 'En pause', 'متوقف مؤقتا', 'On hold'),
+  scheduled: label('scheduled', 'Planifié', 'مبرمج', 'Scheduled'),
+  overdue: label('overdue', 'En retard', 'متأخر', 'Overdue'),
+  in_review: label('in_review', 'En révision', 'قيد المراجعة', 'In review'),
+
   // ── Statuts projet (codes DTO ProjectStatus, y compris legacy) ────────
   planned: label('planned', 'Planifié', 'مخطط', 'Planned'),
   planifie: label('planifie', 'Planifié', 'مخطط', 'Planned'),
@@ -213,6 +223,71 @@ export const CATEGORY_LABELS: Record<string, ReferentialLabel> = {
   other: label('other', 'Autres', 'أخرى', 'Other'),
 };
 
+/** Priorités (tâches, jalons, conformité, risques). */
+export const PRIORITY_LABELS: Record<string, ReferentialLabel> = {
+  low: label('low', 'Faible', 'منخفضة', 'Low'),
+  basse: label('basse', 'Faible', 'منخفضة', 'Low'),
+  faible: label('faible', 'Faible', 'منخفضة', 'Low'),
+  medium: label('medium', 'Moyenne', 'متوسطة', 'Medium'),
+  moyenne: label('moyenne', 'Moyenne', 'متوسطة', 'Medium'),
+  normal: label('normal', 'Normale', 'عادية', 'Normal'),
+  normale: label('normale', 'Normale', 'عادية', 'Normal'),
+  high: label('high', 'Élevée', 'مرتفعة', 'High'),
+  haute: label('haute', 'Élevée', 'مرتفعة', 'High'),
+  elevee: label('elevee', 'Élevée', 'مرتفعة', 'High'),
+  urgent: label('urgent', 'Urgente', 'عاجلة', 'Urgent'),
+  critical: label('critical', 'Critique', 'حرجة', 'Critical'),
+  critique: label('critique', 'Critique', 'حرجة', 'Critical'),
+};
+
+/** Sévérités (alertes, écarts, notifications). */
+export const SEVERITY_LABELS: Record<string, ReferentialLabel> = {
+  info: label('info', 'Information', 'معلومة', 'Info'),
+  success: label('success', 'Succès', 'نجاح', 'Success'),
+  low: label('low', 'Faible', 'منخفضة', 'Low'),
+  warning: label('warning', 'Avertissement', 'تحذير', 'Warning'),
+  medium: label('medium', 'Moyenne', 'متوسطة', 'Medium'),
+  high: label('high', 'Élevée', 'مرتفعة', 'High'),
+  error: label('error', 'Erreur', 'خطأ', 'Error'),
+  critical: label('critical', 'Critique', 'حرجة', 'Critical'),
+  blocker: label('blocker', 'Bloquant', 'حاجز', 'Blocker'),
+};
+
+/** Types de documents et d'alertes affichés dans les tableaux de bord. */
+export const DOCUMENT_TYPE_LABELS: Record<string, ReferentialLabel> = {
+  contract: label('contract', 'Contrat', 'عقد', 'Contract'),
+  contrat: label('contrat', 'Contrat', 'عقد', 'Contract'),
+  invoice: label('invoice', 'Facture', 'فاتورة', 'Invoice'),
+  report: label('report', 'Rapport', 'تقرير', 'Report'),
+  plan: label('plan', 'Plan', 'مخطط', 'Plan'),
+  permit: label('permit', 'Autorisation', 'ترخيص', 'Permit'),
+  guarantee: label('guarantee', 'Garantie bancaire', 'ضمان بنكي', 'Bank guarantee'),
+  insurance: label('insurance', 'Assurance', 'تأمين', 'Insurance'),
+  payment: label('payment', 'Paiement', 'دفعة', 'Payment'),
+  milestone: label('milestone', 'Jalon', 'مرحلة رئيسية', 'Milestone'),
+  task: label('task', 'Tâche', 'مهمة', 'Task'),
+  phase: label('phase', 'Phase', 'مرحلة', 'Phase'),
+  step: label('step', 'Étape', 'خطوة', 'Step'),
+  inspection: label('inspection', 'Inspection', 'تفتيش', 'Inspection'),
+  photo: label('photo', 'Photo', 'صورة', 'Photo'),
+  budget: label('budget', 'Budget', 'ميزانية', 'Budget'),
+  delay: label('delay', 'Retard', 'تأخير', 'Delay'),
+  other: label('other', 'Autre', 'أخرى', 'Other'),
+};
+
+/** Départements / entités organisationnelles. */
+export const DEPARTMENT_LABELS: Record<string, ReferentialLabel> = {
+  technical: label('technical', 'Technique', 'فني', 'Technical'),
+  finance: label('finance', 'Finances', 'المالية', 'Finance'),
+  procurement: label('procurement', 'Achats & Marchés', 'المشتريات', 'Procurement'),
+  hr: label('hr', 'Ressources humaines', 'الموارد البشرية', 'Human resources'),
+  operations: label('operations', 'Opérations', 'العمليات', 'Operations'),
+  quality: label('quality', 'Qualité', 'الجودة', 'Quality'),
+  hse: label('hse', 'HSE', 'الصحة والسلامة', 'HSE'),
+  management: label('management', 'Direction', 'الإدارة', 'Management'),
+  other: label('other', 'Autre', 'أخرى', 'Other'),
+};
+
 /** Registre global des dictionnaires de labels métier. */
 export const REFERENTIAL_LABEL_REGISTRY = {
   status: STATUS_LABELS,
@@ -223,6 +298,10 @@ export const REFERENTIAL_LABEL_REGISTRY = {
   role: ROLE_LABELS,
   deviation: DEVIATION_LABELS,
   category: CATEGORY_LABELS,
+  priority: PRIORITY_LABELS,
+  severity: SEVERITY_LABELS,
+  documentType: DOCUMENT_TYPE_LABELS,
+  department: DEPARTMENT_LABELS,
 } as const;
 
 export type ReferentialLabelDomain = keyof typeof REFERENTIAL_LABEL_REGISTRY;

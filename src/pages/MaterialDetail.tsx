@@ -32,6 +32,7 @@ import { AppLayout } from "@/components/layout";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 /**
  * Composant de détail d'un matériau
  * Affiche les informations, la localisation et les zones de couverture
@@ -214,19 +215,19 @@ const MaterialDetail = () => {
                   <p className="text-sm text-muted-foreground">Prix unitaire</p>
                   <p className="font-medium">
                     {formatAmount2(material.pricePerUnit)}/
-                    {material.unit}
+                    <TranslatedUnit code={material.unit} />
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Unité de mesure</p>
-                  <p className="font-medium">{material.unit}</p>
+                  <p className="font-medium"><TranslatedUnit code={material.unit} /></p>
                 </div>
               </div>
 
               {material.category && (
                 <div>
                   <p className="text-sm text-muted-foreground">Catégorie</p>
-                  <Badge variant="secondary">{material.category}</Badge>
+                  <Badge variant="secondary"><TranslatedCategory code={material.category} /></Badge>
                 </div>
               )}
             </CardContent>

@@ -18,6 +18,7 @@ import { TenderService, getTenderService} from '@/application/services/TenderSer
 import { TenderTransformer } from '@/dtos/transforms/TenderTransformer';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle, Download, FileText, Lock } from 'lucide-react';
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import {
   SecretCodeAccessGate,
   type GateValidationResult,
@@ -102,7 +103,7 @@ export const UnlockedView: React.FC<{ payload: UnlockedPayload; onReset: () => v
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 flex-wrap">
-              <Badge>{tenderDTO.status}</Badge>
+              <Badge><TranslatedStatus code={tenderDTO.status} /></Badge>
               {tenderDTO.marketType && <Badge variant="outline">{tenderDTO.marketType}</Badge>}
               {tenderDTO.selectionMode && (
                 <Badge variant="outline">{tenderDTO.selectionMode}</Badge>

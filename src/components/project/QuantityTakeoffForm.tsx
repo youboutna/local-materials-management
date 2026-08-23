@@ -22,6 +22,7 @@ import { getQuantityTakeoffService } from '@/application/services/QuantityTakeof
 import { useProjectPhasesHex } from '@/hooks/hexagonal/useProjectPhasesHex';
 import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqService';
 
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface QuantityTakeoffFormProps {
   projectId: string;
   onSubmitSuccess?: () => void;
@@ -186,7 +187,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
               <SelectContent>
                 {materials?.map((material) => (
                   <SelectItem key={material.id} value={material.id}>
-                    {material.name} ({material.category})
+                    {material.name} (<TranslatedCategory code={material.category} />)
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -341,7 +342,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
 
           <div className="bg-muted p-4 rounded-lg space-y-1">
             <div className="text-lg font-semibold">
-              Quantité calculée: {totals.quantity.toFixed(2)} {formData.unit}
+              Quantité calculée: {totals.quantity.toFixed(2)} <TranslatedUnit code={formData.unit} />
             </div>
             {unitPrice > 0 && (
               <>

@@ -35,6 +35,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import EnhancedScheduleInspectionModal from '@/components/inspections/EnhancedScheduleInspectionModal';
 import PaymentRequestModal from '@/components/payments/PaymentRequestModal';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // Types
 type StepDetailTab = 'overview' | 'inspections' | 'documents' | 'payments';
 
@@ -382,7 +383,7 @@ export const StepDetailPanel: React.FC<StepDetailPanelProps> = ({
                         (inspection.status as string) === 'approved' ? 'default' :
                         (inspection.status as string) === 'rejected' ? 'destructive' : 'secondary'
                       }>
-                        {inspection.status}
+                        <TranslatedStatus code={inspection.status} />
                       </Badge>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>

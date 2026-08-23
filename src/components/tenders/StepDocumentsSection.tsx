@@ -6,6 +6,7 @@ import { getWorkflowStepService } from '@/application/services/WorkflowStepServi
 import { WorkflowStepDTO, StepDocumentDTO } from '@/dtos/types/workflow-dto';
 import { FileText, Plus, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface StepDocumentsSectionProps {
   step: WorkflowStepDTO;
   readonly?: boolean;
@@ -65,7 +66,7 @@ const StepDocumentsSection: React.FC<StepDocumentsSectionProps> = ({ step, reado
       {!canUpload && (
         <div className="p-3 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
-            Upload de documents non disponible pour cette étape (statut: {step.status})
+            Upload de documents non disponible pour cette étape (statut: <TranslatedStatus code={step.status} />)
           </p>
         </div>
       )}

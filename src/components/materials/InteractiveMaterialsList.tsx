@@ -7,6 +7,7 @@ import { MapPin, Package, DollarSign, Truck, Eye } from 'lucide-react';
 import { usePagination } from '@/hooks/usePagination';
 import { MaterialUIDTO } from '@/dtos/transforms';
 
+import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface InteractiveMaterialsListProps {
   materials: MaterialUIDTO[];
   onMaterialSelect?: (material: MaterialUIDTO) => void;
@@ -116,7 +117,7 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                         {material.description}
                       </p>
                       <Badge variant="outline" className="text-xs">
-                        {material.category}
+                        <TranslatedCategory code={material.category} />
                       </Badge>
                     </div>
                     <div className={`w-3 h-3 rounded-full ${stockColor} ml-3 mt-1`} title={stockLabel}></div>
@@ -156,13 +157,13 @@ const InteractiveMaterialsList: React.FC<InteractiveMaterialsListProps> = ({
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-4 w-4 text-success" />
                         <span className="font-medium text-success">
-                          {formatPrice(material.pricePerUnit)}/{material.unit}
+                          {formatPrice(material.pricePerUnit)}/<TranslatedUnit code={material.unit} />
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-primary" />
                         <span className="font-medium">
-                          {material.availableQuantity} {material.unit}
+                          {material.availableQuantity} <TranslatedUnit code={material.unit} />
                         </span>
                         <Badge 
                           variant="secondary" 

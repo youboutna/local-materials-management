@@ -28,6 +28,7 @@ import {
 } from '@/dtos/entities/InspectionDTO';
 import { InspectionDocumentsPanel } from '@/components/documents/panels';
 
+import { TranslatedCategory, TranslatedRole, TranslatedSeverity, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 // Local types for UI-specific fields not in DTOs
 interface LocalMeasurement {
   id: string;
@@ -421,7 +422,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                             {item.label || item.title}
                             {item.required && <span className="text-destructive ml-1">*</span>}
                           </label>
-                          <p className="text-xs text-muted-foreground mt-1">{item.category}</p>
+                          <p className="text-xs text-muted-foreground mt-1"><TranslatedCategory code={item.category} /></p>
                         </div>
                         {(item.checked || item.completed) && item.checkedAt && (
                           <span className="text-xs text-muted-foreground">
@@ -513,11 +514,11 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline">{obs.category}</Badge>
+                              <Badge variant="outline"><TranslatedCategory code={obs.category} /></Badge>
                               <Badge variant={obs.conformity === 'conforme' ? 'default' : obs.conformity === 'non_conforme' ? 'destructive' : 'secondary'}>
                                 {obs.conformity === 'conforme' ? 'Conforme' : obs.conformity === 'non_conforme' ? 'Non conforme' : 'Partiel'}
                               </Badge>
-                              {obs.severity && <Badge variant="outline">{obs.severity}</Badge>}
+                              {obs.severity && <Badge variant="outline"><TranslatedSeverity code={obs.severity} /></Badge>}
                             </div>
                             <p className="text-sm mt-2">{obs.description}</p>
                           </div>
@@ -566,7 +567,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                   <div className="space-y-2">
                     {executionData.measurements?.map((m) => (
                       <div key={m.id} className={`flex items-center justify-between p-3 rounded-lg border ${m.isWithinRange ? 'bg-success-soft' : 'bg-destructive/10'}`}>
-                        <div><p className="font-medium">{m.parameter}</p><p className="text-sm text-muted-foreground">{m.value} {m.unit}</p></div>
+                        <div><p className="font-medium">{m.parameter}</p><p className="text-sm text-muted-foreground">{m.value} <TranslatedUnit code={m.unit} /></p></div>
                         <Badge variant={m.isWithinRange ? 'default' : 'destructive'}>{m.isWithinRange ? 'OK' : 'Hors norme'}</Badge>
                       </div>
                     ))}
@@ -597,7 +598,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                       <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center"><Users className="h-5 w-5 text-primary" /></div>
-                          <div><p className="font-medium">{p.name}</p><p className="text-sm text-muted-foreground">{p.role}{p.organization ? ` - ${p.organization}` : ''}</p></div>
+                          <div><p className="font-medium">{p.name}</p><p className="text-sm text-muted-foreground"><TranslatedRole code={p.role} />{p.organization ? ` - ${p.organization}` : ''}</p></div>
                         </div>
                         <Button variant="ghost" size="icon" onClick={() => setExecutionData(prev => ({ ...prev, participants: prev.participants?.filter(part => part.id !== p.id) }))}><Trash2 className="h-4 w-4" /></Button>
                       </div>

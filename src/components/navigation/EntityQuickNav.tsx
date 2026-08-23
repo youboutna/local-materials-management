@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import {
   Tooltip,
   TooltipContent,
@@ -141,7 +142,7 @@ export function EntityQuickNav({
                 <span className="max-w-24 truncate">{entity.name}</span>
                 {entity.status && (
                   <Badge variant={entity.statusVariant || "secondary"} className="text-[10px] px-1 py-0">
-                    {entity.status}
+                    <TranslatedStatus code={entity.status} />
                   </Badge>
                 )}
               </Link>

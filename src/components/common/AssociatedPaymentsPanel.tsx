@@ -11,6 +11,7 @@ import { formatDate } from '@/lib/utils';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { getPaymentService } from '@/application/services/PaymentService';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface AssociatedPaymentsPanelProps {
   entityType: 'project' | 'inspection' | 'supplier' | 'validation';
   entityId: string;
@@ -86,7 +87,7 @@ export const AssociatedPaymentsPanel: React.FC<AssociatedPaymentsPanelProps> = (
                 <TableCell>{payment.amount} MRU</TableCell>
                 <TableCell>
                   <Badge variant={payment.status === 'approved' ? 'default' : 'secondary'}>
-                    {payment.status}
+                    <TranslatedStatus code={payment.status} />
                   </Badge>
                 </TableCell>
                 <TableCell>

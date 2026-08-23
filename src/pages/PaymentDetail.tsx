@@ -11,6 +11,7 @@ import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 const PaymentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ const PaymentDetailPage: React.FC = () => {
                 <CardTitle>Paiement {payment.transactionId || payment.id}</CardTitle>
                 <p className="text-sm text-muted-foreground font-mono">{payment.id}</p>
               </div>
-              {payment.status && <Badge>{payment.status}</Badge>}
+              {payment.status && <Badge><TranslatedStatus code={payment.status} /></Badge>}
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Montant" value={formatAmount2(payment.amount)} />

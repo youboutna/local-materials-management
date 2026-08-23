@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { MATERIAL_CATEGORIES, MaterialCategoryConfig, MaterialSubcategory } from '@/dtos/entities/MaterialCategoryDTO';
 
+import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 interface MaterialCategorySelectorProps {
   selectedCategory?: string;
   selectedSubcategory?: string;
@@ -73,7 +74,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 <SelectItem key={subcategory.id} value={subcategory.id}>
                   <div>
                     <div className="font-medium">{subcategory.name}</div>
-                    <div className="text-sm text-muted-foreground">Unité: {subcategory.unit}</div>
+                    <div className="text-sm text-muted-foreground">Unité: <TranslatedUnit code={subcategory.unit} /></div>
                   </div>
                 </SelectItem>
               ))}

@@ -32,6 +32,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatNumber2, formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 const milestoneToasts = entityToasts('jalon');
 
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
@@ -151,7 +152,7 @@ const MilestoneDetail: React.FC = () => {
                   <p className="text-sm text-muted-foreground font-mono">{milestone.id}</p>
                 </div>
               </div>
-              <Badge variant={statusVariant[milestone.status] || 'outline'}>{milestone.status}</Badge>
+              <Badge variant={statusVariant[milestone.status] || 'outline'}><TranslatedStatus code={milestone.status} /></Badge>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Description" value={milestone.description} />

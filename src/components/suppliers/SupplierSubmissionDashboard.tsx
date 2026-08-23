@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersHex } from '@/hooks/hexagonal'
 import { 
   useCurrentUserHex,
@@ -362,7 +363,7 @@ const SupplierSubmissionDashboard = () => {
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex-1">
                                   <p className="text-sm font-medium">{doc.document?.title || doc.document?.fileName}</p>
-                                  <p className="text-xs text-muted-foreground capitalize">{doc.category} - {doc.subcategory}</p>
+                                  <p className="text-xs text-muted-foreground capitalize"><TranslatedCategory code={doc.category} /> - {doc.subcategory}</p>
                                 </div>
                                 {validation && (
                                   <Badge variant="outline" className={`${validation.color} text-xs`}>

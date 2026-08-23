@@ -8,6 +8,7 @@ import 'leaflet/dist/leaflet.css';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 // Local type alias for project with coordinates
 type ProjectData = ProjectDTO;
 
@@ -224,7 +225,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                               border: `1px solid ${getStatusColor(project.status)}40`
                             }}
                           >
-                            {project.status}
+                            <TranslatedStatus code={project.status} />
                           </span>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Navigation className="h-3 w-3" />

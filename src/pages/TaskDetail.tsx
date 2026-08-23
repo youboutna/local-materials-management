@@ -14,6 +14,7 @@ import { AppLayout } from '@/components/layout';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 const TaskDetail = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();
@@ -132,7 +133,7 @@ const TaskDetail = () => {
             </div>
             <div className="flex gap-2">
               <Badge className={getPriorityColor(task.priority)}>
-                {task.priority}
+                <TranslatedPriority code={task.priority} />
               </Badge>
               <Badge variant={
                 task.status === 'completed' ? 'default' : 

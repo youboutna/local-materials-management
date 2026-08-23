@@ -28,6 +28,7 @@ import UnifiedPaymentFormDialog, {
 } from '@/components/payments/UnifiedPaymentFormDialog';
 import type { ConsultantProjectRef } from '@/hooks/hexagonal/useConsultantPortalHex';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface Props {
   projects: ConsultantProjectRef[];
 }
@@ -233,7 +234,7 @@ export function ConsultantProgressValidation({ projects }: Props) {
                       {m.targetDate ? new Date(m.targetDate).toLocaleDateString('fr-FR') : '—'}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={m.status === 'completed' ? 'default' : 'secondary'}>{m.status}</Badge>
+                      <Badge variant={m.status === 'completed' ? 'default' : 'secondary'}><TranslatedStatus code={m.status} /></Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button

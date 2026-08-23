@@ -15,6 +15,7 @@ import type { GeneratedPV, PVType } from '@/dtos/workflows/InspectionExecutionDT
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface InspectionPVGeneratorProps {
   inspection: {
     id: string;
@@ -177,7 +178,7 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
           </div>
           <div>
             <Label className="text-muted-foreground">Statut</Label>
-            <Badge variant="outline">{inspection.status}</Badge>
+            <Badge variant="outline"><TranslatedStatus code={inspection.status} /></Badge>
           </div>
           <div>
             <Label className="text-muted-foreground">Progression</Label>

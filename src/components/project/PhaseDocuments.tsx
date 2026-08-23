@@ -9,6 +9,7 @@ import { Plus, FileText, Download, Eye, Trash2 } from 'lucide-react';
 import PhaseDocumentUpload from './phases/PhaseDocumentUpload';
 import { usePhaseDocuments, useDocumentDelete } from '@/hooks/hexagonal';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface PhaseDocumentsProps {
   phaseId: string;
   projectId: string;
@@ -148,7 +149,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
                   </Badge>
                   {doc.status && (
                     <Badge variant={doc.status === 'approved' ? 'default' : 'secondary'}>
-                      {doc.status}
+                      <TranslatedStatus code={doc.status} />
                     </Badge>
                   )}
                 </div>

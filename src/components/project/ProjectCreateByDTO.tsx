@@ -14,6 +14,7 @@ import { ProjectReportDTO, EnhancedPhaseDTO, ConstructionMilestoneDTO } from '@/
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
+import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 interface ProjectCreateByDTOProps {
   onSave: (project: ProjectData) => void;
   onCancel: () => void;
@@ -594,7 +595,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     {milestones.map((milestone, index) => (
                       <div key={index} className="flex items-center justify-between p-2 border rounded">
                         <span>{milestone.title}</span>
-                        <Badge variant="outline">{milestone.priority}</Badge>
+                        <Badge variant="outline"><TranslatedPriority code={milestone.priority} /></Badge>
                       </div>
                     ))}
                   </div>

@@ -28,6 +28,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
+import { TranslatedRole, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface Phase {
   id: string;
   name: string;
@@ -207,7 +208,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p className="font-medium">{phase.name}</p>
-                <p className="text-xs">{phase.progress}% - {phase.status}</p>
+                <p className="text-xs">{phase.progress}% - <TranslatedStatus code={phase.status} /></p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -240,7 +241,7 @@ const ProjectHealthCard: React.FC<ProjectHealthCardProps> = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p className="font-medium">{stakeholder.name}</p>
-                <p className="text-xs text-muted-foreground">{stakeholder.role}</p>
+                <p className="text-xs text-muted-foreground"><TranslatedRole code={stakeholder.role} /></p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

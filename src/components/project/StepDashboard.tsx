@@ -10,6 +10,7 @@ import { PhaseStepDTO, PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { AuditEntry } from '@/hooks/useAuditEntries';
 import { StepItem } from '@/dtos/workflows/UnifiedWorkflowDTO';
 
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 // Local metric and helper types to avoid loose Record usage
 type Metrics = {
   overallProgress?: number;
@@ -347,7 +348,7 @@ const StepDashboard: React.FC<StepDashboardProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">{node.name}</p>
-                      <p className="text-xs text-muted-foreground">{node.type}</p>
+                      <p className="text-xs text-muted-foreground"><TranslatedDocumentType code={node.type} /></p>
                     </div>
                     <div className="text-xs text-muted-foreground">{node.status || 'unknown'}</div>
                   </div>

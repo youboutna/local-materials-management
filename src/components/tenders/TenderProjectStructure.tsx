@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { useProjectStructureHex } from '@/hooks/hexagonal/useProjectStructureHex';
 
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface TenderProjectStructureProps {
   projectId: string;
   onPhaseSelect?: (phaseId: string) => void;
@@ -144,7 +145,7 @@ const TenderProjectStructure: React.FC<TenderProjectStructureProps> = ({
               )}
             </div>
             <Badge className={getStatusColor(project.status)}>
-              {project.status}
+              <TranslatedStatus code={project.status} />
             </Badge>
           </div>
 

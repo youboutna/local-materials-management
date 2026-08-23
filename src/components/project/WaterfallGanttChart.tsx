@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, BarChart3, Clock, Users, DollarSign } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { i18nService } from '@/application/services/I18nService';
 /**
  * GanttTaskDTO (camelCase strict) consommé par `WaterfallGanttChart`.
  * Le mapping depuis les phases hex/repos est effectué dans le parent.
@@ -100,14 +101,7 @@ const WaterfallGanttChart: React.FC<WaterfallGanttChartProps> = ({
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Terminé';
-      case 'in_progress': return 'En cours';
-      case 'delayed': return 'Retardé';
-      default: return 'Non commencé';
-    }
-  };
+  const getStatusLabel = (status: string) => i18nService.translateStatus(status as string);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {

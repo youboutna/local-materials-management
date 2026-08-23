@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Plus, Edit, Trash2, Star } from 'lucide-react';
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { 
   useSuppliersHex, 
   useCreateSupplier, 
@@ -248,7 +249,7 @@ const SuppliersManagement = () => {
                     <h3 className="font-medium">{supplier.name}</h3>
                     {supplier.category && (
                       <Badge variant="outline" className="mt-1">
-                        {supplier.category}
+                        <TranslatedCategory code={supplier.category} />
                       </Badge>
                     )}
                   </div>

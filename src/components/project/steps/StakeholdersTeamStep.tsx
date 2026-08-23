@@ -55,6 +55,7 @@ import {
 } from "@/dtos/transforms/StakeholderUITransformer";
 import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
+import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 type Segment = "all" | "team" | "external" | "contractors";
 
 interface StakeholdersTeamStepProps {
@@ -443,7 +444,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   <div className="min-w-0">
                     <h4 className="font-medium truncate">{stakeholder.name}</h4>
                     <p className="text-sm text-muted-foreground truncate">
-                      {stakeholder.role} • {getEntityName(stakeholder)}
+                      <TranslatedRole code={stakeholder.role} /> • {getEntityName(stakeholder)}
                     </p>
                   </div>
                 </div>

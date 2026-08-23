@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Check, X } from 'lucide-react';
 import AddressSearchBox, { type AddressSelection } from '@/components/gis/AddressSearchBox';
+import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 import type {
   InterventionZoneDTO,
   InterventionZoneLatLng,
@@ -158,7 +159,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
             <MapPin className="h-4 w-4 text-primary" />
             Éditer la localisation
             <Badge variant="outline" className="capitalize">
-              {zone.type}
+              <TranslatedDocumentType code={zone.type} />
             </Badge>
           </DialogTitle>
         </DialogHeader>

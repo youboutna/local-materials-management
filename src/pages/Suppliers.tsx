@@ -18,6 +18,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { AppLayout } from '@/components/layout';
 import type { Supplier } from '@/domain/entities';
 
+import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 type SupplierRow = Supplier;
 type SupplierCategory = 'materials' | 'services' | 'equipment' | 'subcontractor' | 'consultant' | 'other';
 
@@ -383,7 +384,7 @@ const Suppliers = () => {
                     <h3 className="font-medium">{supplier.name}</h3>
                     {supplier.category && (
                       <Badge variant="outline" className="mt-1">
-                        {supplier.category}
+                        <TranslatedCategory code={supplier.category} />
                       </Badge>
                     )}
                   </div>

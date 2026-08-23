@@ -11,6 +11,7 @@ import { Edit, Trash2, Eye, Search, Calendar, FolderKanban, CheckCircle2 } from 
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface TenderRow {
   id: string;
   tender_number?: string | null;
@@ -155,7 +156,7 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <Badge className={STATUS_STYLE[t.status] || STATUS_STYLE.draft}>{t.status}</Badge>
+                  <Badge className={STATUS_STYLE[t.status] || STATUS_STYLE.draft}><TranslatedStatus code={t.status} /></Badge>
                   {t.selection_mode && <Badge variant="outline">{t.selection_mode}</Badge>}
                   {t.market_type && <Badge variant="outline">{t.market_type}</Badge>}
                   {t.procurement_type && <Badge variant="outline">{t.procurement_type}</Badge>}

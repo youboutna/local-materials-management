@@ -18,6 +18,7 @@ import { RiskDTO } from "@/dtos/entities/RiskDTO";
 import { ComplianceItemDTO } from "@/dtos/entities/ComplianceDTO";
 import { getStorageService } from '@/application/services/StorageService';
 
+import { TranslatedDocumentType, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 interface EnhancedValidationStepProps {
   formData: ProjectDTO & { 
     compliance?: ComplianceItemDTO[];
@@ -308,7 +309,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                     {getStatusIcon(field.status)}
                   </div>
                   <p className="font-medium text-xs">{field.name}</p>
-                  <p className="text-xs text-muted-foreground">{field.status}</p>
+                  <p className="text-xs text-muted-foreground"><TranslatedStatus code={field.status} /></p>
                 </div>
               ))}
             </div>
@@ -453,7 +454,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                       {uploadedFiles.map((file, index) => (
                         <div key={index} className="flex items-center justify-between p-2 border rounded">
                           <span className="text-sm">{file.name}</span>
-                          <Badge variant="outline">{file.type}</Badge>
+                          <Badge variant="outline"><TranslatedDocumentType code={file.type} /></Badge>
                         </div>
                       ))}
                     </div>
@@ -479,7 +480,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                           <p className="text-sm text-muted-foreground">Président: {reception.chairmanName}</p>
                         </div>
                         <Badge variant={reception.status === 'approved' ? 'default' : 'secondary'}>
-                          {reception.status}
+                          <TranslatedStatus code={reception.status} />
                         </Badge>
                       </div>
                       {reception.notes && (
@@ -531,7 +532,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={getStatusBadgeColor(field.status)}>
-                      {field.status}
+                      <TranslatedStatus code={field.status} />
                     </Badge>
                     <Button
                       size="sm"

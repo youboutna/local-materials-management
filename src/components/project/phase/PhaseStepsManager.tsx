@@ -63,6 +63,7 @@ import { BoqImportDialog } from "@/components/boq/BoqImportDialog";
 import { Upload } from "lucide-react";
 import PhaseStepResourceDialog from "./PhaseStepResourceDialog";
 
+import { i18nService } from '@/application/services/I18nService';
 interface PhaseStepsManagerProps {
   // Accept legacy PhaseStepDTO[] or unified StepItem[]
   steps: PhaseStepDTO[] | StepItem[];
@@ -94,13 +95,7 @@ const getStatusColor = (status: PhaseStatus | string) => {
   }
 };
 
-const getStatusLabel = (status: PhaseStatus | string) => {
-  const labels: Record<string, string> = {
-    completed: "Terminé",
-    in_progress: "En cours",
-    delayed: "En retard",
-    pending: "En attente",
-  };
+const getStatusLabel = (status: PhaseStatus | string) => i18nService.translateStatus(status as string);
   return labels[status] || status;
 };
 
