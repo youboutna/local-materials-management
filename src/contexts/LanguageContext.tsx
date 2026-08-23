@@ -26,10 +26,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const useLanguage = () => {
     const context = useContext(LanguageContext);
     if (!context) {
-        throw new Error('useLanguage must be used within a LanguageProvider');
+        // Repli sûr : certains composants sont montés hors du provider
+        // (portails, écrans d'erreur). On ne casse pas le rendu pour autant.
+        return FALLBACK_LANGUAGE_CONTEXT;
     }
     return context;
 };
+
 export const translations = {
     fr: {
         common: {
