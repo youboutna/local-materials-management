@@ -537,7 +537,28 @@ const TaskAssignmentsComponent = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="filter-project">
+                <T k="auto.taskassignments.projet" fallback="Projet" />
+              </Label>
+              <Select value={filterProject} onValueChange={setFilterProject}>
+                <SelectTrigger id="filter-project">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <T k="auto.taskassignments.tous" fallback="Tous" />
+                  </SelectItem>
+                  {projects?.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
         </CardContent>
       </Card>
 
