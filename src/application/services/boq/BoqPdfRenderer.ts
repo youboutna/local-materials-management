@@ -34,7 +34,18 @@ export interface BoqPdfContext {
   termsConditions?: string;
   notes?: string;
   validityDays?: number;
+  /** Étape du cycle documentaire (référentiel invoice-document-types). */
+  documentStage?: string;
+  /** TypeCode UNTDID 1001 (310 devis/commande, 380 facture). */
+  facturxTypeCode?: string;
+  /** Statut métier de l'étape (« demande », « signe », « payee »…). */
+  businessStatus?: string;
+  /** Avancement facturé pour les décomptes (%). */
+  billedPercentage?: number | null;
+  /** Référence documentaire (numéro Factur-X). */
+  reference?: string;
 }
+
 
 const DEFAULT_TERMS = `CONDITIONS GÉNÉRALES:
 1. Validité de l'offre: 30 jours à compter de la date d'émission
@@ -124,6 +135,28 @@ export const BoqPdfRenderer = {
       doc.setFont('helvetica', 'normal'); doc.text(String(v), 380, cy + i * 14);
     });
     y += 74;
+
+    // ---- Bandeau étape documentaire (cycle DQE → Facture / Factur-X) ----
+    if (ctx.documentStage || ctx.facturxTypeCode || ctx.billedPercentage != null) {
+      const chips: string[] = [];
+      if (ctx.documentStage) chips.push(`Étape : ${ctx.documentStage}`);
+      if (ctx.businessStatus) chips.push(`Statut : ${ctx.businessStatus}`);
+      if (ctx.facturxTypeCode) chips.push(`Factur-X / EN 16931 · TypeCode ${ctx.facturxTypeCode}`);
+      if (ctx.billedPercentage != null) chips.push(`Avancement facturé : ${Number(ctx.billedPercentage).toFixed(2)} %`);
+      if (ctx.reference) chips.push(`Réf. ${ctx.reference}`);
+
+      doc.setFillColor(240, 253, 250);
+      doc.setDrawColor(COLOR.accent[0], COLOR.accent[1], COLOR.accent[2]);
+      doc.roundedRect(40, y, 515, 26, 4, 4, 'FD');
+      doc.setFontSize(8.5); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(COLOR.accent[0], COLOR.accent[1], COLOR.accent[2]);
+      const chipText = doc.splitTextToSize(chips.join('   |   '), 495);
+      doc.text(chipText.slice(0, 1), 52, y + 16);
+      doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal');
+      y += 40;
+    }
+
+
 
     // ---- Lignes ----
     y = section(doc, y, 'Détail des postes', COLOR.accent);

@@ -24,6 +24,16 @@ export interface DocumentContext {
   signedAt?: string;
   /** Entête du document : organisation propriétaire (gestionnaire) ou fournisseur (émetteur). */
   company?: BoqPdfCompany;
+  /** Étape du cycle documentaire (DQE, Devis, Contrat, Décompte, Facture). */
+  documentStage?: string;
+  /** TypeCode UNTDID 1001 porté par l'étape (310 / 380). */
+  facturxTypeCode?: string;
+  /** Statut métier de l'étape. */
+  businessStatus?: string;
+  /** Avancement facturé (décompte). */
+  billedPercentage?: number | null;
+  /** Référence documentaire Factur-X. */
+  reference?: string;
 }
 
 async function loadLines(ctx: DocumentContext, fallback: BoqLineDTO[]): Promise<BoqLineDTO[]> {
@@ -55,8 +65,15 @@ function toPdfCtx(ctx: DocumentContext): BoqPdfContext {
     signedBy: ctx.signedBy,
     signedAt: ctx.signedAt,
     company: ctx.company,
+    documentStage: ctx.documentStage,
+    facturxTypeCode: ctx.facturxTypeCode,
+    businessStatus: ctx.businessStatus,
+    billedPercentage: ctx.billedPercentage ?? null,
+    reference: ctx.reference,
+    docNumber: ctx.reference,
   };
 }
+
 
 export const DocumentService = {
   async generate(lines: BoqLineDTO[], ctx: DocumentContext): Promise<{ blob: Blob; filename: string }> {

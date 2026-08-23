@@ -249,9 +249,13 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
               tenderId={props.tenderId}
               sellerName={props.projectName}
               buyerName={props.recipientEmail}
+              recipientEmail={props.recipientEmail}
               docPrefix={ctx.docPrefix}
+              projectBudget={props.remainingBudget ?? null}
               disabled={doc.isLoading}
+              onTransformed={() => doc.refetch?.()}
             />
+
           </div>
         </CardHeader>
 

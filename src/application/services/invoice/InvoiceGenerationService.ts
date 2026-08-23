@@ -48,6 +48,17 @@ export const InvoiceGenerationService = {
       ...input.documentContext,
       title: input.documentContext.title || def.label,
       docPrefix: input.documentContext.docPrefix || def.code,
+      // T6 — PDF contextuel : l'étape, le TypeCode et l'avancement facturé
+      // proviennent du référentiel documentaire, jamais d'un libellé codé en dur.
+      documentStage: input.documentContext.documentStage ?? def.label,
+      facturxTypeCode: input.documentContext.facturxTypeCode ?? def.facturxTypeCode,
+      businessStatus:
+        input.documentContext.businessStatus ??
+        (input.lines[0]?.businessStatus ?? def.initialStatus),
+      billedPercentage: def.requiresPercentage
+        ? input.percentage ?? input.lines[0]?.billedPercentage ?? null
+        : input.documentContext.billedPercentage ?? null,
+      reference,
     });
 
     const ctx: FacturXContext = {
@@ -80,4 +91,49 @@ export const InvoiceGenerationService = {
     );
     return res;
   },
+
+  /**
+   * Envoie le couple PDF + XML Factur-X au destinataire via le service de
+   * communication central (Edge Function `send-email-notification`).
+   */
+  async generateAndEmail(
+    input: InvoiceGenerationInput & { to: string; message?: string },
+  ): Promise<{ ok: boolean; message?: string; result: InvoiceGenerationResult }> {
+    const res = await this.generate(input);
+    const def = getInvoiceDocumentType(input.documentType);
+
+    const [{ CommunicationService }, { blobToBase64 }] = await Promise.all([
+      import('@/application/services/CommunicationService'),
+      import('@/utils/fileEncoding'),
+    ]);
+
+    const pdfB64 = await blobToBase64(res.pdf.blob);
+    const xmlB64 = await blobToBase64(new Blob([res.xml.content], { type: 'application/xml' }));
+
+    const body =
+      input.message ??
+      `Veuillez trouver ci-joint le document « ${def.label} » (${res.pdf.filename}) ` +
+        `accompagné de son XML Factur-X (EN 16931, TypeCode ${def.facturxTypeCode}).`;
+
+    const sent = await CommunicationService.sendEmail({
+      to: input.to,
+      subject: `${def.label} — ${input.documentContext.title || def.label}`,
+      message: body,
+      html: `<p>Bonjour,</p><p>${body}</p>`,
+      actionType: 'invoice_document',
+      metadata: {
+        documentType: def.code,
+        facturxTypeCode: def.facturxTypeCode,
+        projectId: input.documentContext.projectId ?? null,
+        tenderId: input.documentContext.tenderId ?? null,
+      },
+      attachments: [
+        { filename: res.pdf.filename, content: pdfB64, contentType: 'application/pdf', encoding: 'base64' },
+        { filename: res.xml.filename, content: xmlB64, contentType: 'application/xml', encoding: 'base64' },
+      ],
+    });
+
+    return { ok: !!sent?.success, message: sent?.reference, result: res };
+  },
 };
+

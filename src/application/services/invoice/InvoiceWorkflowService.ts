@@ -19,6 +19,10 @@ import {
 } from '@/config/referentials/invoices/invoice-document-types.referential';
 import { FacturXTransformer } from './FacturXTransformer';
 import { reconcileLinePrice } from '@/application/services/boq/parsers/priceCoherence';
+import {
+  InvoiceBudgetGuardService,
+  type InvoiceBudgetVerdict,
+} from './InvoiceBudgetGuardService';
 
 export interface InvoiceTransformInput {
   /** Type du document source. */
@@ -36,6 +40,11 @@ export interface InvoiceTransformInput {
   title?: string;
   actor?: InvoiceActor;
   reference?: string;
+  /** Verrou budgétaire (T11) : plafonds de contrôle avant émission. */
+  projectBudget?: number | null;
+  contractAmount?: number | null;
+  alreadyInvoiced?: number | null;
+  currency?: string;
 }
 
 export interface InvoiceTransformResult {
@@ -46,7 +55,10 @@ export interface InvoiceTransformResult {
   lines: BoqLineDTO[];
   totalHt: number;
   totalTtc: number;
+  /** Verdict du verrou budgétaire appliqué avant persistance. */
+  budget?: InvoiceBudgetVerdict;
 }
+
 
 function clampPct(p?: number): number {
   if (!Number.isFinite(p as number) || (p as number) <= 0) return 100;
@@ -112,6 +124,12 @@ export const InvoiceWorkflowService = {
         dqeType: def.dqeType,
         documentId,
         title: input.title ?? def.label,
+        // Colonnes dédiées (T10) : le cycle documentaire est requêtable en SQL
+        // sans dépendre du contenu de `metadata`.
+        documentType: def.code,
+        businessStatus: def.initialStatus,
+        facturxTypeCode: def.facturxTypeCode,
+        billedPercentage: def.requiresPercentage ? clampPct(input.percentage) : null,
         metadata: {
           ...(l.metadata ?? {}),
           invoiceWorkflow: {
@@ -129,6 +147,7 @@ export const InvoiceWorkflowService = {
         },
       };
     });
+
     return { lines, documentId, def };
   },
 
@@ -144,6 +163,17 @@ export const InvoiceWorkflowService = {
     if (!source.length) throw new Error('Aucune ligne à transformer');
 
     const { lines, documentId, def } = this.build(input, source);
+
+    // Verrou budgétaire (T11) : bloque décompte/facture au-delà du plafond.
+    const budget = InvoiceBudgetGuardService.assert({
+      targetType: def.code,
+      lines,
+      projectBudget: input.projectBudget ?? null,
+      contractAmount: input.contractAmount ?? null,
+      alreadyInvoiced: input.alreadyInvoiced ?? null,
+      currency: input.currency,
+    });
+
     const persisted = await boqRepository.bulkCreate(lines);
     const totals = FacturXTransformer.computeTotals(persisted.length ? persisted : lines);
     return {
@@ -154,6 +184,8 @@ export const InvoiceWorkflowService = {
       lines: persisted.length ? persisted : lines,
       totalHt: totals.totalHt,
       totalTtc: totals.totalTtc,
+      budget,
     };
+
   },
 };
