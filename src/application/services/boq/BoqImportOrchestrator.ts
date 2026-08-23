@@ -9,6 +9,7 @@ import { getFiscalProfile } from '@/config/referentials/boq/default-values.refer
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { mergeDimensions } from './parsers/dimensionExtraction';
+import { reconcileLinePrice } from './parsers/priceCoherence';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
@@ -162,8 +163,11 @@ export class BoqImportOrchestrator {
       // Rejet des lignes non valorisées (titres de document, notes) : une ligne
       // DQE exploitable porte au minimum une quantité, un PU ou un montant.
       if (!designation || (!quantity && rawTotal == null && pu == null)) continue;
-      const unitPrice = pu ?? (rawTotal != null && quantity ? rawTotal / quantity : null);
-      const totalHt = rawTotal ?? (unitPrice != null ? quantity * unitPrice : null);
+      // Contrôle arithmétique : quantité × P.U. = montant, sinon P.U. corrigé.
+      const price = reconcileLinePrice({ quantity, unitPrice: pu, totalHt: rawTotal });
+      const unitPrice = price.unitPrice;
+      const totalHt = price.totalHt;
+
       const lotKey = mapping.lot ? String(get(mapping.lot) ?? '').trim() || null : null;
       // Nature de la section (bloc RH → main d'œuvre).
       const sectionKind = String(row.raw[SECTION_KIND_COLUMN] ?? '').trim().toLowerCase();
@@ -213,6 +217,9 @@ export class BoqImportOrchestrator {
           ...(lotKey ? { lot: lotKey } : {}),
           ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(price.corrected
+            ? { priceCorrection: { originalUnitPrice: price.originalUnitPrice ?? null, reason: price.reason ?? null } }
+            : {}),
           ...(isLabour && labourPayroll != null ? { payrollTaxRate: labourPayroll } : {}),
           ...(partyMeta.supplierName || partyMeta.organizationName
             ? { parties: partyMeta }
