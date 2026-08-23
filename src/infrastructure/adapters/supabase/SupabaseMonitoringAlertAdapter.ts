@@ -201,7 +201,7 @@ export class SupabaseMonitoringAlertAdapter implements IMonitoringAlertRepositor
         project_id: projectId,
         source: alertData.source || 'monitoring',
         metadata: (Object.keys(metadata).length ? metadata : null) as unknown as Json,
-      })
+      } as never)
       .select()
       .single();
 

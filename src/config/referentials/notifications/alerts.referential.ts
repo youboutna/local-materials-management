@@ -73,7 +73,7 @@ export function resolveAlertType(raw: string | null | undefined): AlertTypeItem 
 
 /** Code canonique persisté (fallback = code reçu, jamais de faux "project_delay"). */
 export function canonicalAlertType(raw: string | null | undefined): string {
-  return resolveAlertType(raw)?.code ?? normalize(raw ?? '') || 'other';
+  return resolveAlertType(raw)?.code ?? (normalize(raw ?? '') || 'other');
 }
 
 export function alertCategoryOf(raw: string | null | undefined): AlertCategory {

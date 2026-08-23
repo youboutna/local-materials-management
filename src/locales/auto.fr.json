@@ -4823,9 +4823,7 @@
   "users.table.role": "Rôle",
   "users.updated": "Utilisateur mis à jour",
   "users.updated_success": "L'utilisateur a été mis à jour avec succès",
-  "phase_structure": {
-    "takeoff_analysis": "Analyse des métrés",
-    "takeoff_count": "{{count}} métré(s)"
-  },
-  "dashboard.management_tabs.alerts.tabs.compliance": "Conformité"
+  "dashboard.management_tabs.alerts.tabs.compliance": "Conformité",
+  "phase_structure.takeoff_analysis": "Analyse des métrés",
+  "phase_structure.takeoff_count": "{{count}} métré(s)"
 }

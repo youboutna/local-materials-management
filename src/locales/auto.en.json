@@ -4826,9 +4826,7 @@
   "users.table.role": "Role",
   "users.updated": "User updated",
   "users.updated_success": "User updated successfully",
-  "phase_structure": {
-    "takeoff_analysis": "Takeoff analysis",
-    "takeoff_count": "{{count}} takeoff(s)"
-  },
-  "dashboard.management_tabs.alerts.tabs.compliance": "Compliance"
+  "dashboard.management_tabs.alerts.tabs.compliance": "Compliance",
+  "phase_structure.takeoff_analysis": "Takeoff analysis",
+  "phase_structure.takeoff_count": "{{count}} takeoff(s)"
 }
