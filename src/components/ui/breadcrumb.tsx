@@ -1,5 +1,4 @@
 import * as React from "react"
-import { T } from '@/components/i18n/T';
 import { Slot } from "@radix-ui/react-slot"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 
@@ -100,7 +99,7 @@ const BreadcrumbEllipsis = ({
     {...props}
   >
     <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only"><T k="auto.breadcrumb.more" fallback="More" /></span>
+    <span className="sr-only">More</span>
   </span>
 )
 BreadcrumbEllipsis.displayName = "BreadcrumbElipssis"

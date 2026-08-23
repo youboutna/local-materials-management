@@ -1,5 +1,4 @@
 import * as React from "react"
-import { T } from '@/components/i18n/T';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -71,7 +70,7 @@ const PaginationPrevious = ({
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
-    <span><T k="auto.pagination.precedent" fallback="Précédent" /></span>
+    <span>Précédent</span>
   </PaginationLink>
 )
 PaginationPrevious.displayName = "PaginationPrevious"
@@ -86,7 +85,7 @@ const PaginationNext = ({
     className={cn("gap-1 pr-2.5", className)}
     {...props}
   >
-    <span><T k="auto.pagination.suivant" fallback="Suivant" /></span>
+    <span>Suivant</span>
     <ChevronRight className="h-4 w-4" />
   </PaginationLink>
 )
@@ -102,7 +101,7 @@ const PaginationEllipsis = ({
     {...props}
   >
     <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only"><T k="auto.pagination.plus_de_pages" fallback="Plus de pages" /></span>
+    <span className="sr-only">Plus de pages</span>
   </span>
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"

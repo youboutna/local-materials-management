@@ -15,7 +15,6 @@ import {
 } from '@/config/referentials/reports/mauritania-basemap.referential';
 import type { InterventionZoneDTO, InterventionZoneLatLng } from '@/dtos/entities/InterventionZoneDTO';
 import { Circle, Image, Polygon, StyleSheet, Svg, Text, View } from '@react-pdf/renderer';
-import { T } from '@/components/i18n/T';
 
 const MAP_W = 150;
 const MAP_H = 104;
@@ -118,7 +117,7 @@ export function ProjectMiniMap({ project }: { project: ProjectMiniMapInput }) {
       <View style={styles.container}>
         <View style={styles.frame}>
           <Image src={basemap} style={styles.basemap} />
-          <Text style={styles.empty}><T k="auto.projectminimap.localisation_non_georeferencee" fallback="Localisation non géoréférencée" /></Text>
+          <Text style={styles.empty}>Localisation non géoréférencée</Text>
         </View>
         <Text style={styles.caption}>{project.location || 'Localisation non définie'}</Text>
       </View>

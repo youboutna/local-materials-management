@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable } from './PDFDocument';
 import { EstimateItem, EstimateData, ExportConfig } from '@/dtos/transforms/shared';
-import { T } from '@/components/i18n/T';
 
 const styles = StyleSheet.create({
   grandTotal: {
@@ -171,7 +170,7 @@ export function DevisPDFDocument({
           </PDFRow>
           {tender?.description && (
             <View style={{ marginTop: 10 }}>
-              <Text style={{ fontWeight: 'bold', marginBottom: 5 }}><T k="auto.devispdfdocument.description" fallback="Description:" /></Text>
+              <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Description:</Text>
               <Text style={{ fontSize: 11, lineHeight: 1.4 }}>{tender.description}</Text>
             </View>
           )}
@@ -246,14 +245,14 @@ export function DevisPDFDocument({
           <View style={styles.signatureSection}>
             <View style={styles.signatureRow}>
               <View>
-                <Text style={{ fontSize: 12, color: '#6b7280' }}><T k="auto.devispdfdocument.nom_du_signataire" fallback="Nom du signataire:" /></Text>
+                <Text style={{ fontSize: 12, color: '#6b7280' }}>Nom du signataire:</Text>
                 <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 5 }}>{finalConfig.signatoryName}</Text>
                 {finalConfig.signatoryTitle && (
                   <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{finalConfig.signatoryTitle}</Text>
                 )}
               </View>
               <View style={styles.signatureBox}>
-                <Text style={{ fontSize: 10, color: '#9ca3af' }}><T k="auto.devispdfdocument.signature_requise" fallback="Signature requise" /></Text>
+                <Text style={{ fontSize: 10, color: '#9ca3af' }}>Signature requise</Text>
               </View>
             </View>
             <View style={{ marginTop: 15, alignItems: 'flex-end' }}>
