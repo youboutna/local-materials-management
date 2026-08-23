@@ -4954,5 +4954,11 @@
   "users.updated": "تم تحديث المستخدم",
   "users.updated_success": "تم تحديث المستخدم بنجاح",
   "wbs.select_milestone_first": "اختر معلماً",
-  "wbs.select_phase_first": "اختر مرحلة"
+  "wbs.select_phase_first": "اختر مرحلة",
+  "alerts.phase_label": "المرحلة",
+  "dashboard.kpi.load_error": "المؤشرات غير متاحة. يرجى التحقق من مصادر البيانات.",
+  "dashboard.kpi.not_evaluable": "غير قابل للتقييم",
+  "dqe.fiscal.vat": "ضريبة القيمة المضافة",
+  "dqe.save_success": "تم حفظ المسودة",
+  "dqe.status.mixed": "حالات متعددة"
 }

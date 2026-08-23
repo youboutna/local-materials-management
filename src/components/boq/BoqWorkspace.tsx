@@ -352,7 +352,7 @@ export function BoqWorkspace({
   useEffect(() => { setDirty(false); }, [documentId]);
 
   const draftLineIds = useMemo(
-    () => doc.lines.filter((l) => l.status === 'draft' && l.id).map((l) => l.id!),
+    () => doc.lines.flatMap((line) => line.status === 'draft' && line.id ? [line.id] : []),
     [doc.lines]
   );
 

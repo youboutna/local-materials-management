@@ -4955,5 +4955,11 @@
   "users.updated": "User updated",
   "users.updated_success": "User updated successfully",
   "wbs.select_milestone_first": "Select a milestone",
-  "wbs.select_phase_first": "Select a phase"
+  "wbs.select_phase_first": "Select a phase",
+  "alerts.phase_label": "Phase",
+  "dashboard.kpi.load_error": "Metrics are unavailable. Check the data sources.",
+  "dashboard.kpi.not_evaluable": "Not assessable",
+  "dqe.fiscal.vat": "VAT",
+  "dqe.save_success": "Draft saved",
+  "dqe.status.mixed": "Multiple statuses"
 }
