@@ -58,6 +58,8 @@ import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { EnumBadge } from '@/components/i18n/EnumText';
 import { T } from '@/components/i18n/T';
+import { EnumSelect } from '@/components/i18n/EnumSelect';
+import { useI18n } from '@/hooks/useI18n';
 type Segment = "all" | "team" | "external" | "contractors";
 
 interface StakeholdersTeamStepProps {
@@ -71,6 +73,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   workflowData,
   onStepComplete,
 }) => {
+  const { t } = useI18n();
   const projectData = workflowData?.projectData || ({} as ProjectDTO);
   const projectId = projectData.id;
 
@@ -308,9 +311,11 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
               <Label className="block text-sm font-medium mb-2">
                 <T k="auto.stakeholdersteamstep.type_de_partie_prenante" fallback="Type de partie prenante" />
               </Label>
-              <Select
+              <EnumSelect
+                enumName="StakeholderType"
+                codes={Object.values(StakeholderType)}
                 value={newStakeholder?.stakeholderType || ""}
-                onValueChange={(value) =>
+                onChange={(value) =>
                   setNewStakeholder({
                     ...newStakeholder,
                     stakeholderType: value as StakeholderType,
@@ -318,43 +323,26 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     organizationId: undefined,
                   })
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(StakeholderType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={t('auto.stakeholdersteamstep.selectionner_le_type')}
+              />
             </div>
 
             <div>
               <Label className="block text-sm font-medium mb-2"><T k="auto.stakeholdersteamstep.role" fallback="Rôle" /></Label>
-              <Select
+              <EnumSelect
+                enumName="StakeholderRole"
+                codes={Object.values(StakeholderRole)}
                 value={(newStakeholder?.role as string) || ""}
-                onValueChange={(value) =>
+                onChange={(value) =>
                   setNewStakeholder({
                     ...newStakeholder,
                     role: value as StakeholderRole,
                   })
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(StakeholderRole).map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={t('auto.stakeholdersteamstep.selectionner_le_role')}
+              />
             </div>
+
 
             {newStakeholder?.stakeholderType === StakeholderType.EMPLOYEE && (
               <div className="md:col-span-2">
