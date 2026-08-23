@@ -15,6 +15,7 @@ import {
 } from '@/config/referentials/notifications/alerts.referential';
 import type { INotificationRepository, NotificationData } from '@/domain/repositories/INotificationRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getProjectService } from '@/application/services/ProjectService';
 import {
     CreateMonitoringAlertDTO,
     IMonitoringAlertRepository,
@@ -161,16 +162,21 @@ export class MonitoringAlertService {
    * (alertes projet + notifications métier promues en alertes, dédupliquées).
    */
   async getAllAlerts(): Promise<AlertData[]> {
-    const [dtos, notificationAlerts] = await Promise.all([
+    const [dtos, notificationAlerts, projects] = await Promise.all([
       this.repository.findAll(),
       this.getNotificationAlerts(),
+      getProjectService().getAllProjects(),
     ]);
 
     const alerts = dtos.map(transformToAlertData);
     const known = new Set(alerts.map((a) => a.id));
     const merged = [...alerts, ...notificationAlerts.filter((a) => !known.has(a.id))];
 
-    return merged.sort(
+    const projectTitles = new Map(projects.map((project) => [project.id, project.title]));
+    return merged.map((alert) => ({
+      ...alert,
+      projectTitle: alert.projectId ? projectTitles.get(alert.projectId) : undefined,
+    })).sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   }
