@@ -8,10 +8,8 @@
 import { DecompteCalculationContext, IDecompteRepository, PhaseFinancials, ProjectFinancials, VerifiedMilestone } from '@/domain/repositories/IDecompteRepository';
 import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { AutomaticDecompteDTO } from '@/dtos/entities/AutomaticDecompteDTO';
-import {
-    DecompteLineDTO,
-    DecompteStatus
-} from '@/dtos/types/checkpoint-dto';
+import { AutomaticDecompteDTO as _AutomaticDecompteDTO, DecompteLineDTO } from '@/dtos/entities/AutomaticDecompteDTO';
+import { DecompteStatus } from '@/dtos/types/checkpoint-dto';
 import { Payment } from '@/domain/entities/Payment';
 import { InspectionStatus } from '@/domain/entities/Inspection';
 
