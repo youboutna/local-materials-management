@@ -49,6 +49,10 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import type { StakeholderOption } from './BoqLineTable';
 import { getEnumOptions } from '@/config/referentials/i18n/enum-labels.referential';
 import { useI18n } from '@/hooks/useI18n';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { i18nService } from '@/application/services/I18nService';
 import { T } from '@/components/i18n/T';
 
@@ -458,7 +462,7 @@ export function BoqWorkspace({
   }, [doc.lines]);
   const locked = !!signatureInfo;
   const pendingCount = pendingLines.length + draftLineIds.length;
-  const docStatus = pendingCount > 0 ? 'À enregistrer' : (doc.lines.length > 0 ? 'Document validé' : 'Nouveau document');
+  const docStatus = pendingCount > 0 ? t('dqe.doc_status.to_save') : (doc.lines.length > 0 ? t('dqe.doc_status.validated') : t('dqe.doc_status.new'));
   const isDocumentEmpty = displayedLines.length === 0;
   const handleParsedImport = (lines: BoqLineDTO[]) => {
     setPendingLines((prev) => [...prev, ...lines.map((line) => ({
@@ -501,16 +505,16 @@ export function BoqWorkspace({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__project__">
-                  {projectName ? `Réf. projet — ${projectName}` : 'Référentiel du projet'}
+                  {projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
                   {referentialCode ? ` (${referentialCode})` : ''}
                 </SelectItem>
                 {referentialOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>Enrichir : {opt.label}</SelectItem>
+                  <SelectItem key={opt.value} value={opt.value}>{t('dqe.referential.enrich')} {opt.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground">
-              Par défaut le référentiel du projet ; sélectionnez-en un autre pour enrichir le mapping Phase / Jalon / Tâche.
+              {t('dqe.referential.hint')}
             </p>
           </div>
           <div className="space-y-2">
@@ -535,7 +539,7 @@ export function BoqWorkspace({
               title={locked ? t('dqe.locked_signed') : pendingCount === 0 ? t('dqe.save_hint_no_pending') : undefined}
             >
               {finalizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-2" />}
-              Enregistrer le {labels.docPrefix.toUpperCase()}{pendingCount > 0 ? ` (${pendingCount})` : ''}
+              {t('dqe.action.save')}{pendingCount > 0 ? ` (${pendingCount})` : ''}
             </Button>
           </div>
         </div>
@@ -551,7 +555,7 @@ export function BoqWorkspace({
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Calcul métré — ajouter au document</DialogTitle>
+                <DialogTitle>{t('dqe.action.takeoff')}</DialogTitle>
                 <DialogDescription><T k="auto.boqworkspace.calculez_les_quantites_puis_ajoutez_les_lignes_o" fallback="Calculez les quantités puis ajoutez les lignes obtenues au document courant." /></DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-6 gap-3">
@@ -755,7 +759,7 @@ export function BoqWorkspace({
 
               <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-5 gap-2">
                 <div><T k="auto.boqworkspace.qte" fallback="Qté :" /> <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>
-                <div>HT : <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
+                <div>{t('dqe.fiscal.ht')} <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
                 <div><T k="auto.boqworkspace.tva" fallback="TVA :" /> <span className="font-semibold">{manualPreview.tva.toLocaleString('fr-FR')}</span></div>
                 <div><T k="auto.boqworkspace.ras" fallback="RAS :" /> <span className="font-semibold">{manualPreview.ras.toLocaleString('fr-FR')}</span></div>
                 <div><T k="auto.boqworkspace.ttc" fallback="TTC :" /> <span className="font-bold text-primary">{manualPreview.ttc.toLocaleString('fr-FR')}</span></div>
@@ -764,7 +768,7 @@ export function BoqWorkspace({
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setOpenManual(false)}><T k="auto.boqworkspace.annuler" fallback="Annuler" /></Button>
                 <Button onClick={handleCreate} disabled={doc.isPending}>
-                  {doc.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Ajouter
+                  {doc.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}{t('dqe.action.add')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -787,14 +791,28 @@ export function BoqWorkspace({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {isDocumentEmpty ? null : (
-              <Button size="sm" variant="ghost" onClick={() => setPendingLines([])} disabled={pendingLines.length === 0}>
-                <Trash2 className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.vider_brouillon" fallback="Vider brouillon" />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="ghost" disabled={pendingLines.length === 0}>
+                    <Trash2 className="h-4 w-4 mr-1" />{t('dqe.action.clear_draft')}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('dqe.action.clear_draft')}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('dqe.clear_draft.confirm')}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => setPendingLines([])}>{t('common.confirm')}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           {mode === 'bid' && projectId && estimateId && (
             <Button size="sm" onClick={handleAlignPlanning} disabled={aligning}>
               {aligning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ArrowRightCircle className="h-4 w-4 mr-1" />}
-              Aligner à la planification
+              {t('dqe.action.align_planning')}
             </Button>
           )}
         </div>
