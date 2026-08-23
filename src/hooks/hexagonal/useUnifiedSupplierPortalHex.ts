@@ -9,8 +9,9 @@ import { StorageService } from '@/application/services/StorageService';
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { getAuthService } from '@/application/services/AuthService';
+import type { AuthSession, AuthUser } from '@/domain/repositories/IAuthRepository';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
