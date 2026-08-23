@@ -14,9 +14,10 @@ import type { BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
 import { useBoqDocumentList } from '@/hooks/hexagonal/useBoqDocumentList';
 import { useToast } from '@/hooks/use-toast';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
-import { FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Eye, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Props {
   source: BoqSource;
@@ -42,6 +43,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: 'default' | 'second
 const fmt = (v: number) => v.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
+  const { t } = useI18n();
   const { toast } = useToast();
   const { documents, isLoading, invalidate } = useBoqDocumentList({ source, contextId, projectId });
   const [search, setSearch] = useState('');
@@ -128,6 +130,8 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
               </td></tr>
             ) : filtered.map((d) => {
               const st = STATUS_LABEL[d.status] ?? STATUS_LABEL.draft;
+              // Document transmis (publié / facturé / payé / archivé) : consultation seule.
+              const readOnly = ['validated', 'invoiced', 'paid', 'archived'].includes(d.status);
               return (
                 <tr
                   key={d.documentId}
@@ -141,10 +145,21 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                   <td className="p-3"><Badge variant={st.variant}>{st.label}</Badge></td>
                   <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => onOpen(d.documentId)} title="Ouvrir">
-                        <Pencil className="h-4 w-4" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => onOpen(d.documentId)}
+                        title={readOnly ? t('dqe.action.view') : t('dqe.action.edit')}
+                      >
+                        {readOnly ? <Eye className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDelete(d)} title="Supprimer">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleDelete(d)}
+                        disabled={readOnly}
+                        title={readOnly ? t('dqe.locked_transmitted') : t('common.delete')}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
