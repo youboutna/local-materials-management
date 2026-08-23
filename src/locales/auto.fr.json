@@ -4449,5 +4449,6 @@
   "auto.tendersecuritybadge.confidentiel": "Confidentiel",
   "auto.tendersecuritybadge.partage_securise_uniquement": "Partage sécurisé uniquement",
   "auto.tendersecuritybadge.secret": "Secret",
-  "auto.tendersecuritybadge.niveau_de_securite_maximum": "Niveau de sécurité maximum"
+  "auto.tendersecuritybadge.niveau_de_securite_maximum": "Niveau de sécurité maximum",
+  "auto.materialdocumentadapter.documents_du_materiau": "Documents du matériau"
 }
