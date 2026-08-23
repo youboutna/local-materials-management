@@ -95,14 +95,28 @@ export function BoqWorkspace({
   const labels = LABELS[mode];
   // Référentiel actif — défaut = référentiel du projet courant (prop),
   // modifiable pour enrichir le mapping (phases/étapes/tâches alternatives).
-  const [activeReferential, setActiveReferential] = useState<ReferentialType | undefined>(referentialCode);
-  useEffect(() => { setActiveReferential(referentialCode); }, [referentialCode]);
+  // Préférences du document persistées (référentiel enrichi + profil fiscal) :
+  // la sélection survit à la navigation, le référentiel projet reste le défaut.
+  const prefsKey = `boq-prefs:${contextId}`;
+  const readPrefs = (): { referential?: ReferentialType; fiscalCode?: string } => {
+    try { return JSON.parse(localStorage.getItem(prefsKey) ?? '{}'); } catch { return {}; }
+  };
+  const writePrefs = (patch: { referential?: ReferentialType; fiscalCode?: string }) => {
+    try { localStorage.setItem(prefsKey, JSON.stringify({ ...readPrefs(), ...patch })); } catch { /* stockage indisponible */ }
+  };
+  const [activeReferential, setActiveReferential] = useState<ReferentialType | undefined>(
+    () => readPrefs().referential ?? referentialCode,
+  );
+  useEffect(() => {
+    setActiveReferential(readPrefs().referential ?? referentialCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referentialCode, contextId]);
   const referentialOptions = useMemo(() => getReferentialOptions('fr'), []);
 
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
   const { materials } = useMaterialsHex();
-  const [fiscalCode, setFiscalCode] = useState<string>('MR_STANDARD');
+  const [fiscalCode, setFiscalCode] = useState<string>(() => readPrefs().fiscalCode ?? 'MR_STANDARD');
   const [overheadPct, setOverheadPct] = useState<number>(0);
   const [category, setCategory] = useState<ManualCategory>('material');
   const [materialId, setMaterialId] = useState<string>('');
@@ -476,7 +490,11 @@ export function BoqWorkspace({
             <Label className="text-xs text-muted-foreground">{t('referential.label')}</Label>
             <Select
               value={activeReferential ?? '__project__'}
-              onValueChange={(v) => setActiveReferential(v === '__project__' ? referentialCode : (v as ReferentialType))}
+              onValueChange={(v) => {
+                const next = v === '__project__' ? referentialCode : (v as ReferentialType);
+                setActiveReferential(next);
+                writePrefs({ referential: next });
+              }}
             >
               <SelectTrigger className="h-10">
                 <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
@@ -501,7 +519,7 @@ export function BoqWorkspace({
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
-            <Select value={fiscalCode} onValueChange={setFiscalCode}>
+            <Select value={fiscalCode} onValueChange={(v) => { setFiscalCode(v); writePrefs({ fiscalCode: v }); }}>
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
