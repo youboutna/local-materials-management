@@ -258,7 +258,7 @@ const InspectionDetail = () => {
                 inspection={pvInspectionData}
                 projectTitle={projectTitle}
                 onGenerated={(pv, url) => {
-                  console.log('PV generated:', pv.pv_number);
+                  console.log('PV generated:', pv.pvNumber);
                 }}
               />
             </TabsContent>

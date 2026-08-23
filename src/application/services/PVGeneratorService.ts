@@ -34,7 +34,7 @@ export interface InspectionWithProjectDTO {
     location?: string;
   } | null;
   project_phases?: {
-    phase_name: string;
+    phaseName: string;
   } | null;
 }
 
@@ -94,33 +94,33 @@ export class PVGeneratorService {
       // Create GeneratedPV object
       const generatedPV: GeneratedPV = {
         id: `pv-${Date.now()}`,
-        inspection_id: request.inspectionId,
-        pv_type: request.pvType,
-        pv_number: pvNumber,
+        inspectionId: request.inspectionId,
+        pvType: request.pvType,
+        pvNumber: pvNumber,
         title: request.customTitle || `Procès-Verbal - ${inspection.projects?.title || 'Projet'}`,
         header: {
-          project_title: inspection.projects?.title || 'Projet',
-          phase_name: inspection.project_phases?.phase_name,
-          inspection_date: inspection.date,
-          inspection_type: request.pvType,
+          projectTitle: inspection.projects?.title || 'Projet',
+          phaseName: inspection.project_phases?.phaseName,
+          inspectionDate: inspection.date,
+          inspectionType: request.pvType,
           location: inspection.projects?.location || 'Non spécifié'
         },
         participants: [],
         object: `Inspection ${request.pvType === 'technical_inspection' ? 'technique' : 'de sécurité'}`,
-        observations_summary: request.customContent || inspection.comments || 'Aucune observation particulière',
-        observations_table: [],
+        observationsSummary: request.customContent || inspection.comments || 'Aucune observation particulière',
+        observationsTable: [],
         conclusions: {
-          overall_status: inspection.status === 'approved' ? 'conform' : 'non_conform',
+          overallStatus: inspection.status === 'approved' ? 'conform' : 'non_conform',
           summary: `Progression: ${inspection.progress_at_inspection}%`
         },
         recommendations: [],
         signatures: [],
         annexes: [],
         status: 'draft',
-        generated_at: new Date().toISOString(),
-        generated_by: inspection.inspector,
+        generatedAt: new Date().toISOString(),
+        generatedBy: inspection.inspector,
         version: 1,
-        pdf_url: pdfUrl
+        pdfUrl: pdfUrl
       };
 
       // Persist PV via repository
@@ -208,7 +208,7 @@ export class PVGeneratorService {
           location: project.location
         },
         project_phases: phase && typeof phase === 'object' && phase !== null && 'name' in phase ? {
-          phase_name: (phase as { name?: string }).name || 'Phase'
+          phaseName: (phase as { name?: string }).name || 'Phase'
         } : undefined
       };
     } catch (error) {
@@ -232,7 +232,7 @@ export class PVGeneratorService {
       content = `
 PROCÈS-VERBAL D'INSPECTION TECHNIQUE
 ${inspection.projects?.title || 'Projet'} - ${inspection.projects?.location || 'Lieu'}
-${inspection.project_phases?.phase_name ? `Phase: ${inspection.project_phases.phase_name}` : ''}
+${inspection.project_phases?.phaseName ? `Phase: ${inspection.project_phases.phaseName}` : ''}
 
 Date: ${date}
 Inspecteur: ${inspection.inspector}
@@ -252,7 +252,7 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
       content = `
 PROCÈS-VERBAL D'INSPECTION SÉCURITÉ
 ${inspection.projects?.title || 'Projet'} - ${inspection.projects?.location || 'Lieu'}
-${inspection.project_phases?.phase_name ? `Phase: ${inspection.project_phases.phase_name}` : ''}
+${inspection.project_phases?.phaseName ? `Phase: ${inspection.project_phases.phaseName}` : ''}
 
 Date: ${date}
 Inspecteur: ${inspection.inspector}
@@ -298,7 +298,7 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
       const record = await this.pvRepository.getPVById(pvId);
-      return (record?.pdf_url as string | undefined) ?? null;
+      return (record?.pdfUrl as string | undefined) ?? null;
     } catch (error) {
       console.error('PVGeneratorService.downloadPV failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download PV');

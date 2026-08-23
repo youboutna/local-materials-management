@@ -84,12 +84,12 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
 
   // Download PDF
   const handleDownload = async () => {
-    if (!generatedPV || !generatedPV.pdf_url) return;
+    if (!generatedPV || !generatedPV.pdfUrl) return;
 
     setIsDownloading(true);
     try {
       // Open PDF in new tab
-      window.open(generatedPV.pdf_url, '_blank');
+      window.open(generatedPV.pdfUrl, '_blank');
       toast.success('PDF ouvert dans un nouvel onglet');
     } catch (error) {
       console.error('Error downloading PDF:', error);
@@ -106,9 +106,9 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
     setIsDownloading(true);
     try {
       // PV is already generated, just notify
-      if (generatedPV.pdf_url) {
+      if (generatedPV.pdfUrl) {
         toast.success('PV sauvegardé dans les documents');
-        onGenerated?.(generatedPV, generatedPV.pdf_url);
+        onGenerated?.(generatedPV, generatedPV.pdfUrl);
       } else {
         toast.error('Erreur lors de la sauvegarde');
       }
@@ -193,10 +193,10 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-success" />
-                <span className="font-medium">PV généré: {generatedPV.pv_number}</span>
+                <span className="font-medium">PV généré: {generatedPV.pvNumber}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Type: {pvTypeOptions.find(o => o.value === generatedPV.pv_type)?.label}
+                Type: {pvTypeOptions.find(o => o.value === generatedPV.pvType)?.label}
               </p>
             </div>
           </>
