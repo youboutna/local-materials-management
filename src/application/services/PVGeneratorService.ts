@@ -133,10 +133,10 @@ export class PVGeneratorService {
           content: pvContent,
           pdf_url: pdfUrl,
           status: generatedPV.status,
-          generated_by: generatedPV.generated_by,
+          generated_by: generatedPV.generatedBy,
           version: generatedPV.version,
           metadata: { header: generatedPV.header, conclusions: generatedPV.conclusions },
-          generated_at: generatedPV.generated_at,
+          generated_at: generatedPV.generatedAt,
         });
         if (saved && saved.id) {
           generatedPV.id = saved.id;
@@ -298,7 +298,7 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'PV ID is required');
       }
       const record = await this.pvRepository.getPVById(pvId);
-      return (record?.pdfUrl as string | undefined) ?? null;
+      return (record?.pdf_url as string | undefined) ?? null;
     } catch (error) {
       console.error('PVGeneratorService.downloadPV failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download PV');
@@ -325,32 +325,32 @@ Fait à ${inspection.projects?.location || 'Lieu'}, le ${format(new Date(), 'dd 
     const metadata = (record.metadata as Record<string, unknown> | null) || {};
     return {
       id: String(record.id),
-      inspection_id: String(record.inspection_id),
-      pv_type: record.pv_type as PVType,
-      pv_number: String(record.pv_number),
+      inspectionId: String(record.inspection_id),
+      pvType: record.pv_type as PVType,
+      pvNumber: String(record.pv_number),
       title: (record.title as string) || '',
       header: (metadata.header as GeneratedPV['header']) || {
-        project_title: '',
-        inspection_date: '',
-        inspection_type: record.pv_type as PVType,
+        projectTitle: '',
+        inspectionDate: '',
+        inspectionType: record.pv_type as PVType,
         location: '',
       },
       participants: [],
       object: '',
-      observations_summary: (record.content as string) || '',
-      observations_table: [],
+      observationsSummary: (record.content as string) || '',
+      observationsTable: [],
       conclusions: (metadata.conclusions as GeneratedPV['conclusions']) || {
-        overall_status: 'conform' as ConformityStatus,
+        overallStatus: 'conform' as ConformityStatus,
         summary: '',
       },
       recommendations: [],
       signatures: [],
       annexes: [],
       status: (record.status as GeneratedPV['status']) || 'draft',
-      generated_at: String(record.generated_at),
-      generated_by: (record.generated_by as string) || '',
+      generatedAt: String(record.generated_at),
+      generatedBy: (record.generated_by as string) || '',
       version: Number(record.version) || 1,
-      pdf_url: (record.pdf_url as string) || undefined,
+      pdfUrl: (record.pdf_url as string) || undefined,
     };
   }
 }
