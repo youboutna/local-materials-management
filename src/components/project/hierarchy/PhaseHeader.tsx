@@ -20,6 +20,7 @@ import {
   Banknote,
 } from "lucide-react";
 import { KPICard } from "./KPICard";
+import { T } from '@/components/i18n/T';
 
 interface PhaseHeaderProps {
   phase: {
@@ -158,14 +159,14 @@ export const PhaseHeader: React.FC<PhaseHeaderProps> = ({
           {onEdit && (
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Edit className="h-4 w-4 mr-1.5" />
-              Modifier
+              <T k="auto.phaseheader.modifier" fallback="Modifier" />
             </Button>
           )}
           
           {onScheduleInspection && (
             <Button variant="outline" size="sm" onClick={onScheduleInspection}>
               <ClipboardCheck className="h-4 w-4 mr-1.5" />
-              Inspection
+              <T k="auto.phaseheader.inspection" fallback="Inspection" />
             </Button>
           )}
           
@@ -176,7 +177,7 @@ export const PhaseHeader: React.FC<PhaseHeaderProps> = ({
               className="bg-success hover:bg-success/90 text-success-foreground"
             >
               <Banknote className="h-4 w-4 mr-1.5" />
-              Paiement
+              <T k="auto.phaseheader.paiement" fallback="Paiement" />
             </Button>
           )}
         </div>

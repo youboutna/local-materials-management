@@ -8,6 +8,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { T } from '@/components/i18n/T';
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
@@ -91,7 +92,7 @@ const ResetPasswordPage = () => {
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
-            <p className="text-center mt-4 text-muted-foreground">Vérification du lien...</p>
+            <p className="text-center mt-4 text-muted-foreground"><T k="auto.resetpasswordpage.verification_du_lien" fallback="Vérification du lien..." /></p>
           </CardContent>
         </Card>
       </div>
@@ -103,7 +104,7 @@ const ResetPasswordPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-muted">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center text-destructive">Lien invalide</CardTitle>
+            <CardTitle className="text-center text-destructive"><T k="auto.resetpasswordpage.lien_invalide" fallback="Lien invalide" /></CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <p className="text-center text-muted-foreground mb-4">
@@ -113,7 +114,7 @@ const ResetPasswordPage = () => {
               onClick={() => navigate('/auth')}
               className="w-full"
             >
-              Retour à la connexion
+              <T k="auto.resetpasswordpage.retour_a_la_connexion" fallback="Retour à la connexion" />
             </Button>
           </CardContent>
         </Card>
@@ -127,7 +128,7 @@ const ResetPasswordPage = () => {
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold text-primary flex items-center justify-center gap-2">
             <Lock className="h-6 w-6" />
-            Nouveau mot de passe
+            <T k="auto.resetpasswordpage.nouveau_mot_de_passe" fallback="Nouveau mot de passe" />
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -139,7 +140,7 @@ const ResetPasswordPage = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+              <Label htmlFor="newPassword"><T k="auto.resetpasswordpage.nouveau_mot_de_passe" fallback="Nouveau mot de passe" /></Label>
               <div className="relative">
                 <Input
                   id="newPassword"
@@ -160,7 +161,7 @@ const ResetPasswordPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Label htmlFor="confirmPassword"><T k="auto.resetpasswordpage.confirmer_le_mot_de_passe" fallback="Confirmer le mot de passe" /></Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -194,7 +195,7 @@ const ResetPasswordPage = () => {
               onClick={() => navigate('/auth')}
               className="w-full"
             >
-              Retour à la connexion
+              <T k="auto.resetpasswordpage.retour_a_la_connexion" fallback="Retour à la connexion" />
             </Button>
           </form>
         </CardContent>

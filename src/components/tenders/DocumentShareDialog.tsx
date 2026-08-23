@@ -12,6 +12,7 @@ import { Share2, FileText, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ProcurementPhase } from './PublicProcurementWorkflow';
 import { useTenderDocumentsForShare, useShareDocuments } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 interface DocumentShareDialogProps {
   isOpen: boolean;
@@ -121,7 +122,7 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
                           {isAlreadyShared && (
                             <Badge variant="secondary" className="flex items-center gap-1">
                               <CheckCircle2 className="h-3 w-3" />
-                              Partagé
+                              <T k="auto.documentsharedialog.partage" fallback="Partagé" />
                             </Badge>
                           )}
                           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
@@ -139,9 +140,9 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun document disponible pour cet appel d'offres</p>
+              <p><T k="auto.documentsharedialog.aucun_document_disponible_pour_cet_appel_d_offre" fallback="Aucun document disponible pour cet appel d'offres" /></p>
               <p className="text-sm mt-1">
-                Ajoutez des documents dans la section Documents avant de les partager
+                <T k="auto.documentsharedialog.ajoutez_des_documents_dans_la_section_documents_" fallback="Ajoutez des documents dans la section Documents avant de les partager" />
               </p>
             </div>
           )}
@@ -156,7 +157,7 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
           
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>
-              Annuler
+              <T k="auto.documentsharedialog.annuler" fallback="Annuler" />
             </Button>
             <Button 
               onClick={handleShare}

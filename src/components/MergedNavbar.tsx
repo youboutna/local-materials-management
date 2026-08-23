@@ -44,6 +44,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { BrandBands, BrandIdentity } from "@/components/branding/BrandIdentity";
+import { T } from '@/components/i18n/T';
 
 
 const MergedNavbar = () => {
@@ -224,7 +225,7 @@ const MergedNavbar = () => {
             />
             {DEV_MODE && (
               <span className="text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded self-center">
-                DEV MODE
+                <T k="auto.mergednavbar.dev_mode" fallback="DEV MODE" />
               </span>
             )}
           </Link>
@@ -318,7 +319,7 @@ const MergedNavbar = () => {
                           className="text-sm font-medium text-foreground hover:text-terracotta-600"
                         >
                           <MoreHorizontal className="h-4 w-4 mr-2" />
-                          More
+                          <T k="auto.mergednavbar.more" fallback="More" />
                           <ChevronDown className="h-4 w-4 ml-1" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -560,7 +561,7 @@ const MergedNavbar = () => {
                                 onClick={() => setIsOpen(false)}
                               >
                                 <User className="h-4 w-4 mr-2" />
-                                Profile
+                                <T k="auto.mergednavbar.profile" fallback="Profile" />
                               </Link>
                             </Button>
                             {!DEV_MODE && (
@@ -571,7 +572,7 @@ const MergedNavbar = () => {
                                 className="flex-1"
                               >
                                 <LogOut className="h-4 w-4 mr-2" />
-                                Logout
+                                <T k="auto.mergednavbar.logout" fallback="Logout" />
                               </Button>
                             )}
                           </div>

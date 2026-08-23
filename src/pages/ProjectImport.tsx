@@ -12,6 +12,7 @@ import type { ImportResult as ReportImportResult } from "@/dtos/entities/Project
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { T } from '@/components/i18n/T';
 
 const ProjectImport = () => {
   const { t } = useLanguage();
@@ -156,13 +157,13 @@ const ProjectImport = () => {
                 </h3>
                 <ul className="text-sm text-success dark:text-success-foreground space-y-1">
                   <li>
-                    • <strong>JSON</strong>: {t("projects.export.jsonDesc")}
+                    • <strong><T k="auto.projectimport.json" fallback="JSON" /></strong>: {t("projects.export.jsonDesc")}
                   </li>
                   <li>
-                    • <strong>Excel</strong>: {t("projects.export.excelDesc")}
+                    • <strong><T k="auto.projectimport.excel" fallback="Excel" /></strong>: {t("projects.export.excelDesc")}
                   </li>
                   <li>
-                    • <strong>CSV</strong>: {t("projects.export.csvDesc")}
+                    • <strong><T k="auto.projectimport.csv" fallback="CSV" /></strong>: {t("projects.export.csvDesc")}
                   </li>
                 </ul>
               </div>

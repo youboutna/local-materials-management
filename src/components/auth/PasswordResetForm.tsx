@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
+import { T } from '@/components/i18n/T';
 
 interface PasswordResetFormProps {
   onBack: () => void;
@@ -38,13 +39,13 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Mail className="h-5 w-5" />
-            Email envoyé
+            <T k="auto.passwordresetform.email_envoye" fallback="Email envoyé" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription>
-              Un lien de réinitialisation de mot de passe a été envoyé à <strong>{email}</strong>.
+              <T k="auto.passwordresetform.un_lien_de_reinitialisation_de_mot_de_passe_a_et" fallback="Un lien de réinitialisation de mot de passe a été envoyé à" /> <strong>{email}</strong>.
               Vérifiez votre boîte de réception et suivez les instructions dans l'email.
             </AlertDescription>
           </Alert>
@@ -55,7 +56,7 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
             onClick={onBack}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour à la connexion
+            <T k="auto.passwordresetform.retour_a_la_connexion" fallback="Retour à la connexion" />
           </Button>
         </CardContent>
       </Card>
@@ -65,7 +66,7 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-center">Mot de passe oublié</CardTitle>
+        <CardTitle className="text-center"><T k="auto.passwordresetform.mot_de_passe_oublie" fallback="Mot de passe oublié" /></CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -76,7 +77,7 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
           )}
 
           <div>
-            <Label htmlFor="email">Adresse email</Label>
+            <Label htmlFor="email"><T k="auto.passwordresetform.adresse_email" fallback="Adresse email" /></Label>
             <Input
               id="email"
               type="email"
@@ -103,7 +104,7 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
               onClick={onBack}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à la connexion
+              <T k="auto.passwordresetform.retour_a_la_connexion" fallback="Retour à la connexion" />
             </Button>
           </div>
         </form>

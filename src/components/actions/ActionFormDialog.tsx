@@ -28,7 +28,7 @@ export interface ActionFormData {
 interface ActionFormDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (formData: ActionFormData) => Promise<void>;
+  onSubmit: (formData: ActionFormData) => <T k="auto.actionformdialog.promise" fallback="Promise" /><void>;
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';
   entityId: string;
   availableEmployees?: Array<{ id: string; full_name: string; email?: string; position?: string; }>;

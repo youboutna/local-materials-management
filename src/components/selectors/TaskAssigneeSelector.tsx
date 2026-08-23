@@ -28,6 +28,7 @@ import { StakeholderResponseDTO } from '@/dtos/entities/StakeholderDTO';
 
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 // ============================================================================
 // TYPES - ALIAS VERS LES DTOS
 // ============================================================================
@@ -217,7 +218,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                 <SelectGroup>
                   <SelectLabel className="flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Employés
+                    <T k="auto.taskassigneeselector.employes" fallback="Employés" />
                   </SelectLabel>
                   {employeesList.map((assignee) => (
                     <SelectItem key={assignee.id} value={assignee.id}>
@@ -242,7 +243,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                 <SelectGroup>
                   <SelectLabel className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
-                    Parties prenantes externes
+                    <T k="auto.taskassigneeselector.parties_prenantes_externes" fallback="Parties prenantes externes" />
                   </SelectLabel>
                   {suppliersList.map((assignee) => (
                     <SelectItem key={assignee.id} value={assignee.id}>
@@ -264,7 +265,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                 <SelectItem value="no-assignees" disabled>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>Aucun assigné trouvé</span>
+                    <span><T k="auto.taskassigneeselector.aucun_assigne_trouve" fallback="Aucun assigné trouvé" /></span>
                   </div>
                 </SelectItem>
               )}

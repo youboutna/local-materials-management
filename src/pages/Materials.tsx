@@ -16,6 +16,7 @@ import { useMaterialsHex } from "@/hooks/hexagonal";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MaterialUIDTO } from "@/dtos/transforms";
+import { T } from '@/components/i18n/T';
 
 
 const Materials: React.FC = () => {
@@ -130,7 +131,7 @@ const Materials: React.FC = () => {
         <Button asChild className="bg-primary hover:bg-primary/90">
           <Link to="/materials/create">
             <Plus className="w-4 h-4 mr-2" />
-            Ajouter un matériau
+            <T k="auto.materials.ajouter_un_materiau" fallback="Ajouter un matériau" />
           </Link>
         </Button>
       }
@@ -141,14 +142,14 @@ const Materials: React.FC = () => {
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
             <TabsTrigger value="grid" className="flex items-center gap-2">
               <Grid className="h-4 w-4" />
-              Vue Grille
+              <T k="auto.materials.vue_grille" fallback="Vue Grille" />
             </TabsTrigger>
             <TabsTrigger
               value="interactive"
               className="flex items-center gap-2"
             >
               <MapPin className="h-4 w-4" />
-              Carte Interactive
+              <T k="auto.materials.carte_interactive" fallback="Carte Interactive" />
             </TabsTrigger>
           </TabsList>
 

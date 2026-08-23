@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantHex';
 import type { ProjectConsultantDTO } from '@/application/services/ProjectConsultantService';
+import { T } from '@/components/i18n/T';
 
 interface ProjectConsultantDesignationProps {
   projectId?: string;
@@ -145,10 +146,10 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
           <div className="space-y-2">
             <Tabs value={kindFilter} onValueChange={(v) => setKindFilter(v as 'all' | EntityKind)}>
               <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto sm:grid sm:grid-cols-4">
-                <TabsTrigger value="all" className="text-xs">Tous</TabsTrigger>
-                <TabsTrigger value="organization" className="text-xs">Organisations</TabsTrigger>
-                <TabsTrigger value="supplier" className="text-xs">Fournisseurs</TabsTrigger>
-                <TabsTrigger value="employee" className="text-xs">Employés</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs"><T k="auto.projectconsultantdesignation.tous" fallback="Tous" /></TabsTrigger>
+                <TabsTrigger value="organization" className="text-xs"><T k="auto.projectconsultantdesignation.organisations" fallback="Organisations" /></TabsTrigger>
+                <TabsTrigger value="supplier" className="text-xs"><T k="auto.projectconsultantdesignation.fournisseurs" fallback="Fournisseurs" /></TabsTrigger>
+                <TabsTrigger value="employee" className="text-xs"><T k="auto.projectconsultantdesignation.employes" fallback="Employés" /></TabsTrigger>
               </TabsList>
             </Tabs>
 

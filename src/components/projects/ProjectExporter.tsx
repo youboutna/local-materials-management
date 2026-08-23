@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const ProjectExporter = () => {
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'json' | 'excel' | 'csv'>('json');
@@ -681,7 +682,7 @@ const ProjectExporter = () => {
             >
               <FileText className="h-5 w-5" />
               <div className="text-left">
-                <div className="font-medium">JSON</div>
+                <div className="font-medium"><T k="auto.projectexporter.json" fallback="JSON" /></div>
                 <div className="text-xs opacity-70">{t('projects.export.jsonDesc')}</div>
               </div>
             </Button>
@@ -693,7 +694,7 @@ const ProjectExporter = () => {
             >
               <FileSpreadsheet className="h-5 w-5" />
               <div className="text-left">
-                <div className="font-medium">Excel</div>
+                <div className="font-medium"><T k="auto.projectexporter.excel" fallback="Excel" /></div>
                 <div className="text-xs opacity-70">{t('projects.export.excelDesc')}</div>
               </div>
             </Button>
@@ -705,7 +706,7 @@ const ProjectExporter = () => {
             >
               <FileText className="h-5 w-5" />
               <div className="text-left">
-                <div className="font-medium">CSV</div>
+                <div className="font-medium"><T k="auto.projectexporter.csv" fallback="CSV" /></div>
                 <div className="text-xs opacity-70">{t('projects.export.csvDesc')}</div>
               </div>
             </Button>

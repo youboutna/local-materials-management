@@ -9,6 +9,7 @@ import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSubmitContactMessageHex } from "@/hooks/hexagonal/useContactMessagesHex";
 import { useToast } from "@/hooks/use-toast";
+import { T } from '@/components/i18n/T';
 
 const contactSchema = z.object({
   senderName: z
@@ -109,7 +110,7 @@ const Contact: React.FC = () => {
               {t("contact.title") || "Contactez-nous"}
             </h1>
             <p className="text-muted-foreground mt-2">
-              Envoyez-nous un message, notre équipe vous répondra rapidement.
+              <T k="auto.contact.envoyez_nous_un_message_notre_equipe_vous_repond" fallback="Envoyez-nous un message, notre équipe vous répondra rapidement." />
             </p>
           </header>
 
@@ -128,7 +129,7 @@ const Contact: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="contact-name">
-                        Nom complet <span aria-hidden="true">*</span>
+                        <T k="auto.contact.nom_complet" fallback="Nom complet" /> <span aria-hidden="true">*</span>
                       </Label>
                       <Input
                         id="contact-name"
@@ -149,7 +150,7 @@ const Contact: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="contact-email">
-                        E-mail <span aria-hidden="true">*</span>
+                        <T k="auto.contact.e_mail" fallback="E-mail" /> <span aria-hidden="true">*</span>
                       </Label>
                       <Input
                         id="contact-email"
@@ -173,7 +174,7 @@ const Contact: React.FC = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="contact-phone">Téléphone</Label>
+                      <Label htmlFor="contact-phone"><T k="auto.contact.telephone" fallback="Téléphone" /></Label>
                       <Input
                         id="contact-phone"
                         type="tel"
@@ -192,7 +193,7 @@ const Contact: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="contact-subject">
-                        Objet <span aria-hidden="true">*</span>
+                        <T k="auto.contact.objet" fallback="Objet" /> <span aria-hidden="true">*</span>
                       </Label>
                       <Input
                         id="contact-subject"
@@ -214,7 +215,7 @@ const Contact: React.FC = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="contact-message">
-                      Message <span aria-hidden="true">*</span>
+                      <T k="auto.contact.message" fallback="Message" /> <span aria-hidden="true">*</span>
                     </Label>
                     <Textarea
                       id="contact-message"

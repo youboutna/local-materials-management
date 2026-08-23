@@ -15,6 +15,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { AppLayout } from "@/components/layout";
+import { T } from '@/components/i18n/T';
 
 const Home = () => {
   const { t } = useLanguage();
@@ -136,10 +137,10 @@ const Home = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-adrar-100 border border-adrar-200 text-adrar-700 text-sm font-medium mb-6">
               <Building className="h-4 w-4" />
-              Plateforme BTP Mauritanie
+              <T k="auto.home.plateforme_btp_mauritanie" fallback="Plateforme BTP Mauritanie" />
             </div>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-adrar-900 mb-6 bg-gradient-to-br from-adrar-800 to-adrar-600 bg-clip-text text-transparent">
-              Gestion de Projets BTP
+              <T k="auto.home.gestion_de_projets_btp" fallback="Gestion de Projets BTP" />
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-4xl mx-auto leading-relaxed">
               Plateforme complète de gestion des projets de construction,
@@ -152,7 +153,7 @@ const Home = () => {
               >
                 <Link to="/projects">
                   <Button className="bg-gradient-to-r from-terracotta-500 to-terracotta-600 hover:from-terracotta-600 hover:to-terracotta-700 text-white px-8 py-4 text-lg rounded-full shadow-lg">
-                    Voir les Projets
+                    <T k="auto.home.voir_les_projets" fallback="Voir les Projets" />
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
@@ -166,7 +167,7 @@ const Home = () => {
                     variant="outline"
                     className="border-2 border-adrar-300 text-adrar-700 hover:bg-adrar-50 px-8 py-4 text-lg rounded-full"
                   >
-                    Tableau de Bord
+                    <T k="auto.home.tableau_de_bord" fallback="Tableau de Bord" />
                   </Button>
                 </Link>
               </motion.div>
@@ -236,7 +237,7 @@ const Home = () => {
                         variant="ghost"
                         className="text-terracotta-600 hover:text-terracotta-700 hover:bg-terracotta-50 rounded-full"
                       >
-                        En savoir plus
+                        <T k="auto.home.en_savoir_plus" fallback="En savoir plus" />
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
@@ -254,7 +255,7 @@ const Home = () => {
             className="text-center"
           >
             <h2 className="text-4xl font-serif font-bold text-adrar-800 mb-12 bg-gradient-to-br from-adrar-800 to-adrar-600 bg-clip-text text-transparent">
-              Actions Rapides
+              <T k="auto.home.actions_rapides" fallback="Actions Rapides" />
             </h2>
             <div className="flex flex-wrap justify-center gap-4">
               {quickActions.map((action, index) => (

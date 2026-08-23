@@ -37,6 +37,7 @@ import {
   type InvoiceActor,
   type InvoiceDocumentType,
 } from '@/config/referentials/invoices/invoice-document-types.referential';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   documentType: InvoiceDocumentType;
@@ -296,7 +297,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1">
-            <Label htmlFor="invoice-workflow-pct">Avancement facturé (%)</Label>
+            <Label htmlFor="invoice-workflow-pct"><T k="auto.invoiceworkflowactions.avancement_facture" fallback="Avancement facturé (%)" /></Label>
             <Input
               id="invoice-workflow-pct"
               type="number"
@@ -313,10 +314,10 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPctOpen(false)}>
-              Annuler
+              <T k="auto.invoiceworkflowactions.annuler" fallback="Annuler" />
             </Button>
             <Button onClick={() => runTransform(percentage)} disabled={busy !== null || blocked}>
-              Créer
+              <T k="auto.invoiceworkflowactions.creer" fallback="Créer" />
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Activity, TrendingUp, Wallet } from 'lucide-react';
 import { ProjectMetricsOrchestrator, type ProjectMetricsInput } from '@/application/services/ProjectMetricsOrchestrator';
 import ProjectGanttTimeline from '@/components/project/ProjectGanttTimeline';
+import { T } from '@/components/i18n/T';
 
 /**
  * ProjectMetricsPanel — Dashboard Monitoring alimenté EXCLUSIVEMENT par
@@ -95,7 +96,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Progression pondérée</p>
+                <p className="text-sm text-muted-foreground"><T k="auto.projectmetricspanel.progression_ponderee" fallback="Progression pondérée" /></p>
                 <p className="text-xl font-semibold">{metrics.formatted.progress}</p>
               </div>
               <TrendingUp className="h-7 w-7 text-primary" />
@@ -163,7 +164,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
         </CardHeader>
         <CardContent className="space-y-2">
           {metrics.alerts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune alerte déclenchée par les métriques.</p>
+            <p className="text-sm text-muted-foreground"><T k="auto.projectmetricspanel.aucune_alerte_declenchee_par_les_metriques" fallback="Aucune alerte déclenchée par les métriques." /></p>
           ) : (
             metrics.alerts.map((alert) => (
               <div key={alert.code} className="flex items-center justify-between rounded-md border p-2">
@@ -210,7 +211,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
       {withGantt && (
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Diagramme de Gantt (calendrier réel)</CardTitle>
+          <CardTitle className="text-base"><T k="auto.projectmetricspanel.diagramme_de_gantt_calendrier_reel" fallback="Diagramme de Gantt (calendrier réel)" /></CardTitle>
         </CardHeader>
         <CardContent>
           <ProjectGanttTimeline gantt={metrics.gantt} showAsciiBars={!isCompact} />

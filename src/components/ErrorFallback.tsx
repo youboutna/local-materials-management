@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 interface ErrorFallbackProps {
   error: Error;
@@ -15,14 +16,14 @@ const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps) => {
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
         <Alert variant="destructive" className="mb-6">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Erreur</AlertTitle>
+          <AlertTitle><T k="auto.errorfallback.erreur" fallback="Erreur" /></AlertTitle>
           <AlertDescription>
-            Une erreur s'est produite dans l'application.
+            <T k="auto.errorfallback.une_erreur_s_est_produite_dans_l_application" fallback="Une erreur s'est produite dans l'application." />
           </AlertDescription>
         </Alert>
         
         <div className="mb-6">
-          <h3 className="text-lg font-medium mb-2">Détails de l'erreur:</h3>
+          <h3 className="text-lg font-medium mb-2"><T k="auto.errorfallback.details_de_l_erreur" fallback="Détails de l'erreur:" /></h3>
           <div className="bg-muted p-4 rounded text-sm font-mono overflow-auto max-h-40">
             {error.message}
           </div>
@@ -30,10 +31,10 @@ const ErrorFallback = ({ error, resetErrorBoundary }: ErrorFallbackProps) => {
         
         <div className="flex justify-between">
           <Button variant="outline" onClick={resetErrorBoundary}>
-            Réessayer
+            <T k="auto.errorfallback.reessayer" fallback="Réessayer" />
           </Button>
           <Button onClick={() => window.location.href = '/'}>
-            Retour à l'accueil
+            <T k="auto.errorfallback.retour_a_l_accueil" fallback="Retour à l'accueil" />
           </Button>
         </div>
       </div>

@@ -11,6 +11,7 @@ import { Copy, Link as LinkIcon, Mail, Plus, ShieldX, Trash2 } from 'lucide-reac
 import { useState } from 'react';
 import { SecureSharingDialog } from './SecureSharingDialog';
 import ShareSecretWithSupplierDialog from './ShareSecretWithSupplierDialog';
+import { T } from '@/components/i18n/T';
 
 interface TenderSecretsPanelProps {
   tenderId: string;
@@ -40,7 +41,7 @@ export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: Tend
             Codes secrets ({secrets.length})
           </CardTitle>
           <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Nouveau code
+            <Plus className="h-4 w-4 mr-1" /> <T k="auto.tendersecretspanel.nouveau_code" fallback="Nouveau code" />
           </Button>
         </CardHeader>
         <CardContent>
@@ -65,7 +66,7 @@ export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: Tend
                         <Badge variant={s.isActive && !expired ? 'default' : 'secondary'}>
                           {s.isActive && !expired ? 'Actif' : expired ? 'Expiré' : 'Révoqué'}
                         </Badge>
-                        {capped && <Badge variant="destructive">Quota atteint</Badge>}
+                        {capped && <Badge variant="destructive"><T k="auto.tendersecretspanel.quota_atteint" fallback="Quota atteint" /></Badge>}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1 truncate">
                         {s.supplierEmail || '—'} · expire {s.expiresAt ? new Date(s.expiresAt).toLocaleDateString('fr-FR') : '—'} · {s.accessCount}/{s.maxAccessCount ?? '∞'} accès

@@ -16,6 +16,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div>
     <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
@@ -54,7 +55,7 @@ const TenderDetail: React.FC = () => {
     <AppLayout pageTitle="📄 Détail de l'appel d'offres">
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Retour
+          <ArrowLeft className="h-4 w-4 mr-2" /> <T k="auto.tenderdetail.retour" fallback="Retour" />
         </Button>
 
         {loading && <Skeleton className="h-64 w-full" />}
@@ -70,7 +71,7 @@ const TenderDetail: React.FC = () => {
         {!loading && !tender && !error && (
           <Card>
             <CardContent className="p-6">
-              Aucun appel d'offres trouvé pour l'identifiant <code>{id}</code>.
+              <T k="auto.tenderdetail.aucun_appel_d_offres_trouve_pour_l_identifiant" fallback="Aucun appel d'offres trouvé pour l'identifiant" /> <code>{id}</code>.
             </CardContent>
           </Card>
         )}
@@ -110,7 +111,7 @@ const TenderDetail: React.FC = () => {
                 {tender.projectId && (
                   <Button variant="outline" asChild>
                     <Link to={`/projects/${tender.projectId}`}>
-                      Projet associé <ExternalLink className="h-3 w-3 ml-1" />
+                      <T k="auto.tenderdetail.projet_associe" fallback="Projet associé" /> <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
                 )}
@@ -136,7 +137,7 @@ const TenderDetail: React.FC = () => {
             <Card>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Soumissions</p>
+                  <p className="text-xs text-muted-foreground"><T k="auto.tenderdetail.soumissions" fallback="Soumissions" /></p>
                   <p className="text-2xl font-bold">{(submissions as any[]).length}</p>
                 </div>
                 <Users className="h-8 w-8 text-muted-foreground" />
@@ -145,7 +146,7 @@ const TenderDetail: React.FC = () => {
             <Card>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Documents</p>
+                  <p className="text-xs text-muted-foreground"><T k="auto.tenderdetail.documents" fallback="Documents" /></p>
                   <p className="text-2xl font-bold">{docsCount}</p>
                 </div>
                 <FileText className="h-8 w-8 text-muted-foreground" />
@@ -154,7 +155,7 @@ const TenderDetail: React.FC = () => {
             <Card>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Codes secrets actifs</p>
+                  <p className="text-xs text-muted-foreground"><T k="auto.tenderdetail.codes_secrets_actifs" fallback="Codes secrets actifs" /></p>
                   <p className="text-2xl font-bold">
                     {(secrets as any[]).filter((s) => s.isActive).length}
                   </p>

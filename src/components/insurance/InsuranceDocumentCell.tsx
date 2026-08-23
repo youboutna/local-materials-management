@@ -17,6 +17,7 @@ import { useDocumentViewer } from '@/components/documents/viewer';
 import { getInsuranceCertificatesService } from '@/application/services/InsuranceCertificatesService';
 import { useToast } from '@/hooks/use-toast';
 import type { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
+import { T } from '@/components/i18n/T';
 
 interface InsuranceDocumentCellProps {
   certificate: InsuranceCertificateDTO;
@@ -63,7 +64,7 @@ export function InsuranceDocumentCell({ certificate, onChanged }: InsuranceDocum
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Joindre un document d'assurance</DialogTitle>
+            <DialogTitle><T k="auto.insurancedocumentcell.joindre_un_document_d_assurance" fallback="Joindre un document d'assurance" /></DialogTitle>
             <DialogDescription>
               Police {certificate.policyNumber || '—'} — le document sera rattaché au certificat et au projet.
             </DialogDescription>

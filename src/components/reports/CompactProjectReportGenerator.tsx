@@ -17,6 +17,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { REPORT_PROFILES, type ReportProfile, defaultSectionsFor } from '@/config/referentials/reports/report-profiles.referential';
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
+import { T } from '@/components/i18n/T';
 
 // Local type aliases for report generation
 interface EVMMetrics {
@@ -395,13 +396,13 @@ export function CompactProjectReportGenerator({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Générateur de Rapport Compact
+          <T k="auto.compactprojectreportgenerator.generateur_de_rapport_compact" fallback="Générateur de Rapport Compact" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-end">
           <div>
-            <Label htmlFor="report-title">Titre du Rapport</Label>
+            <Label htmlFor="report-title"><T k="auto.compactprojectreportgenerator.titre_du_rapport" fallback="Titre du Rapport" /></Label>
             <Input
               id="report-title"
               value={reportTitle}
@@ -410,7 +411,7 @@ export function CompactProjectReportGenerator({
             />
           </div>
           <div className="min-w-[200px]">
-            <Label htmlFor="report-profile">Profil</Label>
+            <Label htmlFor="report-profile"><T k="auto.compactprojectreportgenerator.profil" fallback="Profil" /></Label>
             <Select value={profile} onValueChange={(v) => setProfile(v as ReportProfile)}>
               <SelectTrigger id="report-profile">
                 <SelectValue />
@@ -458,7 +459,7 @@ export function CompactProjectReportGenerator({
         
         {onClose && (
           <Button variant="outline" onClick={onClose}>
-            Fermer
+            <T k="auto.compactprojectreportgenerator.fermer" fallback="Fermer" />
           </Button>
         )}
       </CardContent>

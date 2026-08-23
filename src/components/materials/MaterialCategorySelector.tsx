@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { MATERIAL_CATEGORIES, MaterialCategoryConfig, MaterialSubcategory } from '@/dtos/entities/MaterialCategoryDTO';
 
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface MaterialCategorySelectorProps {
   selectedCategory?: string;
   selectedSubcategory?: string;
@@ -42,7 +43,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="category">Catégorie</Label>
+        <Label htmlFor="category"><T k="auto.materialcategoryselector.categorie" fallback="Catégorie" /></Label>
         <Select value={selectedCategory} onValueChange={handleCategoryChange}>
           <SelectTrigger>
             <SelectValue placeholder="Sélectionner une catégorie" />
@@ -64,7 +65,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
 
       {currentCategory && currentCategory.subcategories && (
         <div>
-          <Label htmlFor="subcategory">Sous-catégorie</Label>
+          <Label htmlFor="subcategory"><T k="auto.materialcategoryselector.sous_categorie" fallback="Sous-catégorie" /></Label>
           <Select value={selectedSubcategory} onValueChange={handleSubcategoryChange}>
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner une sous-catégorie" />
@@ -74,7 +75,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 <SelectItem key={subcategory.id} value={subcategory.id}>
                   <div>
                     <div className="font-medium">{subcategory.name}</div>
-                    <div className="text-sm text-muted-foreground">Unité: <TranslatedUnit code={subcategory.unit} /></div>
+                    <div className="text-sm text-muted-foreground"><T k="auto.materialcategoryselector.unite" fallback="Unité:" /> <TranslatedUnit code={subcategory.unit} /></div>
                   </div>
                 </SelectItem>
               ))}

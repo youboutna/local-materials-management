@@ -6,6 +6,7 @@ import { CheckCircle, Clock, AlertTriangle, TrendingUp, FileText, Send, Users, E
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useManagementActionsHex, ActionItem } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 const ManagementActions: React.FC = () => {
   const { t } = useLanguage();
@@ -142,7 +143,7 @@ const ManagementActions: React.FC = () => {
             {actionItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-success" />
-                <p>Aucune action en attente</p>
+                <p><T k="auto.managementactions.aucune_action_en_attente" fallback="Aucune action en attente" /></p>
               </div>
             ) : (
               actionItems.map(item => {

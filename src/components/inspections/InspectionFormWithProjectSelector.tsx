@@ -15,6 +15,7 @@ import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelec
 import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface InspectionFormData {
   projectId: string;
@@ -71,7 +72,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Nouvelle Inspection</CardTitle>
+        <CardTitle><T k="auto.inspectionformwithprojectselector.nouvelle_inspection" fallback="Nouvelle Inspection" /></CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -128,7 +129,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="progress">Progrès observé (%)</Label>
+              <Label htmlFor="progress"><T k="auto.inspectionformwithprojectselector.progres_observe" fallback="Progrès observé (%)" /></Label>
               <Input
                 id="progress"
                 type="number"
@@ -141,23 +142,23 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
             </div>
 
             <div>
-              <Label htmlFor="status">Statut</Label>
+              <Label htmlFor="status"><T k="auto.inspectionformwithprojectselector.statut" fallback="Statut" /></Label>
               <Select value={formData.status} onValueChange={(value) => updateFormData('status', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner le statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="planifiée">Planifiée</SelectItem>
+                  <SelectItem value="planifiée"><T k="auto.inspectionformwithprojectselector.planifiee" fallback="Planifiée" /></SelectItem>
                   <SelectItem value="en_cours"><TranslatedStatus code="en_cours" /></SelectItem>
-                  <SelectItem value="validé">Validée</SelectItem>
-                  <SelectItem value="non_conforme">Non conforme</SelectItem>
+                  <SelectItem value="validé"><T k="auto.inspectionformwithprojectselector.validee" fallback="Validée" /></SelectItem>
+                  <SelectItem value="non_conforme"><T k="auto.inspectionformwithprojectselector.non_conforme" fallback="Non conforme" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="comments">Commentaires</Label>
+            <Label htmlFor="comments"><T k="auto.inspectionformwithprojectselector.commentaires" fallback="Commentaires" /></Label>
             <Textarea
               id="comments"
               value={formData.comments}

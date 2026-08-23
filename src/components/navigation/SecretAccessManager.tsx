@@ -28,6 +28,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useTendersHex } from '@/hooks/hexagonal';
 import { TenderSecretsPanel } from '@/components/tenders/TenderSecretsPanel';
+import { T } from '@/components/i18n/T';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -52,7 +53,7 @@ const SecretManagerBody: React.FC<{ initialTenderId?: string }> = ({ initialTend
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="secret-manager-tender">Appel d'offres</Label>
+        <Label htmlFor="secret-manager-tender"><T k="auto.secretaccessmanager.appel_d_offres" fallback="Appel d'offres" /></Label>
         <Select value={tenderId} onValueChange={setTenderId} disabled={loading}>
           <SelectTrigger id="secret-manager-tender">
             <SelectValue placeholder={loading ? 'Chargement…' : "Sélectionner un appel d'offres"} />

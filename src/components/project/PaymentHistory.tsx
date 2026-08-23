@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { format } from 'date-fns';
+import { T } from '@/components/i18n/T';
 
 interface PaymentHistoryProps {
   payments: PaymentDTO[];
@@ -12,10 +13,10 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Historique des paiements</CardTitle>
+          <CardTitle className="text-lg"><T k="auto.paymenthistory.historique_des_paiements" fallback="Historique des paiements" /></CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Aucun paiement effectué pour ce projet.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.paymenthistory.aucun_paiement_effectue_pour_ce_projet" fallback="Aucun paiement effectué pour ce projet." /></p>
         </CardContent>
       </Card>
     );
@@ -24,7 +25,7 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Historique des paiements</CardTitle>
+        <CardTitle className="text-lg"><T k="auto.paymenthistory.historique_des_paiements" fallback="Historique des paiements" /></CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

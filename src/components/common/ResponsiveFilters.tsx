@@ -19,6 +19,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { T } from '@/components/i18n/T';
 
 export interface FilterOption {
   value: string;
@@ -104,7 +105,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
     >
       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0 pl-1">
         <Filter className="h-3.5 w-3.5" />
-        <span>Filtres</span>
+        <span><T k="auto.responsivefilters.filtres" fallback="Filtres" /></span>
         {activeFiltersCount > 0 && (
           <Badge variant="secondary" className="h-4 px-1 text-[10px]">
             {activeFiltersCount}

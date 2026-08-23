@@ -9,6 +9,7 @@
 import { createContext } from 'react';
 import { Alert, AlertStatistics, ProjectManagerState } from '@/domain/entities/Alert';
 import { AlertService } from '@/application/services/AlertService';
+import { T } from '@/components/i18n/T';
 
 export const defaultState: ProjectManagerState = {
   alerts: [],
@@ -49,10 +50,10 @@ export interface ProjectManagerContextType {
   alerts: Alert[];
   data: ProjectManagerState;
   loading?: boolean;
-  runChecks: () => Promise<void> | void; // Support both sync and async
-  acknowledgeAlert: (alertId: string, userId: string, actionTaken?: string) => Promise<boolean> | void;
-  resolveAlert: (alertId: string, userId: string, resolution?: string) => Promise<boolean> | void;
-  closeAlert: (alertId: string, userId: string) => Promise<boolean> | void;
+  runChecks: () => <T k="auto.projectmanagercontext.promise" fallback="Promise" /><void> | void; // Support both sync and async
+  acknowledgeAlert: (alertId: string, userId: string, actionTaken?: string) => <T k="auto.projectmanagercontext.promise" fallback="Promise" /><boolean> | void;
+  resolveAlert: (alertId: string, userId: string, resolution?: string) => <T k="auto.projectmanagercontext.promise" fallback="Promise" /><boolean> | void;
+  closeAlert: (alertId: string, userId: string) => <T k="auto.projectmanagercontext.promise" fallback="Promise" /><boolean> | void;
   getAlertsByType: (type: string) => Alert[];
   getAlertsBySeverity: (severity: string) => Alert[];
   needsEscalation: (alert: Alert) => boolean;

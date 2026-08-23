@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { ConstructionPhase, ConstructionStage } from '@/dtos/entities/ProjectDTO';
 import ConstructionPhaseManager from './ConstructionPhaseManager';
+import { T } from '@/components/i18n/T';
 
 interface ConstructionPhaseSelectorProps {
   currentPhase?: ConstructionPhase;
@@ -56,14 +57,14 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
         <CardTitle className="flex items-center gap-2 text-primary">
           <Calendar className="h-5 w-5" />
-          Phases de construction
+          <T k="auto.constructionphaseselector.phases_de_construction" fallback="Phases de construction" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
         {/* Construction Timeline Preview */}
         {currentPhase && (
           <div className="bg-muted rounded-lg p-4 space-y-3">
-            <h4 className="text-sm font-medium text-foreground mb-3">Séquence de construction</h4>
+            <h4 className="text-sm font-medium text-foreground mb-3"><T k="auto.constructionphaseselector.sequence_de_construction" fallback="Séquence de construction" /></h4>
             <div className="space-y-2">
               {CONSTRUCTION_PHASES.map((phase, index) => {
                 const isCompleted = CONSTRUCTION_PHASES.findIndex(p => p.value === currentPhase) > index;
@@ -94,12 +95,12 @@ const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
                         </span>
                         {isCurrent && (
                           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
-                            En cours
+                            <T k="auto.constructionphaseselector.en_cours" fallback="En cours" />
                           </Badge>
                         )}
                         {isCompleted && (
                           <Badge variant="outline" className="text-xs bg-success-soft text-success border-success/30">
-                            Terminé
+                            <T k="auto.constructionphaseselector.termine" fallback="Terminé" />
                           </Badge>
                         )}
                       </div>

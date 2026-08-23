@@ -9,6 +9,7 @@ import SystemHealthOverview from '@/components/monitoring/SystemHealthOverview';
 import PerformanceMetrics from '@/components/monitoring/PerformanceMetrics';
 import { AppLayout } from '@/components/layout';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { T } from '@/components/i18n/T';
 
 const ComprehensiveMonitoringPage = () => {
   const { t } = useLanguage();
@@ -22,27 +23,27 @@ const ComprehensiveMonitoringPage = () => {
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3 lg:grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            <span className="hidden sm:inline">Vue d'ensemble</span>
+            <span className="hidden sm:inline"><T k="auto.comprehensivemonitoring.vue_d_ensemble" fallback="Vue d'ensemble" /></span>
           </TabsTrigger>
           <TabsTrigger value="performance" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Performance</span>
+            <span className="hidden sm:inline"><T k="auto.comprehensivemonitoring.performance" fallback="Performance" /></span>
           </TabsTrigger>
           <TabsTrigger value="inspections" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Inspections</span>
+            <span className="hidden sm:inline"><T k="auto.comprehensivemonitoring.inspections" fallback="Inspections" /></span>
           </TabsTrigger>
           <TabsTrigger value="insurance" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Assurances</span>
+            <span className="hidden sm:inline"><T k="auto.comprehensivemonitoring.assurances" fallback="Assurances" /></span>
           </TabsTrigger>
           <TabsTrigger value="guarantees" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            <span className="hidden sm:inline">Garanties</span>
+            <span className="hidden sm:inline"><T k="auto.comprehensivemonitoring.garanties" fallback="Garanties" /></span>
           </TabsTrigger>
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Paiements</span>
+            <span className="hidden sm:inline"><T k="auto.comprehensivemonitoring.paiements" fallback="Paiements" /></span>
           </TabsTrigger>
         </TabsList>
 

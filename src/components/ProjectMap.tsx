@@ -10,6 +10,7 @@ import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 export type { ProjectStatus } from "@/dtos/entities/ProjectAggregateDTO";
 
 interface ProjectMapProps {
@@ -167,7 +168,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright"><T k="auto.projectmap.openstreetmap" fallback="OpenStreetMap" /></a> contributors'
         />
 
         {mapLocations.map((location) => (

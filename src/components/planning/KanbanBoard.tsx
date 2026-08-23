@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { useKanbanTasks, KanbanTask } from '@/hooks/hexagonal';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface KanbanColumn {
   id: string;
   title: string;
@@ -111,7 +112,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <LayoutGrid className="h-5 w-5 text-primary" />
-          Tableau Kanban
+          <T k="auto.kanbanboard.tableau_kanban" fallback="Tableau Kanban" />
         </CardTitle>
       </CardHeader>
 
@@ -155,7 +156,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 {isOverLimit && (
                   <div className="bg-destructive/10 text-destructive text-xs p-2 flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
-                    Limite WIP dépassée!
+                    <T k="auto.kanbanboard.limite_wip_depassee" fallback="Limite WIP dépassée!" />
                   </div>
                 )}
 
@@ -205,7 +206,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                          {(task.progress || 0) > 0 && (
                            <div className="mb-2">
                              <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                               <span>Progression</span>
+                               <span><T k="auto.kanbanboard.progression" fallback="Progression" /></span>
                                <span>{task.progress}%</span>
                              </div>
                              <Progress value={task.progress || 0} className="h-1" />
@@ -229,7 +230,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                            ) : (
                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                <User className="h-3 w-3" />
-                               Non assigné
+                               <T k="auto.kanbanboard.non_assigne" fallback="Non assigné" />
                              </div>
                            )}
 
@@ -258,7 +259,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
                   {columnTasks.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground text-sm">
-                      <p>Aucune tâche</p>
+                      <p><T k="auto.kanbanboard.aucune_tache" fallback="Aucune tâche" /></p>
                     </div>
                   )}
                 </div>

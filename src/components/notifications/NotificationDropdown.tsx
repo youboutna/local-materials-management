@@ -18,6 +18,7 @@ import { NotificationType } from '@/dtos/entities/ProjectReportDTO';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
+import { T } from '@/components/i18n/T';
 
 export function NotificationDropdown() {
   const { user } = useAuth();
@@ -42,7 +43,7 @@ export function NotificationDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
+          <span><T k="auto.notificationdropdown.notifications" fallback="Notifications" /></span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -51,7 +52,7 @@ export function NotificationDropdown() {
               className="h-auto p-1 text-xs"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              Tout marquer lu
+              <T k="auto.notificationdropdown.tout_marquer_lu" fallback="Tout marquer lu" />
             </Button>
           )}
         </DropdownMenuLabel>
@@ -59,7 +60,7 @@ export function NotificationDropdown() {
         
         {recentNotifications.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
-            Aucune notification
+            <T k="auto.notificationdropdown.aucune_notification" fallback="Aucune notification" />
           </div>
         ) : (
           <ScrollArea className="h-96">
@@ -143,7 +144,7 @@ export function NotificationDropdown() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/notifications" className="text-center w-full">
-                Voir toutes les notifications
+                <T k="auto.notificationdropdown.voir_toutes_les_notifications" fallback="Voir toutes les notifications" />
               </Link>
             </DropdownMenuItem>
           </>

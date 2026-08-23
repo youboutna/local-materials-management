@@ -6,6 +6,7 @@ import InspectionPaymentValidation from "@/components/inspections/InspectionPaym
 import { AppLayout } from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsPanel";
+import { T } from '@/components/i18n/T';
 
 const ProjectDetail = () => {
   const { t } = useLanguage();
@@ -38,7 +39,7 @@ const ProjectDetail = () => {
       <Tabs defaultValue="info" className="mt-4">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 lg:w-auto lg:inline-grid">
           <TabsTrigger value="info" className="flex items-center gap-2">
-            Informations
+            <T k="auto.projectdetail.informations" fallback="Informations" />
           </TabsTrigger>
           <TabsTrigger value="finance" className="flex items-center gap-2">
             Finance &amp; Paiements

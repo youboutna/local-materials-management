@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { T } from '@/components/i18n/T';
 
 const TestProject = () => {
   const navigate = useNavigate();
@@ -16,10 +17,10 @@ const TestProject = () => {
     <div className="container mx-auto py-8">
       <Card>
         <CardHeader>
-          <CardTitle>Test des projets - Diagnostic</CardTitle>
+          <CardTitle><T k="auto.testproject.test_des_projets_diagnostic" fallback="Test des projets - Diagnostic" /></CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p>Cliquez sur un projet pour tester le chargement des données :</p>
+          <p><T k="auto.testproject.cliquez_sur_un_projet_pour_tester_le_chargement_" fallback="Cliquez sur un projet pour tester le chargement des données :" /></p>
           {testProjects.map((project) => (
             <Button
               key={project.id}

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Building2, Search, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useSuppliersSelector } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 export interface SupplierSelectorValue {
   id?: string;
@@ -119,7 +120,7 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
   return (
     <div ref={ref} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="supplierSearch">Fournisseur</Label>
+        <Label htmlFor="supplierSearch"><T k="auto.supplierselector.fournisseur" fallback="Fournisseur" /></Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
@@ -149,7 +150,7 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
           </SelectTrigger>
           <SelectContent>
             {suppliers.length === 0 && !allowCustom && (
-              <div className="px-3 py-2 text-sm text-muted-foreground">Aucun fournisseur disponible</div>
+              <div className="px-3 py-2 text-sm text-muted-foreground"><T k="auto.supplierselector.aucun_fournisseur_disponible" fallback="Aucun fournisseur disponible" /></div>
             )}
             {suppliers.map((supplier) => (
               <SelectItem key={supplier.id as string} value={supplier.id as string}>
@@ -176,7 +177,7 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
               <SelectItem value={CUSTOM_OPTION}>
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" aria-hidden="true" />
-                  <span>Autre fournisseur (saisie manuelle)</span>
+                  <span><T k="auto.supplierselector.autre_fournisseur_saisie_manuelle" fallback="Autre fournisseur (saisie manuelle)" /></span>
                 </div>
               </SelectItem>
             )}
@@ -187,7 +188,7 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
       {isCustom && (
         <div className="space-y-3 p-4 border rounded-lg bg-surface-muted">
           <div className="space-y-1.5">
-            <Label htmlFor="supplierName">Nom du fournisseur</Label>
+            <Label htmlFor="supplierName"><T k="auto.supplierselector.nom_du_fournisseur" fallback="Nom du fournisseur" /></Label>
             <Input
               id="supplierName"
               value={customSupplier.name}
@@ -197,7 +198,7 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="supplierContact">Contact</Label>
+            <Label htmlFor="supplierContact"><T k="auto.supplierselector.contact" fallback="Contact" /></Label>
             <Input
               id="supplierContact"
               value={customSupplier.contact}
@@ -207,7 +208,7 @@ const SupplierSelector = React.forwardRef<HTMLDivElement, SupplierSelectorProps>
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="leadTime">Délai de livraison (jours)</Label>
+            <Label htmlFor="leadTime"><T k="auto.supplierselector.delai_de_livraison_jours" fallback="Délai de livraison (jours)" /></Label>
             <Input
               id="leadTime"
               type="number"

@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
 import { useAuth } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 const PasswordResetHandler = () => {
   const [searchParams] = useSearchParams();
@@ -109,7 +110,7 @@ const PasswordResetHandler = () => {
       <div className="min-h-screen flex items-center justify-center bg-muted">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center">Lien invalide</CardTitle>
+            <CardTitle className="text-center"><T k="auto.passwordresethandler.lien_invalide" fallback="Lien invalide" /></CardTitle>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
@@ -121,7 +122,7 @@ const PasswordResetHandler = () => {
               className="w-full mt-4" 
               onClick={() => navigate('/auth')}
             >
-              Retour à la connexion
+              <T k="auto.passwordresethandler.retour_a_la_connexion" fallback="Retour à la connexion" />
             </Button>
           </CardContent>
         </Card>
@@ -135,7 +136,7 @@ const PasswordResetHandler = () => {
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Lock className="h-5 w-5" />
-            Nouveau mot de passe
+            <T k="auto.passwordresethandler.nouveau_mot_de_passe" fallback="Nouveau mot de passe" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -147,7 +148,7 @@ const PasswordResetHandler = () => {
             )}
 
             <div>
-              <Label htmlFor="password">Nouveau mot de passe</Label>
+              <Label htmlFor="password"><T k="auto.passwordresethandler.nouveau_mot_de_passe" fallback="Nouveau mot de passe" /></Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -175,7 +176,7 @@ const PasswordResetHandler = () => {
             </div>
 
             <div>
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Label htmlFor="confirmPassword"><T k="auto.passwordresethandler.confirmer_le_mot_de_passe" fallback="Confirmer le mot de passe" /></Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"

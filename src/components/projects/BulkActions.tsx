@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
+import { T } from '@/components/i18n/T';
 
 interface BulkActionsProps {
   selectedProjects: Set<string>;
@@ -67,7 +68,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
             className="flex items-center gap-2"
           >
             <X className="h-4 w-4" />
-            Annuler
+            <T k="auto.bulkactions.annuler" fallback="Annuler" />
           </Button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DocumentItem, formatBytes } from './types';
 import { MimeIcon } from './MimeIcon';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   items: DocumentItem[];
@@ -20,16 +21,16 @@ export function DocumentHubTable({ items, facetKeys, categoryLabels, onPreview, 
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40">
-              <TableHead>Nom</TableHead>
-              <TableHead className="hidden md:table-cell">Catégorie</TableHead>
+              <TableHead><T k="auto.documenthubtable.nom" fallback="Nom" /></TableHead>
+              <TableHead className="hidden md:table-cell"><T k="auto.documenthubtable.categorie" fallback="Catégorie" /></TableHead>
               {facetKeys.map((f) => (
                 <TableHead key={f.key} className="hidden md:table-cell">
                   {f.label}
                 </TableHead>
               ))}
-              <TableHead className="hidden sm:table-cell text-right">Taille</TableHead>
-              <TableHead className="hidden lg:table-cell">Ajouté le</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="hidden sm:table-cell text-right"><T k="auto.documenthubtable.taille" fallback="Taille" /></TableHead>
+              <TableHead className="hidden lg:table-cell"><T k="auto.documenthubtable.ajoute_le" fallback="Ajouté le" /></TableHead>
+              <TableHead className="text-right"><T k="auto.documenthubtable.actions" fallback="Actions" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

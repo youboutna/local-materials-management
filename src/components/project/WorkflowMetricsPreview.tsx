@@ -12,6 +12,7 @@ import {
 import { Activity } from 'lucide-react';
 import ProjectMetricsPanel from '@/components/project/ProjectMetricsPanel';
 import type { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
+import { T } from '@/components/i18n/T';
 
 /**
  * WorkflowMetricsPreview — accès discret aux métriques projet pendant les
@@ -55,9 +56,9 @@ export const WorkflowMetricsPreview: React.FC<Props> = ({ formData, mode, classN
         </SheetTrigger>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
           <SheetHeader>
-            <SheetTitle>Indicateurs temps réel</SheetTitle>
+            <SheetTitle><T k="auto.workflowmetricspreview.indicateurs_temps_reel" fallback="Indicateurs temps réel" /></SheetTitle>
             <SheetDescription>
-              Avancement pondéré, EVM et alertes calculés à partir des données saisies.
+              <T k="auto.workflowmetricspreview.avancement_pondere_evm_et_alertes_calcules_a_par" fallback="Avancement pondéré, EVM et alertes calculés à partir des données saisies." />
             </SheetDescription>
           </SheetHeader>
           <div className="mt-4">

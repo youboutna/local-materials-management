@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { useOAuthLogin } from '@/hooks/hexagonal/useOAuthLogin';
 import { Github, Chrome, Briefcase } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { T } from '@/components/i18n/T';
 
 const PROVIDER_ICONS = {
   google: Chrome,
@@ -117,7 +118,7 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
                 {IconComponent && <IconComponent className="h-5 w-5" />}
                 <span>Continuer avec {label}</span>
                 <Badge variant="secondary" className="ml-auto">
-                  OAuth
+                  <T k="auto.oauthlogin.oauth" fallback="OAuth" />
                 </Badge>
               </Button>
             );
@@ -137,7 +138,7 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
               </div>
             </div>
             <div className="text-center text-sm text-muted-foreground">
-              Utilisez le formulaire ci-dessous pour une connexion classique
+              <T k="auto.oauthlogin.utilisez_le_formulaire_ci_dessous_pour_une_conne" fallback="Utilisez le formulaire ci-dessous pour une connexion classique" />
             </div>
           </>
         )}

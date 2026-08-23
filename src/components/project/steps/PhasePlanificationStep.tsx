@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Alert, AlertDescription } from '../../ui/alert';
 import { AlertCircle, Layers } from 'lucide-react';
 import ConstructionPhaseManager from '../ConstructionPhaseManager';
+import { T } from '@/components/i18n/T';
 
 interface PhasePlanificationStepProps {
   formData: any;
@@ -43,7 +44,7 @@ const PhasePlanificationStep: React.FC<PhasePlanificationStepProps> = ({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Projet non encore créé.</strong> Complétez les étapes précédentes et enregistrez le projet avant de gérer les phases.
+              <strong><T k="auto.phaseplanificationstep.projet_non_encore_cree" fallback="Projet non encore créé." /></strong> Complétez les étapes précédentes et enregistrez le projet avant de gérer les phases.
             </AlertDescription>
           </Alert>
         ) : (

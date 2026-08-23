@@ -9,6 +9,7 @@ import { useSuppliersSelector } from '@/hooks/hexagonal'
 
 interface SimpleSupplierSelectorProps {
   value?: string;
+import { T } from '@/components/i18n/T';
   onChange: (supplierId: string) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -127,7 +128,7 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
             ))}
             {(!suppliers || suppliers.filter(s => s.id && s.id.trim() !== '').length === 0) && (
               <div className="p-2 text-sm text-muted-foreground text-center">
-                Aucun fournisseur trouvé
+                <T k="auto.simplesupplierselector.aucun_fournisseur_trouve" fallback="Aucun fournisseur trouvé" />
               </div>
             )}
           </SelectContent>

@@ -15,6 +15,7 @@ import {
   Trophy 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
 
 interface InspectionType {
   code: string;
@@ -131,7 +132,7 @@ const InspectionTypeStep: React.FC<InspectionTypeStepProps> = ({
           {mode === 'request' ? 'Quel type d\'inspection souhaitez-vous demander ?' : 'Sélectionnez le type d\'inspection à programmer'}
         </h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Le type détermine les documents requis et le workflow de validation
+          <T k="auto.inspectiontypestep.le_type_determine_les_documents_requis_et_le_wor" fallback="Le type détermine les documents requis et le workflow de validation" />
         </p>
       </div>
 
@@ -169,7 +170,7 @@ const InspectionTypeStep: React.FC<InspectionTypeStepProps> = ({
                     <span>~{type.estimatedDuration}h</span>
                     {type.requiresEngineerApproval && (
                       <Badge variant="secondary" className="text-xs">
-                        Validation Ing. Conseil
+                        <T k="auto.inspectiontypestep.validation_ing_conseil" fallback="Validation Ing. Conseil" />
                       </Badge>
                     )}
                   </div>

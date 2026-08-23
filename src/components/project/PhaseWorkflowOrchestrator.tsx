@@ -14,8 +14,8 @@ interface PhaseWorkflowOrchestratorProps {
   rawMilestones?: any[];
   projectId: string;
   phaseId: string;
-  onStepAction?: (action: StepAction, data?: any) => Promise<void> | void;
-  onMilestoneAction?: (action: MilestoneAction, data?: any) => Promise<void> | void;
+  onStepAction?: (action: StepAction, data?: any) => <T k="auto.phaseworkfloworchestrator.promise" fallback="Promise" /><void> | void;
+  onMilestoneAction?: (action: MilestoneAction, data?: any) => <T k="auto.phaseworkfloworchestrator.promise" fallback="Promise" /><void> | void;
   onAddStep?: () => void;
   onRetry?: () => void;
   enableNormalization?: boolean;

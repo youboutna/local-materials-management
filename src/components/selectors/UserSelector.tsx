@@ -9,6 +9,7 @@ import type { UserProfile } from '@/hooks/hexagonal/useSelectorsHex';
 import { useDebounce } from '@/hooks/useDebounce';
 
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface UserSelectorProps {
   value?: string;
   onChange: (userId: string) => void;
@@ -124,7 +125,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
           <SelectContent>
             {isLoading && (
               <SelectItem value="__loading" disabled>
-                Chargement des utilisateurs...
+                <T k="auto.userselector.chargement_des_utilisateurs" fallback="Chargement des utilisateurs..." />
               </SelectItem>
             )}
             {!isLoading &&
@@ -152,7 +153,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
               <SelectItem value="__empty" disabled>
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <Users className="h-4 w-4" aria-hidden="true" />
-                  Aucun utilisateur trouvé
+                  <T k="auto.userselector.aucun_utilisateur_trouve" fallback="Aucun utilisateur trouvé" />
                 </span>
               </SelectItem>
             )}

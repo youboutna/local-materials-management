@@ -6,6 +6,7 @@ import { Menu, X, LogIn } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from '@/hooks/hexagonal/useAuth';
+import { T } from '@/components/i18n/T';
 
 const CustomNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,7 +47,7 @@ const CustomNavbar = () => {
               {t('nav.users')}
             </Link>
             <Link to="/settings" className="text-adrar-700 hover:text-adrar-900">
-              Settings
+              <T k="auto.customnavbar.settings" fallback="Settings" />
             </Link>
             
             {/* Language Switcher */}
@@ -112,7 +113,7 @@ const CustomNavbar = () => {
                 className="text-adrar-700 hover:text-adrar-900 py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Settings
+                <T k="auto.customnavbar.settings" fallback="Settings" />
               </Link>
               
               <div className="py-2">

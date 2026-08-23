@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { btpClient } from '@/integrations/supabase/schema-clients';
+import { T } from '@/components/i18n/T';
 
 export default function TendersPublic() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function TendersPublic() {
             <h1 className="font-semibold text-lg">Portail Fournisseur — Appels d'offres publics</h1>
           </div>
           <Button size="sm" variant="ghost" asChild>
-            <a href="/supplier-portal"><HelpCircle className="h-4 w-4 mr-1" /> J'ai un code secret</a>
+            <a href="/supplier-portal"><HelpCircle className="h-4 w-4 mr-1" /> <T k="auto.tenderspublic.j_ai_un_code_secret" fallback="J'ai un code secret" /></a>
           </Button>
         </div>
       </header>
@@ -55,7 +56,7 @@ export default function TendersPublic() {
         {!selectedId && (
           <>
             <div className="mb-4">
-              <h2 className="text-xl font-bold">Consultez les appels d'offres ouverts</h2>
+              <h2 className="text-xl font-bold"><T k="auto.tenderspublic.consultez_les_appels_d_offres_ouverts" fallback="Consultez les appels d'offres ouverts" /></h2>
               <p className="text-sm text-muted-foreground">
                 Consultation libre, soumission via wizard guidé. Aucun compte requis pour parcourir.
               </p>
@@ -67,7 +68,7 @@ export default function TendersPublic() {
         {selectedId && tender && (
           <div className="space-y-4">
             <Button variant="ghost" size="sm" onClick={() => setSelectedId(null)}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Retour à la liste
+              <ArrowLeft className="h-4 w-4 mr-1" /> <T k="auto.tenderspublic.retour_a_la_liste" fallback="Retour à la liste" />
             </Button>
             <Card>
               <CardHeader className="pb-3">
@@ -131,7 +132,7 @@ function BidStepContent({ step, tenderId }: { step: BidWizardStepCode; tenderId:
       <div className="space-y-2">
         <h3 className="font-semibold">3. Pièces administratives, techniques, financières</h3>
         <p className="text-sm text-muted-foreground">
-          Uploadez les documents demandés dans le DPAO, classés par catégorie.
+          <T k="auto.tenderspublic.uploadez_les_documents_demandes_dans_le_dpao_cla" fallback="Uploadez les documents demandés dans le DPAO, classés par catégorie." />
         </p>
         <div className="rounded border bg-muted/30 p-4 text-sm text-center text-muted-foreground">
           [SupplierDocumentUpload multi-catégories]

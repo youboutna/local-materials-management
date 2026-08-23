@@ -15,6 +15,7 @@ import { FileText, Calendar, User, Eye, Download, Trash2 } from 'lucide-react';
 import { DocumentDTO, DocumentStatus } from '@/dtos/entities/DocumentDTO';
 import { useDocumentViewer } from '@/components/documents/viewer';
 import { useDocumentChanges, type DocumentChangeEvent } from '@/components/documents/viewer/documentEvents';
+import { T } from '@/components/i18n/T';
 
 interface DocumentsListPaginatedProps {
   documents: DocumentDTO[];
@@ -160,10 +161,10 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
         <CardContent className="text-center py-12">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Aucun document trouvé
+            <T k="auto.documentslistpaginated.aucun_document_trouve" fallback="Aucun document trouvé" />
           </h3>
           <p className="text-muted-foreground">
-            Aucun document ne correspond à vos critères de recherche.
+            <T k="auto.documentslistpaginated.aucun_document_ne_correspond_a_vos_criteres_de_r" fallback="Aucun document ne correspond à vos critères de recherche." />
           </p>
         </CardContent>
       </Card>
@@ -215,12 +216,12 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                     </Badge>
                     {document.isInternalOnly && (
                       <Badge variant="secondary" className="bg-primary/10 text-primary">
-                        Interne
+                        <T k="auto.documentslistpaginated.interne" fallback="Interne" />
                       </Badge>
                     )}
                     {document.isSharedWithSuppliers && (
                       <Badge variant="secondary" className="bg-success-soft text-success">
-                        Partagé
+                        <T k="auto.documentslistpaginated.partage" fallback="Partagé" />
                       </Badge>
                     )}
                   </div>
@@ -262,7 +263,7 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
                     className="flex items-center gap-2"
                   >
                     <Eye className="h-4 w-4" />
-                    Voir
+                    <T k="auto.documentslistpaginated.voir" fallback="Voir" />
                   </Button>
 
                   

@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar, CheckCircle, FileText } from 'lucide-react';
 import React, { useState } from 'react';
+import { T } from '@/components/i18n/T';
 
 interface Document {
   id: string;
@@ -167,7 +168,7 @@ const TenderDocumentSelector: React.FC<TenderDocumentSelectorProps> = ({
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>Aucun document trouvé pour cet appel d'offres</p>
+            <p><T k="auto.tenderdocumentselector.aucun_document_trouve_pour_cet_appel_d_offres" fallback="Aucun document trouvé pour cet appel d'offres" /></p>
             <p className="text-sm mt-1">Ajoutez des documents dans l'onglet "Documents" pour les partager.</p>
           </div>
         )}

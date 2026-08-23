@@ -23,6 +23,7 @@ import type {
   InterventionZoneDTO,
   InterventionZoneLatLng,
 } from '@/dtos/entities/InterventionZoneDTO';
+import { T } from '@/components/i18n/T';
 
 interface ZoneLocationEditorProps {
   open: boolean;
@@ -157,7 +158,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
-            Éditer la localisation
+            <T k="auto.zonelocationeditor.editer_la_localisation" fallback="Éditer la localisation" />
             <Badge variant="outline" className="capitalize">
               <TranslatedDocumentType code={zone.type} />
             </Badge>
@@ -166,7 +167,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
 
         <div className="space-y-4">
           <div>
-            <Label className="text-xs">Libellé</Label>
+            <Label className="text-xs"><T k="auto.zonelocationeditor.libelle" fallback="Libellé" /></Label>
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
@@ -195,7 +196,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
           {zone.type === 'point' && coords[0] && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label className="text-xs">Latitude</Label>
+                <Label className="text-xs"><T k="auto.zonelocationeditor.latitude" fallback="Latitude" /></Label>
                 <Input
                   type="number"
                   step="0.0001"
@@ -205,7 +206,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
                 />
               </div>
               <div>
-                <Label className="text-xs">Longitude</Label>
+                <Label className="text-xs"><T k="auto.zonelocationeditor.longitude" fallback="Longitude" /></Label>
                 <Input
                   type="number"
                   step="0.0001"
@@ -240,7 +241,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
                 />
               </div>
               <div>
-                <Label className="text-xs">Rayon (m)</Label>
+                <Label className="text-xs"><T k="auto.zonelocationeditor.rayon_m" fallback="Rayon (m)" /></Label>
                 <Input
                   type="number"
                   min={1}
@@ -301,10 +302,10 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
 
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
-            <X className="h-4 w-4 mr-1" /> Annuler
+            <X className="h-4 w-4 mr-1" /> <T k="auto.zonelocationeditor.annuler" fallback="Annuler" />
           </Button>
           <Button onClick={handleSave} disabled={!canSave}>
-            <Check className="h-4 w-4 mr-1" /> Enregistrer
+            <Check className="h-4 w-4 mr-1" /> <T k="auto.zonelocationeditor.enregistrer" fallback="Enregistrer" />
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
+import { T } from '@/components/i18n/T';
 
 export interface DqeResourceValue {
   resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
@@ -73,7 +74,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
     <div className="space-y-2">
     <div className={compact ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-2 gap-4'}>
       <div>
-        <Label>Type de ressource</Label>
+        <Label><T k="auto.dqeresourcepicker.type_de_ressource" fallback="Type de ressource" /></Label>
         <Select
           value={value.resource_kind ?? ''}
           onValueChange={(v) => update({
@@ -85,8 +86,8 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
         >
           <SelectTrigger><SelectValue placeholder="Sélectionner…" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="internal_qualification">RH interne (qualification)</SelectItem>
-            <SelectItem value="external_provider">Prestataire externe</SelectItem>
+            <SelectItem value="internal_qualification"><T k="auto.dqeresourcepicker.rh_interne_qualification" fallback="RH interne (qualification)" /></SelectItem>
+            <SelectItem value="external_provider"><T k="auto.dqeresourcepicker.prestataire_externe" fallback="Prestataire externe" /></SelectItem>
             <SelectItem value="material">Matériel / Équipement</SelectItem>
           </SelectContent>
         </Select>
@@ -114,7 +115,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
       {value.resource_kind === 'external_provider' && (
         <>
           <div>
-            <Label>Prestataire</Label>
+            <Label><T k="auto.dqeresourcepicker.prestataire" fallback="Prestataire" /></Label>
             <Select
               value={value.supplier_id ?? ''}
               onValueChange={(v) => update({ supplier_id: v })}
@@ -128,7 +129,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
             </Select>
           </div>
           <div className="col-span-2">
-            <Label>Référence contractuelle</Label>
+            <Label><T k="auto.dqeresourcepicker.reference_contractuelle" fallback="Référence contractuelle" /></Label>
             <Input
               value={value.supplier_contract_ref ?? ''}
               onChange={(e) => update({ supplier_contract_ref: e.target.value })}
@@ -140,7 +141,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
 
       {(value.resource_kind === 'internal_qualification' || value.resource_kind === 'external_provider') && (
         <div>
-          <Label>Heures estimées</Label>
+          <Label><T k="auto.dqeresourcepicker.heures_estimees" fallback="Heures estimées" /></Label>
           <Input
             type="number"
             value={value.estimated_hours ?? ''}

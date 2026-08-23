@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import type { MilestoneType } from "@/dtos/entities/MilestoneNodeDTO";
+import { T } from '@/components/i18n/T';
 export type { MilestoneType };
 
 interface MilestoneNodeProps {
@@ -277,18 +278,18 @@ export const MilestoneNode: React.FC<MilestoneNodeProps> = ({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onViewDetails?.(milestone.id)}>
                 <Eye className="h-4 w-4 mr-2" />
-                Voir détails
+                <T k="auto.milestonenode.voir_details" fallback="Voir détails" />
               </DropdownMenuItem>
               {milestone.type === "inspection" && !isCompleted && (
                 <DropdownMenuItem onClick={() => onScheduleInspection?.(milestone.id, stepId)}>
                   <ClipboardCheck className="h-4 w-4 mr-2" />
-                  Programmer inspection
+                  <T k="auto.milestonenode.programmer_inspection" fallback="Programmer inspection" />
                 </DropdownMenuItem>
               )}
               {(milestone.type === "payment" || milestone.type === "paiement") && !isCompleted && (
                 <DropdownMenuItem onClick={() => onRequestPayment?.(milestone.id, stepId)}>
                   <DollarSign className="h-4 w-4 mr-2" />
-                  Initier paiement
+                  <T k="auto.milestonenode.initier_paiement" fallback="Initier paiement" />
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

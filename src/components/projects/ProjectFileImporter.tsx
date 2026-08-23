@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import React, { useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
+import { T } from '@/components/i18n/T';
 
 type ImportMode = "create" | "update" | "patch";
 
@@ -528,7 +529,7 @@ export default function ProjectFileImporter({
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Format</Label>
+                <Label className="text-xs text-muted-foreground"><T k="auto.projectfileimporter.format" fallback="Format" /></Label>
                 <Select
                   value={templateFormat}
                   onValueChange={(v) => setTemplateFormat(v as TemplateFormat)}
@@ -537,8 +538,8 @@ export default function ProjectFileImporter({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="json">JSON (complet)</SelectItem>
-                    <SelectItem value="csv">CSV (à plat)</SelectItem>
+                    <SelectItem value="json"><T k="auto.projectfileimporter.json_complet" fallback="JSON (complet)" /></SelectItem>
+                    <SelectItem value="csv"><T k="auto.projectfileimporter.csv_a_plat" fallback="CSV (à plat)" /></SelectItem>
                   </SelectContent>
                 </Select>
               </div>

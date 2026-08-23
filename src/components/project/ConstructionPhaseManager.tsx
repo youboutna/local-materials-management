@@ -2098,7 +2098,7 @@ const PhaseEditDialog: React.FC<{
 
   phase: PhaseData;
 
-  onSave: (phase: PhaseData) => Promise<boolean> | void;
+  onSave: (phase: PhaseData) => <T k="auto.constructionphasemanager.promise" fallback="Promise" /><boolean> | void;
 
   onClose: () => void;
 

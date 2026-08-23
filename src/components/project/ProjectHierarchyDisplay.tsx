@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Mail, Phone, Building, Users } from 'lucide-react';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 
 interface HierarchyMember {
   hierarchy_id: string;
@@ -84,7 +85,7 @@ const ProjectHierarchyDisplay: React.FC<ProjectHierarchyDisplayProps> = ({
           {hierarchy.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucune hiérarchie organisationnelle trouvée pour ce projet</p>
+              <p><T k="auto.projecthierarchydisplay.aucune_hierarchie_organisationnelle_trouvee_pour" fallback="Aucune hiérarchie organisationnelle trouvée pour ce projet" /></p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -139,12 +140,12 @@ const ProjectHierarchyDisplay: React.FC<ProjectHierarchyDisplayProps> = ({
                               <div className="flex items-center gap-2 mt-3">
                                 {member.can_approve_projects && (
                                   <Badge variant="outline" className="text-xs">
-                                    Projets
+                                    <T k="auto.projecthierarchydisplay.projets" fallback="Projets" />
                                   </Badge>
                                 )}
                                 {member.can_approve_payments && (
                                   <Badge variant="outline" className="text-xs">
-                                    Paiements
+                                    <T k="auto.projecthierarchydisplay.paiements" fallback="Paiements" />
                                   </Badge>
                                 )}
                               </div>
@@ -154,7 +155,7 @@ const ProjectHierarchyDisplay: React.FC<ProjectHierarchyDisplayProps> = ({
                                   onClick={() => onEscalate(`level${level}`, member)}
                                   className="mt-2 px-2 py-1 bg-primary/10 text-primary text-xs rounded hover:bg-primary/20 transition-colors"
                                 >
-                                  Escalader
+                                  <T k="auto.projecthierarchydisplay.escalader" fallback="Escalader" />
                                 </button>
                               )}
                             </div>

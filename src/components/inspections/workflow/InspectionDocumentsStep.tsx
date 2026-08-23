@@ -15,6 +15,7 @@ import {
   RequiredDocument,
   InspectionDocumentType
 } from '@/application/services/InspectionWorkflowService';
+import { T } from '@/components/i18n/T';
 
 interface InspectionDocumentsStepProps {
   inspectionType: string;
@@ -72,7 +73,7 @@ const InspectionDocumentsStep: React.FC<InspectionDocumentsStepProps> = ({
   return (
     <div className="space-y-6">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold">Documents requis</h3>
+        <h3 className="text-lg font-semibold"><T k="auto.inspectiondocumentsstep.documents_requis" fallback="Documents requis" /></h3>
         <p className="text-sm text-muted-foreground mt-1">
           {mode === 'request' 
             ? 'Définissez les documents qui devront être fournis lors de l\'inspection'
@@ -86,7 +87,7 @@ const InspectionDocumentsStep: React.FC<InspectionDocumentsStepProps> = ({
         </Badge>
         <Button variant="outline" size="sm" onClick={selectAllRequired}>
           <CheckCircle2 className="h-3 w-3 mr-1" />
-          Sélectionner tous les obligatoires
+          <T k="auto.inspectiondocumentsstep.selectionner_tous_les_obligatoires" fallback="Sélectionner tous les obligatoires" />
         </Button>
       </div>
 
@@ -122,7 +123,7 @@ const InspectionDocumentsStep: React.FC<InspectionDocumentsStepProps> = ({
                     <div className="flex items-center gap-2">
                       <Label className="font-medium cursor-pointer">{doc.label}</Label>
                       {doc.required && (
-                        <Badge variant="destructive" className="text-xs">Obligatoire</Badge>
+                        <Badge variant="destructive" className="text-xs"><T k="auto.inspectiondocumentsstep.obligatoire" fallback="Obligatoire" /></Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -149,7 +150,7 @@ const InspectionDocumentsStep: React.FC<InspectionDocumentsStepProps> = ({
 
       <div className="flex justify-end pt-4">
         <Button onClick={onComplete} disabled={!allRequiredSelected}>
-          Continuer
+          <T k="auto.inspectiondocumentsstep.continuer" fallback="Continuer" />
         </Button>
       </div>
     </div>

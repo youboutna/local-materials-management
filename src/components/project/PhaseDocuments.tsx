@@ -10,6 +10,7 @@ import PhaseDocumentUpload from './phases/PhaseDocumentUpload';
 import { usePhaseDocuments, useDocumentDelete } from '@/hooks/hexagonal';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface PhaseDocumentsProps {
   phaseId: string;
   projectId: string;
@@ -66,7 +67,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
   };
 
   if (isLoading) {
-    return <div className="animate-pulse">Chargement des documents...</div>;
+    return <div className="animate-pulse"><T k="auto.phasedocuments.chargement_des_documents" fallback="Chargement des documents..." /></div>;
   }
 
   return (
@@ -81,12 +82,12 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Ajouter un document
+                <T k="auto.phasedocuments.ajouter_un_document" fallback="Ajouter un document" />
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Ajouter un document à la phase</DialogTitle>
+                <DialogTitle><T k="auto.phasedocuments.ajouter_un_document_a_la_phase" fallback="Ajouter un document à la phase" /></DialogTitle>
               </DialogHeader>
               <PhaseDocumentUpload
                 projectId={projectId}
@@ -157,7 +158,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Aucun document assigné à cette phase.</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.phasedocuments.aucun_document_assigne_a_cette_phase" fallback="Aucun document assigné à cette phase." /></p>
         )}
       </CardContent>
     </Card>

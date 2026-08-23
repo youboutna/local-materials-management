@@ -11,6 +11,7 @@ import { useUserCreate, useUserUpdate, useUserToggleStatus } from '@/hooks/hexag
 import { useRoleManagement } from '@/hooks/useUserRoles';
 import RoleBadge, { RoleType } from '@/components/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { T } from '@/components/i18n/T';
 
 interface UserProfile {
   id: string;
@@ -247,7 +248,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
             />
             {mode === 'edit' && (
               <p className="text-xs text-muted-foreground mt-1">
-                La modification de l'email nécessite des privilèges avancés
+                <T k="auto.usermanagementdialog.la_modification_de_l_email_necessite_des_privile" fallback="La modification de l'email nécessite des privilèges avancés" />
               </p>
             )}
           </div>
@@ -291,9 +292,9 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           {mode === 'edit' && (
             <>
               <div className="space-y-3 border-t pt-4">
-                <h4 className="font-medium">Mise à jour du mot de passe</h4>
+                <h4 className="font-medium"><T k="auto.usermanagementdialog.mise_a_jour_du_mot_de_passe" fallback="Mise à jour du mot de passe" /></h4>
                 <div>
-                  <Label htmlFor="new_password">Nouveau mot de passe</Label>
+                  <Label htmlFor="new_password"><T k="auto.usermanagementdialog.nouveau_mot_de_passe" fallback="Nouveau mot de passe" /></Label>
                   <Input
                     id="new_password"
                     type="password"
@@ -304,7 +305,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                     disabled // Disable password editing for now
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    La modification du mot de passe nécessite des privilèges avancés
+                    <T k="auto.usermanagementdialog.la_modification_du_mot_de_passe_necessite_des_pr" fallback="La modification du mot de passe nécessite des privilèges avancés" />
                   </p>
                 </div>
               </div>
@@ -380,9 +381,9 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           {/* Admin Password Reset Section */}
           {mode === 'edit' && (
             <div className="space-y-4 pt-4 border-t">
-              <h4 className="text-sm font-medium text-foreground">Réinitialisation du mot de passe</h4>
+              <h4 className="text-sm font-medium text-foreground"><T k="auto.usermanagementdialog.reinitialisation_du_mot_de_passe" fallback="Réinitialisation du mot de passe" /></h4>
               <div className="space-y-2">
-                <Label htmlFor="newPassword">Nouveau mot de passe (optionnel)</Label>
+                <Label htmlFor="newPassword"><T k="auto.usermanagementdialog.nouveau_mot_de_passe_optionnel" fallback="Nouveau mot de passe (optionnel)" /></Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -392,7 +393,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                <Label htmlFor="confirmPassword"><T k="auto.usermanagementdialog.confirmer_le_mot_de_passe" fallback="Confirmer le mot de passe" /></Label>
                 <Input
                   id="confirmPassword"
                   type="password"

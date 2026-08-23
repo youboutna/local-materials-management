@@ -34,6 +34,7 @@ import { formatIndex2, formatAmount2, formatNumber2 } from "@/utils/reportNumber
 import type { ProjectDetailDTO } from "@/dtos/entities/ProjectDTO";
 
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 export interface MonitoringEvalPhaseInput {
   id: string;
   name: string;
@@ -237,7 +238,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
         {/* Tableau des écarts par phase */}
         <div>
           <h4 className="text-sm font-semibold mb-2">
-            Écarts par phase (planifié vs réalisé)
+            <T k="auto.monitoringevaluationpanel.ecarts_par_phase_planifie_vs_realise" fallback="Écarts par phase (planifié vs réalisé)" />
           </h4>
           {!hasAnyDeviation ? (
             <p className="text-sm text-muted-foreground">
@@ -248,10 +249,10 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Phase</TableHead>
-                    <TableHead>Indicateur</TableHead>
-                    <TableHead className="text-right">Écart</TableHead>
-                    <TableHead>Sévérité</TableHead>
+                    <TableHead><T k="auto.monitoringevaluationpanel.phase" fallback="Phase" /></TableHead>
+                    <TableHead><T k="auto.monitoringevaluationpanel.indicateur" fallback="Indicateur" /></TableHead>
+                    <TableHead className="text-right"><T k="auto.monitoringevaluationpanel.ecart" fallback="Écart" /></TableHead>
+                    <TableHead><T k="auto.monitoringevaluationpanel.severite" fallback="Sévérité" /></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -260,7 +261,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
                       <TableRow key={`${phase.id}-none`}>
                         <TableCell className="font-medium">{phase.name}</TableCell>
                         <TableCell colSpan={3} className="text-xs text-muted-foreground">
-                          Aucun écart
+                          <T k="auto.monitoringevaluationpanel.aucun_ecart" fallback="Aucun écart" />
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -289,7 +290,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
         {/* Synthèse */}
         <div className="rounded-md border p-3 bg-muted/30">
           <p className="text-sm">
-            <span className="font-semibold">Synthèse : </span>
+            <span className="font-semibold"><T k="auto.monitoringevaluationpanel.synthese" fallback="Synthèse :" /> </span>
             <span className={judgement.tone}>{judgement.label}</span>. SPI ={" "}
             {formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null)} • CPI ={" "}
             {formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null)} • EAC ={" "}

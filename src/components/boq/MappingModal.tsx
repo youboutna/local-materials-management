@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
+import { T } from '@/components/i18n/T';
 
 export const MAPPING_FIELDS: { key: keyof ImportMapping; label: string }[] = [
   { key: 'designation', label: 'Désignation' },
@@ -37,7 +38,7 @@ export const MappingModal: React.FC<Props> = ({ open, onOpenChange, columns, map
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Correspondance colonnes → champs</DialogTitle>
-          <DialogDescription>Associez chaque colonne du fichier au champ métier correspondant.</DialogDescription>
+          <DialogDescription><T k="auto.mappingmodal.associez_chaque_colonne_du_fichier_au_champ_meti" fallback="Associez chaque colonne du fichier au champ métier correspondant." /></DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           {MAPPING_FIELDS.map(({ key, label }) => (
@@ -59,8 +60,8 @@ export const MappingModal: React.FC<Props> = ({ open, onOpenChange, columns, map
           ))}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button onClick={onConfirm}>Valider</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}><T k="auto.mappingmodal.annuler" fallback="Annuler" /></Button>
+          <Button onClick={onConfirm}><T k="auto.mappingmodal.valider" fallback="Valider" /></Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

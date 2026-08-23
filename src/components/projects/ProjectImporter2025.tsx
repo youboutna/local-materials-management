@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Calendar, MapPin, DollarSign, Clock } from 'lucide-react';
 import { useProjectImportExportHex } from '@/hooks/hexagonal/useProjectImportExportHex';
 import type { ProjectImportRow } from '@/application/services/ProjectImportExportService';
+import { T } from '@/components/i18n/T';
 
 const ProjectImporter2025 = () => {
   const { importProjects, isImporting, lastImportResult } = useProjectImportExportHex();
@@ -205,7 +206,7 @@ const ProjectImporter2025 = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Upload className="h-5 w-5 mr-2" />
-            Import des Projets 2025
+            <T k="auto.projectimporter2025.import_des_projets_2025" fallback="Import des Projets 2025" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -233,7 +234,7 @@ const ProjectImporter2025 = () => {
 
             {lastImportResult && (
               <div className="text-sm text-muted-foreground border-t pt-3">
-                <strong>Dernier import :</strong> {lastImportResult.imported} créé(s),
+                <strong><T k="auto.projectimporter2025.dernier_import" fallback="Dernier import :" /></strong> {lastImportResult.imported} créé(s),
                 {' '}{lastImportResult.skipped} ignoré(s),
                 {' '}{lastImportResult.failed} en erreur
                 {lastImportResult.errors.length > 0 && (
@@ -252,7 +253,7 @@ const ProjectImporter2025 = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Aperçu des Projets à Importer</CardTitle>
+          <CardTitle><T k="auto.projectimporter2025.apercu_des_projets_a_importer" fallback="Aperçu des Projets à Importer" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

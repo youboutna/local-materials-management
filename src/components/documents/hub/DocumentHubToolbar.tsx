@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { T } from '@/components/i18n/T';
 
 export type SortKey = 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'size_desc' | 'size_asc';
 export type ViewMode = 'grid' | 'table';
@@ -56,8 +57,8 @@ export function DocumentHubToolbar({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="date_desc">Plus récent</SelectItem>
-            <SelectItem value="date_asc">Plus ancien</SelectItem>
+            <SelectItem value="date_desc"><T k="auto.documenthubtoolbar.plus_recent" fallback="Plus récent" /></SelectItem>
+            <SelectItem value="date_asc"><T k="auto.documenthubtoolbar.plus_ancien" fallback="Plus ancien" /></SelectItem>
             <SelectItem value="name_asc">Nom (A→Z)</SelectItem>
             <SelectItem value="name_desc">Nom (Z→A)</SelectItem>
             <SelectItem value="size_desc">Taille ↓</SelectItem>
@@ -82,7 +83,7 @@ export function DocumentHubToolbar({
         {canUpload && (
           <Button onClick={onUploadClick} size="sm">
             <Plus className="mr-1 h-4 w-4" />
-            Ajouter
+            <T k="auto.documenthubtoolbar.ajouter" fallback="Ajouter" />
           </Button>
         )}
       </div>

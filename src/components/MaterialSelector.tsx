@@ -13,6 +13,7 @@ import { useMaterialsSelector, MaterialOption } from '@/hooks/hexagonal'
 
 interface SelectedMaterial {
   materialId: string;
+import { T } from '@/components/i18n/T';
   quantity: number;
 }
 
@@ -128,7 +129,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger><SelectValue placeholder="Toutes" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les catégories</SelectItem>
+                  <SelectItem value="all"><T k="auto.materialselector.toutes_les_categories" fallback="Toutes les catégories" /></SelectItem>
                   {categories.map(cat => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
@@ -172,7 +173,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                     <CardContent className="p-4">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                         <div className="md:col-span-2 space-y-2">
-                          <Label>Matériau</Label>
+                          <Label><T k="auto.materialselector.materiau" fallback="Matériau" /></Label>
                           <Select value={selected.materialId} onValueChange={(v) => updateMaterialId(index, v)}>
                             <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
                             <SelectContent className="max-h-60">
@@ -201,7 +202,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Quantité</Label>
+                          <Label><T k="auto.materialselector.quantite" fallback="Quantité" /></Label>
                           <div className="flex items-center space-x-2">
                             <Input
                               type="number"
@@ -222,7 +223,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
 
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Total</span>
+                            <span className="text-sm font-medium"><T k="auto.materialselector.total" fallback="Total" /></span>
                             <Button variant="ghost" size="sm" onClick={() => removeMaterial(index)} className="text-destructive">
                               <Trash className="h-4 w-4" />
                             </Button>
@@ -239,7 +240,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="font-medium">Coût total</h3>
+                      <h3 className="font-medium"><T k="auto.materialselector.cout_total" fallback="Coût total" /></h3>
                       <p className="text-sm text-muted-foreground">{selectedMaterials.length} matériau(x)</p>
                     </div>
                     <div className="text-right">

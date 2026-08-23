@@ -4,6 +4,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Calendar, DollarSign, Clock, Eye } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 interface Tender {
   id: string;
@@ -133,10 +134,10 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
         <CardContent className="text-center py-12">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Aucun appel d'offres trouvé
+            <T k="auto.tenderlistpaginated.aucun_appel_d_offres_trouve" fallback="Aucun appel d'offres trouvé" />
           </h3>
           <p className="text-muted-foreground">
-            Aucun appel d'offres ne correspond à vos critères de recherche.
+            <T k="auto.tenderlistpaginated.aucun_appel_d_offres_ne_correspond_a_vos_critere" fallback="Aucun appel d'offres ne correspond à vos critères de recherche." />
           </p>
         </CardContent>
       </Card>
@@ -185,14 +186,14 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Budget:</span>
+                    <span className="text-muted-foreground"><T k="auto.tenderlistpaginated.budget" fallback="Budget:" /></span>
                     <span className="font-medium">{formatBudget(tender.budgetMin || tender.budget_min, tender.budgetMax || tender.budget_max)}</span>
                   </div>
 
                   {(tender.launchDate || tender.launch_date) && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Lancement:</span>
+                      <span className="text-muted-foreground"><T k="auto.tenderlistpaginated.lancement" fallback="Lancement:" /></span>
                       <span className="font-medium">
                         {new Date(tender.launchDate || tender.launch_date!).toLocaleDateString('fr-FR')}
                       </span>
@@ -202,7 +203,7 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
                   {(tender.deadlineDate || tender.deadline_date) && (
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Échéance:</span>
+                      <span className="text-muted-foreground"><T k="auto.tenderlistpaginated.echeance" fallback="Échéance:" /></span>
                       <span className="font-medium">
                         {new Date(tender.deadlineDate || tender.deadline_date!).toLocaleDateString('fr-FR')}
                       </span>
@@ -212,7 +213,7 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
                   {(tender.marketType || tender.market_type) && (
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Type:</span>
+                      <span className="text-muted-foreground"><T k="auto.tenderlistpaginated.type" fallback="Type:" /></span>
                       <span className="font-medium">{tender.marketType || tender.market_type}</span>
                     </div>
                   )}
@@ -224,7 +225,7 @@ const TenderListPaginated: React.FC<TenderListPaginatedProps> = ({
                   </span>
                   <Button size="sm" variant="outline" className="flex items-center gap-2">
                     <Eye className="h-4 w-4" />
-                    Voir détails
+                    <T k="auto.tenderlistpaginated.voir_details" fallback="Voir détails" />
                   </Button>
                 </div>
               </div>

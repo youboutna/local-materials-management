@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getAwardedTenderToProjectService } from '@/application/services/AwardedTenderToProjectService';
 import type { AwardedProjectHydrationPayload } from '@/dtos/transforms/AwardedTenderTransformer';
 import { useTenderToPlanning } from '@/hooks/hexagonal/useTenderToPlanning';
+import { T } from '@/components/i18n/T';
 
 export interface AwardedTenderPreviewDialogProps {
   open: boolean;
@@ -166,7 +167,7 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
                   </div>
                 ))}
                 {payload.phases.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">Aucune phase à créer.</p>
+                  <p className="text-center text-muted-foreground py-8"><T k="auto.awardedtenderpreviewdialog.aucune_phase_a_creer" fallback="Aucune phase à créer." /></p>
                 )}
               </div>
             </ScrollArea>
@@ -174,7 +175,7 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
         )}
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}><T k="auto.awardedtenderpreviewdialog.annuler" fallback="Annuler" /></Button>
           <CopyBoqToProjectButton estimateId={winningEstimateId} projectId={projectId} />
           <Button
             onClick={() => applyMutation.mutate()}

@@ -12,6 +12,7 @@ import {
 } from '@/application/services/DeviationEngine';
 import { DeviationSeverity } from '@/config/referentials/deviation-rules.referential';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
 
 interface DeviationBadgesProps {
   input: PlannedActualInput;
@@ -54,7 +55,7 @@ const DeviationBadges: React.FC<DeviationBadgesProps> = ({ input, scope = 'proje
   if (deviations.length === 0) {
     return (
       <Badge variant="outline" className="text-[10px]">
-        Aucun écart calculable
+        <T k="auto.deviationbadges.aucun_ecart_calculable" fallback="Aucun écart calculable" />
       </Badge>
     );
   }

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Users } from 'lucide-react';
 import PhaseMaterials from '@/components/project/PhaseMaterials';
 import PhaseEmployees from '@/components/project/PhaseEmployees';
+import { T } from '@/components/i18n/T';
 
 interface PhaseResourcesTabProps {
   phaseId: string;
@@ -23,7 +24,7 @@ const PhaseResourcesTab: React.FC<PhaseResourcesTabProps> = ({ phaseId, projectI
         <CardHeader className="py-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" />
-            Matériaux
+            <T k="auto.phaseresourcestab.materiaux" fallback="Matériaux" />
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -30,6 +30,7 @@ import {
   type RegulatoryDomain,
 } from '@/config/referentials/compliance/regulatory-compliance.referential';
 import type { ComplianceItemDTO } from '@/dtos/entities/ComplianceDTO';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   projectId?: string | null;
@@ -166,7 +167,7 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileCheck className="h-5 w-5" />
-            Questionnaire de conformité réglementaire
+            <T k="auto.regulatorycompliancechecklist.questionnaire_de_conformite_reglementaire" fallback="Questionnaire de conformité réglementaire" />
             <Badge variant="outline" className="ml-auto">
               {compliantCount}/{REGULATORY_TOTAL_ITEMS} conformes
             </Badge>
@@ -249,7 +250,7 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
                       onClick={() => setUploadTarget({ domain, item })}
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Ajouter la pièce
+                      <T k="auto.regulatorycompliancechecklist.ajouter_la_piece" fallback="Ajouter la pièce" />
                     </Button>
                   </div>
                 </div>
@@ -262,7 +263,7 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
       <Dialog open={!!uploadTarget} onOpenChange={(open) => !open && setUploadTarget(null)}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pièce justificative réglementaire</DialogTitle>
+            <DialogTitle><T k="auto.regulatorycompliancechecklist.piece_justificative_reglementaire" fallback="Pièce justificative réglementaire" /></DialogTitle>
             <DialogDescription>{uploadTarget?.item.question}</DialogDescription>
           </DialogHeader>
           {uploadTarget && (
@@ -283,7 +284,7 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
       {canPersist && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Save className="h-3 w-3" />
-          Chaque réponse est enregistrée automatiquement.
+          <T k="auto.regulatorycompliancechecklist.chaque_reponse_est_enregistree_automatiquement" fallback="Chaque réponse est enregistrée automatiquement." />
         </div>
       )}
     </div>

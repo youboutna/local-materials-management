@@ -47,7 +47,7 @@ type MauritaniaLocation = Location ;
 
 interface FormRef {
   submit: () => void;
-  getFormData: () => Partial<MaterialFormDataDTO>;
+  getFormData: () => <T k="auto.enhancedmaterialform.partial" fallback="Partial" /><MaterialFormDataDTO>;
 }
 
 // Component-specific types

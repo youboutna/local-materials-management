@@ -3,13 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { generatePVPDF } from '@/lib/pvGenerator';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   decompte: Record<string, any> | null;
   phaseName?: string;
-  onCreate: () => Promise<void> | void;
+  onCreate: () => <T k="auto.decomptepreviewdialog.promise" fallback="Promise" /><void> | void;
 }
 
 export const DecomptePreviewDialog: React.FC<Props> = ({ open, onOpenChange, decompte, phaseName, onCreate }) => {
@@ -18,7 +19,7 @@ export const DecomptePreviewDialog: React.FC<Props> = ({ open, onOpenChange, dec
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Prévisualisation décompte</DialogTitle>
+          <DialogTitle><T k="auto.decomptepreviewdialog.previsualisation_decompte" fallback="Prévisualisation décompte" /></DialogTitle>
         </DialogHeader>
 
         <Card>
@@ -30,8 +31,8 @@ export const DecomptePreviewDialog: React.FC<Props> = ({ open, onOpenChange, dec
         </Card>
 
         <div className="flex gap-2 mt-4">
-          <Button onClick={() => { if (decompte) generatePVPDF({ title: 'PV de réception', phaseName: phaseName || 'Phase', decompte }); }}>Générer PV (PDF)</Button>
-          <Button variant="default" onClick={async () => { await onCreate(); }}>Enregistrer décompte</Button>
+          <Button onClick={() => { if (decompte) generatePVPDF({ title: 'PV de réception', phaseName: phaseName || 'Phase', decompte }); }}><T k="auto.decomptepreviewdialog.generer_pv_pdf" fallback="Générer PV (PDF)" /></Button>
+          <Button variant="default" onClick={async () => { await onCreate(); }}><T k="auto.decomptepreviewdialog.enregistrer_decompte" fallback="Enregistrer décompte" /></Button>
         </div>
       </DialogContent>
     </Dialog>

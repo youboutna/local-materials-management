@@ -17,6 +17,7 @@ import { toast } from '@/hooks/use-toast';
 import { DatabaseConfig, DatabaseProvider, setDatabaseConfig, getDatabaseConfig } from '@/config/database';
 import { dbManager } from '@/lib/database/DatabaseFactory';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { T } from '@/components/i18n/T';
 
 const DatabaseSettings = () => {
   const { t } = useLanguage();
@@ -160,15 +161,15 @@ const DatabaseSettings = () => {
             >
               <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted cursor-pointer">
                 <RadioGroupItem value="supabase" id="supabase" />
-                <Label htmlFor="supabase" className="cursor-pointer font-medium">Supabase</Label>
+                <Label htmlFor="supabase" className="cursor-pointer font-medium"><T k="auto.databasesettings.supabase" fallback="Supabase" /></Label>
               </div>
               <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted cursor-pointer">
                 <RadioGroupItem value="postgresql" id="postgresql" />
-                <Label htmlFor="postgresql" className="cursor-pointer font-medium">PostgreSQL</Label>
+                <Label htmlFor="postgresql" className="cursor-pointer font-medium"><T k="auto.databasesettings.postgresql" fallback="PostgreSQL" /></Label>
               </div>
               <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted cursor-pointer">
                 <RadioGroupItem value="mysql" id="mysql" />
-                <Label htmlFor="mysql" className="cursor-pointer font-medium">MySQL</Label>
+                <Label htmlFor="mysql" className="cursor-pointer font-medium"><T k="auto.databasesettings.mysql" fallback="MySQL" /></Label>
               </div>
             </RadioGroup>
           </div>

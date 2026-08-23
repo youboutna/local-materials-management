@@ -14,6 +14,7 @@ import {
   DocumentItem,
   UploadInput,
 } from '../hub/types';
+import { T } from '@/components/i18n/T';
 
 export type DocumentsTableFilter =
   | { column: 'project_id'; value: string }
@@ -40,7 +41,7 @@ export interface DocumentsTableAdapterOptions {
   /** Extra columns merged into every INSERT (e.g. project_id: xxx). */
   insertDefaults?: Record<string, unknown>;
   /** Optional secondary facet extractor to enrich each item (e.g. lot, phase name). */
-  itemFacetBuilder?: (row: any) => Record<string, string | null>;
+  itemFacetBuilder?: (row: any) => <T k="auto.documentstableadapter.record" fallback="Record" /><string, string | null>;
   /** Preview strategy — 'proxy' hides the underlying storage URL. */
   previewMode?: 'direct' | 'proxy';
 }

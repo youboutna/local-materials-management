@@ -55,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { T } from '@/components/i18n/T';
 
 type Translate = (key: string) => string;
 
@@ -116,9 +117,9 @@ const Settings = () => {
           <CardHeader>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <CardTitle>Configuration providers</CardTitle>
+                <CardTitle><T k="auto.settings.configuration_providers" fallback="Configuration providers" /></CardTitle>
                 <CardDescription>
-                  Statut des providers actuels et compatibilité de la configuration.
+                  <T k="auto.settings.statut_des_providers_actuels_et_compatibilite_de" fallback="Statut des providers actuels et compatibilité de la configuration." />
                 </CardDescription>
               </div>
               <Badge variant={isValid ? 'default' : 'destructive'}>
@@ -129,15 +130,15 @@ const Settings = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm font-semibold">Auth Provider</p>
+                <p className="text-sm font-semibold"><T k="auto.settings.auth_provider" fallback="Auth Provider" /></p>
                 <p className="text-sm text-muted-foreground">{config.auth.provider}</p>
               </div>
               <div>
-                <p className="text-sm font-semibold">Data Provider</p>
+                <p className="text-sm font-semibold"><T k="auto.settings.data_provider" fallback="Data Provider" /></p>
                 <p className="text-sm text-muted-foreground">{config.database.provider}</p>
               </div>
               <div>
-                <p className="text-sm font-semibold">Storage Provider</p>
+                <p className="text-sm font-semibold"><T k="auto.settings.storage_provider" fallback="Storage Provider" /></p>
                 <p className="text-sm text-muted-foreground">{config.storage.provider}</p>
               </div>
             </div>

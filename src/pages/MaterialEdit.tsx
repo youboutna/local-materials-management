@@ -13,13 +13,14 @@ import { MaterialDTO, MaterialUnit, MaterialStatus, MaterialCategory } from "@/d
 import type { WorkspaceDTO } from "@/dtos/entities/WorkspaceDTO";
 import { MaterialTransformer } from "@/dtos/transforms/MaterialTransformer";
 import { AppLayout } from "@/components/layout";
+import { T } from '@/components/i18n/T';
 
 // Extend window interface for form ref access
 declare global {
   interface Window {
     materialFormRef?: {
       submit: () => void;
-      getFormData: () => Partial<MaterialFormDataDTO>;
+      getFormData: () => <T k="auto.materialedit.partial" fallback="Partial" /><MaterialFormDataDTO>;
     };
   }
 }
@@ -31,7 +32,7 @@ const MaterialEdit = () => {
   const safeId = id || '';
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'basic';
-  const formRefLocal = useRef<{ submit: () => void; getFormData: () => Partial<MaterialFormDataDTO> } | null>(null);
+  const formRefLocal = useRef<{ submit: () => void; getFormData: () => <T k="auto.materialedit.partial" fallback="Partial" /><MaterialFormDataDTO> } | null>(null);
 
 
   const { material, isLoading, error, updateMaterial, isUpdating } = useMaterialHex(safeId);

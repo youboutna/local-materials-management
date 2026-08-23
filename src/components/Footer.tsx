@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Building2, Mail, Phone, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
+import { T } from '@/components/i18n/T';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -66,7 +67,7 @@ const Footer = () => {
               <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-terracotta-600 rounded-lg flex items-center justify-center">
                 <Building2 className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold">BTP Manager</span>
+              <span className="text-xl font-bold"><T k="auto.footer.btp_manager" fallback="BTP Manager" /></span>
             </div>
             <p className="text-adrar-200 mb-6 text-start leading-relaxed max-w-md">
               {t("footer.about_desc")}
@@ -133,7 +134,7 @@ const Footer = () => {
               {t("footer.newsletter") || "Newsletter"}
             </h3>
             <p className="text-adrar-200 text-sm mb-4">
-              Restez informé des dernières nouveautés
+              <T k="auto.footer.restez_informe_des_dernieres_nouveautes" fallback="Restez informé des dernières nouveautés" />
             </p>
             <div className="flex gap-2">
               <input
@@ -160,7 +161,7 @@ const Footer = () => {
               <span className="text-white font-bold">A</span>
             </span>
             <div className="leading-tight">
-              <p className="text-sm font-semibold text-white">HadraTech-GPI</p>
+              <p className="text-sm font-semibold text-white"><T k="auto.footer.hadratech_gpi" fallback="HadraTech-GPI" /></p>
               <p className="text-adrar-300 text-xs">
                 © {currentYear} · {t("footer.rights")}
               </p>

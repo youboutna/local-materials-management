@@ -17,6 +17,7 @@ import {
   getAllowedTransitions,
   TenderTransitionContext,
 } from '@/config/referentials/tender/tender-workflow.referential';
+import { T } from '@/components/i18n/T';
 
 interface TenderWorkflowPanelProps {
   tenderId: string;
@@ -61,7 +62,7 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
       {/* Wizard : fil conducteur métier */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Étapes de préparation (référentiel)</CardTitle>
+          <CardTitle className="text-base"><T k="auto.tenderworkflowpanel.etapes_de_preparation_referentiel" fallback="Étapes de préparation (référentiel)" /></CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-2">

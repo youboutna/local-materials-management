@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupplierDocumentsHex } from '@/hooks/hexagonal'
 import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
 import type { SupplierDocument } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 interface SupplierDocumentsListProps {
   supplier: Supplier;
@@ -78,7 +79,7 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
       <Card>
         <CardContent className="text-center py-6">
           <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Aucun document téléversé</p>
+          <p className="text-sm text-muted-foreground"><T k="auto.supplierdocumentslist.aucun_document_televerse" fallback="Aucun document téléversé" /></p>
         </CardContent>
       </Card>
     );

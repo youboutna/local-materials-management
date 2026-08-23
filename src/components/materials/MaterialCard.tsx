@@ -17,6 +17,7 @@ import { MapPin, Package, Trash2 } from 'lucide-react';
 import { MaterialUIDTO } from '@/dtos/transforms';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { T } from '@/components/i18n/T';
 interface MaterialCardProps {
   material: MaterialUIDTO;
   onClick: () => void;
@@ -41,15 +42,15 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
           </AlertDialogTrigger>
           <AlertDialogContent onClick={(e) => e.stopPropagation()}>
             <AlertDialogHeader>
-              <AlertDialogTitle>Supprimer ce matériau ?</AlertDialogTitle>
+              <AlertDialogTitle><T k="auto.materialcard.supprimer_ce_materiau" fallback="Supprimer ce matériau ?" /></AlertDialogTitle>
               <AlertDialogDescription>
                 Cette action est irréversible. Le matériau "{material.name}" sera définitivement supprimé.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogCancel><T k="auto.materialcard.annuler" fallback="Annuler" /></AlertDialogCancel>
               <AlertDialogAction onClick={() => onDelete(material.id)}>
-                Supprimer
+                <T k="auto.materialcard.supprimer" fallback="Supprimer" />
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -96,14 +97,14 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
 
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Prix:</span>
+              <span className="text-sm text-muted-foreground"><T k="auto.materialcard.prix" fallback="Prix:" /></span>
               <span className="font-semibold text-sm">
                 {(material.pricePerUnit || 0).toLocaleString()} MRU/<TranslatedUnit code={material.unit} />
               </span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Stock:</span>
+              <span className="text-sm text-muted-foreground"><T k="auto.materialcard.stock" fallback="Stock:" /></span>
               <div className="flex items-center gap-1">
                 <Package className="h-3 w-3 text-muted-foreground" />
                 <span className="font-medium text-sm">
@@ -114,7 +115,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
 
             {material.originLocation && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Origine:</span>
+                <span className="text-sm text-muted-foreground"><T k="auto.materialcard.origine" fallback="Origine:" /></span>
                 <span className="font-medium text-xs text-primary">
                   {material.originLocation}
                 </span>
@@ -124,7 +125,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
             {material.coordinatesLatitude && material.coordinatesLongitude && (
               <div className="flex items-center gap-1 text-xs text-primary">
                 <MapPin className="h-3 w-3" />
-                <span>Géolocalisé</span>
+                <span><T k="auto.materialcard.geolocalise" fallback="Géolocalisé" /></span>
               </div>
             )}
           </div>
