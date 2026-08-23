@@ -27,41 +27,9 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { useProjectStructureHex } from '@/hooks/hexagonal/useProjectStructureHex';
+import type { Phase, Step, ProjectDetails } from '@/hooks/hexagonal/useProjectStructureHex';
 
-interface Phase {
-  id: string;
-  name: string;
-  description?: string;
-  status: string;
-  progress: number;
-  start_date?: string;
-  end_date?: string;
-  budget?: number;
-  steps?: Step[];
-}
-
-interface Step {
-  id: string;
-  name: string;
-  status: string;
-  progress: number;
-  order_index: number;
-}
-
-interface ProjectDetails {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  progress: number;
-  budget?: number;
-  location?: string;
-  start_date?: string;
-  end_date?: string;
-  phases: Phase[];
-}
 
 interface TenderProjectStructureProps {
   projectId: string;
