@@ -28,14 +28,29 @@ export class ResendAdapter implements EmailProvider {
     const from = options.from || this.defaultFrom;
     const html = options.html || options.text || '';
 
+    const attachments = (options.attachments ?? []).map((a) => ({
+      filename: a.filename,
+      content: typeof a.content === 'string' ? a.content : btoa(String.fromCharCode(...a.content)),
+      content_type: a.contentType,
+    }));
+
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({ from, to, subject: options.subject, html }),
+      body: JSON.stringify({
+        from,
+        to,
+        subject: options.subject,
+        html,
+        ...(options.text ? { text: options.text } : {}),
+        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
+        ...(attachments.length ? { attachments } : {}),
+      }),
     });
+
 
     const body = await response.text();
 
