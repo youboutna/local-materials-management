@@ -34,7 +34,15 @@ const WilayaBoundariesLayer: React.FC<WilayaBoundariesLayerProps> = ({
 
   const collections = useMemo(
     () =>
-      boundaries.map((boundary) => ({
+      boundaries.filter((boundary) => {
+        const geometry = boundary.geometry;
+        return Boolean(
+          geometry &&
+          (geometry.type === 'Polygon' || geometry.type === 'MultiPolygon') &&
+          Array.isArray(geometry.coordinates) &&
+          geometry.coordinates.length > 0,
+        );
+      }).map((boundary) => ({
         boundary,
         data: {
           type: 'FeatureCollection',

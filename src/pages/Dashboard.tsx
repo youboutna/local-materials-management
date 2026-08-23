@@ -225,7 +225,7 @@ const Dashboard: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger value="alerts" className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
-                <span className="hidden sm:inline">{t('dashboard.management_tabs.alerts')}</span>
+                <span className="hidden sm:inline">{t('dashboard.management_tabs.alerts.label')}</span>
               </TabsTrigger>
             </TabsList>
 
