@@ -96,6 +96,8 @@ const getStatusConfig = (status: StatusType) => {
 
 const StatusBadge = ({ status, className }: StatusBadgeProps) => {
   const { bgColor, textColor, borderColor, dotColor } = getStatusConfig(status);
+  const { translateStatus } = useI18n();
+  const displayLabel = translateStatus(status);
 
   return (
     <div
@@ -109,9 +111,10 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
       )}
     >
       <span className={cn('w-2 h-2 rounded-full mr-1.5', dotColor)} />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {displayLabel.charAt(0).toUpperCase() + displayLabel.slice(1)}
     </div>
   );
 };
+
 
 export default StatusBadge;
