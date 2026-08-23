@@ -33,6 +33,11 @@ import { useSearchParams } from 'react-router-dom';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { getUserService } from '@/application/services/UserService';
 import { T } from '@/components/i18n/T';
+import {
+  SupplierTenderDetailHeader,
+  SupplierTenderList,
+  type SupplierTenderViewModel,
+} from '@/components/suppliers/SupplierTenderExperience';
 
 
 interface PublicTender {
@@ -436,13 +441,54 @@ const EnhancedSupplierTenderPortal = () => {
     );
   }
 
+  const tenderViewModels: SupplierTenderViewModel[] = (publicTenders ?? []).map((tender) => ({
+    id: tender.id,
+    title: tender.title,
+    description: tender.description,
+    projectReference: tender.project_reference,
+    deadlineDate: tender.deadline_date,
+    launchDate: tender.launch_date,
+    status: tender.status,
+    projectTitle: tender.project?.title,
+    location: tender.project?.location,
+  }));
+
+  const selectedTenderViewModel: SupplierTenderViewModel | null = selectedTender ? {
+    id: selectedTender.id,
+    title: selectedTender.title,
+    description: selectedTender.description,
+    projectReference: selectedTender.project_reference,
+    deadlineDate: selectedTender.deadline_date,
+    launchDate: selectedTender.launch_date,
+    status: selectedTender.status,
+    projectTitle: selectedTender.project?.title,
+    location: selectedTender.project?.location,
+  } : null;
+
+  const selectTender = (tenderId: string) => {
+    const tender = publicTenders?.find((item) => item.id === tenderId) ?? null;
+    if (!tender) return;
+    setSelectedTender(tender);
+    setActiveTab('submit');
+  };
+
+  const createQuote = (tenderId: string) => {
+    window.dispatchEvent(new CustomEvent('boq-create-quote', { detail: { tenderId } }));
+  };
+
+  const openDao = () => {
+    const document = sharedDocuments?.[0];
+    if (!document) return;
+    openDocument(document, { proxy: true, allowStatusChange: false });
+  };
+
   return (
     <SupplierTenderAccessGuard onAccessGranted={handleAccessGranted}>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">{t('supplier_tender.title')}</h1>
-            <p className="text-muted-foreground mt-2">{t('supplier_tender.subtitle')}</p>
+      <div className="space-y-5">
+        <div className="flex items-start justify-between gap-4 border-b pb-4">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold sm:text-2xl">{t('supplier_tender.title')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t('supplier_tender.subtitle')}</p>
             {hasAccessToTender && supplierEmailFromSecret && (
               <Badge variant="outline" className="mt-2">
                 {t('supplier_tender.access_granted_for')} {supplierEmailFromSecret}
@@ -451,75 +497,33 @@ const EnhancedSupplierTenderPortal = () => {
           </div>
         </div>
 
+        {selectedTenderViewModel && (
+          <SupplierTenderDetailHeader
+            tender={selectedTenderViewModel}
+            selectedDocuments={Object.keys(selectedFiles).length}
+            isComplete={isSubmissionComplete()}
+            isSubmitted={Boolean(userSubmission)}
+            canSubmit={canSubmitBid()}
+            hasDao={Boolean(sharedDocuments?.length)}
+            onBack={() => {
+              setSelectedTender(null);
+              setActiveTab('browse');
+            }}
+            onOpenDao={openDao}
+            onOpenSubmission={() => setActiveTab('submit')}
+          />
+        )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
+          <TabsList className="grid h-11 w-full grid-cols-3 sm:max-w-xl">
           <TabsTrigger value="browse">{t('supplier_tender.tabs.browse')}</TabsTrigger>
           <TabsTrigger value="documents">{t('supplier_tender.tabs.documents')}</TabsTrigger>
           <TabsTrigger value="submit">{t('supplier_tender.tabs.submit')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
-          {publicTenders && publicTenders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {publicTenders.map((tender) => (
-                <Card key={tender.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{tender.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-3">{tender.description}</p>
-                      </div>
-                      
-                      {tender.project && (
-                        <div className="bg-muted/50 p-3 rounded">
-                          <p className="text-sm font-medium">{t('supplier_tender.project_label')}: {tender.project.title}</p>
-                          {tender.project.location && (
-                            <p className="text-xs text-muted-foreground">{t('supplier_tender.location_label')}: {tender.project.location}</p>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <Badge variant="default">{t('supplier_tender.title')}</Badge>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              window.dispatchEvent(new CustomEvent('boq-create-quote', { detail: { tenderId: tender.id } }));
-                            }}
-                          >
-                            <Calculator className="h-3.5 w-3.5 mr-1" />
-                            <T k="auto.enhancedsuppliertenderportal.creer_un_devis" fallback="Créer un devis" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setSelectedTender(tender);
-                              setActiveTab('submit');
-                            }}
-                            size="sm"
-                          >
-                            {t('supplier_tender.actions.submit')}
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        {tender.launch_date && (
-                          <p>{t('supplier_tender.launched_on')} {new Date(tender.launch_date).toLocaleDateString()}</p>
-                        )}
-                        {tender.deadline_date && (
-                          <p className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {t('supplier_tender.deadline_label')}: {new Date(tender.deadline_date).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          {tenderViewModels.length > 0 ? (
+            <SupplierTenderList tenders={tenderViewModels} onSelect={selectTender} onCreateQuote={createQuote} />
           ) : (
             <Card>
                 <CardContent className="p-8 text-center">
@@ -574,7 +578,7 @@ const EnhancedSupplierTenderPortal = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(doc.file_url, '_blank')}
+                                onClick={() => openDocument(doc, { proxy: true, allowStatusChange: false })}
                               >
                                 <Download className="h-4 w-4 mr-1" />
                                 {t('supplier_tender.actions.download')}
