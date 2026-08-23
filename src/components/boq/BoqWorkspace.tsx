@@ -353,9 +353,9 @@ export function BoqWorkspace({
       .map((id) => ({ id, source }));
     setFinalizing(true);
     try {
-      await doc.commitChanges({ create, update, remove });
-      setBaselineLines(candidates);
-      setDraftLines(candidates);
+      const persistedLines = await doc.commitChanges({ create, update, remove });
+      setBaselineLines(persistedLines);
+      setDraftLines(persistedLines);
       setDirty(false);
       if (!silent) toast({ title: t('dqe.save_success') });
       return true;

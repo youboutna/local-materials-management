@@ -20,6 +20,8 @@ export interface MonitoringMetrics {
 }
 
 export interface DashboardStats {
+  /** Sources that could not be read; affected KPIs must be rendered as N/A. */
+  unavailableSources?: string[];
   activeProjects: number;
   totalProjects: number;
   totalBudget: number;

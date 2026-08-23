@@ -89,13 +89,14 @@ const Dashboard: React.FC = () => {
   // DashboardService is the single source for aggregates. A missing aggregate
   // remains unavailable instead of being replaced by a synthetic zero.
   const stats = useMemo(() => {
+    const unavailable = new Set(dashboardStats?.unavailableSources ?? []);
     const baseStats = {
-      activeProjects: dashboardStats?.activeProjects ?? null,
-      totalBudget: dashboardStats?.totalBudget ?? null,
-      teamMembers: dashboardStats?.totalEmployees ?? null,
-      materials: dashboardStats?.totalMaterials ?? null,
-      statusDistribution: dashboardStats?.statusDistribution ?? [],
-      locationDistribution: dashboardStats?.locationDistribution ?? [],
+      activeProjects: unavailable.has('projects') ? null : dashboardStats?.activeProjects ?? null,
+      totalBudget: unavailable.has('projects') ? null : dashboardStats?.totalBudget ?? null,
+      teamMembers: unavailable.has('employees') ? null : dashboardStats?.totalEmployees ?? null,
+      materials: unavailable.has('materials') ? null : dashboardStats?.totalMaterials ?? null,
+      statusDistribution: unavailable.has('projects') ? [] : dashboardStats?.statusDistribution ?? [],
+      locationDistribution: unavailable.has('projects') ? [] : dashboardStats?.locationDistribution ?? [],
     };
     return baseStats;
   }, [dashboardStats]);

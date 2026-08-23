@@ -126,6 +126,15 @@ export class DashboardService {
       const paymentsData = payments.status === 'fulfilled' ? payments.value : [];
       const inspectionsData = inspections.status === 'fulfilled' ? inspections.value : [];
       const suppliersData = suppliers.status === 'fulfilled' ? suppliers.value : [];
+      const unavailableSources = [
+        ['projects', projects],
+        ['employees', employees],
+        ['materials', materials],
+        ['documents', documents],
+        ['payments', payments],
+        ['inspections', inspections],
+        ['suppliers', suppliers],
+      ].flatMap(([name, result]) => (result as PromiseSettledResult<unknown>).status === 'rejected' ? [name as string] : []);
 
       console.log('DashboardService: Data fetched:', {
         projects: projectsData.length,
@@ -148,7 +157,7 @@ export class DashboardService {
         suppliersData
       );
 
-      return stats;
+      return { ...stats, unavailableSources };
     } catch (error) {
       throw new DashboardServiceError(
         'Failed to fetch dashboard statistics',
