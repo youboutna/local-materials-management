@@ -22,6 +22,7 @@ import {
   type PhaseSummaryDTO,
 } from "@/dtos/entities/PhaseConstructionDTO";
 import { PhaseConstructionTransformer } from "@/dtos/transforms/PhaseConstructionTransformer";
+import { TranslatedStatus } from "@/components/i18n/TranslatedBadges";
 
 interface PhaseListProps {
   phases: unknown[];
@@ -93,7 +94,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
   };
 
   const handleDeletePhase = async (phaseId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette phase ?")) return;
+    if (!confirm(t("phase.confirm_delete"))) return;
     try {
       await deletePhase(phaseId);
       onPhaseUpdate?.();
@@ -127,7 +128,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Phases du projet ({phaseDtos.length})</span>
+          <span>{t("phase.project_phases", { count: phaseDtos.length })}</span>
           <Button
             size="sm"
             variant="outline"
@@ -140,7 +141,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
             <RefreshCw
               className={`h-4 w-4 mr-1 ${isCreating || isDeleting ? "animate-spin" : ""}`}
             />
-            Rafraîchir
+            {t("common.refresh")}
           </Button>
         </CardTitle>
       </CardHeader>
@@ -184,15 +185,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
                   </div>
                   <div className="flex items-start gap-2">
                     <Badge className={getStatusColor(String(phase.status))}>
-                      {phase.status === "completed"
-                        ? "Terminée"
-                        : phase.status === "in_progress"
-                        ? "En cours"
-                        : phase.status === "delayed"
-                        ? "En retard"
-                        : phase.status === "not_started"
-                        ? "Non commencée"
-                        : "Planifiée"}
+                      <TranslatedStatus code={String(phase.status)} />
                     </Badge>
                     <TooltipProvider>
                       <div className="flex gap-1">
@@ -208,7 +201,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Voir les détails de la phase</p>
+                            <p>{t("phase.view_details")}</p>
                           </TooltipContent>
                         </Tooltip>
                         <Tooltip>
@@ -223,7 +216,7 @@ const PhaseList: React.FC<PhaseListProps> = ({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Supprimer la phase</p>
+                            <p>{t("phase.delete")}</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -235,28 +228,28 @@ const PhaseList: React.FC<PhaseListProps> = ({
                   <div className="mt-3">
                     <Progress value={phase.progress} />
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>Progression</span>
-                      <span>{phase.progress}%</span>
+                      <span>{t("common.progress")}</span>
+                      <span>{t("progress.percent", { value: phase.progress })}</span>
                     </div>
                   </div>
                 )}
 
                 {phase.stages && phase.stages.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-sm font-medium mb-2">Étapes:</p>
+                    <p className="text-sm font-medium mb-2">{t("phase.steps")}</p>
                     <div className="space-y-1">
                       {phase.stages.slice(0, 3).map((stage, index) => (
                         <div key={index} className="flex items-center text-sm">
                           <span className="mr-2">{stage.order ?? index + 1}.</span>
                           <span>{stage.name}</span>
                           <Badge variant="outline" className="ml-2 text-xs">
-                            {stage.status ?? "planifiée"}
+                            <TranslatedStatus code={stage.status ?? "planned"} />
                           </Badge>
                         </div>
                       ))}
                       {phase.stages.length > 3 && (
                         <p className="text-xs text-muted-foreground">
-                          + {phase.stages.length - 3} étape(s) supplémentaires
+                          {t("phase.additional_steps", { count: phase.stages.length - 3 })}
                         </p>
                       )}
                     </div>

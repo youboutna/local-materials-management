@@ -1284,11 +1284,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
             <AlertDescription>
 
-              Vous devez être connecté pour gérer les phases de construction. 
+              {t('phase.auth_required')}{' '}
 
               <Button variant="link" className="p-0 h-auto ml-1" onClick={() => window.location.href = '/auth'}>
 
-                Se connecter
+                {t('auth.login')}
 
               </Button>
 
@@ -1354,7 +1354,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                         <Eye className="h-4 w-4" />
 
-                        Détails
+                        {t('common.details')}
 
                       </Button>
 
@@ -1408,7 +1408,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                       <div>
 
-                        <p className="text-xs text-muted-foreground">Dates</p>
+                        <p className="text-xs text-muted-foreground">{t('common.dates')}</p>
 
                         <p className="text-sm">{phase.startDate} - {phase.endDate}</p>
 
@@ -1424,7 +1424,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                       <div>
 
-                        <p className="text-xs text-muted-foreground">Budget</p>
+                        <p className="text-xs text-muted-foreground">{t('common.budget')}</p>
 
                         <p className="text-sm">{(phase.budget || 0).toLocaleString()} MRU</p>
 
@@ -1440,9 +1440,8 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                       <div>
 
-                        <p className="text-xs text-muted-foreground">Matériaux</p>
-
-                        <p className="text-sm">{getPhaseCounts(phase.id).materials} éléments</p>
+                        <p className="text-xs text-muted-foreground">{t('nav.materials')}</p>
+                        <p className="text-sm">{t('common.items_count', { count: getPhaseCounts(phase.id).materials })}</p>
 
                       </div>
 
@@ -1456,9 +1455,8 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                       <div>
 
-                        <p className="text-xs text-muted-foreground">Ressources</p>
-
-                        <p className="text-sm">{getPhaseCounts(phase.id).employees} rôles</p>
+                        <p className="text-xs text-muted-foreground">{t('common.resources')}</p>
+                        <p className="text-sm">{t('common.roles_count', { count: getPhaseCounts(phase.id).employees })}</p>
 
                       </div>
 
@@ -1493,9 +1491,8 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     <div className="flex justify-between text-sm mb-1">
 
-                      <span>Progression</span>
-
-                      <span>{phase.progress}%</span>
+                      <span>{t('common.progress')}</span>
+                      <span>{t('progress.percent', { value: phase.progress })}</span>
 
                     </div>
 

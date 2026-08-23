@@ -111,8 +111,8 @@ const ProjectCreate = () => {
       
       if (missingSteps.length > 0) {
         toast({
-          title: t("common.warning") || "Attention",
-          description: `Les étapes ${missingSteps.join(', ')} sont requises`,
+          title: t("common.warning"),
+          description: t('workflow.required_steps', { steps: missingSteps.join(', ') }),
           variant: "destructive",
         });
         setCurrentStep(missingSteps[0]);
@@ -126,8 +126,8 @@ const ProjectCreate = () => {
       
       if (invalidSteps.length > 0) {
         toast({
-          title: t("common.warning") || "Attention",
-          description: `Les étapes ${invalidSteps.join(', ')} ont des erreurs`,
+          title: t("common.warning"),
+          description: t('workflow.invalid_steps', { steps: invalidSteps.join(', ') }),
           variant: "destructive",
         });
         setCurrentStep(invalidSteps[0]);
@@ -144,18 +144,18 @@ const ProjectCreate = () => {
       
       if (id) {
         toast({
-          title: "Succès",
-          description: `Projet "${data.projectData?.title}" créé avec succès`,
+          title: t('common.success'),
+          description: t('project_create.created_named', { title: data.projectData?.title ?? '' }),
         });
         navigate(`/projects/${id}`);
       } else {
         navigate("/projects");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de la création");
+      setError(err instanceof Error ? err.message : t('project_create.create_error'));
       toast({
-        title: t("common.error") || "Erreur",
-        description: err instanceof Error ? err.message : "Erreur lors de la création",
+        title: t("common.error"),
+        description: err instanceof Error ? err.message : t('project_create.create_error'),
         variant: "destructive",
       });
     } finally {
@@ -173,7 +173,7 @@ const ProjectCreate = () => {
   return (
     <AppLayout
       pageTitle={t("project_create.title")}
-      pageDescription="Créez un nouveau projet en suivant les étapes du workflow"
+      pageDescription={t('project_create.workflow_description')}
       actions={
         <div className="flex items-center gap-3">
           {/* Progression */}
@@ -209,7 +209,7 @@ const ProjectCreate = () => {
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erreur</AlertTitle>
+            <AlertTitle>{t('common.error')}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -218,12 +218,12 @@ const ProjectCreate = () => {
         {currentStep === workflowSteps.length && !isSubmitting && (
           <Alert className="mb-4 border-warning/30 bg-warning/10">
             <AlertCircle className="h-4 w-4 text-warning" />
-            <AlertTitle className="text-warning">Validation finale</AlertTitle>
+            <AlertTitle className="text-warning">{t('workflow.final_validation')}</AlertTitle>
             <AlertDescription className="text-warning">
               {completedSteps.length < workflowSteps.filter(s => s.required).length ? (
-                `Veuillez compléter toutes les étapes requises avant de valider le projet.`
+                t('workflow.complete_required_before_validation')
               ) : (
-                `Toutes les étapes sont complètes. Vous pouvez maintenant créer le projet.`
+                t('workflow.ready_to_create')
               )}
             </AlertDescription>
           </Alert>
@@ -250,7 +250,7 @@ const ProjectCreate = () => {
             {currentStep < workflowSteps.length ? (
               `${t('workflow.step_counter', { current: currentStep, total: workflowSteps.length })} — ${t(`project_workflow.steps.${workflowSteps.find(s => s.number === currentStep)?.code}.title`)}`
             ) : (
-              `Toutes les étapes sont complètes - Prêt à créer le projet`
+              t('workflow.all_complete_ready_create')
             )}
           </p>
         </div>

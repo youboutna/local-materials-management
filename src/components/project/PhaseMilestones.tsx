@@ -71,14 +71,14 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
         });
       }
       toast({
-        title: 'Jalons générés',
-        description: `${templates.length} jalon(s) créés depuis le référentiel.`,
+        title: t('milestone.generated'),
+        description: t('milestone.generated_count', { count: templates.length }),
       });
     } catch (error) {
       console.error('Error generating milestones:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de générer les jalons.',
+        title: t('common.error'),
+        description: t('milestone.generate_error'),
         variant: 'destructive',
       });
     } finally {
@@ -104,7 +104,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
           weight: formData.weight,
           notes: formData.notes,
         });
-        toast({ title: "Succès", description: "Jalon modifié" });
+        toast({ title: t("common.success"), description: t("milestone.updated") });
       } else {
         await createMilestone({
           projectId,
@@ -116,7 +116,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
           notes: formData.notes,
           status: 'pending',
         });
-        toast({ title: "Succès", description: "Jalon ajouté" });
+        toast({ title: t("common.success"), description: t("milestone.added") });
       }
 
       setIsDialogOpen(false);
@@ -124,8 +124,8 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
     } catch (error) {
       console.error("Error saving milestone:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder",
+        title: t("common.error"),
+        description: t("common.save_error"),
         variant: "destructive",
       });
     }
@@ -147,17 +147,17 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
     try {
       await toggleMilestoneStatus(milestone.id, milestone.status);
       toast({
-        title: "Succès",
+        title: t("common.success"),
         description:
           milestone.status === "completed"
-            ? "Jalon marqué comme en attente"
-            : "Jalon marqué comme terminé",
+            ? t("milestone.marked_pending")
+            : t("milestone.marked_completed"),
       });
     } catch (error) {
       console.error("Error updating milestone status:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut",
+        title: t("common.error"),
+        description: t("common.status_update_error"),
         variant: "destructive",
       });
     }
@@ -213,10 +213,10 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5 text-primary" />
-          Jalons de la Phase
+          {t('milestone.phase_title')}
           {milestones.length > 0 && (
             <Badge variant="outline">
-              {Math.round(progress)}% complété
+              {t('milestone.progress_completed', { value: Math.round(progress) })}
             </Badge>
           )}
         </CardTitle>
@@ -224,41 +224,41 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <Plus className="h-4 w-4 mr-2" />
-              Ajouter
+              {t('common.add')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {editingMilestone ? "Modifier" : "Ajouter"} un jalon
+                {editingMilestone ? t("milestone.edit_title") : t("milestone.add_title")}
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4">
               <div>
-                <Label htmlFor="title">Titre</Label>
+                <Label htmlFor="title">{t('common.title')}</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  placeholder="Titre du jalon"
+                  placeholder={t('milestone.title_placeholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('common.description')}</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Description du jalon"
+                  placeholder={t('milestone.description_placeholder')}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="target_date">Date cible</Label>
+                  <Label htmlFor="target_date">{t('milestone.target_date')}</Label>
                   <Input
                     id="target_date"
                     type="date"
@@ -269,7 +269,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="weight">Poids (0.1 - 1.0)</Label>
+                  <Label htmlFor="weight">{t('milestone.weight')}</Label>
                   <Input
                     id="weight"
                     type="number"
@@ -287,14 +287,14 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                 </div>
               </div>
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t('common.notes')}</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) =>
                     setFormData({ ...formData, notes: e.target.value })
                   }
-                  placeholder="Notes additionnelles"
+                  placeholder={t('milestone.notes_placeholder')}
                 />
               </div>
               <div className="flex justify-end gap-2">
@@ -302,10 +302,10 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleSave}>
-                  {editingMilestone ? "Modifier" : "Ajouter"}
+                  {editingMilestone ? t("common.edit") : t("common.add")}
                 </Button>
               </div>
             </div>
@@ -317,14 +317,14 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
         {(phaseInspections.length > 0 || phasePayments.length > 0) && (
           <div className="mb-4 grid grid-cols-2 gap-3">
             <div className="rounded-lg border p-3 bg-muted/30">
-              <p className="text-xs text-muted-foreground">Inspections de la phase</p>
+              <p className="text-xs text-muted-foreground">{t('milestone.phase_inspections')}</p>
               <p className="text-lg font-semibold">
                 {phaseInspections.filter((i: any) => i.status === 'completed' || i.status === 'approved').length}
                 <span className="text-sm text-muted-foreground"> / {phaseInspections.length}</span>
               </p>
             </div>
             <div className="rounded-lg border p-3 bg-muted/30">
-              <p className="text-xs text-muted-foreground">Paiements liés</p>
+              <p className="text-xs text-muted-foreground">{t('milestone.linked_payments')}</p>
               <p className="text-lg font-semibold">
                 {phasePayments.filter((p: any) => p.status === 'paid' || p.status === 'approved').length}
                 <span className="text-sm text-muted-foreground"> / {phasePayments.length}</span>
@@ -335,8 +335,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
         {milestones.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Aucun jalon pour cette phase — vous pouvez les générer depuis le référentiel
-              projet puis les ajuster.
+              {t('milestone.none_hint')}
             </p>
             <Button
               variant="outline"
@@ -364,7 +363,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                       <Badge className={getStatusColor(milestone.status)}>
                         <TranslatedStatus code={milestone.status} />
                       </Badge>
-                      <Badge variant="outline">Poids: {milestone.weight}</Badge>
+                      <Badge variant="outline">{t('milestone.weight_value', { value: milestone.weight })}</Badge>
                     </div>
                     {milestone.description && (
                       <p className="text-sm text-muted-foreground mb-2">
@@ -374,13 +373,13 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <CalendarDays className="h-4 w-4" />
-                        Cible:{" "}
+                        {t('milestone.target')}{' '}
                         {new Date(milestone.targetDate).toLocaleDateString()}
                       </div>
                       {milestone.completionDate && (
                         <div className="flex items-center gap-1">
                           <CheckCircle className="h-4 w-4" />
-                          Terminé:{" "}
+                           {t('milestone.completed_on')}{' '}
                           {new Date(
                             milestone.completionDate
                           ).toLocaleDateString()}
@@ -395,21 +394,21 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
                       onClick={() => handleMarkCompleted(milestone)}
                     >
                       {milestone.status === "completed"
-                        ? "Marquer en attente"
-                        : "Marquer terminé"}
+                        ? t("milestone.mark_pending")
+                        : t("milestone.mark_completed")}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(milestone)}
                     >
-                      Modifier
+                      {t('common.edit')}
                     </Button>
                   </div>
                 </div>
                 {milestone.notes && (
                   <div className="mt-2 text-sm text-muted-foreground">
-                    Notes: {milestone.notes}
+                    {t('common.notes')}: {milestone.notes}
                   </div>
                 )}
               </div>

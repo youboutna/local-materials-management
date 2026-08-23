@@ -26,6 +26,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
+import { useI18n } from '@/hooks/useI18n';
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -271,6 +272,7 @@ interface AdvancedQuantityCalculatorProps {
 }
 
 const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({ projectId, phaseId, onPersisted }) => {
+  const { t } = useI18n();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
   const [invoiceLines, setInvoiceLines] = useState<InvoiceLine[]>([]);
@@ -516,7 +518,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
 
   const addOpening = () => {
     if (currentOpening.length <= 0 || currentOpening.width <= 0) {
-      toast({ title: "Erreur", description: "Dimensions invalides pour l'ouverture", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('quantity.invalid_opening'), variant: "destructive" });
       return;
     }
     // Conversion cm/mm → m via AdvancedMeterEngine.toMeters
@@ -549,7 +551,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
 
   const handleCalculate = () => {
     if (!hasRequiredDimensions()) {
-      toast({ title: "Erreur", description: "Veuillez remplir toutes les dimensions requises", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('quantity.required_dimensions'), variant: "destructive" });
       return;
     }
     try {
@@ -877,7 +879,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
           {/* Openings */}
           {(form.elementType === "concrete_slab" || form.elementType === "masonry_wall") && (
             <div className="mt-4">
-              <Label>Ouvertures</Label>
+              <Label>{t('quantity.openings')}</Label>
               <div className="space-y-2">
                 {form.openings.map(o => (
                   <Badge key={o.id} variant="outline">
@@ -886,7 +888,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                   </Badge>
                 ))}
                 {!showOpeningForm ? (
-                  <Button onClick={() => setShowOpeningForm(true)}>Ajouter ouverture</Button>
+                  <Button onClick={() => setShowOpeningForm(true)}>{t('quantity.add_opening')}</Button>
                 ) : (
                   <div className="grid grid-cols-4 gap-2 items-end">
                     <Input type="number" step="0.01" min="0" placeholder="L" value={currentOpening.length || ""} onChange={e => setCurrentOpening(o => ({ ...o, length: parseFloat(e.target.value) || 0 }))} />
@@ -902,7 +904,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                         <SelectItem value="mm">mm</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" onClick={addOpening}>Ajouter</Button>
+                    <Button variant="outline" onClick={addOpening}>{t('common.add')}</Button>
                   </div>
                 )}
 
@@ -914,9 +916,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
           {projectId && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 border-t pt-3">
               <div>
-                <Label className="text-xs">Matériau de référence</Label>
+                <Label className="text-xs">{t('quantity.reference_material')}</Label>
                 <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionner un matériau..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('quantity.select_material')} /></SelectTrigger>
                   <SelectContent>
                     {materials.map((m: any) => (
                       <SelectItem key={m.id} value={m.id}>{m.name} (<TranslatedUnit code={m.unit} />)</SelectItem>
@@ -925,7 +927,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Type de ressource (défaut)</Label>
+                <Label className="text-xs">{t('quantity.default_resource_type')}</Label>
                 <Select value={resourceType} onValueChange={(v) => setResourceType(v as BoqResourceType)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -936,7 +938,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">PU par défaut (optionnel)</Label>
+                <Label className="text-xs">{t('quantity.default_unit_price')}</Label>
                 <Input type="number" step="0.01" min="0" value={unitPriceOverride}
                   onChange={(e) => setUnitPriceOverride(e.target.value)} placeholder="0.00" />
               </div>
@@ -953,37 +955,37 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                 onChange={(e) => setAutoRecs(e.target.checked)}
                 className="h-4 w-4"
               />
-              Générer une ligne article par recommandation ({getRecommendationItems(form.elementType).length}) en utilisant le PU / unité du matériau
+              {t('quantity.auto_recommendations', { count: getRecommendationItems(form.elementType).length })}
             </label>
           )}
 
 
           {/* Actions principales */}
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="default" onClick={handleCalculate} disabled={!hasRequiredDimensions()}><Calculator className="w-4 h-4 mr-2" />Calculer et ajouter</Button>
-            <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />Réinitialiser</Button>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? "Traitement..." : "Importer (PDF/Excel/CSV)"}</Button>
+            <Button variant="default" onClick={handleCalculate} disabled={!hasRequiredDimensions()}><Calculator className="w-4 h-4 mr-2" />{t('quantity.calculate_add')}</Button>
+            <Button variant="secondary" onClick={resetForm}><Trash2 className="w-4 h-4 mr-2" />{t('quantity.reset')}</Button>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}><Upload className="w-4 h-4 mr-2" />{isProcessing ? t('quantity.processing') : t('quantity.import')}</Button>
             <input type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-            <Button variant="outline" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))} title="Page précédente"><SkipBack className="w-4 h-4 mr-2" />Précédent</Button>
-            <Button variant="outline" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} title="Page suivante"><SkipForward className="w-4 h-4 mr-2" />Suivant</Button>
-            <span className="text-xs text-muted-foreground self-center px-2">Page {safePage + 1} / {totalPages}{calculations.length ? ` · ${pageStart + 1}–${pageEnd} / ${calculations.length}` : ''}</span>
+            <Button variant="outline" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))} title={t('quantity.previous_page')}><SkipBack className="w-4 h-4 mr-2" />{t('common.previous')}</Button>
+            <Button variant="outline" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} title={t('quantity.next_page')}><SkipForward className="w-4 h-4 mr-2" />{t('common.next')}</Button>
+            <span className="text-xs text-muted-foreground self-center px-2">{t('quantity.page', { current: safePage + 1, total: totalPages })}</span>
 
             {projectId && calculations.length > 0 && (
               <>
                 <Button onClick={handleSaveAll} disabled={savingAll || !selectedMaterialId} variant="secondary">
-                  <Save className="w-4 h-4 mr-2" />{savingAll ? "Enregistrement..." : `Enregistrer (${calculations.length})`}
+                  <Save className="w-4 h-4 mr-2" />{savingAll ? t('quantity.saving') : t('quantity.save_count', { count: calculations.length })}
                 </Button>
                 <Button onClick={handleSendToBoq} disabled={sendingBoq}>
-                  <Upload className="w-4 h-4 mr-2" />{sendingBoq ? "Envoi..." : `Envoyer vers BOQ (${calculations.length})`}
+                  <Upload className="w-4 h-4 mr-2" />{sendingBoq ? t('quantity.sending') : t('quantity.send_to_boq', { count: calculations.length })}
                 </Button>
               </>
             )}
             <div className="ml-auto flex gap-2">
-              <Button variant="outline" onClick={exportToCSV} disabled={calculations.length === 0}><Download className="w-4 h-4 mr-2" />Exporter CSV</Button>
-              <Button variant="destructive" onClick={() => setCalculations([])} disabled={calculations.length === 0}><Trash2 className="w-4 h-4 mr-2" />Tout effacer</Button>
+              <Button variant="outline" onClick={exportToCSV} disabled={calculations.length === 0}><Download className="w-4 h-4 mr-2" />{t('quantity.export_csv')}</Button>
+              <Button variant="destructive" onClick={() => setCalculations([])} disabled={calculations.length === 0}><Trash2 className="w-4 h-4 mr-2" />{t('quantity.clear_all')}</Button>
             </div>
           </div>
-          {phaseId && <div className="mt-2"><Badge variant="outline">Phase associée</Badge></div>}
+          {phaseId && <div className="mt-2"><Badge variant="outline">{t('quantity.linked_phase')}</Badge></div>}
         </CardContent>
       </Card>
 
@@ -991,7 +993,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       {calculations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Détail estimatif ({calculations.length} lignes)</CardTitle>
+            <CardTitle>{t('quantity.estimate_detail', { count: calculations.length })}</CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <div className="border rounded-lg overflow-hidden">
@@ -1319,11 +1321,11 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
             </div>
             {calculations.length > PAGE_SIZE && (
               <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
-                <span>Lignes {pageStart + 1}–{pageEnd} sur {calculations.length}</span>
+                <span>{t('quantity.lines_range', { start: pageStart + 1, end: pageEnd, total: calculations.length })}</span>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}><SkipBack className="w-3 h-3 mr-1" />Précédent</Button>
-                  <span className="self-center">Page {safePage + 1} / {totalPages}</span>
-                  <Button variant="outline" size="sm" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>Suivant<SkipForward className="w-3 h-3 ml-1" /></Button>
+                  <Button variant="outline" size="sm" disabled={safePage <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}><SkipBack className="w-3 h-3 mr-1" />{t('common.previous')}</Button>
+                  <span className="self-center">{t('quantity.page', { current: safePage + 1, total: totalPages })}</span>
+                  <Button variant="outline" size="sm" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>{t('common.next')}<SkipForward className="w-3 h-3 ml-1" /></Button>
                 </div>
               </div>
             )}
