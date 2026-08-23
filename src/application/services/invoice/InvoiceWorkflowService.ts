@@ -89,8 +89,15 @@ export const InvoiceWorkflowService = {
     const ratio = def.requiresPercentage ? clampPct(input.percentage) / 100 : 1;
 
     const lines = sourceLines.map<BoqLineDTO>((l) => {
-      const quantity = Number(((l.quantity ?? 0) * ratio).toFixed(4));
-      const unitPrice = l.unitPrice ?? null;
+      // Réconciliation arithmétique : le montant source fait foi, le P.U. est
+      // recalculé si nécessaire afin que la proratisation reste fidèle.
+      const coherent = reconcileLinePrice({
+        quantity: l.quantity ?? 0,
+        unitPrice: l.unitPrice,
+        totalHt: l.totalHt,
+      });
+      const quantity = Number((((l.quantity ?? 0) * ratio)).toFixed(4));
+      const unitPrice = coherent.unitPrice;
       return {
         ...l,
         id: undefined,
@@ -98,7 +105,8 @@ export const InvoiceWorkflowService = {
         contextId: input.targetContextId ?? input.sourceContextId,
         quantity,
         unitPrice,
-        totalHt: unitPrice != null ? quantity * unitPrice : null,
+        totalHt: coherent.totalHt != null ? Number((coherent.totalHt * ratio).toFixed(2)) : null,
+
         status: 'draft',
         dqeType: def.dqeType,
         documentId,
