@@ -14,14 +14,23 @@ export interface DocumentContext {
   source?: BoqSource;
   contextId?: string;
   projectId?: string;
+  /** Libellé métier du projet (D1 — jamais l'identifiant technique). */
+  projectTitle?: string;
   tenderId?: string;
+  tenderTitle?: string;
   submissionId?: string;
+  documentId?: string | null;
   recipientEmail?: string;
   recipientName?: string;
   senderName?: string;
   signed?: boolean;
   signedBy?: string;
   signedAt?: string;
+  /** Profil fiscal appliqué (TVA / RAS homogènes). */
+  fiscalProfileCode?: string | null;
+  /** Date d'émission ISO stable. */
+  issueDate?: string | null;
+  currency?: string;
   /** Entête du document : organisation propriétaire (gestionnaire) ou fournisseur (émetteur). */
   company?: BoqPdfCompany;
   /** Étape du cycle documentaire (DQE, Devis, Contrat, Décompte, Facture). */
@@ -35,6 +44,7 @@ export interface DocumentContext {
   /** Référence documentaire Factur-X. */
   reference?: string;
 }
+
 
 async function loadLines(ctx: DocumentContext, fallback: BoqLineDTO[]): Promise<BoqLineDTO[]> {
   if (ctx.source && (ctx.contextId || ctx.projectId)) {
