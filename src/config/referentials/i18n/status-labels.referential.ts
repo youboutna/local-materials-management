@@ -54,6 +54,16 @@ export const STATUS_LABELS: Record<string, ReferentialLabel> = {
   canceled: label('canceled', 'Annulé', 'ملغي', 'Canceled'),
   suspended: label('suspended', 'Suspendu', 'موقوف', 'Suspended'),
 
+  not_started: label('not_started', 'Non commencé', 'لم يبدأ', 'Not started'),
+  non_commence: label('non_commence', 'Non commencé', 'لم يبدأ', 'Not started'),
+  delayed: label('delayed', 'En retard', 'متأخر', 'Delayed'),
+  todo: label('todo', 'À faire', 'للتنفيذ', 'To do'),
+  blocked: label('blocked', 'Bloqué', 'محجوب', 'Blocked'),
+  on_hold: label('on_hold', 'En pause', 'متوقف مؤقتا', 'On hold'),
+  scheduled: label('scheduled', 'Planifié', 'مبرمج', 'Scheduled'),
+  overdue: label('overdue', 'En retard', 'متأخر', 'Overdue'),
+  in_review: label('in_review', 'En révision', 'قيد المراجعة', 'In review'),
+
   // ── Statuts projet (codes DTO ProjectStatus, y compris legacy) ────────
   planned: label('planned', 'Planifié', 'مخطط', 'Planned'),
   planifie: label('planifie', 'Planifié', 'مخطط', 'Planned'),
