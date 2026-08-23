@@ -16,6 +16,7 @@ import { usePhasePayments } from "@/hooks/hexagonal/usePhasePaymentsHex";
 import { toast } from "@/hooks/use-toast";
 import { CalendarDays, CheckCircle, Clock, Plus, Sparkles, Target } from "lucide-react";
 import React, { useState } from "react";
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ElectricSpinner } from "../loading-page";
 import { getDefaultPhaseMilestones } from "@/config/referentials/milestones.referential";
 
@@ -29,6 +30,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
   phaseId,
   projectId,
 }) => {
+  const { t } = useLanguage();
   const {
     milestones,
     loading,
@@ -343,7 +345,7 @@ const PhaseMilestones: React.FC<PhaseMilestonesProps> = ({
               disabled={generating}
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              {generating ? 'Génération…' : 'Générer les jalons du référentiel'}
+              {generating ? t('phase_structure.generating') : t('phase_structure.generate_milestones_from_referential')}
             </Button>
           </div>
         ) : (

@@ -21,6 +21,7 @@ import {
     Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useSearchParams } from "react-router-dom";
 
 // (uuid removed — IDs are generated DB-side via `gen_random_uuid()`)
@@ -576,7 +577,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             ) : (
               <Card>
                 <CardContent className="p-4 text-sm text-muted-foreground">
-                  Le calcul métré (simple & avancé) sera disponible après la sauvegarde de l'étape 1.
+                  {t('phase_structure.takeoff_after_step1')}
                 </CardContent>
               </Card>
             )}
