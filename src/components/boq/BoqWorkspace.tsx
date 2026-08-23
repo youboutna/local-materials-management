@@ -536,10 +536,9 @@ export function BoqWorkspace({
                   <Select value={category} onValueChange={(v) => setCategory(v as ManualCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="material"><T k="auto.boqworkspace.materiau" fallback="Matériau" /></SelectItem>
-                      <SelectItem value="labour">Main-d'œuvre</SelectItem>
-                      <SelectItem value="equipment"><T k="auto.boqworkspace.equipement" fallback="Équipement" /></SelectItem>
-                      <SelectItem value="overhead"><T k="auto.boqworkspace.frais_generaux" fallback="Frais généraux" /></SelectItem>
+                      {getEnumOptions('ResourceType', lang).map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
