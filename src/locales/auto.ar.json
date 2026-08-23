@@ -2072,6 +2072,7 @@
   "auto.milestonepositioneditor.priorite": "الأولوية",
   "auto.monitoringdocumentadapter.garanties_bancaires": "ضمانات بنكية",
   "auto.monitoringdocumentadapter.paiements": "المدفوعات",
+  "auto.monitoringdocumentadapter.polices_d_assurance": "بوالص التأمين",
   "auto.monitoringdocumentadapter.type_de_document": "نوع المستند",
   "auto.monitoringdocumentspanel.documents_associes_aux_garanties_bancaires": "المستندات المرتبطة بالضمانات البنكية",
   "auto.monitoringdocumentspanel.documents_associes_aux_paiements": "المستندات المرتبطة بالمدفوعات",
@@ -4673,6 +4674,7 @@
   "dashboard.management_tabs.alerts.medium": "متوسطة",
   "dashboard.management_tabs.alerts.none": "لا توجد تنبيهات",
   "dashboard.management_tabs.alerts.tabs.all": "الكل",
+  "dashboard.management_tabs.alerts.tabs.compliance": "المطابقة",
   "dashboard.management_tabs.alerts.tabs.delay": "التأخيرات",
   "dashboard.management_tabs.alerts.tabs.guarantee": "الضمانات",
   "dashboard.management_tabs.alerts.tabs.inspection": "التفتيش",
@@ -4783,6 +4785,8 @@
   "notifications_center.title": "مركز الإشعارات",
   "payment_control.subtitle": "إدارة واعتماد المدفوعات مع إشعارات فورية",
   "payment_control.title": "مراقبة المدفوعات",
+  "phase_structure.takeoff_analysis": "تحليل القياسات",
+  "phase_structure.takeoff_count": "{{count}} قياسات",
   "project_create.form.add_materials": "اختر المواد اللازمة لهذا المشروع",
   "project_import.desc": "استيراد مشاريع 2025",
   "project_import.title": "استيراد المشاريع",
@@ -4824,8 +4828,5 @@
   "users.table.national_id": "الرقم الوطني",
   "users.table.role": "الدور",
   "users.updated": "تم تحديث المستخدم",
-  "users.updated_success": "تم تحديث المستخدم بنجاح",
-  "dashboard.management_tabs.alerts.tabs.compliance": "المطابقة",
-  "phase_structure.takeoff_analysis": "تحليل القياسات",
-  "phase_structure.takeoff_count": "{{count}} قياسات"
+  "users.updated_success": "تم تحديث المستخدم بنجاح"
 }
