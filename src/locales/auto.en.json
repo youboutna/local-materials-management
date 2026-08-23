@@ -4715,6 +4715,10 @@
   "auto.zonelocationeditor.rayon_m": "Radius (m)",
   "bank_guarantee.subtitle": "Automated system for detecting delays and triggering guarantees",
   "bank_guarantee.title": "Bank Guarantee Monitoring",
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
   "common.create": "Create",
   "common.details": "Details",
   "common.edit": "Edit",
@@ -4747,6 +4751,69 @@
   "dashboard.project.search_by_location": "Search projects by location...",
   "dashboard.title": "Dashboard",
   "documents.title": "Documents",
+  "dqe": {
+    "action": {
+      "add": "Add",
+      "add_line": "Add a line",
+      "align_planning": "Align with planning",
+      "attach_submission": "Attach to my bid",
+      "clear_draft": "Clear draft",
+      "create_decompte": "Create progress statement",
+      "dispatch_wbs": "Transfer to phases",
+      "distribute": "Distribute",
+      "download": "Download",
+      "email": "Send",
+      "facturx": "PDF + Factur-X",
+      "generate_pdf": "Generate PDF",
+      "import": "Import a BoQ",
+      "publish": "Publish",
+      "save": "Save document",
+      "sign": "Sign",
+      "signed": "Signed",
+      "submit_invoice": "Submit for payment",
+      "takeoff": "Quantity take-off",
+      "transfer": "Transfer",
+      "transform_to": "Transform into",
+      "validate_gate": "Approve for injection"
+    },
+    "actions": {
+      "document_menu": "Document",
+      "workflow_menu": "Workflow"
+    },
+    "clear_draft": {
+      "confirm": "Pending lines will be deleted. This action cannot be undone."
+    },
+    "doc_status": {
+      "new": "New document",
+      "to_save": "To save",
+      "validated": "Validated document"
+    },
+    "fiscal": {
+      "ht": "Net:"
+    },
+    "gate": {
+      "validated": "approved",
+      "validation_required": "approval required"
+    },
+    "lifecycle": {
+      "possible_statuses_label": "Possible statuses:",
+      "status_label": "Status:"
+    },
+    "referential": {
+      "enrich": "Enrich:",
+      "hint": "The project referential is used by default; pick another one to enrich the Phase / Milestone / Task classification.",
+      "project": "Project ref. —"
+    },
+    "transfer": {
+      "project_dqe": "Submit for approval",
+      "supplier_bid": "Attach to my bid",
+      "supplier_invoice": "Submit for payment",
+      "tender_estimate": "Publish to suppliers"
+    },
+    "transform": {
+      "blocked": "Issuance blocked"
+    }
+  },
   "dqe.lifecycle.billed_progress": "Billed progress",
   "dqe.lifecycle.possible_statuses": "Possible statuses",
   "dqe.lifecycle.status": "Status",
@@ -4906,5 +4973,9 @@
   "users.table.national_id": "National ID",
   "users.table.role": "Role",
   "users.updated": "User updated",
-  "users.updated_success": "User updated successfully"
+  "users.updated_success": "User updated successfully",
+  "wbs": {
+    "select_milestone_first": "Select a milestone",
+    "select_phase_first": "Select a phase"
+  }
 }

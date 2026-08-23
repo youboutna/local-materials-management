@@ -38,6 +38,10 @@ import {
   type InvoiceDocumentType,
 } from '@/config/referentials/invoices/invoice-document-types.referential';
 import { T } from '@/components/i18n/T';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
+import { getInvoiceDocumentTypeLabel } from '@/config/referentials/invoices/invoice-document-types.referential';
 
 interface Props {
   documentType: InvoiceDocumentType;
@@ -83,6 +87,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   onTransformed,
 }) => {
   const { toast } = useToast();
+  const { t, language } = useI18n();
   const [busy, setBusy] = useState<string | null>(null);
   const [pctOpen, setPctOpen] = useState(false);
   const [percentage, setPercentage] = useState(30);
@@ -251,38 +256,37 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
         ) : null}
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="self-center">
-            {def.label} · Factur-X {def.facturxTypeCode}
+          <Badge variant="outline" className="self-center" title={`Factur-X ${def.facturxTypeCode}`}>
+            {getInvoiceDocumentTypeLabel(def.code, language)}
           </Badge>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleFacturX}
-            disabled={disabled || noLines || busy !== null}
-            title="Générer le PDF contextuel et le XML Factur-X (EN 16931)"
-          >
-            {spinner('facturx') ?? <FileCode2 className="h-4 w-4 mr-2" />}
-            PDF + Factur-X
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleEmail}
-            disabled={disabled || noLines || busy !== null || !recipientEmail}
-            title={recipientEmail ? `Envoyer à ${recipientEmail}` : 'Aucun destinataire'}
-          >
-            {spinner('email') ?? <Mail className="h-4 w-4 mr-2" />}
-            Envoyer
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" disabled={disabled || noLines || busy !== null}>
+                {spinner('facturx') ?? spinner('email') ?? <FileCode2 className="h-4 w-4 mr-2" />}
+                {t('dqe.actions.document_menu')}
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => void handleFacturX()}>
+                <FileCode2 className="h-4 w-4 mr-2" />
+                {t('dqe.action.facturx')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void handleEmail()} disabled={!recipientEmail}>
+                <Mail className="h-4 w-4 mr-2" />
+                {t('dqe.action.email')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {nextDef && allowed && (
             <Button
               size="sm"
               onClick={() => (nextDef.requiresPercentage ? setPctOpen(true) : runTransform())}
               disabled={disabled || noLines || busy !== null || blocked}
-              title={blocked ? guardPreview?.message ?? 'Émission bloquée' : def.nextActionLabel}
+              title={blocked ? guardPreview?.message ?? t('dqe.transform.blocked') : `${t('dqe.action.transform_to')} ${getInvoiceDocumentTypeLabel(nextDef.code, language)}`}
             >
               {spinner('transform') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
-              {def.nextActionLabel ?? `Transformer en ${nextDef.label}`}
+              {`${t('dqe.action.transform_to')} ${getInvoiceDocumentTypeLabel(nextDef.code, language)}`}
             </Button>
           )}
         </div>
@@ -291,7 +295,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
       <Dialog open={pctOpen} onOpenChange={setPctOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{nextDef?.label}</DialogTitle>
+            <DialogTitle>{nextDef ? getInvoiceDocumentTypeLabel(nextDef.code, language) : ''}</DialogTitle>
             <DialogDescription>
               Les quantités sont proratisées selon l'avancement facturé, conformément au référentiel documentaire.
             </DialogDescription>

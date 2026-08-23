@@ -4712,6 +4712,10 @@
   "auto.zonelocationeditor.rayon_m": "Rayon (m)",
   "bank_guarantee.subtitle": "Système automatisé de détection des retards et de déclenchement des garanties",
   "bank_guarantee.title": "Suivi des garanties bancaires",
+  "common": {
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
+  },
   "common.create": "Créer",
   "common.details": "Détails",
   "common.edit": "Modifier",
@@ -4744,6 +4748,69 @@
   "dashboard.project.search_by_location": "Rechercher des projets par localisation...",
   "dashboard.title": "Tableau de bord",
   "documents.title": "Documents",
+  "dqe": {
+    "action": {
+      "add": "Ajouter",
+      "add_line": "Ajouter une ligne",
+      "align_planning": "Aligner à la planification",
+      "attach_submission": "Joindre à ma soumission",
+      "clear_draft": "Vider le brouillon",
+      "create_decompte": "Créer un décompte",
+      "dispatch_wbs": "Transférer vers les phases",
+      "distribute": "Diffuser",
+      "download": "Télécharger",
+      "email": "Envoyer",
+      "facturx": "PDF + Factur-X",
+      "generate_pdf": "Générer le PDF",
+      "import": "Importer un DQE",
+      "publish": "Publier",
+      "save": "Enregistrer le document",
+      "sign": "Signer",
+      "signed": "Signé",
+      "submit_invoice": "Soumettre pour paiement",
+      "takeoff": "Calcul métré",
+      "transfer": "Transférer",
+      "transform_to": "Transformer en",
+      "validate_gate": "Valider pour injection"
+    },
+    "actions": {
+      "document_menu": "Document",
+      "workflow_menu": "Workflow"
+    },
+    "clear_draft": {
+      "confirm": "Les lignes en attente seront supprimées. Cette action est irréversible."
+    },
+    "doc_status": {
+      "new": "Nouveau document",
+      "to_save": "À enregistrer",
+      "validated": "Document validé"
+    },
+    "fiscal": {
+      "ht": "HT :"
+    },
+    "gate": {
+      "validated": "validé",
+      "validation_required": "validation requise"
+    },
+    "lifecycle": {
+      "possible_statuses_label": "Statuts possibles :",
+      "status_label": "Statut :"
+    },
+    "referential": {
+      "enrich": "Enrichir :",
+      "hint": "Par défaut le référentiel du projet ; sélectionnez-en un autre pour enrichir la classification Phase / Jalon / Tâche.",
+      "project": "Réf. projet —"
+    },
+    "transfer": {
+      "project_dqe": "Soumettre pour validation",
+      "supplier_bid": "Joindre à ma soumission",
+      "supplier_invoice": "Soumettre pour paiement",
+      "tender_estimate": "Publier vers fournisseurs"
+    },
+    "transform": {
+      "blocked": "Émission bloquée"
+    }
+  },
   "dqe.lifecycle.billed_progress": "Avancement facturé",
   "dqe.lifecycle.possible_statuses": "Statuts possibles",
   "dqe.lifecycle.status": "Statut",
@@ -4903,5 +4970,9 @@
   "users.table.national_id": "ID national",
   "users.table.role": "Rôle",
   "users.updated": "Utilisateur mis à jour",
-  "users.updated_success": "L'utilisateur a été mis à jour avec succès"
+  "users.updated_success": "L'utilisateur a été mis à jour avec succès",
+  "wbs": {
+    "select_milestone_first": "Sélectionner un jalon",
+    "select_phase_first": "Sélectionner une phase"
+  }
 }
