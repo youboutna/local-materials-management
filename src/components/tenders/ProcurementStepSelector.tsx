@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Plus } from 'lucide-react';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { 
-import { T } from '@/components/i18n/T';
   PROCUREMENT_STAGES, 
   PROCUREMENT_PHASE_LABELS, 
   ProcurementPhase, 
@@ -15,6 +14,7 @@ import { T } from '@/components/i18n/T';
   getSuggestedDocuments,
   PROCUREMENT_PHASES
 } from './PublicProcurementWorkflow';
+import { T } from '@/components/i18n/T';
 
 interface ProcurementStepSelectorProps {
   isOpen: boolean;

@@ -17,6 +17,7 @@ import {
   Zap
 } from 'lucide-react';
 import { getPerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
+import { T } from '@/components/i18n/T';
 // Local type definitions for metrics
 interface DatabaseMetricsDTO { totalSize?: number; activeConnections?: number; queryPerformance?: number; }
 interface LocalPerformanceMetricsDTO { uptime?: number; responseTime?: number; errorRate?: number; throughput?: number; }
@@ -24,7 +25,6 @@ import { getHealthColor, getHealthBadgeVariant, formatMetric } from '@/utils/mon
 import { useMonitoringStatsHex } from '@/hooks/hexagonal/useMonitoringStatsHex';
 
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
-import { T } from '@/components/i18n/T';
 const SystemHealthOverview: React.FC = () => {
   const [stats, setStats] = useState<LocalPerformanceMetricsDTO | null>(null);
   const [alerts, setAlerts] = useState<any[]>([]);

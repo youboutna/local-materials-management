@@ -24,7 +24,6 @@ import { fr } from 'date-fns/locale';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersHex } from '@/hooks/hexagonal'
 import { 
-import { T } from '@/components/i18n/T';
   useCurrentUserHex,
   useSupplierSubmissionsHex as useSupplierSubmissions,
   useSubmissionDocumentsHex as useSubmissionDocumentsList,
@@ -33,6 +32,7 @@ import { T } from '@/components/i18n/T';
   type SubmissionDocument,
   type UseRealtimeOptions
 } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 
 const SupplierSubmissionDashboard = () => {

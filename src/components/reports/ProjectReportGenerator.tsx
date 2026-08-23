@@ -19,7 +19,6 @@ import type { OrganizationDTO } from '@/dtos/entities/OrganizationDTO';
 import { ProjectPDFDocument } from './pdf/ProjectPDFDocument';
 
 import {
-import { T } from '@/components/i18n/T';
   ReportProfile,
   ReportSectionKey,
   REPORT_PROFILES,
@@ -27,6 +26,7 @@ import { T } from '@/components/i18n/T';
   defaultSectionsFor,
   getReportProfile,
 } from '@/config/referentials/reports/report-profiles.referential';
+import { T } from '@/components/i18n/T';
 
 interface ProjectReportGeneratorProps {
   project: any; // ProjectData or ProjectDTO

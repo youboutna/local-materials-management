@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { AlertTriangle, Download, Server, Database, Cloud, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { T } from '@/components/i18n/T';
 
 export default function KeycloakConfigurationTab() {
   const [activeTab, setActiveTab] = useState('development');
@@ -103,7 +104,6 @@ cd keycloak-22.0.5/bin/
 
   const pythonScriptContent = `import subprocess
 import os
-import { T } from '@/components/i18n/T';
 
 def setup_keycloak():
     # Install PostgreSQL

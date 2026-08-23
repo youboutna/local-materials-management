@@ -18,6 +18,7 @@ import {
   type TenderEstimatorLineInput,
   type TenderCategory,
 } from '@/application/services/boq/TenderEstimatorService';
+import { T } from '@/components/i18n/T';
 
 const CATEGORIES: { value: TenderCategory; label: string }[] = [
   { value: 'material', label: 'Matériau' },
@@ -27,7 +28,6 @@ const CATEGORIES: { value: TenderCategory; label: string }[] = [
 ];
 
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
-import { T } from '@/components/i18n/T';
 
 const UNITS = DQE_UNIT_CODES.filter((code) => code !== 'ens' && code !== 'lot');
 

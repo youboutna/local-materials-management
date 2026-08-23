@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 
 import { CustomPhase, PhaseData } from '@/dtos/entities/PhaseDTO';
+import { T } from '@/components/i18n/T';
 
 
 // Types for procurement phases from referential
@@ -75,7 +76,6 @@ import { usePhaseResourceCountsHex } from '@/hooks/hexagonal/usePhaseResourceCou
 
 import { i18nService } from '@/application/services/I18nService';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
-import { T } from '@/components/i18n/T';
 // PhaseService instance for dynamic data
 const phaseService = getPhaseService();
 

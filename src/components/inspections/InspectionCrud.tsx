@@ -15,7 +15,6 @@ import { Plus, Edit, Trash2, Eye, CheckCircle, Clock, AlertTriangle } from 'luci
 import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
 import {
-import { T } from '@/components/i18n/T';
   useInspectionsList,
   useCreateInspection,
   useUpdateInspection,
@@ -23,6 +22,7 @@ import { T } from '@/components/i18n/T';
   type InspectionFormData,
   type InspectionRow
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 const InspectionCrud: React.FC = () => {
   const [selectedInspection, setSelectedInspection] = useState<InspectionRow | null>(null);

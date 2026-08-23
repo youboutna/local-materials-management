@@ -17,13 +17,13 @@ import { Plus, DollarSign, Trash2, Calendar, ExternalLink, Pencil } from 'lucide
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
 import { 
-import { T } from '@/components/i18n/T';
   usePhasePayments, 
   useAddPhasePayment, 
   useDeletePhasePayment,
   useSupplierInfo,
   PhasePaymentFormData
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 interface PhasePaymentsProps {
   phaseId: string;

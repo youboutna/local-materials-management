@@ -13,7 +13,6 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, AlertTriangle, Shield, Target, TrendingUp, User, Calendar, Building, AlertCircle } from 'lucide-react';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
-import { T } from '@/components/i18n/T';
   useEnhancedRiskManagerHex,
   ProjectRisk,
   RiskFormData,
@@ -21,6 +20,7 @@ import { T } from '@/components/i18n/T';
   Employee,
   Supplier
 } from '@/hooks/hexagonal/useEnhancedRiskManagerHex';
+import { T } from '@/components/i18n/T';
 
 interface EnhancedRiskManagerProps {
   projectId: string;

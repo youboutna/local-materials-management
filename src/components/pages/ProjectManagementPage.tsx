@@ -78,13 +78,13 @@ import {
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_CATEGORIES 
 } from '@/dtos/entities/ProjectDTO';
+import { T } from '@/components/i18n/T';
 
 // ProjectDashboard placeholder - component will be created separately
 const ProjectDashboard: React.FC<any> = () => <div><T k="auto.projectmanagementpage.project_dashboard" fallback="Project Dashboard" /></div>;
 import { Skeleton } from '../ui/skeleton';
 
 import { TranslatedSeverity, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
-import { T } from '@/components/i18n/T';
 /**
  * Comprehensive Project Management Page
  * Implements all project-related services with data-driven UI

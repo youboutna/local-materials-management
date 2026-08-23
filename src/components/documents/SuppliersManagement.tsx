@@ -14,13 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Building2, Plus, Edit, Trash2, Star } from 'lucide-react';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { 
-import { T } from '@/components/i18n/T';
   useSuppliersHex, 
   useCreateSupplier, 
   useUpdateSupplier, 
   useDeleteSupplier,
   SupplierMgmtFormData
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 const SuppliersManagement = () => {
   const [isCreating, setIsCreating] = useState(false);

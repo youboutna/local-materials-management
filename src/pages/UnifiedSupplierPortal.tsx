@@ -49,6 +49,7 @@ import { useDocumentStorage } from "@/hooks/useDocumentStorage";
 import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/useInvoicesHex";
 import { parsePdf } from "@/utils/btpCalculations";
 import type { BtpTables } from "@/integrations/supabase/btp-types";
+import { T } from '@/components/i18n/T';
 
 type SupplierNotificationRow = BtpTables<"supplier_notifications">;
 import { useQuery } from "@tanstack/react-query";
@@ -83,7 +84,6 @@ import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsP
 // ✅ Import du GED centralisé (DocumentHub)
 import { DocumentHub } from "@/components/documents/hub/DocumentHub";
 import type { DocumentHubContract, DocumentItem, UploadInput } from "@/components/documents/hub/types";
-import { T } from '@/components/i18n/T';
 
 // ✅ Définition du contrat GED pour le fournisseur
 function createSupplierDocumentHubContract(

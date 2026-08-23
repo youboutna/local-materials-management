@@ -14,11 +14,11 @@ import { Upload, FileText, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import {
-import { T } from '@/components/i18n/T';
   useProgressInvoiceFormHex,
   type InvoiceFormData,
   type WorkflowRequirements
 } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 const invoiceSchema = z.object({
   project_id: z.string().min(1, 'Le projet est requis'),

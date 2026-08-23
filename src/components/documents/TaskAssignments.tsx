@@ -40,12 +40,12 @@ import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
-import { T } from '@/components/i18n/T';
   useTaskAssignmentsHex, 
   useProjectsHex, 
   useAssigneeDetails,
   type TaskAssignment
 } from '@/hooks/hexagonal';
+import { T } from '@/components/i18n/T';
 
 type Project = { id: string; title: string };
 

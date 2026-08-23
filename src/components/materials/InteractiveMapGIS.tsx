@@ -15,7 +15,6 @@ import 'leaflet/dist/leaflet.css';
 import { GeocodingService } from '@/application/services/GeocodingService';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
 import { 
-import { T } from '@/components/i18n/T';
   Region, 
   City, 
   getMajorCities, 
@@ -27,6 +26,7 @@ import { T } from '@/components/i18n/T';
   getCityByCode,
   getCitiesByWilaya
 } from '@/utils/mauritaniaUtils';
+import { T } from '@/components/i18n/T';
 
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({
