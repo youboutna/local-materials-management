@@ -4236,5 +4236,7 @@
   "auto.importdropzone.selectionner_un_fichier": "اختر ملفاً",
   "auto.actionsdropdown.actions": "الإجراءات",
   "auto.projectmap.openstreetmap": "OpenStreetMap",
-  "auto.mainnavbar.dev": "DEV"
+  "auto.mainnavbar.dev": "DEV",
+  "auto.common.active": "نشط",
+  "auto.common.inactive": "غير نشط"
 }

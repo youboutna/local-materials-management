@@ -5,6 +5,7 @@
 
 // Base entity interface (canonical definition lives in entities/BaseEntityDTO.ts)
 import type { BaseEntityDTO } from './entities/BaseEntityDTO';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 export type { BaseEntityDTO };
 
 // Base form interface for UI state management
@@ -170,3 +171,11 @@ export interface StatusHistoryDTO {
   changedBy?: string;
   reason?: string;
 }
+
+/** Libellés multilingues de CommonStatus (référentiel i18n — code technique inchangé). */
+export const COMMON_STATUS_LABELS: Readonly<Record<CommonStatus, EnumLabel>> =
+    ENUM_LABELS.CommonStatus as Readonly<Record<CommonStatus, EnumLabel>>;
+
+/** Libellés multilingues de Priority (référentiel i18n — code technique inchangé). */
+export const PRIORITY_LABELS: Readonly<Record<Priority, EnumLabel>> =
+    ENUM_LABELS.Priority as Readonly<Record<Priority, EnumLabel>>;

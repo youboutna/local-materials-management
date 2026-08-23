@@ -56,6 +56,7 @@ import {
 import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
+import { EnumBadge } from '@/components/i18n/EnumText';
 import { T } from '@/components/i18n/T';
 type Segment = "all" | "team" | "external" | "contractors";
 
@@ -446,6 +447,9 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     <h4 className="font-medium truncate">{stakeholder.name}</h4>
                     <p className="text-sm text-muted-foreground truncate">
                       <TranslatedRole code={stakeholder.role} /> • {getEntityName(stakeholder)}
+                      {stakeholder.entityType && (
+                        <> • <EnumBadge enumName="StakeholderEntityType" code={String(stakeholder.entityType)} variant="outline" /></>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -459,7 +463,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                   <Badge
                     variant={stakeholder.isActive ? "default" : "secondary"}
                   >
-                    {stakeholder.isActive ? "Actif" : "Inactif"}
+                    <T k={stakeholder.isActive ? 'auto.common.active' : 'auto.common.inactive'} fallback={stakeholder.isActive ? 'Actif' : 'Inactif'} />
                   </Badge>
                   <Button
                     variant={isConsultantStakeholder(stakeholder) ? "secondary" : "outline"}

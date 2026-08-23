@@ -15,6 +15,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { EnumText } from '@/components/i18n/EnumText';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -200,7 +201,12 @@ const PhaseStakeholdersTab: React.FC<PhaseStakeholdersTabProps> = ({ projectId, 
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="text-xs text-muted-foreground space-y-1">
-                      {s.role && <div>Rôle : {String(s.role)}</div>}
+                      {s.role && (
+                        <div>
+                          <T k="auto.phasestakeholderstab.role" fallback="Rôle" /> :{' '}
+                          <EnumText enumName="StakeholderRole" code={String(s.role)} />
+                        </div>
+                      )}
                       {s.organization && <div>Organisation : {s.organization}</div>}
                       {s.email && <div>Email : {s.email}</div>}
                       {s.phone && <div>Téléphone : {s.phone}</div>}

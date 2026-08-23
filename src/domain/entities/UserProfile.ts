@@ -1,3 +1,4 @@
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 /**
  * UserProfile Entity
  * Représente le profil complémentaire d'un utilisateur dans SOMELEC
@@ -193,3 +194,7 @@ export class UserProfile {
     return parts.join(' - ');
   }
 }
+
+/** Libellés multilingues de ProfileStatus (référentiel i18n — code technique inchangé). */
+export const PROFILE_STATUS_LABELS: Readonly<Record<ProfileStatus, EnumLabel>> =
+    ENUM_LABELS.ProfileStatus as Readonly<Record<ProfileStatus, EnumLabel>>;

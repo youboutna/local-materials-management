@@ -5,6 +5,7 @@
  */
 
 import { BaseEntityDTO } from '../shared';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 /**
  * Stakeholder type enumeration
@@ -369,3 +370,15 @@ export interface StakeholderServiceResult<T = StakeholderResponseDTO> {
 }
 
 export type StakeholderListResult = StakeholderServiceResult<StakeholderResponseDTO[]>;
+
+/** Libellés multilingues de StakeholderType (référentiel i18n — code technique inchangé). */
+export const STAKEHOLDER_TYPE_LABELS: Readonly<Record<StakeholderType, EnumLabel>> =
+    ENUM_LABELS.StakeholderType as Readonly<Record<StakeholderType, EnumLabel>>;
+
+/** Libellés multilingues de StakeholderEntityType (référentiel i18n — code technique inchangé). */
+export const STAKEHOLDER_ENTITY_TYPE_LABELS: Readonly<Record<StakeholderEntityType, EnumLabel>> =
+    ENUM_LABELS.StakeholderEntityType as Readonly<Record<StakeholderEntityType, EnumLabel>>;
+
+/** Libellés multilingues de StakeholderRole (référentiel i18n — code technique inchangé). */
+export const STAKEHOLDER_ROLE_LABELS: Readonly<Record<StakeholderRole, EnumLabel>> =
+    ENUM_LABELS.StakeholderRole as Readonly<Record<StakeholderRole, EnumLabel>>;

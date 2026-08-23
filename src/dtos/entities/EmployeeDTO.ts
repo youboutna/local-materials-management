@@ -5,6 +5,7 @@
  */
 
 import { BaseEntityDTO, ContactInfoDTO } from '../shared';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 /**
  * Employee status enumeration
@@ -492,3 +493,19 @@ export interface UserResponseDto {
   createdAt: string;
   updatedAt: string;
 }
+
+/** Libellés multilingues de EmployeeStatus (référentiel i18n — code technique inchangé). */
+export const EMPLOYEE_STATUS_LABELS: Readonly<Record<EmployeeStatus, EnumLabel>> =
+    ENUM_LABELS.EmployeeStatus as Readonly<Record<EmployeeStatus, EnumLabel>>;
+
+/** Libellés multilingues de EmployeeType (référentiel i18n — code technique inchangé). */
+export const EMPLOYEE_TYPE_LABELS: Readonly<Record<EmployeeType, EnumLabel>> =
+    ENUM_LABELS.EmployeeType as Readonly<Record<EmployeeType, EnumLabel>>;
+
+/** Libellés multilingues de EmployeeRole (référentiel i18n — code technique inchangé). */
+export const EMPLOYEE_ROLE_LABELS: Readonly<Record<EmployeeRole, EnumLabel>> =
+    ENUM_LABELS.EmployeeRole as Readonly<Record<EmployeeRole, EnumLabel>>;
+
+/** Libellés multilingues de EmployeeDepartment (référentiel i18n — code technique inchangé). */
+export const EMPLOYEE_DEPARTMENT_LABELS: Readonly<Record<EmployeeDepartment, EnumLabel>> =
+    ENUM_LABELS.EmployeeDepartment as Readonly<Record<EmployeeDepartment, EnumLabel>>;

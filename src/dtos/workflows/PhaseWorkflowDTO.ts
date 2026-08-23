@@ -11,6 +11,7 @@
 import { BaseEntityDTO } from '../shared';
 import { PhaseDTO } from '../entities/PhaseDTO';
 import { TaskAssignmentDTO } from '../entities/TaskAssignmentDTO';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 /**
  * Phase step enumeration
@@ -291,3 +292,7 @@ export interface PhaseTimelineEventDTO {
   userName?: string;
   metadata?: Record<string, unknown>;
 }
+
+/** Libellés multilingues de PhaseWorkflowStep (référentiel i18n — code technique inchangé). */
+export const PHASE_WORKFLOW_STEP_LABELS: Readonly<Record<PhaseWorkflowStep, EnumLabel>> =
+    ENUM_LABELS.PhaseWorkflowStep as Readonly<Record<PhaseWorkflowStep, EnumLabel>>;

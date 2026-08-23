@@ -6,6 +6,7 @@
 
 import { BaseEntityDTO } from '../shared';
 import { CreateDocumentDTO } from './DocumentDTO';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 /**
  * Inspection status enumeration
@@ -572,3 +573,15 @@ export type UpdateChecklistItemRequestDto = {
   itemId: string;
   updates: Partial<ChecklistItem>;
 };
+
+/** Libellés multilingues de InspectionStatus (référentiel i18n — code technique inchangé). */
+export const INSPECTION_STATUS_LABELS: Readonly<Record<InspectionStatus, EnumLabel>> =
+    ENUM_LABELS.InspectionStatus as Readonly<Record<InspectionStatus, EnumLabel>>;
+
+/** Libellés multilingues de InspectionType (référentiel i18n — code technique inchangé). */
+export const INSPECTION_TYPE_LABELS: Readonly<Record<InspectionType, EnumLabel>> =
+    ENUM_LABELS.InspectionType as Readonly<Record<InspectionType, EnumLabel>>;
+
+/** Libellés multilingues de InspectionPriority (référentiel i18n — code technique inchangé). */
+export const INSPECTION_PRIORITY_LABELS: Readonly<Record<InspectionPriority, EnumLabel>> =
+    ENUM_LABELS.InspectionPriority as Readonly<Record<InspectionPriority, EnumLabel>>;

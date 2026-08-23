@@ -5,6 +5,7 @@
  */
 
 import { BaseEntityDTO } from '../shared';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 /**
  * Risk status enumeration
@@ -355,3 +356,11 @@ export interface RiskFilterDTO {
     endDate?: string;
   };
 }
+
+/** Libellés multilingues de RiskStatus (référentiel i18n — code technique inchangé). */
+export const RISK_STATUS_LABELS: Readonly<Record<RiskStatus, EnumLabel>> =
+    ENUM_LABELS.RiskStatus as Readonly<Record<RiskStatus, EnumLabel>>;
+
+/** Libellés multilingues de RiskLevel (référentiel i18n — code technique inchangé). */
+export const RISK_LEVEL_LABELS: Readonly<Record<RiskLevel, EnumLabel>> =
+    ENUM_LABELS.RiskLevel as Readonly<Record<RiskLevel, EnumLabel>>;

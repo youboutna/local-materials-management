@@ -6,6 +6,7 @@
  */
 
 import { BaseEntityDTO } from '../shared';
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 
 /**
  * Material category enumeration
@@ -399,3 +400,11 @@ export interface CreateProjectMaterialDTO {
   status?: ProjectMaterialStatus;
   notes?: string | null;
 }
+
+/** Libellés multilingues de MaterialStatus (référentiel i18n — code technique inchangé). */
+export const MATERIAL_STATUS_LABELS: Readonly<Record<MaterialStatus, EnumLabel>> =
+    ENUM_LABELS.MaterialStatus as Readonly<Record<MaterialStatus, EnumLabel>>;
+
+/** Libellés multilingues de MaterialUnit (référentiel i18n — code technique inchangé). */
+export const MATERIAL_UNIT_LABELS: Readonly<Record<MaterialUnit, EnumLabel>> =
+    ENUM_LABELS.MaterialUnit as Readonly<Record<MaterialUnit, EnumLabel>>;

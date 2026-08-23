@@ -1,3 +1,4 @@
+import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
 /**
  * AuthUser Entity
  * Représente un utilisateur authentifié dans le domaine
@@ -169,3 +170,11 @@ export class AuthUser {
     );
   }
 }
+
+/** Libellés multilingues de AuthProvider (référentiel i18n — code technique inchangé). */
+export const AUTH_PROVIDER_LABELS: Readonly<Record<AuthProvider, EnumLabel>> =
+    ENUM_LABELS.AuthProvider as Readonly<Record<AuthProvider, EnumLabel>>;
+
+/** Libellés multilingues de AuthUserStatus (référentiel i18n — code technique inchangé). */
+export const AUTH_USER_STATUS_LABELS: Readonly<Record<AuthUserStatus, EnumLabel>> =
+    ENUM_LABELS.AuthUserStatus as Readonly<Record<AuthUserStatus, EnumLabel>>;
