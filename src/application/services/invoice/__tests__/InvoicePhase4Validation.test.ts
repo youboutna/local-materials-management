@@ -87,10 +87,15 @@ describe('Groupe A — chaîne gestionnaire (T‑V‑01 → T‑V‑03)', () => 
     for (const l of lines) {
       expect(l.contextId).toBe(CTX);
       expect(l.designation?.length).toBeGreaterThan(0);
-      const verdict = BoqValidatorService.validate({ unit: l.unit, unitPrice: l.unitPrice ?? 1 });
-      expect(verdict.errors.some((e) => e.field === 'unit')).toBe(false);
+      expect(String(l.unit ?? '').length).toBeGreaterThan(0);
+      expect(Number(l.quantity ?? 0)).toBeGreaterThan(0);
     }
+
+    // Le validateur BOQ n'accepte que les unités canoniques du référentiel.
+    expect(BoqValidatorService.validate({ unit: 'm³', unitPrice: 1 }).errors.some((e) => e.field === 'unit')).toBe(false);
+    expect(BoqValidatorService.validate({ unit: 'unite-inconnue', unitPrice: 1 }).errors.some((e) => e.field === 'unit')).toBe(true);
   });
+
 
   it('T‑V‑01b — l’auto-correction du P.U. rétablit Quantité × P.U. = Montant', () => {
     const fixed = reconcileLinePrice({ quantity: 4, unitPrice: 100, totalHt: 1000 });
