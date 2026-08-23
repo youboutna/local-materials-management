@@ -172,6 +172,7 @@ export function InspectionFormWithContext({
               inspection_type: inspectionType,
               inspection_date: format(date, 'yyyy-MM-dd'),
               progress: progress,
+              phase_id: context?.linkedPhase?.id || milestoneContext?.phaseId || null,
               milestone_id: milestoneContext?.milestoneId
             }
           });
