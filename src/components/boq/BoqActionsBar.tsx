@@ -31,6 +31,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
 import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referentials/boq/dqe-actions.referential';
+import { DocumentPartiesDialog, type DocumentPartiesValue } from './DocumentPartiesDialog';
+import { Pencil } from 'lucide-react';
 
 interface Props {
   ctx: BoqContext;
@@ -155,8 +157,34 @@ export const BoqActionsBar: React.FC<Props> = ({
     };
   }, [isSupplierContext, parties.senderName, ownerOrg]);
 
+  // === En-tête éditable (émetteur / destinataire) ===
+  // Éditable tant que le document n'est pas signé ; les valeurs saisies
+  // alimentent le PDF ET le XML Factur-X.
+  const [partiesOpen, setPartiesOpen] = useState(false);
+  const [partiesOverride, setPartiesOverride] = useState<DocumentPartiesValue | null>(null);
+
+  const effectiveParties: DocumentPartiesValue = React.useMemo(() => ({
+    senderName: partiesOverride?.senderName ?? company?.name ?? parties.senderName,
+    senderAddress: partiesOverride?.senderAddress ?? company?.address,
+    senderPhone: partiesOverride?.senderPhone ?? company?.phone,
+    senderEmail: partiesOverride?.senderEmail ?? company?.email,
+    recipientName: partiesOverride?.recipientName ?? parties.recipientName,
+    recipientEmail: partiesOverride?.recipientEmail ?? recipientEmail,
+  }), [partiesOverride, company, parties.senderName, parties.recipientName, recipientEmail]);
+
+  const effectiveCompany = React.useMemo(() => (
+    effectiveParties.senderName
+      ? {
+          name: effectiveParties.senderName,
+          address: effectiveParties.senderAddress,
+          phone: effectiveParties.senderPhone,
+          email: effectiveParties.senderEmail,
+        }
+      : company
+  ), [effectiveParties, company]);
+
   const baseDocCtx = {
-    company,
+    company: effectiveCompany,
     docPrefix: ctx.docPrefix,
     title: ctx.title,
     source: ctx.source,
@@ -170,8 +198,8 @@ export const BoqActionsBar: React.FC<Props> = ({
     signed: !!signedInfo,
     signedBy: signedInfo?.by,
     signedAt: signedInfo?.at,
-    senderName: parties.senderName,
-    recipientName: parties.recipientName,
+    senderName: effectiveParties.senderName,
+    recipientName: effectiveParties.recipientName,
   };
 
 
@@ -187,7 +215,7 @@ export const BoqActionsBar: React.FC<Props> = ({
   });
 
   const handleEmail = () => withGuard('email', async () => {
-    const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail });
+    const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail: effectiveParties.recipientEmail ?? recipientEmail });
     if (res.ok) toast({ title: 'Email envoyé' });
     else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
   });
@@ -327,6 +355,17 @@ export const BoqActionsBar: React.FC<Props> = ({
           </DropdownMenu>
         )}
 
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setPartiesOpen(true)}
+          disabled={disabled || busy !== null}
+          title={t('dqe.parties.edit_title')}
+        >
+          <Pencil className="h-4 w-4 mr-2" />
+          {t('dqe.actions.parties_menu')}
+        </Button>
+
         {can('sign') && (
           <Button
             size="sm"
@@ -388,6 +427,14 @@ export const BoqActionsBar: React.FC<Props> = ({
         )}
       </div>
 
+
+      <DocumentPartiesDialog
+        open={partiesOpen}
+        onOpenChange={setPartiesOpen}
+        value={effectiveParties}
+        locked={!!signedInfo}
+        onSave={(v) => setPartiesOverride(v)}
+      />
 
       <Dialog open={decompteOpen} onOpenChange={setDecompteOpen}>
         <DialogContent>
