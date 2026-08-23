@@ -196,8 +196,8 @@ export const BoqActionsBar: React.FC<Props> = ({
     signed: !!signedInfo,
     signedBy: signedInfo?.by,
     signedAt: signedInfo?.at,
-    senderName: parties.senderName,
-    recipientName: parties.recipientName,
+    senderName: effectiveParties.senderName,
+    recipientName: effectiveParties.recipientName,
   };
 
 
