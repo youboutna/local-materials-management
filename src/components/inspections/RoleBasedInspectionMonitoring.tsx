@@ -44,13 +44,13 @@ import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles'; // Import the correct role hook
 import { useAuth } from '@/hooks/hexagonal/useAuth'; // Import auth context
 import { 
+import { T } from '@/components/i18n/T';
   useInspectionMonitoringHex,
   type MonitoringInspection
 } from '@/hooks/hexagonal'
 
 const RoleBasedInspectionMonitoring = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-import { T } from '@/components/i18n/T';
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth(); // Get current user

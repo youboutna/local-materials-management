@@ -18,10 +18,10 @@ import { httpMetricsCollector } from '@/utils/httpMetricsCollector';
 import { getPerformanceMonitoringService } from '@/application/services/PerformanceMonitoringService';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import {
+import { T } from '@/components/i18n/T';
   classifyPerformance,
   PERFORMANCE_STATUS_TEXT_CLASS,
 } from '@/config/referentials/kpi/health-thresholds.referential';
-import { T } from '@/components/i18n/T';
 
 // Create service instance once
 const performanceService = getPerformanceMonitoringService();

@@ -14,6 +14,7 @@ import { Upload, FileText, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import {
+import { T } from '@/components/i18n/T';
   useProgressInvoiceFormHex,
   type InvoiceFormData,
   type WorkflowRequirements
@@ -28,7 +29,6 @@ const invoiceSchema = z.object({
   quantities_executed: z.any().optional(),
   lot_details: z.any().optional(),
 });
-import { T } from '@/components/i18n/T';
 
 type InvoiceFormDataType = z.infer<typeof invoiceSchema>;
 

@@ -37,11 +37,11 @@ import {
 } from '@/utils/phaseHelpers';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 import {
+import { T } from '@/components/i18n/T';
   ArrowLeft, Calendar, DollarSign, MapPin, Users, Package, FileText, BarChart3,
   Target, Layers, ClipboardCheck, CreditCard, Flag, Compass, HardHat, ShieldCheck,
   ExternalLink, AlertTriangle, Edit, Calculator, Building2, Wallet,
 } from 'lucide-react';
-import { T } from '@/components/i18n/T';
 
 
 const PhaseDetail: React.FC = () => {

@@ -103,6 +103,7 @@ cd keycloak-22.0.5/bin/
 
   const pythonScriptContent = `import subprocess
 import os
+import { T } from '@/components/i18n/T';
 
 def setup_keycloak():
     # Install PostgreSQL
@@ -111,7 +112,6 @@ def setup_keycloak():
 
     # Configure DB
     subprocess.run(["sudo", "-u", "postgres", "psql", "-c", "CREATE DATABASE keycloak;"])
-import { T } from '@/components/i18n/T';
     subprocess.run(["sudo", "-u", "postgres", "psql", "-c", "CREATE USER keycloak WITH PASSWORD 'keycloak_pass';"])
     subprocess.run(["sudo", "-u", "postgres", "psql", "-c", "GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;"])
 

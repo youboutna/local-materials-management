@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Calendar, User, AlertCircle, CheckCircle, Clock, Filter } from 'lucide-react';
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import {
+import { T } from '@/components/i18n/T';
   useProjectPhasesForTasks,
   useProjectTasks,
   useCreateProjectTask,
@@ -23,7 +24,6 @@ import {
   ProjectTask,
   ProjectPhase
 } from '@/hooks/hexagonal/useEnhancedTasksHex';
-import { T } from '@/components/i18n/T';
 
 interface EnhancedTaskListProps {
   projectId: string;

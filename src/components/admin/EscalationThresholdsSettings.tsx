@@ -10,12 +10,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useEscalationThresholdsHex } from '@/hooks/hexagonal/useEscalationThresholdsHex';
 import type { EscalationThresholdRow } from '@/domain/repositories/IEscalationThresholdRepository';
 import {
+import { T } from '@/components/i18n/T';
   ESCALATION_SEVERITIES,
   ESCALATION_THRESHOLD_CATEGORIES,
   ESCALATION_UNIT_LABELS,
   type EscalationUnit,
 } from '@/config/referentials/kpi/escalation-thresholds.referential';
-import { T } from '@/components/i18n/T';
 
 type EscalationThreshold = EscalationThresholdRow;
 

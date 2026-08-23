@@ -8,12 +8,12 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { ProjectCalculationService } from '@/application/services/ProjectCalculationService';
 import {
+import { T } from '@/components/i18n/T';
   formatCurrency,
   getFinancialHealthColor,
   getFinancialHealthLabel,
   getFinancialHealthIcon,
 } from '@/utils/phaseHelpers';
-import { T } from '@/components/i18n/T';
 
 interface FinancialAnalysisCardProps {
   phaseId: string;

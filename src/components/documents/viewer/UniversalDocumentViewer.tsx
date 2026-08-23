@@ -35,12 +35,12 @@ import { MimeIcon } from '@/components/documents/hub/MimeIcon';
 import { formatBytes, getPreviewKind } from '@/components/documents/hub/types';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import {
+import { T } from '@/components/i18n/T';
   DocumentViewerOptions,
   VIEWER_STATUS_OPTIONS,
   ViewableDocument,
   viewerStatusLabel,
 } from './types';
-import { T } from '@/components/i18n/T';
 
 interface Props extends DocumentViewerOptions {
   document: ViewableDocument | null;

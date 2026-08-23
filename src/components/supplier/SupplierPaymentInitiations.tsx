@@ -21,6 +21,7 @@ import {
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 
+import { T } from '@/components/i18n/T';
   DollarSign, 
   Clock, 
   FileText, 
@@ -31,7 +32,6 @@ import {
   Calendar,
   Building
 } from 'lucide-react';
-import { T } from '@/components/i18n/T';
 
 interface SupplierPaymentInitiationsProps {
   supplierId: string;

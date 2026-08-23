@@ -24,6 +24,7 @@ import { fr } from 'date-fns/locale';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersHex } from '@/hooks/hexagonal'
 import { 
+import { T } from '@/components/i18n/T';
   useCurrentUserHex,
   useSupplierSubmissionsHex as useSupplierSubmissions,
   useSubmissionDocumentsHex as useSubmissionDocumentsList,
@@ -36,7 +37,6 @@ import {
 
 const SupplierSubmissionDashboard = () => {
   const { toast } = useToast();
-import { T } from '@/components/i18n/T';
   const [activeTab, setActiveTab] = useState('all');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [realtimeSubmissions, setRealtimeSubmissions] = useState<Submission[]>([]);

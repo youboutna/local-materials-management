@@ -16,6 +16,7 @@ import { Shield, AlertTriangle, CheckCircle, Calendar, FileText, Plus } from 'lu
 import { useToast } from '@/hooks/use-toast';
 import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { 
+import { T } from '@/components/i18n/T';
   InsuranceType,
   InsuranceStatus,
   CreateInsuranceRequestDTO,
@@ -24,7 +25,6 @@ import {
   InsuranceAlertDTO,
   InsuranceCertificateDTO
 } from '@/dtos/entities/InsuranceDTO';
-import { T } from '@/components/i18n/T';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'ID projet requis'),

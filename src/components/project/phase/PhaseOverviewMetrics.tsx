@@ -20,13 +20,13 @@ import {
 } from "lucide-react";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import {
+import { T } from '@/components/i18n/T';
   formatCurrency,
   formatDate,
   calculateRemainingDays,
   getStatusColor,
   getStatusLabel,
 } from "@/utils/phaseDisplayHelpers";
-import { T } from '@/components/i18n/T';
 
 interface ProgressMetrics {
   overallProgress: number;

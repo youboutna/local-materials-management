@@ -21,6 +21,7 @@ import {
 import { MilestoneNode, MilestoneType } from "./MilestoneNode";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
+import { T } from '@/components/i18n/T';
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -28,7 +29,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { T } from '@/components/i18n/T';
 
 interface Milestone {
   id: string;

@@ -28,11 +28,11 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { 
+import { T } from '@/components/i18n/T';
   useTenderSubmission, 
   useSubmissionDocuments, 
   useSaveSubmissionEvaluation 
 } from '@/hooks/hexagonal';
-import { T } from '@/components/i18n/T';
 
 interface SubmissionEvaluationPanelProps {
   submissionId: string;

@@ -18,10 +18,10 @@ import { Users, Package, Wrench, LayoutGrid, ClipboardList } from 'lucide-react'
 import TeamOverview from '@/components/project/TeamOverview';
 import { getProjectResourceAggregatorService } from '@/application/services/ProjectResourceAggregatorService';
 import type {
+import { T } from '@/components/i18n/T';
   ResourceFamilyBucketDTO,
   ResourceLineDTO,
 } from '@/dtos/entities/ProjectResourceContainerDTO';
-import { T } from '@/components/i18n/T';
 
 interface ProjectResourcesContainerProps {
   projectId: string;
