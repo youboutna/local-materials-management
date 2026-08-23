@@ -45,6 +45,7 @@ export const STATUS_LABELS: Record<string, ReferentialLabel> = {
   active: label('active', 'Actif', 'نشط', 'Active'),
   inactive: label('inactive', 'Inactif', 'غير نشط', 'Inactive'),
   draft: label('draft', 'Brouillon', 'مسودة', 'Draft'),
+  brouillon: label('brouillon', 'Brouillon', 'مسودة', 'Draft'),
   pending: label('pending', 'En attente', 'قيد الانتظار', 'Pending'),
   validated: label('validated', 'Validé', 'تم التحقق', 'Validated'),
   valide: label('valide', 'Validé', 'تم التحقق', 'Validated'),
