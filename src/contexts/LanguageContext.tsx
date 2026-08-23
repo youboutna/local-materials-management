@@ -5566,6 +5566,20 @@ const PHASE_STRUCTURE_KEYS = {
 });
 
 /**
+ * Phase 6 — libellés d'interface extraits des composants *.tsx par le codemod
+ * (`scripts/i18n-codemod.cjs`) et traduits fr/ar/en (`scripts/i18n-translate.cjs`).
+ * Namespace `auto.*` : uniquement des chaînes d'UI, jamais des données de la base.
+ */
+(['fr', 'ar', 'en'] as const).forEach((lang) => {
+    deepMergeMissing(
+        (translations as unknown as Record<string, Record<string, unknown>>)[lang],
+        expandFlatKeys(AUTO_UI_LABELS[lang] as Record<string, string>)
+    );
+});
+
+
+
+/**
  * Phase 6 — alias canoniques exigés par la spécification d'intégration.
  * Un seul code source de vérité (PHASE_STRUCTURE_KEYS) ; ces alias exposent
  * les clés contractuelles `wbs.*`, `referential.*`, `phase.*`, `step.*`, `progress.*`.
