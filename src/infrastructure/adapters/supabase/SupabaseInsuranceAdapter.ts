@@ -38,6 +38,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
     const dto: InsuranceCertificateDTO = {
       id: data.id,
       projectId: data.project_id,
+      phaseId: (data as unknown as { phase_id?: string | null }).phase_id ?? null,
       contractorId: data.contractor_id,
       contractorName: data.contractor_name,
       insuranceType: data.coverage_type as any,
@@ -74,6 +75,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
 
     return {
       project_id: entity.projectId,
+      phase_id: entity.phaseId ?? null,
       contractor_id: contractorId as unknown as string,
       contractor_name: entity.contractorName || null as unknown as string,
       insurance_company: entity.insuranceCompany,

@@ -8,6 +8,8 @@ import type { InsuranceCertificateStatus, InsuranceType } from '@/dtos/entities/
 export interface InsuranceCertificateEntity {
   id: string;
   projectId: string;
+  /** Contexte phase (doctrine : toute entité métier porte projectId + phaseId). */
+  phaseId?: string | null;
   contractorId: string;
   contractorName: string;
   insuranceCompany: string;
