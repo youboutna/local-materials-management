@@ -1,3 +1,4 @@
+import { btpClient } from '@/integrations/supabase/schema-clients';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
