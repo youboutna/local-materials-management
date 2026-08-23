@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 import { i18nService } from '@/application/services/I18nService';
 import { useEmployeesSelector, type EmployeeOption } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 interface EmployeeSelectorProps {
   value?: string;
-import { T } from '@/components/i18n/T';
   onChange: (employeeId: string) => void;
   label?: string;
   disabled?: boolean;

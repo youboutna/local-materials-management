@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Upload, Eye, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { TENDER_DOCUMENT_LABELS, TENDER_CATEGORY_LABELS } from '@/dtos/entities/TenderDTO';
+import { T } from '@/components/i18n/T';
 
 type TenderDocumentCategory = 'administrative' | 'technical' | 'financial';
 import { toast } from '@/hooks/use-toast';
 import { useTenderDocuments, useWorkflowStepDocuments } from '@/hooks/hexagonal'
 import { useDocumentViewer } from '@/components/documents/viewer';
-import { T } from '@/components/i18n/T';
 
 interface TenderDocumentsProps {
   projectId: string;

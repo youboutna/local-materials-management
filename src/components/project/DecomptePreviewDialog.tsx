@@ -10,7 +10,7 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   decompte: Record<string, any> | null;
   phaseName?: string;
-  onCreate: () => <T k="auto.decomptepreviewdialog.promise" fallback="Promise" /><void> | void;
+  onCreate: () => Promise<void> | void;
 }
 
 export const DecomptePreviewDialog: React.FC<Props> = ({ open, onOpenChange, decompte, phaseName, onCreate }) => {

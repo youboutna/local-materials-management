@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { useMaterialsSelector, MaterialOption } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 interface SelectedMaterial {
   materialId: string;
-import { T } from '@/components/i18n/T';
   quantity: number;
 }
 

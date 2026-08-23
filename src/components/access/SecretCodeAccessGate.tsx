@@ -44,7 +44,7 @@ export interface SecretCodeAccessGateProps {
   /** If true, the input is auto-formatted as XXXX-XXXX-XXXX. */
   formatHyphenated?: boolean;
   /** Async validator. Receives normalized (uppercase) code. */
-  onValidate: (normalizedCode: string) => <T k="auto.secretcodeaccessgate.promise" fallback="Promise" /><GateValidationResult>;
+  onValidate: (normalizedCode: string) => Promise<GateValidationResult>;
   /** Renders the post-validation UI. */
   renderUnlocked: (result: GateValidationResult, reset: () => void) => React.ReactNode;
   /** Optional regulatory notice rendered under the form. */

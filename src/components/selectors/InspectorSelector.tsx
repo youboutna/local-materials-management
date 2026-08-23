@@ -8,10 +8,10 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { useInspectorsSelector, type Inspector } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 interface InspectorSelectorProps {
   projectId?: string;
-import { T } from '@/components/i18n/T';
   value?: string;
   onValueChange: (value: string, name: string) => void;
   label?: string;

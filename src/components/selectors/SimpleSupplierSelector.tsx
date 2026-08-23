@@ -6,10 +6,10 @@ import { Building2, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersSelector } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 interface SimpleSupplierSelectorProps {
   value?: string;
-import { T } from '@/components/i18n/T';
   onChange: (supplierId: string) => void;
   placeholder?: string;
   disabled?: boolean;

@@ -6,11 +6,11 @@ import { Building2, Search, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useProjectsSelector } from '@/hooks/hexagonal'
+import { T } from '@/components/i18n/T';
 
 // Local type for project options from selector
 interface ProjectOption {
   id: string;
-import { T } from '@/components/i18n/T';
   title: string;
   status?: string | null;
   progress?: number;

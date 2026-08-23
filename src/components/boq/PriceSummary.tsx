@@ -1,9 +1,9 @@
+import { T } from '@/components/i18n/T';
 /**
  * PriceSummary — displays Qty × PU = HT + VAT + TTC. Format FR.
  */
 interface Props {
   quantity: number;
-import { T } from '@/components/i18n/T';
   unitPrice?: number | null;
   vatRate?: number | null;
 }

@@ -20,7 +20,7 @@ declare global {
   interface Window {
     materialFormRef?: {
       submit: () => void;
-      getFormData: () => <T k="auto.materialedit.partial" fallback="Partial" /><MaterialFormDataDTO>;
+      getFormData: () => Partial<MaterialFormDataDTO>;
     };
   }
 }
@@ -32,7 +32,7 @@ const MaterialEdit = () => {
   const safeId = id || '';
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'basic';
-  const formRefLocal = useRef<{ submit: () => void; getFormData: () => <T k="auto.materialedit.partial" fallback="Partial" /><MaterialFormDataDTO> } | null>(null);
+  const formRefLocal = useRef<{ submit: () => void; getFormData: () => Partial<MaterialFormDataDTO> } | null>(null);
 
 
   const { material, isLoading, error, updateMaterial, isUpdating } = useMaterialHex(safeId);
