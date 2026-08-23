@@ -158,121 +158,45 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     ...lotDocumentsAsTenderDocs,
   ];
 
+  const uploadTenderDocument = useUploadTenderDocument(tenderId, projectId);
+  const tenderEstimateService = new TenderEstimateService();
+
   // Updated upload document mutation to use tender_id
   const uploadMutation = useMutation({
     mutationFn: async ({ file, documentData }: { file: File; documentData: any }) => {
-      console.log('Starting document upload...', { fileName: file.name, documentData });
-      
       // Upload file first
       const uploadResult = await uploadFile(file, `tender-documents/${tenderId}`);
-      
+
       if (!uploadResult.success) {
         throw new Error('File upload failed');
       }
 
-      console.log('File uploaded successfully:', uploadResult.url);
-
-      // Create document record without any foreign key constraints
-      const documentInsertData = {
-        title: documentData.title,
-        description: documentData.description,
-        file_url: uploadResult.url,
-        file_name: file.name,
-        mime_type: file.type,
-        file_size: file.size,
-        document_type: 'tender' as const
-      };
-
-      console.log('Creating document record:', documentInsertData);
-
-      const { data: document, error: docError } = await supabase
-        .from('documents')
-        .insert(documentInsertData)
-        .select()
-        .single();
-
-      if (docError) {
-        console.error('Document creation error:', docError);
-        throw docError;
-      }
-
-      console.log('Document created:', document);
-
-      // Create tender document record using tender_id
-      const tenderDocData = {
-        document_id: document.id,
-        tender_id: tenderId,
-        project_id: projectId || null, // Keep for legacy compatibility
-        category: documentData.category,
-        subcategory: documentData.subcategory,
-        is_required: documentData.is_required,
-        is_submitted: true,
-        submission_date: new Date().toISOString(),
-        status: 'pending'
-      };
-
-      console.log('Creating tender document record:', tenderDocData);
-
-      const { data: tenderDoc, error: tenderDocError } = await supabase
-        .from('tender_documents')
-        .insert(tenderDocData)
-        .select()
-        .single();
-
-      if (tenderDocError) {
-        console.error('Tender document creation error:', tenderDocError);
-        throw tenderDocError;
-      }
-
-      console.log('Tender document created:', tenderDoc);
+      // Create document + tender document records via the hexagonal hook
+      const { document, tenderDoc } = await uploadTenderDocument.mutateAsync({
+        fileUrl: uploadResult.url!,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        documentData: {
+          category: documentData.category,
+          subcategory: documentData.subcategory,
+          title: documentData.title,
+          description: documentData.description,
+          is_required: documentData.is_required,
+        }
+      });
 
       // Hook: if DQE PDF uploaded under financial category, parse and auto-add items
       let estimateId: string | null = null;
       let addedCount = 0;
       try {
-         const isDqePdf =
-           documentData.subcategory === 'devis_quantitatif_estimatif' &&
-           file.type === 'application/pdf';
+        const isDqePdf =
+          documentData.subcategory === 'devis_quantitatif_estimatif' &&
+          file.type === 'application/pdf';
 
         if (isDqePdf) {
-          // Find existing estimate or create one
-          const { data: existingEstimates, error: findErr } = await supabase
-            .from('tender_estimates')
-            .select('id')
-            .eq('tender_id', tenderId)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          if (findErr) console.warn('Failed to check existing estimates:', findErr);
-
-          if (existingEstimates && existingEstimates.length > 0) {
-            estimateId = existingEstimates[0].id as string;
-          } else {
-            const { data: newEst, error: createEstError } = await supabase
-              .from('tender_estimates')
-              .insert([
-                {
-                  tender_id: tenderId,
-                  project_id: projectId || null,
-                  title: 'Métré quantitatif',
-                  total_materials: 0,
-                  total_labor: 0,
-                  total_equipment: 0,
-                  subtotal: 0,
-                  tax_rate: 14,
-                  tax_amount: 0,
-                  total_amount: 0,
-                  overhead_percentage: 15,
-                  overhead_amount: 0,
-                  profit_percentage: 10,
-                  profit_amount: 0,
-                  status: 'draft'
-                }
-              ])
-              .select()
-              .single();
-            if (createEstError) throw createEstError;
-            estimateId = newEst?.id || null;
-          }
+          const estimate = await tenderEstimateService.findOrCreateDraftEstimateForTender(tenderId, projectId || null);
+          estimateId = estimate.id;
 
           if (estimateId) {
             const parsedResults = await parsePdf(file);
@@ -321,13 +245,11 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
               .filter((it) => it.quantity > 0);
 
             if (items.length > 0) {
-              const { error: addItemsError } = await supabase
-                .from('tender_estimate_items')
-                .insert(items);
-              if (addItemsError) {
+              try {
+                const created = await tenderEstimateService.addRawEstimateItems(items);
+                addedCount = created.length;
+              } catch (addItemsError) {
                 console.warn('Failed to insert estimate items from DQE:', addItemsError);
-              } else {
-                addedCount = items.length;
               }
             }
           }
