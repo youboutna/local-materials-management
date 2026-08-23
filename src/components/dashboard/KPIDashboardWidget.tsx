@@ -34,7 +34,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
 }) => {
   const { t } = useI18n();
 
-  const { kpiMetrics, loading } = useKPIMetricsHex();
+  const { kpiMetrics, loading, isError } = useKPIMetricsHex();
 
   const getSPIColor = (spi: number) => {
     if (spi >= 1) return 'text-success';
@@ -88,6 +88,9 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
     );
   }
 
+  if (isError) {
+    return <Card><CardContent className="p-6 text-sm text-destructive">{t('dashboard.kpi.load_error')}</CardContent></Card>;
+  }
   if (!kpiMetrics) return null;
 
   return (
@@ -171,7 +174,7 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <Progress 
-                value={(kpiMetrics.milestonesCompleted / (kpiMetrics.milestonesCompleted + kpiMetrics.milestonesPending)) * 100} 
+                 value={kpiMetrics.milestonesCompleted + kpiMetrics.milestonesPending > 0 ? (kpiMetrics.milestonesCompleted / (kpiMetrics.milestonesCompleted + kpiMetrics.milestonesPending)) * 100 : 0}
                 className="h-2"
               />
             </div>
@@ -226,11 +229,11 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium"><T k="auto.kpidashboardwidget.budget_global" fallback="Budget Global" /></span>
               <span className="text-xs text-muted-foreground">
-                {formatPercent2((kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100)} {t('dashboard.kpi.consumed')}
+                 {kpiMetrics.totalBudget > 0 ? formatPercent2((kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100) : t('dashboard.kpi.not_evaluable')} {t('dashboard.kpi.consumed')}
               </span>
             </div>
             <Progress 
-              value={(kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100} 
+             value={kpiMetrics.totalBudget > 0 ? (kpiMetrics.totalSpent / kpiMetrics.totalBudget) * 100 : 0}
               className="h-2 mb-3"
             />
             <div className="flex justify-between text-sm">
