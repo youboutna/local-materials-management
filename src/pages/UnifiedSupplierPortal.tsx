@@ -43,6 +43,7 @@ import {
   FileCheck,
   Building,
   CreditCard,
+  MoreHorizontal,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
@@ -50,6 +51,12 @@ import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/
 import { parsePdf } from "@/utils/btpCalculations";
 import type { BtpTables } from "@/integrations/supabase/btp-types";
 import { T } from '@/components/i18n/T';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type SupplierNotificationRow = BtpTables<"supplier_notifications">;
 import { useQuery } from "@tanstack/react-query";
@@ -666,24 +673,34 @@ const UnifiedSupplierPortal = () => {
           </div>
 
           {/* Main Content */}
-          <Tabs defaultValue="documents" className="space-y-6" value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-9 overflow-x-auto">
+          <Tabs defaultValue="documents" className="space-y-5" value={activeTab} onValueChange={handleTabChange}>
+            <TabsList className="grid h-auto w-full grid-cols-5 p-1 lg:max-w-3xl">
               <TabsTrigger value="tenders"><T k="auto.unifiedsupplierportal.appels_d_offres" fallback="Appels d'Offres" /></TabsTrigger>
               <TabsTrigger value="devis"><T k="auto.unifiedsupplierportal.devis" fallback="Devis" /></TabsTrigger>
               <TabsTrigger value="documents"><T k="auto.unifiedsupplierportal.documents" fallback="Documents" /></TabsTrigger>
-              <TabsTrigger value="upload"><T k="auto.unifiedsupplierportal.telecharger" fallback="Télécharger" /></TabsTrigger>
-              <TabsTrigger value="payments"><T k="auto.unifiedsupplierportal.paiements" fallback="Paiements" /></TabsTrigger>
-              <TabsTrigger value="notifications">
+              <TabsTrigger value="notifications" className="relative">
                 Notifications
                 {paymentInitiationsCount > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 text-xs">
+                  <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 px-1 text-xs">
                     {paymentInitiationsCount}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="tasks"><T k="auto.unifiedsupplierportal.taches" fallback="Tâches" /></TabsTrigger>
-              <TabsTrigger value="inspections"><T k="auto.unifiedsupplierportal.inspections" fallback="Inspections" /></TabsTrigger>
-              <TabsTrigger value="invoices"><T k="auto.unifiedsupplierportal.factures" fallback="Factures" /></TabsTrigger>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-9 min-w-0 px-2 data-[state=open]:bg-background" aria-label={t('supplier_experience.more')}>
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('supplier_experience.more')}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onSelect={() => handleTabChange('upload')}><Upload className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.telecharger')}</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleTabChange('payments')}><CreditCard className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.paiements')}</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleTabChange('tasks')}><ClipboardCheck className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.taches')}</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleTabChange('inspections')}><FileCheck className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.inspections')}</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleTabChange('invoices')}><Receipt className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.factures')}</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TabsList>
 
             {/* ✅ ONGLET DOCUMENTS – Utilise le GED centralisé */}
