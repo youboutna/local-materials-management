@@ -11,6 +11,9 @@ export interface NotificationDTO {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   read: boolean;
+  /** Contexte métier (doctrine : toute entité porte projectId + phaseId). */
+  projectId?: string | null;
+  phaseId?: string | null;
   createdAt: string;
   updatedAt?: string;
   priority?: 'low' | 'medium' | 'high';
@@ -24,6 +27,8 @@ export interface CreateNotificationRequestDTO {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
+  projectId?: string | null;
+  phaseId?: string | null;
   priority?: 'low' | 'medium' | 'high';
   expiresAt?: string;
   actionUrl?: string;
@@ -32,6 +37,7 @@ export interface CreateNotificationRequestDTO {
   relatedId?: string;
   read?: boolean;
 }
+
 
 export interface UpdateNotificationRequestDTO {
   title?: string;

@@ -13,6 +13,7 @@ import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 interface ProjectStakeholderRow {
   id: string;
   project_id: string;
+  phase_id?: string | null;
   stakeholder_type: string;
   stakeholder_entity_type: string;
   employee_id?: string | null;
@@ -37,6 +38,7 @@ interface ProjectStakeholderRow {
 // Supabase insert/update data interface
 interface ProjectStakeholderInsertData {
   project_id?: string;
+  phase_id?: string | null;
   stakeholder_type?: string;
   stakeholder_entity_type?: string;
   employee_id?: string | null;
@@ -296,6 +298,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
     return ProjectStakeholderEntity.create({
       id: data.id,
       projectId: data.project_id,
+      phaseId: data.phase_id ?? null,
       stakeholderType: data.stakeholder_type as ProjectStakeholderEntity['stakeholderType'],
       stakeholderEntityType: data.stakeholder_entity_type as ProjectStakeholderEntity['stakeholderEntityType'],
       employeeId: data.employee_id || null,
@@ -321,6 +324,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
   private mapToSupabase(entity: Partial<ProjectStakeholderEntity>): ProjectStakeholderInsertData {
     const row: ProjectStakeholderInsertData = { updated_at: new Date().toISOString() };
     if (entity.projectId !== undefined) row.project_id = entity.projectId;
+    if (entity.phaseId !== undefined) row.phase_id = entity.phaseId;
     if (entity.stakeholderType !== undefined) row.stakeholder_type = entity.stakeholderType;
     if (entity.stakeholderEntityType !== undefined) row.stakeholder_entity_type = entity.stakeholderEntityType;
     if (entity.employeeId !== undefined) row.employee_id = entity.employeeId;

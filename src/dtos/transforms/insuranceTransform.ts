@@ -54,6 +54,7 @@ export const insuranceTransform = {
     return {
       id: entity.id,
       projectId: entity.projectId || '',
+      phaseId: entity.phaseId ?? null,
       contractorId: entity.contractorId || '',
       contractorName: entity.contractorName || '',
       insuranceType: (entity.coverageType || entity.insuranceType || 'responsabilite_civile') as InsuranceType,
@@ -99,7 +100,8 @@ export const insuranceTransform = {
 
     return {
       id: dto.id,
-      projectId: dto.projectId || dto.projectId || '',
+      projectId: dto.projectId || '',
+      phaseId: dto.phaseId ?? null,
       contractorId: dto.contractorId || dto.contractorId || '',
       contractorName: dto.contractorName || dto.contractorName || '',
       insuranceCompany: dto.insuranceCompany || dto.insuranceCompany || '',
@@ -141,7 +143,8 @@ export const insuranceTransform = {
     }
 
     return {
-      projectId: createData.projectId || createData.projectId || '',
+      projectId: createData.projectId || '',
+      phaseId: createData.phaseId ?? null,
       contractorId: createData.contractorId || createData.contractorId || '',
       contractorName: createData.contractorName || createData.contractorName || '',
       insuranceCompany: createData.insuranceCompany || createData.insuranceCompany || '',

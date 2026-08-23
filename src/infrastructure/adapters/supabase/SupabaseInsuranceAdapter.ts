@@ -38,6 +38,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
     const dto: InsuranceCertificateDTO = {
       id: data.id,
       projectId: data.project_id,
+      phaseId: (data as unknown as { phase_id?: string | null }).phase_id ?? null,
       contractorId: data.contractor_id,
       contractorName: data.contractor_name,
       insuranceType: data.coverage_type as any,
@@ -64,7 +65,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
   /**
    * Map Entity to DB record
    */
-  private mapToDB(entity: InsuranceCertificateEntity): Omit<InsuranceCertificateDB, 'id' | 'created_at' | 'updated_at'> {
+  private mapToDB(entity: InsuranceCertificateEntity): Omit<InsuranceCertificateDB, 'id' | 'created_at' | 'updated_at'> & { phase_id?: string | null } {
     // `contractor_id` est un uuid en base : une chaîne vide provoque une 400
     // (invalid input syntax for type uuid). On normalise donc en null.
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -74,6 +75,7 @@ export class SupabaseInsuranceAdapter implements IInsuranceRepository {
 
     return {
       project_id: entity.projectId,
+      phase_id: entity.phaseId ?? null,
       contractor_id: contractorId as unknown as string,
       contractor_name: entity.contractorName || null as unknown as string,
       insurance_company: entity.insuranceCompany,

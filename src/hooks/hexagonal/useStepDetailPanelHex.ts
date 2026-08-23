@@ -7,7 +7,7 @@ export function useProjectForSchedulerHex(projectId?: string) {
       const { btpClient } = await import('@/integrations/supabase/schema-clients');
       const { data, error } = await btpClient.from('projects')
         .select('id, title, location, status, project_reference, budget, progress, main_contractor')
-        .eq('id', projectId)
+        .eq('id', projectId as string)
         .single();
 
       if (error) throw error;

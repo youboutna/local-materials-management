@@ -26,11 +26,14 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
         message: notification.message,
         type: notification.type,
         read: notification.read ?? false,
+        project_id: notification.projectId ?? null,
+        phase_id: notification.phaseId ?? null,
         priority: notification.priority ?? 'medium',
         expires_at: notification.expiresAt ?? null,
         action_url: notification.actionUrl ?? null,
         metadata: notification.metadata ?? {},
       };
+
 
       const { data, error } = await supabase
         .from('notifications')
@@ -51,6 +54,8 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
         message: row.message as string,
         type: row.type as NotificationData['type'],
         read: row.read as boolean,
+        projectId: (row.project_id as string | null) ?? null,
+        phaseId: (row.phase_id as string | null) ?? null,
         createdAt: row.created_at as string,
         updatedAt: row.updated_at as string,
         priority: (row.priority as NotificationData['priority']) ?? undefined,
@@ -105,6 +110,8 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
           message: row.message as string,
           type: row.type as NotificationData['type'],
           read: row.read as boolean,
+          projectId: (row.project_id as string | null) ?? null,
+          phaseId: (row.phase_id as string | null) ?? null,
           createdAt: row.created_at as string,
           updatedAt: row.updated_at as string,
           priority: (row.priority as NotificationData['priority']) ?? undefined,

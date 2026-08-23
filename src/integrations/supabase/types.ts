@@ -1129,7 +1129,9 @@ export type Database = {
           id: string
           message: string
           metadata: Json | null
+          phase_id: string | null
           priority: string
+          project_id: string | null
           read: boolean
           recipient_id: string
           related_id: string | null
@@ -1144,7 +1146,9 @@ export type Database = {
           id?: string
           message: string
           metadata?: Json | null
+          phase_id?: string | null
           priority?: string
+          project_id?: string | null
           read?: boolean
           recipient_id: string
           related_id?: string | null
@@ -1159,7 +1163,9 @@ export type Database = {
           id?: string
           message?: string
           metadata?: Json | null
+          phase_id?: string | null
           priority?: string
+          project_id?: string | null
           read?: boolean
           recipient_id?: string
           related_id?: string | null

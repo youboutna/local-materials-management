@@ -15,6 +15,9 @@ export interface SupplierDTO extends BaseEntityDTO {
   category?: string;
   rating?: number;
   isActive: boolean;
+  /** Contexte métier optionnel (fournisseur global, rattaché à un projet/phase quand consommé en contexte). */
+  projectId?: string | null;
+  phaseId?: string | null;
   nif?: string;
   commerceRegisterRef?: string;
 

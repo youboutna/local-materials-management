@@ -106,7 +106,7 @@ export {
 
 // Phase Management
 export { usePhaseDocuments } from './usePhaseDocumentsHex';
-export { usePhaseInspectionsHex } from './usePhaseInspectionsHex';
+export { usePhaseInspectionsListHex, useAddPhaseInspectionHex, useDeletePhaseInspectionHex } from './usePhaseInspectionsHex';
 export { usePhaseMonitoringSummaryHex } from './usePhaseMonitoringSummaryHex';
 export {
     useAddPhasePayment,

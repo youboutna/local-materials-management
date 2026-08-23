@@ -71,6 +71,8 @@ export interface StakeholderDTO extends BaseEntityDTO {
   
   // Project relationship
   projectId: string;
+  /** Contexte phase (doctrine : toute entité métier porte projectId + phaseId). */
+  phaseId?: string | null;
   isPrimary: boolean;
   isInternal: boolean;
   
@@ -131,6 +133,7 @@ export interface CreateStakeholderDTO {
   entityType: StakeholderEntityType;
   role: StakeholderRole;
   projectId: string;
+  phaseId?: string | null;
   isPrimary?: boolean;
   isInternal?: boolean;
   organizationId?: string;
