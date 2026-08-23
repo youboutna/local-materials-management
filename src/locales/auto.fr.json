@@ -4840,5 +4840,12 @@
   "users.table.national_id": "ID national",
   "users.table.role": "Rôle",
   "users.updated": "Utilisateur mis à jour",
-  "users.updated_success": "L'utilisateur a été mis à jour avec succès"
+  "users.updated_success": "L'utilisateur a été mis à jour avec succès",
+  "dqe.lifecycle.status": "Statut",
+  "dqe.lifecycle.possible_statuses": "Statuts possibles",
+  "dqe.lifecycle.billed_progress": "Avancement facturé",
+  "dqe.noDeviation": "Aucun écart calculable",
+  "dqe.save_hint_no_pending": "Aucune ligne en attente : ajoutez ou importez des lignes.",
+  "dqe.locked_signed": "Document signé — lecture seule",
+  "dqe.referential.project_default": "Référentiel du projet"
 }

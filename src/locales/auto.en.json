@@ -4843,5 +4843,12 @@
   "users.table.national_id": "National ID",
   "users.table.role": "Role",
   "users.updated": "User updated",
-  "users.updated_success": "User updated successfully"
+  "users.updated_success": "User updated successfully",
+  "dqe.lifecycle.status": "Status",
+  "dqe.lifecycle.possible_statuses": "Possible statuses",
+  "dqe.lifecycle.billed_progress": "Billed progress",
+  "dqe.noDeviation": "No computable deviation",
+  "dqe.save_hint_no_pending": "No pending lines: add or import lines.",
+  "dqe.locked_signed": "Signed document — read only",
+  "dqe.referential.project_default": "Project referential"
 }

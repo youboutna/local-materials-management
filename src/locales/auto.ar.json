@@ -4842,5 +4842,12 @@
   "users.table.national_id": "الرقم الوطني",
   "users.table.role": "الدور",
   "users.updated": "تم تحديث المستخدم",
-  "users.updated_success": "تم تحديث المستخدم بنجاح"
+  "users.updated_success": "تم تحديث المستخدم بنجاح",
+  "dqe.lifecycle.status": "الحالة",
+  "dqe.lifecycle.possible_statuses": "الحالات الممكنة",
+  "dqe.lifecycle.billed_progress": "نسبة التقدم المفوترة",
+  "dqe.noDeviation": "لا يوجد فارق قابل للحساب",
+  "dqe.save_hint_no_pending": "لا توجد بنود في الانتظار: أضف أو استورد بنودًا.",
+  "dqe.locked_signed": "المستند موقّع — للقراءة فقط",
+  "dqe.referential.project_default": "مرجعية المشروع"
 }
