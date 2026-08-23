@@ -31,6 +31,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
 import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referentials/boq/dqe-actions.referential';
+import { DocumentPartiesDialog, type DocumentPartiesValue } from './DocumentPartiesDialog';
+import { Pencil } from 'lucide-react';
 
 interface Props {
   ctx: BoqContext;
@@ -353,6 +355,17 @@ export const BoqActionsBar: React.FC<Props> = ({
           </DropdownMenu>
         )}
 
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setPartiesOpen(true)}
+          disabled={disabled || busy !== null}
+          title={t('dqe.parties.edit_title')}
+        >
+          <Pencil className="h-4 w-4 mr-2" />
+          {t('dqe.actions.parties_menu')}
+        </Button>
+
         {can('sign') && (
           <Button
             size="sm"
@@ -414,6 +427,14 @@ export const BoqActionsBar: React.FC<Props> = ({
         )}
       </div>
 
+
+      <DocumentPartiesDialog
+        open={partiesOpen}
+        onOpenChange={setPartiesOpen}
+        value={effectiveParties}
+        locked={!!signedInfo}
+        onSave={(v) => setPartiesOverride(v)}
+      />
 
       <Dialog open={decompteOpen} onOpenChange={setDecompteOpen}>
         <DialogContent>
