@@ -87,7 +87,7 @@ export function BoqWorkspace({
   referentialCode, estimateId,
   emptyLabel, importLabel, documentId,
 }: Props) {
-  const { translateTerm, t } = useI18n();
+  const { translateTerm, t, language: lang } = useI18n();
   const doc = useBoqDocument({ source, contextId, projectId, documentId });
   const { toast } = useToast();
   const labels = LABELS[mode];
