@@ -12,6 +12,8 @@
  * - Le français est la langue par défaut (fallback systématique).
  */
 
+import { resolveAnyEnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
+
 export type ReferentialLanguage = 'fr' | 'ar' | 'en';
 
 export interface ReferentialLabel {
@@ -372,6 +374,10 @@ export function resolveReferentialLabel(
   if (!code) return '';
   const dictionary = REFERENTIAL_LABEL_REGISTRY[domain] as Record<string, ReferentialLabel>;
   const entry = dictionary[code] ?? dictionary[normalizeReferentialCode(code)];
-  if (!entry) return code;
+  if (!entry) {
+    // Filet de sécurité : libellé issu du référentiel des ENUM (fr/ar/en) avant
+    // tout affichage d'un code technique brut.
+    return resolveAnyEnumLabel(code, language) ?? resolveAnyEnumLabel(normalizeReferentialCode(code), language) ?? code;
+  }
   return entry[language] || entry.fr;
 }
