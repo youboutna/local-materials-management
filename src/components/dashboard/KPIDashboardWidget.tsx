@@ -36,13 +36,15 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
 
   const { kpiMetrics, loading, isError } = useKPIMetricsHex();
 
-  const getSPIColor = (spi: number) => {
+  const getSPIColor = (spi: number | null) => {
+    if (spi === null) return 'text-muted-foreground';
     if (spi >= 1) return 'text-success';
     if (spi >= 0.9) return 'text-warning';
     return 'text-destructive';
   };
 
-  const getCPIColor = (cpi: number) => {
+  const getCPIColor = (cpi: number | null) => {
+    if (cpi === null) return 'text-muted-foreground';
     if (cpi >= 1) return 'text-success';
     if (cpi >= 0.9) return 'text-warning';
     return 'text-destructive';
@@ -116,14 +118,14 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground"><T k="auto.kpidashboardwidget.spi" fallback="SPI" /></span>
-              {kpiMetrics.spi >= 1 ? (
+              {kpiMetrics.spi !== null && kpiMetrics.spi >= 1 ? (
                 <TrendingUp className="h-4 w-4 text-success" />
               ) : (
                 <TrendingDown className="h-4 w-4 text-destructive" />
               )}
             </div>
             <div className={cn("text-3xl font-bold", getSPIColor(kpiMetrics.spi))}>
-              {formatRatio2(kpiMetrics.spi)}
+              {kpiMetrics.spi === null ? t('dashboard.kpi.not_evaluable') : formatRatio2(kpiMetrics.spi)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               <T k="auto.kpidashboardwidget.schedule_performance_index" fallback="Schedule Performance Index" />
@@ -134,14 +136,14 @@ const KPIDashboardWidget: React.FC<KPIDashboardWidgetProps> = ({
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground"><T k="auto.kpidashboardwidget.cpi" fallback="CPI" /></span>
-              {kpiMetrics.cpi >= 1 ? (
+              {kpiMetrics.cpi !== null && kpiMetrics.cpi >= 1 ? (
                 <TrendingUp className="h-4 w-4 text-success" />
               ) : (
                 <TrendingDown className="h-4 w-4 text-destructive" />
               )}
             </div>
             <div className={cn("text-3xl font-bold", getCPIColor(kpiMetrics.cpi))}>
-              {formatRatio2(kpiMetrics.cpi)}
+              {kpiMetrics.cpi === null ? t('dashboard.kpi.not_evaluable') : formatRatio2(kpiMetrics.cpi)}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               <T k="auto.kpidashboardwidget.cost_performance_index" fallback="Cost Performance Index" />

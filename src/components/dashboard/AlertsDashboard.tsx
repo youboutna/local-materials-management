@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useI18n } from '@/hooks/useI18n';
 import { toast } from "@/hooks/use-toast";
 import { useAlertsHex } from "@/hooks/hexagonal";
@@ -25,8 +24,7 @@ import {
 } from '@/config/referentials/notifications/alerts.referential';
 import { T } from '@/components/i18n/T';
 const AlertsDashboard: React.FC = () => {
-  const { t } = useLanguage();
-  const { formatDateTime } = useI18n();
+  const { t, formatDateTime } = useI18n();
   const { 
     alerts, 
     isLoading, 
@@ -201,6 +199,11 @@ const AlertsDashboard: React.FC = () => {
                         {alert.projectTitle && (
                           <div className="mt-1 text-sm">
                             <strong><T k="auto.alertsdashboard.projet" fallback="Projet:" /></strong> {alert.projectTitle}
+                          </div>
+                        )}
+                        {alert.phaseTitle && (
+                          <div className="mt-1 text-sm">
+                            <strong>{t('alerts.phase_label')}:</strong> {alert.phaseTitle}
                           </div>
                         )}
                       </AlertDescription>

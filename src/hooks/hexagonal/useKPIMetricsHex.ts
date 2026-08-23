@@ -25,8 +25,8 @@ export interface CriticalAlert {
 }
 
 export interface KPIMetrics {
-  spi: number;
-  cpi: number;
+  spi: number | null;
+  cpi: number | null;
   projectsOnTrack: number;
   projectsDelayed: number;
   projectsAtRisk: number;
@@ -107,8 +107,8 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
 
     const scheduleVariance = earnedValue - plannedValue;
     const costVariance = earnedValue - totalSpent;
-    const schedulePerformanceIndex = plannedValue > 0 ? clampIndex(earnedValue / plannedValue) : 1;
-    const costPerformanceIndex = totalSpent > 0 ? clampIndex(earnedValue / totalSpent) : 1;
+    const schedulePerformanceIndex = plannedValue > 0 ? clampIndex(earnedValue / plannedValue) : 0;
+    const costPerformanceIndex = totalSpent > 0 ? clampIndex(earnedValue / totalSpent) : 0;
     const budgetAtCompletion = totalBudget;
     const estimateAtCompletion =
       costPerformanceIndex > 0.01 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
@@ -145,7 +145,8 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     }));
 
     return {
-      spi: schedulePerformanceIndex, cpi: costPerformanceIndex,
+      spi: plannedValue > 0 ? schedulePerformanceIndex : null,
+      cpi: totalSpent > 0 ? costPerformanceIndex : null,
       projectsOnTrack, projectsDelayed, projectsAtRisk,
       totalBudget, totalSpent, budgetVariance: budget.costVariance,
       milestonesCompleted, milestonesPending, milestonesOverdue,
