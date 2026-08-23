@@ -77,6 +77,8 @@ interface ProjectDashboardProps {
 }
 
 const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
+  const { t } = useI18n();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedProject, setSelectedProject] = useState<string | null>(projectId || null);
 
