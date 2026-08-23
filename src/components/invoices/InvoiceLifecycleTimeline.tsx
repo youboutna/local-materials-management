@@ -73,14 +73,14 @@ export const InvoiceLifecycleTimeline: React.FC<Props> = ({
       </ol>
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant="secondary">{t('dqe.lifecycle.status')} : {statusLabel}</Badge>
+        <Badge variant="secondary">{t('dqe.lifecycle.status_label')} {statusLabel}</Badge>
         {def.requiresPercentage && billedPercentage != null ? (
           <Badge variant="outline">
             {t('dqe.lifecycle.billed_progress')} {Number(billedPercentage).toFixed(2)} %
           </Badge>
         ) : null}
         <span>
-          {t('dqe.lifecycle.possible_statuses')} :{' '}
+          {t('dqe.lifecycle.possible_statuses_label')}{' '}
           {def.statuses.map((s) => translateStatus(s)).join(' · ')}
         </span>
       </div>
