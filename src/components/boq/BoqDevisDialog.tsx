@@ -21,7 +21,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from '@/hooks/use-toast';
 import { DevisPDFDocument } from '@/components/reports/pdf/DevisPDFDocument';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { CommunicationService } from '@/application/services/CommunicationService';
+import { blobToBase64, textToBase64 } from '@/utils/fileEncoding';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { EstimateData, EstimateItem, ExportConfig } from '@/dtos/transforms/shared';
 
