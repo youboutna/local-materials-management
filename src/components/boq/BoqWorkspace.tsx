@@ -287,7 +287,7 @@ export function BoqWorkspace({
         effectiveOpenings ? `Ouvertures déduites : ${openings.count} × ${openings.width}×${openings.height} m` : null,
       ].filter(Boolean).join(' • ') || null,
       sourceType: useAdvanced ? 'avance' : 'rapide',
-      status: 'submitted',
+      status: 'draft',
     };
     // Recommandations du référentiel → 1 ligne article par recommandation.
     const recoDrafts: BoqLineDTO[] = (autoRecs ? recommendations : []).map((rec) => ({
@@ -356,29 +356,14 @@ export function BoqWorkspace({
     [doc.lines]
   );
 
-  const finalizeDraftLines = async (silent = false): Promise<boolean> => {
-    // 1) persiste d'abord le tampon local
+  const saveDraftLines = async (silent = false): Promise<boolean> => {
+    // Enregistrer conserve le statut brouillon. La transition vers `submitted`
+    // appartient exclusivement à l'action métier de transfert.
     const persisted = await persistPending(true);
     if (!persisted) return false;
-    // 2) puis passe tous les brouillons DB en submitted
-    if (draftLineIds.length === 0) {
-      setDirty(false);
-      if (!silent) toast({ title: `${labels.docPrefix.toUpperCase()} enregistré` });
-      return true;
-    }
-    try {
-      await doc.updateStatus(draftLineIds, 'submitted', source);
-      setDirty(false);
-      if (!silent) toast({ title: `${draftLineIds.length} ligne(s) finalisée(s)` });
-      return true;
-    } catch (e) {
-      toast({
-        title: 'Finalisation échouée',
-        description: String(e instanceof Error ? e.message : e),
-        variant: 'destructive',
-      });
-      return false;
-    }
+    setDirty(false);
+    if (!silent) toast({ title: t('dqe.save_success') });
+    return true;
   };
 
   // ---- Édition inline (persistée) + tampon (local) ---------------------------
@@ -453,12 +438,13 @@ export function BoqWorkspace({
       milestoneId: wbsDefault.milestoneId ?? null,
       taskId: wbsDefault.taskId ?? null,
       sourceType: 'rapide',
-      status: 'submitted',
+      status: 'draft',
     }]);
   };
 
   // ---- Render ---------------------------------------------------------------
-  const docRef = (documentId ?? contextId).slice(0, 8).toUpperCase();
+  const rawDocRef = documentId ?? contextId;
+  const docRef = rawDocRef.includes('-') ? rawDocRef.slice(0, 12).toUpperCase() : rawDocRef.toUpperCase();
   // Tant que le document n'est pas signé, l'édition (ajout / modification /
   // suppression de lignes) reste ouverte. La signature figeage le document.
   const signatureInfo = useMemo(() => {
@@ -491,7 +477,7 @@ export function BoqWorkspace({
       contextId,
       documentId: documentId ?? null,
       id: undefined,
-      status: 'submitted' as const,
+       status: 'draft' as const,
     }))]);
   };
   return (
@@ -552,14 +538,14 @@ export function BoqWorkspace({
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
-                  <SelectItem key={p.code} value={p.code}>{getFiscalProfileLabel(p.code, lang)} (TVA {(p.vatRate * 100).toFixed(0)}%)</SelectItem>
+                   <SelectItem key={p.code} value={p.code}>{getFiscalProfileLabel(p.code, lang)} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%)</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex lg:justify-end">
             <Button
-              onClick={() => finalizeDraftLines(false)}
+               onClick={() => saveDraftLines(false)}
               disabled={locked || (pendingCount === 0 && !dirty) || finalizing || doc.isPending}
               title={
                 transmittedInfo
@@ -610,7 +596,7 @@ export function BoqWorkspace({
                     <SelectContent>
                       {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
                         <SelectItem key={p.code} value={p.code}>
-                          {getFiscalProfileLabel(p.code, lang)} (TVA {(p.vatRate * 100).toFixed(0)}%)
+                           {getFiscalProfileLabel(p.code, lang)} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%)
                         </SelectItem>
                       ))}
                     </SelectContent>

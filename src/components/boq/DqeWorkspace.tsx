@@ -211,7 +211,9 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   }
 
   // ------------------------------------------------------------ Vue Détail
-  const actionableLines = (doc.lines ?? []).filter((line) => line.status !== 'draft');
+  // Les brouillons persistés sont actionnables : le transfert métier les fait
+  // passer à l'état soumis. Seules les lignes locales non sauvegardées sont exclues.
+  const actionableLines = doc.lines ?? [];
   // Étape documentaire courante déduite du référentiel via le `dqeType` des lignes.
   const invoiceDef = getInvoiceTypeByDqeType((doc.lines ?? [])[0]?.dqeType);
   const noActionableLines = actionableLines.length === 0;

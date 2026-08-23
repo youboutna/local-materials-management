@@ -29,21 +29,15 @@ interface Props {
   onCreate: (newDocumentId: string) => void;
 }
 
-const STATUS_LABEL: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  draft: { label: 'Brouillon', variant: 'secondary' },
-  submitted: { label: 'En cours', variant: 'default' },
-  validated: { label: 'Validé', variant: 'default' },
-  rejected: { label: 'Rejeté', variant: 'destructive' },
-  invoiced: { label: 'Facturé', variant: 'default' },
-  paid: { label: 'Payé', variant: 'default' },
-  archived: { label: 'Archivé', variant: 'outline' },
-  mixed: { label: 'Mixte', variant: 'outline' },
+const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+  draft: 'secondary', submitted: 'default', validated: 'default', rejected: 'destructive',
+  invoiced: 'default', paid: 'default', archived: 'outline', mixed: 'outline',
 };
 
 const fmt = (v: number) => v.toLocaleString('fr-FR', { maximumFractionDigits: 0 });
 
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
-  const { t } = useI18n();
+  const { t, translateStatus, locale } = useI18n();
   const { toast } = useToast();
   const { documents, isLoading, invalidate } = useBoqDocumentList({ source, contextId, projectId });
   const [search, setSearch] = useState('');
@@ -102,8 +96,8 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Statut" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all"><T k="auto.boqdocumentlist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
-            {Object.entries(STATUS_LABEL).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v.label}</SelectItem>
+             {Object.keys(STATUS_VARIANT).map((code) => (
+               <SelectItem key={code} value={code}>{code === 'mixed' ? t('dqe.status.mixed') : translateStatus(code)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -129,9 +123,8 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                 Aucun document. Cliquez « Nouveau {docPrefix.toUpperCase()} » pour commencer.
               </td></tr>
             ) : filtered.map((d) => {
-              const st = STATUS_LABEL[d.status] ?? STATUS_LABEL.draft;
-              // Document transmis (publié / facturé / payé / archivé) : consultation seule.
-              const readOnly = ['validated', 'invoiced', 'paid', 'archived'].includes(d.status);
+               const variant = STATUS_VARIANT[d.status] ?? STATUS_VARIANT.draft;
+               const readOnly = d.readOnly;
               return (
                 <tr
                   key={d.documentId}
@@ -141,8 +134,8 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                   <td className="p-3 font-mono text-xs">{docPrefix.toUpperCase()}-{d.reference}</td>
                   <td className="p-3">{d.title || <span className="text-muted-foreground italic"><T k="auto.boqdocumentlist.sans_titre" fallback="Sans titre" /></span>}</td>
                   <td className="p-3 text-right">{d.lineCount}</td>
-                  <td className="p-3 text-right font-medium">{fmt(d.totalHt)} MRU</td>
-                  <td className="p-3"><Badge variant={st.variant}>{st.label}</Badge></td>
+                   <td className="p-3 text-right font-medium">{d.totalHt.toLocaleString(locale, { maximumFractionDigits: 2 })} MRU</td>
+                   <td className="p-3"><Badge variant={variant}>{d.status === 'mixed' ? t('dqe.status.mixed') : translateStatus(d.status)}</Badge></td>
                   <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
                       <Button
