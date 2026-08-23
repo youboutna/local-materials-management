@@ -27,6 +27,10 @@ import { BoqTransferService } from '@/application/services/boq/BoqTransferServic
 import { BoqPartyResolverService, partyHintsFromLines } from '@/application/services/boq/BoqPartyResolverService';
 import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 import { T } from '@/components/i18n/T';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
+import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referentials/boq/dqe-actions.referential';
 
 interface Props {
   ctx: BoqContext;
@@ -48,6 +52,7 @@ export const BoqActionsBar: React.FC<Props> = ({
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
 }) => {
   const { toast } = useToast();
+  const { t } = useI18n();
   const [busy, setBusy] = useState<string | null>(null);
   const [signOpen, setSignOpen] = useState(false);
   const [signer, setSigner] = useState('');
@@ -229,7 +234,7 @@ export const BoqActionsBar: React.FC<Props> = ({
         actorName: signedInfo?.by ?? parties.senderName ?? null,
         submissionId: ctx.submissionId,
       });
-      toast({ title: TRANSFER_LABEL[ctx.routeContext], description: `${res.transferred} ligne(s) — ${res.message}` });
+      toast({ title: t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext]), description: `${res.transferred} ligne(s) — ${res.message}` });
       window.dispatchEvent(new CustomEvent('boq-transfer-next', { detail: {
         routeContext: ctx.routeContext,
         projectId: ctx.projectId,
@@ -265,7 +270,6 @@ export const BoqActionsBar: React.FC<Props> = ({
   const isProjectDqe = ctx.routeContext === 'project-dqe';
 
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
-  const L = DOC_LABELS[ctx.routeContext];
 
 
   const docActions = [
