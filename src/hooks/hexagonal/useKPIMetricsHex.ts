@@ -86,19 +86,6 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
     const DAY = 24 * 60 * 60 * 1000;
     const clampIndex = (value: number) => Math.min(3, Math.max(0, Number.isFinite(value) ? value : 0));
 
-    // Coût réel réparti par projet (les paiements sans projet alimentent le résiduel)
-    const spentByProject = new Map<string, number>();
-    let unassignedSpent = 0;
-    for (const payment of paymentsList) {
-      const projectId = payment.projectId || payment.project_id;
-      const amount = Number(payment.amount) || 0;
-      if (projectId) {
-        spentByProject.set(projectId, (spentByProject.get(projectId) || 0) + amount);
-      } else {
-        unassignedSpent += amount;
-      }
-    }
-
     let plannedValue = 0;
     let earnedValue = 0;
     for (const project of projectsList) {
@@ -125,8 +112,6 @@ const fetchKPIMetrics = async (): Promise<KPIMetrics> => {
       costPerformanceIndex > 0.01 ? budgetAtCompletion / costPerformanceIndex : budgetAtCompletion;
     const estimateToComplete = Math.max(0, estimateAtCompletion - totalSpent);
     const varianceAtCompletion = budgetAtCompletion - estimateAtCompletion;
-    void unassignedSpent;
-    void spentByProject;
 
 
     const evm: EVMCalculations = {
