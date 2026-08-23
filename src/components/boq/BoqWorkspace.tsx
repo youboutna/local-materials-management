@@ -33,7 +33,8 @@ import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
 import { tenderToPlanningService } from '@/application/services/TenderToPlanningService';
 import type { ReferentialType } from '@/config/referentials';
 import { getReferentialOptions } from '@/config/referentials';
-import { BOQ_FISCAL_PROFILES, getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { BOQ_FISCAL_PROFILES, getFiscalProfile, getFiscalProfileLabel } from '@/config/referentials/boq/default-values.referential';
+import { formatCurrency } from '@/utils/phaseDisplayHelpers';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import { getRecommendationItems } from '@/config/referentials/boq/recommendations.referential';
@@ -466,7 +467,7 @@ export function BoqWorkspace({
               <Badge variant={pendingCount > 0 ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
               {locked && (
                 <Badge variant="outline" className="border-primary text-primary">
-                  Signé le {signatureInfo?.at} par {signatureInfo?.by} — lecture seule
+                  {t('dqe.locked_signed')} · {signatureInfo?.at} — {signatureInfo?.by}
                 </Badge>
               )}
             </div>
@@ -478,7 +479,7 @@ export function BoqWorkspace({
               onValueChange={(v) => setActiveReferential(v === '__project__' ? referentialCode : (v as ReferentialType))}
             >
               <SelectTrigger className="h-10">
-                <SelectValue placeholder={projectName ? `Réf. projet — ${projectName}` : 'Référentiel du projet'} />
+                <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__project__">
@@ -504,13 +505,17 @@ export function BoqWorkspace({
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
-                  <SelectItem key={p.code} value={p.code}>{p.label} (TVA {(p.vatRate * 100).toFixed(0)}%)</SelectItem>
+                  <SelectItem key={p.code} value={p.code}>{getFiscalProfileLabel(p.code, lang)} (TVA {(p.vatRate * 100).toFixed(0)}%)</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex lg:justify-end">
-            <Button onClick={() => finalizeDraftLines(false)} disabled={locked || pendingCount === 0 || finalizing || doc.isPending}>
+            <Button
+              onClick={() => finalizeDraftLines(false)}
+              disabled={locked || pendingCount === 0 || finalizing || doc.isPending}
+              title={locked ? t('dqe.locked_signed') : pendingCount === 0 ? t('dqe.save_hint_no_pending') : undefined}
+            >
               {finalizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-2" />}
               Enregistrer le {labels.docPrefix.toUpperCase()}{pendingCount > 0 ? ` (${pendingCount})` : ''}
             </Button>
@@ -550,7 +555,7 @@ export function BoqWorkspace({
                     <SelectContent>
                       {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
                         <SelectItem key={p.code} value={p.code}>
-                          {p.label} (TVA {(p.vatRate * 100).toFixed(0)}%)
+                          {getFiscalProfileLabel(p.code, lang)} (TVA {(p.vatRate * 100).toFixed(0)}%)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -579,7 +584,7 @@ export function BoqWorkspace({
                           <SelectItem value="__none__">— Saisie libre —</SelectItem>
                           {filteredMaterials.slice(0, 200).map((m) => (
                             <SelectItem key={m.id} value={m.id}>
-                              {m.name}{m.unit ? ` · ${i18nService.translateUnit(m.unit)}` : ''}{m.pricePerUnit ? ` · ${m.pricePerUnit} MRU` : ''}
+                              {m.name}{m.unit ? ` · ${i18nService.translateUnit(m.unit)}` : ''}{m.pricePerUnit ? ` · ${formatCurrency(m.pricePerUnit)}` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -778,12 +783,12 @@ export function BoqWorkspace({
       </div>
 
       <div className="grid grid-cols-2 gap-3 border-b bg-muted/20 p-4 text-sm md:grid-cols-4">
-        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.total_ht" fallback="Total HT" /></div><div className="font-medium">{totals.totalHt.toLocaleString('fr-FR')} MRU</div></div>
-        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.tva" fallback="TVA" /></div><div className="font-medium">{totals.totalTva.toLocaleString('fr-FR')} MRU</div></div>
+        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.total_ht" fallback="Total HT" /></div><div className="font-medium">{formatCurrency(totals.totalHt)}</div></div>
+        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.tva" fallback="TVA" /></div><div className="font-medium">{formatCurrency(totals.totalTva)}</div></div>
         {(totals.withholding ?? 0) > 0 ? (
-          <div><div className="text-muted-foreground"><T k="auto.boqworkspace.ras" fallback="RAS" /></div><div className="font-medium">{(totals.withholding ?? 0).toLocaleString('fr-FR')} MRU</div></div>
+          <div><div className="text-muted-foreground"><T k="auto.boqworkspace.ras" fallback="RAS" /></div><div className="font-medium">{formatCurrency(totals.withholding ?? 0)}</div></div>
         ) : <div />}
-        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.net_a_payer" fallback="Net à payer" /></div><div className="font-semibold">{(totals.netToPay ?? totals.totalTtc).toLocaleString('fr-FR')} MRU</div></div>
+        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.net_a_payer" fallback="Net à payer" /></div><div className="font-semibold">{formatCurrency(totals.netToPay ?? totals.totalTtc)}</div></div>
       </div>
 
       <div className="p-4">
