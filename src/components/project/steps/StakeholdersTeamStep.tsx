@@ -308,9 +308,11 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
               <Label className="block text-sm font-medium mb-2">
                 <T k="auto.stakeholdersteamstep.type_de_partie_prenante" fallback="Type de partie prenante" />
               </Label>
-              <Select
+              <EnumSelect
+                enumName="StakeholderType"
+                codes={Object.values(StakeholderType)}
                 value={newStakeholder?.stakeholderType || ""}
-                onValueChange={(value) =>
+                onChange={(value) =>
                   setNewStakeholder({
                     ...newStakeholder,
                     stakeholderType: value as StakeholderType,
@@ -318,43 +320,26 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     organizationId: undefined,
                   })
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(StakeholderType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={t('auto.stakeholdersteamstep.selectionner_le_type', 'Sélectionner le type')}
+              />
             </div>
 
             <div>
               <Label className="block text-sm font-medium mb-2"><T k="auto.stakeholdersteamstep.role" fallback="Rôle" /></Label>
-              <Select
+              <EnumSelect
+                enumName="StakeholderRole"
+                codes={Object.values(StakeholderRole)}
                 value={(newStakeholder?.role as string) || ""}
-                onValueChange={(value) =>
+                onChange={(value) =>
                   setNewStakeholder({
                     ...newStakeholder,
                     role: value as StakeholderRole,
                   })
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(StakeholderRole).map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={t('auto.stakeholdersteamstep.selectionner_le_role', 'Sélectionner le rôle')}
+              />
             </div>
+
 
             {newStakeholder?.stakeholderType === StakeholderType.EMPLOYEE && (
               <div className="md:col-span-2">
