@@ -16,6 +16,8 @@ import type { BoqRouteContext } from './BoqContextService';
 
 export interface BoqTransferTarget {
   status: BoqStatus;
+  /** Statut métier de l'étape documentaire (référentiel invoice-document-types). */
+  businessStatus?: string;
   stage: string;
   label: string;
   successMessage: string;
@@ -24,24 +26,28 @@ export interface BoqTransferTarget {
 export const BOQ_TRANSFER_TARGETS: Record<BoqRouteContext, BoqTransferTarget> = {
   'project-dqe': {
     status: 'submitted',
+    businessStatus: 'soumis',
     stage: 'hierarchy_validation',
     label: 'Soumettre pour validation',
     successMessage: 'Document soumis à la validation hiérarchique.',
   },
   'tender-estimate': {
     status: 'validated',
+    businessStatus: 'valide',
     stage: 'published_to_suppliers',
     label: 'Publier vers fournisseurs',
     successMessage: 'DQE publié : visible depuis le portail fournisseur.',
   },
   'supplier-bid': {
     status: 'submitted',
+    businessStatus: 'recu',
     stage: 'attached_to_submission',
     label: 'Joindre à ma soumission',
     successMessage: 'Devis rattaché à la soumission.',
   },
   'supplier-invoice': {
     status: 'invoiced',
+    businessStatus: 'demande',
     stage: 'payment_requested',
     label: 'Soumettre pour paiement',
     successMessage: 'Décompte soumis au circuit de paiement.',
@@ -80,6 +86,7 @@ export const BoqTransferService = {
         boqRepository.update(line.id as string, {
           source: line.source,
           status: target.status,
+          ...(target.businessStatus ? { businessStatus: target.businessStatus } : {}),
           metadata: {
             ...(line.metadata ?? {}),
             transfer: {
