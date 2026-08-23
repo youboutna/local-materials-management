@@ -6,7 +6,7 @@
 import { InspectionStatus as DomainInspectionStatus, Inspection } from '@/domain/entities/Inspection';
 import { IInspectionRepository, InspectionObservation } from '@/domain/repositories/IInspectionRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase } from '@/integrations/supabase/client';
+import type { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 import {
@@ -43,8 +43,18 @@ function isValidInspectionStatusTransition(current: string, next: string): boole
 
 export class InspectionExecutionService {
   constructor(
-    private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository()
+    private inspectionRepository: IInspectionRepository = RepositoryFactory.getInspectionRepository(),
+    private authRepository: IAuthRepository = RepositoryFactory.getAuthRepository()
   ) {}
+
+  /** Utilisateur courant via le port Auth (aucun accès provider direct). */
+  private async requireCurrentUserId(): Promise<string> {
+    const { user, error } = await this.authRepository.getCurrentUser();
+    if (error || !user) {
+      throw new AppError(ErrorCode.UNAUTHORIZED, 'User not authenticated');
+    }
+    return user.id;
+  }
 
   async startInspection(request: StartInspectionRequestDto): Promise<InspectionOperationResultDTO> {
     try {
@@ -92,11 +102,7 @@ export class InspectionExecutionService {
       if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
       // Get current user
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) {
-        throw new AppError(ErrorCode.UNAUTHORIZED, 'User not authenticated');
-      }
-      const currentUserId = userData.user.id;
+      const currentUserId = await this.requireCurrentUserId();
 
       const observationId = `obs-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
       const newObservation: InspectionObservation = {
@@ -213,10 +219,6 @@ export class InspectionExecutionService {
       if (!inspection) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
 
       // Get current user
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) {
-        throw new AppError(ErrorCode.UNAUTHORIZED, 'User not authenticated');
-      }
 
       const participantId = `part-${Date.now()}-${crypto.randomUUID().slice(0, 9)}`;
       const newParticipant: InspectionParticipant = {
