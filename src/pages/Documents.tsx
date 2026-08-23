@@ -52,6 +52,7 @@ export default function Documents() {
   const [projectId, setProjectId] = useState<string>('');
   const [tenderId, setTenderId] = useState<string>('');
   const [supplierId, setSupplierId] = useState<string>('');
+  const { t } = useLanguage();
 
   const { projects = [] } = useProjectsHex();
   const { data: tenders = [] } = useTenders();
@@ -62,7 +63,7 @@ export default function Documents() {
       case 'project':
         return (
           <ScopePicker
-            label="Projet"
+            label={t('auto.documents.scope.project')}
             value={projectId}
             onChange={setProjectId}
             options={(projects as any[]).map((p) => ({ value: p.id, label: p.title }))}
@@ -71,31 +72,31 @@ export default function Documents() {
       case 'tender':
         return (
           <ScopePicker
-            label="Appel d'offres"
+            label={t('auto.documents.scope.tender')}
             value={tenderId}
             onChange={setTenderId}
-            options={(tenders as any[]).map((t) => ({
-              value: t.id,
-              label: `${t.tender_number ? `[${t.tender_number}] ` : ''}${t.title}`,
+            options={(tenders as any[]).map((tender) => ({
+              value: tender.id,
+              label: `${tender.tender_number ? `[${tender.tender_number}] ` : ''}${tender.title}`,
             }))}
           />
         );
       case 'supplier':
         return (
           <ScopePicker
-            label="Fournisseur"
+            label={t('auto.documents.scope.supplier')}
             value={supplierId}
             onChange={setSupplierId}
             options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
           />
         );
     }
-  }, [scope, projectId, tenderId, supplierId, projects, tenders, suppliers]);
+  }, [scope, projectId, tenderId, supplierId, projects, tenders, suppliers, t]);
 
-  const activeTender = (tenders as any[]).find((t) => t.id === tenderId);
+  const activeTender = (tenders as any[]).find((tender) => tender.id === tenderId);
 
   return (
-    <AppLayout pageTitle="Documents">
+    <AppLayout pageTitle={t('auto.documents.title')}>
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-5">
         <Card>
           <CardHeader className="pb-3">
@@ -103,9 +104,7 @@ export default function Documents() {
               <ShieldCheck className="h-4 w-4 text-primary" />
               <CardTitle className="text-base"><T k="auto.documents.gestion_electronique_des_documents_ged" fallback="Gestion électronique des documents (GED)" /></CardTitle>
             </div>
-            <CardDescription>
-              Espace unifié — projets, appels d'offres, fournisseurs. Aperçu sécurisé via passerelle (l'URL de stockage n'est pas exposée).
-            </CardDescription>
+            <CardDescription>{t('auto.documents.ged_description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs value={scope} onValueChange={(v) => setScope(v as Scope)}>
@@ -115,14 +114,14 @@ export default function Documents() {
                   return (
                     <TabsTrigger key={s.id} value={s.id} className="gap-2">
                       <Icon className="h-4 w-4" />
-                      {s.label}
+                      {t(s.labelKey)}
                     </TabsTrigger>
                   );
                 })}
               </TabsList>
               {SCOPES.map((s) => (
                 <TabsContent key={s.id} value={s.id} className="pt-3">
-                  <p className="mb-3 text-sm text-muted-foreground">{s.description}</p>
+                  <p className="mb-3 text-sm text-muted-foreground">{t(s.descriptionKey)}</p>
                   {currentPicker}
                 </TabsContent>
               ))}
@@ -141,7 +140,7 @@ export default function Documents() {
           (scope === 'supplier' && !supplierId)) && (
           <Card>
             <CardContent className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-              Sélectionnez un {scope === 'project' ? 'projet' : scope === 'tender' ? "appel d'offres" : 'fournisseur'} pour afficher ses documents.
+              {t('auto.documents.empty_state')}
             </CardContent>
           </Card>
         )}
@@ -157,22 +156,63 @@ interface PickerProps {
   options: { value: string; label: string }[];
 }
 
+/** Combobox avec autocomplétion — indispensable dès que la liste dépasse quelques dizaines d'entrées. */
 function ScopePicker({ label, value, onChange, options }: PickerProps) {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o.value === value);
+
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-muted-foreground">{label}</label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={`Sélectionner un ${label.toLowerCase()}`} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between font-normal"
+          >
+            <span className={cn('truncate', !selected && 'text-muted-foreground')}>
+              {selected ? selected.label : t('auto.documents.picker.placeholder')}
+            </span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <Command
+            filter={(itemValue, search) =>
+              itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+            }
+          >
+            <CommandInput placeholder={t('auto.documents.picker.search')} />
+            <CommandList>
+              <CommandEmpty>{t('auto.documents.picker.empty')}</CommandEmpty>
+              <CommandGroup>
+                {options.map((o) => (
+                  <CommandItem
+                    key={o.value}
+                    value={`${o.label} ${o.value}`}
+                    onSelect={() => {
+                      onChange(o.value);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        value === o.value ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    <span className="truncate">{o.label}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
+
