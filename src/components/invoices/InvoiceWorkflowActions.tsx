@@ -34,6 +34,8 @@ import { InvoiceLifecycleTimeline } from './InvoiceLifecycleTimeline';
 import DeviationBadges from '@/components/common/DeviationBadges';
 import {
   getInvoiceDocumentType,
+  getNextBusinessStatus,
+  isSourceStatusSatisfied,
   type InvoiceActor,
   type InvoiceDocumentType,
 } from '@/config/referentials/invoices/invoice-document-types.referential';
@@ -90,7 +92,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   onTransformed,
 }) => {
   const { toast } = useToast();
-  const { t, language } = useI18n();
+  const { t, language, translateStatus } = useI18n();
   const [busy, setBusy] = useState<string | null>(null);
   const [pctOpen, setPctOpen] = useState(false);
   const [percentage, setPercentage] = useState(30);
@@ -102,6 +104,10 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   const noLines = lines.length === 0;
 
   const businessStatus = lines[0]?.businessStatus ?? def.initialStatus;
+  // Statut suivant propre à l'étape courante (DQE : brouillon → soumis → validé).
+  const nextStatus = getNextBusinessStatus(documentType, businessStatus);
+  // P1 — l'étape suivante n'est ouverte qu'une fois le document courant validé.
+  const gateSatisfied = nextType ? isSourceStatusSatisfied(nextType, businessStatus) : false;
   const billedPercentage = lines[0]?.billedPercentage ?? null;
 
   // Aperçu du verrou budgétaire pour l'étape suivante (informatif avant clic).
@@ -196,6 +202,31 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
     },
   });
 
+  const runAdvanceStatus = async () => {
+    if (!nextStatus) return;
+    setBusy('status');
+    try {
+      const res = await InvoiceWorkflowService.advanceStatus({
+        type: documentType,
+        lines,
+        target: nextStatus,
+      });
+      toast({
+        title: getInvoiceDocumentTypeLabel(def.code, language),
+        description: `${t('dqe.lifecycle.status_label')} ${translateStatus(res.status)}`,
+      });
+      onTransformed?.(lines.find((l) => l.documentId)?.documentId ?? '', documentType);
+    } catch (e) {
+      toast({
+        title: 'Statut non mis à jour',
+        description: e instanceof Error ? e.message : undefined,
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const handleFacturX = async () => {
     setBusy('facturx');
     try {
@@ -284,12 +315,30 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {nextStatus && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void runAdvanceStatus()}
+              disabled={disabled || noLines || busy !== null}
+              title={`${t('dqe.lifecycle.status_label')} ${translateStatus(nextStatus)}`}
+            >
+              {spinner('status') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
+              {translateStatus(nextStatus)}
+            </Button>
+          )}
           {nextDef && allowed && (
             <Button
               size="sm"
               onClick={() => (nextDef.requiresPercentage ? setPctOpen(true) : runTransform())}
-              disabled={disabled || noLines || busy !== null || blocked}
-              title={blocked ? guardPreview?.message ?? t('dqe.transform.blocked') : `${t('dqe.action.transform_to')} ${getInvoiceDocumentTypeLabel(nextDef.code, language)}`}
+              disabled={disabled || noLines || busy !== null || blocked || !gateSatisfied}
+              title={
+                !gateSatisfied
+                  ? `${getInvoiceDocumentTypeLabel(nextDef.code, language)} — ${translateStatus(nextDef.requiredSourceStatus ?? def.validationStatus)} requis`
+                  : blocked
+                    ? guardPreview?.message ?? t('dqe.transform.blocked')
+                    : `${t('dqe.action.transform_to')} ${getInvoiceDocumentTypeLabel(nextDef.code, language)}`
+              }
             >
               {spinner('transform') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
               {`${t('dqe.action.transform_to')} ${getInvoiceDocumentTypeLabel(nextDef.code, language)}`}

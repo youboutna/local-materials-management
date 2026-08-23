@@ -25,6 +25,10 @@ import { TaskAssignment } from '@/domain/entities/TaskAssignment';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getBoqResourcePropagationService } from './BoqResourcePropagationService';
 import { BoqInjectionGateService } from './BoqInjectionGateService';
+import {
+  getInvoiceDocumentType,
+  resolveInvoiceDocumentType,
+} from '@/config/referentials/invoices/invoice-document-types.referential';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface DispatchResult {
@@ -95,6 +99,31 @@ export class BoqDispatchService {
         ErrorCode.VALIDATION_ERROR,
         'Aucune ligne transférable : enregistrez puis soumettez les lignes DQE avant le transfert.',
       );
+    }
+
+    // P2 — la planification n'est alimentée qu'après VALIDATION du DQE
+    // (expression de besoin) : un besoin non validé ne crée pas de phases.
+    const dqeLines = eligible.filter((l) => {
+      const def = resolveInvoiceDocumentType({
+        source: l.source,
+        documentType: l.documentType,
+        dqeType: l.dqeType,
+      });
+      return def.code === 'dqe';
+    });
+    if (dqeLines.length) {
+      const dqeDef = getInvoiceDocumentType('dqe');
+      const notValidated = dqeLines.filter(
+        (l) =>
+          String(l.businessStatus ?? '') !== dqeDef.validationStatus &&
+          String(l.status ?? '') !== 'validated',
+      );
+      if (notValidated.length) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          `Expression de besoin non validée : passez le DQE au statut « ${dqeDef.validationStatus} » avant d'alimenter la planification.`,
+        );
+      }
     }
 
     // Porte de gouvernance : devis validés par le gestionnaire de projet,

@@ -22,6 +22,12 @@ export interface InvoiceDocumentTypeDef {
   dqeType: string;
   statuses: string[];
   initialStatus: string;
+  /** Statut terminal ouvrant l'étape suivante (DQE : validé ; devis : accepté…). */
+  validationStatus: string;
+  /** Statut requis sur le document source pour produire cette étape. */
+  requiredSourceStatus?: string;
+  /** `source` de `btp.boq_lines` portant cette étape (résolution UI / PDF). */
+  boqSources: string[];
   /** Étape suivante du workflow (null = terminal). */
   next: InvoiceDocumentType | null;
   /** Acteurs autorisés à produire ce document. */
@@ -35,17 +41,20 @@ export interface InvoiceDocumentTypeDef {
 export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
   {
     code: 'dqe',
-    label: 'DQE / Expression de besoin',
-    labelAr: 'الكشف الكمي التقديري / التعبير عن الحاجة',
-    labelEn: 'BoQ / Statement of needs',
+    label: 'Expression de besoin (DQE)',
+    labelAr: 'التعبير عن الحاجة (الكشف الكمي التقديري)',
+    labelEn: 'Statement of needs (BoQ)',
     facturxTypeCode: '310',
     dqeType: 'previsionnel',
-    statuses: ['brouillon', 'pour_validation', 'valide'],
+    // Workflow maîtrise d'ouvrage : exprimer puis valider le besoin.
+    statuses: ['brouillon', 'soumis', 'valide'],
     initialStatus: 'brouillon',
+    validationStatus: 'valide',
+    boqSources: ['dqe', 'quantity_takeoff', 'tender_estimate'],
     next: 'devis',
     actors: ['manager'],
     requiresPercentage: false,
-    nextActionLabel: 'Transformer en devis',
+    nextActionLabel: 'Lancer la consultation (devis)',
   },
   {
     code: 'devis',
@@ -54,13 +63,19 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     labelEn: 'Quotation',
     facturxTypeCode: '310',
     dqeType: 'devis',
-    statuses: ['brouillon', 'soumis', 'en_negociation', 'accepte', 'rejete'],
-    initialStatus: 'brouillon',
+    // Workflow prestataire : l'offre est reçue, analysée puis acceptée/rejetée.
+    statuses: ['recu', 'en_analyse', 'accepte', 'rejete'],
+    initialStatus: 'recu',
+    validationStatus: 'accepte',
+    // Un devis ne peut être émis qu'après validation du DQE.
+    requiredSourceStatus: 'valide',
+    boqSources: ['supplier_bid'],
     next: 'contrat',
     actors: ['manager', 'supplier'],
     requiresPercentage: false,
     nextActionLabel: 'Transformer en contrat',
   },
+
   {
     code: 'contrat',
     label: 'Contrat',
@@ -70,6 +85,9 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     dqeType: 'contrat',
     statuses: ['recu', 'signe', 'en_cours', 'termine'],
     initialStatus: 'signe',
+    validationStatus: 'signe',
+    requiredSourceStatus: 'accepte',
+    boqSources: ['supplier_bid'],
     next: 'decompte',
     actors: ['manager', 'supplier'],
     requiresPercentage: false,
@@ -84,6 +102,8 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     dqeType: 'decompte',
     statuses: ['demande', 'programme', 'valide', 'rejete', 'paye'],
     initialStatus: 'demande',
+    validationStatus: 'valide',
+    boqSources: ['invoice'],
     next: 'facture',
     actors: ['manager', 'supplier'],
     requiresPercentage: true,
@@ -98,11 +118,14 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     dqeType: 'facture',
     statuses: ['emise', 'approuvee', 'payee'],
     initialStatus: 'emise',
+    validationStatus: 'payee',
+    boqSources: ['invoice'],
     next: null,
     actors: ['manager', 'supplier'],
     requiresPercentage: false,
   },
 ];
+
 
 export const INVOICE_DOCUMENT_TYPE_BY_CODE: Record<InvoiceDocumentType, InvoiceDocumentTypeDef> =
   INVOICE_DOCUMENT_TYPES.reduce((acc, def) => {
@@ -129,6 +152,57 @@ export function getInvoiceTypeByDqeType(dqeType?: string | null): InvoiceDocumen
   );
 }
 
+/** Étapes documentaires possibles pour une `source` de lignes BOQ. */
+export function invoiceTypesForBoqSource(source?: string | null): InvoiceDocumentTypeDef[] {
+  const s = String(source ?? '').trim().toLowerCase();
+  return INVOICE_DOCUMENT_TYPES.filter((d) => d.boqSources.includes(s));
+}
+
+/**
+ * Résolution canonique de l'étape documentaire : la `source` BOQ fait foi
+ * (un DQE reste un DQE), le `documentType` / `dqeType` des lignes n'affine
+ * que parmi les étapes autorisées pour cette source.
+ * Évite la confusion DQE ↔ Devis observée en production.
+ */
+export function resolveInvoiceDocumentType(input: {
+  source?: string | null;
+  documentType?: string | null;
+  dqeType?: string | null;
+}): InvoiceDocumentTypeDef {
+  const candidates = invoiceTypesForBoqSource(input.source);
+  if (!candidates.length) {
+    return input.documentType
+      ? getInvoiceDocumentType(input.documentType)
+      : getInvoiceTypeByDqeType(input.dqeType);
+  }
+  const byDocType = candidates.find((d) => d.code === input.documentType);
+  if (byDocType) return byDocType;
+  const byDqeType = candidates.find((d) => d.dqeType === input.dqeType);
+  if (byDqeType) return byDqeType;
+  return candidates[0];
+}
+
+/** Statut suivant dans la progression linéaire de l'étape (null = terminal). */
+export function getNextBusinessStatus(
+  code: InvoiceDocumentType,
+  current?: string | null,
+): string | null {
+  const def = getInvoiceDocumentType(code);
+  const index = def.statuses.indexOf(String(current ?? def.initialStatus));
+  if (index < 0) return def.statuses[0] ?? null;
+  return def.statuses[index + 1] ?? null;
+}
+
+/** Le document source porte-t-il le statut requis pour produire l'étape suivante ? */
+export function isSourceStatusSatisfied(
+  target: InvoiceDocumentType,
+  sourceStatus?: string | null,
+): boolean {
+  const required = getInvoiceDocumentType(target).requiredSourceStatus;
+  if (!required) return true;
+  return String(sourceStatus ?? '') === required;
+}
+
 /** Libellé d'une étape documentaire dans la langue active. */
 export function getInvoiceDocumentTypeLabel(
   code?: string | null,
@@ -138,4 +212,5 @@ export function getInvoiceDocumentTypeLabel(
   if (lang === 'ar') return def.labelAr ?? def.label;
   if (lang === 'en') return def.labelEn ?? def.label;
   return def.label;
+
 }
