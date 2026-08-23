@@ -9,6 +9,7 @@ import { getFiscalProfile } from '@/config/referentials/boq/default-values.refer
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { mergeDimensions } from './parsers/dimensionExtraction';
+import { reconcileLinePrice } from './parsers/priceCoherence';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
@@ -216,6 +217,9 @@ export class BoqImportOrchestrator {
           ...(lotKey ? { lot: lotKey } : {}),
           ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(price.corrected
+            ? { priceCorrection: { originalUnitPrice: price.originalUnitPrice ?? null, reason: price.reason ?? null } }
+            : {}),
           ...(isLabour && labourPayroll != null ? { payrollTaxRate: labourPayroll } : {}),
           ...(partyMeta.supplierName || partyMeta.organizationName
             ? { parties: partyMeta }
