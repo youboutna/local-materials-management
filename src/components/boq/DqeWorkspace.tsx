@@ -18,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, FileSpreadsheet, GitCompare, LayoutDashboard } from 'lucide-react';
 import { BoqWorkspace, type BoqWorkspaceMode } from './BoqWorkspace';
 import { BoqActionsBar } from './BoqActionsBar';
+import { InvoiceWorkflowActions } from '@/components/invoices/InvoiceWorkflowActions';
+import { getInvoiceTypeByDqeType } from '@/config/referentials/invoices/invoice-document-types.referential';
 import { BoqDocumentList } from './BoqDocumentList';
 import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
@@ -209,6 +211,8 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
 
   // ------------------------------------------------------------ Vue Détail
   const actionableLines = (doc.lines ?? []).filter((line) => line.status !== 'draft');
+  // Étape documentaire courante déduite du référentiel via le `dqeType` des lignes.
+  const invoiceDef = getInvoiceTypeByDqeType((doc.lines ?? [])[0]?.dqeType);
   const noActionableLines = actionableLines.length === 0;
 
   return (
@@ -244,11 +248,12 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
               projectId={props.projectId}
               tenderId={props.tenderId}
               sellerName={props.projectName}
-              buyerName={props.recipientName}
+              buyerName={props.recipientEmail}
               docPrefix={ctx.docPrefix}
               disabled={doc.isLoading}
             />
           </div>
+        </CardHeader>
 
         <CardContent className="p-0">
           <BoqWorkspace
