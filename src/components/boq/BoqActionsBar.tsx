@@ -35,6 +35,8 @@ import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referent
 interface Props {
   ctx: BoqContext;
   lines: BoqLineDTO[];
+  /** Libellé métier du projet porté dans l'entête documentaire (D1). */
+  projectName?: string;
   recipientEmail?: string;
   disabled?: boolean;
   onAttachToSubmission?: () => void;
@@ -48,9 +50,10 @@ interface Props {
 
 
 export const BoqActionsBar: React.FC<Props> = ({
-  ctx, lines, recipientEmail, disabled = false,
+  ctx, lines, projectName, recipientEmail, disabled = false,
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
 }) => {
+
   const { toast } = useToast();
   const { t } = useI18n();
   const [busy, setBusy] = useState<string | null>(null);
