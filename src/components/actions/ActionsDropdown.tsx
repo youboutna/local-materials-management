@@ -181,7 +181,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 
       toast({
         title: t('common.success'),
-        description: `Action "${actionLabels[formData.actionType]}" exécutée avec succès`,
+        description: `${t(actionLabelKeys[formData.actionType])}`,
       });
 
       onActionComplete?.();
@@ -250,11 +250,11 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   };
 
   const getDefaultTitle = (actionType: ActionFormData['actionType']): string => {
-    return `${actionLabels[actionType]} - ${entityType.replace('_', ' ')}`;
+    return `${t(actionLabelKeys[actionType])} - ${t(`auto.actions.entity.${entityType}`)}`;
   };
 
   const getDefaultMessage = (actionType: ActionFormData['actionType']): string => {
-    return `Action ${actionLabels[actionType]} pour ${entityType.replace('_', ' ')} ${entityId}`;
+    return `${t(actionLabelKeys[actionType])} — ${t(`auto.actions.entity.${entityType}`)} ${entityId}`;
   };
 
   return (
@@ -267,7 +267,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {Object.entries(actionLabels).map(([actionType, label]) => {
+          {Object.entries(actionLabelKeys).map(([actionType, labelKey]) => {
             const Icon = actionIcons[actionType as keyof typeof actionIcons];
             return (
               <DropdownMenuItem
@@ -276,7 +276,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
                 className="cursor-pointer"
               >
                 <Icon className="h-4 w-4 mr-2" />
-                {label}
+                {t(labelKey)}
               </DropdownMenuItem>
             );
           })}
