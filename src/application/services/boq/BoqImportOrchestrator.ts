@@ -162,8 +162,11 @@ export class BoqImportOrchestrator {
       // Rejet des lignes non valorisées (titres de document, notes) : une ligne
       // DQE exploitable porte au minimum une quantité, un PU ou un montant.
       if (!designation || (!quantity && rawTotal == null && pu == null)) continue;
-      const unitPrice = pu ?? (rawTotal != null && quantity ? rawTotal / quantity : null);
-      const totalHt = rawTotal ?? (unitPrice != null ? quantity * unitPrice : null);
+      // Contrôle arithmétique : quantité × P.U. = montant, sinon P.U. corrigé.
+      const price = reconcileLinePrice({ quantity, unitPrice: pu, totalHt: rawTotal });
+      const unitPrice = price.unitPrice;
+      const totalHt = price.totalHt;
+
       const lotKey = mapping.lot ? String(get(mapping.lot) ?? '').trim() || null : null;
       // Nature de la section (bloc RH → main d'œuvre).
       const sectionKind = String(row.raw[SECTION_KIND_COLUMN] ?? '').trim().toLowerCase();
