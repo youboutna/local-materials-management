@@ -34,12 +34,13 @@ import { T } from '@/components/i18n/T';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const SecretManagerBody: React.FC<{ initialTenderId?: string }> = ({ initialTenderId }) => {
+  const { t } = useLanguage();
   const { tenders, loading } = useTendersHex();
   const [tenderId, setTenderId] = useState<string>(initialTenderId ?? '');
 
   useEffect(() => {
     if (!tenderId && tenders.length > 0) {
-      const preselect = initialTenderId && tenders.some((t) => t.id === initialTenderId)
+      const preselect = initialTenderId && tenders.some((td) => td.id === initialTenderId)
         ? initialTenderId
         : tenders[0].id;
       setTenderId(preselect);
@@ -47,7 +48,7 @@ const SecretManagerBody: React.FC<{ initialTenderId?: string }> = ({ initialTend
   }, [tenders, tenderId, initialTenderId]);
 
   const selected = useMemo(
-    () => tenders.find((t) => t.id === tenderId) ?? null,
+    () => tenders.find((td) => td.id === tenderId) ?? null,
     [tenders, tenderId],
   );
 
@@ -60,9 +61,9 @@ const SecretManagerBody: React.FC<{ initialTenderId?: string }> = ({ initialTend
             <SelectValue placeholder={loading ? t('common.loading') : t('tenders.select_placeholder')} />
           </SelectTrigger>
           <SelectContent>
-            {tenders.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.title}
+            {tenders.map((td) => (
+              <SelectItem key={td.id} value={td.id}>
+                {td.title}
               </SelectItem>
             ))}
           </SelectContent>
