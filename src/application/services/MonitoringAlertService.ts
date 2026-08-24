@@ -16,7 +16,7 @@ import {
 import type { INotificationRepository, NotificationData } from '@/domain/repositories/INotificationRepository';
 import type { IDerivedAlertRepository } from '@/domain/repositories/IDerivedAlertRepository';
 import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseDerivedAlertAdapter';
-import { toDerivedAlerts } from '@/application/services/alerts/DerivedAlertEngine';
+import { isDerivedAlertId, toDerivedAlerts } from '@/application/services/alerts/DerivedAlertEngine';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getProjectService } from '@/application/services/ProjectService';
 
@@ -125,6 +125,16 @@ function transformNotificationToAlertData(n: NotificationData): AlertData {
   };
 }
 
+/** Identifiants d'alertes dérivées déjà matérialisées en base (évite les doublons). */
+function collectMaterializedDerivedIds(dtos: MonitoringAlertDTO[]): Set<string> {
+  const ids = new Set<string>();
+  dtos.forEach((dto) => {
+    const derivedId = (dto.metadata as Record<string, unknown> | null | undefined)?.derived_id;
+    if (typeof derivedId === 'string') ids.add(derivedId);
+  });
+  return ids;
+}
+
 export class MonitoringAlertService {
   private repository: IMonitoringAlertRepository;
   private notificationRepository?: INotificationRepository;
@@ -204,10 +214,11 @@ export class MonitoringAlertService {
 
     const alerts = dtos.map(transformToAlertData);
     const known = new Set(alerts.map((a) => a.id));
+    const materialized = collectMaterializedDerivedIds(dtos);
     const merged = [
       ...alerts,
       ...notificationAlerts.filter((a) => !known.has(a.id)),
-      ...derivedAlerts.filter((a) => !known.has(a.id)),
+      ...derivedAlerts.filter((a) => !known.has(a.id) && !materialized.has(a.id)),
     ];
 
     const projectTitles = new Map(projects.map((project) => [project.id, project.title]));
@@ -372,10 +383,11 @@ export class MonitoringAlertService {
     ]);
     const alerts = dtos.map(transformToAlertData);
     const known = new Set(alerts.map((a) => a.id));
+    const materialized = collectMaterializedDerivedIds(dtos);
     return [
       ...alerts,
       ...notificationAlerts.filter((a) => a.projectId === projectId && !known.has(a.id)),
-      ...derivedAlerts.filter((a) => !known.has(a.id)),
+      ...derivedAlerts.filter((a) => !known.has(a.id) && !materialized.has(a.id)),
     ];
   }
 
