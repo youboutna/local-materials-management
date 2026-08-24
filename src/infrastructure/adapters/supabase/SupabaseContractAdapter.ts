@@ -63,6 +63,16 @@ export class SupabaseContractAdapter implements IContractRepository {
     return (data ?? []).map(toDto);
   }
 
+  async findBySupplierId(supplierId: string): Promise<ContractRecordDTO[]> {
+    const { data, error } = await (btpClient as any)
+      .from('contracts')
+      .select('*')
+      .eq('supplier_id', supplierId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(toDto);
+  }
+
   async create(dto: CreateContractRecordDTO): Promise<ContractRecordDTO> {
     const { data, error } = await (btpClient as any)
       .from('contracts')
