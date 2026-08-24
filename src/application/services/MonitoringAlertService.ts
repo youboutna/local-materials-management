@@ -322,6 +322,11 @@ export class MonitoringAlertService {
    * Resolve an alert
    */
   async resolveAlert(id: string, resolutionNotes?: string): Promise<void> {
+    if (isDerivedAlertId(id)) {
+      const persistedId = await this.materializeDerivedAlert(id);
+      if (persistedId) await this.repository.resolve(persistedId, resolutionNotes);
+      return;
+    }
     try {
       await this.repository.resolve(id, resolutionNotes);
     } catch (error) {
@@ -331,6 +336,7 @@ export class MonitoringAlertService {
       if (readError) throw error;
     }
   }
+
 
 
   /**
