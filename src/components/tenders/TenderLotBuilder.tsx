@@ -38,6 +38,8 @@ import {
   useDeleteTenderLot,
 } from '@/hooks/hexagonal/useTenderLotsHex';
 import TenderLotDocumentsManager from './TenderLotDocumentsManager';
+import TenderLotWorkflowBar, { TenderLotStatusBadge } from './TenderLotWorkflowBar';
+import type { TenderLotStatus } from '@/dtos/transforms/TenderLotTransformer';
 import { T } from '@/components/i18n/T';
 
 interface Phase {
@@ -64,7 +66,11 @@ interface TenderLot {
   linkedStepIds: string[];
   requirements?: string[];
   deliverables?: string[];
+  status?: TenderLotStatus;
+  awardedTo?: string | null;
+  awardedAmount?: number | null;
 }
+
 
 interface TenderLotBuilderProps {
   tenderId: string;
