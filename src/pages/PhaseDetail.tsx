@@ -442,6 +442,13 @@ const PhaseDetail: React.FC = () => {
 
           {/* Planification: étapes/tâches, métré DQE, planning, jalons, ressources */}
           <TabsContent value="planification" className="space-y-6">
+            {/* Mode 1 : édition/sauvegarde partielle de l'onglet Planification */}
+            <PhasePlanningQuickEdit
+              value={editDraft}
+              isSaving={isUpdatingPhase}
+              disabled={isClosed}
+              onSave={handlePartialSave}
+            />
             <Tabs defaultValue="steps" className="space-y-4">
               <WorkspaceTabsList variant="underline">
                 <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" /><T k="auto.phasedetail.etapes" fallback="Étapes" /></TabsTrigger>
