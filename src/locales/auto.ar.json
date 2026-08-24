@@ -5016,4 +5016,7 @@
   "auto.quantitytakeoffs.calcul_metre": "حساب الكميات",
   "auto.quantitytakeoffs.auto_hint": "يتم حساب الكميات تلقائياً من موارد المشروع وتظهر مباشرة في بنود جدول الكميات القابلة للتعديل أدناه.",
   "auto.quantitytakeoffs.phase_dispatch_hint": "يتم توزيع البنود المعتمدة على هذه المرحلة (الموارد، المهام، المعالم)."
+, "projectconsultantdesignation": {
+    "stakeholders": "أصحاب المصلحة في المشروع"
+  }
 }

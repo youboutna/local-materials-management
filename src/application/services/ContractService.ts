@@ -13,6 +13,9 @@ import type {
 import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
+// ✅ IMPORT formatReference et validateEntityLabel
+import { formatReference, validateEntityLabel } from '@/utils/entityLabels';
+
 export interface AwardContractInput {
   projectId: string;
   tenderId: string;
@@ -26,7 +29,8 @@ export interface AwardContractInput {
 
 /** Numéro de contrat lisible et stable : CTR-<AAAA>-<8 premiers du tender>. */
 export function buildContractNumber(tenderId: string, at: Date = new Date()): string {
-  const suffix = (tenderId || '').replace(/-/g, '').slice(0, 8).toUpperCase();
+  // ✅ formatReference au lieu de tenderId.replace(/-/g, '').slice(0, 8)
+  const suffix = formatReference(tenderId, '');
   return `CTR-${at.getFullYear()}-${suffix || 'MANUEL'}`;
 }
 
@@ -49,7 +53,6 @@ export class ContractService {
     return this.repository.findBySupplierId(supplierId);
   }
 
-
   /**
    * Crée la trace contractuelle d'une attribution. Idempotent par appel d'offres :
    * si un contrat existe déjà pour ce tender, il est renvoyé tel quel.
@@ -61,11 +64,14 @@ export class ContractService {
     const existing = await this.repository.findByTenderId(input.tenderId).catch(() => []);
     if (existing.length > 0) return existing[0];
 
+    // ✅ formatReference au lieu de input.tenderId.slice(0, 8)
+    const tenderRef = formatReference(input.tenderId, '');
+
     const dto: CreateContractRecordDTO = {
       contractNumber: buildContractNumber(input.tenderId),
       title: input.projectName
         ? `Contrat — ${input.projectName}`
-        : `Contrat d'attribution ${input.tenderId.slice(0, 8)}`,
+        : `Contrat d'attribution ${tenderRef}`,
       projectId: input.projectId,
       tenderId: input.tenderId,
       supplierId: input.supplierId ?? null,
@@ -76,6 +82,13 @@ export class ContractService {
       currency: input.currency ?? 'MRU',
       metadata: input.supplierName ? { supplierName: input.supplierName } : null,
     };
+
+    // ✅ Validation du contrat
+    const validationResult = validateEntityLabel(dto, 'contract');
+    if (!validationResult.valid) {
+      console.warn('⚠️ Contract validation warning:', validationResult.error);
+    }
+
     return this.repository.create(dto);
   }
 }

@@ -3,6 +3,7 @@ import { getProjectService } from '../application/services/ProjectService';
 import { PhaseService } from '../application/services/PhaseService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { getPhaseService } from '@/application/services/PhaseService';
+import { formatReference } from '@/utils/entityLabels';
 
 interface PhaseCostData {
   id: string;

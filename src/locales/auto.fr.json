@@ -5014,4 +5014,9 @@
   "auto.quantitytakeoffs.calcul_metre": "Calcul métré",
   "auto.quantitytakeoffs.auto_hint": "Les quantités sont calculées automatiquement depuis les ressources (types d'ouvrage, déduction des ouvertures, recommandations) et s'affichent directement dans les lignes DQE, éditables ci-dessous.",
   "auto.quantitytakeoffs.phase_dispatch_hint": "Les lignes validées sont dispatchées vers cette phase (ressources, tâches, jalons)."
+
+ , "projectconsultantdesignation": {
+    "stakeholders": "Parties prenantes du projet"
+  }
+
 }

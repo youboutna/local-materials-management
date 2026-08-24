@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Shield } from "lucide-react";
 import { T } from '@/components/i18n/T';
+import { formatReference } from '@/utils/entityLabels';
 
 const UserProfile = () => {
   const { user, logout } = useAuth();

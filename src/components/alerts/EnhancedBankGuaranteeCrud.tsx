@@ -1,6 +1,7 @@
 /**
  * EnhancedBankGuaranteeCrud - MIGRATED TO HEXAGONAL ARCHITECTURE
  * Uses camelCase formData aligned with BankGuaranteeFormData from hooks
+ * Uses entityLabels for display, keeps IDs for CRUD operations
  */
 
 import React, { useMemo, useState } from 'react';
@@ -35,6 +36,10 @@ import {
 import { BankGuaranteeType, BankGuaranteeStatus } from '@/dtos/entities/BankGuaranteeDTO';
 import { T } from '@/components/i18n/T';
 
+// ✅ IMPORT entityLabels
+import { getEntityLabel, createEntityOptions } from '@/utils/entityLabels';
+import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+
 const EnhancedBankGuaranteeCrud = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -63,6 +68,7 @@ const EnhancedBankGuaranteeCrud = () => {
 
   // Hexagonal hooks
   const { data: guarantees = [], isLoading, refetch } = useBankGuaranteesList();
+  const { data: projects = [] } = useProjectsHex(); // ✅ Pour les labels
   const createMutation = useCreateBankGuarantee();
   const updateMutation = useUpdateBankGuarantee();
   const deleteMutation = useDeleteBankGuarantee();
@@ -195,19 +201,24 @@ const EnhancedBankGuaranteeCrud = () => {
     }
   };
 
-  // Filtrage/recherche côté présentation : aucune donnée n'est retirée du modèle,
-  // la liste complète reste accessible via le filtre « Tous ».
+  // ✅ Filtrage avec recherche sur le label du projet
   const filteredGuarantees = useMemo(() => {
     const q = search.trim().toLowerCase();
     return guarantees.filter((g) => {
       if (typeFilter !== 'all' && g.guaranteeType !== typeFilter) return false;
       if (!matchesExpiryFilter(g.expiryDate, expiryFilter)) return false;
       if (!q) return true;
-      return [g.projectId, g.bankName, g.guaranteeType, g.contractorName, g.status, g.notes]
+      
+      // ✅ Récupérer le label du projet pour la recherche
+      const projectLabel = g.projectId 
+        ? getEntityLabel(g.projectId, projects, 'project')
+        : '';
+      
+      return [projectLabel, g.bankName, g.guaranteeType, g.contractorName, g.status, g.notes]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q));
     });
-  }, [guarantees, search, expiryFilter, typeFilter]);
+  }, [guarantees, projects, search, expiryFilter, typeFilter]);
 
   const getStatusColor = (status: string) => {
     return statusOptions.find(option => option.value === status)?.color || 'bg-muted text-foreground';
@@ -462,78 +473,86 @@ const EnhancedBankGuaranteeCrud = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredGuarantees.map((guarantee) => (
-              <TableRow key={guarantee.id}>
-                <TableCell className="font-medium">
-                  {guarantee.projectId ? (
-                    <a
-                      href={`/projects/${guarantee.projectId}`}
-                      className="text-primary hover:underline inline-flex items-center gap-1"
-                      title={guarantee.projectId}
-                    >
-                      <Eye className="h-3 w-3" />
-                      {guarantee.projectId.slice(0, 8)}...
-                    </a>
-                  ) : '—'}
-                </TableCell>
-                <TableCell>{guarantee.bankName}</TableCell>
-                <TableCell>
-                  {guaranteeTypes.find(t => t.value === guarantee.guaranteeType)?.label || guarantee.guaranteeType}
-                </TableCell>
-                <TableCell>{formatCurrency(guarantee.guaranteeAmount || 0)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {new Date(guarantee.expiryDate || '').toLocaleDateString('fr-FR')}
-                    {isExpiringSoon(guarantee.expiryDate || '') && (
-                      <AlertTriangle className="h-4 w-4 text-warning" />
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <ExpiryCountdown expiryDate={guarantee.expiryDate} />
-                </TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(guarantee.status)}>
-                    {statusOptions.find(s => s.value === guarantee.status)?.label || guarantee.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)} aria-label="Consulter">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><T k="auto.enhancedbankguaranteecrud.consulter_la_garantie" fallback="Consulter la garantie" /></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)} aria-label="Modifier">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><T k="auto.enhancedbankguaranteecrud.modifier_la_garantie" fallback="Modifier la garantie" /></TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(guarantee.id)}
-                          className="text-destructive hover:text-destructive"
-                          disabled={deleteMutation.isPending}
-                          aria-label="Supprimer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent><T k="auto.enhancedbankguaranteecrud.supprimer_la_garantie" fallback="Supprimer la garantie" /></TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {filteredGuarantees.map((guarantee) => {
+              // ✅ RÉSOLUTION DU LABEL DU PROJET
+              const projectLabel = guarantee.projectId 
+                ? getEntityLabel(guarantee.projectId, projects, 'project')
+                : '—';
+              
+              return (
+                <TableRow key={guarantee.id}>
+                  <TableCell className="font-medium">
+                    {guarantee.projectId ? (
+                      <a
+                        href={`/projects/${guarantee.projectId}`}
+                        className="text-primary hover:underline inline-flex items-center gap-1"
+                        title={guarantee.projectId}
+                      >
+                        <Eye className="h-3 w-3" />
+                        {/* ✅ AFFICHAGE DU LABEL AU LIEU DE L'UUID */}
+                        {projectLabel}
+                      </a>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell>{guarantee.bankName}</TableCell>
+                  <TableCell>
+                    {guaranteeTypes.find(t => t.value === guarantee.guaranteeType)?.label || guarantee.guaranteeType}
+                  </TableCell>
+                  <TableCell>{formatCurrency(guarantee.guaranteeAmount || 0)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {new Date(guarantee.expiryDate || '').toLocaleDateString('fr-FR')}
+                      {isExpiringSoon(guarantee.expiryDate || '') && (
+                        <AlertTriangle className="h-4 w-4 text-warning" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <ExpiryCountdown expiryDate={guarantee.expiryDate} />
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(guarantee.status)}>
+                      {statusOptions.find(s => s.value === guarantee.status)?.label || guarantee.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)} aria-label="Consulter">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><T k="auto.enhancedbankguaranteecrud.consulter_la_garantie" fallback="Consulter la garantie" /></TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)} aria-label="Modifier">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><T k="auto.enhancedbankguaranteecrud.modifier_la_garantie" fallback="Modifier la garantie" /></TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(guarantee.id)}
+                            className="text-destructive hover:text-destructive"
+                            disabled={deleteMutation.isPending}
+                            aria-label="Supprimer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><T k="auto.enhancedbankguaranteecrud.supprimer_la_garantie" fallback="Supprimer la garantie" /></TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             {filteredGuarantees.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">

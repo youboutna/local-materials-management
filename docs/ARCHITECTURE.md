@@ -60,8 +60,8 @@ src/application/
 ### **src/infrastructure/** 🔧 **Implémentations Techniques**
 ```
 src/infrastructure/
-├── supabase/            # ✅ Adapters Supabase
-│   ├── adapters/
+├── adapters/          
+│   ├── supabase/   # ✅ Adapters Supabase
 │   │   ├── SupabaseMaterialAdapter.ts
 │   │   ├── SupabaseProjectAdapter.ts
 │   │   └── SupabaseInspectionAdapter.ts

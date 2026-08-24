@@ -21,7 +21,10 @@ import {
 import { PhaseDTO } from "@/dtos/types/phase-dto";
 import { formatCurrency } from "@/utils/phaseDisplayHelpers";
 import { T } from '@/components/i18n/T';
-// PaymentCalculator component requires different props - using simpler display
+
+// ✅ IMPORT entityLabels
+import { getEntityLabel, formatReference } from '@/utils/entityLabels';
+import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
 
 interface PhaseCosts {
   estimatedCost: number;
@@ -68,6 +71,14 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
   loadingResources,
   onCreatePayment,
 }) => {
+  // ✅ Récupérer les projets pour les labels
+  const { data: projects = [] } = useProjectsHex();
+
+  // ✅ RÉSOLUTION DU LABEL DU PROJET
+  const projectLabel = projectId 
+    ? getEntityLabel(projectId, projects, 'project')
+    : 'Projet inconnu';
+
   return (
     <div className="space-y-6">
       {/* Financial Overview Cards */}
@@ -234,20 +245,27 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   {Object.entries(phaseCosts.paymentDistribution)
                     .sort(([,a], [,b]) => (b as number) - (a as number))
                     .slice(0, 5)
-                    .map(([contractorId, amount]) => (
-                      <div key={contractorId} className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
-                          <span className="text-sm truncate">Contractant {contractorId.slice(0, 8)}</span>
+                    .map(([contractorId, amount]) => {
+                      // ✅ RÉSOLUTION DU LABEL DU CONTRACTANT
+                      const contractorLabel = getEntityLabel(contractorId, projects, 'supplier');
+                      return (
+                        <div key={contractorId} className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-500" />
+                            <span className="text-sm truncate">
+                              {/* ✅ AFFICHAGE DU LABEL AU LIEU DE contractorId.slice(0, 8) */}
+                              {contractorLabel || formatReference(contractorId, 'SUP')}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium text-sm">{formatCurrency(amount as number)}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {(((amount as number) / phaseCosts.totalPayments) * 100).toFixed(1)}%
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium text-sm">{formatCurrency(amount as number)}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {(((amount as number) / phaseCosts.totalPayments) * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>

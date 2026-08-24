@@ -20,6 +20,18 @@ import { fr } from 'date-fns/locale';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { T } from '@/components/i18n/T';
 
+// ✅ Fonction utilitaire pour formater les dates en toute sécurité
+const safeFormatDistanceToNow = (date: string | Date | null | undefined): string => {
+  if (!date) return 'Date inconnue';
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return 'Date invalide';
+    return formatDistanceToNow(d, { addSuffix: true, locale: fr });
+  } catch {
+    return 'Date invalide';
+  }
+};
+
 export function NotificationDropdown() {
   const { user } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(user?.id);
@@ -120,10 +132,8 @@ export function NotificationDropdown() {
                     )}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(notification.created_at), { 
-                          addSuffix: true, 
-                          locale: fr 
-                        })}
+                        {/* ✅ Utilisation de safeFormatDistanceToNow */}
+                        {safeFormatDistanceToNow(notification.created_at)}
                       </span>
                       {(notification.metadata as any)?.task_type && (
                         <Badge variant="secondary" className="text-xs">

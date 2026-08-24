@@ -12,6 +12,9 @@ import {
   type DecompteStatus,
 } from '@/dtos/entities/DecompteRecordDTO';
 
+// ✅ IMPORT formatReference
+import { formatReference } from '@/utils/entityLabels';
+
 const mapStatus = (raw: string | null): DecompteStatus => {
   const value = (raw ?? '').toLowerCase();
   if ((DECOMPTE_PAID_DB_STATUSES as readonly string[]).includes(value)) return 'paid';
@@ -45,7 +48,8 @@ const toDto = (row: any): DecompteRecordDTO => {
     id: row.id,
     decompteNumber: row.invoice_number
       ? String(row.invoice_number).replace(/^INV-/, 'D-')
-      : `D-${String(row.id).slice(0, 8).toUpperCase()}`,
+      // ✅ formatReference au lieu de id.slice(0, 8)
+      : `D-${formatReference(row.id, 'DEC')}`,
     invoiceNumber: row.invoice_number ?? null,
     projectId: row.project_id ?? null,
     phaseId: row.phase_id ?? null,

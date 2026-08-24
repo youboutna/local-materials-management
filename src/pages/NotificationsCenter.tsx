@@ -43,6 +43,24 @@ import { Link } from 'react-router-dom';
 import { formatAmount2, formatNumber2, formatPercent2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
 
+// ✅ Fonction utilitaire pour formater les dates en toute sécurité
+const safeFormatDate = (date: string | Date | null | undefined): string => {
+  if (!date) return 'Date inconnue';
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return 'Date invalide';
+    return d.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return 'Date invalide';
+  }
+};
+
 interface NotificationData {
   id: string;
   title: string;
@@ -433,7 +451,8 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
+                                  {/* ✅ Utilisation de safeFormatDate */}
+                                  {safeFormatDate(notification.createdAt)}
                                 </div>
                               </div>
                             </div>
@@ -538,7 +557,8 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
+                                  {/* ✅ Utilisation de safeFormatDate */}
+                                  {safeFormatDate(notification.createdAt)}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -648,7 +668,8 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
+                                  {/* ✅ Utilisation de safeFormatDate */}
+                                  {safeFormatDate(notification.createdAt)}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -753,13 +774,14 @@ const NotificationsCenterPage = () => {
                                 {notification.metadata?.due_date && (
                                   <div className="flex items-center gap-2 mb-2">
                                     <Badge variant="outline" className="text-warning">
-                                      Échéance: {new Date(notification.metadata.due_date).toLocaleDateString('fr-FR')}
+                                      Échéance: {safeFormatDate(notification.metadata.due_date)}
                                     </Badge>
                                   </div>
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
+                                  {/* ✅ Utilisation de safeFormatDate */}
+                                  {safeFormatDate(notification.createdAt)}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -865,7 +887,8 @@ const NotificationsCenterPage = () => {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
+                                  {/* ✅ Utilisation de safeFormatDate */}
+                                  {safeFormatDate(notification.createdAt)}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -930,7 +953,8 @@ const NotificationsCenterPage = () => {
                                 </p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(notification.createdAt).toLocaleString('fr-FR')}
+                                  {/* ✅ Utilisation de safeFormatDate */}
+                                  {safeFormatDate(notification.createdAt)}
                                 </div>
                               </div>
                             </div>

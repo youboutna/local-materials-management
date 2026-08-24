@@ -4,7 +4,7 @@ import { OperationalStatus } from '@/utils/mauritania';
 import type { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 import type { Workspace } from '@/domain/entities/Workspace';
 import type { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepository';
-
+import { formatReference } from '@/utils/entityLabels';
 // Database row interface for workspaces table
 interface WorkspaceRow {
   id: string;
@@ -219,7 +219,7 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
     return {
       id: data.id,
       workspaceId: data.id, // Assuming workspaceId is same as id for now
-      workspaceCode: `WS-${data.id.slice(0, 8)}`, // Generate a simple code
+      workspaceCode: `WS-${formatReference(data.id, '')}`, // Generate a simple code
       name: data.name,
       location: data.location || 'Nouakchott', // String location for now
       description: data.description || undefined,

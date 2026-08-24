@@ -24,6 +24,9 @@ import { cn } from '@/lib/utils';
 import { usePaymentsHex } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
 
+// ✅ IMPORT formatReference
+import { formatReference } from '@/utils/entityLabels';
+
 // Define PaymentMilestone interface locally since hook doesn't export it
 interface PaymentMilestone {
   id: string;
@@ -56,7 +59,8 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
   // Transform payments to PaymentMilestone format
   const payments: PaymentMilestone[] = (rawPayments || []).map(p => ({
     id: p.id,
-    title: `Paiement ${p.id.slice(0, 8)}`,
+    // ✅ formatReference au lieu de p.id.slice(0, 8)
+    title: `Paiement ${formatReference(p.id, 'PAY')}`,
     dueDate: p.createdAt || new Date().toISOString(),
     amount: p.amount || 0,
     status: (p.status || 'pending') as 'pending',
@@ -114,7 +118,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Summary Cards */}
+        {/* Summary Cards - inchangé */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
             <div className="flex items-center gap-2 text-primary mb-2">

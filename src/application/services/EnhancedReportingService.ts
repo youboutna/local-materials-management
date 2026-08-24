@@ -14,6 +14,9 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 // Direct Supabase access removed for Hexagonal Architecture
 import { ReportCalculations } from '@/utils/reportCalculations';
 
+// ✅ IMPORT formatReference et validateEntityLabel
+import { formatReference, validateEntityLabel } from '@/utils/entityLabels';
+
 export class EnhancedReportingService {
   private reportingRepository = RepositoryFactory.getReportingRepository();
 
@@ -51,6 +54,12 @@ export class EnhancedReportingService {
         this.reportingRepository.getProjectInspections(project.id)
       ]);
 
+      // ✅ Validation du projet
+      const validationResult = validateEntityLabel(project, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning:', validationResult.error);
+      }
+
       const phasesData = phases || [];
       const inspectionsData = inspections || [];
       
@@ -82,6 +91,9 @@ export class EnhancedReportingService {
         qualityScore
       );
 
+      // ✅ formatReference au lieu de project.id.slice(0, 8) pour le titre
+      const projectRef = formatReference(project.id, 'PRJ');
+
       const reportData: ReportData = {
         id: `report-${project.id}-${Date.now()}`,
         projectId: project.id,
@@ -95,7 +107,7 @@ export class EnhancedReportingService {
         taskProgress: [],
         riskAssessment: reportDTO.riskAssessment?.risks?.map(risk => ({
           id: risk.id,
-          title: risk.description,
+          title: risk.description || `Risque ${formatReference(risk.id, 'RISK')}`,
           severity: String(risk.riskScore),
           status: risk.status
         })) || []
@@ -141,7 +153,6 @@ export class EnhancedReportingService {
         .select('*')
         .eq('project_id', projectId);
 
-
       if (!phasesData || phasesData.length === 0) return [];
 
       return phasesData.map(phase => {
@@ -157,7 +168,7 @@ export class EnhancedReportingService {
 
         return {
           id: phase.id,
-          name: phase.phase_name || '—',
+          name: phase.phase_name || `Phase ${formatReference(phase.id, 'PH')}`,
           plannedProgress: Math.round(plannedProgress),
           actualProgress: phase.progress || 0,
           budget: phase.estimated_cost || 0,
@@ -290,7 +301,8 @@ export class EnhancedReportingService {
           dueDate: new Date(p.paymentDate || new Date()),
           paidDate: new Date(p.paymentDate || new Date()),
           status: 'paid' as const,
-          description: p.transactionId || `Payment ${p.id.slice(0, 8)}`
+          // ✅ formatReference au lieu de p.id.slice(0, 8)
+          description: p.transactionId || `Payment ${formatReference(p.id, 'PAY')}`
         })),
         bankGuarantees: (bankGuarantees || []).map((bg: any) => ({
           id: bg.id,
@@ -410,8 +422,6 @@ export class EnhancedReportingService {
     return phases.length > 0 ? (onTimePhases / phases.length) * 100 : 100;
   }
 
-  // Qualité issue des inspections réelles — 0 quand aucune inspection n'est
-  // exploitable (plus de constante 85 qui simulait une qualité inexistante).
   private static calculateQualityFromInspections(inspections: any[]): number {
     if (!inspections || inspections.length === 0) return 0;
     const completedInspections = inspections.filter(i => i.status === 'completed' || i.status === 'approved');

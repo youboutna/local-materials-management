@@ -34,6 +34,10 @@ import {
 import type { ActionFormData, PaymentControlActionsProps, ActionMetadata } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
 
+// ✅ IMPORT entityLabels
+import { getEntityLabel, formatReference } from '@/utils/entityLabels';
+import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+
 // Use the same ActionType from schema
 type ActionType = 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail';
 
@@ -48,6 +52,18 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   const { toast } = useToast();
   const { t } = useLanguage();
   const { createNotification } = useNotifications();
+
+  // ✅ Récupérer les projets pour les labels
+  const { data: projects = [] } = useProjectsHex();
+
+  // ✅ RÉSOLUTION DES LABELS
+  const projectLabel = projectId 
+    ? getEntityLabel(projectId, projects, 'project')
+    : 'Projet inconnu';
+  
+  const contractorLabel = contractorId 
+    ? getEntityLabel(contractorId, projects, 'supplier')
+    : 'Contractant inconnu';
 
   // Use hexagonal hook with props
   const {
@@ -222,10 +238,14 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
           <T k="auto.paymentcontrolactions.actions_de_controle_de_paiement" fallback="Actions de Contrôle de Paiement" />
         </CardTitle>
         <CardDescription>
-          Actions disponibles pour le paiement de {amount.toLocaleString()} MRU —{' '}
-          <a href={`/payments/${paymentId}`} className="text-primary hover:underline font-mono">
-            voir détail ({paymentId.slice(0, 8)}…)
-          </a>
+          {/* ✅ AFFICHAGE DES LABELS AU LIEU DES IDS */}
+          Actions disponibles pour le paiement de {amount.toLocaleString()} MRU — 
+          Projet: {projectLabel} — Contractant: {contractorLabel}
+          <span className="block text-xs text-muted-foreground mt-1">
+            <a href={`/payments/${paymentId}`} className="text-primary hover:underline">
+              voir détail ({formatReference(paymentId, 'PAY')})
+            </a>
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>

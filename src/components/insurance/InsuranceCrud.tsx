@@ -17,6 +17,10 @@ import { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
 import { T } from '@/components/i18n/T';
 
+// ✅ IMPORT entityLabels
+import { getEntityLabel } from '@/utils/entityLabels';
+import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+
 // Local form data interface matching component needs (Rule #2: camelCase)
 interface InsuranceFormData {
   projectId: string;
@@ -64,6 +68,9 @@ const InsuranceCrud: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const { toast } = useToast();
+
+  // ✅ Récupérer les projets pour les labels
+  const { data: projects = [] } = useProjectsHex();
 
   const [formData, setFormData] = useState<InsuranceFormData>({
     projectId: '',
@@ -442,68 +449,76 @@ const InsuranceCrud: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {certificates.map((certificate) => (
-                <TableRow key={certificate.id}>
-                  <TableCell className="font-medium">
-                    {certificate.projectId ? (
-                      <a
-                        href={`/projects/${certificate.projectId}`}
-                        className="text-primary hover:underline inline-flex items-center gap-1"
-                        title={certificate.projectId}
-                      >
-                        <Eye className="h-3 w-3" />
-                        {certificate.projectId.slice(0, 8)}...
-                      </a>
-                    ) : '—'}
-                  </TableCell>
-                  <TableCell>{certificate.contractorName || certificate.contractorId}</TableCell>
-                  <TableCell>
-                    {coverageTypes.find(t => t.value === certificate.coverageType)?.label || certificate.coverageType}
-                  </TableCell>
-                  <TableCell>{certificate.policyNumber}</TableCell>
-                  <TableCell>
-                    {certificate.coverageAmount.toLocaleString()} MRU
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {new Date(certificate.endDate).toLocaleDateString('fr-FR')}
-                      {isExpiringSoon(certificate.endDate) && (
-                        <AlertTriangle className="h-4 w-4 text-warning" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(certificate.status)}>
-                      {statusOptions.find(s => s.value === certificate.status)?.label || certificate.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openViewForm(certificate)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditForm(certificate)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(certificate.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {certificates.map((certificate) => {
+                // ✅ RÉSOLUTION DU LABEL DU PROJET
+                const projectLabel = certificate.projectId 
+                  ? getEntityLabel(certificate.projectId, projects, 'project')
+                  : '—';
+                
+                return (
+                  <TableRow key={certificate.id}>
+                    <TableCell className="font-medium">
+                      {certificate.projectId ? (
+                        <a
+                          href={`/projects/${certificate.projectId}`}
+                          className="text-primary hover:underline inline-flex items-center gap-1"
+                          title={certificate.projectId}
+                        >
+                          <Eye className="h-3 w-3" />
+                          {/* ✅ AFFICHAGE DU LABEL AU LIEU DE L'UUID */}
+                          {projectLabel}
+                        </a>
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell>{certificate.contractorName || certificate.contractorId}</TableCell>
+                    <TableCell>
+                      {coverageTypes.find(t => t.value === certificate.coverageType)?.label || certificate.coverageType}
+                    </TableCell>
+                    <TableCell>{certificate.policyNumber}</TableCell>
+                    <TableCell>
+                      {certificate.coverageAmount.toLocaleString()} MRU
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {new Date(certificate.endDate).toLocaleDateString('fr-FR')}
+                        {isExpiringSoon(certificate.endDate) && (
+                          <AlertTriangle className="h-4 w-4 text-warning" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(certificate.status)}>
+                        {statusOptions.find(s => s.value === certificate.status)?.label || certificate.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openViewForm(certificate)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditForm(certificate)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(certificate.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {certificates.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">

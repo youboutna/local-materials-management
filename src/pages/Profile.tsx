@@ -11,7 +11,7 @@ import { usePasswordManagement } from "@/hooks/usePasswordManagement";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout";
 import { T } from '@/components/i18n/T';
-
+import { formatReference } from '@/utils/entityLabels';
 const Profile = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -102,7 +102,7 @@ const Profile = () => {
                   <T k="auto.profile.id_utilisateur" fallback="ID Utilisateur" />
                 </Label>
                 <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                  {user?.id?.slice(0, 8)}...{user?.id?.slice(-8)}
+                  {formatReference(user?.id, 'USR')}
                 </p>
               </div>
             </div>

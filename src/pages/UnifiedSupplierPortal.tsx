@@ -57,6 +57,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { formatReference } from '@/utils/entityLabels';
 
 type SupplierNotificationRow = BtpTables<"supplier_notifications">;
 import { useQuery } from "@tanstack/react-query";
@@ -273,7 +274,7 @@ const UnifiedSupplierPortal = () => {
     setInvoiceParsing(true);
     try {
       const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-      const path = `invoices/${user.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safeName}`;
+      const path = `invoices/${user.id}/${Date.now()}-${formatReference(crypto.randomUUID(), '')}-${safeName}`;
       const up = await storageUpload(file, path);
       if (!up.success) throw new Error("Upload échoué");
 
@@ -359,7 +360,7 @@ const UnifiedSupplierPortal = () => {
     if (!uploadFile || !uploadTitle.trim() || !user) return;
 
     const safeName = uploadFile.name.replace(/[^\w.\-]+/g, "_");
-    const uniquePath = `supplier-uploads/${user.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safeName}`;
+    const uniquePath = `supplier-uploads/${user.id}/${Date.now()}-${formatReference(crypto.randomUUID(), '')}-${safeName}`;
     const uploadResult = await storageUpload(uploadFile, uniquePath);
 
     if (!uploadResult.success) {

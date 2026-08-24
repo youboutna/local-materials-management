@@ -17,7 +17,7 @@ import { BoqWorkspace } from '@/components/boq';
 import { useToast } from '@/hooks/use-toast';
 import { usePublicTenderById } from '@/hooks/hexagonal/usePublicTendersHex';
 import { T } from '@/components/i18n/T';
-
+import { formatReference } from '@/utils/entityLabels';
 export default function TendersPublic() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -90,7 +90,7 @@ function BidStepContent({ step, tenderId }: { step: BidWizardStepCode; tenderId:
           Téléchargez le dossier complet contenant le cahier des charges, le BPU et les annexes.
         </p>
         <div className="rounded border bg-muted/30 p-4 text-sm text-center text-muted-foreground">
-          [Zone de téléchargement des documents publics du tender {tenderId.slice(0, 8)}]
+          [Zone de téléchargement des documents publics du tender {formatReference(tenderId, 'TND')}]
         </div>
       </div>
     );

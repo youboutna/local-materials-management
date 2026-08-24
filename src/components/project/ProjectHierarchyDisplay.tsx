@@ -6,6 +6,10 @@ import { Mail, Phone, Building, Users } from 'lucide-react';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
 
+// ✅ IMPORT entityLabels
+import { getEntityLabel, formatReference } from '@/utils/entityLabels';
+import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+
 interface HierarchyMember {
   hierarchy_id: string;
   employee_id: string;
@@ -32,6 +36,13 @@ const ProjectHierarchyDisplay: React.FC<ProjectHierarchyDisplayProps> = ({
   projectId,
   onEscalate
 }) => {
+  // ✅ Récupérer les projets pour les labels
+  const { data: projects = [] } = useProjectsHex();
+  
+  // ✅ RÉSOLUTION DU LABEL DU PROJET
+  const projectLabel = getEntityLabel(projectId, projects, 'project');
+  const projectRef = formatReference(projectId, 'PRJ');
+
   // Group hierarchy by level
   const hierarchyByLevel = hierarchy.reduce((acc, member) => {
     if (!acc[member.level]) {
@@ -78,7 +89,8 @@ const ProjectHierarchyDisplay: React.FC<ProjectHierarchyDisplayProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building className="h-5 w-5" />
-            Hiérarchie Organisationnelle - Projet {projectId.slice(0, 8)}
+            {/* ✅ AFFICHAGE DU LABEL AU LIEU DE projectId.slice(0, 8) */}
+            Hiérarchie Organisationnelle - {projectLabel || projectRef}
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -9,6 +9,9 @@ import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRep
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
+// ✅ IMPORT formatReference
+import { formatReference } from '@/utils/entityLabels';
+
 function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
   const map = new Map<string, BoqLineDTO[]>();
   for (const l of lines) {
@@ -37,7 +40,8 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
     });
     list.push({
       documentId,
-      reference: documentId.slice(0, 8).toUpperCase(),
+      // ✅ formatReference au lieu de documentId.slice(0, 8)
+      reference: formatReference(documentId, 'BOQ'),
       title,
       status,
       totalHt,

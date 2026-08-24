@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from '@/hooks/hexagonal/useAuth';;
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DEV_MODE } from "@/config/constants";
 import { motion } from "framer-motion";
@@ -46,23 +46,16 @@ import { NotificationDropdown } from "@/components/notifications/NotificationDro
 import { BrandBands, BrandIdentity } from "@/components/branding/BrandIdentity";
 import { T } from '@/components/i18n/T';
 
-
 const MergedNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // 🔥 Utilisation unique du hook hexagonal
   const { user, isAuthenticated, logout, hasRole, hasAnyRole } = useAuth();
-
-  // Alias pour compatibilité avec l'ancien code
-  const authUser = user;
-  const signOut = logout;
 
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Vérification des rôles
   const canManageUsers = hasAnyRole?.(["admin", "director"]) ?? false;
   const isSupplier = hasAnyRole?.(["supplier"]) ?? false;
   const isSupplierOnly =
@@ -104,7 +97,6 @@ const MergedNavbar = () => {
     return user?.avatarUrl || "";
   };
 
-  // Items de navigation (inchangés)
   const coreNavItems = [
     { name: t("dashboard.title"), href: "/dashboard", icon: Home },
     { name: t("nav.projects"), href: "/projects", icon: Briefcase },
@@ -206,7 +198,7 @@ const MergedNavbar = () => {
     >
       <div className="container mx-auto px-4 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between min-h-16 gap-4">
-          {/* Identité du propriétaire — sceau + bandeau au même niveau (aucun nom applicatif ici) */}
+          {/* Brand */}
           <Link to="/" className="flex items-center gap-3 flex-shrink-0 min-w-0">
             <BrandIdentity
               size="lg"
@@ -229,8 +221,6 @@ const MergedNavbar = () => {
               </span>
             )}
           </Link>
-
-
 
           {/* Desktop Navigation - Core Items */}
           {isAuthenticated && !isSupplierOnly && (
@@ -256,38 +246,46 @@ const MergedNavbar = () => {
                     </Button>
                   </NavigationMenuItem>
 
-                  {/* Projects Dropdown */}
+                  {/* ✅ Projects Dropdown - Version DropdownMenu (comme More) */}
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-sm font-medium text-foreground data-[state=open]:text-terracotta-600 data-[state=open]:bg-terracotta-50">
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      {t("nav.projects")}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent className="w-80 min-w-[320px]">
-                      <div className="p-2 w-full">
-                        {projectDropdownItems.map((item) => (
-                          <NavigationMenuLink key={item.name} asChild>
-                            <Link
-                              to={item.href}
-                              className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted transition-colors group w-full"
-                            >
-                              {item.icon && (
-                                <item.icon className="h-4 w-4 mt-0.5 text-muted-foreground group-hover:text-terracotta-600 flex-shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium text-foreground group-hover:text-terracotta-600 whitespace-nowrap">
-                                  {item.name}
-                                </div>
-                                {item.description && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                                    {item.description}
-                                  </p>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="text-sm font-medium text-foreground hover:text-terracotta-600 data-[state=open]:text-terracotta-600 data-[state=open]:bg-terracotta-50"
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          {t("nav.projects")}
+                          <ChevronDown className="ml-1 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-80 min-w-[320px] bg-white border shadow-xl rounded-lg">
+                        <div className="p-2 w-full">
+                          {projectDropdownItems.map((item) => (
+                            <DropdownMenuItem key={item.name} asChild>
+                              <Link
+                                to={item.href}
+                                className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted transition-colors group w-full"
+                              >
+                                {item.icon && (
+                                  <item.icon className="h-4 w-4 mt-0.5 text-muted-foreground group-hover:text-terracotta-600 flex-shrink-0" />
                                 )}
-                              </div>
-                            </Link>
-                          </NavigationMenuLink>
-                        ))}
-                      </div>
-                    </NavigationMenuContent>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-foreground group-hover:text-terracotta-600 whitespace-nowrap">
+                                    {item.name}
+                                  </div>
+                                  {item.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                                      {item.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </NavigationMenuItem>
 
                   {/* Materials */}
@@ -404,10 +402,8 @@ const MergedNavbar = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3 flex-shrink-0">
-            {/* Language Switcher */}
             <LanguageSwitcher />
 
-            {/* Notifications */}
             {isAuthenticated && <NotificationDropdown />}
 
             {/* User Menu / Auth Buttons */}
@@ -497,7 +493,6 @@ const MergedNavbar = () => {
                   align="end"
                 >
                   <div className="py-2 max-h-[80vh] overflow-y-auto">
-                    {/* Navigation Items */}
                     {(isSupplierOnly
                       ? supplierNavItems
                       : [...coreNavItems, ...additionalNavItems]
@@ -525,7 +520,6 @@ const MergedNavbar = () => {
 
                     <DropdownMenuSeparator />
 
-                    {/* User Section */}
                     <div className="px-4 py-3 space-y-3">
                       {isAuthenticated ? (
                         <>
@@ -611,7 +605,6 @@ const MergedNavbar = () => {
         </div>
       </div>
     </motion.nav>
-
   );
 };
 

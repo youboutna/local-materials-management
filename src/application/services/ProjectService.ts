@@ -28,6 +28,9 @@ import {
   ProjectLocationData as ProjectLocationDataType
 } from '@/dtos/entities/ProjectDTO';
 
+// ✅ IMPORT validateEntityLabel
+import { validateEntityLabel } from '@/utils/entityLabels';
+
 // Import ProjectTransformer for transformations
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
@@ -96,6 +99,12 @@ export class ProjectService {
     try {
       this.validateCreateRequest(request);
       
+      // ✅ Validation du projet avant création
+      const validationResult = validateEntityLabel(request, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning:', validationResult.error);
+      }
+      
       // Keep the complete UI -> DTO -> domain/adapter mapping in one place.
       // The adapter then converts this camelCase object to database snake_case.
       const projectData = ProjectTransformer.fromCreateDTOToEntity(request);
@@ -119,6 +128,13 @@ export class ProjectService {
     try {
       const project = await this.projectRepository.findById(id);
       if (!project) return null;
+      
+      // ✅ Validation du projet
+      const validationResult = validateEntityLabel(project, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning for', id, ':', validationResult.error);
+      }
+      
       return ProjectTransformer.toDTO(project);
     } catch (error) {
       throw new ProjectServiceError(
@@ -135,6 +151,15 @@ export class ProjectService {
   async findAll(): Promise<ProjectDTO[]> {
     try {
       const projects = await this.projectRepository.findAll();
+      
+      // ✅ Validation de tous les projets
+      projects.forEach(project => {
+        const validationResult = validateEntityLabel(project, 'project');
+        if (!validationResult.valid) {
+          console.warn('⚠️ Project validation warning for', project.id, ':', validationResult.error);
+        }
+      });
+      
       return ProjectTransformer.manyToDTO(projects);
     } catch (error) {
       console.error('ProjectService.findAll error details:', error);
@@ -154,6 +179,12 @@ export class ProjectService {
    */
   async update(id: string, request: UpdateProjectDTO): Promise<ProjectDTO | null> {
     try {
+      // ✅ Validation avant mise à jour
+      const validationResult = validateEntityLabel(request, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning for update:', validationResult.error);
+      }
+      
       const projectData = ProjectTransformer.fromUpdateDTOToEntity(request);
 
       const project = await this.projectRepository.update(id, projectData);
@@ -218,6 +249,14 @@ export class ProjectService {
   async getActiveProjects(): Promise<ProjectDTO[]> {
     try {
       const projects = await this.projectRepository.findActiveProjects();
+      
+      projects.forEach(project => {
+        const validationResult = validateEntityLabel(project, 'project');
+        if (!validationResult.valid) {
+          console.warn('⚠️ Project validation warning:', validationResult.error);
+        }
+      });
+      
       return ProjectTransformer.manyToDTO(projects);
     } catch (error) {
       throw new ProjectServiceError(
@@ -231,6 +270,14 @@ export class ProjectService {
     try {
       const allProjects = await this.projectRepository.findAll();
       const filtered = allProjects.filter(p => p.status === status);
+      
+      filtered.forEach(project => {
+        const validationResult = validateEntityLabel(project, 'project');
+        if (!validationResult.valid) {
+          console.warn('⚠️ Project validation warning:', validationResult.error);
+        }
+      });
+      
       return ProjectTransformer.manyToDTO(filtered);
     } catch (error) {
       throw new ProjectServiceError(
@@ -255,6 +302,14 @@ export class ProjectService {
         const consultant = p.engineeringConsultant as { id?: string } | undefined;
         return consultant?.id === consultantId || designatedProjectIds.includes(p.id);
       });
+      
+      filtered.forEach(project => {
+        const validationResult = validateEntityLabel(project, 'project');
+        if (!validationResult.valid) {
+          console.warn('⚠️ Project validation warning:', validationResult.error);
+        }
+      });
+      
       return ProjectTransformer.manyToDTO(filtered);
 
     } catch (error) {
@@ -277,6 +332,14 @@ export class ProjectService {
         const s = String(p.status || '').toLowerCase();
         return s === 'en cours' || s === 'en_cours' || s === 'en_cours_v2' || s === 'in_progress';
       });
+      
+      eligible.forEach(project => {
+        const validationResult = validateEntityLabel(project, 'project');
+        if (!validationResult.valid) {
+          console.warn('⚠️ Project validation warning:', validationResult.error);
+        }
+      });
+      
       return ProjectTransformer.manyToDTO(eligible);
     } catch (error) {
       throw new ProjectServiceError(
@@ -361,6 +424,14 @@ export class ProjectService {
       const filtered = allProjects.filter(p => 
         statusInCategory.includes(p.status)
       );
+      
+      filtered.forEach(project => {
+        const validationResult = validateEntityLabel(project, 'project');
+        if (!validationResult.valid) {
+          console.warn('⚠️ Project validation warning:', validationResult.error);
+        }
+      });
+      
       return ProjectTransformer.manyToDTO(filtered);
     } catch (error) {
       throw new ProjectServiceError(
@@ -477,6 +548,12 @@ export class ProjectService {
       const project = await this.projectRepository.findById(id);
       if (!project) return null;
 
+      // ✅ Validation du projet
+      const validationResult = validateEntityLabel(project, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning:', validationResult.error);
+      }
+
       return ProjectTransformer.toSummaryDTO(project, {
         phasesCount: summary.phasesCount,
         tasksCount: summary.tasksCount,
@@ -499,6 +576,12 @@ export class ProjectService {
     try {
       const data = await this.projectRepository.findWithRelatedData(id);
       if (!data.project) return null;
+
+      // ✅ Validation du projet
+      const validationResult = validateEntityLabel(data.project, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning:', validationResult.error);
+      }
 
       const detailDTO = ProjectTransformer.toDetailDTO(data.project);
       
@@ -585,6 +668,14 @@ export class ProjectService {
       const limit = criteria.limit || 20;
       const paginated = projects.slice(offset, offset + limit);
 
+      // ✅ Validation des projets paginés
+      paginated.forEach(project => {
+        const validationResult = validateEntityLabel(project, 'project');
+        if (!validationResult.valid) {
+          console.warn('⚠️ Project validation warning:', validationResult.error);
+        }
+      });
+
       return {
         projects: ProjectTransformer.manyToDTO(paginated),
         total,
@@ -633,6 +724,12 @@ export class ProjectService {
       const project = await this.projectRepository.findById(id);
       if (!project) return null;
       
+      // ✅ Validation du projet
+      const validationResult = validateEntityLabel(project, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning:', validationResult.error);
+      }
+      
       const projectDTO = ProjectTransformer.toDTO(project);
       const stakeholders = await this.getProjectStakeholdersData(id);
       
@@ -670,6 +767,12 @@ export class ProjectService {
   async createWithLocation(request: CreateProjectDTO, locationData?: ProjectLocationData): Promise<ProjectDTO> {
     try {
       this.validateCreateRequest(request);
+      
+      // ✅ Validation du projet avant création
+      const validationResult = validateEntityLabel(request, 'project');
+      if (!validationResult.valid) {
+        console.warn('⚠️ Project validation warning:', validationResult.error);
+      }
       
       // Validate and enrich location data if provided
       let enrichedLocation: ProjectLocationData & { validatedAt: string; validationSource: string; confidence: number } | undefined;

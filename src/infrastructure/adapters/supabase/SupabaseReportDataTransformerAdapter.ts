@@ -19,6 +19,7 @@ import { RiskCategory, RiskDTO, RiskLevel, RiskStatus } from '@/dtos/entities/Ri
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Database } from '@/integrations/supabase/types';
 import { ReportCalculations } from '@/utils/reportCalculations';
+import { formatReference } from '@/utils/entityLabels';
 
 // Types officiels Supabase pour les tables utilisées
 type ProjectPhaseRow = BtpTables<'project_phases'>;
@@ -339,7 +340,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
           dueDate: p.payment_date ? new Date(p.payment_date) : new Date(),
           paidDate: p.payment_date ? new Date(p.payment_date) : new Date(),
           status: 'paid' as const,
-          description: p.transaction_id || `Payment ${p.id.slice(0, 8)}`
+          description: p.transaction_id || `Payment ${this.formatReference(p.id,'PAY')}`
         })),
         bankGuarantees: bankGuarantees.data?.map(bg => ({
           id: bg.id,
