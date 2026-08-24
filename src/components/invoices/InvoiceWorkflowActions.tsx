@@ -305,25 +305,38 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
           <Badge variant="outline" className="self-center" title={`Factur-X ${def.facturxTypeCode}`}>
             {getInvoiceDocumentTypeLabel(def.code, language)}
           </Badge>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" disabled={disabled || noLines || busy !== null}>
-                {spinner('facturx') ?? spinner('email') ?? <FileCode2 className="h-4 w-4 mr-2" />}
-                {t('dqe.actions.document_menu')}
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => void handleFacturX()}>
-                <FileCode2 className="h-4 w-4 mr-2" />
-                {t('dqe.action.facturx')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void handleEmail()} disabled={!recipientEmail}>
-                <Mail className="h-4 w-4 mr-2" />
-                {t('dqe.action.email')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {compact ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void handleFacturX()}
+              disabled={disabled || noLines || busy !== null}
+            >
+              {spinner('facturx') ?? <FileCode2 className="h-4 w-4 mr-2" />}
+              {t('dqe.action.facturx')}
+            </Button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" disabled={disabled || noLines || busy !== null}>
+                  {spinner('facturx') ?? spinner('email') ?? <FileCode2 className="h-4 w-4 mr-2" />}
+                  {t('dqe.actions.document_menu')}
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => void handleFacturX()}>
+                  <FileCode2 className="h-4 w-4 mr-2" />
+                  {t('dqe.action.facturx')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void handleEmail()} disabled={!recipientEmail}>
+                  <Mail className="h-4 w-4 mr-2" />
+                  {t('dqe.action.email')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {nextStatus && (
             <Button
               size="sm"
