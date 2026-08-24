@@ -17,12 +17,29 @@ import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { getMaterialResourceKind } from '@/utils/resourceKind';
+
 interface PhaseMaterialsProps {
   phaseId: string;
   projectId: string;
+  /** Filtre référentiel : matériaux consommables, équipements, ou tout. */
+  kind?: 'material' | 'equipment' | 'all';
+  /** Libellé de la carte (par défaut « Matériaux de la phase »). */
+  title?: string;
+  /** Libellé du bouton d'ajout. */
+  addLabel?: string;
+  /** Message affiché lorsque la liste filtrée est vide. */
+  emptyLabel?: string;
 }
 
-const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) => {
+const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
+  phaseId,
+  projectId,
+  kind = 'all',
+  title,
+  addLabel,
+  emptyLabel,
+}) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedMaterialId, setSelectedMaterialId] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -31,14 +48,27 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
 
   // Use hexagonal hooks
   const { 
-    phaseMaterials, 
+    phaseMaterials: allPhaseMaterials, 
     isLoading, 
     addMaterial, 
     updateQuantity: updateMaterialQuantity, 
     removeMaterial 
   } = usePhaseMaterialsHex(phaseId, projectId);
   
-  const { data: availableMaterials } = useAvailableMaterials();
+  const { data: allAvailableMaterials } = useAvailableMaterials();
+
+  const matchesKind = (category?: string | null) =>
+    kind === 'all' || getMaterialResourceKind(category) === kind;
+
+  const phaseMaterials = React.useMemo(
+    () => (allPhaseMaterials ?? []).filter((pm) => matchesKind(pm.material?.category)),
+    [allPhaseMaterials, kind]
+  );
+  const availableMaterials = React.useMemo(
+    () => (allAvailableMaterials ?? []).filter((m) => matchesKind(m.category)),
+    [allAvailableMaterials, kind]
+  );
+
 
   const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,14 +152,15 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Matériaux de la phase ({phaseMaterials?.length || 0})
+            {title ?? 'Matériaux de la phase'} ({phaseMaterials?.length || 0})
           </CardTitle>
           <Dialog open={isAdding} onOpenChange={setIsAdding}>
             <DialogTrigger asChild>
-              <Button>
+              <Button size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                <T k="auto.phasematerials.ajouter_un_materiau" fallback="Ajouter un matériau" />
+                {addLabel ?? <T k="auto.phasematerials.ajouter_un_materiau" fallback="Ajouter un matériau" />}
               </Button>
+
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -226,7 +257,15 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground"><T k="auto.phasematerials.aucun_materiau_assigne_a_cette_phase" fallback="Aucun matériau assigné à cette phase." /></p>
+          <p className="text-sm text-muted-foreground">
+            {emptyLabel ?? (
+              <T
+                k="auto.phasematerials.aucun_materiau_assigne_a_cette_phase"
+                fallback="Aucun matériau assigné à cette phase."
+              />
+            )}
+          </p>
+
         )}
       </CardContent>
     </Card>

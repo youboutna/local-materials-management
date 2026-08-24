@@ -12,6 +12,7 @@ import { WorkspaceTabsList } from '@/components/common/WorkspaceTabsList';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePhaseDetails } from '@/hooks/usePhaseDetails';
+import { useProjectById } from '@/hooks/hexagonal/useProjectsHex';
 import { PhaseStatus } from '@/dtos/entities/PhaseDTO';
 import type { PhaseDTO, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/types/phase-dto';
 import PhaseTasks from '@/components/project/PhaseTasks';
@@ -23,6 +24,7 @@ import PhaseStepsManager from '@/components/project/phase/PhaseStepsManager';
 import PhaseResourcesTab from '@/components/project/phase/PhaseResourcesTab';
 import PhaseQuantityTakeoffTab from '@/components/project/phase/PhaseQuantityTakeoffTab';
 import PhaseStakeholdersTab from '@/components/project/phase/PhaseStakeholdersTab';
+import PhaseTeamTab from '@/components/project/phase/PhaseTeamTab';
 import PhaseFinancesTab from '@/components/project/phase/PhaseFinancesTab';
 import PhaseEditDialog from '@/components/project/phase/PhaseEditDialog';
 import PhaseEditWorkflowDialog from '@/components/project/phase/PhaseEditWorkflowDialog';
@@ -69,6 +71,9 @@ const PhaseDetail: React.FC = () => {
     isUpdating,
     metrics,
   } = usePhaseDetails(phaseId);
+
+  const { data: project } = useProjectById(projectId ?? '');
+  const [planTab, setPlanTab] = useState('steps');
 
   const [isEditing, setIsEditing] = useState(false);
   const [isWorkflowEditing, setIsWorkflowEditing] = useState(false);
@@ -173,6 +178,17 @@ const PhaseDetail: React.FC = () => {
   }
 
   const { title, description, budget: storedBudget, estimatedDuration, startDate, endDate, location } = vm;
+
+  // Localisation : celle de la phase, sinon héritée du projet (aucun placeholder)
+  const projectLocation =
+    (project as unknown as { location?: string; address?: string } | null | undefined)?.location ||
+    (project as unknown as { address?: string } | null | undefined)?.address ||
+    '';
+  const effectiveLocation = location
+    ? { value: location, inherited: false }
+    : projectLocation
+      ? { value: projectLocation, inherited: true }
+      : { value: 'Non spécifiée', inherited: false };
 
   // Source unique de vérité : PhaseMetricsService (aucun calcul dans l'UI)
   const progressResult = PhaseMetricsService.computeProgress({
@@ -353,7 +369,12 @@ const PhaseDetail: React.FC = () => {
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
-              <div className="text-sm font-medium truncate">{location || 'Non spécifiée'}</div>
+              <div className="text-sm font-medium truncate">{effectiveLocation.value}</div>
+              {effectiveLocation.inherited && (
+                <p className="text-[11px] text-muted-foreground truncate">
+                  <T k="auto.phasedetail.heritee_du_projet" fallback="Héritée du projet" />
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -449,7 +470,7 @@ const PhaseDetail: React.FC = () => {
               disabled={isClosed}
               onSave={handlePartialSave}
             />
-            <Tabs defaultValue="steps" className="space-y-4">
+            <Tabs value={planTab} onValueChange={setPlanTab} className="space-y-4">
               <WorkspaceTabsList variant="underline">
                 <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" /><T k="auto.phasedetail.etapes" fallback="Étapes" /></TabsTrigger>
                 <TabsTrigger value="tasks"><T k="auto.phasedetail.taches" fallback="Tâches" /></TabsTrigger>
@@ -481,7 +502,11 @@ const PhaseDetail: React.FC = () => {
                 <PhaseQuantityTakeoffTab phaseId={phaseId!} projectId={projectId!} phaseName={title} />
               </TabsContent>
               <TabsContent value="resources">
-                <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
+                <PhaseResourcesTab
+                  phaseId={phaseId!}
+                  projectId={projectId!}
+                  onOpenTeam={() => setPlanTab('team')}
+                />
               </TabsContent>
               <TabsContent value="stakeholders">
                 <PhaseStakeholdersTab projectId={projectId!} phaseId={phaseId!} />
@@ -510,7 +535,7 @@ const PhaseDetail: React.FC = () => {
               <TabsContent value="pert"><PERTDiagram projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="critical"><CriticalPathView projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="team"><PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="team"><PhaseTeamTab phaseId={phaseId!} projectId={projectId!} /></TabsContent>
             </Tabs>
           </TabsContent>
 
