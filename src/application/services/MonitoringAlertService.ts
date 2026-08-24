@@ -14,8 +14,12 @@ import {
     resolveAlertSeverity,
 } from '@/config/referentials/notifications/alerts.referential';
 import type { INotificationRepository, NotificationData } from '@/domain/repositories/INotificationRepository';
+import type { IDerivedAlertRepository } from '@/domain/repositories/IDerivedAlertRepository';
+import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseDerivedAlertAdapter';
+import { toDerivedAlerts } from '@/application/services/alerts/DerivedAlertEngine';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getProjectService } from '@/application/services/ProjectService';
+
 import {
     CreateMonitoringAlertDTO,
     IMonitoringAlertRepository,
