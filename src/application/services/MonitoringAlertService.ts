@@ -274,11 +274,39 @@ export class MonitoringAlertService {
   }
 
   /**
+   * Matérialise une alerte dérivée en alerte persistée (traçabilité de l'action).
+   * Retourne l'identifiant persisté, ou null si le signal n'existe plus.
+   */
+  private async materializeDerivedAlert(derivedId: string): Promise<string | null> {
+    const derived = await this.getDerivedAlerts();
+    const alert = derived.find((a) => a.id === derivedId);
+    if (!alert) return null;
+
+    const created = await this.repository.create({
+      title: alert.title,
+      alertType: alert.type,
+      priority: alert.severity,
+      description: alert.message,
+      projectId: alert.projectId || undefined,
+      phaseId: alert.phaseId ?? null,
+      source: alert.source,
+      metadata: { ...(alert.metadata ?? {}), derived_id: derivedId },
+    });
+    return created.id;
+  }
+
+  /**
    * Acknowledge an alert
    * Repli notification : une alerte issue d'une notification est acquittée
    * en marquant la notification comme lue (même identifiant métier).
+   * Alerte dérivée : elle est d'abord matérialisée en base pour tracer l'action.
    */
   async acknowledgeAlert(id: string): Promise<void> {
+    if (isDerivedAlertId(id)) {
+      const persistedId = await this.materializeDerivedAlert(id);
+      if (persistedId) await this.repository.acknowledge(persistedId);
+      return;
+    }
     try {
       await this.repository.acknowledge(id);
     } catch (error) {
@@ -288,6 +316,7 @@ export class MonitoringAlertService {
       if (readError) throw error;
     }
   }
+
 
   /**
    * Resolve an alert
