@@ -14,8 +14,12 @@ import {
     resolveAlertSeverity,
 } from '@/config/referentials/notifications/alerts.referential';
 import type { INotificationRepository, NotificationData } from '@/domain/repositories/INotificationRepository';
+import type { IDerivedAlertRepository } from '@/domain/repositories/IDerivedAlertRepository';
+import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseDerivedAlertAdapter';
+import { isDerivedAlertId, toDerivedAlerts } from '@/application/services/alerts/DerivedAlertEngine';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getProjectService } from '@/application/services/ProjectService';
+
 import {
     CreateMonitoringAlertDTO,
     IMonitoringAlertRepository,
@@ -121,13 +125,50 @@ function transformNotificationToAlertData(n: NotificationData): AlertData {
   };
 }
 
+/** Identifiants d'alertes dérivées déjà matérialisées en base (évite les doublons). */
+function collectMaterializedDerivedIds(dtos: MonitoringAlertDTO[]): Set<string> {
+  const ids = new Set<string>();
+  dtos.forEach((dto) => {
+    const derivedId = (dto.metadata as Record<string, unknown> | null | undefined)?.derived_id;
+    if (typeof derivedId === 'string') ids.add(derivedId);
+  });
+  return ids;
+}
+
 export class MonitoringAlertService {
   private repository: IMonitoringAlertRepository;
   private notificationRepository?: INotificationRepository;
+  private derivedRepository?: IDerivedAlertRepository;
 
-  constructor(repository?: IMonitoringAlertRepository, notificationRepository?: INotificationRepository) {
+  constructor(
+    repository?: IMonitoringAlertRepository,
+    notificationRepository?: INotificationRepository,
+    derivedRepository?: IDerivedAlertRepository,
+  ) {
     this.repository = repository || new SupabaseMonitoringAlertAdapter();
     this.notificationRepository = notificationRepository;
+    this.derivedRepository = derivedRepository;
+  }
+
+  private getDerivedRepository(): IDerivedAlertRepository {
+    if (!this.derivedRepository) {
+      this.derivedRepository = new SupabaseDerivedAlertAdapter();
+    }
+    return this.derivedRepository;
+  }
+
+  /** Alertes dérivées de l'état réel du projet (retards, échéances, blocages). */
+  private async getDerivedAlerts(projectId?: string): Promise<AlertData[]> {
+    try {
+      const repo = this.getDerivedRepository();
+      const signals = projectId
+        ? await repo.findSignalsByProject(projectId)
+        : await repo.findSignals();
+      return toDerivedAlerts(signals);
+    } catch (error) {
+      console.warn('MonitoringAlertService: derived alerts unavailable', error);
+      return [];
+    }
   }
 
   private getNotificationRepository(): INotificationRepository | undefined {
@@ -140,6 +181,7 @@ export class MonitoringAlertService {
     }
     return this.notificationRepository;
   }
+
 
   /** Alertes issues des notifications métier (inspection, retard, paiement...). */
   private async getNotificationAlerts(): Promise<AlertData[]> {
@@ -159,18 +201,25 @@ export class MonitoringAlertService {
 
   /**
    * Get all monitoring alerts as AlertData for UI
-   * (alertes projet + notifications métier promues en alertes, dédupliquées).
+   * (alertes projet + notifications métier + alertes dérivées de l'état réel,
+   * dédupliquées).
    */
   async getAllAlerts(): Promise<AlertData[]> {
-    const [dtos, notificationAlerts, projects] = await Promise.all([
+    const [dtos, notificationAlerts, derivedAlerts, projects] = await Promise.all([
       this.repository.findAll(),
       this.getNotificationAlerts(),
+      this.getDerivedAlerts(),
       getProjectService().getAllProjects(),
     ]);
 
     const alerts = dtos.map(transformToAlertData);
     const known = new Set(alerts.map((a) => a.id));
-    const merged = [...alerts, ...notificationAlerts.filter((a) => !known.has(a.id))];
+    const materialized = collectMaterializedDerivedIds(dtos);
+    const merged = [
+      ...alerts,
+      ...notificationAlerts.filter((a) => !known.has(a.id)),
+      ...derivedAlerts.filter((a) => !known.has(a.id) && !materialized.has(a.id)),
+    ];
 
     const projectTitles = new Map(projects.map((project) => [project.id, project.title]));
     return merged.map((alert) => ({
@@ -180,6 +229,7 @@ export class MonitoringAlertService {
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   }
+
 
 
   /**
@@ -235,11 +285,39 @@ export class MonitoringAlertService {
   }
 
   /**
+   * Matérialise une alerte dérivée en alerte persistée (traçabilité de l'action).
+   * Retourne l'identifiant persisté, ou null si le signal n'existe plus.
+   */
+  private async materializeDerivedAlert(derivedId: string): Promise<string | null> {
+    const derived = await this.getDerivedAlerts();
+    const alert = derived.find((a) => a.id === derivedId);
+    if (!alert) return null;
+
+    const created = await this.repository.create({
+      title: alert.title,
+      alertType: alert.type,
+      priority: alert.severity,
+      description: alert.message,
+      projectId: alert.projectId || undefined,
+      phaseId: alert.phaseId ?? null,
+      source: alert.source,
+      metadata: { ...(alert.metadata ?? {}), derived_id: derivedId },
+    });
+    return created.id;
+  }
+
+  /**
    * Acknowledge an alert
    * Repli notification : une alerte issue d'une notification est acquittée
    * en marquant la notification comme lue (même identifiant métier).
+   * Alerte dérivée : elle est d'abord matérialisée en base pour tracer l'action.
    */
   async acknowledgeAlert(id: string): Promise<void> {
+    if (isDerivedAlertId(id)) {
+      const persistedId = await this.materializeDerivedAlert(id);
+      if (persistedId) await this.repository.acknowledge(persistedId);
+      return;
+    }
     try {
       await this.repository.acknowledge(id);
     } catch (error) {
@@ -250,10 +328,16 @@ export class MonitoringAlertService {
     }
   }
 
+
   /**
    * Resolve an alert
    */
   async resolveAlert(id: string, resolutionNotes?: string): Promise<void> {
+    if (isDerivedAlertId(id)) {
+      const persistedId = await this.materializeDerivedAlert(id);
+      if (persistedId) await this.repository.resolve(persistedId, resolutionNotes);
+      return;
+    }
     try {
       await this.repository.resolve(id, resolutionNotes);
     } catch (error) {
@@ -263,6 +347,7 @@ export class MonitoringAlertService {
       if (readError) throw error;
     }
   }
+
 
 
   /**
@@ -288,20 +373,24 @@ export class MonitoringAlertService {
     return alerts.filter((alert) => alertCategoryOf(alert.type) === type);
   }
 
-  /** Alertes contextualisées projet (alertes projet + notifications du projet) */
+  /** Alertes contextualisées projet (alertes projet + notifications + dérivées) */
   async getAlertsByProject(projectId: string): Promise<AlertData[]> {
     if (!projectId) return [];
-    const [dtos, notificationAlerts] = await Promise.all([
+    const [dtos, notificationAlerts, derivedAlerts] = await Promise.all([
       this.repository.findByProjectId(projectId),
       this.getNotificationAlerts(),
+      this.getDerivedAlerts(projectId),
     ]);
     const alerts = dtos.map(transformToAlertData);
     const known = new Set(alerts.map((a) => a.id));
+    const materialized = collectMaterializedDerivedIds(dtos);
     return [
       ...alerts,
       ...notificationAlerts.filter((a) => a.projectId === projectId && !known.has(a.id)),
+      ...derivedAlerts.filter((a) => !known.has(a.id) && !materialized.has(a.id)),
     ];
   }
+
 
 
   /** Alertes contextualisées phase */
