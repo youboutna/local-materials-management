@@ -297,6 +297,13 @@ export const BoqActionsBar: React.FC<Props> = ({
     }
   });
 
+  // Raccourci clavier Ctrl+Entrée depuis le poste DQE -> soumettre pour validation.
+  useEffect(() => {
+    const onShortcut = () => { if (!disabled) handleTransfer(); };
+    window.addEventListener('boq-shortcut-submit', onShortcut);
+    return () => window.removeEventListener('boq-shortcut-submit', onShortcut);
+  });
+
   // Chaîne complète : DQE validé -> planification -> prévisions -> AO -> portails.
   const { runChain, isPending: chainPending } = useProcurementChain();
   const dqeValidated = ProcurementChainService.isValidatedDqe(lines);
