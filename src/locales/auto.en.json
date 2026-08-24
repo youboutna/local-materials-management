@@ -5013,5 +5013,8 @@
   "wbs.select_milestone_first": "Select a milestone",
   "wbs.select_phase": "Select a phase",
   "wbs.select_phase_first": "Select a phase",
-  "wbs.select_task": "Select a task"
+  "wbs.select_task": "Select a task",
+  "auto.quantitytakeoffs.calcul_metre": "Recompute takeoff",
+  "auto.quantitytakeoffs.auto_hint": "Quantities are computed automatically from project resources (element types, opening deductions, recommendations) and shown directly as editable BOQ lines below.",
+  "auto.quantitytakeoffs.phase_dispatch_hint": "Validated lines are dispatched to this phase (resources, tasks, milestones)."
 }
