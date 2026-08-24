@@ -110,7 +110,11 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
         linkedStepIds: l.linkedStepIds,
         requirements: l.requirements,
         deliverables: l.deliverables,
+        status: l.status,
+        awardedTo: l.awardedTo,
+        awardedAmount: l.awardedAmount,
       }))
+
     : (externalLots ?? internalLots);
 
   const lots: TenderLot[] = isPersistMode
