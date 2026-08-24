@@ -38,7 +38,10 @@ export class TakeoffToBoqService {
    * Sync all quantity takeoffs of a project into boq_lines (DQE) and phase_materials (resources).
    * Idempotent: re-running does not duplicate boq_lines nor phase_materials rows.
    */
-  async syncProject(projectId: string): Promise<TakeoffSyncResult> {
+  async syncProject(
+    projectId: string,
+    options?: { defaultPhaseId?: string | null },
+  ): Promise<TakeoffSyncResult> {
     if (!projectId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
 
     const takeoffs = await this.takeoffRepository.findByProjectId(projectId);
@@ -70,6 +73,7 @@ export class TakeoffToBoqService {
         projectId,
         (takeoff as { phase_id?: string | null }).phase_id ?? null,
         projectPhases,
+        options?.defaultPhaseId ?? null,
       );
       const line: BoqLineDTO = {
         source: 'quantity_takeoff',
@@ -102,7 +106,9 @@ export class TakeoffToBoqService {
       await this.boqRepo.bulkCreate(toCreate);
     }
 
-    const resourcesUpserted = await this.syncPhaseResources(projectId, takeoffs, projectPhases);
+    const resourcesUpserted = await this.syncPhaseResources(
+      projectId, takeoffs, projectPhases, options?.defaultPhaseId ?? null,
+    );
 
     const totalHt = toCreate.reduce((sum, l) => sum + (l.quantity * (l.unitPrice ?? 0)), 0)
       + existingLines.reduce((sum, l) => sum + (l.totalHt ?? 0), 0);
@@ -124,6 +130,7 @@ export class TakeoffToBoqService {
     projectId: string,
     takeoffs: QuantityTakeoffWithDetails[],
     projectPhases: Awaited<ReturnType<IPhaseRepository['findByProjectId']>>,
+    defaultPhaseId: string | null,
   ): Promise<number> {
     const byPhaseMaterial = new Map<string, { phaseId: string; materialId: string; quantity: number }>();
 
@@ -132,6 +139,7 @@ export class TakeoffToBoqService {
         projectId,
         (t as { phase_id?: string | null }).phase_id ?? null,
         projectPhases,
+        defaultPhaseId,
       );
       const materialId = t.material_id;
       if (!phaseId || !materialId) continue; // no WBS attachment -> cannot become a phase resource
@@ -162,6 +170,7 @@ export class TakeoffToBoqService {
     projectId: string,
     phaseReference: string | null,
     projectPhases: Awaited<ReturnType<IPhaseRepository['findByProjectId']>>,
+    defaultPhaseId: string | null = null,
   ): Promise<string | null> {
     if (phaseReference) {
       const phaseById = projectPhases.find((phase) => phase.id === phaseReference);
@@ -173,6 +182,10 @@ export class TakeoffToBoqService {
       }
     }
 
+    // Contexte explicite (onglet Métré d'une phase) : rattachement à la phase courante.
+    if (defaultPhaseId && (projectPhases.length === 0 || projectPhases.some((p) => p.id === defaultPhaseId))) {
+      return defaultPhaseId;
+    }
     return projectPhases.length === 1 ? projectPhases[0].id : null;
   }
 

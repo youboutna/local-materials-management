@@ -5012,5 +5012,8 @@
   "wbs.select_milestone_first": "اختر معلماً",
   "wbs.select_phase": "اختر مرحلة",
   "wbs.select_phase_first": "اختر مرحلة",
-  "wbs.select_task": "اختر مهمة"
+  "wbs.select_task": "اختر مهمة",
+  "auto.quantitytakeoffs.calcul_metre": "حساب الكميات",
+  "auto.quantitytakeoffs.auto_hint": "يتم حساب الكميات تلقائياً من موارد المشروع وتظهر مباشرة في بنود جدول الكميات القابلة للتعديل أدناه.",
+  "auto.quantitytakeoffs.phase_dispatch_hint": "يتم توزيع البنود المعتمدة على هذه المرحلة (الموارد، المهام، المعالم)."
 }
