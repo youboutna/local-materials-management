@@ -1,3 +1,4 @@
+import { resolvePhaseLabel } from '@/utils/entityLabels';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -326,7 +327,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                               />
                               <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
                                 <span className="text-foreground dark:text-gray-100">
-                                  {phase.phase_name || `Phase ${phase.id}`}
+                                  {resolvePhaseLabel(phase as any)}
                                 </span>
                                 {phase.construction_phase && (
                                   <span className="text-xs text-muted-foreground ml-2 block">

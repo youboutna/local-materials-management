@@ -1,3 +1,4 @@
+import { resolvePhaseLabel } from '@/utils/entityLabels';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,7 +130,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
     const phases = (enrichedData?.phases as any[]) || [];
     return phases.map((p) => ({
       id: String(p.id),
-      name: p.title || p.name || p.phase_name || `Phase ${p.id}`,
+      name: resolvePhaseLabel(p as any),
     }));
   }, [enrichedData]);
 
@@ -150,7 +151,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
       );
       return {
         phaseId: String(p.id),
-        phaseName: p.title || p.name || p.phase_name || `Phase ${p.id}`,
+        phaseName: resolvePhaseLabel(p as any),
         deviations: results,
       };
     });
