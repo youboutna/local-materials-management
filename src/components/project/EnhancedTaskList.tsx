@@ -1,6 +1,7 @@
 /**
  * EnhancedTaskList - MIGRATED TO HEXAGONAL ARCHITECTURE
  */
+import { resolvePhaseLabel } from '@/utils/entityLabels';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -154,9 +155,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all"><T k="auto.enhancedtasklist.toutes_les_phases" fallback="Toutes les phases" /></SelectItem>
-                {phases?.map((phase) => (
+                {phases?.map((phase, idx) => (
                   <SelectItem key={phase.id} value={phase.id}>
-                    {phase.name}
+                    {resolvePhaseLabel(phase as any, idx)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -221,9 +222,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="no_phase"><T k="auto.enhancedtasklist.aucune_phase" fallback="Aucune phase" /></SelectItem>
-                          {phases?.map((phase) => (
+                          {phases?.map((phase, idx) => (
                             <SelectItem key={phase.id} value={phase.id}>
-                              {phase.name}
+                              {resolvePhaseLabel(phase as any, idx)}
                             </SelectItem>
                           ))}
                         </SelectContent>

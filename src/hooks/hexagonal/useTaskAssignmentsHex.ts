@@ -1,3 +1,4 @@
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { invalidateAllTaskQueries } from '@/hooks/hexagonal/taskQueryKeys';
 import { PhaseService } from '@/application/services/PhaseService';
 /**
@@ -660,7 +661,8 @@ export function useProjectPhasesForTasks(projectId: string) {
       const phaseService = new PhaseService(
         RepositoryFactory.getPhaseRepository()
       );
-      return (await phaseService.getPhasesByProject(projectId)) as unknown as PhaseDTO[];
+      const phases = await phaseService.getPhasesByProject(projectId);
+      return PhaseTransformer.manyToDTO(phases);
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!projectId

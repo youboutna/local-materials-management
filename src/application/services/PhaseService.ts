@@ -4,6 +4,7 @@
  * Following hexagonal architecture principles
  */
 
+import { isUuid } from '@/utils/entityLabels';
 import {
     ReferentialStep,
     ReferentialTask,
@@ -45,6 +46,15 @@ export class PhaseService {
       if (!resolvedName) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase name is required');
       }
+
+      // Un identifiant technique ne peut pas servir de libellé métier
+      if (isUuid(resolvedName)) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          'Phase name cannot be a technical identifier (UUID)'
+        );
+      }
+
 
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
@@ -134,6 +144,22 @@ export class PhaseService {
       const existingPhase = await this.repository.findById(id);
       if (!existingPhase) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Phase not found');
+      }
+
+      // Validation du libellé : jamais vide, jamais un identifiant technique
+      const nextName = (data as unknown as Record<string, unknown>).name
+        ?? (data as unknown as Record<string, unknown>).phaseName;
+      if (nextName !== undefined) {
+        const candidate = String(nextName ?? '').trim();
+        if (!candidate) {
+          throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase name cannot be empty');
+        }
+        if (isUuid(candidate)) {
+          throw new AppError(
+            ErrorCode.VALIDATION_ERROR,
+            'Phase name cannot be a technical identifier (UUID)'
+          );
+        }
       }
 
       const updatedPhase = PhaseTransformer.updatePhase(existingPhase, data);
