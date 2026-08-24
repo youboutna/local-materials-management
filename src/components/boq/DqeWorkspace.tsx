@@ -226,7 +226,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
-        <CardHeader className="flex flex-col gap-3 border-b bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
+        <CardHeader className="flex flex-col gap-3 border-b bg-muted/20">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => setSelectedDocumentId(null)}>
               <ArrowLeft className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.retour_a_la_liste" fallback="Retour à la liste" />
@@ -236,39 +236,40 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
               {ctx.title}
             </CardTitle>
           </div>
-          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-            <BoqActionsBar
-              ctx={ctx}
-              lines={actionableLines}
-              projectName={props.projectName}
-              recipientEmail={props.recipientEmail}
-              disabled={doc.isLoading || noActionableLines}
-
-              onAttachToSubmission={props.onAttachToSubmission}
-              onSubmitInvoice={props.onSubmitInvoice}
-              onDistribute={props.onDistribute}
-              onPublish={props.onPublish}
-            />
-            <InvoiceWorkflowActions
-              documentType={invoiceDef.code}
-              actor={props.routeContext === 'project-dqe' || props.routeContext === 'tender-estimate' ? 'manager' : 'supplier'}
-              lines={doc.lines ?? []}
-              contextId={ctx.contextId ?? ''}
-              targetSource={ctx.source}
-              projectId={props.projectId}
-              projectName={props.projectName}
-              tenderId={props.tenderId}
-              sellerName={props.projectName}
-              buyerName={props.recipientEmail}
-              recipientEmail={props.recipientEmail}
-              docPrefix={ctx.docPrefix}
-              projectBudget={props.remainingBudget ?? null}
-              disabled={doc.isLoading}
-              onTransformed={() => doc.refetch?.()}
-            />
-
-          </div>
+          {/* Barre unique : G1 actions principales · G2 workflow · G3 badges. */}
+          <BoqActionsBar
+            ctx={ctx}
+            lines={actionableLines}
+            projectName={props.projectName}
+            recipientEmail={props.recipientEmail}
+            disabled={doc.isLoading || noActionableLines}
+            onAttachToSubmission={props.onAttachToSubmission}
+            onSubmitInvoice={props.onSubmitInvoice}
+            onDistribute={props.onDistribute}
+            onPublish={props.onPublish}
+            workflowSlot={
+              <InvoiceWorkflowActions
+                compact
+                documentType={invoiceDef.code}
+                actor={props.routeContext === 'project-dqe' || props.routeContext === 'tender-estimate' ? 'manager' : 'supplier'}
+                lines={doc.lines ?? []}
+                contextId={ctx.contextId ?? ''}
+                targetSource={ctx.source}
+                projectId={props.projectId}
+                projectName={props.projectName}
+                tenderId={props.tenderId}
+                sellerName={props.projectName}
+                buyerName={props.recipientEmail}
+                recipientEmail={props.recipientEmail}
+                docPrefix={ctx.docPrefix}
+                projectBudget={props.remainingBudget ?? null}
+                disabled={doc.isLoading}
+                onTransformed={() => doc.refetch?.()}
+              />
+            }
+          />
         </CardHeader>
+
 
         <CardContent className="p-0">
           <BoqWorkspace

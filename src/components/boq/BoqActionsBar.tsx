@@ -48,7 +48,14 @@ interface Props {
   onSubmitInvoice?: () => void;
   onDistribute?: () => void;
   onPublish?: () => void;
+  /** Actions principales additionnelles (groupe 1). */
+  primarySlot?: React.ReactNode;
+  /** Actions de workflow / validation additionnelles (groupe 2). */
+  workflowSlot?: React.ReactNode;
+  /** Badges d'information additionnels (groupe 3). */
+  badgesSlot?: React.ReactNode;
 }
+
 
 // Un seul libellé de transfert par contexte, résolu depuis le référentiel
 // d'actions DQE (plus de doublons « Transférer / Transporter en devis »).
@@ -57,7 +64,9 @@ interface Props {
 export const BoqActionsBar: React.FC<Props> = ({
   ctx, lines, projectName, recipientEmail, disabled = false,
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
+  primarySlot, workflowSlot, badgesSlot,
 }) => {
+
 
   const { toast } = useToast();
   const { t } = useI18n();
@@ -372,98 +381,114 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
-        {docActions.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
-                {iconOf('pdf') ?? iconOf('email') ?? iconOf('download') ?? <FileDown className="h-4 w-4 mr-2" />}
-                {t('dqe.actions.document_menu')}
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {docActions.map((a) => (
-                <DropdownMenuItem key={a.key} onSelect={() => a.onSelect()}>
-                  {a.icon}
-                  {t(getDqeActionLabelKey(a.key))}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+      {/* Disposition unique en 3 groupes :
+          G1 actions principales · G2 workflow / validation · G3 badges d'information. */}
+      <div className="flex w-full flex-col gap-2">
+        {/* --- G1 : actions principales --- */}
+        <div className="flex flex-wrap items-center gap-2">
+          {docActions.map((a) => (
+            <Button
+              key={a.key}
+              size="sm"
+              variant="outline"
+              onClick={() => a.onSelect()}
+              disabled={disabled || busy !== null}
+            >
+              {iconOf(a.key) ?? a.icon}
+              {t(getDqeActionLabelKey(a.key))}
+            </Button>
+          ))}
 
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setPartiesOpen(true)}
-          disabled={disabled || busy !== null}
-          title={t('dqe.parties.edit_title')}
-        >
-          <Pencil className="h-4 w-4 mr-2" />
-          {t('dqe.actions.parties_menu')}
-        </Button>
+          {can('transfer') && (
+            <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
+              {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
+              {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
+            </Button>
+          )}
 
-        {can('sign') && (
+          {primarySlot}
+        </div>
+
+        {/* --- G2 : workflow / validation --- */}
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
-            variant={signedInfo ? 'default' : 'outline'}
-            onClick={() => setSignOpen(true)}
+            variant="ghost"
+            onClick={() => setPartiesOpen(true)}
             disabled={disabled || busy !== null}
-            title={`${t('dqe.action.sign')} — ${ctx.title}`}
+            title={t('dqe.parties.edit_title')}
           >
-            {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
-            {signedInfo ? t('dqe.action.signed') : t('dqe.action.sign')}
+            <Pencil className="h-4 w-4 mr-2" />
+            {t('dqe.actions.parties_menu')}
           </Button>
-        )}
 
-        {workflowActions.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
-                {iconOf('dispatch') ?? iconOf('decompte') ?? <Layers className="h-4 w-4 mr-2" />}
-                {t('dqe.actions.workflow_menu')}
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {workflowActions.map((a) => (
-                <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
-                  {a.icon}
-                  {t(getDqeActionLabelKey(a.key))}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+          {can('sign') && !signedInfo && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSignOpen(true)}
+              disabled={disabled || busy !== null}
+              title={`${t('dqe.action.sign')} — ${ctx.title}`}
+            >
+              {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
+              {t('dqe.action.sign')}
+            </Button>
+          )}
 
-        {gateKind && !gate.allowed && (
-          <>
-            <Badge variant="destructive" className="self-center">
-              {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} — {t('dqe.gate.validation_required')}
+          {workflowActions.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
+                  {iconOf('dispatch') ?? iconOf('decompte') ?? <Layers className="h-4 w-4 mr-2" />}
+                  {t('dqe.actions.workflow_menu')}
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {workflowActions.map((a) => (
+                  <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
+                    {a.icon}
+                    {t(getDqeActionLabelKey(a.key))}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {gateKind && !gate.allowed && canValidateGate && (
+            <Button size="sm" onClick={handleApproveInjection} disabled={disabled || busy !== null}
+              title={BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].blockedMessage}>
+              {iconOf('gate') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
+              {t('dqe.action.validate_gate')}
+            </Button>
+          )}
+
+          {workflowSlot}
+        </div>
+
+        {/* --- G3 : badges d'information (jamais de boutons) --- */}
+        <div className="flex flex-wrap items-center gap-2">
+          {signedInfo && (
+            <Badge variant="secondary" className="gap-1">
+              <PenTool className="h-3 w-3" />
+              {t('dqe.action.signed')} — {signedInfo.by}
             </Badge>
-            {canValidateGate && (
-              <Button size="sm" onClick={handleApproveInjection} disabled={disabled || busy !== null}
-                title={BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].blockedMessage}>
-                {iconOf('gate') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
-                {t('dqe.action.validate_gate')}
-              </Button>
-            )}
-          </>
-        )}
-        {gateKind && gate.allowed && (
-          <Badge variant="outline" className="self-center">
-            {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} — {t('dqe.gate.validated')}
-          </Badge>
-        )}
-
-        {can('transfer') && (
-          <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
-            {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
-            {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
-          </Button>
-        )}
+          )}
+          {gateKind && (
+            <Badge variant={gate.allowed ? 'outline' : 'destructive'}>
+              {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} —{' '}
+              {gate.allowed ? t('dqe.gate.validated') : t('dqe.gate.validation_required')}
+            </Badge>
+          )}
+          {projectName && (
+            <Badge variant="outline">
+              {t('dqe.badge.project_ref')} · {projectName}
+            </Badge>
+          )}
+          {badgesSlot}
+        </div>
       </div>
+
 
 
       <DocumentPartiesDialog

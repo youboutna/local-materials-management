@@ -12,7 +12,12 @@ import {
   getDerivedAlertRule,
   renderDerivedAlertMessage,
   type DerivedAlertLang,
+  type DerivedSeverityThresholds,
+  type DerivedAlertKind,
 } from '@/config/referentials/notifications/derived-alerts.referential';
+
+/** Surcharges de seuils issues des réglages `/settings`. */
+export type DerivedThresholdMap = Partial<Record<DerivedAlertKind, DerivedSeverityThresholds>>;
 
 const DAY_MS = 86_400_000;
 
@@ -38,12 +43,13 @@ export function toDerivedAlert(
   signal: DerivedAlertSignal,
   lang: DerivedAlertLang = 'fr',
   now: number = Date.now(),
+  thresholds?: DerivedThresholdMap,
 ): AlertData | null {
   const rule = getDerivedAlertRule(signal.kind);
   if (!rule) return null;
 
   const days = daysFor(rule.mode, signal.referenceDate, now);
-  const severity = derivedSeverity(rule, days);
+  const severity = derivedSeverity(rule, days, thresholds?.[signal.kind]);
   const timestamp = new Date(now).toISOString();
 
   return {
@@ -83,8 +89,9 @@ export function toDerivedAlerts(
   signals: DerivedAlertSignal[],
   lang: DerivedAlertLang = 'fr',
   now: number = Date.now(),
+  thresholds?: DerivedThresholdMap,
 ): AlertData[] {
   return signals
-    .map((signal) => toDerivedAlert(signal, lang, now))
+    .map((signal) => toDerivedAlert(signal, lang, now, thresholds))
     .filter((alert): alert is AlertData => alert !== null);
 }

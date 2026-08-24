@@ -67,7 +67,14 @@ interface Props {
   alreadyInvoiced?: number | null;
   /** Avancement physique constaté, pour le calcul d'écarts (T12). */
   actualProgress?: number | null;
+  /**
+   * Mode compact : le menu « Document » et l'envoi email ne sont pas dupliqués
+   * (ils appartiennent au groupe 1 de la barre DQE). Seuls Factur-X, le statut
+   * et la transformation restent affichés.
+   */
+  compact?: boolean;
   onTransformed?: (documentId: string, type: InvoiceDocumentType) => void;
+
 }
 
 export const InvoiceWorkflowActions: React.FC<Props> = ({
@@ -89,7 +96,9 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   contractAmount,
   alreadyInvoiced,
   actualProgress,
+  compact = false,
   onTransformed,
+
 }) => {
   const { toast } = useToast();
   const { t, language, translateStatus } = useI18n();
@@ -296,25 +305,38 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
           <Badge variant="outline" className="self-center" title={`Factur-X ${def.facturxTypeCode}`}>
             {getInvoiceDocumentTypeLabel(def.code, language)}
           </Badge>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" disabled={disabled || noLines || busy !== null}>
-                {spinner('facturx') ?? spinner('email') ?? <FileCode2 className="h-4 w-4 mr-2" />}
-                {t('dqe.actions.document_menu')}
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => void handleFacturX()}>
-                <FileCode2 className="h-4 w-4 mr-2" />
-                {t('dqe.action.facturx')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void handleEmail()} disabled={!recipientEmail}>
-                <Mail className="h-4 w-4 mr-2" />
-                {t('dqe.action.email')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {compact ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void handleFacturX()}
+              disabled={disabled || noLines || busy !== null}
+            >
+              {spinner('facturx') ?? <FileCode2 className="h-4 w-4 mr-2" />}
+              {t('dqe.action.facturx')}
+            </Button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" disabled={disabled || noLines || busy !== null}>
+                  {spinner('facturx') ?? spinner('email') ?? <FileCode2 className="h-4 w-4 mr-2" />}
+                  {t('dqe.actions.document_menu')}
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => void handleFacturX()}>
+                  <FileCode2 className="h-4 w-4 mr-2" />
+                  {t('dqe.action.facturx')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void handleEmail()} disabled={!recipientEmail}>
+                  <Mail className="h-4 w-4 mr-2" />
+                  {t('dqe.action.email')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {nextStatus && (
             <Button
               size="sm"
