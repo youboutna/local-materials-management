@@ -136,6 +136,8 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
         linkedStepIds: [],
         requirements: [],
         deliverables: [],
+        status: 'draft',
+
       });
       return;
     }
