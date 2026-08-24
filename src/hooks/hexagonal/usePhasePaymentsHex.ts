@@ -9,7 +9,7 @@
 
 import { getPaymentService } from '@/application/services/PaymentService';
 import { getSupplierService } from '@/application/services/SupplierService';
-import { PhaseMetricsService } from '@/application/services/PhaseMetricsService';
+import { normalizeProgressPercent } from "@/application/services/PhaseMetricsService";
 import type { CreatePaymentDTO, PaymentDTO, UpdatePaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -38,9 +38,7 @@ export function usePhasePayments(phaseId: string) {
       return payments.map((payment) => ({
         ...payment,
         phaseId: payment.phaseId ?? payment.phaseRef?.id ?? phaseId,
-        progressAtPayment: PhaseMetricsService.normalizeProgressPercent
-          ? PhaseMetricsService.normalizeProgressPercent(payment.progressAtPayment)
-          : payment.progressAtPayment,
+        progressAtPayment: normalizeProgressPercent(payment.progressAtPayment),
       }));
     },
     enabled: !!phaseId,
@@ -81,7 +79,7 @@ export function useAddPhasePayment(phaseId: string, projectId: string) {
         paymentMethod: formData.payment_method,
         paymentDate: formData.payment_date,
         transactionId: formData.transaction_id,
-        progressAtPayment: PhaseMetricsService.normalizeProgressPercent(formData.progress_at_payment),
+        progressAtPayment: normalizeProgressPercent(formData.progress_at_payment),
         origin: 'project',
       };
       return await paymentService.createPayment(payload);
@@ -105,7 +103,7 @@ export function useUpdatePhasePayment(phaseId: string, projectId?: string) {
         phaseId: updates.phaseId ?? phaseId,
         phaseRef: updates.phaseRef ?? { id: phaseId },
         ...(updates.progressAtPayment !== undefined
-          ? { progressAtPayment: PhaseMetricsService.normalizeProgressPercent(updates.progressAtPayment) }
+          ? { progressAtPayment: normalizeProgressPercent(updates.progressAtPayment) }
           : {}),
       };
       await paymentService.updatePayment(id, payload);
