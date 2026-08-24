@@ -248,13 +248,23 @@ const PhaseDetail: React.FC = () => {
             <Badge className={getStatusColor(vm.status)} variant="outline">
               {getStatusLabel(vm.status)}
             </Badge>
+            {/* Mode 2 : workflow d'édition complet */}
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setIsEditing(true)}
-              aria-label="Modifier la phase"
+              onClick={() => setIsWorkflowEditing(true)}
+              aria-label="Modifier la phase (workflow complet)"
             >
               <Edit className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.modifier" fallback="Modifier" />
+            </Button>
+            {/* Édition rapide (formulaire simple) */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsEditing(true)}
+              aria-label="Édition rapide de la phase"
+            >
+              <T k="auto.phasedetail.edition_rapide" fallback="Édition rapide" />
             </Button>
             {progressResult.isDivergent && progressResult.derivedValue != null && (
               <Button
