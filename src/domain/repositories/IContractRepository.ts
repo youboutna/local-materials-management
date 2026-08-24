@@ -9,6 +9,7 @@ export interface IContractRepository {
   findById(id: string): Promise<ContractRecordDTO | null>;
   findByProjectId(projectId: string): Promise<ContractRecordDTO[]>;
   findByTenderId(tenderId: string): Promise<ContractRecordDTO[]>;
+  findBySupplierId(supplierId: string): Promise<ContractRecordDTO[]>;
   create(dto: CreateContractRecordDTO): Promise<ContractRecordDTO>;
   updateStatus(id: string, status: string): Promise<ContractRecordDTO>;
 }
