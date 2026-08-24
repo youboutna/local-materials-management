@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import { resolvePhaseLabel } from '@/utils/entityLabels';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -386,7 +387,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
       } else if (formData.applyToAllPhases) {
         await Promise.all(
           currentPhases.map((phase) =>
-            createProjectTask.mutateAsync(buildTaskPayload(phase.id, phase.name))
+            createProjectTask.mutateAsync(buildTaskPayload(phase.id, resolvePhaseLabel(phase as any, currentPhases.indexOf(phase))))
           )
         );
       } else {
@@ -471,7 +472,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     const phaseId = task?.phaseId || '';
     if (phaseId) {
       const phase = (currentPhases as any[]).find((p: any) => p.id === phaseId);
-      if (phase?.name) return phase.name;
+      if (phase) return resolvePhaseLabel(phase as any, currentPhases.findIndex(p => p.id === phase.id));
       if (phase?.phase_name) return phase.phase_name;
     }
     return task?.phaseName || task?.construction_phase || 'Sans phase';
@@ -522,7 +523,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               <SelectItem value="all"><T k="auto.enhancedtaskmanager.toutes_les_phases" fallback="Toutes les phases" /></SelectItem>
               {currentPhases.map((phase) => (
                 <SelectItem key={phase.id} value={phase.id}>
-                  {phase.name}
+                  {resolvePhaseLabel(phase as any, currentPhases.indexOf(phase))}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -639,7 +640,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                                 />
                                 <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
                                   <span className="text-foreground dark:text-gray-100">
-                                    {phase.name || `Phase ${phase.id}`}
+                                    {resolvePhaseLabel(phase as any, currentPhases.indexOf(phase))}
                                   </span>
                                   {phase.construction_phase && (
                                     <span className="text-xs text-muted-foreground ml-2 block">

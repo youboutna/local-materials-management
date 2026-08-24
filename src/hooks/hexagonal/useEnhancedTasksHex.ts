@@ -1,5 +1,6 @@
 import { invalidateAllTaskQueries } from '@/hooks/hexagonal/taskQueryKeys';
 import { PhaseService } from '@/application/services/PhaseService';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 /**
  * useEnhancedTasksHex - Hook hexagonal pour les tâches avancées
  * 
@@ -665,7 +666,9 @@ export function useProjectPhasesForTasks(projectId: string) {
   return useQuery({
     queryKey: ['project-phases-for-tasks', projectId],
     queryFn: async (): Promise<PhaseDTO[]> => {
-      return (await phaseService.getPhasesByProject(projectId)) as unknown as PhaseDTO[];
+      const phases = await phaseService.getPhasesByProject(projectId);
+      // Mapping canonique entité → DTO (garantit `name`, `phaseCode`, `orderIndex`)
+      return PhaseTransformer.toDTOList(phases);
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!projectId

@@ -18,6 +18,7 @@
 
 import { TaskAssignmentService } from '@/application/services/TaskAssignmentService';
 import { PhaseService } from '@/application/services/PhaseService';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { 
   TaskAssignmentDTO,
   CreateTaskAssignmentDTO,
@@ -54,7 +55,8 @@ export function useTaskListHex(projectId: string) {
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<PhaseDTO[]> => {
       const phases = await phaseService.getPhasesByProject(projectId);
-      return phases as unknown as PhaseDTO[];
+      // Mapping canonique entité → DTO (garantit `name`, `phaseCode`, `orderIndex`)
+      return PhaseTransformer.toDTOList(phases);
     },
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000,
@@ -483,7 +485,8 @@ export function useProjectPhasesForTasks(projectId: string) {
     queryKey: ['project-phases-for-tasks', projectId],
     queryFn: async (): Promise<PhaseDTO[]> => {
       const phases = await phaseService.getPhasesByProject(projectId);
-      return phases as unknown as PhaseDTO[];
+      // Mapping canonique entité → DTO (garantit `name`, `phaseCode`, `orderIndex`)
+      return PhaseTransformer.toDTOList(phases);
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!projectId
