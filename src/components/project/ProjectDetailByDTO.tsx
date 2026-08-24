@@ -47,6 +47,9 @@ import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
+import { useDocumentsByProject } from "@/hooks/hexagonal/useDocumentsHex";
+import { useMilestonesHex } from "@/hooks/hexagonal/useMilestonesHex";
+
 import { toast } from "@/hooks/use-toast";
 import { useProjectMetrics } from "@/hooks/useProjectMetrics";
 import { useProjectFinancialsHex } from "@/hooks/hexagonal/useProjectFinancialsHex";
@@ -451,17 +454,35 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   ]);
 
   // ============ Documents et garanties ============
+  // Source unique : DocumentService (scopé projet), fallback sur l'agrégat ProjectDetail
+  const { data: projectDocuments = [] } = useDocumentsByProject((project as any)?.id || '');
+
+  // ============ Jalons — source unique MilestoneService ============
+  const { milestones: hexMilestones = [] } = useMilestonesHex((project as any)?.id);
+  const milestonesSource = useMemo(() => {
+    const source = (hexMilestones && hexMilestones.length > 0)
+      ? hexMilestones
+      : ((projectDetail as any)?.milestones ?? []);
+    return source as any[];
+  }, [hexMilestones, projectDetail]);
+
+
   const documentsData = useMemo(() => {
-    return ((projectDetail as any)?.documents || []).map((doc: any) => ({
+    const source =
+      (projectDocuments && projectDocuments.length > 0)
+        ? projectDocuments
+        : ((projectDetail as any)?.documents || []);
+    return (source as any[]).map((doc: any) => ({
       id: doc.id,
-      title: doc.title || doc.file_name || 'Document',
-      type: doc.document_type || doc.type || 'other',
-      document_type: doc.document_type || doc.type || 'other',
+      title: doc.title || doc.fileName || doc.file_name || 'Document',
+      type: doc.documentType || doc.document_type || doc.type || 'other',
+      document_type: doc.documentType || doc.document_type || doc.type || 'other',
       description: doc.description,
-      created_at: doc.created_at || doc.createdAt || new Date().toISOString(),
+      created_at: doc.createdAt || doc.created_at || new Date().toISOString(),
       status: doc.status || 'pending',
     }));
-  }, [projectDetail]);
+  }, [projectDocuments, projectDetail]);
+
 
   const bankGuaranteesData = useMemo(() => {
     return ((projectDetail as any)?.bankGuarantees || []).map((bg: any) => ({
@@ -713,15 +734,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       inspectionsCount: inspectionsSource.length,
       documentsCount: documentsData.length,
       risks: risksSource as any[],
-      milestones: ((projectDetail as any)?.milestones ?? []).map((m: any) => ({
+      milestones: milestonesSource.map((m: any) => ({
         id: m.id,
         name: m.title,
         status: m.status,
-        progress: m.progress,
+        progress: m.progress ?? (m.status === 'completed' ? 100 : 0),
         dueDate: m.targetDate,
       })),
     };
-  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent, actualCostBreakdown, doctrineFinancials]);
+  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, milestonesSource, totalPaymentsSpent, actualCostBreakdown, doctrineFinancials]);
+
 
   const metrics = useProjectMetrics(metricsInput);
 
