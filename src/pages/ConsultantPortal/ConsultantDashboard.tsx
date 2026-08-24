@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Bell, CheckCircle2, DollarSign, FileSpreadsheet, FileText, FolderKanban, ShieldAlert } from 'lucide-react';
 import { DqeWorkspace } from '@/components/boq/DqeWorkspace';
+import FinancialDoctrineCard from '@/components/finance/FinancialDoctrineCard';
 import { useAuthUserHex } from '@/hooks/hexagonal/useAuthUserHex';
 import { useConsultantPortalHex } from '@/hooks/hexagonal/useConsultantPortalHex';
 import { ConsultantValidationPanel } from '@/components/invoices/ConsultantValidationPanel';
@@ -230,11 +231,20 @@ const ConsultantDashboard = () => {
                     </div>
 
                     {invoiceProjectId ? (
+                      <>
+                      {/* Situation financière doctrinale du projet sélectionné */}
+                      <FinancialDoctrineCard
+                        scope="project"
+                        entityId={invoiceProjectId}
+                        declaredBudget={(projects.find((p) => p.id === invoiceProjectId) as any)?.budget ?? 0}
+                        className="mb-4"
+                      />
                       <DqeWorkspace
                         routeContext="supplier-invoice"
                         projectId={invoiceProjectId}
                         projectName={projects.find((p) => p.id === invoiceProjectId)?.title}
                       />
+                      </>
                     ) : (
                       <p className="text-sm text-muted-foreground">
                         <T k="auto.consultantdashboard.aucun_projet_selectionne" fallback="Aucun projet sélectionné." />

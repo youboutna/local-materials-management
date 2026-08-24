@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Breadcrumb from '@/components/navigation/Breadcrumb';
 import MonitoringDocumentsPanel from '@/components/documents/panels/MonitoringDocumentsPanel';
+import FinancialDoctrineCard from '@/components/finance/FinancialDoctrineCard';
 import { PAYMENT_CONTROL_THRESHOLDS } from '@/config/referentials/payment-tolerance.referential';
 import { PaymentOriginKey } from '@/config/referentials/payment-origin.referential';
 import { useNotificationsHex, useProjectsHex } from '@/hooks/hexagonal';
@@ -54,7 +55,7 @@ const PaymentControlActionsContainer = () => {
   );
 };
 
-const PaymentControlContent = () => {
+const PaymentControlContent = ({ project }: { project: ProjectData | null }) => {
   const { toast } = useToast();
   const { hasAnyRole } = useCurrentUserRoles();
   const { userId } = useAuthUserHex();
@@ -263,6 +264,14 @@ const PaymentControlContent = () => {
             </TabsContent>
 
             <TabsContent value="gestion" className="mt-6">
+              {/* Doctrine unique : Budget → Engagé → Dépensé (décomptes validés) → Payé */}
+              <FinancialDoctrineCard
+                scope="project"
+                entityId={project?.id}
+                declaredBudget={(project as any)?.budget ?? 0}
+                currency={(project as any)?.currency ?? 'MRU'}
+                className="mb-6"
+              />
               <PaymentCrud
                 onCreatePayment={() => handleOpenNewPayment('manual')}
               />
@@ -354,7 +363,7 @@ const PaymentControlPage = () => {
 
   return (
     <ProjectManagerProvider project={selectedProject} roles={buildEscalationRoles()} actionLabels={actionLabels}>
-      <PaymentControlContent />
+      <PaymentControlContent project={selectedProject} />
     </ProjectManagerProvider>
   );
 };

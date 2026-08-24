@@ -58,6 +58,11 @@ export interface EvmResult {
   progressGapPoints: number | null;
   /** Avancement planifié temporel [0..100], `null` si dates absentes. */
   plannedProgress: number | null;
+  /**
+   * false quand AC est trop faible face à EV (< 5 %) : le CPI reste calculé
+   * mais n'est pas significatif — l'UI doit afficher « N/A ».
+   */
+  isCostIndexReliable: boolean;
 }
 
 const num = (value: unknown): number => {
@@ -94,17 +99,25 @@ export class EvmService {
       ? Math.max(0, Math.min(100, num(input.progress)))
       : weighted.progress;
 
-    // --- Coût réel : phases (actual_cost) sinon valeur fournie ---
+    // --- Coût réel : doctrine « dépensé = décomptes validés ».
+    // La valeur fournie (AC doctrinal, calculée par ActualCostService à partir
+    // des décomptes) PRIME sur les `actual_cost` de phases, qui peuvent encore
+    // contenir des engagements DQE. Le cumul des phases n'est qu'un repli.
     const phaseActual = PhaseWeightingService.sumActualCost(phases);
-    const actualCost = phaseActual > 0 ? phaseActual : num(input.actualCost);
+    const providedActual = num(input.actualCost);
+    const actualCost = providedActual > 0 ? providedActual : phaseActual;
 
     // --- Valeurs EVM ---
     const budgetAtCompletion = budget;
     const plannedProgress = this.plannedProgress(input.startDate, input.endDate, asOf);
     const plannedValue = round2(budget * ((plannedProgress ?? 0) / 100));
-    const earnedValue = weighted.isEmpty
-      ? round2(budget * (progress / 100))
-      : PhaseWeightingService.computeEarnedValue(phases, budget);
+    // EV toujours exprimée sur le budget de référence du périmètre : sinon la
+    // somme des budgets de phases (souvent ≠ budget projet) produit une EV
+    // incohérente avec l'avancement affiché — d'où les CPI aberrants (12.91).
+    const earnedValue =
+      budget > 0
+        ? round2(budget * (progress / 100))
+        : PhaseWeightingService.computeEarnedValue(phases, budget);
 
     const scheduleVariance = round2(earnedValue - plannedValue);
     const costVariance = actualCost > 0 ? round2(earnedValue - actualCost) : null;
@@ -158,6 +171,9 @@ export class EvmService {
       // Signe cohérent : négatif = retard (avant, un retard s'affichait « +75 pts »).
       progressGapPoints: plannedProgress !== null ? round2(progress - plannedProgress) : null,
       plannedProgress,
+      isCostIndexReliable:
+        costPerformanceIndex !== null &&
+        (earnedValue <= 0 || actualCost >= earnedValue * 0.05),
     };
   }
 
@@ -180,7 +196,8 @@ export class EvmService {
       estimateToComplete: result.estimateToComplete ?? Math.max(0, result.budgetAtCompletion - result.actualCost),
       varianceAtCompletion: result.varianceAtCompletion ?? 0,
       // Métadonnées additionnelles (optionnelles côté consommateurs).
-      hasActualCost: result.costPerformanceIndex !== null,
+      hasActualCost: result.costPerformanceIndex !== null && result.isCostIndexReliable,
+      isCostIndexReliable: result.isCostIndexReliable,
       hasPlannedValue: result.schedulePerformanceIndex !== null,
       progress: result.progress,
       progressBasis: result.progressBasis,
