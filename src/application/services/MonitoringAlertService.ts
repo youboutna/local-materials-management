@@ -327,20 +327,23 @@ export class MonitoringAlertService {
     return alerts.filter((alert) => alertCategoryOf(alert.type) === type);
   }
 
-  /** Alertes contextualisées projet (alertes projet + notifications du projet) */
+  /** Alertes contextualisées projet (alertes projet + notifications + dérivées) */
   async getAlertsByProject(projectId: string): Promise<AlertData[]> {
     if (!projectId) return [];
-    const [dtos, notificationAlerts] = await Promise.all([
+    const [dtos, notificationAlerts, derivedAlerts] = await Promise.all([
       this.repository.findByProjectId(projectId),
       this.getNotificationAlerts(),
+      this.getDerivedAlerts(projectId),
     ]);
     const alerts = dtos.map(transformToAlertData);
     const known = new Set(alerts.map((a) => a.id));
     return [
       ...alerts,
       ...notificationAlerts.filter((a) => a.projectId === projectId && !known.has(a.id)),
+      ...derivedAlerts.filter((a) => !known.has(a.id)),
     ];
   }
+
 
 
   /** Alertes contextualisées phase */
