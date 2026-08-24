@@ -49,6 +49,7 @@ import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO"
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
 import { toast } from "@/hooks/use-toast";
 import { useProjectMetrics } from "@/hooks/useProjectMetrics";
+import { useProjectFinancialsHex } from "@/hooks/hexagonal/useProjectFinancialsHex";
 import { formatAmount2 } from "@/utils/reportNumbers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -675,6 +676,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     staleTime: 60_000,
   });
 
+  // Doctrine financière unique : Budget (DQE validé) → Engagé → Dépensé → Payé
+  const { financials: doctrineFinancials } = useProjectFinancialsHex({
+    scope: 'project',
+    entityId: (project as any)?.id,
+    declaredBudget: (project as any)?.budget ?? 0,
+    currency: (project as any)?.currency ?? 'MRU',
+  });
+
   const metricsInput = useMemo(() => {
     if (!project) return null;
     return {
@@ -699,7 +708,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         status: p.status,
       })),
       // AC = paiements payés + engagements ressources de phase (source: ActualCostService)
-      actualCost: actualCostBreakdown?.actualCost ?? (totalPaymentsSpent || (project as any)?.actualCost || 0),
+      actualCost: doctrineFinancials?.spent ?? actualCostBreakdown?.actualCost ?? (totalPaymentsSpent || (project as any)?.actualCost || 0),
+      financials: doctrineFinancials,
       inspectionsCount: inspectionsSource.length,
       documentsCount: documentsData.length,
       risks: risksSource as any[],
@@ -711,7 +721,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         dueDate: m.targetDate,
       })),
     };
-  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent, actualCostBreakdown]);
+  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent, actualCostBreakdown, doctrineFinancials]);
 
   const metrics = useProjectMetrics(metricsInput);
 
@@ -1006,13 +1016,13 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             scope="project"
             entityId={projectId}
             initialBudget={project.budget || 0}
-            engaged={actualCostBreakdown?.resourcesCost ?? 0}
+            engaged={doctrineFinancials?.engaged ?? actualCostBreakdown?.resourcesCost ?? 0}
             className="mb-6"
           />
 
           <FinancialOverview
             budget={project.budget || 0}
-            spent={actualCostBreakdown?.decomptedCost ?? metrics?.actualCost ?? totalPaymentsSpent}
+            spent={doctrineFinancials?.spent ?? actualCostBreakdown?.decomptedCost ?? metrics?.actualCost ?? totalPaymentsSpent}
             phases={phasesSource || []}
             financialMetrics={
               metrics
@@ -1311,7 +1321,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     scope="project"
                     entityId={projectId}
                     initialBudget={project.budget || 0}
-                    engaged={actualCostBreakdown?.resourcesCost ?? 0}
+                    engaged={doctrineFinancials?.engaged ?? actualCostBreakdown?.resourcesCost ?? 0}
                   />
                   <Card>
 
