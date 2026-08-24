@@ -25,6 +25,9 @@ import PhaseQuantityTakeoffTab from '@/components/project/phase/PhaseQuantityTak
 import PhaseStakeholdersTab from '@/components/project/phase/PhaseStakeholdersTab';
 import PhaseFinancesTab from '@/components/project/phase/PhaseFinancesTab';
 import PhaseEditDialog from '@/components/project/phase/PhaseEditDialog';
+import PhaseEditWorkflowDialog from '@/components/project/phase/PhaseEditWorkflowDialog';
+import PhasePlanningQuickEdit from '@/components/project/phase/PhasePlanningQuickEdit';
+import { toPhaseEditDraft, type PhaseEditDraft } from '@/components/project/phase/PhaseEditDraft';
 import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
 import { AppLayout } from '@/components/layout/AppLayout';
 import DeviationBadges from '@/components/common/DeviationBadges';
@@ -68,6 +71,7 @@ const PhaseDetail: React.FC = () => {
   } = usePhaseDetails(phaseId);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isWorkflowEditing, setIsWorkflowEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<PhaseDTO>>({});
 
   const steps = useMemo(
@@ -115,6 +119,34 @@ const PhaseDetail: React.FC = () => {
       /* toast géré par usePhaseDetails */
     }
   };
+
+  /** Brouillon partagé par les deux modes d'édition (onglet + workflow). */
+  const editDraft: PhaseEditDraft = useMemo(
+    () =>
+      vm
+        ? toPhaseEditDraft(vm)
+        : { name: '', description: '', startDate: '', endDate: '', estimatedCost: 0, progress: 0, status: 'pending' },
+    [vm]
+  );
+
+  /** Mode 1 — sauvegarde partielle (onglet) : persiste uniquement les champs fournis. */
+  const handlePartialSave = async (partial: Partial<PhaseEditDraft>) => {
+    try {
+      await updatePhaseAsync(partial as Record<string, unknown>);
+    } catch {
+      /* toast géré par usePhaseDetails */
+    }
+  };
+
+  /** Mode 2 — sauvegarde globale (workflow) : persiste l'ensemble du brouillon. */
+  const handleWorkflowSave = async (draft: PhaseEditDraft) => {
+    try {
+      await updatePhaseAsync(draft as unknown as Record<string, unknown>);
+    } catch {
+      /* toast géré par usePhaseDetails */
+    }
+  };
+
 
 
 
@@ -216,13 +248,23 @@ const PhaseDetail: React.FC = () => {
             <Badge className={getStatusColor(vm.status)} variant="outline">
               {getStatusLabel(vm.status)}
             </Badge>
+            {/* Mode 2 : workflow d'édition complet */}
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setIsEditing(true)}
-              aria-label="Modifier la phase"
+              onClick={() => setIsWorkflowEditing(true)}
+              aria-label="Modifier la phase (workflow complet)"
             >
               <Edit className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.modifier" fallback="Modifier" />
+            </Button>
+            {/* Édition rapide (formulaire simple) */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsEditing(true)}
+              aria-label="Édition rapide de la phase"
+            >
+              <T k="auto.phasedetail.edition_rapide" fallback="Édition rapide" />
             </Button>
             {progressResult.isDivergent && progressResult.derivedValue != null && (
               <Button
@@ -400,6 +442,13 @@ const PhaseDetail: React.FC = () => {
 
           {/* Planification: étapes/tâches, métré DQE, planning, jalons, ressources */}
           <TabsContent value="planification" className="space-y-6">
+            {/* Mode 1 : édition/sauvegarde partielle de l'onglet Planification */}
+            <PhasePlanningQuickEdit
+              value={editDraft}
+              isSaving={isUpdatingPhase}
+              disabled={isClosed}
+              onSave={handlePartialSave}
+            />
             <Tabs defaultValue="steps" className="space-y-4">
               <WorkspaceTabsList variant="underline">
                 <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" /><T k="auto.phasedetail.etapes" fallback="Étapes" /></TabsTrigger>
@@ -539,6 +588,23 @@ const PhaseDetail: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <PhaseEditWorkflowDialog
+          isOpen={isWorkflowEditing}
+          onOpenChange={setIsWorkflowEditing}
+          projectId={projectId!}
+          phaseId={phaseId!}
+          value={editDraft}
+          isSaving={isUpdatingPhase}
+          summary={{
+            team: metrics.totalEmployees,
+            documents: metrics.totalDocuments,
+            payments: metrics.totalPayments,
+            tasks: metrics.totalTasks,
+            completedTasks: metrics.completedTasks,
+          }}
+          onSave={handleWorkflowSave}
+        />
 
         <PhaseEditDialog
           isOpen={isEditing}
