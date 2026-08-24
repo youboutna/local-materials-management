@@ -52,7 +52,7 @@ export function ConsultantInspectionsPanel({ projects }: Props) {
   /** Conformité : une phase est validable si elle porte au moins une inspection réalisée. */
   const inspectionsByPhase = useMemo(() => {
     const map = new Map<string, number>();
-    for (const insp of inspections as Array<Record<string, unknown>>) {
+    for (const insp of inspections as unknown as Array<Record<string, unknown>>) {
       const phaseId = (insp.phaseId ?? insp.phase_id) as string | undefined;
       if (!phaseId) continue;
       map.set(phaseId, (map.get(phaseId) ?? 0) + 1);
@@ -210,8 +210,8 @@ export function ConsultantInspectionsPanel({ projects }: Props) {
             <p className="text-xs text-muted-foreground">
               {(t('consultant.inspections.last') || 'Dernière inspection') + ' : '}
               {formatDate(
-                ((inspections as Array<Record<string, unknown>>)[0]?.date ??
-                  (inspections as Array<Record<string, unknown>>)[0]?.scheduledDate) as string,
+                ((inspections as unknown as Array<Record<string, unknown>>)[0]?.date ??
+                  (inspections as unknown as Array<Record<string, unknown>>)[0]?.scheduledDate) as string,
               )}
             </p>
           )}
