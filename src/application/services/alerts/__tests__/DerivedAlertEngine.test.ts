@@ -52,7 +52,7 @@ describe('DerivedAlertEngine', () => {
     const ar = toDerivedAlert(signal({}), 'ar', NOW)!;
     const en = toDerivedAlert(signal({}), 'en', NOW)!;
     expect(ar.title).not.toBe(en.title);
-    expect(en.message).toContain('overdue'.slice(0, 3));
+    expect(en.message).toContain('end date');
   });
 
   it('génère des identifiants stables et déduplicables', () => {
