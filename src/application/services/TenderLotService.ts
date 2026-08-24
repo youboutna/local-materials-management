@@ -47,6 +47,52 @@ export class TenderLotService {
       .eq('id', id);
     if (error) throw error;
   }
+
+  /** Transition de statut du lot (brouillon → publié → en évaluation → attribué / annulé). */
+  async setStatus(id: string, status: TenderLotRecord['status']): Promise<TenderLotRecord> {
+    const { data, error } = await supabase
+      .from('tender_lots' as any)
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return TenderLotTransformer.fromRow(data);
+  }
+
+  /** Attribue un lot à un prestataire à partir d'une soumission retenue. */
+  async award(
+    id: string,
+    params: { awardedTo: string; awardedSubmissionId?: string | null; awardedAmount?: number | null },
+  ): Promise<TenderLotRecord> {
+    const { data, error } = await supabase
+      .from('tender_lots' as any)
+      .update({
+        status: 'awarded',
+        awarded_to: params.awardedTo,
+        awarded_submission_id: params.awardedSubmissionId ?? null,
+        awarded_amount: params.awardedAmount ?? null,
+        awarded_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return TenderLotTransformer.fromRow(data);
+  }
+
+  /** Soumissions rattachées à un lot. */
+  async listSubmissionsByLot(lotId: string): Promise<any[]> {
+    if (!lotId) return [];
+    const { data, error } = await supabase
+      .from('tender_submissions' as any)
+      .select('*')
+      .eq('lot_id', lotId)
+      .order('submission_date', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  }
+
 }
 
 let instance: TenderLotService | null = null;

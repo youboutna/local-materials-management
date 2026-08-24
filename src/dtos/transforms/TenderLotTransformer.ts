@@ -1,6 +1,8 @@
 /**
  * TenderLotTransformer - DB row (snake_case) <-> TenderLotRecord (camelCase)
  */
+export type TenderLotStatus = 'draft' | 'published' | 'under_evaluation' | 'awarded' | 'cancelled';
+
 export interface TenderLotRecord {
   id: string;
   tenderId: string;
@@ -13,6 +15,11 @@ export interface TenderLotRecord {
   linkedStepIds: string[];
   requirements: string[];
   deliverables: string[];
+  status: TenderLotStatus;
+  awardedTo?: string | null;
+  awardedSubmissionId?: string | null;
+  awardedAt?: string | null;
+  awardedAmount?: number | null;
 }
 
 const isUuid = (v: string | undefined | null): v is string =>
@@ -32,6 +39,11 @@ export class TenderLotTransformer {
       linkedStepIds: row.linked_step_ids ?? [],
       requirements: row.requirements ?? [],
       deliverables: row.deliverables ?? [],
+      status: (row.status ?? 'draft') as TenderLotStatus,
+      awardedTo: row.awarded_to ?? null,
+      awardedSubmissionId: row.awarded_submission_id ?? null,
+      awardedAt: row.awarded_at ?? null,
+      awardedAmount: row.awarded_amount ?? null,
     };
   }
 
@@ -47,6 +59,12 @@ export class TenderLotTransformer {
       linked_step_ids: (lot.linkedStepIds ?? []).filter(isUuid),
       requirements: lot.requirements ?? [],
       deliverables: lot.deliverables ?? [],
+      status: lot.status ?? 'draft',
+      awarded_to: lot.awardedTo ?? null,
+      awarded_submission_id: isUuid(lot.awardedSubmissionId ?? undefined) ? lot.awardedSubmissionId : null,
+      awarded_at: lot.awardedAt ?? null,
+      awarded_amount: lot.awardedAmount ?? null,
     };
   }
 }
+
