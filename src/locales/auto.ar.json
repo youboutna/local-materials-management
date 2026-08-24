@@ -4756,6 +4756,7 @@
   "dashboard.project.load_error": "فشل تحميل بيانات المشروع",
   "dashboard.project.search_by_location": "البحث عن المشاريع حسب الموقع...",
   "dashboard.title": "لوحة القيادة",
+  "deviation.none_tooltip": "لا يمكن حساب أي فارق حالياً",
   "documents.title": "الوثائق",
   "dqe.action.add": "إضافة",
   "dqe.action.add_line": "إضافة سطر",
@@ -4796,6 +4797,7 @@
   "dqe.lifecycle.billed_progress": "نسبة التقدم المفوترة",
   "dqe.lifecycle.possible_statuses": "الحالات الممكنة",
   "dqe.lifecycle.possible_statuses_label": "الحالات الممكنة:",
+  "dqe.lifecycle.possible_statuses_tooltip": "الحالات الممكنة لهذه الوثيقة",
   "dqe.lifecycle.status": "الحالة",
   "dqe.lifecycle.status_label": "الحالة:",
   "dqe.locked_signed": "المستند موقّع — للقراءة فقط",
@@ -4821,6 +4823,7 @@
   "dqe.referential.project_default": "مرجعية المشروع",
   "dqe.save_hint_no_pending": "لا توجد بنود في الانتظار: أضف أو استورد بنودًا.",
   "dqe.save_success": "تم حفظ المسودة",
+  "dqe.shortcuts.hint": "اختصارات: Ctrl+Shift+A إضافة · Ctrl+Shift+M القياس · Ctrl+Shift+I استيراد · Ctrl+S حفظ · Ctrl+Enter إرسال",
   "dqe.status.mixed": "حالات متعددة",
   "dqe.transfer.project_dqe": "تقديم للاعتماد",
   "dqe.transfer.supplier_bid": "إرفاق بعرضي",
@@ -4998,6 +5001,9 @@
   "users.table.role": "الدور",
   "users.updated": "تم تحديث المستخدم",
   "users.updated_success": "تم تحديث المستخدم بنجاح",
+  "wbs.select_milestone": "اختر معلمة",
   "wbs.select_milestone_first": "اختر معلماً",
-  "wbs.select_phase_first": "اختر مرحلة"
+  "wbs.select_phase": "اختر مرحلة",
+  "wbs.select_phase_first": "اختر مرحلة",
+  "wbs.select_task": "اختر مهمة"
 }
