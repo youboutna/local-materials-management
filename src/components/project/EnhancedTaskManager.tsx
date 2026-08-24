@@ -453,20 +453,30 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     }
   };
 
-  const getAssigneeName = (assignedTo: string) => {
-    const employee = employees.find(emp => emp.id === assignedTo);
-    if (employee) return employee.fullName;
-    
-    const supplier = suppliers.find(sup => sup.id === assignedTo);
-    if (supplier) return supplier.name;
-    
-    return 'Non assigné';
+  // Résolution assigné : référentiels chargés → valeur dénormalisée persistée → non assigné
+  const getAssigneeName = (task: any) => {
+    const assignedTo = task?.assignedTo || '';
+    if (assignedTo) {
+      const employee = employees.find(emp => emp.id === assignedTo);
+      if (employee) return employee.fullName;
+
+      const supplier = suppliers.find(sup => sup.id === assignedTo);
+      if (supplier) return supplier.name;
+    }
+    return task?.assigneeName || task?.assignee_name || 'Non assigné';
   };
 
-  const getPhaseName = (phaseId: string) => {
-    const phase = phases.find(p => p.id === phaseId);
-    return phase?.name || 'Phase inconnue';
+  // Résolution phase : phases du projet (hook ou props) → nom dénormalisé → sans phase
+  const getPhaseName = (task: any) => {
+    const phaseId = task?.phaseId || '';
+    if (phaseId) {
+      const phase = (currentPhases as any[]).find((p: any) => p.id === phaseId);
+      if (phase?.name) return phase.name;
+      if (phase?.phase_name) return phase.phase_name;
+    }
+    return task?.phaseName || task?.construction_phase || 'Sans phase';
   };
+
 
   if (isLoading) {
     return (
