@@ -27,6 +27,7 @@ import {
   buildMonitoringInsights,
   type MonitoringInsight,
 } from '@/utils/monitoringInsights';
+import type { ProjectFinancialDTO } from '@/dtos/entities/ProjectFinancialDTO';
 import {
   formatAmount2,
   formatIndex2,
@@ -54,6 +55,11 @@ export interface ProjectMetricsInput {
   phases?: OrchestratorPhaseInput[];
   /** Coût réel constaté hors phases (paiements, décomptes…). */
   actualCost?: number | null;
+  /**
+   * Synthèse financière doctrinale (ProjectFinancialsService). Quand elle est
+   * fournie, elle PRIME : budget = DQE validé, AC = décomptes validés.
+   */
+  financials?: ProjectFinancialDTO | null;
   inspectionsCount?: number;
   documentsCount?: number;
   /** Risques (bruts) — l'ouverture est déduite du statut. */
@@ -133,6 +139,14 @@ export interface ProjectMetrics {
   pertDurationDays: number | null;
   budget: number;
   actualCost: number;
+  /** Engagé (devis acceptés) — jamais confondu avec le dépensé. */
+  engagedCost: number;
+  /** Dépensé doctrinal = Σ décomptes validés. */
+  spentCost: number;
+  /** Payé (transactions rattachées aux décomptes). */
+  paidCost: number;
+  /** Source du budget de référence (DQE validé, déclaré…). */
+  budgetSource: ProjectFinancialDTO['budgetSource'];
   /** Écart budget : 0 quand aucun coût engagé (non évaluable). */
   budgetVariance: number;
   budgetVarianceEvaluable: boolean;
@@ -208,7 +222,7 @@ export class ProjectMetricsOrchestrator {
       progress: canonicalProjectProgress,
       startDate: project.startDate ?? null,
       endDate: project.endDate ?? null,
-      actualCost: input.actualCost ?? 0,
+      actualCost: input.financials && input.financials.spent > 0 ? input.financials.spent : input.actualCost ?? 0,
       phases,
       asOf,
     });
@@ -230,7 +244,11 @@ export class ProjectMetricsOrchestrator {
         : null;
 
     // --- 3. Budget : écart non évaluable si aucun coût engagé ---
-    const budget = num(project.budget);
+    const fin = input.financials ?? null;
+    const budget =
+      fin && fin.budgetSource !== 'none' && fin.budgetTotal > 0
+        ? fin.budgetTotal
+        : num(project.budget);
     const actualCost = evm.actualCost;
     const budgetVarianceEvaluable = actualCost > 0;
     const budgetVariance = budgetVarianceEvaluable ? Number((actualCost - budget).toFixed(2)) : 0;
@@ -307,7 +325,9 @@ export class ProjectMetricsOrchestrator {
 
     const costPerformanceLabel =
       evm.costPerformanceIndex === null
-        ? 'Non évaluable (aucune dépense engagée)'
+        ? 'Non évaluable (aucun décompte validé)'
+        : !evm.isCostIndexReliable
+          ? 'Non significatif (décomptes insuffisants)'
         : evm.costPerformanceIndex >= 1
           ? 'Excellent'
           : evm.costPerformanceIndex >= 0.9
@@ -333,6 +353,10 @@ export class ProjectMetricsOrchestrator {
       pertDurationDays,
       budget,
       actualCost,
+      engagedCost: fin?.engaged ?? 0,
+      spentCost: fin?.spent ?? (evm.actualCost || 0),
+      paidCost: fin?.paid ?? 0,
+      budgetSource: fin?.budgetSource ?? (budget > 0 ? 'declared' : 'none'),
       budgetVariance,
       budgetVarianceEvaluable,
       budgetCommitmentRate: evm.budgetCommitmentRate,
@@ -355,7 +379,7 @@ export class ProjectMetricsOrchestrator {
           : `${formatAmount2(0, currency)} (non évaluable)`,
         budgetCommitmentRate: formatPercent2(evm.budgetCommitmentRate),
         spi: formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null),
-        cpi: formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null),
+        cpi: evm.isCostIndexReliable ? formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null),
         plannedValue: formatAmount2(evm.plannedValue, currency),
         earnedValue: formatAmount2(evm.earnedValue, currency),
         scheduleVariance: formatAmount2(evm.scheduleVariance, currency),
