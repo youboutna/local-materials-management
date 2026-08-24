@@ -764,7 +764,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Layers className="h-3 w-3" />
-                      {getPhaseName(task.phaseId || '')}
+                      {getPhaseName(task)}
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
