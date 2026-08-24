@@ -29,6 +29,7 @@ import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning
 import { AppLayout } from '@/components/layout/AppLayout';
 import DeviationBadges from '@/components/common/DeviationBadges';
 import { toPhaseViewModel } from '@/utils/phaseViewModel';
+import { PhaseMetricsService } from '@/application/services/PhaseMetricsService';
 import {
   getPhaseLifecycleStage,
   getLifecycleStageMeta,
@@ -484,7 +485,7 @@ const PhaseDetail: React.FC = () => {
                 />
               </TabsContent>
               <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="payments"><PhasePayments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="payments"><PhasePayments phaseId={phaseId!} projectId={projectId!} phaseName={title} phaseBudget={budget} /></TabsContent>
             </Tabs>
           </TabsContent>
 
