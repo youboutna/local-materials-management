@@ -16,7 +16,9 @@ import {
 import type { INotificationRepository, NotificationData } from '@/domain/repositories/INotificationRepository';
 import type { IDerivedAlertRepository } from '@/domain/repositories/IDerivedAlertRepository';
 import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseDerivedAlertAdapter';
-import { isDerivedAlertId, toDerivedAlerts } from '@/application/services/alerts/DerivedAlertEngine';
+import { isDerivedAlertId, toDerivedAlerts, type DerivedThresholdMap } from '@/application/services/alerts/DerivedAlertEngine';
+import { resolveDerivedThresholds } from '@/application/services/alerts/AlertThresholdResolver';
+import { getEscalationThresholdService } from '@/application/services/EscalationThresholdService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getProjectService } from '@/application/services/ProjectService';
 
@@ -157,14 +159,37 @@ export class MonitoringAlertService {
     return this.derivedRepository;
   }
 
+  /**
+   * Seuils de sévérité administrés dans `/settings` (mise en cache courte pour
+   * éviter un aller-retour par appel du tableau de bord).
+   */
+  private thresholdCache: { at: number; map: DerivedThresholdMap } | null = null;
+
+  private async getDerivedThresholds(): Promise<DerivedThresholdMap> {
+    const TTL = 60_000;
+    if (this.thresholdCache && Date.now() - this.thresholdCache.at < TTL) {
+      return this.thresholdCache.map;
+    }
+    try {
+      const rows = await getEscalationThresholdService().getAll();
+      const map = resolveDerivedThresholds(rows);
+      this.thresholdCache = { at: Date.now(), map };
+      return map;
+    } catch (error) {
+      console.warn('MonitoringAlertService: escalation thresholds unavailable', error);
+      return {};
+    }
+  }
+
   /** Alertes dérivées de l'état réel du projet (retards, échéances, blocages). */
   private async getDerivedAlerts(projectId?: string): Promise<AlertData[]> {
     try {
       const repo = this.getDerivedRepository();
-      const signals = projectId
-        ? await repo.findSignalsByProject(projectId)
-        : await repo.findSignals();
-      return toDerivedAlerts(signals);
+      const [signals, thresholds] = await Promise.all([
+        projectId ? repo.findSignalsByProject(projectId) : repo.findSignals(),
+        this.getDerivedThresholds(),
+      ]);
+      return toDerivedAlerts(signals, 'fr', Date.now(), thresholds);
     } catch (error) {
       console.warn('MonitoringAlertService: derived alerts unavailable', error);
       return [];
