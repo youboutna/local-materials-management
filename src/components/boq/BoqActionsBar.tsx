@@ -7,7 +7,7 @@
  *   Devis fournisseur (supplier-bid)   → joindre à soumission
  *   Décompte facture (supplier-invoice) → paiement
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Mail, PenTool, Send, Download, Paperclip, FileCheck2, Loader2, ArrowRightCircle, Layers, ShieldCheck } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -295,6 +295,13 @@ export const BoqActionsBar: React.FC<Props> = ({
         variant: 'destructive',
       });
     }
+  });
+
+  // Raccourci clavier Ctrl+Entrée depuis le poste DQE -> soumettre pour validation.
+  useEffect(() => {
+    const onShortcut = () => { if (!disabled) handleTransfer(); };
+    window.addEventListener('boq-shortcut-submit', onShortcut);
+    return () => window.removeEventListener('boq-shortcut-submit', onShortcut);
   });
 
   // Chaîne complète : DQE validé -> planification -> prévisions -> AO -> portails.

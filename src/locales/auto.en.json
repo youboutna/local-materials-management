@@ -4757,6 +4757,7 @@
   "dashboard.project.load_error": "Failed to load project data",
   "dashboard.project.search_by_location": "Search projects by location...",
   "dashboard.title": "Dashboard",
+  "deviation.none_tooltip": "No deviation can be computed yet",
   "documents.title": "Documents",
   "dqe.action.add": "Add",
   "dqe.action.add_line": "Add a line",
@@ -4797,6 +4798,7 @@
   "dqe.lifecycle.billed_progress": "Billed progress",
   "dqe.lifecycle.possible_statuses": "Possible statuses",
   "dqe.lifecycle.possible_statuses_label": "Possible statuses:",
+  "dqe.lifecycle.possible_statuses_tooltip": "Possible statuses for this document",
   "dqe.lifecycle.status": "Status",
   "dqe.lifecycle.status_label": "Status:",
   "dqe.locked_signed": "Signed document — read only",
@@ -4822,6 +4824,7 @@
   "dqe.referential.project_default": "Project referential",
   "dqe.save_hint_no_pending": "No pending lines: add or import lines.",
   "dqe.save_success": "Draft saved",
+  "dqe.shortcuts.hint": "Shortcuts: Ctrl+Shift+A add · Ctrl+Shift+M takeoff · Ctrl+Shift+I import · Ctrl+S save · Ctrl+Enter submit",
   "dqe.status.mixed": "Multiple statuses",
   "dqe.transfer.project_dqe": "Submit for approval",
   "dqe.transfer.supplier_bid": "Attach to my bid",
@@ -4999,6 +5002,9 @@
   "users.table.role": "Role",
   "users.updated": "User updated",
   "users.updated_success": "User updated successfully",
+  "wbs.select_milestone": "Select a milestone",
   "wbs.select_milestone_first": "Select a milestone",
-  "wbs.select_phase_first": "Select a phase"
+  "wbs.select_phase": "Select a phase",
+  "wbs.select_phase_first": "Select a phase",
+  "wbs.select_task": "Select a task"
 }

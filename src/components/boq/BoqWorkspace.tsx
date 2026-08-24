@@ -120,6 +120,7 @@ export function BoqWorkspace({
 
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
   const { materials } = useMaterialsHex();
   const [fiscalCode, setFiscalCode] = useState<string>(() => readPrefs().fiscalCode ?? 'MR_STANDARD');
   const [overheadPct, setOverheadPct] = useState<number>(0);
@@ -403,6 +404,27 @@ export function BoqWorkspace({
       toast({ title: 'Échec alignement', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     } finally { setAligning(false); }
   };
+
+  // ---- Raccourcis clavier des 5 actions P0 du gestionnaire -------------------
+  // Ctrl+Maj+A ajouter · Ctrl+Maj+M métré · Ctrl+Maj+I importer
+  // Ctrl+S enregistrer · Ctrl+Entrée soumettre pour validation
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const key = e.key.toLowerCase();
+      if (e.shiftKey && key === 'a') { if (!locked) { e.preventDefault(); addEmptyRow(); } return; }
+      if (e.shiftKey && key === 'm') { if (!locked) { e.preventDefault(); setOpenManual(true); } return; }
+      if (e.shiftKey && key === 'i') { if (!locked) { e.preventDefault(); setOpenImport(true); } return; }
+      if (!e.shiftKey && key === 's') { if (!locked) { e.preventDefault(); void saveDraftLines(false); } return; }
+      if (!e.shiftKey && e.key === 'Enter') {
+        if (locked) return;
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('boq-shortcut-submit'));
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   // ---- Ajout inline d'une ligne vide (édition dans le tableau) ---------------
   const addEmptyRow = () => {
@@ -782,6 +804,8 @@ export function BoqWorkspace({
           </Dialog>
 
           <BoqImportDialog
+            open={openImport}
+            onOpenChange={setOpenImport}
             source={source}
             contextId={contextId}
             projectId={projectId}

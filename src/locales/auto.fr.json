@@ -4754,6 +4754,7 @@
   "dashboard.project.load_error": "Échec du chargement des données du projet",
   "dashboard.project.search_by_location": "Rechercher des projets par localisation...",
   "dashboard.title": "Tableau de bord",
+  "deviation.none_tooltip": "Aucun écart calculable pour l'instant",
   "documents.title": "Documents",
   "dqe.action.add": "Ajouter",
   "dqe.action.add_line": "Ajouter une ligne",
@@ -4794,6 +4795,7 @@
   "dqe.lifecycle.billed_progress": "Avancement facturé",
   "dqe.lifecycle.possible_statuses": "Statuts possibles",
   "dqe.lifecycle.possible_statuses_label": "Statuts possibles :",
+  "dqe.lifecycle.possible_statuses_tooltip": "Statuts possibles de ce document",
   "dqe.lifecycle.status": "Statut",
   "dqe.lifecycle.status_label": "Statut :",
   "dqe.locked_signed": "Document signé — lecture seule",
@@ -4819,6 +4821,7 @@
   "dqe.referential.project_default": "Référentiel du projet",
   "dqe.save_hint_no_pending": "Aucune ligne en attente : ajoutez ou importez des lignes.",
   "dqe.save_success": "Brouillon enregistré",
+  "dqe.shortcuts.hint": "Raccourcis : Ctrl+Maj+A ajouter · Ctrl+Maj+M métré · Ctrl+Maj+I importer · Ctrl+S enregistrer · Ctrl+Entrée soumettre",
   "dqe.status.mixed": "Statuts multiples",
   "dqe.transfer.project_dqe": "Soumettre pour validation",
   "dqe.transfer.supplier_bid": "Joindre à ma soumission",
@@ -4996,6 +4999,9 @@
   "users.table.role": "Rôle",
   "users.updated": "Utilisateur mis à jour",
   "users.updated_success": "L'utilisateur a été mis à jour avec succès",
+  "wbs.select_milestone": "Sélectionner un jalon",
   "wbs.select_milestone_first": "Sélectionner un jalon",
-  "wbs.select_phase_first": "Sélectionner une phase"
+  "wbs.select_phase": "Sélectionner une phase",
+  "wbs.select_phase_first": "Sélectionner une phase",
+  "wbs.select_task": "Sélectionner une tâche"
 }

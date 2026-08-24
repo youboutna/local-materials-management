@@ -29,7 +29,7 @@ interface Props {
 const NONE = '__none__';
 
 export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride }: Props) {
-  const { translateTerm, t } = useI18n();
+  const { t } = useI18n();
   const phases: WbsPhase[] = useMemo(() => {
     if (phasesOverride && phasesOverride.length > 0) return phasesOverride;
     if (!referentialCode) return WBS_REFERENTIAL;
@@ -55,9 +55,9 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
           onValueChange={(v) => onChange({ phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}
           disabled={disabled}
         >
-          <SelectTrigger><SelectValue placeholder={translateTerm('wbs_phase')} /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={t('wbs.select_phase')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE}><T k="auto.wbsselector.non_assignee" fallback="Non assignée" /></SelectItem>
+            <SelectItem value={NONE}>{t('wbs.select_phase')}</SelectItem>
             {phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -69,9 +69,9 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
           onValueChange={(v) => onChange({ ...value, milestoneId: v === NONE ? null : v, taskId: null })}
           disabled={disabled || !phase}
         >
-          <SelectTrigger><SelectValue placeholder={phase ? translateTerm('wbs_milestone') : t('wbs.select_phase_first')} /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={phase ? t('wbs.select_milestone') : t('wbs.select_phase_first')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE}><T k="auto.wbsselector.non_assigne" fallback="Non assigné" /></SelectItem>
+            <SelectItem value={NONE}>{t('wbs.select_milestone')}</SelectItem>
             {phase?.milestones.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -83,9 +83,9 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
           onValueChange={(v) => onChange({ ...value, taskId: v === NONE ? null : v })}
           disabled={disabled || !milestone}
         >
-          <SelectTrigger><SelectValue placeholder={milestone ? translateTerm('wbs_task') : t('wbs.select_milestone_first')} /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={milestone ? t('wbs.select_task') : t('wbs.select_milestone_first')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE}><T k="auto.wbsselector.non_assignee" fallback="Non assignée" /></SelectItem>
+            <SelectItem value={NONE}>{t('wbs.select_task')}</SelectItem>
             {milestone?.tasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>

@@ -71,7 +71,9 @@ export const INVOICE_DOCUMENT_TYPES: InvoiceDocumentTypeDef[] = [
     requiredSourceStatus: 'valide',
     boqSources: ['supplier_bid'],
     next: 'contrat',
-    actors: ['manager', 'supplier'],
+    // P1 — l'émission d'un devis appartient au prestataire : le gestionnaire
+    // reçoit et analyse l'offre, il ne la crée pas depuis son poste DQE.
+    actors: ['supplier'],
     requiresPercentage: false,
     nextActionLabel: 'Transformer en contrat',
   },
