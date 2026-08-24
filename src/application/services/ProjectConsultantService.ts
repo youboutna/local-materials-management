@@ -7,47 +7,109 @@
  */
 
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import {
-  IStakeholderRepository,
-  StakeholderAssignment,
-} from '@/domain/repositories/IStakeholderRepository';
+import type { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
+import type { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
+import type { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
+import type { IOrganizationRepository } from '@/domain/repositories/IOrganizationRepository';
+import type {
+  ConsultantCandidateDTO,
+  ProjectConsultantDTO,
+} from '@/dtos/entities/ProjectConsultantDTO';
 import {
   CONSULTANT_DESIGNATION_REFERENTIAL,
   isConsultantBusinessCode,
 } from '@/config/referentials/consultant-designation.referential';
 
-export interface ProjectConsultantDTO {
-  stakeholderId: string;
-  projectId: string;
-  name: string;
-  businessRole: string;
-  entityType: string;
-  employeeId?: string | null;
-  supplierId?: string | null;
-  isConsultant: boolean;
-}
-
 export class ProjectConsultantService {
-  constructor(private readonly stakeholderRepository: IStakeholderRepository) {}
+  constructor(
+    private readonly stakeholderRepository: IProjectStakeholderRepository,
+    private readonly employeeRepository: IEmployeeRepository,
+    private readonly supplierRepository: ISupplierRepository,
+    private readonly organizationRepository: IOrganizationRepository,
+  ) {}
 
   /** Parties prenantes du projet, avec indicateur consultant. */
   async getProjectStakeholders(projectId: string): Promise<ProjectConsultantDTO[]> {
     if (!projectId) return [];
     const list = await this.stakeholderRepository.findByProjectId(projectId);
-    return list.map((s) => {
-      const raw = s as unknown as Record<string, any>;
-      const businessRole = String(raw.role ?? raw.type ?? '');
+    const [employees, suppliers, organizations] = await Promise.all([
+      this.employeeRepository.findAll(),
+      this.supplierRepository.findAll(),
+      this.organizationRepository.findAll(),
+    ]);
+    const employeeById = new Map(employees.map((item) => [item.id, item]));
+    const supplierById = new Map(suppliers.map((item) => [item.id, item]));
+    const organizationById = new Map(organizations.map((item) => [item.id, item]));
+    return list.filter((s) => s.isActive).map((s) => {
+      const employee = s.employeeId ? employeeById.get(s.employeeId) : undefined;
+      const supplier = s.supplierId ? supplierById.get(s.supplierId) : undefined;
+      const organization = s.organizationId ? organizationById.get(s.organizationId) : undefined;
+      const businessRole = String(s.stakeholderType ?? '');
       return {
         stakeholderId: s.id,
         projectId,
-        name: raw.contact?.name || raw.externalName || raw.name || 'Partie prenante',
+        name: employee?.fullName || supplier?.name || organization?.name || s.externalName || s.roleDescription || 'Partie prenante',
         businessRole,
-        entityType: String(raw.stakeholderType ?? raw.entityType ?? ''),
-        employeeId: raw.employeeId ?? null,
-        supplierId: raw.supplierId ?? raw.organizationId ?? null,
+        entityType: String(s.stakeholderEntityType ?? ''),
+        employeeId: s.employeeId,
+        supplierId: s.supplierId,
+        organizationId: s.organizationId,
         isConsultant: isConsultantBusinessCode(businessRole),
       };
     });
+  }
+
+  /** Catalogue dédupliqué : parties prenantes existantes + référentiels globaux. */
+  async getEligibleCandidates(projectId: string): Promise<ConsultantCandidateDTO[]> {
+    if (!projectId) return [];
+    const [stakeholders, employees, suppliers, organizations] = await Promise.all([
+      this.getProjectStakeholders(projectId),
+      this.employeeRepository.findActive(),
+      this.supplierRepository.findActive(),
+      this.organizationRepository.findAll(),
+    ]);
+    const candidates: ConsultantCandidateDTO[] = [];
+    const linkedEmployees = new Set(stakeholders.map((s) => s.employeeId).filter(Boolean));
+    const linkedSuppliers = new Set(stakeholders.map((s) => s.supplierId).filter(Boolean));
+    const linkedOrganizations = new Set(stakeholders.map((s) => s.organizationId).filter(Boolean));
+
+    stakeholders.filter((s) => !s.isConsultant).forEach((s) => candidates.push({
+      key: `stakeholder:${s.stakeholderId}`,
+      sourceId: s.stakeholderId,
+      stakeholderId: s.stakeholderId,
+      kind: 'stakeholder',
+      name: s.name,
+      detail: s.businessRole || s.entityType,
+      isAlreadyStakeholder: true,
+    }));
+    employees.filter((e) => !linkedEmployees.has(e.id)).forEach((e) => candidates.push({
+      key: `employee:${e.id}`,
+      sourceId: e.id,
+      kind: 'employee',
+      name: e.fullName,
+      detail: e.position || String(e.role || ''),
+      email: e.email || undefined,
+      isAlreadyStakeholder: false,
+    }));
+    suppliers.filter((s) => !linkedSuppliers.has(s.id)).forEach((s) => candidates.push({
+      key: `supplier:${s.id}`,
+      sourceId: s.id,
+      kind: 'supplier',
+      name: s.name,
+      detail: s.category || undefined,
+      email: s.email || undefined,
+      isAlreadyStakeholder: false,
+    }));
+    organizations.filter((o) => o.isActive && !linkedOrganizations.has(o.id)).forEach((o) => candidates.push({
+      key: `organization:${o.id}`,
+      sourceId: o.id,
+      kind: 'organization',
+      name: o.name,
+      detail: o.orgType || o.code,
+      email: o.email,
+      isAlreadyStakeholder: false,
+    }));
+    return candidates.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   }
 
   /** Consultants actuellement désignés sur un projet. */
@@ -57,75 +119,79 @@ export class ProjectConsultantService {
   }
 
   /** Désigne une partie prenante comme consultant du projet. */
-  async designateConsultant(projectId: string, stakeholderId: string): Promise<void> {
-    if (!projectId || !stakeholderId) {
-      throw new Error('projectId et stakeholderId sont requis');
-    }
-    if (!this.stakeholderRepository.setBusinessRole) {
-      throw new Error("Le repository ne supporte pas la mise à jour du rôle métier");
+  async designateConsultant(projectId: string, candidate: ConsultantCandidateDTO): Promise<void> {
+    if (!projectId || !candidate?.sourceId) {
+      throw new Error('Le projet et le candidat sont requis');
     }
 
     if (CONSULTANT_DESIGNATION_REFERENTIAL.singleConsultantPerProject) {
       const current = await this.getProjectConsultants(projectId);
       await Promise.all(
         current
-          .filter((c) => c.stakeholderId !== stakeholderId)
-          .map((c) =>
-            this.stakeholderRepository.setBusinessRole!(
-              c.stakeholderId,
-              CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode,
-            ),
-          ),
+          .filter((c) => c.stakeholderId !== candidate.stakeholderId)
+          .map((c) => this.stakeholderRepository.update(c.stakeholderId, {
+            stakeholderType: CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode,
+          })),
       );
     }
 
-    await this.stakeholderRepository.setBusinessRole(
-      stakeholderId,
-      CONSULTANT_DESIGNATION_REFERENTIAL.canonicalCode,
-    );
+    if (candidate.stakeholderId) {
+      const existing = await this.stakeholderRepository.findById(candidate.stakeholderId);
+      if (!existing || existing.projectId !== projectId) throw new Error('Partie prenante introuvable dans ce projet');
+      await this.stakeholderRepository.update(candidate.stakeholderId, {
+        stakeholderType: CONSULTANT_DESIGNATION_REFERENTIAL.canonicalCode,
+      });
+      return;
+    }
+
+    await this.stakeholderRepository.create({
+      projectId,
+      stakeholderType: CONSULTANT_DESIGNATION_REFERENTIAL.canonicalCode,
+      stakeholderEntityType: candidate.kind === 'employee' ? 'employee' : candidate.kind === 'supplier' ? 'supplier' : 'external',
+      employeeId: candidate.kind === 'employee' ? candidate.sourceId : null,
+      supplierId: candidate.kind === 'supplier' ? candidate.sourceId : null,
+      organizationId: candidate.kind === 'organization' ? candidate.sourceId : null,
+      externalName: candidate.name,
+      externalEmail: candidate.email || null,
+      roleDescription: 'consultant',
+      isActive: true,
+    });
   }
 
   /** Retire le rôle consultant d'une partie prenante. */
   async revokeConsultant(stakeholderId: string): Promise<void> {
     if (!stakeholderId) throw new Error('stakeholderId est requis');
-    if (!this.stakeholderRepository.setBusinessRole) {
-      throw new Error("Le repository ne supporte pas la mise à jour du rôle métier");
-    }
-    await this.stakeholderRepository.setBusinessRole(
-      stakeholderId,
-      CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode,
-    );
+    await this.stakeholderRepository.update(stakeholderId, {
+      stakeholderType: CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode,
+    });
   }
 
-  /** Toutes les affectations consultant (tous projets). */
-  async getConsultantAssignments(): Promise<StakeholderAssignment[]> {
-    if (!this.stakeholderRepository.findAssignmentsByBusinessRoles) return [];
-    return this.stakeholderRepository.findAssignmentsByBusinessRoles([
-      ...CONSULTANT_DESIGNATION_REFERENTIAL.consultantCodes,
-    ]);
-  }
-
-  /**
-   * Projets sur lesquels une entité (employé, fournisseur, partie prenante)
-   * est désignée consultant.
-   */
+  /** Projets où l'entité est explicitement rattachée comme consultant. */
   async getConsultantProjectIds(entityId: string): Promise<string[]> {
     if (!entityId) return [];
-    const assignments = await this.getConsultantAssignments();
-    const ids = assignments
-      .filter(
-        (a) => a.employeeId === entityId || a.supplierId === entityId || a.id === entityId,
-      )
-      .map((a) => a.projectId)
-      .filter(Boolean);
-    return Array.from(new Set(ids));
+    const [employeeLinks, supplierLinks, directLink] = await Promise.all([
+      this.stakeholderRepository.findByEmployeeId(entityId),
+      this.stakeholderRepository.findBySupplierId(entityId),
+      this.stakeholderRepository.findById(entityId),
+    ]);
+    const links = [...employeeLinks, ...supplierLinks, ...(directLink ? [directLink] : [])];
+    return Array.from(new Set(
+      links
+        .filter((link) => link.isActive && isConsultantBusinessCode(link.stakeholderType))
+        .map((link) => link.projectId),
+    ));
   }
 }
 
 let instance: ProjectConsultantService | null = null;
 export function getProjectConsultantService(): ProjectConsultantService {
   if (!instance) {
-    instance = new ProjectConsultantService(RepositoryFactory.getStakeholderRepository());
+    instance = new ProjectConsultantService(
+      RepositoryFactory.getProjectStakeholderRepository(),
+      RepositoryFactory.getEmployeeRepository(),
+      RepositoryFactory.getSupplierRepository(),
+      RepositoryFactory.getOrganizationRepository(),
+    );
   }
   return instance;
 }

@@ -14,6 +14,7 @@ const TABLE = 'phase_employees';
 interface PhaseEmployeeDbRow {
   id: string;
   phase_id: string;
+  employee_id: string | null;
   employee_name: string | null;
   employee_role: string | null;
   employee_contact: string | null;
@@ -29,6 +30,7 @@ function fromDb(row: PhaseEmployeeDbRow): PhaseEmployeeRow {
   return {
     id: row.id,
     phaseId: row.phase_id,
+    employeeId: row.employee_id ?? null,
     employeeName: row.employee_name ?? '',
     employeeRole: row.employee_role ?? '',
     employeeContact: row.employee_contact ?? null,
@@ -44,6 +46,7 @@ function fromDb(row: PhaseEmployeeDbRow): PhaseEmployeeRow {
 function toDb(input: Partial<PhaseEmployeeInput>): Record<string, unknown> {
   const row: Record<string, unknown> = {};
   if (input.phaseId !== undefined) row.phase_id = input.phaseId;
+  if (input.employeeId !== undefined) row.employee_id = input.employeeId ?? null;
   if (input.employeeName !== undefined) row.employee_name = input.employeeName;
   if (input.employeeRole !== undefined) row.employee_role = input.employeeRole;
   if (input.employeeContact !== undefined) row.employee_contact = input.employeeContact ?? null;

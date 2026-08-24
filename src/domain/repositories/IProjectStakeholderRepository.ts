@@ -6,6 +6,28 @@
 
 import { ProjectStakeholderEntity } from '@/domain/entities/ProjectStakeholder';
 
+export interface CreateProjectStakeholderRecord {
+  projectId: string;
+  phaseId?: string | null;
+  stakeholderType: ProjectStakeholderEntity['stakeholderType'];
+  stakeholderEntityType: ProjectStakeholderEntity['stakeholderEntityType'];
+  employeeId?: string | null;
+  supplierId?: string | null;
+  organizationId?: string | null;
+  externalRef?: string | null;
+  externalName?: string | null;
+  externalEmail?: string | null;
+  externalPhone?: string | null;
+  roleDescription?: string | null;
+  responsibilities?: string[] | null;
+  isActive?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  hourlyRate?: number | null;
+  contractType?: string | null;
+  notes?: string | null;
+}
+
 export interface IProjectStakeholderRepository {
   /**
    * Find stakeholder by ID
@@ -35,7 +57,7 @@ export interface IProjectStakeholderRepository {
   /**
    * Create new stakeholder
    */
-  create(stakeholder: Omit<ProjectStakeholderEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProjectStakeholderEntity>;
+  create(stakeholder: CreateProjectStakeholderRecord): Promise<ProjectStakeholderEntity>;
 
   /**
    * Update existing stakeholder
