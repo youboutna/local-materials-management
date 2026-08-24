@@ -697,7 +697,9 @@ const UnifiedSupplierPortal = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onSelect={() => handleTabChange('contracts')}><FileText className="mr-2 h-4 w-4" />{t('supplier.contracts.tab') || 'Contrats'}</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handleTabChange('upload')}><Upload className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.telecharger')}</DropdownMenuItem>
+
                   <DropdownMenuItem onSelect={() => handleTabChange('payments')}><CreditCard className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.paiements')}</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handleTabChange('tasks')}><ClipboardCheck className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.taches')}</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handleTabChange('inspections')}><FileCheck className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.inspections')}</DropdownMenuItem>
