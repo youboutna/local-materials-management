@@ -330,8 +330,9 @@ export function useTaskListHex(projectId: string) {
     if (!phaseId) return 'Sans phase';
     const phases = phasesQuery.data || [];
     const phase = phases.find(p => p.id === phaseId);
-    return phase?.name || 'Phase inconnue';
+    return phase?.name || 'Sans phase';
   };
+
 
   /**
    * Récupère les tâches groupées par phase
