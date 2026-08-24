@@ -14,6 +14,7 @@
  * - ✅ Gestion complète des phases, steps et tâches
  */
 
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { getEmployeeService } from '@/application/services/EmployeeService';
 import { getInspectionService } from '@/application/services/InspectionService';
@@ -95,7 +96,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
       if (!phaseId) throw new Error('Phase ID is required');
       const phase = await phaseService.getPhaseById(phaseId);
       if (!phase) throw new Error('Phase not found');
-      return phase as unknown as PhaseDTO;
+      return PhaseTransformer.toDTO(phase);
     },
     enabled: !!phaseId,
     staleTime: 2 * 60 * 1000,

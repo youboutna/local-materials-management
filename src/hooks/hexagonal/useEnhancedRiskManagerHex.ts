@@ -15,6 +15,7 @@
  * - ✅ Tous les hooks commencent par "use"
  */
 
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { toast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -153,7 +154,7 @@ export const useEnhancedRiskManagerHex = (
     queryKey: ['project-phases', projectId],
     queryFn: async (): Promise<PhaseDTO[]> => {
       const data = await phaseRepo.findByProjectId(projectId);
-      return (data || []) as unknown as PhaseDTO[];
+      return PhaseTransformer.manyToDTO(data || []);
     },
     enabled: !!projectId && !propPhases,
     retry: 3,
