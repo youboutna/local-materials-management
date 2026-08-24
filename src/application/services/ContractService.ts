@@ -1,0 +1,81 @@
+/**
+ * ContractService — chaînon « devis accepté → contrat / bon de commande ».
+ *
+ * Orchestration pure : la numérotation est déterministe, la persistance est
+ * déléguée à `IContractRepository` (btp.contracts).
+ */
+
+import type { IContractRepository } from '@/domain/repositories/IContractRepository';
+import type {
+  ContractRecordDTO,
+  CreateContractRecordDTO,
+} from '@/dtos/entities/ContractRecordDTO';
+import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
+
+export interface AwardContractInput {
+  projectId: string;
+  tenderId: string;
+  supplierId?: string | null;
+  supplierName?: string | null;
+  sourceEstimateId?: string | null;
+  totalAmount: number;
+  currency?: string;
+  projectName?: string | null;
+}
+
+/** Numéro de contrat lisible et stable : CTR-<AAAA>-<8 premiers du tender>. */
+export function buildContractNumber(tenderId: string, at: Date = new Date()): string {
+  const suffix = (tenderId || '').replace(/-/g, '').slice(0, 8).toUpperCase();
+  return `CTR-${at.getFullYear()}-${suffix || 'MANUEL'}`;
+}
+
+export class ContractService {
+  constructor(private repository: IContractRepository = new SupabaseContractAdapter()) {}
+
+  async listByProject(projectId: string): Promise<ContractRecordDTO[]> {
+    if (!projectId) return [];
+    return this.repository.findByProjectId(projectId);
+  }
+
+  async listByTender(tenderId: string): Promise<ContractRecordDTO[]> {
+    if (!tenderId) return [];
+    return this.repository.findByTenderId(tenderId);
+  }
+
+  /**
+   * Crée la trace contractuelle d'une attribution. Idempotent par appel d'offres :
+   * si un contrat existe déjà pour ce tender, il est renvoyé tel quel.
+   */
+  async awardFromAcceptedQuote(input: AwardContractInput): Promise<ContractRecordDTO> {
+    if (!input.projectId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID requis');
+    if (!input.tenderId) throw new AppError(ErrorCode.VALIDATION_ERROR, "Appel d'offres requis");
+
+    const existing = await this.repository.findByTenderId(input.tenderId).catch(() => []);
+    if (existing.length > 0) return existing[0];
+
+    const dto: CreateContractRecordDTO = {
+      contractNumber: buildContractNumber(input.tenderId),
+      title: input.projectName
+        ? `Contrat — ${input.projectName}`
+        : `Contrat d'attribution ${input.tenderId.slice(0, 8)}`,
+      projectId: input.projectId,
+      tenderId: input.tenderId,
+      supplierId: input.supplierId ?? null,
+      sourceEstimateId: input.sourceEstimateId ?? null,
+      status: 'signed',
+      startDate: new Date().toISOString().slice(0, 10),
+      totalAmount: Number(input.totalAmount || 0),
+      currency: input.currency ?? 'MRU',
+      metadata: input.supplierName ? { supplierName: input.supplierName } : null,
+    };
+    return this.repository.create(dto);
+  }
+}
+
+let instance: ContractService | null = null;
+
+export function getContractService(): ContractService {
+  if (!instance) instance = new ContractService();
+  return instance;
+}
