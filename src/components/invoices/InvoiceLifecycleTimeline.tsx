@@ -7,7 +7,8 @@
  */
 import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Check, ChevronRight } from 'lucide-react';
+import { Check, ChevronRight, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/useI18n';
 import {
@@ -79,10 +80,19 @@ export const InvoiceLifecycleTimeline: React.FC<Props> = ({
             {t('dqe.lifecycle.billed_progress')} {Number(billedPercentage).toFixed(2)} %
           </Badge>
         ) : null}
-        <span>
-          {t('dqe.lifecycle.possible_statuses_label')}{' '}
-          {def.statuses.map((s) => translateStatus(s)).join(' · ')}
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" aria-label={t('dqe.lifecycle.possible_statuses_tooltip')} className="inline-flex items-center">
+              <Info className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span className="text-xs">
+              {t('dqe.lifecycle.possible_statuses_label')}{' '}
+              {def.statuses.map((s) => translateStatus(s)).join(' · ')}
+            </span>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

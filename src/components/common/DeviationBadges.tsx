@@ -54,9 +54,12 @@ const DeviationBadges: React.FC<DeviationBadgesProps> = ({ input, scope = 'proje
 
   if (deviations.length === 0) {
     return (
-      <Badge variant="outline" className="text-[10px]">
+      <span
+        className="text-[10px] text-muted-foreground"
+        title={i18nService.t('deviation.none_tooltip')}
+      >
         <T k="auto.deviationbadges.aucun_ecart_calculable" fallback="Aucun écart calculable" />
-      </Badge>
+      </span>
     );
   }
 
