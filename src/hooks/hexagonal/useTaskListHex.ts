@@ -56,7 +56,7 @@ export function useTaskListHex(projectId: string) {
     queryFn: async (): Promise<PhaseDTO[]> => {
       const phases = await phaseService.getPhasesByProject(projectId);
       // Mapping canonique entité → DTO (garantit `name`, `phaseCode`, `orderIndex`)
-      return PhaseTransformer.toDTOList(phases);
+      return PhaseTransformer.manyToDTO(phases);
     },
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000,
@@ -486,7 +486,7 @@ export function useProjectPhasesForTasks(projectId: string) {
     queryFn: async (): Promise<PhaseDTO[]> => {
       const phases = await phaseService.getPhasesByProject(projectId);
       // Mapping canonique entité → DTO (garantit `name`, `phaseCode`, `orderIndex`)
-      return PhaseTransformer.toDTOList(phases);
+      return PhaseTransformer.manyToDTO(phases);
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!projectId
