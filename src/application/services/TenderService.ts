@@ -21,6 +21,13 @@ import {
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { PROCUREMENT_CHAIN_REFERENTIAL } from '@/config/referentials/procurement/procurement-chain.referential';
+
+/** Statuts d'AO considérés comme publiés (référentiel, jamais en dur dans l'UI). */
+const PUBLISHED_TENDER_STATUSES: string[] = [
+  PROCUREMENT_CHAIN_REFERENTIAL.publishedTenderStatus,
+  'open',
+];
 
 export class TenderService {
   constructor(
