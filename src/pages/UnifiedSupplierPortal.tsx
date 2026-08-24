@@ -90,6 +90,9 @@ import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsP
 
 // ✅ Import du GED centralisé (DocumentHub)
 import { DocumentHub } from "@/components/documents/hub/DocumentHub";
+import { SupplierContractsPanel } from "@/components/suppliers/SupplierContractsPanel";
+import { SupplierQuoteStatusPanel } from "@/components/suppliers/SupplierQuoteStatusPanel";
+
 import type { DocumentHubContract, DocumentItem, UploadInput } from "@/components/documents/hub/types";
 
 // ✅ Définition du contrat GED pour le fournisseur
