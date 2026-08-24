@@ -1304,8 +1304,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="payments-exec">
+                <TabsContent value="payments-exec" className="space-y-4">
+                  {/* Décomptes = factures acceptées ⇒ dépensé réel du projet */}
+                  <DecompteTrackingPanel
+                    scope="project"
+                    entityId={projectId}
+                    initialBudget={project.budget || 0}
+                    engaged={actualCostBreakdown?.resourcesCost ?? 0}
+                  />
                   <Card>
+
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5" />
