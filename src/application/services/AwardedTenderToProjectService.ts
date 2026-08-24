@@ -34,6 +34,9 @@ export interface HydrateFromWinnerResult {
   createdPhaseIds?: string[];
   createdTaskIds?: string[];
   createdMilestoneIds?: string[];
+  /** Contrat d'attribution persisté (btp.contracts). */
+  contractId?: string;
+  contractNumber?: string;
   warnings: string[];
 }
 
