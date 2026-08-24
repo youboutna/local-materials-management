@@ -139,15 +139,50 @@ const PhaseDetail: React.FC = () => {
     );
   }
 
-  const { title, description, progress, budget, estimatedDuration, startDate, endDate, location } = vm;
+  const { title, description, budget: storedBudget, estimatedDuration, startDate, endDate, location } = vm;
+
+  // Source unique de vérité : PhaseMetricsService (aucun calcul dans l'UI)
+  const progressResult = PhaseMetricsService.computeProgress({
+    storedProgress: vm.progress,
+    totalTasks: metrics.totalTasks,
+    completedTasks: metrics.completedTasks,
+    stepsCount: metrics.stepsCount,
+    completedSteps: metrics.completedSteps,
+  });
+  const progress = progressResult.value;
+
+  const financials = PhaseMetricsService.computeFinancials({
+    estimatedCost: storedBudget,
+    actualCost: vm.actualCost,
+    paymentAmounts: [metrics.totalPaymentAmount],
+  });
+  const budget = financials.budget;
+
+  const completion = PhaseMetricsService.computeCompletionReadiness({
+    progress,
+    totalTasks: metrics.totalTasks,
+    completedTasks: metrics.completedTasks,
+    stepsCount: metrics.stepsCount,
+    completedSteps: metrics.completedSteps,
+  });
 
   const isClosed = vm.status === PhaseStatus.COMPLETED;
 
   const handleClosePhase = async () => {
     try {
-      await updatePhaseAsync({ status: PhaseStatus.COMPLETED });
+      await updatePhaseAsync({ status: PhaseStatus.COMPLETED, progress: 100 } as Record<string, unknown>);
     } catch (e) {
       // Toast d'erreur déjà géré par usePhaseDetails
+    }
+  };
+
+  /** Aligne la progression persistée sur la progression dérivée des faits. */
+  const handleAlignProgress = async () => {
+    if (progressResult.derivedValue == null) return;
+    try {
+      await updatePhaseAsync({ progress: progressResult.derivedValue } as Record<string, unknown>);
+    } catch (e) {
+      /* toast géré par usePhaseDetails */
     }
   };
 
