@@ -451,17 +451,25 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   ]);
 
   // ============ Documents et garanties ============
+  // Source unique : DocumentService (scopé projet), fallback sur l'agrégat ProjectDetail
+  const { data: projectDocuments = [] } = useDocumentsByProject((project as any)?.id || '');
+
   const documentsData = useMemo(() => {
-    return ((projectDetail as any)?.documents || []).map((doc: any) => ({
+    const source =
+      (projectDocuments && projectDocuments.length > 0)
+        ? projectDocuments
+        : ((projectDetail as any)?.documents || []);
+    return (source as any[]).map((doc: any) => ({
       id: doc.id,
-      title: doc.title || doc.file_name || 'Document',
-      type: doc.document_type || doc.type || 'other',
-      document_type: doc.document_type || doc.type || 'other',
+      title: doc.title || doc.fileName || doc.file_name || 'Document',
+      type: doc.documentType || doc.document_type || doc.type || 'other',
+      document_type: doc.documentType || doc.document_type || doc.type || 'other',
       description: doc.description,
-      created_at: doc.created_at || doc.createdAt || new Date().toISOString(),
+      created_at: doc.createdAt || doc.created_at || new Date().toISOString(),
       status: doc.status || 'pending',
     }));
-  }, [projectDetail]);
+  }, [projectDocuments, projectDetail]);
+
 
   const bankGuaranteesData = useMemo(() => {
     return ((projectDetail as any)?.bankGuarantees || []).map((bg: any) => ({
