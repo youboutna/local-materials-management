@@ -30,14 +30,37 @@ export class TenderService {
   ) {}
 
   // ============= STATIC METHODS FOR BACKWARD COMPATIBILITY =============
-  
+
   /**
-   * Static: Get published tenders for submission
+   * Static: Get published tenders for submission (portail prestataire).
+   * Délègue à `getPublishedTenders()` : seuls les appels d'offres réellement
+   * publiés (statuts du référentiel `procurement-chain`) sont exposés.
    */
   static async getPublishedTendersForSubmission(): Promise<Tender[]> {
     const service = new TenderService();
-    return service.getAllTenders();
+    return service.getPublishedTenders();
   }
+
+  /**
+   * Appels d'offres visibles sur le portail prestataire : publiés et encore
+   * ouverts à soumission. Les statuts proviennent du référentiel de la chaîne
+   * d'approvisionnement (aucun statut codé en dur ici).
+   */
+  async getPublishedTenders(): Promise<Tender[]> {
+    try {
+      const accepting = await this.tenderRepository.findAcceptingSubmissions();
+      if (accepting.length > 0) return accepting;
+      // Aucun délai de soumission renseigné : on retombe sur les AO publiés.
+      const open = await this.tenderRepository.findOpen();
+      return open.filter((t) => PUBLISHED_TENDER_STATUSES.includes(String(t.status)));
+    } catch (error) {
+      console.error('TenderService.getPublishedTenders failed:', error);
+      throw error instanceof AppError
+        ? error
+        : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get published tenders');
+    }
+  }
+
 
   // ============= END STATIC METHODS =============
 
