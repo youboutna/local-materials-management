@@ -55,7 +55,7 @@ const PaymentControlActionsContainer = () => {
   );
 };
 
-const PaymentControlContent = () => {
+const PaymentControlContent = ({ project }: { project: ProjectData | null }) => {
   const { toast } = useToast();
   const { hasAnyRole } = useCurrentUserRoles();
   const { userId } = useAuthUserHex();
@@ -267,9 +267,9 @@ const PaymentControlContent = () => {
               {/* Doctrine unique : Budget → Engagé → Dépensé (décomptes validés) → Payé */}
               <FinancialDoctrineCard
                 scope="project"
-                entityId={state?.project?.id}
-                declaredBudget={state?.project?.budget ?? 0}
-                currency={state?.project?.currency ?? 'MRU'}
+                entityId={project?.id}
+                declaredBudget={(project as any)?.budget ?? 0}
+                currency={(project as any)?.currency ?? 'MRU'}
                 className="mb-6"
               />
               <PaymentCrud
@@ -363,7 +363,7 @@ const PaymentControlPage = () => {
 
   return (
     <ProjectManagerProvider project={selectedProject} roles={buildEscalationRoles()} actionLabels={actionLabels}>
-      <PaymentControlContent />
+      <PaymentControlContent project={selectedProject} />
     </ProjectManagerProvider>
   );
 };
