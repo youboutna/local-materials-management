@@ -379,7 +379,9 @@ export class ProjectMetricsOrchestrator {
           : `${formatAmount2(0, currency)} (non évaluable)`,
         budgetCommitmentRate: formatPercent2(evm.budgetCommitmentRate),
         spi: formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null),
-        cpi: evm.isCostIndexReliable ? formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null),
+        cpi: evm.isCostIndexReliable
+          ? formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null)
+          : 'N/A',
         plannedValue: formatAmount2(evm.plannedValue, currency),
         earnedValue: formatAmount2(evm.earnedValue, currency),
         scheduleVariance: formatAmount2(evm.scheduleVariance, currency),
