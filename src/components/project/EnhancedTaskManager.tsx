@@ -768,7 +768,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {getAssigneeName(task.assignedTo || '')}
+                      {getAssigneeName(task)}
                     </span>
                     {task.dueDate && (
                       <span className="flex items-center gap-1">
