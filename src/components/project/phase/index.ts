@@ -10,3 +10,6 @@ export * from './PhaseEditDraft';
 export { default as PhaseFinancesTab } from './PhaseFinancesTab';
 export { default as ResourceUtilizationCard } from './ResourceUtilizationCard';
 export * from '@/utils/phaseDisplayHelpers';
+export { default as PhaseResourcesTab } from './PhaseResourcesTab';
+export { default as PhaseTeamTab } from './PhaseTeamTab';
+export { default as PhaseStakeholdersTab } from './PhaseStakeholdersTab';
