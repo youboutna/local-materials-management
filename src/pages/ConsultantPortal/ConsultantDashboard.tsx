@@ -230,11 +230,20 @@ const ConsultantDashboard = () => {
                     </div>
 
                     {invoiceProjectId ? (
+                      <>
+                      {/* Situation financière doctrinale du projet sélectionné */}
+                      <FinancialDoctrineCard
+                        scope="project"
+                        entityId={invoiceProjectId}
+                        declaredBudget={(projects.find((p) => p.id === invoiceProjectId) as any)?.budget ?? 0}
+                        className="mb-4"
+                      />
                       <DqeWorkspace
                         routeContext="supplier-invoice"
                         projectId={invoiceProjectId}
                         projectName={projects.find((p) => p.id === invoiceProjectId)?.title}
                       />
+                      </>
                     ) : (
                       <p className="text-sm text-muted-foreground">
                         <T k="auto.consultantdashboard.aucun_projet_selectionne" fallback="Aucun projet sélectionné." />
