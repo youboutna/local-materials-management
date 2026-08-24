@@ -38,6 +38,8 @@ import {
   useDeleteTenderLot,
 } from '@/hooks/hexagonal/useTenderLotsHex';
 import TenderLotDocumentsManager from './TenderLotDocumentsManager';
+import TenderLotWorkflowBar, { TenderLotStatusBadge } from './TenderLotWorkflowBar';
+import type { TenderLotStatus } from '@/dtos/transforms/TenderLotTransformer';
 import { T } from '@/components/i18n/T';
 
 interface Phase {
@@ -64,7 +66,11 @@ interface TenderLot {
   linkedStepIds: string[];
   requirements?: string[];
   deliverables?: string[];
+  status?: TenderLotStatus;
+  awardedTo?: string | null;
+  awardedAmount?: number | null;
 }
+
 
 interface TenderLotBuilderProps {
   tenderId: string;
@@ -104,7 +110,11 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
         linkedStepIds: l.linkedStepIds,
         requirements: l.requirements,
         deliverables: l.deliverables,
+        status: l.status,
+        awardedTo: l.awardedTo,
+        awardedAmount: l.awardedAmount,
       }))
+
     : (externalLots ?? internalLots);
 
   const lots: TenderLot[] = isPersistMode
@@ -322,6 +332,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                     <Badge className="bg-primary">Lot {lot.number}</Badge>
                     <span className="font-medium">{lot.title}</span>
                     <div className="flex items-center gap-2 ml-auto mr-4">
+                      <TenderLotStatusBadge status={lot.status} />
                       {getLinkedPhasesCount(lot) > 0 && (
                         <Badge variant="outline" className="text-xs gap-1">
                           <Layers className="h-3 w-3" />
@@ -339,7 +350,11 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
 
                 <AccordionContent>
                   <div className="px-4 pb-4 space-y-4">
+                    {isPersistMode && (
+                      <TenderLotWorkflowBar tenderId={tenderId} lot={lot as any} readOnly={readOnly} />
+                    )}
                     {/* Basic Info */}
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label><T k="auto.tenderlotbuilder.titre_du_lot" fallback="Titre du lot" /></Label>
