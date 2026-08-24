@@ -80,6 +80,7 @@ import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
+import { DecompteTrackingPanel } from '@/components/project/finance/DecompteTrackingPanel';
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
 // ============================================================================
