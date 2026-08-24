@@ -243,17 +243,27 @@ export function useProjectPhasesForTender(projectId?: string, tenderId?: string)
       ]);
       const mapped: ProjectPhaseForTender[] = (phases || []).map((ph, idx) => {
         const p = ph as unknown as Record<string, unknown>;
+        const status = String(p.status ?? 'pending');
+        const rawProgress = p.progress ?? p.progressPercentage ?? p.completionPercentage;
+        const progress =
+          rawProgress !== null && rawProgress !== undefined && !Number.isNaN(Number(rawProgress))
+            ? Math.max(0, Math.min(100, Number(rawProgress)))
+            : status === 'completed'
+              ? 100
+              : 0;
         return {
           id: String(p.id),
           name: String(p.phaseName ?? p.name ?? `Phase ${idx + 1}`),
           order: Number(p.orderIndex ?? idx),
-          status: String(p.status ?? 'pending'),
+          status,
+          progress,
           startDate: p.startDate as string | undefined,
           endDate: p.endDate as string | undefined,
           budget: p.estimatedCost as number | undefined,
           steps: [],
         };
       });
+
       const projRec = project ? (project as unknown as Record<string, unknown>) : null;
       return {
         projectInfo: projRec ? { id: String(projRec.id), title: String(projRec.title ?? '') } : null,
