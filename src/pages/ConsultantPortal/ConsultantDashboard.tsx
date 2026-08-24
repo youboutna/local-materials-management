@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Bell, CheckCircle2, DollarSign, FileSpreadsheet, FileText, FolderKanban, ShieldAlert } from 'lucide-react';
 import { DqeWorkspace } from '@/components/boq/DqeWorkspace';
+import FinancialDoctrineCard from '@/components/finance/FinancialDoctrineCard';
 import { useAuthUserHex } from '@/hooks/hexagonal/useAuthUserHex';
 import { useConsultantPortalHex } from '@/hooks/hexagonal/useConsultantPortalHex';
 import { ConsultantValidationPanel } from '@/components/invoices/ConsultantValidationPanel';
