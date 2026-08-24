@@ -1,394 +1,221 @@
 /**
- * PhasePayments - Phase payment management
- * MIGRATED TO HEXAGONAL ARCHITECTURE
+ * PhasePayments — paiements rattachés à la phase courante.
+ *
+ * Architecture hexagonale : DTO camelCase issus de PaymentService,
+ * progression bornée par PhaseMetricsService (fin du bug « 807500% »),
+ * édition in-situ via UnifiedPaymentFormDialog (contexte projet/phase conservé).
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, DollarSign, Trash2, Calendar, ExternalLink, Pencil } from 'lucide-react';
+import { Plus, DollarSign, Trash2, Calendar, ExternalLink, Pencil, Layers } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import SimpleSupplierSelector from '@/components/selectors/SimpleSupplierSelector';
-import { 
-  usePhasePayments, 
-  useAddPhasePayment, 
+import { UnifiedPaymentFormDialog, type UnifiedPaymentFormDefaults } from '@/components/payments/UnifiedPaymentFormDialog';
+import {
+  usePhasePayments,
   useDeletePhasePayment,
-  useSupplierInfo,
-  PhasePaymentFormData
-} from '@/hooks/hexagonal';
+} from '@/hooks/hexagonal/usePhasePaymentsHex';
+import { PhaseMetricsService, normalizeProgressPercent } from '@/application/services/PhaseMetricsService';
+import { PAYMENT_METHOD_OPTIONS } from '@/config/referentials/payment-origin.referential';
+import type { PaymentDTO } from '@/dtos/entities/PaymentDTO';
+import { formatAmount2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
 
 interface PhasePaymentsProps {
   phaseId: string;
   projectId: string;
+  phaseName?: string;
+  /** Budget de la phase pour afficher le taux de consommation. */
+  phaseBudget?: number;
 }
 
-const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => {
+const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId, phaseName, phaseBudget }) => {
   const navigate = useNavigate();
-  const [isAdding, setIsAdding] = useState(false);
-  const [formData, setFormData] = useState<PhasePaymentFormData>({
-    amount: '',
-    payment_method: 'bank_transfer',
-    payment_date: new Date().toISOString().split('T')[0],
-    progress_at_payment: '',
-    contractor_name: '',
-    contractor_contact: '',
-    transaction_id: '',
-    supplier_id: '',
-  });
-  
   const { toast } = useToast();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<PaymentDTO | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
-  // Use hexagonal hooks
-  const { data: payments, isLoading } = usePhasePayments(phaseId);
-  const addPaymentMutation = useAddPhasePayment(phaseId, projectId);
-  const deletePaymentMutation = useDeletePhasePayment(phaseId);
-  const { data: supplierInfo } = useSupplierInfo(formData.supplier_id || null);
+  const { data: payments = [], isLoading } = usePhasePayments(phaseId);
+  const deletePaymentMutation = useDeletePhasePayment(phaseId, projectId);
 
-  // Auto-fill contractor info when supplier changes
-  useEffect(() => {
-    if (supplierInfo) {
-      setFormData(prev => ({
-        ...prev,
-        contractor_name: supplierInfo.name,
-        contractor_contact: supplierInfo.contact_person || supplierInfo.email || supplierInfo.phone || '',
-      }));
-    }
-  }, [supplierInfo]);
+  const financials = useMemo(
+    () =>
+      PhaseMetricsService.computeFinancials({
+        estimatedCost: phaseBudget ?? 0,
+        paymentAmounts: payments.map((p) => p.amount),
+      }),
+    [payments, phaseBudget]
+  );
 
-  const resetForm = () => {
-    setFormData({
-      amount: '',
-      payment_method: 'bank_transfer',
-      payment_date: new Date().toISOString().split('T')[0],
-      progress_at_payment: '',
-      contractor_name: '',
-      contractor_contact: '',
-      transaction_id: '',
-      supplier_id: '',
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast({
-        title: 'Erreur de validation',
-        description: 'Veuillez saisir un montant valide',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!formData.contractor_name.trim()) {
-      toast({
-        title: 'Erreur de validation',
-        description: 'Veuillez sélectionner un contractant',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!formData.contractor_contact.trim()) {
-      toast({
-        title: 'Erreur de validation',
-        description: 'Le contact du contractant est requis',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!formData.transaction_id.trim()) {
-      toast({
-        title: 'Erreur de validation',
-        description: 'L\'ID de transaction est requis',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (formData.progress_at_payment && (parseInt(formData.progress_at_payment) < 0 || parseInt(formData.progress_at_payment) > 100)) {
-      toast({
-        title: 'Erreur de validation',
-        description: 'La progression doit être entre 0 et 100%',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    try {
-      await addPaymentMutation.mutateAsync(formData);
-      setIsAdding(false);
-      resetForm();
-      toast({ title: 'Paiement ajouté avec succès' });
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'ajouter le paiement',
-        variant: 'destructive',
-      });
-    }
-  };
+  const getPaymentMethodLabel = (method?: string) =>
+    PAYMENT_METHOD_OPTIONS.find((option) => option.value === method)?.label || method || '—';
 
   const handleDelete = async (id: string) => {
     try {
       await deletePaymentMutation.mutateAsync(id);
-      toast({ title: 'Paiement supprimé avec succès' });
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer le paiement',
-        variant: 'destructive',
-      });
+      toast({ title: 'Paiement supprimé' });
+    } catch {
+      /* toast géré par le hook */
     }
   };
 
-  const getPaymentMethodLabel = (method: string) => {
-    const methods: Record<string, string> = {
-      bank_transfer: 'Virement bancaire',
-      cash: 'Espèces',
-      check: 'Chèque',
-      mobile_money: 'Mobile Money',
-      other: 'Autre',
-    };
-    return methods[method] || method;
+  const openCreate = () => {
+    setEditing(null);
+    setDialogOpen(true);
   };
+
+  const openEdit = (payment: PaymentDTO) => {
+    setEditing(payment);
+    setDialogOpen(true);
+  };
+
+  const dialogDefaults: UnifiedPaymentFormDefaults = useMemo(
+    () => ({
+      id: editing?.id,
+      projectId,
+      phaseId,
+      contractorId: editing?.contractorId,
+      contractorName: editing?.contractorName,
+      contractorContact: editing?.contractorContact,
+      amount: editing?.amount,
+      paymentMethod: editing?.paymentMethod,
+      paymentDate: editing?.paymentDate,
+      transactionId: editing?.transactionId,
+      progressAtPayment: normalizeProgressPercent(editing?.progressAtPayment),
+      bankName: editing?.bankName,
+      accountNumber: editing?.accountNumber,
+      receiverName: editing?.receiverName,
+      notes: editing?.notes,
+      documentIds: editing?.documentIds,
+      inspectionId: editing?.inspectionId,
+      contextLabel: phaseName ? `Phase : ${phaseName}` : undefined,
+    }),
+    [editing, phaseId, projectId, phaseName]
+  );
 
   if (isLoading) {
     return <div className="animate-pulse"><T k="auto.phasepayments.chargement_des_paiements" fallback="Chargement des paiements..." /></div>;
   }
 
-  const totalAmount = payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
-  const totalPages = Math.ceil((payments?.length || 0) / pageSize);
+  const totalPages = Math.ceil(payments.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
-  const paginatedPayments = payments?.slice(startIndex, startIndex + pageSize) || [];
+  const paginatedPayments = payments.slice(startIndex, startIndex + pageSize);
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Paiements de la phase ({payments?.length || 0})
+            <T k="auto.phasepayments.paiements_de_la_phase" fallback="Paiements de la phase" /> ({payments.length})
           </CardTitle>
           <div className="flex gap-2">
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => navigate('/payment-control')}
+              size="sm"
+              onClick={() => navigate(`/payment-control?phase=${phaseId}&project=${projectId}`)}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               <T k="auto.phasepayments.voir_tous_les_paiements" fallback="Voir tous les paiements" />
             </Button>
-            <Dialog open={isAdding} onOpenChange={setIsAdding}>
-              <DialogTrigger asChild>
-                <Button onClick={resetForm}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  <T k="auto.phasepayments.ajouter_un_paiement" fallback="Ajouter un paiement" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle><T k="auto.phasepayments.enregistrer_un_paiement" fallback="Enregistrer un paiement" /></DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <SimpleSupplierSelector
-                    value={formData.supplier_id}
-                    onChange={(supplierId) => {
-                      setFormData(prev => ({ ...prev, supplier_id: supplierId }));
-                    }}
-                    label="Fournisseur/Contractant *"
-                    placeholder="Sélectionner un fournisseur"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="contractor_name">Nom du contractant *</Label>
-                    <Input
-                      id="contractor_name"
-                      value={formData.contractor_name}
-                      onChange={(e) => setFormData({ ...formData, contractor_name: e.target.value })}
-                      required
-                      placeholder="Rempli automatiquement"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contractor_contact">Contact du contractant *</Label>
-                    <Input
-                      id="contractor_contact"
-                      value={formData.contractor_contact}
-                      onChange={(e) => setFormData({ ...formData, contractor_contact: e.target.value })}
-                      required
-                      placeholder="Rempli automatiquement"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="amount">Montant (MRU) *</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="payment_method"><T k="auto.phasepayments.methode_de_paiement" fallback="Méthode de paiement" /></Label>
-                    <Select
-                      value={formData.payment_method}
-                      onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bank_transfer"><T k="auto.phasepayments.virement_bancaire" fallback="Virement bancaire" /></SelectItem>
-                        <SelectItem value="cash"><T k="auto.phasepayments.especes" fallback="Espèces" /></SelectItem>
-                        <SelectItem value="check"><T k="auto.phasepayments.cheque" fallback="Chèque" /></SelectItem>
-                        <SelectItem value="mobile_money"><T k="auto.phasepayments.mobile_money" fallback="Mobile Money" /></SelectItem>
-                        <SelectItem value="other"><T k="auto.phasepayments.autre" fallback="Autre" /></SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="payment_date">Date de paiement *</Label>
-                    <Input
-                      id="payment_date"
-                      type="date"
-                      value={formData.payment_date}
-                      onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="progress_at_payment"><T k="auto.phasepayments.progression" fallback="Progression (%)" /></Label>
-                    <Input
-                      id="progress_at_payment"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.progress_at_payment}
-                      onChange={(e) => setFormData({ ...formData, progress_at_payment: e.target.value })}
-                      placeholder="0-100"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="transaction_id">ID de transaction *</Label>
-                  <Input
-                    id="transaction_id"
-                    value={formData.transaction_id}
-                    onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
-                    required
-                    placeholder="Ex: TXN-2024-001"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsAdding(false)}>
-                    <T k="auto.phasepayments.annuler" fallback="Annuler" />
-                  </Button>
-                  <Button type="submit" disabled={addPaymentMutation.isPending}>
-                    {addPaymentMutation.isPending ? 'Enregistrement...' : 'Enregistrer le paiement'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-            </Dialog>
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              <T k="auto.phasepayments.ajouter_un_paiement" fallback="Ajouter un paiement" />
+            </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        {payments && payments.length > 0 ? (
+        {payments.length > 0 ? (
           <div className="space-y-4">
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-medium">
-                Total des paiements: {totalAmount.toLocaleString()} MRU
-              </p>
+            <div className="p-3 bg-muted rounded-lg space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span className="font-medium">
+                  <T k="auto.phasepayments.total_paye" fallback="Total payé" /> : {formatAmount2(financials.paidAmount)} MRU
+                </span>
+                {financials.budget > 0 && (
+                  <span className="text-muted-foreground">
+                    <T k="auto.phasepayments.budget_phase" fallback="Budget phase" /> : {formatAmount2(financials.budget)} MRU
+                    {' · '}
+                    <T k="auto.phasepayments.consommation" fallback="Consommation" /> : {financials.consumptionRate}%
+                  </span>
+                )}
+              </div>
+              {financials.budget > 0 && (
+                <Progress value={Math.min(100, financials.consumptionRate)} className="h-1.5" />
+              )}
             </div>
-            
-            {paginatedPayments.map((payment) => (
-              <div key={payment.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-medium text-lg">
-                      {payment.amount.toLocaleString()} MRU
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {payment.contractor_name || ''}
-                    </p>
+
+            {paginatedPayments.map((payment) => {
+              const progressValue = normalizeProgressPercent(payment.progressAtPayment);
+              return (
+                <div key={payment.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-medium text-lg">{formatAmount2(payment.amount)} MRU</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {payment.contractorName || payment.receiverName || '—'}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(payment)} title="Modifier" aria-label="Modifier le paiement">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigate(`/payments/${payment.id}`)}
+                        title="Consulter"
+                        aria-label="Consulter le paiement"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(payment.id)}
+                        title="Supprimer"
+                        aria-label="Supprimer le paiement"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => navigate(`/payment-control?id=${payment.id}`)}
-                      title="Modifier"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => navigate(`/payments/${payment.id}`)}
-                      title="Consulter"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(payment.id)}
-                      title="Supprimer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="flex flex-wrap gap-2 mb-2">
-                  <Badge variant="secondary">
-                    {getPaymentMethodLabel(payment.payment_method || '')}
-                  </Badge>
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString() : 'N/A'}
-                  </Badge>
-                  {payment.progress_at_payment && (
-                    <Badge>
-                      Progression: {payment.progress_at_payment}%
+
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <Badge variant="secondary">{getPaymentMethodLabel(payment.paymentMethod)}</Badge>
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}
                     </Badge>
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Layers className="h-3 w-3" />
+                      {phaseName || <T k="auto.phasepayments.phase_liee" fallback="Phase liée" />}
+                    </Badge>
+                    {progressValue > 0 && (
+                      <Badge>
+                        <T k="auto.phasepayments.progression_label" fallback="Progression" /> : {progressValue}%
+                      </Badge>
+                    )}
+                  </div>
+
+                  {payment.transactionId && (
+                    <p className="text-xs text-muted-foreground">Transaction : {payment.transactionId}</p>
                   )}
                 </div>
+              );
+            })}
 
-                <p className="text-xs text-muted-foreground">
-                  Transaction: {payment.transaction_id}
-                </p>
-              </div>
-            ))}
-            
-            {payments && payments.length > pageSize && (
+            {payments.length > pageSize && (
               <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -401,10 +228,26 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId }) => 
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground"><T k="auto.phasepayments.aucun_paiement_enregistre_pour_cette_phase" fallback="Aucun paiement enregistré pour cette phase." /></p>
+            <p className="text-sm text-muted-foreground">
+              <T k="auto.phasepayments.aucun_paiement_enregistre_pour_cette_phase" fallback="Aucun paiement enregistré pour cette phase." />
+            </p>
           </div>
         )}
       </CardContent>
+
+      <UnifiedPaymentFormDialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditing(null);
+        }}
+        origin="project"
+        defaults={dialogDefaults}
+        lockProject
+        isEdit={!!editing}
+        onCreated={() => setDialogOpen(false)}
+        onUpdated={() => setDialogOpen(false)}
+      />
     </Card>
   );
 };

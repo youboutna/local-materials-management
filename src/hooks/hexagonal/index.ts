@@ -110,7 +110,8 @@ export { usePhaseInspectionsListHex, useAddPhaseInspectionHex, useDeletePhaseIns
 export { usePhaseMonitoringSummaryHex } from './usePhaseMonitoringSummaryHex';
 export {
     useAddPhasePayment,
-    useDeletePhasePayment, usePhasePayments
+    useDeletePhasePayment, usePhasePayments,
+    useUpdatePhasePayment
 } from './usePhasePaymentsHex';
 
 // Monitoring & Compliance

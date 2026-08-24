@@ -29,6 +29,7 @@ import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning
 import { AppLayout } from '@/components/layout/AppLayout';
 import DeviationBadges from '@/components/common/DeviationBadges';
 import { toPhaseViewModel } from '@/utils/phaseViewModel';
+import { PhaseMetricsService } from '@/application/services/PhaseMetricsService';
 import {
   getPhaseLifecycleStage,
   getLifecycleStageMeta,
@@ -63,6 +64,7 @@ const PhaseDetail: React.FC = () => {
     updateTask,
     deleteTask,
     isUpdating,
+    metrics,
   } = usePhaseDetails(phaseId);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -138,15 +140,50 @@ const PhaseDetail: React.FC = () => {
     );
   }
 
-  const { title, description, progress, budget, estimatedDuration, startDate, endDate, location } = vm;
+  const { title, description, budget: storedBudget, estimatedDuration, startDate, endDate, location } = vm;
+
+  // Source unique de vérité : PhaseMetricsService (aucun calcul dans l'UI)
+  const progressResult = PhaseMetricsService.computeProgress({
+    storedProgress: vm.progress,
+    totalTasks: metrics.totalTasks,
+    completedTasks: metrics.completedTasks,
+    stepsCount: metrics.stepsCount,
+    completedSteps: metrics.completedSteps,
+  });
+  const progress = progressResult.value;
+
+  const financials = PhaseMetricsService.computeFinancials({
+    estimatedCost: storedBudget,
+    actualCost: vm.actualCost,
+    paymentAmounts: [metrics.totalPaymentAmount],
+  });
+  const budget = financials.budget;
+
+  const completion = PhaseMetricsService.computeCompletionReadiness({
+    progress,
+    totalTasks: metrics.totalTasks,
+    completedTasks: metrics.completedTasks,
+    stepsCount: metrics.stepsCount,
+    completedSteps: metrics.completedSteps,
+  });
 
   const isClosed = vm.status === PhaseStatus.COMPLETED;
 
   const handleClosePhase = async () => {
     try {
-      await updatePhaseAsync({ status: PhaseStatus.COMPLETED });
+      await updatePhaseAsync({ status: PhaseStatus.COMPLETED, progress: 100 } as Record<string, unknown>);
     } catch (e) {
       // Toast d'erreur déjà géré par usePhaseDetails
+    }
+  };
+
+  /** Aligne la progression persistée sur la progression dérivée des faits. */
+  const handleAlignProgress = async () => {
+    if (progressResult.derivedValue == null) return;
+    try {
+      await updatePhaseAsync({ progress: progressResult.derivedValue } as Record<string, unknown>);
+    } catch (e) {
+      /* toast géré par usePhaseDetails */
     }
   };
 
@@ -171,7 +208,8 @@ const PhaseDetail: React.FC = () => {
               {description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{description}</p>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Barre d'actions unifiée (une seule zone d'actions pour la phase) */}
+          <div className="flex flex-wrap items-center gap-2">
             <Badge className={stageMeta.tokenClass} variant="outline">
               {stageMeta.label}
             </Badge>
@@ -186,20 +224,49 @@ const PhaseDetail: React.FC = () => {
             >
               <Edit className="h-4 w-4 mr-1" aria-hidden="true" /> <T k="auto.phasedetail.modifier" fallback="Modifier" />
             </Button>
+            {progressResult.isDivergent && progressResult.derivedValue != null && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAlignProgress}
+                disabled={isUpdatingPhase}
+                aria-label="Aligner la progression sur les faits"
+              >
+                <BarChart3 className="h-4 w-4 mr-1" aria-hidden="true" />
+                <T k="auto.phasedetail.aligner_progression" fallback="Aligner la progression" /> ({progressResult.derivedValue}%)
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={handleClosePhase}
+              disabled={isClosed || isUpdatingPhase}
+              aria-label="Clôturer la phase"
+            >
+              <Flag className="h-4 w-4 mr-1" aria-hidden="true" />
+              {isClosed ? (
+                <T k="auto.phasedetail.phase_cloturee" fallback="Phase clôturée" />
+              ) : (
+                <T k="auto.phasedetail.cloturer_la_phase" fallback="Clôturer la phase" />
+              )}
+            </Button>
           </div>
 
         </div>
 
         {/* Overview KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
               <CardTitle className="text-xs font-medium"><T k="auto.phasedetail.progression" fallback="Progression" /></CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
-              <div className="text-xl font-bold">{progress}%</div>
+              <div className="text-xl font-bold">{formatPercent2(progress)}</div>
               <Progress value={progress} className="mt-1.5 h-1.5" />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {metrics.completedTasks}/{metrics.totalTasks} <T k="auto.phasedetail.taches" fallback="Tâches" />
+                {metrics.stepsCount > 0 && ` · ${metrics.completedSteps}/${metrics.stepsCount} étapes`}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -209,6 +276,23 @@ const PhaseDetail: React.FC = () => {
             </CardHeader>
             <CardContent className="px-3 pb-3 pt-0">
               <div className="text-xl font-bold">{formatAmount2(budget)}</div>
+              <p className="text-[11px] text-muted-foreground truncate">
+                <T k="auto.phasedetail.reste" fallback="Reste" /> : {formatAmount2(financials.remaining)}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3">
+              <CardTitle className="text-xs font-medium"><T k="auto.phasedetail.depense" fallback="Dépensé" /></CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="px-3 pb-3 pt-0">
+              <div className={`text-xl font-bold ${financials.isOverBudget ? 'text-destructive' : ''}`}>
+                {formatAmount2(financials.spent)}
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {formatPercent2(financials.consumptionRate)} · {metrics.totalPayments} <T k="auto.phasedetail.paiements" fallback="Paiements" />
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -231,6 +315,34 @@ const PhaseDetail: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Résumés liés (tâches, paiements, documents, équipe, inspections) */}
+        <Card>
+          <CardContent className="py-3 px-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground mr-1">
+              <T k="auto.phasedetail.resume" fallback="Résumé :" />
+            </span>
+            <Badge variant="outline" className="flex items-center gap-1">
+              <ClipboardCheck className="h-3 w-3" /> {metrics.completedTasks}/{metrics.totalTasks} <T k="auto.phasedetail.taches" fallback="Tâches" />
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1">
+              <CreditCard className="h-3 w-3" /> {metrics.totalPayments} <T k="auto.phasedetail.paiements" fallback="Paiements" /> · {formatAmount2(metrics.totalPaymentAmount)}
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1">
+              <FileText className="h-3 w-3" /> {metrics.totalDocuments} <T k="auto.phasedetail.documents" fallback="Documents" />
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Users className="h-3 w-3" /> {metrics.totalEmployees} <T k="auto.phasedetail.equipe" fallback="Équipe" />
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1">
+              <ShieldCheck className="h-3 w-3" /> {metrics.passedInspections}/{metrics.totalInspections} <T k="auto.phasedetail.inspections" fallback="Inspections" />
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Package className="h-3 w-3" /> {metrics.totalMaterials} <T k="auto.phasedetail.ressources" fallback="Ressources" />
+            </Badge>
+          </CardContent>
+        </Card>
+
 
         {/* Écarts planifié vs réalisé (DeviationEngine + deviation-rules) */}
         <Card>
@@ -373,7 +485,7 @@ const PhaseDetail: React.FC = () => {
                 />
               </TabsContent>
               <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="payments"><PhasePayments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="payments"><PhasePayments phaseId={phaseId!} projectId={projectId!} phaseName={title} phaseBudget={budget} /></TabsContent>
             </Tabs>
           </TabsContent>
 
@@ -392,10 +504,24 @@ const PhaseDetail: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {progress < 100 && (
+                {!completion.canComplete && (
                   <div className="flex items-start gap-2 p-3 bg-warning/10 dark:bg-amber-950/30 border border-warning/30 dark:border-amber-900 rounded-md text-sm">
                     <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-                    <span>La phase n'est pas encore achevée ({progress}%). La clôture nécessite la réception définitive et la levée des réserves.</span>
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        <T k="auto.phasedetail.cloture_conditions" fallback="Conditions de clôture non réunies" /> ({formatPercent2(progress)})
+                      </p>
+                      <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                        {completion.reasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                      </ul>
+                      {progressResult.derivedValue != null && progressResult.isDivergent && (
+                        <Button size="sm" variant="outline" onClick={handleAlignProgress} disabled={isUpdatingPhase}>
+                          <T k="auto.phasedetail.aligner_progression" fallback="Aligner la progression" /> ({progressResult.derivedValue}%)
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
                 <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
@@ -423,18 +549,19 @@ const PhaseDetail: React.FC = () => {
           isUpdating={isUpdatingPhase}
           phaseName={title}
           completionValidation={{
-            canComplete: progress >= 100,
+            canComplete: completion.canComplete,
             pendingCheckpoints: [],
             completedCheckpoints: [],
-            totalCheckpoints: 0,
-            completedCount: 0,
-            message: '',
-            progressMet: progress >= 100,
-            currentProgress: progress,
-            requiredProgress: 100,
-            progressMessage: '',
+            totalCheckpoints: metrics.totalTasks,
+            completedCount: metrics.completedTasks,
+            message: completion.reasons.join(' · '),
+            progressMet: completion.progressMet,
+            currentProgress: completion.currentProgress,
+            requiredProgress: completion.requiredProgress,
+            progressMessage: completion.reasons[0] ?? '',
           }}
         />
+
       </div>
 
     </AppLayout>
