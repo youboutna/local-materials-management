@@ -17,12 +17,29 @@ import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { getMaterialResourceKind } from '@/utils/resourceKind';
+
 interface PhaseMaterialsProps {
   phaseId: string;
   projectId: string;
+  /** Filtre référentiel : matériaux consommables, équipements, ou tout. */
+  kind?: 'material' | 'equipment' | 'all';
+  /** Libellé de la carte (par défaut « Matériaux de la phase »). */
+  title?: string;
+  /** Libellé du bouton d'ajout. */
+  addLabel?: string;
+  /** Message affiché lorsque la liste filtrée est vide. */
+  emptyLabel?: string;
 }
 
-const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) => {
+const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
+  phaseId,
+  projectId,
+  kind = 'all',
+  title,
+  addLabel,
+  emptyLabel,
+}) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedMaterialId, setSelectedMaterialId] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -31,14 +48,27 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({ phaseId, projectId }) =
 
   // Use hexagonal hooks
   const { 
-    phaseMaterials, 
+    phaseMaterials: allPhaseMaterials, 
     isLoading, 
     addMaterial, 
     updateQuantity: updateMaterialQuantity, 
     removeMaterial 
   } = usePhaseMaterialsHex(phaseId, projectId);
   
-  const { data: availableMaterials } = useAvailableMaterials();
+  const { data: allAvailableMaterials } = useAvailableMaterials();
+
+  const matchesKind = (category?: string | null) =>
+    kind === 'all' || getMaterialResourceKind(category) === kind;
+
+  const phaseMaterials = React.useMemo(
+    () => (allPhaseMaterials ?? []).filter((pm) => matchesKind(pm.material?.category)),
+    [allPhaseMaterials, kind]
+  );
+  const availableMaterials = React.useMemo(
+    () => (allAvailableMaterials ?? []).filter((m) => matchesKind(m.category)),
+    [allAvailableMaterials, kind]
+  );
+
 
   const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
