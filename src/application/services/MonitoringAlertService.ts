@@ -191,18 +191,24 @@ export class MonitoringAlertService {
 
   /**
    * Get all monitoring alerts as AlertData for UI
-   * (alertes projet + notifications métier promues en alertes, dédupliquées).
+   * (alertes projet + notifications métier + alertes dérivées de l'état réel,
+   * dédupliquées).
    */
   async getAllAlerts(): Promise<AlertData[]> {
-    const [dtos, notificationAlerts, projects] = await Promise.all([
+    const [dtos, notificationAlerts, derivedAlerts, projects] = await Promise.all([
       this.repository.findAll(),
       this.getNotificationAlerts(),
+      this.getDerivedAlerts(),
       getProjectService().getAllProjects(),
     ]);
 
     const alerts = dtos.map(transformToAlertData);
     const known = new Set(alerts.map((a) => a.id));
-    const merged = [...alerts, ...notificationAlerts.filter((a) => !known.has(a.id))];
+    const merged = [
+      ...alerts,
+      ...notificationAlerts.filter((a) => !known.has(a.id)),
+      ...derivedAlerts.filter((a) => !known.has(a.id)),
+    ];
 
     const projectTitles = new Map(projects.map((project) => [project.id, project.title]));
     return merged.map((alert) => ({
@@ -212,6 +218,7 @@ export class MonitoringAlertService {
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   }
+
 
 
   /**
