@@ -124,10 +124,37 @@ function transformNotificationToAlertData(n: NotificationData): AlertData {
 export class MonitoringAlertService {
   private repository: IMonitoringAlertRepository;
   private notificationRepository?: INotificationRepository;
+  private derivedRepository?: IDerivedAlertRepository;
 
-  constructor(repository?: IMonitoringAlertRepository, notificationRepository?: INotificationRepository) {
+  constructor(
+    repository?: IMonitoringAlertRepository,
+    notificationRepository?: INotificationRepository,
+    derivedRepository?: IDerivedAlertRepository,
+  ) {
     this.repository = repository || new SupabaseMonitoringAlertAdapter();
     this.notificationRepository = notificationRepository;
+    this.derivedRepository = derivedRepository;
+  }
+
+  private getDerivedRepository(): IDerivedAlertRepository {
+    if (!this.derivedRepository) {
+      this.derivedRepository = new SupabaseDerivedAlertAdapter();
+    }
+    return this.derivedRepository;
+  }
+
+  /** Alertes dérivées de l'état réel du projet (retards, échéances, blocages). */
+  private async getDerivedAlerts(projectId?: string): Promise<AlertData[]> {
+    try {
+      const repo = this.getDerivedRepository();
+      const signals = projectId
+        ? await repo.findSignalsByProject(projectId)
+        : await repo.findSignals();
+      return toDerivedAlerts(signals);
+    } catch (error) {
+      console.warn('MonitoringAlertService: derived alerts unavailable', error);
+      return [];
+    }
   }
 
   private getNotificationRepository(): INotificationRepository | undefined {
@@ -140,6 +167,7 @@ export class MonitoringAlertService {
     }
     return this.notificationRepository;
   }
+
 
   /** Alertes issues des notifications métier (inspection, retard, paiement...). */
   private async getNotificationAlerts(): Promise<AlertData[]> {
