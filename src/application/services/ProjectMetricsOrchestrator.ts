@@ -386,7 +386,7 @@ export class ProjectMetricsOrchestrator {
         earnedValue: formatAmount2(evm.earnedValue, currency),
         scheduleVariance: formatAmount2(evm.scheduleVariance, currency),
         costVariance:
-          evm.costVariance === null
+          evm.costVariance === null || !evm.isCostIndexReliable
             ? `${formatAmount2(0, currency)} (non évaluable)`
             : formatAmount2(evm.costVariance, currency),
         referenceDuration:
