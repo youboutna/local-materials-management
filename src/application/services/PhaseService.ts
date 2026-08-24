@@ -46,6 +46,15 @@ export class PhaseService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase name is required');
       }
 
+      // Un identifiant technique ne peut pas servir de libellé métier
+      if (isUuid(resolvedName)) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          'Phase name cannot be a technical identifier (UUID)'
+        );
+      }
+
+
       if (!projectId) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
       }
