@@ -25,6 +25,9 @@ import PhaseQuantityTakeoffTab from '@/components/project/phase/PhaseQuantityTak
 import PhaseStakeholdersTab from '@/components/project/phase/PhaseStakeholdersTab';
 import PhaseFinancesTab from '@/components/project/phase/PhaseFinancesTab';
 import PhaseEditDialog from '@/components/project/phase/PhaseEditDialog';
+import PhaseEditWorkflowDialog from '@/components/project/phase/PhaseEditWorkflowDialog';
+import PhasePlanningQuickEdit from '@/components/project/phase/PhasePlanningQuickEdit';
+import { toPhaseEditDraft, type PhaseEditDraft } from '@/components/project/phase/PhaseEditDraft';
 import { GanttChart, PERTDiagram, CriticalPathView } from '@/components/planning';
 import { AppLayout } from '@/components/layout/AppLayout';
 import DeviationBadges from '@/components/common/DeviationBadges';
