@@ -1,83 +1,17 @@
+import type {
+  DecomptePaymentDTO,
+  DecompteRecordDTO,
+} from '@/dtos/entities/DecompteRecordDTO';
+
 /**
- * IDecompteRepository
- * 
- * Interface pour le calcul automatique des décomptes
- * Utilise les repositories existants : Project, Payment, Phase, Milestone, Inspection
+ * Port des décomptes (factures acceptées) — source unique du « dépensé réel ».
+ * L'implémentation possède seul l'accès à btp.progress_invoices / btp.payments.
  */
-
-import {
-    AutomaticDecompteDTO,
-    MilestoneDTO
-} from '@/dtos/entities';
-
-// Local definition for business rules
-export interface MauritaniaBusinessRulesDTO {
-  retentionRate: number;
-  advancePaymentRate: number;
-  penaltyDailyRate: number;
-  maxRetentionAmount: number;
-  inspectionRequired: boolean;
-}
-
-// Types internes pour le calcul des décomptes
-export interface ProjectFinancials {
-  budget: number;
-  totalPaid: number;
-  totalRetentionHeld: number;
-  paymentCount: number;
-  allowsInitialPayment: boolean;
-  initialPaymentPercentage: number;
-}
-
-export interface PhaseFinancials {
-  id: string;
-  phaseName: string;
-  estimatedCost: number;
-  totalPaid: number;
-  progress: number;
-  remainingBudget: number;
-}
-
-export interface VerifiedMilestone {
-  id: string;
-  title: string;
-  weight: number;
-  completionDate: string;
-  phaseId: string;
-  phaseEstimatedCost: number;
-}
-
-export interface DecompteCalculationContext {
-  projectId: string;
-  businessRules: MauritaniaBusinessRulesDTO;
-  previousDecomptes: AutomaticDecompteDTO[];
-  paidThresholds: number[];
-  verifiedMilestones: VerifiedMilestone[];
-  projectFinancials: ProjectFinancials;
-  phaseFinancials: PhaseFinancials[];
-}
-
 export interface IDecompteRepository {
-  // === Données Projet ===
-  getProjectFinancials(projectId: string): Promise<ProjectFinancials>;
-  
-  // === Données Phase ===
-  getPhaseFinancials(projectId: string): Promise<PhaseFinancials[]>;
-  getPhaseData(phaseId: string): Promise<PhaseFinancials | null>;
-  getPhaseMilestones(phaseId: string): Promise<MilestoneDTO[]>;
-  
-  // === Données Jalon ===
-  getVerifiedMilestones(projectId: string): Promise<VerifiedMilestone[]>;
-  
-  // === Données Paiement ===
-  getPreviousDecomptes(projectId: string, phaseId?: string): Promise<AutomaticDecompteDTO[]>;
-  getPaidThresholds(projectId: string): Promise<number[]>;
-  
-  // === Données Inspection ===
-  hasApprovedInspectionForThreshold(projectId: string, threshold: number): Promise<boolean>;
-  
-  // === Calcul Décompte ===
-  calculateDecompte(context: DecompteCalculationContext): Promise<AutomaticDecompteDTO>;
-  validateDecompte(decompte: AutomaticDecompteDTO): Promise<boolean>;
-  saveDecompte(decompte: AutomaticDecompteDTO): Promise<AutomaticDecompteDTO>;
+  findByProjectId(projectId: string): Promise<DecompteRecordDTO[]>;
+  findByPhaseId(phaseId: string): Promise<DecompteRecordDTO[]>;
+  findById(id: string): Promise<DecompteRecordDTO | null>;
+  /** Transactions rattachées (par décompte, sinon par projet/phase). */
+  findPaymentsByProjectId(projectId: string): Promise<DecomptePaymentDTO[]>;
+  findPaymentsByPhaseId(phaseId: string): Promise<DecomptePaymentDTO[]>;
 }
