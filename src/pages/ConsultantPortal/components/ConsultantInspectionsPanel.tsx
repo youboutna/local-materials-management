@@ -265,7 +265,7 @@ export function ConsultantInspectionsPanel({ projects }: Props) {
               {t('common.save') || 'Enregistrer'}
             </Button>
           </DialogFooter>
-        </DialogFooter>
+
         </DialogContent>
       </Dialog>
     </div>
