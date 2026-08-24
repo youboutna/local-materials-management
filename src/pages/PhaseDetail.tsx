@@ -120,6 +120,34 @@ const PhaseDetail: React.FC = () => {
     }
   };
 
+  /** Brouillon partagé par les deux modes d'édition (onglet + workflow). */
+  const editDraft: PhaseEditDraft = useMemo(
+    () =>
+      vm
+        ? toPhaseEditDraft(vm)
+        : { name: '', description: '', startDate: '', endDate: '', estimatedCost: 0, progress: 0, status: 'pending' },
+    [vm]
+  );
+
+  /** Mode 1 — sauvegarde partielle (onglet) : persiste uniquement les champs fournis. */
+  const handlePartialSave = async (partial: Partial<PhaseEditDraft>) => {
+    try {
+      await updatePhaseAsync(partial as Record<string, unknown>);
+    } catch {
+      /* toast géré par usePhaseDetails */
+    }
+  };
+
+  /** Mode 2 — sauvegarde globale (workflow) : persiste l'ensemble du brouillon. */
+  const handleWorkflowSave = async (draft: PhaseEditDraft) => {
+    try {
+      await updatePhaseAsync(draft as unknown as Record<string, unknown>);
+    } catch {
+      /* toast géré par usePhaseDetails */
+    }
+  };
+
+
 
 
   if (loading) {
