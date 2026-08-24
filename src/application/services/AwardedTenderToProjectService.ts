@@ -197,15 +197,38 @@ export class AwardedTenderToProjectService {
       warnings.push(`Statut tender non mis à jour : ${(err as Error).message}`);
     }
 
+    // 4. Trace contractuelle (devis accepté → contrat), idempotente par appel d'offres.
+    let contractId: string | undefined;
+    let contractNumber: string | undefined;
+    try {
+      const contract = await getContractService().awardFromAcceptedQuote({
+        projectId: req.projectId,
+        tenderId: req.tenderId,
+        supplierId: req.supplierId ?? null,
+        supplierName: req.supplierName ?? null,
+        sourceEstimateId: req.winningEstimateId ?? null,
+        totalAmount: payload.contractAmount ?? 0,
+        currency: payload.currency,
+      });
+      contractId = contract.id;
+      contractNumber = contract.contractNumber;
+    } catch (err) {
+      warnings.push(`Contrat non enregistré : ${(err as Error).message}`);
+    }
+
     console.debug('[AwardedTenderToProjectService] Hydration applied', {
       projectId: req.projectId,
       phases: createdPhaseIds.length,
       tasks: createdTaskIds.length,
       milestones: createdMilestoneIds.length,
+      contractId,
       warnings: warnings.length,
     });
 
-    return { payload, applied: true, createdPhaseIds, createdTaskIds, createdMilestoneIds, warnings };
+    return {
+      payload, applied: true, createdPhaseIds, createdTaskIds, createdMilestoneIds,
+      contractId, contractNumber, warnings,
+    };
   }
 }
 
