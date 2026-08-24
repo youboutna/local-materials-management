@@ -257,7 +257,15 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground"><T k="auto.phasematerials.aucun_materiau_assigne_a_cette_phase" fallback="Aucun matériau assigné à cette phase." /></p>
+          <p className="text-sm text-muted-foreground">
+            {emptyLabel ?? (
+              <T
+                k="auto.phasematerials.aucun_materiau_assigne_a_cette_phase"
+                fallback="Aucun matériau assigné à cette phase."
+              />
+            )}
+          </p>
+
         )}
       </CardContent>
     </Card>
