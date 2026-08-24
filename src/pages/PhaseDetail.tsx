@@ -63,6 +63,7 @@ const PhaseDetail: React.FC = () => {
     updateTask,
     deleteTask,
     isUpdating,
+    metrics,
   } = usePhaseDetails(phaseId);
 
   const [isEditing, setIsEditing] = useState(false);
