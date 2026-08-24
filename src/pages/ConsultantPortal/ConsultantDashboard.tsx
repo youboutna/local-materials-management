@@ -182,9 +182,14 @@ const ConsultantDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="inspections">
+            <ConsultantInspectionsPanel projects={projects} />
+          </TabsContent>
+
           <TabsContent value="tenders">
             <ConsultantTendersPanel />
           </TabsContent>
+
 
           <TabsContent value="validation">
             <ConsultantProgressValidation projects={projects} />
