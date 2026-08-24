@@ -13,6 +13,7 @@ import {
 import { DeviationSeverity } from '@/config/referentials/deviation-rules.referential';
 import { i18nService } from '@/application/services/I18nService';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 interface DeviationBadgesProps {
   input: PlannedActualInput;
@@ -50,13 +51,14 @@ function formatVal(value: number, unit: string): string {
 }
 
 const DeviationBadges: React.FC<DeviationBadgesProps> = ({ input, scope = 'project', className }) => {
+  const { t } = useI18n();
   const deviations = useMemo(() => DeviationEngine.compute(input, scope), [input, scope]);
 
   if (deviations.length === 0) {
     return (
       <span
         className="text-[10px] text-muted-foreground"
-        title={i18nService.t('deviation.none_tooltip')}
+        title={t('deviation.none_tooltip')}
       >
         <T k="auto.deviationbadges.aucun_ecart_calculable" fallback="Aucun écart calculable" />
       </span>
