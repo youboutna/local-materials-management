@@ -71,6 +71,7 @@ const PhaseDetail: React.FC = () => {
   } = usePhaseDetails(phaseId);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isWorkflowEditing, setIsWorkflowEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<PhaseDTO>>({});
 
   const steps = useMemo(
