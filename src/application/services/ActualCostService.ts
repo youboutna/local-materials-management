@@ -10,15 +10,24 @@
  * callers (see wiring note in getTakeoffToBoqService / this file's header).
  */
 import { getPaymentService, PaymentService } from '@/application/services/PaymentService';
+import { getDecompteService } from '@/application/services/DecompteService';
 import { getMaterialService, MaterialService } from '@/application/services/MaterialService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { IPhaseMaterialRepository } from '@/domain/repositories/IPhaseMaterialRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface ActualCostBreakdown {
+  /** Transactions réelles rattachées (paiements). */
   paymentsCost: number;
+  /** Engagements prévisionnels (ressources / DQE) — JAMAIS du dépensé. */
   resourcesCost: number;
-  /** paymentsCost + resourcesCost — feed this into ProjectMetricsOrchestrator's `actualCost` input. */
+  /** Dépensé doctrinal = Σ décomptes validés (factures acceptées). */
+  decomptedCost: number;
+  /**
+   * AC pour l'EVM = dépensé réel (décomptes validés). À défaut de décompte,
+   * on retombe sur les paiements payés. Les engagements restent hors AC :
+   * ils sont exposés via `resourcesCost` (« engagé prévisionnel »).
+   */
   actualCost: number;
 }
 
@@ -36,9 +45,12 @@ export class ActualCostService {
   async computeActualCost(projectId: string): Promise<ActualCostBreakdown> {
     if (!projectId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
 
-    const [paymentSummary, resources] = await Promise.all([
+    const [paymentSummary, resources, decompteSpend] = await Promise.all([
       this.paymentService.getPaymentSummary(projectId),
       this.phaseMaterialRepository.findByProjectId(projectId),
+      getDecompteService()
+        .getProjectSpend(projectId)
+        .catch(() => 0),
     ]);
 
     const paymentsCost = paymentSummary.paid ?? 0;
@@ -60,7 +72,8 @@ export class ActualCostService {
     return {
       paymentsCost,
       resourcesCost,
-      actualCost: paymentsCost + resourcesCost,
+      decomptedCost: decompteSpend,
+      actualCost: decompteSpend > 0 ? decompteSpend : paymentsCost,
     };
   }
 }

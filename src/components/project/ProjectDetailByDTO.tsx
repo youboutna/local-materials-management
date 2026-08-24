@@ -80,6 +80,7 @@ import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
+import { DecompteTrackingPanel } from '@/components/project/finance/DecompteTrackingPanel';
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
 // ============================================================================
@@ -1000,9 +1001,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* ===== FINANCIAL ===== */}
         <TabsContent value="financial" className="mt-6">
+          {/* Doctrine : dépensé = décomptes validés (jamais lignes DQE / tâches) */}
+          <DecompteTrackingPanel
+            scope="project"
+            entityId={projectId}
+            initialBudget={project.budget || 0}
+            engaged={actualCostBreakdown?.resourcesCost ?? 0}
+            className="mb-6"
+          />
+
           <FinancialOverview
             budget={project.budget || 0}
-            spent={metrics?.actualCost ?? totalPaymentsSpent}
+            spent={actualCostBreakdown?.decomptedCost ?? metrics?.actualCost ?? totalPaymentsSpent}
             phases={phasesSource || []}
             financialMetrics={
               metrics
@@ -1013,6 +1023,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 : undefined
             }
           />
+
+
 
           {/* Échéancier de paiements */}
           <Card className="mt-6">
@@ -1293,8 +1305,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="payments-exec">
+                <TabsContent value="payments-exec" className="space-y-4">
+                  {/* Décomptes = factures acceptées ⇒ dépensé réel du projet */}
+                  <DecompteTrackingPanel
+                    scope="project"
+                    entityId={projectId}
+                    initialBudget={project.budget || 0}
+                    engaged={actualCostBreakdown?.resourcesCost ?? 0}
+                  />
                   <Card>
+
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5" />

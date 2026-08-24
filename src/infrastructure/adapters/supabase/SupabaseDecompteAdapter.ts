@@ -1,339 +1,131 @@
 /**
- * SupabaseDecompteAdapter
- * 
- * Implémentation de IDecompteRepository utilisant les repositories existants
- * Architecture : Service de compute/util utilisant plusieurs repositories
+ * Supabase adapter — btp.progress_invoices (décomptes = factures acceptées)
+ * et btp.payments (transactions rattachées). Seul propriétaire de l'accès DB.
  */
+import { btpClient } from '@/integrations/supabase/schema-clients';
+import type { IDecompteRepository } from '@/domain/repositories/IDecompteRepository';
+import {
+  DECOMPTE_PAID_DB_STATUSES,
+  DECOMPTE_VALIDATED_DB_STATUSES,
+  type DecomptePaymentDTO,
+  type DecompteRecordDTO,
+  type DecompteStatus,
+} from '@/dtos/entities/DecompteRecordDTO';
 
-import { DecompteCalculationContext, IDecompteRepository, PhaseFinancials, ProjectFinancials, VerifiedMilestone } from '@/domain/repositories/IDecompteRepository';
-import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
-import { AutomaticDecompteDTO } from '@/dtos/entities/AutomaticDecompteDTO';
-import { AutomaticDecompteDTO as _AutomaticDecompteDTO, DecompteLineDTO } from '@/dtos/entities/AutomaticDecompteDTO';
-import { DecompteStatus } from '@/dtos/types/checkpoint-dto';
-import { Payment } from '@/domain/entities/Payment';
-import { InspectionStatus } from '@/domain/entities/Inspection';
+const mapStatus = (raw: string | null): DecompteStatus => {
+  const value = (raw ?? '').toLowerCase();
+  if ((DECOMPTE_PAID_DB_STATUSES as readonly string[]).includes(value)) return 'paid';
+  if ((DECOMPTE_VALIDATED_DB_STATUSES as readonly string[]).includes(value)) return 'validated';
+  if (value.includes('reject')) return 'rejected';
+  if (value.includes('submitted') || value.includes('review')) return 'submitted';
+  return 'draft';
+};
 
-// Import des repositories existants (via RepositoryFactory)
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toDto = (row: any): DecompteRecordDTO => {
+  const status = mapStatus(row.status ?? null);
+  const amount = Number(row.invoice_amount ?? 0);
+  const retention = Number(row.retention_amount ?? 0);
+  const validated =
+    row.validated_amount != null
+      ? Number(row.validated_amount)
+      : status === 'validated' || status === 'paid'
+        ? Math.max(amount - retention, 0)
+        : 0;
+  const paid =
+    row.paid_amount != null
+      ? Number(row.paid_amount)
+      : status === 'paid'
+        ? validated || amount
+        : Number(row.cumulative_paid ?? 0) > 0
+          ? Number(row.cumulative_paid)
+          : 0;
+
+  return {
+    id: row.id,
+    decompteNumber: row.invoice_number
+      ? String(row.invoice_number).replace(/^INV-/, 'D-')
+      : `D-${String(row.id).slice(0, 8).toUpperCase()}`,
+    invoiceNumber: row.invoice_number ?? null,
+    projectId: row.project_id ?? null,
+    phaseId: row.phase_id ?? null,
+    status,
+    rawStatus: row.status ?? null,
+    amount,
+    validatedAmount: validated,
+    paidAmount: paid,
+    retentionAmount: retention,
+    progressPercentage: Number(row.progress_percentage ?? 0),
+    workDescription: row.work_description ?? null,
+    invoiceDocumentId: row.invoice_document_id ?? row.service_fait_document_id ?? null,
+    submittedAt: row.submitted_at ?? null,
+    paidAt: row.paid_at ?? null,
+    createdAt: row.created_at ?? null,
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toPaymentDto = (row: any): DecomptePaymentDTO => ({
+  id: row.id,
+  decompteId: row.decompte_id ?? null,
+  phaseId: row.phase_id ?? null,
+  projectId: row.project_id ?? null,
+  invoiceNumber: row.invoice_number ?? null,
+  amount: Number(row.amount_paid ?? row.amount ?? 0),
+  paymentDate: row.payment_date ?? null,
+  paymentMethod: row.payment_method ?? null,
+  transactionId: row.transaction_id ?? null,
+  receiverName: row.receiver_name ?? null,
+});
 
 export class SupabaseDecompteAdapter implements IDecompteRepository {
-  constructor() {}
-
-  // === DONNÉES PROJET ===
-  async getProjectFinancials(projectId: string): Promise<ProjectFinancials> {
-    // Utiliser le project repository existant
-    const projectRepository = RepositoryFactory.getProjectRepository();
-    const project = await projectRepository.findById(projectId);
-    
-    if (!project) {
-      throw new Error(`Project ${projectId} not found`);
-    }
-
-    // Utiliser le payment repository existant
-    const paymentRepository = RepositoryFactory.getPaymentRepository();
-    const payments = await paymentRepository.findByProjectId(projectId);
-
-    const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-    // Le domaine Payment ne conserve pas de montant de retenue dédié :
-    // la retenue est calculée à la demande via getNetAmount().
-    const totalRetentionHeld = payments
-      .reduce((sum, payment) => sum + (payment.amount - payment.getNetAmount()), 0);
-
-    return {
-      budget: project.budget || 0,
-      totalPaid,
-      totalRetentionHeld,
-      paymentCount: payments.length,
-      allowsInitialPayment: project.allowsInitialPayment || false,
-      initialPaymentPercentage: project.initialPaymentPercentage || 10,
-    };
+  async findByProjectId(projectId: string): Promise<DecompteRecordDTO[]> {
+    const { data, error } = await (btpClient as any)
+      .from('progress_invoices')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map(toDto);
   }
 
-  // === DONNÉES PHASE ===
-  async getPhaseFinancials(projectId: string): Promise<PhaseFinancials[]> {
-    // Utiliser le phase repository existant
-    const phaseRepository = RepositoryFactory.getPhaseRepository();
-    const phases = await phaseRepository.findByProjectId(projectId);
-
-    // Utiliser le payment repository existant
-    const paymentRepository = RepositoryFactory.getPaymentRepository();
-    const payments = await paymentRepository.findByProjectId(projectId);
-
-    const phaseFinancials: PhaseFinancials[] = [];
-
-    for (const phase of phases) {
-      const phasePayments = payments.filter(payment => payment.phaseRef?.id === phase.id);
-      const totalPaid = phasePayments.reduce((sum, payment) => sum + payment.amount, 0);
-
-      phaseFinancials.push({
-        id: phase.id,
-        phaseName: phase.phaseName || 'Phase sans nom',
-        estimatedCost: phase.estimatedCost || 0,
-        totalPaid,
-        progress: phase.progress || 0,
-        remainingBudget: (phase.estimatedCost || 0) - totalPaid,
-      });
-    }
-
-    return phaseFinancials;
+  async findByPhaseId(phaseId: string): Promise<DecompteRecordDTO[]> {
+    const { data, error } = await (btpClient as any)
+      .from('progress_invoices')
+      .select('*')
+      .eq('phase_id', phaseId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map(toDto);
   }
 
-  async getPhaseData(phaseId: string): Promise<PhaseFinancials | null> {
-    // Utiliser le phase repository existant
-    const phaseRepository = RepositoryFactory.getPhaseRepository();
-    const phase = await phaseRepository.findById(phaseId);
-
-    if (!phase) return null;
-
-    // Utiliser le payment repository existant
-    const paymentRepository = RepositoryFactory.getPaymentRepository();
-    const payments = await paymentRepository.findByPhaseId(phaseId);
-
-    const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-
-    return {
-      id: phase.id,
-      phaseName: phase.phaseName || 'Phase sans nom',
-      estimatedCost: phase.estimatedCost || 0,
-      totalPaid,
-      progress: phase.progress || 0,
-      remainingBudget: (phase.estimatedCost || 0) - totalPaid,
-    };
+  async findById(id: string): Promise<DecompteRecordDTO | null> {
+    const { data, error } = await (btpClient as any)
+      .from('progress_invoices')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? toDto(data) : null;
   }
 
-  async getPhaseMilestones(phaseId: string): Promise<MilestoneDTO[]> {
-    // Utiliser le milestone repository existant
-    const milestoneRepository = RepositoryFactory.getMilestoneRepository();
-    const milestones = await milestoneRepository.findByPhaseId(phaseId);
-
-    // Le repository retourne déjà des MilestoneDTO
-    return milestones;
+  async findPaymentsByProjectId(projectId: string): Promise<DecomptePaymentDTO[]> {
+    const { data, error } = await (btpClient as any)
+      .from('payments')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('payment_date', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(toPaymentDto);
   }
 
-  // === DONNÉES JALON ===
-  async getVerifiedMilestones(projectId: string): Promise<VerifiedMilestone[]> {
-    // Utiliser le milestone repository existant
-    const milestoneRepository = RepositoryFactory.getMilestoneRepository();
-    const milestones = await milestoneRepository.findByProjectId(projectId);
-
-    // Filtrer les jalons complétés
-    const completedMilestones = milestones.filter(milestone => milestone.status === 'completed');
-
-    // Utiliser le phase repository pour les coûts estimés
-    const phaseRepository = RepositoryFactory.getPhaseRepository();
-
-    const verifiedMilestones: VerifiedMilestone[] = [];
-
-    for (const milestone of completedMilestones) {
-      const phaseId = milestone.phaseId;
-      if (phaseId) {
-        const phase = await phaseRepository.findById(phaseId);
-        
-        verifiedMilestones.push({
-          id: milestone.id,
-          title: milestone.title || '',
-          weight: milestone.weight || 0,
-          completionDate: milestone.completionDate || new Date().toISOString(),
-          phaseId,
-          phaseEstimatedCost: phase?.estimatedCost || 0,
-        });
-      }
-    }
-
-    return verifiedMilestones.sort((a, b) => 
-      new Date(a.completionDate).getTime() - new Date(b.completionDate).getTime()
-    );
-  }
-
-  // === DONNÉES PAIEMENT ===
-  async getPreviousDecomptes(projectId: string, phaseId?: string): Promise<AutomaticDecompteDTO[]> {
-    // Pour l'instant, on utilise les paiements comme proxy des décomptes
-    const paymentRepository = RepositoryFactory.getPaymentRepository();
-    
-    let payments;
-    if (phaseId) {
-      payments = await paymentRepository.findByPhaseId(phaseId);
-    } else {
-      payments = await paymentRepository.findByProjectId(projectId);
-    }
-
-    // Transformer les paiements en décomptes (adapter selon vos besoins)
-    return payments.map(payment => {
-      const retentionAmount = payment.amount - payment.getNetAmount();
-      return {
-        id: payment.id,
-        project_id: payment.projectRef?.id || projectId,
-        phase_id: payment.phaseRef?.id,
-        decompte_number: 0,
-        decompte_type: 'progress',
-        contract_amount: 0,
-        previous_cumulative: 0,
-        current_period_amount: payment.amount,
-        cumulative_amount: payment.amount,
-        retention_rate: 0,
-        retention_amount: retentionAmount,
-        previous_retention_released: 0,
-        retention_to_release: 0,
-        net_payable: payment.getNetAmount(),
-        verified_milestones: [],
-        lines: [],
-        progress_at_decompte: payment.progressAtPayment || 0,
-        status: 'approved' as DecompteStatus,
-        calculated_at: payment.createdAt || new Date().toISOString(),
-        calculation_log: [],
-      };
-    });
-  }
-
-  async getPaidThresholds(projectId: string): Promise<number[]> {
-    const paymentRepository = RepositoryFactory.getPaymentRepository();
-    const payments = await paymentRepository.findByProjectId(projectId);
-
-    return payments
-      .filter(payment => payment.progressAtPayment)
-      .map(payment => payment.progressAtPayment!)
-      .sort((a, b) => a - b);
-  }
-
-  // === DONNÉES INSPECTION ===
-  async hasApprovedInspectionForThreshold(projectId: string, threshold: number): Promise<boolean> {
-    // Utiliser le inspection repository existant
-    const inspectionRepository = RepositoryFactory.getInspectionRepository();
-    const inspections = await inspectionRepository.findByProjectId(projectId);
-
-    // Filtrer les inspections approuvées pour ce seuil
-    const approvedInspections = inspections.filter(inspection => 
-      inspection.status === InspectionStatus.Approved && 
-      inspection.progressAtInspection === threshold
-    );
-
-    return approvedInspections.length > 0;
-  }
-
-  // === CALCUL DÉCOMPTE ===
-  async calculateDecompte(context: DecompteCalculationContext): Promise<AutomaticDecompteDTO> {
-    // Logique de calcul du décompte
-    // Cette méthode implémente la logique métier complexe du calcul
-    
-    const lines: DecompteLineDTO[] = [];
-    let totalAmount = 0;
-
-    // Calcul basé sur les jalons vérifiés
-    for (const milestone of context.verifiedMilestones) {
-      const milestoneAmount = (milestone.phaseEstimatedCost * milestone.weight) / 100;
-      
-      lines.push({
-        id: `line-${milestone.id}`,
-        description: milestone.title,
-        quantity: 1,
-        unit: 'forfait',
-        unitPrice: milestoneAmount,
-        totalAmount: milestoneAmount,
-        category: 'works',
-        milestoneId: milestone.id,
-        verificationStatus: 'verified',
-      });
-
-      totalAmount += milestoneAmount;
-    }
-
-    // Application des règles métier
-    const retentionAmount = Math.floor(
-      totalAmount * (context.businessRules.retentionRate / 100)
-    );
-    const netAmount = totalAmount - retentionAmount;
-    const previousCumulative = context.projectFinancials.totalPaid;
-
-    return {
-      id: `decompte-${Date.now()}`,
-      projectId: context.projectId,
-      decompteNumber: context.previousDecomptes.length + 1,
-      decompteType: 'progress',
-      contractAmount: context.projectFinancials.budget,
-      previousCumulative: previousCumulative,
-      currentPeriodAmount: totalAmount,
-      cumulativeAmount: previousCumulative + totalAmount,
-      retentionRate: context.businessRules.retentionRate,
-      retentionAmount: retentionAmount,
-      previousRetentionReleased: 0,
-      retentionToRelease: 0,
-      netPayable: netAmount,
-      verifiedMilestones: context.verifiedMilestones.map(milestone => ({
-        milestoneId: milestone.id,
-        title: milestone.title,
-        weight: milestone.weight,
-        amount: (milestone.phaseEstimatedCost * milestone.weight) / 100,
-        verifiedAt: milestone.completionDate,
-      })),
-      lines,
-      progressAtDecompte: this.calculateProgress(context),
-      status: 'draft',
-      calculatedAt: new Date().toISOString(),
-      calculationLog: [],
-    };
-  }
-
-  async validateDecompte(decompte: AutomaticDecompteDTO): Promise<boolean> {
-    // Validation basique du décompte
-    return (
-      decompte.currentPeriodAmount > 0 &&
-      decompte.lines.length > 0 &&
-      decompte.progressAtDecompte >= 0 &&
-      decompte.progressAtDecompte <= 100
-    );
-  }
-
-  async saveDecompte(decompte: AutomaticDecompteDTO): Promise<AutomaticDecompteDTO> {
-    // Pour l'instant, on sauvegarde comme un paiement
-    // Adapter selon votre logique métier
-    
-    const paymentRepository = RepositoryFactory.getPaymentRepository();
-    const now = new Date().toISOString();
-    const id = decompte.id || `decompte-${Date.now()}`;
-
-    const payment = new Payment(
-      id,
-      decompte.projectId ? ({ id: decompte.projectId } as any) : null,
-      decompte.phaseId ? ({ id: decompte.phaseId } as any) : null,
-      null,
-      decompte.netPayable,
-      now,
-      'bank_transfer',
-      'pending',
-      decompte.progressAtDecompte,
-      null,
-      '',
-      '',
-      '',
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      [],
-      now,
-      now
-    );
-
-    await paymentRepository.save(payment);
-
-    // Retourner le décompte avec l'ID du paiement
-    return {
-      ...decompte,
-      id: payment.id,
-      calculatedAt: now,
-    };
-  }
-
-  // === MÉTHODES PRIVÉES ===
-  private calculateProgress(context: DecompteCalculationContext): number {
-    // Calcul du progrès basé sur les jalons vérifiés
-    if (context.verifiedMilestones.length === 0) return 0;
-
-    const totalWeight = context.verifiedMilestones.reduce((sum, milestone) => sum + milestone.weight, 0);
-    const averageWeight = totalWeight / context.verifiedMilestones.length;
-
-    return Math.min(100, Math.floor(averageWeight));
+  async findPaymentsByPhaseId(phaseId: string): Promise<DecomptePaymentDTO[]> {
+    const { data, error } = await (btpClient as any)
+      .from('payments')
+      .select('*')
+      .eq('phase_id', phaseId)
+      .order('payment_date', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(toPaymentDto);
   }
 }

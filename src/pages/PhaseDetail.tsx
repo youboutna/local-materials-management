@@ -18,6 +18,8 @@ import type { PhaseDTO, PhaseStepDTO, PhaseTaskDTO } from '@/dtos/types/phase-dt
 import PhaseTasks from '@/components/project/PhaseTasks';
 import PhaseDocuments from '@/components/project/PhaseDocuments';
 import PhasePayments from '@/components/project/PhasePayments';
+import { DecompteTrackingPanel } from '@/components/project/finance/DecompteTrackingPanel';
+import { usePhaseDecomptesHex } from '@/hooks/hexagonal/useDecomptesHex';
 import PhaseInspections from '@/components/project/PhaseInspections';
 import PhaseMilestones from '@/components/project/PhaseMilestones';
 import PhaseStepsManager from '@/components/project/phase/PhaseStepsManager';
@@ -200,10 +202,16 @@ const PhaseDetail: React.FC = () => {
   });
   const progress = progressResult.value;
 
+  // Doctrine : dépensé = Σ décomptes validés (factures acceptées) sur la phase
+  const { summary: decompteSummary } = usePhaseDecomptesHex(phaseId, {
+    initialBudget: storedBudget ?? 0,
+  });
+  const decomptedSpent = decompteSummary?.decomptedValidated ?? 0;
+
   const financials = PhaseMetricsService.computeFinancials({
     estimatedCost: storedBudget,
-    actualCost: vm.actualCost,
-    paymentAmounts: [metrics.totalPaymentAmount],
+    actualCost: decomptedSpent > 0 ? decomptedSpent : vm.actualCost,
+    paymentAmounts: decomptedSpent > 0 ? [decomptedSpent] : [metrics.totalPaymentAmount],
   });
   const budget = financials.budget;
 
@@ -559,7 +567,10 @@ const PhaseDetail: React.FC = () => {
                 />
               </TabsContent>
               <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="payments"><PhasePayments phaseId={phaseId!} projectId={projectId!} phaseName={title} phaseBudget={budget} /></TabsContent>
+              <TabsContent value="payments" className="space-y-4">
+                <DecompteTrackingPanel scope="phase" entityId={phaseId} initialBudget={budget} />
+                <PhasePayments phaseId={phaseId!} projectId={projectId!} phaseName={title} phaseBudget={budget} />
+              </TabsContent>
             </Tabs>
           </TabsContent>
 
