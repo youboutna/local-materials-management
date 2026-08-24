@@ -29,7 +29,7 @@ interface Props {
 const NONE = '__none__';
 
 export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride }: Props) {
-  const { translateTerm, t } = useI18n();
+  const { t } = useI18n();
   const phases: WbsPhase[] = useMemo(() => {
     if (phasesOverride && phasesOverride.length > 0) return phasesOverride;
     if (!referentialCode) return WBS_REFERENTIAL;
