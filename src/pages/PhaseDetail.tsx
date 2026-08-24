@@ -503,10 +503,24 @@ const PhaseDetail: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {progress < 100 && (
+                {!completion.canComplete && (
                   <div className="flex items-start gap-2 p-3 bg-warning/10 dark:bg-amber-950/30 border border-warning/30 dark:border-amber-900 rounded-md text-sm">
                     <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-                    <span>La phase n'est pas encore achevée ({progress}%). La clôture nécessite la réception définitive et la levée des réserves.</span>
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        <T k="auto.phasedetail.cloture_conditions" fallback="Conditions de clôture non réunies" /> ({formatPercent2(progress)})
+                      </p>
+                      <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                        {completion.reasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                      </ul>
+                      {progressResult.derivedValue != null && progressResult.isDivergent && (
+                        <Button size="sm" variant="outline" onClick={handleAlignProgress} disabled={isUpdatingPhase}>
+                          <T k="auto.phasedetail.aligner_progression" fallback="Aligner la progression" /> ({progressResult.derivedValue}%)
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
                 <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
@@ -534,18 +548,19 @@ const PhaseDetail: React.FC = () => {
           isUpdating={isUpdatingPhase}
           phaseName={title}
           completionValidation={{
-            canComplete: progress >= 100,
+            canComplete: completion.canComplete,
             pendingCheckpoints: [],
             completedCheckpoints: [],
-            totalCheckpoints: 0,
-            completedCount: 0,
-            message: '',
-            progressMet: progress >= 100,
-            currentProgress: progress,
-            requiredProgress: 100,
-            progressMessage: '',
+            totalCheckpoints: metrics.totalTasks,
+            completedCount: metrics.completedTasks,
+            message: completion.reasons.join(' · '),
+            progressMet: completion.progressMet,
+            currentProgress: completion.currentProgress,
+            requiredProgress: completion.requiredProgress,
+            progressMessage: completion.reasons[0] ?? '',
           }}
         />
+
       </div>
 
     </AppLayout>
