@@ -1000,9 +1000,18 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
         {/* ===== FINANCIAL ===== */}
         <TabsContent value="financial" className="mt-6">
+          {/* Doctrine : dépensé = décomptes validés (jamais lignes DQE / tâches) */}
+          <DecompteTrackingPanel
+            scope="project"
+            entityId={projectId}
+            initialBudget={project.budget || 0}
+            engaged={actualCostBreakdown?.resourcesCost ?? 0}
+            className="mb-6"
+          />
+
           <FinancialOverview
             budget={project.budget || 0}
-            spent={metrics?.actualCost ?? totalPaymentsSpent}
+            spent={actualCostBreakdown?.decomptedCost ?? metrics?.actualCost ?? totalPaymentsSpent}
             phases={phasesSource || []}
             financialMetrics={
               metrics
@@ -1013,6 +1022,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 : undefined
             }
           />
+
+
 
           {/* Échéancier de paiements */}
           <Card className="mt-6">
