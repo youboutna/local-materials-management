@@ -226,6 +226,8 @@ interface RepositoryRegistry {
   documentValidationLog?: IDocumentValidationLogRepository;
   inspection?: IInspectionRepository;
   payment?: IPaymentRepository;
+  decompte?: IDecompteRepository;
+
   tender?: ITenderRepository;
   user?: IUserRepository;
   employee?: IEmployeeRepository;
