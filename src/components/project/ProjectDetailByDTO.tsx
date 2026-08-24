@@ -454,6 +454,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   // Source unique : DocumentService (scopé projet), fallback sur l'agrégat ProjectDetail
   const { data: projectDocuments = [] } = useDocumentsByProject((project as any)?.id || '');
 
+  // ============ Jalons — source unique MilestoneService ============
+  const { milestones: hexMilestones = [] } = useMilestonesHex((project as any)?.id);
+  const milestonesSource = useMemo(() => {
+    const source = (hexMilestones && hexMilestones.length > 0)
+      ? hexMilestones
+      : ((projectDetail as any)?.milestones ?? []);
+    return source as any[];
+  }, [hexMilestones, projectDetail]);
+
+
   const documentsData = useMemo(() => {
     const source =
       (projectDocuments && projectDocuments.length > 0)
