@@ -172,6 +172,21 @@ export const DERIVED_ALERT_RULES: DerivedAlertRule[] = [
   },
 ];
 
+/**
+ * Correspondance signal dérivé → catégorie de seuils d'escalade configurée dans
+ * `/settings` (`escalation-thresholds.referential` / `btp.escalation_thresholds`).
+ * Les valeurs administrées surchargent les `thresholds` par défaut ci-dessus.
+ */
+export const DERIVED_KIND_ESCALATION_TYPE: Partial<Record<DerivedAlertKind, string>> = {
+  phase_overdue: 'project_delay',
+  milestone_overdue: 'project_delay',
+  task_overdue: 'project_delay',
+  inspection_pending: 'inspection_overdue',
+  payment_blocked: 'payment_validation',
+  guarantee_expiring: 'insurance_expiry',
+  insurance_expiring: 'insurance_expiry',
+};
+
 export function getDerivedAlertRule(kind: DerivedAlertKind): DerivedAlertRule | undefined {
   return DERIVED_ALERT_RULES.find((r) => r.kind === kind);
 }
@@ -180,9 +195,11 @@ export function getDerivedAlertRule(kind: DerivedAlertKind): DerivedAlertRule | 
 export function derivedSeverity(
   rule: DerivedAlertRule,
   days: number,
+  /** Seuils administrés dans `/settings` (prioritaires sur les défauts). */
+  override?: DerivedSeverityThresholds,
 ): 'critical' | 'high' | 'medium' | 'low' {
   if (rule.mode === 'static') return rule.staticSeverity ?? 'medium';
-  const { critical, high, medium } = rule.thresholds;
+  const { critical, high, medium } = override ?? rule.thresholds;
   if (rule.mode === 'overdue') {
     if (days >= critical) return 'critical';
     if (days >= high) return 'high';
