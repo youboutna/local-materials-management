@@ -68,7 +68,7 @@ export const ProjectMetricsPanel: React.FC<Props> = ({
         interventionZones: project?.interventionZones ?? [],
         currency: project?.currency || 'MRU',
       },
-      phases: (phases || []).map((p: any) => ({
+      phases: (Array.isArray(phases) ? phases.filter(Boolean) : []).map((p: any) => ({
         id: p.id,
         name: p.phase ?? p.phase_name ?? p.name,
         weight: p.weight ?? p.weight_percentage,

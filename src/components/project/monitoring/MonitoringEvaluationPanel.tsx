@@ -52,11 +52,13 @@ export interface MonitoringEvalPhaseInput {
 
 interface Props {
   scope: "project" | "phase";
-  project: ProjectDetailDTO;
-  phases: MonitoringEvalPhaseInput[];
+  /** Peut être `undefined` pendant le chargement du détail projet. */
+  project?: ProjectDetailDTO | null;
+  phases?: MonitoringEvalPhaseInput[];
   /** Phase ciblée en mode scope="phase" */
   phaseId?: string;
 }
+
 
 const severityColor = (s: DeviationResult["severity"]) => {
   switch (s) {
@@ -90,9 +92,17 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
   phases,
   phaseId,
 }) => {
+  const safePhases = useMemo<MonitoringEvalPhaseInput[]>(
+    () => (Array.isArray(phases) ? phases.filter((p) => p && p.id) : []),
+    [phases],
+  );
+
   const targetPhases = useMemo(
-    () => (scope === "phase" && phaseId ? phases.filter((p) => p.id === phaseId) : phases),
-    [scope, phaseId, phases],
+    () =>
+      scope === "phase" && phaseId
+        ? safePhases.filter((p) => p.id === phaseId)
+        : safePhases,
+    [scope, phaseId, safePhases],
   );
 
   // EVM / health — SOURCE UNIQUE : ProjectMetricsOrchestrator (mêmes valeurs
@@ -102,15 +112,15 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
     () =>
       ProjectMetricsOrchestrator.compute({
         project: {
-          id: project.id,
-          title: project.title,
-          budget: project.budget ?? 0,
-          progress: project.progress ?? 0,
-          startDate: project.startDate ?? null,
-          endDate: project.endDate ?? null,
-          currency: (project as any).currency || 'MRU',
+          id: project?.id ?? "",
+          title: project?.title ?? "",
+          budget: project?.budget ?? 0,
+          progress: project?.progress ?? 0,
+          startDate: project?.startDate ?? null,
+          endDate: project?.endDate ?? null,
+          currency: (project as any)?.currency || 'MRU',
         },
-        phases: phases.map((p) => ({
+        phases: safePhases.map((p) => ({
           id: p.id,
           name: p.name,
           weight: undefined,
@@ -122,7 +132,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
           status: p.status,
         })),
       }),
-    [project, phases],
+    [project, safePhases],
   );
   const evm = metrics.evm;
   const health = metrics.health;
@@ -152,11 +162,14 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
     if (rows.length === 0) {
       return [
         {
-          phase: { id: project.id, name: `${project.title} (projet — aucune phase)` },
+          phase: {
+            id: project?.id ?? "project",
+            name: `${project?.title ?? "Projet"} (projet — aucune phase)`,
+          },
           results: DeviationEngine.compute(
             {
-              plannedEndDate: project.endDate ?? null,
-              actualEndDate: project.endDate ?? null,
+              plannedEndDate: project?.endDate ?? null,
+              actualEndDate: project?.endDate ?? null,
               plannedBudget: metrics.budget || null,
               actualCost: metrics.actualCost || null,
               plannedProgress: metrics.evm.plannedProgress ?? null,
@@ -169,6 +182,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
     }
     return rows;
   }, [targetPhases, project, metrics]);
+
 
   const hasAnyDeviation = phaseDeviations.some((p) => p.results.length > 0);
 
