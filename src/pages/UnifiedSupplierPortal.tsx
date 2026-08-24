@@ -90,6 +90,9 @@ import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsP
 
 // ✅ Import du GED centralisé (DocumentHub)
 import { DocumentHub } from "@/components/documents/hub/DocumentHub";
+import { SupplierContractsPanel } from "@/components/suppliers/SupplierContractsPanel";
+import { SupplierQuoteStatusPanel } from "@/components/suppliers/SupplierQuoteStatusPanel";
+
 import type { DocumentHubContract, DocumentItem, UploadInput } from "@/components/documents/hub/types";
 
 // ✅ Définition du contrat GED pour le fournisseur
@@ -694,7 +697,9 @@ const UnifiedSupplierPortal = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onSelect={() => handleTabChange('contracts')}><FileText className="mr-2 h-4 w-4" />{t('supplier.contracts.tab') || 'Contrats'}</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handleTabChange('upload')}><Upload className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.telecharger')}</DropdownMenuItem>
+
                   <DropdownMenuItem onSelect={() => handleTabChange('payments')}><CreditCard className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.paiements')}</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handleTabChange('tasks')}><ClipboardCheck className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.taches')}</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handleTabChange('inspections')}><FileCheck className="mr-2 h-4 w-4" />{t('auto.unifiedsupplierportal.inspections')}</DropdownMenuItem>
@@ -734,7 +739,8 @@ const UnifiedSupplierPortal = () => {
             </TabsContent>
 
             {/* Devis Tab */}
-            <TabsContent value="devis">
+            <TabsContent value="devis" className="space-y-4">
+              <SupplierQuoteStatusPanel supplierId={supplierProfile?.id} />
               {supplierProfile?.id ? (
                 selectedBidTenderId ? (
                   <DqeWorkspace
@@ -751,6 +757,12 @@ const UnifiedSupplierPortal = () => {
                 <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground"><T k="auto.unifiedsupplierportal.profil_fournisseur_requis" fallback="Profil fournisseur requis." /></p></CardContent></Card>
               )}
             </TabsContent>
+
+            {/* Contracts Tab – contrats signés / bons de commande */}
+            <TabsContent value="contracts">
+              <SupplierContractsPanel supplierId={supplierProfile?.id} />
+            </TabsContent>
+
 
             {/* Upload Tab – Conservé pour compatibilité / téléchargement rapide */}
             <TabsContent value="upload">

@@ -29,6 +29,8 @@ import { ConsultantValidationPanel } from '@/components/invoices/ConsultantValid
 import { AssociatedPaymentsPanel } from '@/components/common/AssociatedPaymentsPanel';
 import { MonitoringDocumentsPanel } from '@/components/documents/panels/MonitoringDocumentsPanel';
 import ConsultantProgressValidation from './components/ConsultantProgressValidation';
+import ConsultantInspectionsPanel from './components/ConsultantInspectionsPanel';
+
 import ConsultantAlertsPanel from './components/ConsultantAlertsPanel';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
@@ -153,6 +155,11 @@ const ConsultantDashboard = () => {
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               <T k="auto.consultantdashboard.avancement" fallback="Avancement" />
             </TabsTrigger>
+            <TabsTrigger value="inspections" className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              <T k="consultant.inspections.tab" fallback="Inspections" />
+            </TabsTrigger>
+
             <TabsTrigger value="invoices" className="flex items-center gap-2">
               <FileText className="h-4 w-4" aria-hidden="true" />
               <T k="auto.consultantdashboard.decomptes" fallback="Décomptes" />
@@ -175,9 +182,14 @@ const ConsultantDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="inspections">
+            <ConsultantInspectionsPanel projects={projects} />
+          </TabsContent>
+
           <TabsContent value="tenders">
             <ConsultantTendersPanel />
           </TabsContent>
+
 
           <TabsContent value="validation">
             <ConsultantProgressValidation projects={projects} />
