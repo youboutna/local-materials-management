@@ -737,7 +737,8 @@ const UnifiedSupplierPortal = () => {
             </TabsContent>
 
             {/* Devis Tab */}
-            <TabsContent value="devis">
+            <TabsContent value="devis" className="space-y-4">
+              <SupplierQuoteStatusPanel supplierId={supplierProfile?.id} />
               {supplierProfile?.id ? (
                 selectedBidTenderId ? (
                   <DqeWorkspace
@@ -754,6 +755,12 @@ const UnifiedSupplierPortal = () => {
                 <Card><CardContent className="py-6"><p className="text-sm text-muted-foreground"><T k="auto.unifiedsupplierportal.profil_fournisseur_requis" fallback="Profil fournisseur requis." /></p></CardContent></Card>
               )}
             </TabsContent>
+
+            {/* Contracts Tab – contrats signés / bons de commande */}
+            <TabsContent value="contracts">
+              <SupplierContractsPanel supplierId={supplierProfile?.id} />
+            </TabsContent>
+
 
             {/* Upload Tab – Conservé pour compatibilité / téléchargement rapide */}
             <TabsContent value="upload">
