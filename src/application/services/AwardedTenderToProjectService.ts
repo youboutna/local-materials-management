@@ -13,6 +13,7 @@ import type { DqeMappingConfig } from '@/config/referentials/tender/dqe-mapping.
 import type { TenderEstimateItemDTO } from '@/dtos/entities/TenderEstimateDTO';
 import { AwardedTenderTransformer, type AwardedProjectHydrationPayload } from '@/dtos/transforms/AwardedTenderTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getContractService } from './ContractService';
 import { TenderEstimateService } from './TenderEstimateService';
 
 export interface HydrateFromWinnerRequest {
