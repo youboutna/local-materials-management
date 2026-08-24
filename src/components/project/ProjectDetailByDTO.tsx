@@ -47,6 +47,9 @@ import { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { PhaseDTO } from "@/dtos/entities/PhaseDTO";
 import { ProjectDetailDTO, ProjectSummaryDTO } from "@/dtos/entities/ProjectDTO";
 import { useProjectPhasesHex } from "@/hooks/hexagonal";
+import { useDocumentsByProject } from "@/hooks/hexagonal/useDocumentsHex";
+import { useMilestonesHex } from "@/hooks/hexagonal/useMilestonesHex";
+
 import { toast } from "@/hooks/use-toast";
 import { useProjectMetrics } from "@/hooks/useProjectMetrics";
 import { useProjectFinancialsHex } from "@/hooks/hexagonal/useProjectFinancialsHex";
