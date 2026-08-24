@@ -155,6 +155,11 @@ const ConsultantDashboard = () => {
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               <T k="auto.consultantdashboard.avancement" fallback="Avancement" />
             </TabsTrigger>
+            <TabsTrigger value="inspections" className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              <T k="consultant.inspections.tab" fallback="Inspections" />
+            </TabsTrigger>
+
             <TabsTrigger value="invoices" className="flex items-center gap-2">
               <FileText className="h-4 w-4" aria-hidden="true" />
               <T k="auto.consultantdashboard.decomptes" fallback="Décomptes" />
