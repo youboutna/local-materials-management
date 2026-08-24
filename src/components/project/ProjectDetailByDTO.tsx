@@ -721,15 +721,16 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
       inspectionsCount: inspectionsSource.length,
       documentsCount: documentsData.length,
       risks: risksSource as any[],
-      milestones: ((projectDetail as any)?.milestones ?? []).map((m: any) => ({
+      milestones: milestonesSource.map((m: any) => ({
         id: m.id,
         name: m.title,
         status: m.status,
-        progress: m.progress,
+        progress: m.progress ?? (m.status === 'completed' ? 100 : 0),
         dueDate: m.targetDate,
       })),
     };
-  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, projectDetail, totalPaymentsSpent, actualCostBreakdown, doctrineFinancials]);
+  }, [project, computedPhases, interventionZones, inspectionsSource, documentsData, risksSource, milestonesSource, totalPaymentsSpent, actualCostBreakdown, doctrineFinancials]);
+
 
   const metrics = useProjectMetrics(metricsInput);
 
