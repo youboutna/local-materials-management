@@ -29,6 +29,8 @@ import { ConsultantValidationPanel } from '@/components/invoices/ConsultantValid
 import { AssociatedPaymentsPanel } from '@/components/common/AssociatedPaymentsPanel';
 import { MonitoringDocumentsPanel } from '@/components/documents/panels/MonitoringDocumentsPanel';
 import ConsultantProgressValidation from './components/ConsultantProgressValidation';
+import ConsultantInspectionsPanel from './components/ConsultantInspectionsPanel';
+
 import ConsultantAlertsPanel from './components/ConsultantAlertsPanel';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
