@@ -39,7 +39,7 @@ interface QuantityTakeoffsProps {
 
 const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeoffsProps) => {
   const { t } = useLanguage();
-  const syncToBoq = useQuantityTakeoffSync(projectId);
+  const syncToBoq = useQuantityTakeoffSync(projectId, phaseId);
   const [computing, setComputing] = useState(false);
 
   /**
