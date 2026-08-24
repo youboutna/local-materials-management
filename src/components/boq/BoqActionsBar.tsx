@@ -64,7 +64,9 @@ interface Props {
 export const BoqActionsBar: React.FC<Props> = ({
   ctx, lines, projectName, recipientEmail, disabled = false,
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
+  primarySlot, workflowSlot, badgesSlot,
 }) => {
+
 
   const { toast } = useToast();
   const { t } = useI18n();
