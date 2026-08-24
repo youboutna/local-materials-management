@@ -43,6 +43,13 @@ export class ContractService {
     return this.repository.findByTenderId(tenderId);
   }
 
+  /** Contrats signés visibles par un prestataire (portail fournisseur). */
+  async listBySupplier(supplierId: string): Promise<ContractRecordDTO[]> {
+    if (!supplierId) return [];
+    return this.repository.findBySupplierId(supplierId);
+  }
+
+
   /**
    * Crée la trace contractuelle d'une attribution. Idempotent par appel d'offres :
    * si un contrat existe déjà pour ce tender, il est renvoyé tel quel.
