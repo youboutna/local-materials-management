@@ -51,6 +51,7 @@ import { SupabaseMonitoringAdapter } from '@/infrastructure/adapters/supabase/Su
 import { SupabaseNotificationAdapter } from '@/infrastructure/adapters/supabase/SupabaseNotificationAdapter';
 import { SupabaseParsedInvoiceAdapter } from '@/infrastructure/adapters/supabase/SupabaseParsedInvoiceAdapter';
 import { SupabasePaymentAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentAdapter';
+import { SupabaseDecompteAdapter } from '@/infrastructure/adapters/supabase/SupabaseDecompteAdapter';
 import { SupabasePaymentBlockAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentBlockAdapter';
 import { SupabasePaymentControlActionAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentControlActionAdapter';
 import { SupabasePhaseAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseAdapter';
@@ -147,6 +148,7 @@ import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlocki
 import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
 import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
+import { IDecompteRepository } from '@/domain/repositories/IDecompteRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
@@ -506,6 +508,13 @@ export class RepositoryFactory {
     if (registry.payment) return registry.payment;
     registry.payment = new SupabasePaymentAdapter();
     return registry.payment;
+  }
+
+  // ---------- DECOMPTE (factures acceptées = dépensé réel) ----------
+  static getDecompteRepository(): IDecompteRepository {
+    if (registry.decompte) return registry.decompte;
+    registry.decompte = new SupabaseDecompteAdapter();
+    return registry.decompte;
   }
 
   // ---------- TENDER ----------
