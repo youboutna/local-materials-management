@@ -4,7 +4,10 @@
  */
 
 import { ProjectStakeholderEntity } from '@/domain/entities/ProjectStakeholder';
-import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
+import {
+  IProjectStakeholderRepository,
+  type CreateProjectStakeholderRecord,
+} from '@/domain/repositories/IProjectStakeholderRepository';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { normalizePostgrestError } from './postgrestError';
 import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
@@ -137,7 +140,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
     return (data || []).map(this.mapToEntity);
   }
 
-  async create(stakeholder: Omit<ProjectStakeholderEntity, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProjectStakeholderEntity> {
+  async create(stakeholder: CreateProjectStakeholderRecord): Promise<ProjectStakeholderEntity> {
     const entityData = this.mapToSupabase(stakeholder);
     // Colonnes NOT NULL en base : on garantit des valeurs par défaut cohérentes.
     if (!entityData.stakeholder_entity_type) {
@@ -321,7 +324,7 @@ export class SupabaseProjectStakeholderAdapter implements IProjectStakeholderRep
     });
   }
 
-  private mapToSupabase(entity: Partial<ProjectStakeholderEntity>): ProjectStakeholderInsertData {
+  private mapToSupabase(entity: Partial<ProjectStakeholderEntity> | CreateProjectStakeholderRecord): ProjectStakeholderInsertData {
     const row: ProjectStakeholderInsertData = { updated_at: new Date().toISOString() };
     if (entity.projectId !== undefined) row.project_id = entity.projectId;
     if (entity.phaseId !== undefined) row.phase_id = entity.phaseId;

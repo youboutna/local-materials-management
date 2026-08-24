@@ -9,7 +9,7 @@ import {
   CONSULTANT_DESIGNATION_REFERENTIAL,
   canDesignateConsultant,
 } from '@/config/referentials/consultant-designation.referential';
-import type { ProjectConsultantDTO } from '@/application/services/ProjectConsultantService';
+import type { ConsultantCandidateDTO, ProjectConsultantDTO } from '@/dtos/entities/ProjectConsultantDTO';
 
 export function useProjectConsultantHex(projectId?: string) {
   const queryClient = useQueryClient();
@@ -24,22 +24,36 @@ export function useProjectConsultantHex(projectId?: string) {
       const { getProjectConsultantService } = await import(
         '@/application/services/ProjectConsultantService'
       );
-      return getProjectConsultantService().getProjectStakeholders(projectId!);
+      if (!projectId) return [];
+      return getProjectConsultantService().getProjectStakeholders(projectId);
+    },
+  });
+
+  const { data: candidates = [], isLoading: areCandidatesLoading } = useQuery<ConsultantCandidateDTO[]>({
+    queryKey: ['project-consultant-candidates', projectId],
+    enabled: !!projectId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { getProjectConsultantService } = await import('@/application/services/ProjectConsultantService');
+      return getProjectConsultantService().getEligibleCandidates(projectId);
     },
   });
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['project-consultant-stakeholders', projectId] });
+    queryClient.invalidateQueries({ queryKey: ['project-consultant-candidates', projectId] });
     queryClient.invalidateQueries({ queryKey: ['stakeholders'] });
     queryClient.invalidateQueries({ queryKey: ['consultant-projects'] });
   };
 
   const designateMutation = useMutation({
-    mutationFn: async (stakeholderId: string) => {
+    mutationFn: async (candidate: ConsultantCandidateDTO) => {
       const { getProjectConsultantService } = await import(
         '@/application/services/ProjectConsultantService'
       );
-      await getProjectConsultantService().designateConsultant(projectId!, stakeholderId);
+      if (!projectId) throw new Error('Projet requis');
+      await getProjectConsultantService().designateConsultant(projectId, candidate);
     },
   });
 
@@ -54,13 +68,13 @@ export function useProjectConsultantHex(projectId?: string) {
 
   const labels = CONSULTANT_DESIGNATION_REFERENTIAL.labels.fr;
 
-  const designateConsultantAction = async (stakeholderId: string) => {
+  const designateConsultantAction = async (candidate: ConsultantCandidateDTO) => {
     if (!canDesignate) {
       toast({ title: 'Action non autorisée', description: labels.unauthorized, variant: 'destructive' });
       return false;
     }
     try {
-      await designateMutation.mutateAsync(stakeholderId);
+      await designateMutation.mutateAsync(candidate);
       invalidate();
       toast({ title: labels.badge, description: 'Consultant désigné avec succès.' });
       return true;
@@ -96,8 +110,9 @@ export function useProjectConsultantHex(projectId?: string) {
 
   return {
     stakeholders,
+    candidates,
     consultants: stakeholders.filter((s) => s.isConsultant),
-    isLoading,
+    isLoading: isLoading || areCandidatesLoading,
     canDesignate,
     labels,
     designateConsultant: designateConsultantAction,

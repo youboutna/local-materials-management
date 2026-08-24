@@ -4,7 +4,7 @@
  * (employé, organisation, fournisseur) comme consultant du projet.
  */
 import React, { useMemo, useState } from 'react';
-import { UserCheck, ShieldCheck, X, ChevronsUpDown, Check, Building2, Truck, User } from 'lucide-react';
+import { UserCheck, ShieldCheck, X, ChevronsUpDown, Check, Building2, Truck, User, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantHex';
-import type { ProjectConsultantDTO } from '@/application/services/ProjectConsultantService';
+import type { ConsultantCandidateDTO, ConsultantCandidateKind } from '@/dtos/entities/ProjectConsultantDTO';
 import { T } from '@/components/i18n/T';
 
 interface ProjectConsultantDesignationProps {
@@ -28,25 +28,13 @@ interface ProjectConsultantDesignationProps {
   className?: string;
 }
 
-type EntityKind = 'organization' | 'supplier' | 'employee';
+type EntityKind = ConsultantCandidateKind;
 
 const KIND_META: Record<EntityKind, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
   organization: { label: 'Organisations', icon: Building2 },
   supplier: { label: 'Fournisseurs', icon: Truck },
   employee: { label: 'Employés', icon: User },
-};
-
-/** Classe une partie prenante selon son type d'entité (référentiel métier stakeholders). */
-const classify = (s: ProjectConsultantDTO): EntityKind => {
-  const hay = `${s.entityType} ${s.businessRole}`.toLowerCase();
-  if (s.employeeId || hay.includes('employee') || hay.includes('employé') || hay.includes('agent')) {
-    return 'employee';
-  }
-  if (hay.includes('supplier') || hay.includes('vendor') || hay.includes('fournisseur') || hay.includes('contractor')) {
-    return 'supplier';
-  }
-  if (s.supplierId) return 'supplier';
-  return 'organization';
+  stakeholder: { label: 'Parties prenantes du projet', icon: Users },
 };
 
 const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> = ({
@@ -55,6 +43,7 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
 }) => {
   const {
     stakeholders,
+    candidates,
     consultants,
     isLoading,
     canDesignate,
@@ -68,28 +57,28 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
   const [open, setOpen] = useState(false);
   const [kindFilter, setKindFilter] = useState<'all' | EntityKind>('all');
 
-  const eligible = useMemo(() => stakeholders.filter((s) => !s.isConsultant), [stakeholders]);
-
-  /** Regroupement par type d'entité, filtré par l'onglet actif. */
+  /** Regroupement des sources réelles, sans dupliquer les entités déjà rattachées. */
   const groups = useMemo(() => {
-    const base: Record<EntityKind, ProjectConsultantDTO[]> = {
+    const base: Record<EntityKind, ConsultantCandidateDTO[]> = {
       organization: [],
       supplier: [],
       employee: [],
+      stakeholder: [],
     };
-    for (const s of eligible) base[classify(s)].push(s);
+    for (const candidate of candidates) base[candidate.kind].push(candidate);
     (Object.keys(base) as EntityKind[]).forEach((k) =>
       base[k].sort((a, b) => a.name.localeCompare(b.name, 'fr')),
     );
     if (kindFilter === 'all') return base;
-    return { organization: [], supplier: [], employee: [], [kindFilter]: base[kindFilter] } as Record<
+    return { stakeholder: [], organization: [], supplier: [], employee: [], [kindFilter]: base[kindFilter] } as Record<
       EntityKind,
-      ProjectConsultantDTO[]
+      ConsultantCandidateDTO[]
     >;
-  }, [eligible, kindFilter]);
+  }, [candidates, kindFilter]);
 
-  const selectedLabel = eligible.find((s) => s.stakeholderId === selected)?.name ?? '';
-  const visibleCount = (Object.values(groups) as ProjectConsultantDTO[][]).reduce((n, g) => n + g.length, 0);
+  const selectedCandidate = candidates.find((candidate) => candidate.key === selected);
+  const selectedLabel = selectedCandidate?.name ?? '';
+  const visibleCount = (Object.values(groups) as ConsultantCandidateDTO[][]).reduce((n, g) => n + g.length, 0);
 
   return (
     <Card className={className}>
@@ -145,8 +134,9 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
         {canDesignate ? (
           <div className="space-y-2">
             <Tabs value={kindFilter} onValueChange={(v) => setKindFilter(v as 'all' | EntityKind)}>
-              <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto sm:grid sm:grid-cols-4">
+              <TabsList className="flex w-full flex-wrap justify-start gap-1 h-auto sm:grid sm:grid-cols-5">
                 <TabsTrigger value="all" className="text-xs"><T k="auto.projectconsultantdesignation.tous" fallback="Tous" /></TabsTrigger>
+                <TabsTrigger value="stakeholder" className="text-xs"><T k="auto.projectconsultantdesignation.stakeholders" fallback="Parties prenantes" /></TabsTrigger>
                 <TabsTrigger value="organization" className="text-xs"><T k="auto.projectconsultantdesignation.organisations" fallback="Organisations" /></TabsTrigger>
                 <TabsTrigger value="supplier" className="text-xs"><T k="auto.projectconsultantdesignation.fournisseurs" fallback="Fournisseurs" /></TabsTrigger>
                 <TabsTrigger value="employee" className="text-xs"><T k="auto.projectconsultantdesignation.employes" fallback="Employés" /></TabsTrigger>
@@ -186,10 +176,10 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
                           <CommandGroup key={kind} heading={KIND_META[kind].label}>
                             {items.map((s) => (
                               <CommandItem
-                                key={s.stakeholderId}
-                                value={`${s.name} ${s.businessRole} ${s.entityType}`}
+                                key={s.key}
+                                value={`${s.name} ${s.detail ?? ''} ${s.email ?? ''}`}
                                 onSelect={() => {
-                                  setSelected(s.stakeholderId);
+                                  setSelected(s.key);
                                   setOpen(false);
                                 }}
                               >
@@ -197,10 +187,10 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm truncate">{s.name}</p>
                                   <p className="text-xs text-muted-foreground truncate">
-                                    {s.businessRole || s.entityType || 'partie prenante'}
+                                    {s.detail || s.email || 'Partie prenante'}
                                   </p>
                                 </div>
-                                {selected === s.stakeholderId && (
+                                {selected === s.key && (
                                   <Check className="h-4 w-4 text-primary shrink-0" />
                                 )}
                               </CommandItem>
@@ -215,7 +205,8 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
               <Button
                 disabled={!selected || isPending || !projectId}
                 onClick={async () => {
-                  const ok = await designateConsultant(selected);
+                  if (!selectedCandidate) return;
+                  const ok = await designateConsultant(selectedCandidate);
                   if (ok) setSelected('');
                 }}
               >

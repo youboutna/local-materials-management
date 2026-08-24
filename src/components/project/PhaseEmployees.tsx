@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePhaseEmployeesHex } from '@/hooks/hexagonal/usePhaseEmployeesHex';
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
-import { useSuppliersHex } from '@/hooks/hexagonal/useSuppliersHex';
 import { Edit2, Plus, Star, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { T } from '@/components/i18n/T';
@@ -30,6 +29,7 @@ interface PhaseEmployeesProps {
 }
 
 interface EmployeeFormState {
+  employeeId: string;
   employeeName: string;
   employeeRole: string;
   employeeContact: string;
@@ -40,6 +40,7 @@ interface EmployeeFormState {
 }
 
 const EMPTY_FORM: EmployeeFormState = {
+  employeeId: '',
   employeeName: '',
   employeeRole: '',
   employeeContact: '',
@@ -53,7 +54,6 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<EmployeeFormState>(EMPTY_FORM);
-  const [memberType, setMemberType] = useState<'employee' | 'supplier'>('employee');
 
   const {
     employees,
@@ -67,15 +67,14 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
   } = usePhaseEmployeesHex(phaseId);
 
   const { data: employeesList = [] } = useActiveEmployeesHex();
-  const { suppliers = [] } = useSuppliersHex();
 
   const resetForm = () => {
     setFormData(EMPTY_FORM);
     setEditingId(null);
-    setMemberType('employee');
   };
 
   const toInput = (data: EmployeeFormState) => ({
+    employeeId: data.employeeId || null,
     employeeName: data.employeeName,
     employeeRole: data.employeeRole,
     employeeContact: data.employeeContact || null,
@@ -98,6 +97,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
 
   const startEdit = (employee: (typeof employees)[number]) => {
     setFormData({
+      employeeId: employee.employeeId || '',
       employeeName: employee.employeeName,
       employeeRole: employee.employeeRole,
       employeeContact: employee.employeeContact || '',
@@ -147,59 +147,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      checked={memberType === 'employee'}
-                      onChange={() => {
-                        setMemberType('employee');
-                        setFormData({ ...formData, employeeName: '', employeeRole: '', employeeContact: '' });
-                      }}
-                    />
-                    <T k="auto.phaseemployees.employe_interne" fallback="Employé interne" />
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      checked={memberType === 'supplier'}
-                      onChange={() => {
-                        setMemberType('supplier');
-                        setFormData({ ...formData, employeeName: '', employeeRole: '', employeeContact: '' });
-                      }}
-                    />
-                    Consultant externe / Fournisseur
-                  </label>
-                </div>
-
-                {memberType === 'supplier' ? (
-                  <div>
-                    <Label htmlFor="supplier_select">Fournisseur / consultant *</Label>
-                    <Input
-                      id="supplier_select"
-                      value={formData.employeeName}
-                      list="phase-supplier-list"
-                      autoComplete="off"
-                      required
-                      onChange={(e) => {
-                        const supplier = suppliers.find((s) => s.name === e.target.value);
-                        setFormData({
-                          ...formData,
-                          employeeName: supplier?.name || e.target.value,
-                          employeeRole: formData.employeeRole || 'Consultant externe',
-                          employeeContact:
-                            supplier?.contactPerson || supplier?.email || supplier?.phone || formData.employeeContact,
-                        });
-                      }}
-                    />
-                    <datalist id="phase-supplier-list">
-                      {suppliers.map((s) => (
-                        <option key={s.id} value={s.name} />
-                      ))}
-                    </datalist>
-                  </div>
-                ) : (
-                  <div>
+                <div>
                     <Label htmlFor="employee_name">Nom complet *</Label>
                     <Input
                       id="employee_name"
@@ -211,6 +159,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                         const emp = employeesList.find((item) => item.full_name === e.target.value);
                         setFormData({
                           ...formData,
+                           employeeId: emp?.id || '',
                           employeeName: e.target.value,
                           employeeRole: emp?.position || formData.employeeRole,
                           employeeContact: formData.employeeContact,
@@ -222,8 +171,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                         <option key={emp.id} value={emp.full_name} />
                       ))}
                     </datalist>
-                  </div>
-                )}
+                </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>

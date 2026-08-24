@@ -6,6 +6,7 @@
 export interface PhaseEmployeeRow {
   id: string;
   phaseId: string;
+  employeeId: string | null;
   employeeName: string;
   employeeRole: string;
   employeeContact: string | null;
@@ -19,6 +20,7 @@ export interface PhaseEmployeeRow {
 
 export interface PhaseEmployeeInput {
   phaseId: string;
+  employeeId?: string | null;
   employeeName: string;
   employeeRole: string;
   employeeContact?: string | null;
