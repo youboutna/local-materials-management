@@ -52,11 +52,13 @@ export interface MonitoringEvalPhaseInput {
 
 interface Props {
   scope: "project" | "phase";
-  project: ProjectDetailDTO;
-  phases: MonitoringEvalPhaseInput[];
+  /** Peut être `undefined` pendant le chargement du détail projet. */
+  project?: ProjectDetailDTO | null;
+  phases?: MonitoringEvalPhaseInput[];
   /** Phase ciblée en mode scope="phase" */
   phaseId?: string;
 }
+
 
 const severityColor = (s: DeviationResult["severity"]) => {
   switch (s) {
