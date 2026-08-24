@@ -589,6 +589,23 @@ const PhaseDetail: React.FC = () => {
           </TabsContent>
         </Tabs>
 
+        <PhaseEditWorkflowDialog
+          isOpen={isWorkflowEditing}
+          onOpenChange={setIsWorkflowEditing}
+          projectId={projectId!}
+          phaseId={phaseId!}
+          value={editDraft}
+          isSaving={isUpdatingPhase}
+          summary={{
+            team: metrics.totalEmployees,
+            documents: metrics.totalDocuments,
+            payments: metrics.totalPayments,
+            tasks: metrics.totalTasks,
+            completedTasks: metrics.completedTasks,
+          }}
+          onSave={handleWorkflowSave}
+        />
+
         <PhaseEditDialog
           isOpen={isEditing}
           onOpenChange={setIsEditing}
