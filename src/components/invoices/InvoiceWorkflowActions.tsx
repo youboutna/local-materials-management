@@ -96,7 +96,9 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   contractAmount,
   alreadyInvoiced,
   actualProgress,
+  compact = false,
   onTransformed,
+
 }) => {
   const { toast } = useToast();
   const { t, language, translateStatus } = useI18n();
