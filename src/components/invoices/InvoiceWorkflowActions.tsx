@@ -67,7 +67,14 @@ interface Props {
   alreadyInvoiced?: number | null;
   /** Avancement physique constaté, pour le calcul d'écarts (T12). */
   actualProgress?: number | null;
+  /**
+   * Mode compact : le menu « Document » et l'envoi email ne sont pas dupliqués
+   * (ils appartiennent au groupe 1 de la barre DQE). Seuls Factur-X, le statut
+   * et la transformation restent affichés.
+   */
+  compact?: boolean;
   onTransformed?: (documentId: string, type: InvoiceDocumentType) => void;
+
 }
 
 export const InvoiceWorkflowActions: React.FC<Props> = ({
