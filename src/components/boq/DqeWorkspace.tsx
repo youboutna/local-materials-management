@@ -31,6 +31,8 @@ import { getBoqDispatchService } from '@/application/services/boq/BoqDispatchSer
 import { toast } from '@/hooks/use-toast';
 import type { ReferentialType } from '@/config/referentials';
 import { T } from '@/components/i18n/T';
+import { Badge } from '@/components/ui/badge';
+import { useProcurementConsistency } from '@/hooks/hexagonal/useProcurementChainHex';
 
 interface Props {
   routeContext: BoqRouteContext;
@@ -223,6 +225,14 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   });
   const noActionableLines = actionableLines.length === 0;
 
+  // Cohérence de la chaîne « DQE → planification → appel d'offres » : signalée
+  // en continu (G3 informations) plutôt que sur audit manuel.
+  const consistency = useProcurementConsistency(
+    props.routeContext === 'project-dqe' ? props.projectId : undefined,
+    actionableLines,
+    selectedDocumentId,
+  );
+
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
@@ -247,6 +257,26 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             onSubmitInvoice={props.onSubmitInvoice}
             onDistribute={props.onDistribute}
             onPublish={props.onPublish}
+            badgesSlot={
+              consistency.report ? (
+                <>
+                  <Badge variant={consistency.report.planningFed ? 'secondary' : 'outline'}>
+                    <T k="dqe.badge.planning_fed" fallback="Planification alimentée" />
+                    {consistency.report.planningFed ? ' ✓' : ' —'}
+                  </Badge>
+                  <Badge variant={consistency.report.tenderPublished ? 'secondary' : 'outline'}>
+                    <T k="dqe.badge.tender_published" fallback="Appel d'offres publié" />
+                    {consistency.report.tenderPublished ? ' ✓' : ' —'}
+                  </Badge>
+                  {consistency.report.issues.length > 0 && (
+                    <Badge variant="destructive" title={consistency.report.issues.join(' · ')}>
+                      <T k="dqe.badge.chain_issues" fallback="Chaîne à resynchroniser" />
+                      {` (${consistency.report.issues.length})`}
+                    </Badge>
+                  )}
+                </>
+              ) : null
+            }
             workflowSlot={
               <InvoiceWorkflowActions
                 compact
