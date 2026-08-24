@@ -165,6 +165,22 @@ export class ProjectConsultantService {
       stakeholderType: CONSULTANT_DESIGNATION_REFERENTIAL.fallbackCode,
     });
   }
+
+  /** Projets où l'entité est explicitement rattachée comme consultant. */
+  async getConsultantProjectIds(entityId: string): Promise<string[]> {
+    if (!entityId) return [];
+    const [employeeLinks, supplierLinks, directLink] = await Promise.all([
+      this.stakeholderRepository.findByEmployeeId(entityId),
+      this.stakeholderRepository.findBySupplierId(entityId),
+      this.stakeholderRepository.findById(entityId),
+    ]);
+    const links = [...employeeLinks, ...supplierLinks, ...(directLink ? [directLink] : [])];
+    return Array.from(new Set(
+      links
+        .filter((link) => link.isActive && isConsultantBusinessCode(link.stakeholderType))
+        .map((link) => link.projectId),
+    ));
+  }
 }
 
 let instance: ProjectConsultantService | null = null;

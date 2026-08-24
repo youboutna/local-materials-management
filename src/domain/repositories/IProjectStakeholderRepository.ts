@@ -21,6 +21,11 @@ export interface CreateProjectStakeholderRecord {
   roleDescription?: string | null;
   responsibilities?: string[] | null;
   isActive?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  hourlyRate?: number | null;
+  contractType?: string | null;
+  notes?: string | null;
 }
 
 export interface IProjectStakeholderRepository {
