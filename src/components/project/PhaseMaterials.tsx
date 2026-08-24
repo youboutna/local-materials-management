@@ -152,14 +152,15 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Matériaux de la phase ({phaseMaterials?.length || 0})
+            {title ?? 'Matériaux de la phase'} ({phaseMaterials?.length || 0})
           </CardTitle>
           <Dialog open={isAdding} onOpenChange={setIsAdding}>
             <DialogTrigger asChild>
-              <Button>
+              <Button size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                <T k="auto.phasematerials.ajouter_un_materiau" fallback="Ajouter un matériau" />
+                {addLabel ?? <T k="auto.phasematerials.ajouter_un_materiau" fallback="Ajouter un matériau" />}
               </Button>
+
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
