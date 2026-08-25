@@ -193,6 +193,18 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     documentId: selectedDocumentId ?? undefined,
   });
 
+  // Les brouillons persistés sont actionnables : le transfert métier les fait
+  // passer à l'état soumis. Seules les lignes locales non sauvegardées sont exclues.
+  const actionableLines = doc.lines ?? [];
+
+  // Cohérence de la chaîne « DQE → planification → appel d'offres » : hook appelé
+  // inconditionnellement (avant toute sortie anticipée) pour un ordre de hooks stable.
+  const consistency = useProcurementConsistency(
+    props.routeContext === 'project-dqe' ? props.projectId : undefined,
+    actionableLines,
+    selectedDocumentId,
+  );
+
   // ------------------------------------------------------------- Vue Liste
   if (!selectedDocumentId) {
     return (
@@ -213,9 +225,6 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   }
 
   // ------------------------------------------------------------ Vue Détail
-  // Les brouillons persistés sont actionnables : le transfert métier les fait
-  // passer à l'état soumis. Seules les lignes locales non sauvegardées sont exclues.
-  const actionableLines = doc.lines ?? [];
   // Étape documentaire courante déduite du référentiel via le `dqeType` des lignes.
   // La `source` BOQ fait foi : un DQE reste un DQE (jamais un devis).
   const invoiceDef = resolveInvoiceDocumentType({
@@ -225,13 +234,6 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   });
   const noActionableLines = actionableLines.length === 0;
 
-  // Cohérence de la chaîne « DQE → planification → appel d'offres » : signalée
-  // en continu (G3 informations) plutôt que sur audit manuel.
-  const consistency = useProcurementConsistency(
-    props.routeContext === 'project-dqe' ? props.projectId : undefined,
-    actionableLines,
-    selectedDocumentId,
-  );
 
   return (
     <div className="space-y-4">
