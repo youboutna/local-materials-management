@@ -89,6 +89,12 @@ const PhaseDetail: React.FC = () => {
 
   const vm = useMemo(() => (phase ? toPhaseViewModel(phase as unknown as Record<string, unknown>) : null), [phase]);
 
+  // Doctrine : dépensé = Σ décomptes validés (factures acceptées) sur la phase.
+  // Hook appelé inconditionnellement (avant les sorties anticipées de rendu).
+  const { summary: decompteSummary } = usePhaseDecomptesHex(phaseId, {
+    initialBudget: (vm?.budget as number | undefined) ?? 0,
+  });
+
   const stage = useMemo(
     () => (vm ? getPhaseLifecycleStage({ type: vm.type, status: vm.status }) : 'PLANIFICATION'),
     [vm]
@@ -202,10 +208,6 @@ const PhaseDetail: React.FC = () => {
   });
   const progress = progressResult.value;
 
-  // Doctrine : dépensé = Σ décomptes validés (factures acceptées) sur la phase
-  const { summary: decompteSummary } = usePhaseDecomptesHex(phaseId, {
-    initialBudget: storedBudget ?? 0,
-  });
   const decomptedSpent = decompteSummary?.decomptedValidated ?? 0;
 
   const financials = PhaseMetricsService.computeFinancials({
