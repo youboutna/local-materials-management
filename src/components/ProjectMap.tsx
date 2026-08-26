@@ -191,7 +191,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                     style={{ backgroundColor: getStatusColor(location.status) }}
                     className="text-white text-xs mb-1"
                   >
-                    {location.status.toUpperCase()}
+                    {translateStatus(location.status)}
                   </Badge>
                 )}
                 {location.type === "material" && (
@@ -285,7 +285,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                   className="w-3 h-3 rounded-full border border-white shadow-sm flex-shrink-0"
                   style={{ backgroundColor: getStatusColor(status) }}
                 />
-                <span className="truncate">{status}</span>
+                <span className="truncate">{translateStatus(status)}</span>
               </div>
             ))}
             {zoneOverlays.length > 0 && (

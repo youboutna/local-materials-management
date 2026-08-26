@@ -5,6 +5,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { UiThemeProvider } from "./contexts/UiThemeContext";
 import { HexagonalAuthProvider } from "./contexts/HexagonalAuthContext";
 import { DocumentViewerProvider } from "@/components/documents/viewer";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import MainNavbar from "./components/MainNavbar";
 import Footer from "./components/Footer";
 import { Toaster } from "./components/ui/sonner";

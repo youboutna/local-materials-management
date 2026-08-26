@@ -176,7 +176,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                         status === 'suspendu' ? 'bg-orange-500' :
                         status === 'annulé' ? 'bg-red-500' : 'bg-gray-500'
                       }`}></div>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      {translateStatus(status)}
                     </div>
                   </SelectItem>
                 ))}

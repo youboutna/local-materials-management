@@ -51,9 +51,9 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
       onChange: onStatusChange,
       options: [
         { value: 'all', label: t('auto.projectfilters.tous_les_statuts') },
-        ...availableStatuses.map(status => ({ 
-          value: status, 
-          label: status.charAt(0).toUpperCase() + status.slice(1) 
+        ...availableStatuses.map(status => ({
+          value: status,
+          label: translateStatus(status),
         }))
       ]
     },

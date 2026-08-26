@@ -25,7 +25,7 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO
         <CardTitle className="text-lg flex justify-between items-center">
           <span><T k="auto.projectstatuscard.etat_du_projet" fallback="État du projet" /></span>
           <Badge className={`${getStatusColor()} text-white`}>
-            {project.status.toUpperCase()}
+            {translateStatus(project.status)}
           </Badge>
         </CardTitle>
       </CardHeader>
