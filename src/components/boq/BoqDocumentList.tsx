@@ -15,8 +15,13 @@ import { useBoqDocumentList } from '@/hooks/hexagonal/useBoqDocumentList';
 import { useToast } from '@/hooks/use-toast';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Eye, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+
 import { T } from '@/components/i18n/T';
 import { useI18n } from '@/hooks/useI18n';
 
