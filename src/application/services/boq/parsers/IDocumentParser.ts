@@ -28,7 +28,12 @@ export interface ParseResult {
   detectedFiscal?: DetectedFiscal;
   /** En-tête administratif (fournisseur / organisation) détecté dans le document. */
   parties?: DocumentParties;
+  /** Métadonnées documentaires (référence, devise, projet…) issues des feuilles de synthèse. */
+  documentMeta?: import('./documentMetaDetection').DocumentMeta;
+  /** Feuille retenue pour les lignes (classeurs multi-feuilles). */
+  sheetName?: string;
 }
+
 
 export interface IDocumentParser {
   supports(file: File): boolean;
