@@ -111,7 +111,7 @@ export const DocumentHeaderService = {
         },
         profile,
       );
-      return tax.vatRate === 0 && tax.vatCategoryCode === 'S';
+      return tax.vatRate === 0 && !tax.exemptionReason;
     });
     if (missingVat) {
       issues.push({ field: 'vatRate', messageKey: 'dqe.header.error.vat', fallback: 'Taux de TVA manquant sur au moins une ligne' });
