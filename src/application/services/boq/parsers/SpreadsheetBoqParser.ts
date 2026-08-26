@@ -12,7 +12,9 @@
 import * as XLSX from 'xlsx';
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
-import { extractDocumentParties } from './headerDetection';
+import { extractDocumentParties, type DocumentParty } from './headerDetection';
+import { extractDocumentMeta, mergeParties, type DocumentMeta } from './documentMetaDetection';
+
 import {
   detectSection,
   isRepeatedHeaderRow,
