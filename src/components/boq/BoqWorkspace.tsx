@@ -148,10 +148,22 @@ export function BoqWorkspace({
   ], [organizations, activeEmployees, activeSuppliers]);
   /** Responsable par défaut (Zone 3) — appliqué aux nouvelles lignes sans partie prenante. */
   const [defaultStakeholderId, setDefaultStakeholderId] = useState<string>(() => readPrefs().stakeholderId ?? '');
+  /** Hydratation : à défaut de préférence, le maître d'ouvrage du projet est responsable. */
+  const { organization: ownerOrganization } = useOwnerOrganization();
+  useEffect(() => {
+    if (defaultStakeholderId) return;
+    const stored = readPrefs().stakeholderId;
+    if (stored) { setDefaultStakeholderId(stored); return; }
+    if (ownerOrganization?.id) setDefaultStakeholderId(ownerOrganization.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownerOrganization?.id, defaultStakeholderId]);
   const defaultStakeholder = useMemo(
     () => stakeholders.find((s) => s.id === defaultStakeholderId) ?? null,
     [stakeholders, defaultStakeholderId],
   );
+  /** Référentiel verrouillé sur le projet actif (contexte projet = source de vérité). */
+  const referentialLocked = mode === 'planning' && !!projectId && !!projectName;
+
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
     () => (defaultStakeholder
