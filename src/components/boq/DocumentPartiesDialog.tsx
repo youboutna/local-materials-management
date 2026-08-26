@@ -179,9 +179,40 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
         )}
 
         <div className="space-y-4">
+          {/* Identification documentaire : titre + type code (obligatoires) */}
+          <div className="grid grid-cols-1 gap-3 rounded-md border bg-muted/20 p-3 sm:grid-cols-3">
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="doc-title">{t('dqe.header.title') || 'Titre (Title)'}</Label>
+              <Input id="doc-title" ref={titleRef} value={draft.title ?? ''} disabled={locked}
+                placeholder="DQE"
+                aria-invalid={submitted && titleError}
+                className={submitted && titleError ? 'border-destructive' : undefined}
+                onChange={(e) => patch({ title: e.target.value })} />
+              {submitted && titleError && (
+                <p className="text-xs text-destructive">
+                  {t('dqe.header.error.title_required') || 'Le titre est obligatoire'}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="doc-typecode">{t('dqe.header.type_code') || 'Type code'}</Label>
+              <Input id="doc-typecode" ref={typeCodeRef} value={draft.facturxTypeCode ?? ''} disabled={locked}
+                placeholder="310"
+                aria-invalid={submitted && typeCodeError}
+                className={submitted && typeCodeError ? 'border-destructive' : undefined}
+                onChange={(e) => patch({ facturxTypeCode: e.target.value.trim() })} />
+              {submitted && typeCodeError && (
+                <p className="text-xs text-destructive">
+                  {t('dqe.header.error.type_code_required') || 'Le type code est obligatoire'}
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* En-tête documentaire : référence, date, devise, validité */}
           <div className="grid grid-cols-1 gap-2 rounded-md border bg-muted/20 p-3 sm:grid-cols-4">
             <div className="space-y-1 sm:col-span-2">
+
               <Label>{t('dqe.header.reference') || 'Référence'}</Label>
               <Input value={draft.reference ?? ''} disabled={locked}
                 onChange={(e) => patch({ reference: e.target.value })} />
