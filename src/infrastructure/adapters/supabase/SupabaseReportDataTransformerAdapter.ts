@@ -340,7 +340,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
           dueDate: p.payment_date ? new Date(p.payment_date) : new Date(),
           paidDate: p.payment_date ? new Date(p.payment_date) : new Date(),
           status: 'paid' as const,
-          description: p.transaction_id || `Payment ${this.formatReference(p.id,'PAY')}`
+          description: p.transaction_id || `Payment ${formatReference(p.id,'PAY')}`
         })),
         bankGuarantees: bankGuarantees.data?.map(bg => ({
           id: bg.id,
