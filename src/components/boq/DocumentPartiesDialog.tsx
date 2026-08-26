@@ -17,6 +17,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check, ChevronsUpDown, Lock, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/useI18n';
+import { toast } from '@/hooks/use-toast';
 import { useDocumentPartySuggestions, type DocumentPartySuggestion } from '@/hooks/boq/useDocumentPartySuggestions';
 
 export interface DocumentRecipientValue {
@@ -328,7 +329,7 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-          <Button disabled={locked} onClick={() => { onSave(draft); onOpenChange(false); }}>
+          <Button disabled={locked} onClick={handleSave}>
             {t('common.save')}
           </Button>
         </DialogFooter>
