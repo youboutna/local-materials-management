@@ -34,6 +34,7 @@ import ProjectGanttTimeline from "@/components/project/ProjectGanttTimeline";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
+import { resolveProjectLocationLabel } from "@/utils/projectLocationLabel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogContent as DialogContentUI, DialogHeader as DialogHeaderUI, DialogTitle as DialogTitleUI, Dialog as DialogUI } from "@/components/ui/dialog";
