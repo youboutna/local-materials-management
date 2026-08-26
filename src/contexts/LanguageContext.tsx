@@ -5902,7 +5902,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         type Nested = Record<string, unknown>;
 
         const lookup = (lang: Language): string | null => {
-            let value: unknown = (translations as unknown as Record<string, Nested>)[lang];
+            const dict = (translations as unknown as Record<string, Nested>)[lang];
+            // Les registres mélangent clés plates ('a.b.c') et objets imbriqués :
+            // on tente d'abord la clé plate, puis la traversée par segments.
+            const flat = dict?.[key];
+            if (typeof flat === 'string') return flat;
+            let value: unknown = dict;
             for (const k of key.split('.')) {
                 if (value && typeof value === 'object' && k in (value as Nested)) {
                     value = (value as Nested)[k];
