@@ -145,7 +145,12 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     }
 
     if (sectionsFound) warnings.push(`${sectionsFound} lot(s) détecté(s) depuis les lignes de section.`);
+    if (meta.currency) warnings.push(`Devise du document : ${meta.currency}.`);
+    if (meta.projectReference || meta.projectTitle) {
+      warnings.push(`Projet détecté : ${meta.projectTitle ?? meta.projectReference}.`);
+    }
     warnings.push(...summarizeFiscal(detectedFiscal));
-    return { rows, columns, warnings, detectedFiscal, parties };
+    return { rows, columns, warnings, detectedFiscal, parties, documentMeta: meta, sheetName: target.name };
+
   }
 }
