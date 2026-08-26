@@ -10,7 +10,7 @@
  *
  * Pur TypeScript — aucune dépendance React ni Supabase (catalogues injectés).
  */
-import { BOQ_UNITS, type BoqUnit } from '@/config/referentials/boq/units.referential';
+import { BOQ_UNITS } from '@/config/referentials/boq/units.referential';
 import { detectLabour, LABOUR_PROFILES } from '@/config/referentials/boq/labour-profiles.referential';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { DocumentMeta } from './parsers/documentMetaDetection';
@@ -179,7 +179,7 @@ export class BoqImportAssistService {
       if (!next.designation?.trim()) {
         push('error', 'DESIGNATION_MISSING', 'Désignation vide', { field: 'designation' });
       }
-      if (!BOQ_UNITS.includes(next.unit as BoqUnit)) {
+      if (!BOQ_UNITS.some((u) => u.code === next.unit)) {
         push('warning', 'UNIT_UNKNOWN', `Unité « ${next.unit || '—'} » hors référentiel`, {
           field: 'unit',
           suggestion: 'Choisir une unité du référentiel (m, m², m³, kg, unité, jour, mois, forfait…).',
