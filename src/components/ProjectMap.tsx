@@ -70,6 +70,7 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
 }) => {
   const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const { t } = useLanguage();
+  const { translateStatus } = useI18n();
 
   useEffect(() => {
     if (locations) {
