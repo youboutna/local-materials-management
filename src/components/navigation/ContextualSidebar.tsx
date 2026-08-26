@@ -76,6 +76,7 @@ const navigationItems: NavItem[] = [
     icon: Compass,
     children: [
       { label: 'auto.contextualsidebar.planification', href: "/projects?stage=PLANIFICATION", icon: Target },
+      { label: 'dqe.navigation.module', href: "/dqe/list", icon: FileText },
       { label: 'auto.contextualsidebar.execution', href: "/projects?stage=EXECUTION", icon: HardHat },
       { label: 'auto.contextualsidebar.controle_inspections', href: "/inspection-monitoring", icon: ShieldCheck },
       { label: 'auto.contextualsidebar.paiements_echeances', href: "/payment-control", icon: CreditCard },
@@ -102,6 +103,7 @@ const navigationItems: NavItem[] = [
     icon: Users,
     children: [
       { label: 'auto.contextualsidebar.employes', href: "/employees" },
+      { label: 'nav.consultant_portal', href: "/consultant-portal", roles: ["admin", "director", "manager", "consultant", "engineering_consultant"] },
       { label: 'auto.contextualsidebar.organisations', href: "/organizations", roles: ["admin", "director", "manager"] },
       { label: 'auto.contextualsidebar.utilisateurs', href: "/users", roles: ["admin", "director"] },
 
@@ -112,6 +114,8 @@ const navigationItems: NavItem[] = [
     icon: Building2,
     children: [
       { label: 'auto.contextualsidebar.liste', href: "/suppliers" },
+      { label: 'nav.supplier_portal', href: "/supplier-portal" },
+      { label: 'nav.supplier_tender_portal', href: "/supplier-tender" },
       { label: 'nav.tender_management', href: "/tender-management" },
       { label: 'auto.contextualsidebar.partage_codes', action: 'secretManager', icon: KeyRound },
     ],
