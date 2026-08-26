@@ -52,6 +52,14 @@ export const BOQ_UNITS: BoqUnitDefinition[] = [
     compute: (l) => l,
   },
   {
+    // Ressources humaines mobilisées au mois (homme·mois).
+    code: 'mois',
+    label: 'mois (homme·mois)',
+    requires: { length: true, width: false, height: false },
+    compute: (l) => l,
+  },
+
+  {
     // Poste au forfait : quantité = nombre de forfaits.
     code: 'forfait',
     label: 'forfait',
