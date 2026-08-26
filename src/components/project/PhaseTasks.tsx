@@ -335,7 +335,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
       </CardHeader>
       <CardContent>
         {tasks && tasks.length > 0 ? (
