@@ -381,36 +381,44 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   return (
     <>
-      {/* Disposition unique en 3 groupes :
-          G1 actions principales · G2 workflow / validation · G3 badges d'information. */}
+      {/* Zone 2 — barre de workflow en une seule ligne :
+          gauche = actions principales du document · droite = actions secondaires
+          (Document/PDF, Signer, Workflow) · dessous = badges d'information. */}
       <div className="flex w-full flex-col gap-2">
-        {/* --- G1 : actions principales --- */}
-        <div className="flex flex-wrap items-center gap-2">
-          {docActions.map((a) => (
-            <Button
-              key={a.key}
-              size="sm"
-              variant="outline"
-              onClick={() => a.onSelect()}
-              disabled={disabled || busy !== null}
-            >
-              {iconOf(a.key) ?? a.icon}
-              {t(getDqeActionLabelKey(a.key))}
-            </Button>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* --- Actions principales (gauche) --- */}
+          <div className="flex flex-wrap items-center gap-2">
+            {can('transfer') && (
+              <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
+                {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
+                {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
+              </Button>
+            )}
 
-          {can('transfer') && (
-            <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
-              {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
-              {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
-            </Button>
+            {primarySlot}
+          </div>
+
+          {/* --- Actions secondaires (droite) --- */}
+          <div className="flex flex-wrap items-center gap-2">
+          {docActions.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
+                  {iconOf('generatePdf') ?? iconOf('email') ?? iconOf('download') ?? <FileDown className="h-4 w-4 mr-2" />}
+                  {t('dqe.actions.document_menu')}
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {docActions.map((a) => (
+                  <DropdownMenuItem key={a.key} onSelect={() => a.onSelect()}>
+                    {a.icon}
+                    {t(getDqeActionLabelKey(a.key))}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-
-          {primarySlot}
-        </div>
-
-        {/* --- G2 : workflow / validation --- */}
-        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
             variant="ghost"
@@ -464,7 +472,9 @@ export const BoqActionsBar: React.FC<Props> = ({
           )}
 
           {workflowSlot}
+          </div>
         </div>
+
 
         {/* --- G3 : badges d'information (jamais de boutons) --- */}
         <div className="flex flex-wrap items-center gap-2">

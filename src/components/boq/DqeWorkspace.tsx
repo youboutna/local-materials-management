@@ -47,6 +47,12 @@ interface Props {
 
   recipientEmail?: string;
   showComparison?: boolean;
+  /** Sélection pilotée par la route (`/dqe/:id`). `null` = vue Liste. */
+  documentId?: string | null;
+  /** Notifie la route d'un changement de sélection (navigation). */
+  onDocumentIdChange?: (id: string | null) => void;
+  /** Crée immédiatement un nouveau document (route `/dqe/new`). */
+  autoCreate?: boolean;
   onAttachToSubmission?: () => void;
   onSubmitInvoice?: () => void;
   onDistribute?: () => void;
@@ -80,7 +86,24 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     () => Object.fromEntries((milestones ?? []).map((m) => [m.id, m.title])),
     [milestones],
   );
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [internalDocumentId, setInternalDocumentId] = useState<string | null>(null);
+  const controlled = props.documentId !== undefined;
+  const selectedDocumentId = controlled ? props.documentId ?? null : internalDocumentId;
+  const selectDocument = React.useCallback((id: string | null) => {
+    if (!controlled) setInternalDocumentId(id);
+    props.onDocumentIdChange?.(id);
+  }, [controlled, props.onDocumentIdChange]);
+
+  // Route `/dqe/new` : ouvre directement un nouveau document vierge.
+  useEffect(() => {
+    if (props.autoCreate && !selectedDocumentId) {
+      const id = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+        ? crypto.randomUUID()
+        : `doc-${Date.now()}`;
+      selectDocument(id);
+    }
+  }, [props.autoCreate, selectedDocumentId, selectDocument]);
+
   const queryClient = useQueryClient();
 
   // Détail : lignes du document courant (pour la BoqActionsBar).
@@ -216,8 +239,8 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             projectId={props.projectId}
             title={ctx.title}
             docPrefix={ctx.docPrefix}
-            onOpen={(id) => setSelectedDocumentId(id)}
-            onCreate={(id) => setSelectedDocumentId(id)}
+            onOpen={(id) => selectDocument(id)}
+            onCreate={(id) => selectDocument(id)}
           />
         </CardContent>
       </Card>
@@ -240,7 +263,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-col gap-3 border-b bg-muted/20">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => setSelectedDocumentId(null)}>
+            <Button variant="ghost" size="sm" onClick={() => selectDocument(null)}>
               <ArrowLeft className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.retour_a_la_liste" fallback="Retour à la liste" />
             </Button>
             <CardTitle className="flex items-center gap-2">
