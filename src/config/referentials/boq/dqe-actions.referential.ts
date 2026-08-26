@@ -48,10 +48,14 @@ export const DQE_ACTIONS_REFERENTIAL: DqeActionDefinition[] = [
 
   // --- Document ---
   { key: 'generatePdf', labelKey: 'dqe.action.generate_pdf', group: 'document', capability: 'generatePdf' },
+  { key: 'generateXml', labelKey: 'dqe.action.generate_xml', group: 'document' },
+  { key: 'downloadPdf', labelKey: 'dqe.action.download_pdf', group: 'document', capability: 'download' },
+  { key: 'downloadXml', labelKey: 'dqe.action.download_xml', group: 'document' },
   { key: 'sign', labelKey: 'dqe.action.sign', group: 'document', capability: 'sign' },
   { key: 'email', labelKey: 'dqe.action.email', group: 'document', capability: 'email' },
   { key: 'download', labelKey: 'dqe.action.download', group: 'document', capability: 'download' },
   { key: 'facturx', labelKey: 'dqe.action.facturx', group: 'document' },
+  { key: 'history', labelKey: 'dqe.action.history', group: 'workflow' },
 
   // --- Workflow ---
   { key: 'dispatchWbs', labelKey: 'dqe.action.dispatch_wbs', group: 'workflow' },

@@ -9,7 +9,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileDown, Mail, PenTool, Send, Download, Paperclip, FileCheck2, Loader2, ArrowRightCircle, Layers, ShieldCheck } from 'lucide-react';
+import { FileDown, Mail, PenTool, Send, Download, Paperclip, FileCheck2, Loader2, ArrowRightCircle, Layers, ShieldCheck, FileCode2, Undo2, History } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +37,11 @@ import { useProcurementChain } from '@/hooks/hexagonal/useProcurementChainHex';
 import { ProcurementChainService } from '@/application/services/procurement/ProcurementChainService';
 import { Rocket } from 'lucide-react';
 import { Pencil } from 'lucide-react';
+import { DocumentLifecycleService } from '@/application/services/documents/DocumentLifecycleService';
+import { resolveInvoiceDocumentType } from '@/config/referentials/invoices/invoice-document-types.referential';
+import { FacturXTransformer } from '@/application/services/invoice/FacturXTransformer';
+import { FacturXPdfService } from '@/application/services/invoice/FacturXPdfService';
+import type { ReverseTransitionDef } from '@/config/referentials/documents/document-lifecycle.referential';
 
 interface Props {
   ctx: BoqContext;
@@ -420,56 +425,203 @@ export const BoqActionsBar: React.FC<Props> = ({
   });
 
 
+  // === Cycle de vie documentaire (statut, éditabilité, retours arrière) ===
+  const documentType = React.useMemo(
+    () =>
+      resolveInvoiceDocumentType({
+        source: ctx.source ?? lines[0]?.source,
+        documentType: lines[0]?.documentType,
+        dqeType: lines[0]?.dqeType,
+      }).code,
+    [ctx.source, lines],
+  );
+  const lifecycle = React.useMemo(
+    () => DocumentLifecycleService.resolveFromLines(documentType, lines),
+    [documentType, lines],
+  );
+  const reverseActions = React.useMemo(
+    () =>
+      DocumentLifecycleService.reverseActions({
+        documentType,
+        status: lifecycle.status,
+        actor: { roles: userRoles },
+      }),
+    [documentType, lifecycle.status, userRoles],
+  );
+  /** « Soumettre pour validation » : visible uniquement en brouillon. */
+  const isDraftDocument = lifecycle.editable && !signedInfo;
+
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const reverseLabel = (a: ReverseTransitionDef) => {
+    const translated = t(a.labelKey);
+    return translated && !translated.includes(a.labelKey) ? translated : a.labels.fr;
+  };
+
+  const handleReverse = (transition: ReverseTransitionDef) =>
+    withGuard(`reverse-${transition.action}`, async () => {
+      try {
+        const res = await DocumentLifecycleService.applyReverse({ transition, lines });
+        toast({ title: reverseLabel(transition), description: `${res.updated} ligne(s) — ${res.status}` });
+        window.dispatchEvent(
+          new CustomEvent('boq-lifecycle-reversed', {
+            detail: { contextId: ctx.contextId, action: transition.action, status: res.status },
+          }),
+        );
+      } catch (e) {
+        toast({
+          title: t('dqe.reverse.failed') || 'Retour arrière impossible',
+          description: e instanceof Error ? e.message : undefined,
+          variant: 'destructive',
+        });
+      }
+    });
+
+  // === Factur-X : XML CII (EN 16931) et PDF hybride PDF/XML ===
+  const buildFacturXXml = React.useCallback(() => {
+    return FacturXTransformer.toCiiXml(lines, {
+      documentType,
+      reference: header.reference ?? ctx.docPrefix,
+      issueDate: header.issueDate ?? undefined,
+      currency: header.currency ?? undefined,
+      seller: { name: header.sender.name, address: header.sender.address ?? null },
+      buyer: { name: header.recipients[0]?.name ?? '' },
+      note: effectiveParties.title ?? ctx.title,
+    });
+  }, [lines, documentType, header, ctx.docPrefix, ctx.title, effectiveParties.title]);
+
+  const xmlFilename = () => `${header.reference ?? ctx.docPrefix}-facturx.xml`;
+
+  const handleGenerateXml = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('facturx', async () => {
+      const xml = buildFacturXXml();
+      DocumentService.download(new Blob([xml], { type: 'application/xml' }), xmlFilename());
+      toast({ title: t('dqe.action.generate_xml'), description: xmlFilename() });
+    });
+  };
+
+  const handleDownloadXml = handleGenerateXml;
+
+  /** PDF hybride : le XML Factur-X est embarqué dans le PDF (relation Data). */
+  const handleGenerateFacturXPdf = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('generatePdf', async () => {
+      const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
+      const hybrid = await FacturXPdfService.embed(blob, buildFacturXXml());
+      DocumentService.download(hybrid, filename);
+      toast({ title: t('dqe.action.generate_pdf'), description: filename });
+    });
+  };
+
   const isProjectDqe = ctx.routeContext === 'project-dqe';
 
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
 
 
+  // Menu « Document » : UNIQUEMENT la production documentaire (PDF/XML/email).
   const docActions = [
-    can('generatePdf') && { key: 'generatePdf', icon: <FileDown className="h-4 w-4 mr-2" />, onSelect: handleGenerate },
-    can('email') && { key: 'email', icon: <Mail className="h-4 w-4 mr-2" />, onSelect: handleEmail },
-    can('download') && { key: 'download', icon: <Download className="h-4 w-4 mr-2" />, onSelect: handleDownload },
-  ].filter(Boolean) as { key: string; icon: React.ReactNode; onSelect: () => void }[];
+    can('generatePdf') && { key: 'generatePdf', label: 'dqe.action.generate_pdf', icon: <FileDown className="h-4 w-4 mr-2" />, onSelect: handleGenerateFacturXPdf },
+    { key: 'generateXml', label: 'dqe.action.generate_xml', icon: <FileCode2 className="h-4 w-4 mr-2" />, onSelect: handleGenerateXml },
+    can('download') && { key: 'downloadPdf', label: 'dqe.action.download_pdf', icon: <Download className="h-4 w-4 mr-2" />, onSelect: handleDownload },
+    { key: 'downloadXml', label: 'dqe.action.download_xml', icon: <Download className="h-4 w-4 mr-2" />, onSelect: handleDownloadXml },
+    can('email') && { key: 'email', label: 'dqe.action.email', icon: <Mail className="h-4 w-4 mr-2" />, onSelect: handleEmail },
+  ].filter(Boolean) as { key: string; label?: string; icon: React.ReactNode; onSelect: () => void }[];
 
+  // Menu « Workflow » : UNIQUEMENT les changements de statut du cycle de vie.
   const workflowActions = [
-    can('distribute') && onDistribute && { key: 'distribute', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onDistribute, disabled: false },
+    can('transfer') && isDraftDocument && {
+      key: 'transfer',
+      label: DQE_TRANSFER_LABEL_KEYS[ctx.routeContext],
+      icon: <ArrowRightCircle className="h-4 w-4 mr-2" />,
+      onSelect: handleTransfer,
+      disabled: !lines.length,
+    },
+    can('sign') && !signedInfo && {
+      key: 'sign',
+      label: 'dqe.action.sign',
+      icon: <PenTool className="h-4 w-4 mr-2" />,
+      onSelect: () => setSignOpen(true),
+      disabled: false,
+    },
+    can('publish') && onPublish && { key: 'publish', label: 'dqe.action.publish', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onPublish, disabled: false },
+    can('distribute') && onDistribute && { key: 'distribute', label: 'dqe.action.distribute', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onDistribute, disabled: false },
+    can('attachToSubmission') && onAttachToSubmission && { key: 'attachToSubmission', label: 'dqe.action.attach_submission', icon: <Paperclip className="h-4 w-4 mr-2" />, onSelect: onAttachToSubmission, disabled: false },
+    can('submitInvoice') && onSubmitInvoice && { key: 'submitInvoice', label: 'dqe.action.submit_invoice', icon: <FileCheck2 className="h-4 w-4 mr-2" />, onSelect: onSubmitInvoice, disabled: false },
+    ctx.routeContext === 'supplier-bid' && {
+      key: 'decompte',
+      label: 'dqe.action.create_decompte',
+      icon: <FileCheck2 className="h-4 w-4 mr-2" />,
+      onSelect: () => setDecompteOpen(true),
+      disabled: !lines.length,
+    },
+    // Retours arrière (REOPEN / UNPUBLISH / REVIEW…) issus du référentiel.
+    ...reverseActions.map((a) => ({
+      key: `reverse-${a.action}`,
+      labelText: reverseLabel(a),
+      icon: <Undo2 className="h-4 w-4 mr-2" />,
+      onSelect: () => handleReverse(a),
+      disabled: !lines.length,
+    })),
+    { key: 'history', label: 'dqe.action.history', icon: <History className="h-4 w-4 mr-2" />, onSelect: () => setHistoryOpen(true), disabled: false },
+  ].filter(Boolean) as { key: string; label?: string; labelText?: string; icon: React.ReactNode; onSelect: () => void; disabled?: boolean }[];
+
+  // Actions de projet (planification / chaîne achats) — hors cycle de statut.
+  const planningActions = [
     isProjectDqe && {
       key: 'procurementChain',
+      label: 'dqe.action.procurement_chain',
       icon: chainPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Rocket className="h-4 w-4 mr-2" />,
       onSelect: handleProcurementChain,
       disabled: !dqeValidated || chainPending || !ctx.projectId,
     },
     isProjectDqe && {
       key: 'dispatchWbs',
+      label: 'dqe.action.dispatch_wbs',
       icon: <Layers className="h-4 w-4 mr-2" />,
       onSelect: handleDispatch,
       disabled: !gate.allowed,
     },
-    ctx.routeContext === 'supplier-bid' && {
-      key: 'decompte',
-      icon: <FileCheck2 className="h-4 w-4 mr-2" />,
-      onSelect: () => setDecompteOpen(true),
-      disabled: !lines.length,
-    },
-    can('attachToSubmission') && onAttachToSubmission && { key: 'attachToSubmission', icon: <Paperclip className="h-4 w-4 mr-2" />, onSelect: onAttachToSubmission, disabled: false },
-    can('submitInvoice') && onSubmitInvoice && { key: 'submitInvoice', icon: <FileCheck2 className="h-4 w-4 mr-2" />, onSelect: onSubmitInvoice, disabled: false },
-    can('publish') && onPublish && { key: 'publish', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onPublish, disabled: false },
-  ].filter(Boolean) as { key: string; icon: React.ReactNode; onSelect: () => void; disabled?: boolean }[];
+  ].filter(Boolean) as { key: string; label?: string; icon: React.ReactNode; onSelect: () => void; disabled?: boolean }[];
 
   return (
     <>
-      {/* Zone 2 — barre de workflow en une seule ligne :
-          gauche = actions principales du document · droite = actions secondaires
-          (Document/PDF, Signer, Workflow) · dessous = badges d'information. */}
+      {/* Zone 2 — barre de workflow : gauche = contexte (édition en-tête,
+          planification) · droite = Document ▾, Workflow ▾ puis l'action
+          principale « Soumettre pour validation » (brouillon uniquement). */}
       <div className="flex w-full flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* --- Actions principales (gauche) --- */}
+          {/* --- Contexte (gauche) --- */}
           <div className="flex flex-wrap items-center gap-2">
-            {can('transfer') && (
-              <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
-                {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
-                {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
-              </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setPartiesOpen(true)}
+              disabled={disabled || busy !== null}
+              title={t('dqe.parties.edit_title')}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              {t('dqe.actions.parties_menu')}
+            </Button>
+
+            {planningActions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
+                    {iconOf('dispatch') ?? iconOf('procurementChain') ?? <Layers className="h-4 w-4 mr-2" />}
+                    {t('dqe.actions.planning_menu')}
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {planningActions.map((a) => (
+                    <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
+                      {a.icon}
+                      {t(a.label ?? getDqeActionLabelKey(a.key))}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {primarySlot}
@@ -481,7 +633,7 @@ export const BoqActionsBar: React.FC<Props> = ({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
-                  {iconOf('generatePdf') ?? iconOf('email') ?? iconOf('download') ?? <FileDown className="h-4 w-4 mr-2" />}
+                  {iconOf('generatePdf') ?? iconOf('email') ?? iconOf('download') ?? iconOf('facturx') ?? <FileDown className="h-4 w-4 mr-2" />}
                   {t('dqe.actions.document_menu')}
                   <ChevronDown className="h-4 w-4 ml-1" />
                 </Button>
@@ -490,41 +642,18 @@ export const BoqActionsBar: React.FC<Props> = ({
                 {docActions.map((a) => (
                   <DropdownMenuItem key={a.key} onSelect={() => a.onSelect()}>
                     {a.icon}
-                    {t(getDqeActionLabelKey(a.key))}
+                    {t(a.label ?? getDqeActionLabelKey(a.key))}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setPartiesOpen(true)}
-            disabled={disabled || busy !== null}
-            title={t('dqe.parties.edit_title')}
-          >
-            <Pencil className="h-4 w-4 mr-2" />
-            {t('dqe.actions.parties_menu')}
-          </Button>
-
-          {can('sign') && !signedInfo && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSignOpen(true)}
-              disabled={disabled || busy !== null}
-              title={`${t('dqe.action.sign')} — ${ctx.title}`}
-            >
-              {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
-              {t('dqe.action.sign')}
-            </Button>
           )}
 
           {workflowActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
-                  {iconOf('dispatch') ?? iconOf('decompte') ?? <Layers className="h-4 w-4 mr-2" />}
+                  {iconOf('sign') ?? iconOf('decompte') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
                   {t('dqe.actions.workflow_menu')}
                   <ChevronDown className="h-4 w-4 ml-1" />
                 </Button>
@@ -533,12 +662,21 @@ export const BoqActionsBar: React.FC<Props> = ({
                 {workflowActions.map((a) => (
                   <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
                     {a.icon}
-                    {t(getDqeActionLabelKey(a.key))}
+                    {a.labelText ?? t(a.label ?? getDqeActionLabelKey(a.key))}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+
+          {/* Action principale : visible uniquement tant que le document est en brouillon. */}
+          {can('transfer') && isDraftDocument && (
+            <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
+              {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
+              {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
+            </Button>
+          )}
+
 
           {gateKind && !gate.allowed && canValidateGate && (
             <Button size="sm" onClick={handleApproveInjection} disabled={disabled || busy !== null}
@@ -639,6 +777,38 @@ export const BoqActionsBar: React.FC<Props> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Historique du cycle de vie : jalons franchis + signature. */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('dqe.action.history')}</DialogTitle>
+            <DialogDescription>{t('dqe.history.description')}</DialogDescription>
+          </DialogHeader>
+          <ol className="space-y-2 text-sm">
+            {DocumentLifecycleService.stages().map((stage, index) => (
+              <li key={stage.code} className="flex items-center justify-between gap-2">
+                <span className={index <= lifecycle.stageIndex ? 'font-medium' : 'text-muted-foreground'}>
+                  {stage.labels.fr}
+                </span>
+                <Badge variant={index < lifecycle.stageIndex ? 'secondary' : index === lifecycle.stageIndex ? 'default' : 'outline'}>
+                  {index <= lifecycle.stageIndex ? lifecycle.status : '—'}
+                </Badge>
+              </li>
+            ))}
+            {signedInfo && (
+              <li className="flex items-center justify-between gap-2">
+                <span className="font-medium">{t('dqe.action.signed')} — {signedInfo.by}</span>
+                <Badge variant="secondary">{new Date(signedInfo.at).toLocaleString('fr-FR')}</Badge>
+              </li>
+            )}
+          </ol>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistoryOpen(false)}>{t('common.close') || 'Fermer'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
+
   );
 };
