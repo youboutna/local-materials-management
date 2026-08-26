@@ -18,13 +18,23 @@ export type Language = 'fr' | 'ar' | 'en';
 interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
-    t: (key: string, params?: Record<string, string | number>) => string;
+    /**
+     * Traduction d'une clé d'interface.
+     * `fallback` (optionnel) est utilisé tel quel si la clé est absente du
+     * registre — évite les libellés « humanisés » depuis la clé technique
+     * (ex. `decompte.initialBudget` → « InitialBudget »).
+     */
+    t: (key: string, params?: Record<string, string | number>, fallback?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 /** Résolution hors provider : lecture directe des tables de traduction. */
-const resolveOutsideProvider = (key: string, params?: Record<string, string | number>): string => {
+const resolveOutsideProvider = (
+    key: string,
+    params?: Record<string, string | number>,
+    fallback?: string,
+): string => {
     type Nested = Record<string, unknown>;
     let value: unknown = (translations as unknown as Record<string, Nested>).fr;
     for (const k of key.split('.')) {
@@ -39,6 +49,7 @@ const resolveOutsideProvider = (key: string, params?: Record<string, string | nu
         typeof value === 'string'
             ? value
             : (() => {
+                  if (fallback) return fallback;
                   const last = key.split('.').pop() ?? key;
                   const words = last.replace(/[_-]+/g, ' ').trim();
                   return words.charAt(0).toUpperCase() + words.slice(1);
@@ -5919,7 +5930,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         }
     }, [language]);
 
-    const t = (key: string, params?: Record<string, string | number>): string => {
+    const t = (
+        key: string,
+        params?: Record<string, string | number>,
+        fallback?: string,
+    ): string => {
         type Nested = Record<string, unknown>;
 
         const lookup = (lang: Language): string | null => {
@@ -5951,7 +5966,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             if (import.meta.env.DEV) {
                 console.warn(`Translation key "${key}" not found for language "${language}"`);
             }
-            result = humanize();
+            result = fallback && fallback.trim() ? fallback : humanize();
         }
 
         // Handle interpolation with params like {title}

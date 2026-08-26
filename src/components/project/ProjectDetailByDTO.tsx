@@ -34,6 +34,7 @@ import ProjectGanttTimeline from "@/components/project/ProjectGanttTimeline";
 import UnifiedPERTAnalysis from "@/components/project/UnifiedPERTAnalysis";
 import { ReportManager } from "@/components/reports/ReportManager";
 import { Badge } from "@/components/ui/badge";
+import { resolveProjectLocationLabel } from "@/utils/projectLocationLabel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogContent as DialogContentUI, DialogHeader as DialogHeaderUI, DialogTitle as DialogTitleUI, Dialog as DialogUI } from "@/components/ui/dialog";
@@ -661,6 +662,27 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return (phasesSource || []).map(normalize);
   }, [projectPhases, projectDetail?.plannedPhases, t]);
 
+  // ============ Phase actuelle (source : phases persistées puis DTO) ============
+  const resolvedPhaseInfo = useMemo(() => {
+    if (currentPhaseInfo.currentPhase) return currentPhaseInfo;
+    if (computedPhases.length === 0) return currentPhaseInfo;
+
+    const pick =
+      computedPhases.find((p) => p.status === "in_progress") ||
+      computedPhases.find((p) =>
+        ["not_started", "pending", "draft", "planned"].includes(String(p.status)),
+      ) ||
+      computedPhases[computedPhases.length - 1];
+
+    const stages = Array.isArray(pick?.stages) ? pick.stages : [];
+    const activeStage = stages.find((s: { status?: string }) => s?.status && s.status !== "completed");
+    return {
+      currentPhase: pick?.phase_name || pick?.phase || null,
+      currentStage: activeStage?.name || stages[0]?.name || null,
+    };
+  }, [currentPhaseInfo, computedPhases]);
+
+
   // ============ Statistiques des phases ============
   const TERMINAL_PHASE_STATUSES = new Set(["completed", "closed", "cancelled", "archived"]);
   const PENDING_PHASE_STATUSES = new Set(["not_started", "pending", "draft", "planned"]);
@@ -940,7 +962,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <div className="flex items-baseline justify-between gap-3">
                   <dt className="text-muted-foreground"><T k="auto.projectdetailbydto.localisation" fallback="Localisation" /></dt>
                   <dd className="text-right font-medium">
-                    {project.location || "Non spécifiée"}
+                    {resolveProjectLocationLabel(project as never) || "Non renseignée"}
                     {(() => {
                       const lat =
                         project?.coordinates?.latitude ??
@@ -964,14 +986,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground"><T k="auto.projectdetailbydto.phase_actuelle" fallback="Phase actuelle" /></span>
-                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"} className="text-[11px]">
-                    {currentPhaseInfo.currentPhase || "Aucune phase"}
+                  <Badge variant={resolvedPhaseInfo.currentPhase ? "default" : "outline"} className="text-[11px]">
+                    {resolvedPhaseInfo.currentPhase || "Aucune phase planifiée"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground"><T k="auto.projectdetailbydto.etape_actuelle" fallback="Étape actuelle" /></span>
-                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"} className="text-[11px]">
-                    {currentPhaseInfo.currentStage || "N/A"}
+                  <Badge variant={resolvedPhaseInfo.currentStage ? "secondary" : "outline"} className="text-[11px]">
+                    {resolvedPhaseInfo.currentStage || "—"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3">

@@ -130,7 +130,14 @@ export const DecompteTrackingPanel: React.FC<Props> = ({
             </p>
             <p className="text-lg font-semibold">{formatCurrency(engaged)}</p>
             <p className="text-xs text-muted-foreground">
-              <T k="decompte.engaged.hint" fallback="Non compté comme dépensé" />
+              {engaged > 0 ? (
+                <T k="decompte.engaged.hint" fallback="Non compté comme dépensé" />
+              ) : (
+                <T
+                  k="decompte.engaged.empty"
+                  fallback="Alimenté automatiquement par le DQE validé ou le devis accepté"
+                />
+              )}
             </p>
           </div>
         </div>

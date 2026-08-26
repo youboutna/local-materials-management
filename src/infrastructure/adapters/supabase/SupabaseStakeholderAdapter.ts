@@ -52,7 +52,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
     if (error) throw error;
-    return (data || []).map((d) => this.mapToEntity(d));
+    return this.hydrate(data || []);
   }
 
   async findByType(type: string): Promise<Stakeholder[]> {
@@ -61,7 +61,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
       .eq('stakeholder_type', type)
       .order('created_at', { ascending: true });
     if (error) throw error;
-    return (data || []).map((d) => this.mapToEntity(d));
+    return this.hydrate(data || []);
   }
 
   async findByRole(_role: string): Promise<Stakeholder[]> {
@@ -81,7 +81,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
       .eq('stakeholder_entity_type', 'employee')
       .order('created_at', { ascending: true });
     if (error) throw error;
-    return (data || []).map((d) => this.mapToEntity(d));
+    return this.hydrate(data || []);
   }
 
   async findExternalByProjectId(projectId: string): Promise<Stakeholder[]> {
@@ -92,7 +92,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
       .neq('stakeholder_entity_type', 'employee')
       .order('created_at', { ascending: true });
     if (error) throw error;
-    return (data || []).map((d) => this.mapToEntity(d));
+    return this.hydrate(data || []);
   }
 
   async findPrimaryByProjectId(projectId: string): Promise<Stakeholder[]> {
@@ -103,8 +103,69 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
       .eq('is_primary', true)
       .order('created_at', { ascending: true });
     if (error) throw error;
-    return (data || []).map((d) => this.mapToEntity(d));
+    return this.hydrate(data || []);
   }
+
+  /**
+   * Hydrate les identités depuis les référentiels (employés, fournisseurs,
+   * organisations) : `project_stakeholders` ne stocke que des identifiants,
+   * l'UI ne doit jamais afficher un UUID ni un rôle technique nu.
+   */
+  private async hydrate(rows: Record<string, any>[]): Promise<Stakeholder[]> {
+    if (rows.length === 0) return [];
+
+    const ids = (key: string) =>
+      Array.from(new Set(rows.map((r) => r?.[key]).filter((v): v is string => typeof v === 'string' && !!v)));
+
+    const employeeIds = ids('employee_id');
+    const supplierIds = ids('supplier_id');
+    const organizationIds = ids('organization_id');
+
+    const safeFetch = async (
+      table: string,
+      columns: string,
+      values: string[],
+    ): Promise<Record<string, any>[]> => {
+      if (values.length === 0) return [];
+      try {
+        const { data, error } = await btpClient.from(table as any).select(columns).in('id', values);
+        if (error) throw error;
+        return (data as unknown as Record<string, any>[]) || [];
+      } catch {
+        return [];
+      }
+    };
+
+    const [employees, suppliers, organizations] = await Promise.all([
+      safeFetch('employees', 'id, full_name, email, phone, position', employeeIds),
+      safeFetch('suppliers', 'id, name, email, phone', supplierIds),
+      safeFetch('organizations', 'id, name', organizationIds),
+    ]);
+
+    const byId = (list: Record<string, any>[]) => new Map(list.map((r) => [String(r.id), r]));
+    const employeeMap = byId(employees);
+    const supplierMap = byId(suppliers);
+    const organizationMap = byId(organizations);
+
+    return rows.map((row) => {
+      const employee = row.employee_id ? employeeMap.get(String(row.employee_id)) : undefined;
+      const supplier = row.supplier_id ? supplierMap.get(String(row.supplier_id)) : undefined;
+      const organization = row.organization_id ? organizationMap.get(String(row.organization_id)) : undefined;
+      return this.mapToEntity(row, {
+        name:
+          employee?.full_name ||
+          supplier?.name ||
+          organization?.name ||
+          row.external_name ||
+          null,
+        email: employee?.email || supplier?.email || row.external_email || null,
+        phone: employee?.phone || supplier?.phone || row.external_phone || null,
+        position: employee?.position || null,
+        organizationName: organization?.name || supplier?.name || null,
+      });
+    });
+  }
+
 
   async delete(id: string): Promise<void> {
     if (!id) throw new Error('Invalid stakeholder ID provided');
@@ -169,19 +230,37 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
 
   // ============= Mappers =============
 
-  private mapToEntity(data: Record<string, any>): Stakeholder {
+  private mapToEntity(
+    data: Record<string, any>,
+    identity?: {
+      name?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      position?: string | null;
+      organizationName?: string | null;
+    },
+  ): Stakeholder {
     const stakeholderType = (data.stakeholder_entity_type === 'employee' ? 'employee' : 'supplier') as any;
+    const organizationId = data.organization_id || data.supplier_id || null;
+    const displayName = identity?.name || data.external_name || data.role_description || '';
     return new Stakeholder(
       data.id,
       data.project_id,
       stakeholderType,
       (data.stakeholder_type || data.role_description || 'observer') as any,
-      data.supplier_id || null,
+      organizationId,
       data.employee_id || null,
       !!data.is_primary,
       data.stakeholder_entity_type === 'employee',
-      { name: data.role_description || '', email: '', phone: undefined, position: undefined },
-      null,
+      {
+        name: displayName,
+        email: identity?.email || data.external_email || '',
+        phone: identity?.phone || data.external_phone || undefined,
+        position: identity?.position || undefined,
+      },
+      identity?.organizationName && organizationId
+        ? { id: String(organizationId), name: identity.organizationName, type: stakeholderType }
+        : null,
       [],
       'read',
       null,

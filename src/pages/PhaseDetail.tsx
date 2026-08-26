@@ -50,6 +50,8 @@ import {
   ExternalLink, AlertTriangle, Edit, Calculator, Building2, Wallet,
 } from 'lucide-react';
 import { T } from '@/components/i18n/T';
+import { usePhaseAggregateHex } from '@/hooks/hexagonal/usePhaseAggregateHex';
+import { resolveProjectLocationLabel } from '@/utils/projectLocationLabel';
 
 
 const PhaseDetail: React.FC = () => {
@@ -93,6 +95,13 @@ const PhaseDetail: React.FC = () => {
   // Hook appelé inconditionnellement (avant les sorties anticipées de rendu).
   const { summary: decompteSummary } = usePhaseDecomptesHex(phaseId, {
     initialBudget: (vm?.budget as number | undefined) ?? 0,
+  });
+
+  // Source unique des onglets (ressources, équipe, finances, intervenants).
+  const { aggregate: phaseAggregate } = usePhaseAggregateHex({
+    projectId,
+    phaseId,
+    declaredBudget: (vm?.budget as number | undefined) ?? 0,
   });
 
   const stage = useMemo(
@@ -187,13 +196,13 @@ const PhaseDetail: React.FC = () => {
 
   const { title, description, budget: storedBudget, estimatedDuration, startDate, endDate, location } = vm;
 
-  // Localisation : celle de la phase, sinon héritée du projet (aucun placeholder)
-  const projectLocation =
-    (project as unknown as { location?: string; address?: string } | null | undefined)?.location ||
-    (project as unknown as { address?: string } | null | undefined)?.address ||
-    '';
-  const effectiveLocation = location
-    ? { value: location, inherited: false }
+  // Localisation : celle de la phase, sinon héritée du projet via le résolveur
+  // canonique (zones d'intervention géocodées, adresse, coordonnées) — les
+  // placeholders type « Non spécifié » stockés en base sont ignorés.
+  const projectLocation = resolveProjectLocationLabel(project as never) ?? '';
+  const phaseLocation = resolveProjectLocationLabel({ location } as never);
+  const effectiveLocation = phaseLocation
+    ? { value: phaseLocation, inherited: false }
     : projectLocation
       ? { value: projectLocation, inherited: true }
       : { value: 'Non spécifiée', inherited: false };
@@ -247,7 +256,15 @@ const PhaseDetail: React.FC = () => {
 
 
   return (
-    <AppLayout pageTitle={title} pageDescription={stageMeta.description}>
+    <AppLayout
+      pageTitle={title}
+      pageDescription={[
+        (project as unknown as { title?: string } | null | undefined)?.title,
+        stageMeta.label,
+      ]
+        .filter(Boolean)
+        .join(' · ')}
+    >
       <div className="container mx-auto px-4 py-4 space-y-4">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -545,7 +562,9 @@ const PhaseDetail: React.FC = () => {
               <TabsContent value="pert"><PERTDiagram projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="critical"><CriticalPathView projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="team"><PhaseTeamTab phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="team">
+                <PhaseTeamTab phaseId={phaseId!} projectId={projectId!} declaredBudget={budget} />
+              </TabsContent>
             </Tabs>
           </TabsContent>
 
@@ -570,7 +589,12 @@ const PhaseDetail: React.FC = () => {
               </TabsContent>
               <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
               <TabsContent value="payments" className="space-y-4">
-                <DecompteTrackingPanel scope="phase" entityId={phaseId} initialBudget={budget} />
+                <DecompteTrackingPanel
+                  scope="phase"
+                  entityId={phaseId}
+                  initialBudget={phaseAggregate.totalPlanned > 0 ? phaseAggregate.totalPlanned : budget}
+                  engaged={phaseAggregate.totalEngaged}
+                />
                 <PhasePayments phaseId={phaseId!} projectId={projectId!} phaseName={title} phaseBudget={budget} />
               </TabsContent>
             </Tabs>
