@@ -519,36 +519,70 @@ export const BoqActionsBar: React.FC<Props> = ({
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
 
 
+  // Menu « Document » : UNIQUEMENT la production documentaire (PDF/XML/email).
   const docActions = [
-    can('generatePdf') && { key: 'generatePdf', icon: <FileDown className="h-4 w-4 mr-2" />, onSelect: handleGenerate },
-    can('email') && { key: 'email', icon: <Mail className="h-4 w-4 mr-2" />, onSelect: handleEmail },
-    can('download') && { key: 'download', icon: <Download className="h-4 w-4 mr-2" />, onSelect: handleDownload },
-  ].filter(Boolean) as { key: string; icon: React.ReactNode; onSelect: () => void }[];
+    can('generatePdf') && { key: 'generatePdf', label: 'dqe.action.generate_pdf', icon: <FileDown className="h-4 w-4 mr-2" />, onSelect: handleGenerateFacturXPdf },
+    { key: 'generateXml', label: 'dqe.action.generate_xml', icon: <FileCode2 className="h-4 w-4 mr-2" />, onSelect: handleGenerateXml },
+    can('download') && { key: 'downloadPdf', label: 'dqe.action.download_pdf', icon: <Download className="h-4 w-4 mr-2" />, onSelect: handleDownload },
+    { key: 'downloadXml', label: 'dqe.action.download_xml', icon: <Download className="h-4 w-4 mr-2" />, onSelect: handleDownloadXml },
+    can('email') && { key: 'email', label: 'dqe.action.email', icon: <Mail className="h-4 w-4 mr-2" />, onSelect: handleEmail },
+  ].filter(Boolean) as { key: string; label?: string; icon: React.ReactNode; onSelect: () => void }[];
 
+  // Menu « Workflow » : UNIQUEMENT les changements de statut du cycle de vie.
   const workflowActions = [
-    can('distribute') && onDistribute && { key: 'distribute', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onDistribute, disabled: false },
+    can('transfer') && isDraftDocument && {
+      key: 'transfer',
+      label: DQE_TRANSFER_LABEL_KEYS[ctx.routeContext],
+      icon: <ArrowRightCircle className="h-4 w-4 mr-2" />,
+      onSelect: handleTransfer,
+      disabled: !lines.length,
+    },
+    can('sign') && !signedInfo && {
+      key: 'sign',
+      label: 'dqe.action.sign',
+      icon: <PenTool className="h-4 w-4 mr-2" />,
+      onSelect: () => setSignOpen(true),
+      disabled: false,
+    },
+    can('publish') && onPublish && { key: 'publish', label: 'dqe.action.publish', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onPublish, disabled: false },
+    can('distribute') && onDistribute && { key: 'distribute', label: 'dqe.action.distribute', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onDistribute, disabled: false },
+    can('attachToSubmission') && onAttachToSubmission && { key: 'attachToSubmission', label: 'dqe.action.attach_submission', icon: <Paperclip className="h-4 w-4 mr-2" />, onSelect: onAttachToSubmission, disabled: false },
+    can('submitInvoice') && onSubmitInvoice && { key: 'submitInvoice', label: 'dqe.action.submit_invoice', icon: <FileCheck2 className="h-4 w-4 mr-2" />, onSelect: onSubmitInvoice, disabled: false },
+    ctx.routeContext === 'supplier-bid' && {
+      key: 'decompte',
+      label: 'dqe.action.create_decompte',
+      icon: <FileCheck2 className="h-4 w-4 mr-2" />,
+      onSelect: () => setDecompteOpen(true),
+      disabled: !lines.length,
+    },
+    // Retours arrière (REOPEN / UNPUBLISH / REVIEW…) issus du référentiel.
+    ...reverseActions.map((a) => ({
+      key: `reverse-${a.action}`,
+      labelText: reverseLabel(a),
+      icon: <Undo2 className="h-4 w-4 mr-2" />,
+      onSelect: () => handleReverse(a),
+      disabled: !lines.length,
+    })),
+    { key: 'history', label: 'dqe.action.history', icon: <History className="h-4 w-4 mr-2" />, onSelect: () => setHistoryOpen(true), disabled: false },
+  ].filter(Boolean) as { key: string; label?: string; labelText?: string; icon: React.ReactNode; onSelect: () => void; disabled?: boolean }[];
+
+  // Actions de projet (planification / chaîne achats) — hors cycle de statut.
+  const planningActions = [
     isProjectDqe && {
       key: 'procurementChain',
+      label: 'dqe.action.procurement_chain',
       icon: chainPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Rocket className="h-4 w-4 mr-2" />,
       onSelect: handleProcurementChain,
       disabled: !dqeValidated || chainPending || !ctx.projectId,
     },
     isProjectDqe && {
       key: 'dispatchWbs',
+      label: 'dqe.action.dispatch_wbs',
       icon: <Layers className="h-4 w-4 mr-2" />,
       onSelect: handleDispatch,
       disabled: !gate.allowed,
     },
-    ctx.routeContext === 'supplier-bid' && {
-      key: 'decompte',
-      icon: <FileCheck2 className="h-4 w-4 mr-2" />,
-      onSelect: () => setDecompteOpen(true),
-      disabled: !lines.length,
-    },
-    can('attachToSubmission') && onAttachToSubmission && { key: 'attachToSubmission', icon: <Paperclip className="h-4 w-4 mr-2" />, onSelect: onAttachToSubmission, disabled: false },
-    can('submitInvoice') && onSubmitInvoice && { key: 'submitInvoice', icon: <FileCheck2 className="h-4 w-4 mr-2" />, onSelect: onSubmitInvoice, disabled: false },
-    can('publish') && onPublish && { key: 'publish', icon: <Send className="h-4 w-4 mr-2" />, onSelect: onPublish, disabled: false },
-  ].filter(Boolean) as { key: string; icon: React.ReactNode; onSelect: () => void; disabled?: boolean }[];
+  ].filter(Boolean) as { key: string; label?: string; icon: React.ReactNode; onSelect: () => void; disabled?: boolean }[];
 
   return (
     <>
