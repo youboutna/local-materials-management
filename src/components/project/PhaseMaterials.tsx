@@ -30,6 +30,11 @@ interface PhaseMaterialsProps {
   addLabel?: string;
   /** Message affiché lorsque la liste filtrée est vide. */
   emptyLabel?: string;
+  /**
+   * Autorise la saisie manuelle. Faux quand la phase est alimentée par la
+   * chaîne DQE / devis (lecture seule).
+   */
+  allowManual?: boolean;
 }
 
 const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
@@ -39,6 +44,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
   title,
   addLabel,
   emptyLabel,
+  allowManual = true,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedMaterialId, setSelectedMaterialId] = useState('');
