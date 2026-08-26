@@ -59,18 +59,23 @@ export const DocumentHeaderService = {
     };
   },
 
-  /** Fusionne un en-tête existant avec les valeurs du contexte (émetteur auto). */
+  /** Fusionne un en-tête existant avec les valeurs du contexte (émetteur auto).
+   *  Les champs nuls/vides de `base` n'écrasent JAMAIS les valeurs par défaut. */
   merge(base: DocumentHeaderDTO | null, input: HeaderContextInput): DocumentHeaderDTO {
     const defaults = this.build(input);
     if (!base) return defaults;
     const sender = cleanParty(base.sender) ?? defaults.sender;
+    const defined = Object.fromEntries(
+      Object.entries(base).filter(([, v]) => v !== null && v !== undefined && v !== ''),
+    ) as Partial<DocumentHeaderDTO>;
     return {
       ...defaults,
-      ...base,
+      ...defined,
       sender,
       recipients: base.recipients?.length ? base.recipients : defaults.recipients,
     };
   },
+
 
   /**
    * Validation bloquante avant PDF / signature / soumission.
