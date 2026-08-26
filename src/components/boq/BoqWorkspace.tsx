@@ -165,6 +165,7 @@ export function BoqWorkspace({
   );
   /** Référentiel verrouillé sur le projet actif (contexte projet = source de vérité). */
   const referentialLocked = mode === 'planning' && !!projectId && !!projectName;
+  const effectiveReferential = referentialLocked ? referentialCode : activeReferential;
 
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
@@ -582,7 +583,7 @@ export function BoqWorkspace({
 
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
-            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={activeReferential} />
+            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={effectiveReferential} />
             <Select
               value={defaultStakeholderId || '__none__'}
               onValueChange={(v) => {
@@ -722,7 +723,7 @@ export function BoqWorkspace({
                     onChange={setWbs}
                     phases={projectPhases.length > 0 ? projectPhases : undefined}
           
-                    referentialCode={activeReferential}
+                    referentialCode={effectiveReferential}
                   />
                 </div>
 
@@ -872,7 +873,7 @@ export function BoqWorkspace({
             source={source}
             contextId={contextId}
             projectId={projectId}
-            defaultReferentialCode={activeReferential}
+            defaultReferentialCode={effectiveReferential}
             title={importLabel ?? labels.import}
             trigger={
               <Button size="sm" variant="outline" disabled={locked}>
@@ -929,7 +930,7 @@ export function BoqWorkspace({
           lines={displayedLines}
           emptyLabel={emptyLabel ?? labels.empty}
           editable={!locked}
-          referentialCode={activeReferential}
+          referentialCode={effectiveReferential}
           phases={projectPhases.length > 0 ? projectPhases : undefined}
           stakeholders={stakeholders}
           onChange={handlePatch}
