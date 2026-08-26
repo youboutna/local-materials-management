@@ -34,6 +34,7 @@ interface MapFiltersProps {
 
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { translateStatus } = useI18n();
   const [regionFilter, setRegionFilter] = useState<string>('all');
 
   // Get unique statuses from locations

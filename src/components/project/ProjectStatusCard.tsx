@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { T } from '@/components/i18n/T';
 
 export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO }) {
+  const { translateStatus } = useI18n();
   const getStatusColor = () => {
     switch (project.status) {
       case 'en cours': return 'bg-blue-500';
