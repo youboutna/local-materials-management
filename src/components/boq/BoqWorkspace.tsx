@@ -922,7 +922,30 @@ export function BoqWorkspace({
         />
       )}
       </div>
+
+      {/* Journal de traçabilité — persistance / signature / transmission.
+          Ces badges ne polluent plus l'en-tête : ils sont regroupés ici. */}
+      <div className="flex flex-wrap items-center gap-2 border-t bg-muted/10 p-3 text-xs text-muted-foreground">
+        <span className="font-medium uppercase tracking-wide">
+          <T k="dqe.journal.title" fallback="Journal de traçabilité" />
+        </span>
+        <Badge variant={dirty ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
+        <span>
+          <T k="dqe.journal.lines" fallback="Lignes persistées" /> : {doc.lines.length}
+        </span>
+        {signatureInfo && (
+          <Badge variant="outline" className="border-primary text-primary">
+            {t('dqe.locked_signed')} · {signatureInfo.at} — {signatureInfo.by}
+          </Badge>
+        )}
+        {!signatureInfo && transmittedInfo && (
+          <Badge variant="outline" className="border-primary text-primary">
+            {t('dqe.locked_transmitted')}{transmittedInfo.at ? ` · ${transmittedInfo.at}` : ''}
+          </Badge>
+        )}
+      </div>
       </section>
+
     </div>
   );
 }
