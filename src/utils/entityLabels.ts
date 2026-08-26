@@ -15,12 +15,13 @@ export const isUuid = (value: unknown): boolean =>
 export const isDisplayable = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0 && !isUuid(value);
 
-type AnyRecord = Record<string, unknown>;
+type AnyRecord = Record<string, unknown> | object;
 
 const pick = (source: AnyRecord | null | undefined, keys: readonly string[]): string | undefined => {
   if (!source) return undefined;
+  const bag = source as Record<string, unknown>;
   for (const key of keys) {
-    const raw = source[key];
+    const raw = bag[key];
     if (isDisplayable(raw)) return raw.trim();
   }
   return undefined;
@@ -189,7 +190,7 @@ export type EntityType = keyof typeof CONFIGS;
 // FORMAT REFERENCE (PRJ-4F2A19)
 // ============================================================
 
-export function formatReference(id: string, prefix: string = ''): string {
+export function formatReference(id?: string | null, prefix: string = ''): string {
   if (!id) return '';
   if (id.length < 8) return id;
   const shortId = id.slice(0, 8).toUpperCase();

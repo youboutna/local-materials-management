@@ -95,7 +95,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   const { data: tenderLots = [] } = useTenderLots(tenderId);
   
   // ✅ Récupérer les projets pour les labels
-  const { data: projects = [] } = useProjectsHex();
+  const { projects = [] } = useProjectsHex();
   
   const lotOptions: LotOption[] = (tenderLots as any[]).map((l) => ({
     id: l.id,

@@ -68,7 +68,7 @@ const EnhancedBankGuaranteeCrud = () => {
 
   // Hexagonal hooks
   const { data: guarantees = [], isLoading, refetch } = useBankGuaranteesList();
-  const { data: projects = [] } = useProjectsHex(); // ✅ Pour les labels
+  const { projects = [] } = useProjectsHex(); // ✅ Pour les labels
   const createMutation = useCreateBankGuarantee();
   const updateMutation = useUpdateBankGuarantee();
   const deleteMutation = useDeleteBankGuarantee();
