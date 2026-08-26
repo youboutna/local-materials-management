@@ -616,8 +616,19 @@ export const BoqActionsBar: React.FC<Props> = ({
             {primarySlot}
           </div>
 
-          {/* --- Actions secondaires (droite) --- */}
+          {/* --- Actions secondaires (droite) : Parties ▾ · Document ▾ · Workflow ▾ --- */}
           <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPartiesOpen(true)}
+            disabled={disabled || busy !== null}
+            title={t('dqe.parties.edit_title')}
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            {t('dqe.actions.parties_menu')}
+          </Button>
+
           {docActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
