@@ -220,9 +220,29 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
         lines,
         target: nextStatus,
       });
+      const chain = res.chain;
+      const chainSummary = !chain
+        ? null
+        : chain.triggered
+          ? [
+              chain.tenderId ? `AO ${chain.tenderStatus}` : null,
+              `${(chain.phasesCreated ?? 0) + (chain.phasesReused ?? 0)} phase(s)`,
+              `${chain.milestonesCreated ?? 0} jalon(s)`,
+              `${chain.tasksCreated ?? 0} tâche(s)`,
+              chain.budgetSynced ? 'budget synchronisé' : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          : `Propagation à reprendre : ${chain.error ?? 'erreur inconnue'}`;
       toast({
         title: getInvoiceDocumentTypeLabel(def.code, language),
-        description: `${t('dqe.lifecycle.status_label')} ${translateStatus(res.status)}`,
+        description: [
+          `${t('dqe.lifecycle.status_label')} ${translateStatus(res.status)}`,
+          chainSummary,
+        ]
+          .filter(Boolean)
+          .join(' — '),
+        variant: chain && !chain.triggered ? 'destructive' : undefined,
       });
       onTransformed?.(lines.find((l) => l.documentId)?.documentId ?? '', documentType);
     } catch (e) {
