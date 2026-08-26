@@ -39,6 +39,7 @@ function makeService(existingLines: BoqLineDTO[] = [], takeoffs = [makeTakeoff()
 
   const created: BoqLineDTO[] = [];
   const boqRepo: IBoqRepository = {
+    deleteMany: vi.fn().mockResolvedValue(0),
     list: vi.fn().mockResolvedValue(existingLines),
     bulkCreate: vi.fn().mockImplementation(async (dtos: BoqLineDTO[]) => {
       created.push(...dtos);
