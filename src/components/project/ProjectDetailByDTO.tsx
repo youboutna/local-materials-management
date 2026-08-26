@@ -661,6 +661,25 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     return (phasesSource || []).map(normalize);
   }, [projectPhases, projectDetail?.plannedPhases, t]);
 
+  // ============ Phase actuelle (source : phases persistées puis DTO) ============
+  const resolvedPhaseInfo = useMemo(() => {
+    if (currentPhaseInfo.currentPhase) return currentPhaseInfo;
+    if (computedPhases.length === 0) return currentPhaseInfo;
+
+    const pick =
+      computedPhases.find((p) => p.status === "in_progress") ||
+      computedPhases.find((p) => PENDING_PHASE_STATUSES_SET.has(String(p.status))) ||
+      computedPhases[computedPhases.length - 1];
+
+    const stages = Array.isArray(pick?.stages) ? pick.stages : [];
+    const activeStage = stages.find((s: { status?: string }) => s?.status && s.status !== "completed");
+    return {
+      currentPhase: pick?.phase_name || pick?.phase || null,
+      currentStage: activeStage?.name || stages[0]?.name || null,
+    };
+  }, [currentPhaseInfo, computedPhases]);
+
+
   // ============ Statistiques des phases ============
   const TERMINAL_PHASE_STATUSES = new Set(["completed", "closed", "cancelled", "archived"]);
   const PENDING_PHASE_STATUSES = new Set(["not_started", "pending", "draft", "planned"]);
