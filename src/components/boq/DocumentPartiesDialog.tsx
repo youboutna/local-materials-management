@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown, Lock } from 'lucide-react';
+import { Check, ChevronsUpDown, Lock, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/useI18n';
 import { useDocumentPartySuggestions, type DocumentPartySuggestion } from '@/hooks/boq/useDocumentPartySuggestions';
@@ -221,7 +221,41 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
             <Input type="email" value={draft.recipientEmail ?? ''} disabled={locked}
               onChange={(e) => patch({ recipientEmail: e.target.value })} />
           </div>
+
+          {/* Destinataires additionnels (copies / co-signataires) */}
+          <div className="space-y-2 rounded-md border p-3">
+            <div className="flex items-center justify-between">
+              <Label>{t('dqe.header.extra_recipients') || 'Destinataires additionnels'}</Label>
+              <Button type="button" variant="outline" size="sm" disabled={locked}
+                onClick={() => patch({ extraRecipients: [...recipients, { name: '', email: '' }] })}>
+                <Plus className="mr-1 h-3 w-3" />
+                {t('common.add') || 'Ajouter'}
+              </Button>
+            </div>
+            {recipients.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {t('dqe.header.extra_recipients_hint') || 'Aucun destinataire additionnel.'}
+              </p>
+            ) : (
+              recipients.map((r, index) => (
+                <div key={`recipient-${index}`} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                  <Input value={r.name} disabled={locked}
+                    placeholder={t('dqe.parties.recipient_placeholder')}
+                    onChange={(e) => patchRecipient(index, { name: e.target.value })} />
+                  <Input type="email" value={r.email ?? ''} disabled={locked}
+                    placeholder={t('dqe.parties.recipient_email')}
+                    onChange={(e) => patchRecipient(index, { email: e.target.value })} />
+                  <Button type="button" variant="ghost" size="icon" disabled={locked}
+                    aria-label={t('common.delete') || 'Supprimer'}
+                    onClick={() => patch({ extraRecipients: recipients.filter((_, i) => i !== index) })}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
+
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
