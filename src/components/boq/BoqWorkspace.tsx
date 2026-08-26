@@ -103,12 +103,13 @@ export function BoqWorkspace({
   // Préférences du document persistées (référentiel enrichi + profil fiscal) :
   // la sélection survit à la navigation, le référentiel projet reste le défaut.
   const prefsKey = `boq-prefs:${contextId}`;
-  const readPrefs = (): { referential?: ReferentialType; fiscalCode?: string } => {
+  const readPrefs = (): { referential?: ReferentialType; fiscalCode?: string; stakeholderId?: string } => {
     try { return JSON.parse(localStorage.getItem(prefsKey) ?? '{}'); } catch { return {}; }
   };
-  const writePrefs = (patch: { referential?: ReferentialType; fiscalCode?: string }) => {
+  const writePrefs = (patch: { referential?: ReferentialType; fiscalCode?: string; stakeholderId?: string }) => {
     try { localStorage.setItem(prefsKey, JSON.stringify({ ...readPrefs(), ...patch })); } catch { /* stockage indisponible */ }
   };
+
   const [activeReferential, setActiveReferential] = useState<ReferentialType | undefined>(
     () => readPrefs().referential ?? referentialCode,
   );
@@ -145,6 +146,20 @@ export function BoqWorkspace({
     ...activeEmployees.map((e) => ({ id: e.id, name: e.full_name, type: 'employee' as const })),
     ...activeSuppliers.map((s) => ({ id: s.id, name: s.name, type: 'supplier' as const })),
   ], [organizations, activeEmployees, activeSuppliers]);
+  /** Responsable par défaut (Zone 3) — appliqué aux nouvelles lignes sans partie prenante. */
+  const [defaultStakeholderId, setDefaultStakeholderId] = useState<string>(() => readPrefs().stakeholderId ?? '');
+  const defaultStakeholder = useMemo(
+    () => stakeholders.find((s) => s.id === defaultStakeholderId) ?? null,
+    [stakeholders, defaultStakeholderId],
+  );
+  /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
+  const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
+    () => (defaultStakeholder
+      ? { stakeholder: { id: defaultStakeholder.id, name: defaultStakeholder.name, type: defaultStakeholder.type } }
+      : null),
+    [defaultStakeholder],
+  );
+
   const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
@@ -305,8 +320,10 @@ export function BoqWorkspace({
         effectiveOpenings ? `Ouvertures déduites : ${openings.count} × ${openings.width}×${openings.height} m` : null,
       ].filter(Boolean).join(' • ') || null,
       sourceType: useAdvanced ? 'avance' : 'rapide',
+      metadata: defaultLineMetadata,
       status: 'draft',
     };
+
     // Recommandations du référentiel → 1 ligne article par recommandation.
     const recoDrafts: BoqLineDTO[] = (autoRecs ? recommendations : []).map((rec) => ({
       ...draft,
@@ -446,7 +463,9 @@ export function BoqWorkspace({
       milestoneId: wbsDefault.milestoneId ?? null,
       taskId: wbsDefault.taskId ?? null,
       sourceType: 'rapide',
+      metadata: defaultLineMetadata,
       status: 'draft',
+
     }]);
     setDirty(true);
   };
@@ -480,16 +499,24 @@ export function BoqWorkspace({
   const docStatus = dirty ? t('dqe.doc_status.to_save') : (doc.lines.length > 0 ? t('dqe.doc_status.validated') : t('dqe.doc_status.new'));
   const isDocumentEmpty = displayedLines.length === 0;
   const handleParsedImport = (lines: BoqLineDTO[]) => {
-    setDraftLines((prev) => [...prev, ...lines.map((line) => ({
-      ...line,
-      source,
-      contextId,
-      documentId: documentId ?? null,
-      id: undefined,
-       status: 'draft' as const,
-    }))]);
+    setDraftLines((prev) => [...prev, ...lines.map((line) => {
+      const hasStakeholder = !!(line.metadata as { stakeholder?: unknown } | null)?.stakeholder;
+      return {
+        ...line,
+        source,
+        contextId,
+        documentId: documentId ?? null,
+        id: undefined,
+        // Responsable par défaut (Zone 3) hérité si la ligne importée n'en porte pas.
+        metadata: hasStakeholder || !defaultLineMetadata
+          ? line.metadata ?? null
+          : { ...(line.metadata ?? {}), ...defaultLineMetadata },
+        status: 'draft' as const,
+      };
+    })]);
     setDirty(true);
   };
+
   return (
     <div className="space-y-4">
       <section className="space-y-0">
@@ -541,7 +568,28 @@ export function BoqWorkspace({
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
             <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={activeReferential} />
+            <Select
+              value={defaultStakeholderId || '__none__'}
+              onValueChange={(v) => {
+                const next = v === '__none__' ? '' : v;
+                setDefaultStakeholderId(next);
+                writePrefs({ stakeholderId: next });
+              }}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder={t('dqe.responsible.placeholder')} />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
+                <SelectItem value="__none__">{t('dqe.responsible.none')}</SelectItem>
+                {stakeholders.map((s) => (
+                  <SelectItem key={`${s.type}-${s.id}`} value={s.id}>
+                    {s.name} · {translateTerm(s.type)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
             <Select value={fiscalCode} onValueChange={(v) => { setFiscalCode(v); writePrefs({ fiscalCode: v }); }}>

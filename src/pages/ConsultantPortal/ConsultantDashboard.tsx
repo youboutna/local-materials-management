@@ -6,6 +6,8 @@
  *  - reçoit alertes (retard, garantie bancaire, assurance) et notifications de paiement.
  */
 import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
 import { AppLayout } from '@/components/layout';
 import {
   Breadcrumb,
@@ -70,8 +72,15 @@ const KpiCard = ({
   </Card>
 );
 
+const VALID_TABS = ['validation', 'inspections', 'invoices', 'payments', 'alerts', 'documents', 'tenders'] as const;
+
 const ConsultantDashboard = () => {
   const { userId } = useAuthUserHex();
+  const params = useParams();
+  const navigate = useNavigate();
+  const routeTab = (VALID_TABS as readonly string[]).includes(params.tab ?? '')
+    ? (params.tab as string)
+    : 'validation';
   const {
     projects,
     alerts,
@@ -88,6 +97,7 @@ const ConsultantDashboard = () => {
 
   // Projet ciblé pour l'analyse des décomptes via le module DQE.
   const [invoiceProjectId, setInvoiceProjectId] = useState<string | null>(null);
+
 
   const unreadPaymentNotifications = useMemo(
     () => paymentNotifications.filter((n) => !n.read),
@@ -150,7 +160,12 @@ const ConsultantDashboard = () => {
           />
         </section>
 
-        <Tabs defaultValue="validation" className="space-y-4">
+        <Tabs
+          value={routeTab}
+          onValueChange={(v) => navigate(v === 'validation' ? '/consultant-portal' : `/consultant-portal/${v}`)}
+          className="space-y-4"
+        >
+
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 lg:grid-cols-5">
             <TabsTrigger value="validation" className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />

@@ -18,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, FileSpreadsheet, GitCompare, LayoutDashboard } from 'lucide-react';
 import { BoqWorkspace, type BoqWorkspaceMode } from './BoqWorkspace';
 import { BoqActionsBar } from './BoqActionsBar';
+import { BoqWorkflowStepper } from './BoqWorkflowStepper';
+
 import { InvoiceWorkflowActions } from '@/components/invoices/InvoiceWorkflowActions';
 import { resolveInvoiceDocumentType } from '@/config/referentials/invoices/invoice-document-types.referential';
 import { BoqDocumentList } from './BoqDocumentList';
@@ -270,7 +272,13 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
               <FileSpreadsheet className="h-5 w-5" />
               {ctx.title}
             </CardTitle>
+            <BoqWorkflowStepper
+              lines={doc.lines ?? []}
+              compact={props.routeContext === 'project-dqe'}
+              className="ml-auto"
+            />
           </div>
+
           {/* Barre unique : G1 actions principales · G2 workflow · G3 badges. */}
           <BoqActionsBar
             ctx={ctx}
