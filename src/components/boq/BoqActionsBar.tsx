@@ -586,35 +586,15 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   return (
     <>
-      {/* Zone 2 — barre de workflow : gauche = contexte (édition en-tête,
-          planification) · droite = Document ▾, Workflow ▾ puis l'action
-          principale « Soumettre pour validation » (brouillon uniquement). */}
+      {/* Zone 2 — barre de workflow : droite = Parties · Document ▾ · Workflow ▾
+          (les actions de planification sont regroupées dans Workflow ▾) puis
+          l'action principale « Soumettre pour validation » (brouillon seul). */}
       <div className="flex w-full flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* --- Contexte (gauche) : planification uniquement --- */}
           <div className="flex flex-wrap items-center gap-2">
-            {planningActions.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
-                    {iconOf('dispatch') ?? iconOf('procurementChain') ?? <Layers className="h-4 w-4 mr-2" />}
-                    {t('dqe.actions.planning_menu')}
-                    <ChevronDown className="h-4 w-4 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {planningActions.map((a) => (
-                    <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
-                      {a.icon}
-                      {t(a.label ?? getDqeActionLabelKey(a.key))}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
             {primarySlot}
           </div>
+
 
           {/* --- Actions secondaires (droite) : Parties ▾ · Document ▾ · Workflow ▾ --- */}
           <div className="flex flex-wrap items-center gap-2">
