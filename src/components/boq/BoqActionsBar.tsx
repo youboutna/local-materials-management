@@ -37,6 +37,11 @@ import { useProcurementChain } from '@/hooks/hexagonal/useProcurementChainHex';
 import { ProcurementChainService } from '@/application/services/procurement/ProcurementChainService';
 import { Rocket } from 'lucide-react';
 import { Pencil } from 'lucide-react';
+import { DocumentLifecycleService } from '@/application/services/documents/DocumentLifecycleService';
+import { resolveInvoiceDocumentType } from '@/config/referentials/invoices/invoice-document-types.referential';
+import { FacturXTransformer } from '@/application/services/invoice/FacturXTransformer';
+import { FacturXPdfService } from '@/application/services/invoice/FacturXPdfService';
+import type { ReverseTransitionDef } from '@/config/referentials/documents/document-lifecycle.referential';
 
 interface Props {
   ctx: BoqContext;
