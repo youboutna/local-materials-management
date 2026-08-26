@@ -20,6 +20,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 interface ProjectHeaderProps {
   project: {
@@ -51,25 +52,34 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   onDelete,
 }) => {
   const navigate = useNavigate();
+  const { translateStatus } = useI18n();
 
   const getStatusConfig = (status: string) => {
-    switch (status?.toLowerCase()) {
+    const normalized = (status ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\s-]+/g, '_')
+      .replace(/_v\d+$/i, '');
+    switch (normalized) {
       case "completed":
-      case "terminé":
+      case "termine":
         return { 
           variant: "default" as const, 
           className: "bg-success/10 text-success border-success/20",
           icon: <CheckCircle className="h-3.5 w-3.5" />
         };
       case "in_progress":
-      case "en cours":
+      case "en_cours":
+      case "encours":
         return { 
           variant: "secondary" as const, 
           className: "bg-info/10 text-info border-info/20",
           icon: <Clock className="h-3.5 w-3.5" />
         };
       case "delayed":
-      case "en retard":
+      case "en_retard":
+      case "enretard":
         return { 
           variant: "destructive" as const, 
           className: "bg-destructive/10 text-destructive border-destructive/20",
@@ -156,7 +166,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                 className={cn("flex shrink-0 items-center gap-1 text-[11px]", statusConfig.className)}
               >
                 {statusConfig.icon}
-                {project.status || "En cours"}
+                {translateStatus(project.status || 'en_cours')}
               </Badge>
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
