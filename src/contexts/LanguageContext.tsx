@@ -18,7 +18,13 @@ export type Language = 'fr' | 'ar' | 'en';
 interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
-    t: (key: string, params?: Record<string, string | number>) => string;
+    /**
+     * Traduction d'une clé d'interface.
+     * `fallback` (optionnel) est utilisé tel quel si la clé est absente du
+     * registre — évite les libellés « humanisés » depuis la clé technique
+     * (ex. `decompte.initialBudget` → « InitialBudget »).
+     */
+    t: (key: string, params?: Record<string, string | number>, fallback?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
