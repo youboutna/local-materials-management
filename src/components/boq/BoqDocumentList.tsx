@@ -50,6 +50,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
   const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  /** Documents en attente de confirmation de suppression (modale). */
+  const [pendingDelete, setPendingDelete] = useState<BoqDocumentSummary[]>([]);
+
 
   const visibleDocuments = useMemo(
     () => documents.filter((d) => !removedIds.includes(d.documentId)),
