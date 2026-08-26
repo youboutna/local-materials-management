@@ -399,9 +399,23 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
               </div>
             ))}
           </div>
+        ) : plan.pendingLines > 0 ? (
+          <div className="rounded-lg border border-dashed p-4 text-sm space-y-2">
+            <p className="font-medium">
+              {plan.totalLines} ligne(s) de bordereau rattachée(s) à cette phase, aucune tâche d'exécution.
+            </p>
+            <p className="text-muted-foreground">
+              Générez les tâches depuis le bordereau (DQE / métré / devis accepté) pour ouvrir l'exécution.
+            </p>
+            <Button onClick={() => generateTasks()} disabled={isGenerating}>
+              <Wand2 className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Génération…' : `Générer ${plan.pendingLines} tâche(s)`}
+            </Button>
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground"><T k="auto.phasetasks.aucune_tache_assignee_a_cette_phase" fallback="Aucune tâche assignée à cette phase." /></p>
         )}
+
       </CardContent>
     </Card>
   );
