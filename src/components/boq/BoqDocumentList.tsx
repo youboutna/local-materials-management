@@ -40,6 +40,10 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'dest
   invoiced: 'default', paid: 'default', archived: 'outline', mixed: 'outline',
 };
 
+/** Statuts autorisant la réédition du document (codes canoniques minuscules côté DTO). */
+const EDITABLE_STATUSES = new Set(['draft', 'reopen', 'reopened', 'rejected']);
+
+
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
   const { t, translateStatus, locale } = useI18n();
   const { toast } = useToast();
