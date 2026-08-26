@@ -425,6 +425,95 @@ export const BoqActionsBar: React.FC<Props> = ({
   });
 
 
+  // === Cycle de vie documentaire (statut, éditabilité, retours arrière) ===
+  const documentType = React.useMemo(
+    () =>
+      resolveInvoiceDocumentType({
+        source: ctx.source ?? lines[0]?.source,
+        documentType: lines[0]?.documentType,
+        dqeType: lines[0]?.dqeType,
+      }).code,
+    [ctx.source, lines],
+  );
+  const lifecycle = React.useMemo(
+    () => DocumentLifecycleService.resolveFromLines(documentType, lines),
+    [documentType, lines],
+  );
+  const reverseActions = React.useMemo(
+    () =>
+      DocumentLifecycleService.reverseActions({
+        documentType,
+        status: lifecycle.status,
+        actor: { roles: userRoles },
+      }),
+    [documentType, lifecycle.status, userRoles],
+  );
+  /** « Soumettre pour validation » : visible uniquement en brouillon. */
+  const isDraftDocument = lifecycle.editable && !signedInfo;
+
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const reverseLabel = (a: ReverseTransitionDef) => {
+    const translated = t(a.labelKey);
+    return translated && !translated.includes(a.labelKey) ? translated : a.labels.fr;
+  };
+
+  const handleReverse = (transition: ReverseTransitionDef) =>
+    withGuard(`reverse-${transition.action}`, async () => {
+      try {
+        const res = await DocumentLifecycleService.applyReverse({ transition, lines });
+        toast({ title: reverseLabel(transition), description: `${res.updated} ligne(s) — ${res.status}` });
+        window.dispatchEvent(
+          new CustomEvent('boq-lifecycle-reversed', {
+            detail: { contextId: ctx.contextId, action: transition.action, status: res.status },
+          }),
+        );
+      } catch (e) {
+        toast({
+          title: t('dqe.reverse.failed') || 'Retour arrière impossible',
+          description: e instanceof Error ? e.message : undefined,
+          variant: 'destructive',
+        });
+      }
+    });
+
+  // === Factur-X : XML CII (EN 16931) et PDF hybride PDF/XML ===
+  const buildFacturXXml = React.useCallback(() => {
+    return FacturXTransformer.toCiiXml(lines, {
+      documentType,
+      reference: header.reference ?? ctx.docPrefix,
+      issueDate: header.issueDate ?? undefined,
+      currency: header.currency ?? undefined,
+      seller: { name: header.sender.name, address: header.sender.address ?? null },
+      buyer: { name: header.recipients[0]?.name ?? '' },
+      note: effectiveParties.title ?? ctx.title,
+    });
+  }, [lines, documentType, header, ctx.docPrefix, ctx.title, effectiveParties.title]);
+
+  const xmlFilename = () => `${header.reference ?? ctx.docPrefix}-facturx.xml`;
+
+  const handleGenerateXml = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('facturx', async () => {
+      const xml = buildFacturXXml();
+      DocumentService.download(new Blob([xml], { type: 'application/xml' }), xmlFilename());
+      toast({ title: t('dqe.action.generate_xml'), description: xmlFilename() });
+    });
+  };
+
+  const handleDownloadXml = handleGenerateXml;
+
+  /** PDF hybride : le XML Factur-X est embarqué dans le PDF (relation Data). */
+  const handleGenerateFacturXPdf = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('generatePdf', async () => {
+      const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
+      const hybrid = await FacturXPdfService.embed(blob, buildFacturXXml());
+      DocumentService.download(hybrid, filename);
+      toast({ title: t('dqe.action.generate_pdf'), description: filename });
+    });
+  };
+
   const isProjectDqe = ctx.routeContext === 'project-dqe';
 
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
