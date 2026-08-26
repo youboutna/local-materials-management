@@ -95,6 +95,13 @@ const PhaseDetail: React.FC = () => {
     initialBudget: (vm?.budget as number | undefined) ?? 0,
   });
 
+  // Source unique des onglets (ressources, équipe, finances, intervenants).
+  const { aggregate: phaseAggregate } = usePhaseAggregateHex({
+    projectId,
+    phaseId,
+    declaredBudget: (vm?.budget as number | undefined) ?? 0,
+  });
+
   const stage = useMemo(
     () => (vm ? getPhaseLifecycleStage({ type: vm.type, status: vm.status }) : 'PLANIFICATION'),
     [vm]
