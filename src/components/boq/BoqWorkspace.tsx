@@ -47,6 +47,8 @@ import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
+
 import type { StakeholderOption } from './BoqLineTable';
 import { getEnumOptions } from '@/config/referentials/i18n/enum-labels.referential';
 import { useI18n } from '@/hooks/useI18n';
