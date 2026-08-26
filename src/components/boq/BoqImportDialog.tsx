@@ -388,7 +388,7 @@ export function BoqImportDialog(props: Props) {
                 <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → phases du projet</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {altPhases.map((altPh) => (
-                    <div key={altPh.code} className="flex items-center gap-2">
+                    <div key={altPh.code} className="flex flex-wrap items-center gap-2">
                       <span className="text-xs flex-1 truncate" title={altPh.label}>{altPh.label}</span>
                       <span className="text-xs text-muted-foreground">→</span>
                       <Select
@@ -396,7 +396,7 @@ export function BoqImportDialog(props: Props) {
                         onValueChange={(v) => setPhaseMapping((m) => ({ ...m, [altPh.code]: v === '__none__' ? '' : v }))}
                         disabled={isBusy}
                       >
-                        <SelectTrigger className="w-56 h-8"><SelectValue placeholder="Choisir phase projet" /></SelectTrigger>
+                        <SelectTrigger className="h-8 w-full sm:w-56"><SelectValue placeholder="Choisir phase projet" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">— non mappée —</SelectItem>
                           {(projectWbs.length > 0
