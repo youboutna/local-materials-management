@@ -78,13 +78,16 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
       .map((l) => l.id)
       .filter((id): id is string => Boolean(id));
 
+  const deleteLabel = (docs: BoqDocumentSummary[]) =>
+    docs.length === 1
+      ? `${docPrefix.toUpperCase()}-${docs[0].reference}`
+      : `${docs.length} ${t('dqe.navigation.list')}`;
+
   const deleteDocuments = async (docs: BoqDocumentSummary[]) => {
     if (!docs.length || isDeleting) return;
     const ids = docs.map((d) => d.documentId);
-    const label = docs.length === 1
-      ? `${docPrefix.toUpperCase()}-${docs[0].reference}`
-      : `${docs.length} ${t('dqe.navigation.list')}`;
-    if (!window.confirm(t('common.confirm_delete_named', { name: label }) || `Supprimer ${label} ?`)) return;
+
+
 
     setIsDeleting(true);
     // 1. Retrait optimiste immédiat de la liste.
