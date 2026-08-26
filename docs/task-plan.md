@@ -764,3 +764,15 @@ Règle : **aucun composant `.tsx` ni hook ne parle directement à une Edge Funct
 - Statuts : suppression des affichages de codes bruts (`ProjectMap`, `MapFilters`, `ProjectFilters`, `ProjectStatusCard`) → résolution via `useI18n().translateStatus` (référentiel fr/ar/en).
 - Filet de sécurité `humanizeReferentialCode()` dans `status-labels.referential.ts` : aucun code technique (`en_cours_v2`) ne peut atteindre l’UI.
 - Nettoyage dette de build : locales JSON re-aplaties, `useProjectsHex()` (`projects`), `formatReference` importé dans le report adapter, signatures `entityLabels` élargies. Typecheck 0 erreur.
+
+## 2026-08-26 — Sprint 1 : routes DQE dédiées & densité UI (workflow DQE ➔ Devis ➔ Contrat)
+- Nouvelles routes (aucune duplication de menu) : `/dqe/list` (historique), `/dqe/new` (création directe d'un document), `/dqe/:id` (détail) — page `pages/dqe/DqeHub.tsx`, sélection du projet par `?projectId=`.
+- `DqeWorkspace` accepte désormais une sélection pilotée par la route (`documentId`, `onDocumentIdChange`, `autoCreate`) tout en restant utilisable en mode autonome dans l'onglet projet (aucune régression).
+- Densité `BoqActionsBar` (Zone 2) : une seule ligne « actions principales à gauche / actions secondaires à droite ». `PDF`, `Envoyer`, `Télécharger` regroupés dans un menu `Document` (clé i18n `dqe.actions.document_menu` fr/en/ar) ; `Signer` et `Workflow` conservés à droite ; badges d'information (chaîne planification / AO, signature, gate) sur la ligne inférieure.
+- Conservé intact : parties Émetteur/Destinataire (`DocumentPartiesDialog`), Factur-X / EN 16931, TypeCode 310, organisations, gate d'injection, chaîne `ProcurementChainService` (DQE validé ➔ planification ➔ prévisions ➔ AO ➔ portails).
+- `TooltipProvider` global déjà monté (correctif conservé) ; typecheck 0 erreur, build OK.
+
+### Reste à traiter (Sprint 2/3)
+- Sélection directe depuis les catalogues Matériaux/Équipements dans le tableau de lignes (pré-remplissage désignation/unité/PU).
+- Sélecteur de Responsable (Équipe/RH) dans la carte Référentiel (Zone 3).
+- `/consultant-portal` : onglet Candidatures + validations techniques ; synchronisation budget prévisionnel bidirectionnelle.
