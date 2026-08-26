@@ -239,8 +239,8 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             projectId={props.projectId}
             title={ctx.title}
             docPrefix={ctx.docPrefix}
-            onOpen={(id) => setSelectedDocumentId(id)}
-            onCreate={(id) => setSelectedDocumentId(id)}
+            onOpen={(id) => selectDocument(id)}
+            onCreate={(id) => selectDocument(id)}
           />
         </CardContent>
       </Card>
@@ -263,7 +263,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-col gap-3 border-b bg-muted/20">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => setSelectedDocumentId(null)}>
+            <Button variant="ghost" size="sm" onClick={() => selectDocument(null)}>
               <ArrowLeft className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.retour_a_la_liste" fallback="Retour à la liste" />
             </Button>
             <CardTitle className="flex items-center gap-2">
