@@ -81,6 +81,19 @@ export class SupabaseBoqRepository implements IBoqRepository {
     const { error } = await (supabase as any).from(TABLE).delete().eq('id', id).eq('line_type', BOQ_LINE_TYPE_BY_SOURCE[source]);
     if (error) throw new Error(error.message);
   }
+
+  async deleteMany(ids: string[], source: BoqSource): Promise<number> {
+    if (!ids.length) return 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from(TABLE)
+      .delete()
+      .in('id', ids)
+      .eq('line_type', BOQ_LINE_TYPE_BY_SOURCE[source])
+      .select('id');
+    if (error) throw new Error(error.message);
+    return (data as { id: string }[] | null)?.length ?? 0;
+  }
 }
 
 export const boqRepository: IBoqRepository = new SupabaseBoqRepository();
