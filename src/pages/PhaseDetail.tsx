@@ -589,7 +589,12 @@ const PhaseDetail: React.FC = () => {
               </TabsContent>
               <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
               <TabsContent value="payments" className="space-y-4">
-                <DecompteTrackingPanel scope="phase" entityId={phaseId} initialBudget={budget} />
+                <DecompteTrackingPanel
+                  scope="phase"
+                  entityId={phaseId}
+                  initialBudget={phaseAggregate.totalPlanned > 0 ? phaseAggregate.totalPlanned : budget}
+                  engaged={phaseAggregate.totalEngaged}
+                />
                 <PhasePayments phaseId={phaseId!} projectId={projectId!} phaseName={title} phaseBudget={budget} />
               </TabsContent>
             </Tabs>
