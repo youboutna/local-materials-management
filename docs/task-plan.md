@@ -758,3 +758,9 @@ Règle : **aucun composant `.tsx` ni hook ne parle directement à une Edge Funct
 
 - Adapters `SmtpAdapter` / `SendGridAdapter` : prise en charge des pièces jointes (aujourd'hui seul Resend les relaie).
 - Journaliser les envois sortants (canal, destinataire, référence provider) dans une table dédiée pour l'audit.
+
+## 2026-08-26 — Stabilité UI (labels statuts & TooltipProvider)
+- `TooltipProvider` global monté dans `App.tsx` (corrige « Tooltip must be used within TooltipProvider » dans la liste DQE et partout ailleurs).
+- Statuts : suppression des affichages de codes bruts (`ProjectMap`, `MapFilters`, `ProjectFilters`, `ProjectStatusCard`) → résolution via `useI18n().translateStatus` (référentiel fr/ar/en).
+- Filet de sécurité `humanizeReferentialCode()` dans `status-labels.referential.ts` : aucun code technique (`en_cours_v2`) ne peut atteindre l’UI.
+- Nettoyage dette de build : locales JSON re-aplaties, `useProjectsHex()` (`projects`), `formatReference` importé dans le report adapter, signatures `entityLabels` élargies. Typecheck 0 erreur.
