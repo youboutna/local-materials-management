@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, User, Wand2, Link2 } from 'lucide-react';
 import TaskAssigneeSelector from '@/components/selectors/TaskAssigneeSelector';
 import { usePhaseTasksHex } from '@/hooks/hexagonal/usePhaseTasksHex';
+import { usePhaseTaskGenerationHex } from '@/hooks/hexagonal/usePhaseTaskGenerationHex';
+
 import type { TaskAssignmentDTO as PhaseTask, CreateTaskAssignmentDTO as TaskFormData } from '@/dtos/entities/TaskAssignmentDTO';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
