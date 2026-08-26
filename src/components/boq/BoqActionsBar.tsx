@@ -278,26 +278,37 @@ export const BoqActionsBar: React.FC<Props> = ({
 
 
 
-  const handleGenerate = () => withGuard('pdf', async () => {
-    const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
-    DocumentService.download(blob, filename);
-    toast({ title: 'PDF généré', description: filename });
-  });
+  const handleGenerate = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('pdf', async () => {
+      const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
+      DocumentService.download(blob, filename);
+      toast({ title: 'PDF généré', description: filename });
+    });
+  };
 
-  const handleDownload = () => withGuard('download', async () => {
-    const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
-    DocumentService.download(blob, filename);
-  });
+  const handleDownload = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('download', async () => {
+      const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
+      DocumentService.download(blob, filename);
+    });
+  };
 
-  const handleEmail = () => withGuard('email', async () => {
-    const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail: effectiveParties.recipientEmail ?? recipientEmail });
-    if (res.ok) toast({ title: 'Email envoyé' });
-    else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
-  });
+  const handleEmail = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('email', async () => {
+      const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail: effectiveParties.recipientEmail ?? recipientEmail });
+      if (res.ok) toast({ title: 'Email envoyé' });
+      else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
+    });
+  };
 
   const confirmSign = async () => {
     if (!signer.trim()) { toast({ title: 'Signataire requis', variant: 'destructive' }); return; }
+    if (!requireValidHeader()) return;
     setBusy('sign');
+
     try {
       const res = await DocumentService.sign(lines, { ...baseDocCtx, signedBy: signer.trim() });
       if (res.ok) {
