@@ -74,62 +74,155 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
   // ✅ Récupérer les projets pour les labels
   const { projects = [] } = useProjectsHex();
 
+  // Source unique : agrégat de la phase (bordereau + doctrine financière).
+  const { aggregate, isLoading: loadingAggregate } = usePhaseAggregateHex({
+    projectId,
+    phaseId,
+    declaredBudget: phase?.estimatedCost ?? 0,
+  });
+
   // ✅ RÉSOLUTION DU LABEL DU PROJET
   const projectLabel = projectId 
     ? getEntityLabel(projectId, projects, 'project')
     : 'Projet inconnu';
 
+  const budget = aggregate.totalPlanned > 0 ? aggregate.totalPlanned : (phase?.estimatedCost ?? 0);
+  const engaged = aggregate.totalEngaged;
+  const spent = aggregate.totalSpent;
+  const paid = aggregate.totalPaid;
+  const remaining = budget - spent;
+  const utilization = budget > 0 ? (spent / budget) * 100 : 0;
+  const engagementRate = budget > 0 ? (engaged / budget) * 100 : 0;
+
   return (
     <div className="space-y-6">
       {/* Financial Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Budget vs Actual */}
+        {/* Doctrine : Budget → Engagé → Dépensé → Payé → Restant */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium"><T k="auto.phasefinancestab.budget_vs_reel" fallback="Budget vs Réel" /></CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-primary" />
+              <T k="phase.finances.doctrine" fallback="Budget → Engagé → Dépensé" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {loadingCosts ? (
+            {loadingAggregate ? (
               <div className="space-y-3">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
               </div>
-            ) : phaseCosts ? (
+            ) : (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground"><T k="auto.phasefinancestab.estime" fallback="Estimé:" /></span>
-                  <span className="font-medium">{formatCurrency(phase.estimatedCost)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    <T k="phase.finances.budget" fallback="Budget" />
+                    {aggregate.linkedToBoq && (
+                      <Badge variant="outline" className="ml-2 text-[10px]">
+                        {aggregate.source === 'devis' ? 'Devis' : 'DQE'}
+                      </Badge>
+                    )}
+                  </span>
+                  <span className="font-medium">{formatCurrency(budget)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground"><T k="auto.phasefinancestab.engage" fallback="Engagé:" /></span>
-                  <span className="font-medium text-warning">
-                    {formatCurrency(phaseCosts.totalSpent)}
-                  </span>
+                  <span className="font-medium text-warning">{formatCurrency(engaged)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground"><T k="phase.finances.spent" fallback="Dépensé (décomptes validés)" /></span>
+                  <span className="font-medium">{formatCurrency(spent)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground"><T k="phase.finances.paid" fallback="Payé" /></span>
+                  <span className="font-medium">{formatCurrency(paid)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold">
-                  <span><T k="auto.phasefinancestab.ecart" fallback="Écart:" /></span>
-                  <span className={cn(
-                    phaseCosts.costVariance > 0 
-                      ? "text-destructive" 
-                      : "text-success"
-                  )}>
-                    {formatCurrency(phaseCosts.costVariance)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground"><T k="auto.phasefinancestab.budget_restant" fallback="Budget restant:" /></span>
-                  <span className="font-medium text-success">
-                    {formatCurrency(phaseCosts.remainingBudget)}
+                  <span><T k="auto.phasefinancestab.budget_restant" fallback="Budget restant:" /></span>
+                  <span className={cn(remaining < 0 ? 'text-destructive' : 'text-success')}>
+                    {formatCurrency(remaining)}
                   </span>
                 </div>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4"><T k="auto.phasefinancestab.aucune_donnee_financiere" fallback="Aucune donnée financière" /></p>
             )}
           </CardContent>
         </Card>
+
+        {/* Ressources planifiées (matériaux / équipements / main d'œuvre) */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium"><T k="auto.phasefinancestab.repartition_couts" fallback="Répartition coûts" /></CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingAggregate ? (
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+              </div>
+            ) : aggregate.resources.totals.lineCount > 0 ? (
+              <div className="space-y-3">
+                {([
+                  { key: 'material', label: 'Matériaux', bucket: aggregate.resources.materials, color: 'bg-orange-500' },
+                  { key: 'equipment', label: 'Équipements', bucket: aggregate.resources.equipment, color: 'bg-blue-500' },
+                  { key: 'labor', label: "Main d'œuvre", bucket: aggregate.resources.labor, color: 'bg-purple-500' },
+                ] as const).map((row) => {
+                  const cost = row.bucket.plannedCost + row.bucket.engagedCost;
+                  const share = budget > 0 ? (cost / budget) * 100 : 0;
+                  return (
+                    <div key={row.key} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={cn('w-3 h-3 rounded-full', row.color)} />
+                          <span className="text-sm">{row.label} ({row.bucket.count})</span>
+                        </div>
+                        <span className="font-medium">{formatCurrency(cost)}</span>
+                      </div>
+                      <Progress value={Math.min(share, 100)} className="h-1.5" />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                <T k="phase.finances.no_resources" fallback="Aucune ligne de bordereau rattachée à cette phase." />
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Budget Utilization */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium"><T k="auto.phasefinancestab.utilisation_budget" fallback="Utilisation budget" /></CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingAggregate ? (
+              <Skeleton className="h-4 w-full" />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground"><T k="auto.phasefinancestab.progression" fallback="Progression:" /></span>
+                  <span className="font-medium">{phase?.progress ?? 0}%</span>
+                </div>
+                <Progress value={Math.min(utilization, 100)} className="h-2" />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground"><T k="auto.phasefinancestab.utilisation" fallback="Utilisation:" /></span>
+                  <span className={cn('font-medium', utilization > 100 ? 'text-destructive' : 'text-success')}>
+                    {utilization.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground"><T k="phase.finances.engagement_rate" fallback="Taux d'engagement:" /></span>
+                  <span className="font-medium">{engagementRate.toFixed(1)}%</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
         
         {/* Cost Breakdown */}
         <Card>
