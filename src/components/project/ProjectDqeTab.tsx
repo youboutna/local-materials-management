@@ -7,7 +7,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { DqeWorkspace } from '@/components/boq/DqeWorkspace';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { FileSpreadsheet, History, Plus } from 'lucide-react';
 import type { ReferentialType } from '@/config/referentials';
 import { useI18n } from '@/hooks/useI18n';
