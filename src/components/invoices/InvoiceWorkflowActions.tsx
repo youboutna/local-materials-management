@@ -282,12 +282,16 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   return (
     <>
       <div className="flex w-full flex-col gap-2">
-        <InvoiceLifecycleTimeline
-          current={documentType}
-          actor={actor}
-          businessStatus={businessStatus}
-          billedPercentage={billedPercentage}
-        />
+        {/* Mode compact : le stepper de cycle de vie est déjà rendu par la
+            coquille DQE (BoqWorkflowStepper) — pas de doublon. */}
+        {!compact && (
+          <InvoiceLifecycleTimeline
+            current={documentType}
+            actor={actor}
+            businessStatus={businessStatus}
+            billedPercentage={billedPercentage}
+          />
+        )}
 
         <DeviationBadges input={deviationInput} scope="project" />
 
