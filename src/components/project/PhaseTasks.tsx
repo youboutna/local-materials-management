@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, User, Wand2, Link2 } from 'lucide-react';
 import TaskAssigneeSelector from '@/components/selectors/TaskAssigneeSelector';
 import { usePhaseTasksHex } from '@/hooks/hexagonal/usePhaseTasksHex';
+import { usePhaseTaskGenerationHex } from '@/hooks/hexagonal/usePhaseTaskGenerationHex';
+
 import type { TaskAssignmentDTO as PhaseTask, CreateTaskAssignmentDTO as TaskFormData } from '@/dtos/entities/TaskAssignmentDTO';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -42,6 +44,10 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     isUpdating,
     isDeleting
   } = usePhaseTasksHex(phaseId);
+
+  // Chaîne DQE → exécution : les lignes du bordereau deviennent des tâches.
+  const { plan, generateTasks, isGenerating } = usePhaseTaskGenerationHex(projectId, phaseId);
+
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -193,18 +199,36 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Tâches de la phase ({tasks?.length || 0})
+            {plan.linkedToBoq && (
+              <Badge variant="secondary" className="gap-1">
+                <Link2 className="h-3 w-3" />
+                <T k="phase.tasks.from_boq" fallback="Alimenté par le bordereau" />
+              </Badge>
+            )}
           </CardTitle>
-          <Dialog open={isCreating} onOpenChange={setIsCreating}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { resetForm(); setEditingId(null); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                <T k="auto.phasetasks.ajouter_une_tache" fallback="Ajouter une tâche" />
+          <div className="flex items-center gap-2">
+            {plan.pendingLines > 0 && (
+              <Button variant="default" onClick={() => generateTasks()} disabled={isGenerating}>
+                <Wand2 className="h-4 w-4 mr-2" />
+                {isGenerating
+                  ? 'Génération…'
+                  : `Générer ${plan.pendingLines} tâche(s) depuis le bordereau`}
               </Button>
-            </DialogTrigger>
+            )}
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            {!plan.linkedToBoq && (
+              <DialogTrigger asChild>
+                <Button variant="outline" onClick={() => { resetForm(); setEditingId(null); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  <T k="auto.phasetasks.ajouter_une_tache" fallback="Ajouter une tâche" />
+                </Button>
+              </DialogTrigger>
+            )}
+
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
@@ -317,7 +341,9 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
       </CardHeader>
       <CardContent>
         {tasks && tasks.length > 0 ? (
@@ -377,9 +403,23 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
               </div>
             ))}
           </div>
+        ) : plan.pendingLines > 0 ? (
+          <div className="rounded-lg border border-dashed p-4 text-sm space-y-2">
+            <p className="font-medium">
+              {plan.totalLines} ligne(s) de bordereau rattachée(s) à cette phase, aucune tâche d'exécution.
+            </p>
+            <p className="text-muted-foreground">
+              Générez les tâches depuis le bordereau (DQE / métré / devis accepté) pour ouvrir l'exécution.
+            </p>
+            <Button onClick={() => generateTasks()} disabled={isGenerating}>
+              <Wand2 className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Génération…' : `Générer ${plan.pendingLines} tâche(s)`}
+            </Button>
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground"><T k="auto.phasetasks.aucune_tache_assignee_a_cette_phase" fallback="Aucune tâche assignée à cette phase." /></p>
         )}
+
       </CardContent>
     </Card>
   );
