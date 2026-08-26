@@ -432,7 +432,7 @@ export function createEntityOption<T extends AnyRecord>(
   index?: number
 ): EntityOption {
   return {
-    id: entity.id as string,
+    id: (entity as { id?: string }).id ?? '',
     label: resolveLabel(entity, type, index),
   };
 }
@@ -449,7 +449,7 @@ export function getEntityOption(
   entities: AnyRecord[],
   type: EntityType
 ): EntityOption | null {
-  const entity = entities.find(e => e.id === id);
+  const entity = entities.find((e) => (e as { id?: string }).id === id);
   if (!entity) return null;
   return createEntityOption(entity, type);
 }
