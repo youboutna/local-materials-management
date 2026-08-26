@@ -586,18 +586,42 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   return (
     <>
-      {/* Zone 2 — barre de workflow en une seule ligne :
-          gauche = actions principales du document · droite = actions secondaires
-          (Document/PDF, Signer, Workflow) · dessous = badges d'information. */}
+      {/* Zone 2 — barre de workflow : gauche = contexte (édition en-tête,
+          planification) · droite = Document ▾, Workflow ▾ puis l'action
+          principale « Soumettre pour validation » (brouillon uniquement). */}
       <div className="flex w-full flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* --- Actions principales (gauche) --- */}
+          {/* --- Contexte (gauche) --- */}
           <div className="flex flex-wrap items-center gap-2">
-            {can('transfer') && (
-              <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
-                {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
-                {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
-              </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setPartiesOpen(true)}
+              disabled={disabled || busy !== null}
+              title={t('dqe.parties.edit_title')}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              {t('dqe.actions.parties_menu')}
+            </Button>
+
+            {planningActions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
+                    {iconOf('dispatch') ?? iconOf('procurementChain') ?? <Layers className="h-4 w-4 mr-2" />}
+                    {t('dqe.actions.planning_menu')}
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {planningActions.map((a) => (
+                    <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
+                      {a.icon}
+                      {t(a.label ?? getDqeActionLabelKey(a.key))}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {primarySlot}
@@ -609,7 +633,7 @@ export const BoqActionsBar: React.FC<Props> = ({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
-                  {iconOf('generatePdf') ?? iconOf('email') ?? iconOf('download') ?? <FileDown className="h-4 w-4 mr-2" />}
+                  {iconOf('generatePdf') ?? iconOf('email') ?? iconOf('download') ?? iconOf('facturx') ?? <FileDown className="h-4 w-4 mr-2" />}
                   {t('dqe.actions.document_menu')}
                   <ChevronDown className="h-4 w-4 ml-1" />
                 </Button>
@@ -618,41 +642,18 @@ export const BoqActionsBar: React.FC<Props> = ({
                 {docActions.map((a) => (
                   <DropdownMenuItem key={a.key} onSelect={() => a.onSelect()}>
                     {a.icon}
-                    {t(getDqeActionLabelKey(a.key))}
+                    {t(a.label ?? getDqeActionLabelKey(a.key))}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setPartiesOpen(true)}
-            disabled={disabled || busy !== null}
-            title={t('dqe.parties.edit_title')}
-          >
-            <Pencil className="h-4 w-4 mr-2" />
-            {t('dqe.actions.parties_menu')}
-          </Button>
-
-          {can('sign') && !signedInfo && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSignOpen(true)}
-              disabled={disabled || busy !== null}
-              title={`${t('dqe.action.sign')} — ${ctx.title}`}
-            >
-              {iconOf('sign') ?? <PenTool className="h-4 w-4 mr-2" />}
-              {t('dqe.action.sign')}
-            </Button>
           )}
 
           {workflowActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline" disabled={disabled || busy !== null}>
-                  {iconOf('dispatch') ?? iconOf('decompte') ?? <Layers className="h-4 w-4 mr-2" />}
+                  {iconOf('sign') ?? iconOf('decompte') ?? <ShieldCheck className="h-4 w-4 mr-2" />}
                   {t('dqe.actions.workflow_menu')}
                   <ChevronDown className="h-4 w-4 ml-1" />
                 </Button>
@@ -661,12 +662,21 @@ export const BoqActionsBar: React.FC<Props> = ({
                 {workflowActions.map((a) => (
                   <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
                     {a.icon}
-                    {t(getDqeActionLabelKey(a.key))}
+                    {a.labelText ?? t(a.label ?? getDqeActionLabelKey(a.key))}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+
+          {/* Action principale : visible uniquement tant que le document est en brouillon. */}
+          {can('transfer') && isDraftDocument && (
+            <Button size="sm" onClick={handleTransfer} disabled={disabled || busy !== null || !lines.length}>
+              {iconOf('transfer') ?? <ArrowRightCircle className="h-4 w-4 mr-2" />}
+              {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
+            </Button>
+          )}
+
 
           {gateKind && !gate.allowed && canValidateGate && (
             <Button size="sm" onClick={handleApproveInjection} disabled={disabled || busy !== null}
