@@ -45,6 +45,10 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     isDeleting
   } = usePhaseTasksHex(phaseId);
 
+  // Chaîne DQE → exécution : les lignes du bordereau deviennent des tâches.
+  const { plan, generateTasks, isGenerating } = usePhaseTaskGenerationHex(projectId, phaseId);
+
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
