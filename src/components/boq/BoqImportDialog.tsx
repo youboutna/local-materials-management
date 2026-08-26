@@ -24,6 +24,8 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { EdbBudgetDecision } from '@/dtos/boq/EdbValidationDTO';
 import { EdbValidationPanel } from './EdbValidationPanel';
 import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
+import { useBoqImportAssist } from '@/hooks/hexagonal/useBoqImportAssist';
+import { BoqAssistPanel } from '@/components/boq/BoqAssistPanel';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -120,6 +122,20 @@ export function BoqImportDialog(props: Props) {
   }, [dtos, wbs, isAltReferential, phaseMapping]);
 
   const issues = useMemo(() => validateLines(wbsEnrichedDtos), [wbsEnrichedDtos]);
+
+  /** Assistance import : confrontation aux catalogues (matériaux, RH, fournisseurs,
+   *  organisations, projets, phases) + diagnostics ligne par ligne. */
+  const { assist, isCatalogsLoading } = useBoqImportAssist(resolvedProjectId);
+  const assistResult = useMemo(
+    () =>
+      parseResult && wbsEnrichedDtos.length
+        ? assist(wbsEnrichedDtos, { documentMeta: parseResult.documentMeta, parties: parseResult.parties })
+        : null,
+    [parseResult, wbsEnrichedDtos, assist],
+  );
+  const applyAssist = () => {
+    if (assistResult) setDtos(assistResult.lines);
+  };
 
   /** Rapport de validation EDB (JSON structuré) — bloque l'écriture tant que les
    *  erreurs de calcul ne sont pas corrigées et que l'écart n'est pas arbitré. */
@@ -427,6 +443,10 @@ export function BoqImportDialog(props: Props) {
 
 
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
+
+            {assistResult && (
+              <BoqAssistPanel result={assistResult} onApply={applyAssist} disabled={isBusy || isCatalogsLoading} />
+            )}
 
             {edbReport && (
               <EdbValidationPanel
