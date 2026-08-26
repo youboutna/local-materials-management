@@ -37,6 +37,18 @@ export interface BoqLineTotals {
   netToPay?: number;      // TTC − retenues (opt.)
 }
 
+/**
+ * Surcharges de TVA à trois niveaux (doctrine fiscale du document) :
+ *   1. Ligne      → `line.vatRate` (saisie explicite, priorité absolue)
+ *   2. Catégorie  → `byCategory[categorie|resourceType|elementType]`
+ *   3. Global     → `globalVatRate` (en-tête du document)
+ * puis, à défaut : régime de prestation → profil fiscal pays.
+ */
+export interface BoqVatOverrides {
+  globalVatRate?: number | null;
+  byCategory?: Record<string, number | null | undefined>;
+}
+
 export class BoqCalculatorService {
   /**
    * Compute the quantity for a single line from dims + unit rules.
@@ -51,12 +63,36 @@ export class BoqCalculatorService {
     return def.compute(input.length ?? 0, input.width ?? undefined, input.height ?? undefined);
   }
 
+  /** Taux de TVA effectif d'une ligne selon la hiérarchie ligne → catégorie → global. */
+  static resolveVatRate(
+    input: BoqLineInput,
+    profile?: BoqFiscalProfile,
+    overrides?: BoqVatOverrides | null,
+  ): number {
+    if (input.vatRate !== null && input.vatRate !== undefined) return input.vatRate;
+    const keys = [input.category, input.resourceType, input.elementType]
+      .map((k) => (k == null ? '' : String(k)))
+      .filter(Boolean);
+    for (const key of keys) {
+      const rate = overrides?.byCategory?.[key];
+      if (rate !== null && rate !== undefined) return rate;
+    }
+    if (overrides?.globalVatRate !== null && overrides?.globalVatRate !== undefined) {
+      return overrides.globalVatRate;
+    }
+    return resolveLineTax(input, profile).vatRate;
+  }
+
   /** Line totals HT / TVA / TTC (+ retenues if a fiscal profile is provided). */
-  static computeTotals(input: BoqLineInput, profile?: BoqFiscalProfile): BoqLineTotals {
+  static computeTotals(
+    input: BoqLineInput,
+    profile?: BoqFiscalProfile,
+    overrides?: BoqVatOverrides | null,
+  ): BoqLineTotals {
     const quantity = BoqCalculatorService.computeQuantity(input);
     const unitPrice = input.unitPrice ?? 0;
     const tax = resolveLineTax(input, profile);
-    const vatRate = tax.vatRate;
+    const vatRate = BoqCalculatorService.resolveVatRate(input, profile, overrides);
     const totalHt = quantity * unitPrice + (input.fees ?? 0);
     const totalTva = totalHt * vatRate;
     const withholding = totalHt * tax.rasRate;
@@ -66,11 +102,16 @@ export class BoqCalculatorService {
     return { quantity, totalHt, totalTva, totalTtc, withholding, netToPay };
   }
 
+
   /** Aggregate totals over a set of lines. */
-  static aggregate(lines: BoqLineInput[], profile?: BoqFiscalProfile): BoqLineTotals {
+  static aggregate(
+    lines: BoqLineInput[],
+    profile?: BoqFiscalProfile,
+    overrides?: BoqVatOverrides | null,
+  ): BoqLineTotals {
     return lines.reduce<BoqLineTotals>(
       (acc, l) => {
-        const t = BoqCalculatorService.computeTotals(l, profile);
+        const t = BoqCalculatorService.computeTotals(l, profile, overrides);
         return {
           quantity: acc.quantity + t.quantity,
           totalHt: acc.totalHt + t.totalHt,
@@ -89,12 +130,13 @@ export class BoqCalculatorService {
     lines: T[],
     key: string,
     profile?: BoqFiscalProfile,
+    overrides?: BoqVatOverrides | null,
   ): Record<string, BoqLineTotals> {
     const out: Record<string, BoqLineTotals> = {};
     for (const l of lines) {
       const k = String(l[key] ?? '__unassigned__');
       const cur = out[k] ?? { quantity: 0, totalHt: 0, totalTva: 0, totalTtc: 0, withholding: 0, netToPay: 0 };
-      const t = BoqCalculatorService.computeTotals(l, profile);
+      const t = BoqCalculatorService.computeTotals(l, profile, overrides);
       out[k] = {
         quantity: cur.quantity + t.quantity,
         totalHt: cur.totalHt + t.totalHt,
@@ -111,20 +153,26 @@ export class BoqCalculatorService {
    * Ventilation TVA multi-taux : la TVA n'est pas uniforme sur un DQE
    * (travaux / fourniture / consulting / exonéré bailleur).
    */
-  static vatBuckets(lines: BoqLineInput[], profile?: BoqFiscalProfile): VatBucket[] {
+  static vatBuckets(
+    lines: BoqLineInput[],
+    profile?: BoqFiscalProfile,
+    overrides?: BoqVatOverrides | null,
+  ): VatBucket[] {
     return buildVatBuckets(
       lines.map((l) => {
         const tax = resolveLineTax(l, profile);
-        const t = BoqCalculatorService.computeTotals(l, profile);
+        const t = BoqCalculatorService.computeTotals(l, profile, overrides);
+        const vatRate = BoqCalculatorService.resolveVatRate(l, profile, overrides);
         return {
           totalHt: t.totalHt,
-          vatRate: tax.vatRate,
-          vatCategoryCode: tax.vatCategoryCode,
-          exemptionReason: tax.exemptionReason,
+          vatRate,
+          vatCategoryCode: vatRate > 0 ? 'S' : tax.vatCategoryCode,
+          exemptionReason: vatRate > 0 ? undefined : tax.exemptionReason,
         };
       }),
     );
   }
+
 
   /**
    * Contrôle de cohérence HT / TVA / TTC entre les lignes et le récapitulatif

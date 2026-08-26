@@ -32,6 +32,7 @@ import { ChevronDown } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
 import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referentials/boq/dqe-actions.referential';
 import { DocumentPartiesDialog, type DocumentPartiesValue } from './DocumentPartiesDialog';
+import { DocumentHeaderService } from '@/application/services/boq/DocumentHeaderService';
 import { useProcurementChain } from '@/hooks/hexagonal/useProcurementChainHex';
 import { ProcurementChainService } from '@/application/services/procurement/ProcurementChainService';
 import { Rocket } from 'lucide-react';
@@ -182,6 +183,11 @@ export const BoqActionsBar: React.FC<Props> = ({
     senderEmail: partiesOverride?.senderEmail ?? company?.email,
     recipientName: partiesOverride?.recipientName ?? parties.recipientName,
     recipientEmail: partiesOverride?.recipientEmail ?? recipientEmail,
+    extraRecipients: partiesOverride?.extraRecipients ?? [],
+    reference: partiesOverride?.reference,
+    issueDate: partiesOverride?.issueDate,
+    currency: partiesOverride?.currency,
+    validityDays: partiesOverride?.validityDays,
   }), [partiesOverride, company, parties.senderName, parties.recipientName, recipientEmail]);
 
   const effectiveCompany = React.useMemo(() => (
@@ -194,6 +200,57 @@ export const BoqActionsBar: React.FC<Props> = ({
         }
       : company
   ), [effectiveParties, company]);
+
+  // En-tête canonique (DTO) : source unique du PDF, du XML Factur-X et de la
+  // validation bloquante avant génération / signature / envoi.
+  const header = React.useMemo(
+    () => DocumentHeaderService.merge(
+      {
+        reference: effectiveParties.reference ?? null,
+        issueDate: effectiveParties.issueDate ?? null,
+        currency: effectiveParties.currency ?? null,
+        validityDays: effectiveParties.validityDays ?? null,
+        facturxTypeCode: null,
+        sender: {
+          name: effectiveParties.senderName ?? '',
+          address: effectiveParties.senderAddress ?? null,
+          phone: effectiveParties.senderPhone ?? null,
+          email: effectiveParties.senderEmail ?? null,
+        },
+        recipients: [
+          { name: effectiveParties.recipientName ?? '', email: effectiveParties.recipientEmail ?? null },
+          ...(effectiveParties.extraRecipients ?? []).map((r) => ({ name: r.name, email: r.email ?? null })),
+        ].filter((r) => r.name.trim().length > 0),
+        notes: null,
+      },
+      {
+        reference: effectiveParties.reference ?? null,
+        issueDate: effectiveParties.issueDate ?? null,
+        sender: { name: effectiveParties.senderName ?? '' },
+        recipients: [{ name: effectiveParties.recipientName ?? '' }],
+      },
+    ),
+    [effectiveParties],
+  );
+
+  const headerValidation = React.useMemo(
+    () => DocumentHeaderService.validate(header, lines),
+    [header, lines],
+  );
+
+  /** Bloque PDF / signature / envoi tant que l'en-tête est incomplet. */
+  const requireValidHeader = React.useCallback((): boolean => {
+    if (headerValidation.valid) return true;
+    toast({
+      title: t('dqe.header.error.title') || 'En-tête incomplet',
+      description: headerValidation.issues
+        .map((i) => t(i.messageKey) || i.fallback)
+        .join(' · '),
+      variant: 'destructive',
+    });
+    setPartiesOpen(true);
+    return false;
+  }, [headerValidation, t]);
 
   const baseDocCtx = {
     company: effectiveCompany,
@@ -210,31 +267,49 @@ export const BoqActionsBar: React.FC<Props> = ({
     signed: !!signedInfo,
     signedBy: signedInfo?.by,
     signedAt: signedInfo?.at,
-    senderName: effectiveParties.senderName,
-    recipientName: effectiveParties.recipientName,
+    senderName: header.sender.name,
+    recipientName: header.recipients[0]?.name,
+    recipientNames: header.recipients.map((r) => r.name),
+    reference: header.reference ?? undefined,
+    issueDate: header.issueDate ?? undefined,
+    currency: header.currency ?? undefined,
+    validityDays: header.validityDays ?? undefined,
+    facturxTypeCode: header.facturxTypeCode ?? undefined,
   };
 
 
-  const handleGenerate = () => withGuard('pdf', async () => {
-    const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
-    DocumentService.download(blob, filename);
-    toast({ title: 'PDF généré', description: filename });
-  });
 
-  const handleDownload = () => withGuard('download', async () => {
-    const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
-    DocumentService.download(blob, filename);
-  });
+  const handleGenerate = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('pdf', async () => {
+      const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
+      DocumentService.download(blob, filename);
+      toast({ title: 'PDF généré', description: filename });
+    });
+  };
 
-  const handleEmail = () => withGuard('email', async () => {
-    const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail: effectiveParties.recipientEmail ?? recipientEmail });
-    if (res.ok) toast({ title: 'Email envoyé' });
-    else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
-  });
+  const handleDownload = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('download', async () => {
+      const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
+      DocumentService.download(blob, filename);
+    });
+  };
+
+  const handleEmail = () => {
+    if (!requireValidHeader()) return;
+    void withGuard('email', async () => {
+      const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail: effectiveParties.recipientEmail ?? recipientEmail });
+      if (res.ok) toast({ title: 'Email envoyé' });
+      else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
+    });
+  };
 
   const confirmSign = async () => {
     if (!signer.trim()) { toast({ title: 'Signataire requis', variant: 'destructive' }); return; }
+    if (!requireValidHeader()) return;
     setBusy('sign');
+
     try {
       const res = await DocumentService.sign(lines, { ...baseDocCtx, signedBy: signer.trim() });
       if (res.ok) {

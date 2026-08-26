@@ -274,9 +274,13 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             </CardTitle>
             <BoqWorkflowStepper
               lines={doc.lines ?? []}
+              documentType={invoiceDef.code}
+              source={ctx.source}
               compact={props.routeContext === 'project-dqe'}
+              onReversed={() => doc.refetch?.()}
               className="ml-auto"
             />
+
           </div>
 
           {/* Barre unique : G1 actions principales · G2 workflow · G3 badges. */}

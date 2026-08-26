@@ -14,10 +14,15 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown, Lock } from 'lucide-react';
+import { Check, ChevronsUpDown, Lock, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/useI18n';
 import { useDocumentPartySuggestions, type DocumentPartySuggestion } from '@/hooks/boq/useDocumentPartySuggestions';
+
+export interface DocumentRecipientValue {
+  name: string;
+  email?: string;
+}
 
 export interface DocumentPartiesValue {
   senderName?: string;
@@ -26,6 +31,16 @@ export interface DocumentPartiesValue {
   senderEmail?: string;
   recipientName?: string;
   recipientEmail?: string;
+  /** Destinataires additionnels (copies / co-signataires). */
+  extraRecipients?: DocumentRecipientValue[];
+  /** Référence documentaire affichée sur le PDF (Réf. DQE / N° facture). */
+  reference?: string;
+  /** Date d'émission ISO (YYYY-MM-DD). */
+  issueDate?: string;
+  /** Devise ISO 4217. */
+  currency?: string;
+  /** Validité de l'offre en jours. */
+  validityDays?: number;
 }
 
 interface Props {
@@ -104,9 +119,13 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
 
   const patch = (p: Partial<DocumentPartiesValue>) => setDraft((prev) => ({ ...prev, ...p }));
 
+  const recipients = draft.extraRecipients ?? [];
+  const patchRecipient = (index: number, p: Partial<DocumentRecipientValue>) =>
+    patch({ extraRecipients: recipients.map((r, i) => (i === index ? { ...r, ...p } : r)) });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('dqe.parties.edit_title')}</DialogTitle>
           <DialogDescription>
@@ -122,6 +141,31 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
         )}
 
         <div className="space-y-4">
+          {/* En-tête documentaire : référence, date, devise, validité */}
+          <div className="grid grid-cols-1 gap-2 rounded-md border bg-muted/20 p-3 sm:grid-cols-4">
+            <div className="space-y-1 sm:col-span-2">
+              <Label>{t('dqe.header.reference') || 'Référence'}</Label>
+              <Input value={draft.reference ?? ''} disabled={locked}
+                onChange={(e) => patch({ reference: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('dqe.header.issue_date') || "Date d'émission"}</Label>
+              <Input type="date" value={draft.issueDate ?? ''} disabled={locked}
+                onChange={(e) => patch({ issueDate: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('dqe.header.currency') || 'Devise'}</Label>
+              <Input value={draft.currency ?? ''} disabled={locked} placeholder="MRU"
+                onChange={(e) => patch({ currency: e.target.value.toUpperCase() })} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('dqe.header.validity_days') || 'Validité (jours)'}</Label>
+              <Input type="number" min={1} value={draft.validityDays ?? ''} disabled={locked}
+                onChange={(e) => patch({ validityDays: Number(e.target.value) || undefined })} />
+            </div>
+          </div>
+
+
           <PartyAutocomplete
             label={t('dqe.parties.sender')}
             value={draft.senderName}
@@ -177,7 +221,41 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
             <Input type="email" value={draft.recipientEmail ?? ''} disabled={locked}
               onChange={(e) => patch({ recipientEmail: e.target.value })} />
           </div>
+
+          {/* Destinataires additionnels (copies / co-signataires) */}
+          <div className="space-y-2 rounded-md border p-3">
+            <div className="flex items-center justify-between">
+              <Label>{t('dqe.header.extra_recipients') || 'Destinataires additionnels'}</Label>
+              <Button type="button" variant="outline" size="sm" disabled={locked}
+                onClick={() => patch({ extraRecipients: [...recipients, { name: '', email: '' }] })}>
+                <Plus className="mr-1 h-3 w-3" />
+                {t('common.add') || 'Ajouter'}
+              </Button>
+            </div>
+            {recipients.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {t('dqe.header.extra_recipients_hint') || 'Aucun destinataire additionnel.'}
+              </p>
+            ) : (
+              recipients.map((r, index) => (
+                <div key={`recipient-${index}`} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                  <Input value={r.name} disabled={locked}
+                    placeholder={t('dqe.parties.recipient_placeholder')}
+                    onChange={(e) => patchRecipient(index, { name: e.target.value })} />
+                  <Input type="email" value={r.email ?? ''} disabled={locked}
+                    placeholder={t('dqe.parties.recipient_email')}
+                    onChange={(e) => patchRecipient(index, { email: e.target.value })} />
+                  <Button type="button" variant="ghost" size="icon" disabled={locked}
+                    aria-label={t('common.delete') || 'Supprimer'}
+                    onClick={() => patch({ extraRecipients: recipients.filter((_, i) => i !== index) })}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
+
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>

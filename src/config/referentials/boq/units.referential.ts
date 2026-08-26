@@ -4,7 +4,7 @@
  * Reused by QuantityTakeoff, Tender DQE Estimator, and DQE Import.
  */
 
-export type BoqUnit = 'm³' | 'm²' | 'm' | 'unité' | 'jour' | 'forfait';
+export type BoqUnit = 'm³' | 'm²' | 'm' | 'unité' | 'jour' | 'mois' | 'forfait';
 
 export interface BoqUnitDefinition {
   code: BoqUnit;
@@ -51,6 +51,14 @@ export const BOQ_UNITS: BoqUnitDefinition[] = [
     requires: { length: true, width: false, height: false },
     compute: (l) => l,
   },
+  {
+    // Ressources humaines mobilisées au mois (homme·mois).
+    code: 'mois',
+    label: 'mois (homme·mois)',
+    requires: { length: true, width: false, height: false },
+    compute: (l) => l,
+  },
+
   {
     // Poste au forfait : quantité = nombre de forfaits.
     code: 'forfait',

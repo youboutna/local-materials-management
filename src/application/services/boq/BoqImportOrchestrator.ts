@@ -5,6 +5,7 @@
  */
 import type { ReferentialType } from '@/config/referentials';
 import { detectElementType, normalizeUnit } from '@/config/referentials/boq';
+import { detectLabour } from '@/config/referentials/boq/labour-profiles.referential';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -186,17 +187,17 @@ export class BoqImportOrchestrator {
         ? String(get(mapping.elementType) ?? '').trim()
         : detectElementType(designation);
 
-      // Une unité en jours/hommes désigne une prestation intellectuelle (RH),
-      // même hors bloc « Ressources Humaines » (cas des DQE de services).
-      // Une unité en jours désigne une prestation/main d'œuvre, sauf location
-      // d'engins ou de véhicules facturée à la journée (matériel).
-      const equipmentRental = /\b(location|louage|engin|v[eé]hicule|camion|pelle|grue|4x4|mat[eé]riel)\b/i.test(designation);
-      const labourUnit = unit === 'jour' && !equipmentRental;
-      if (unit === 'jour' && equipmentRental) resolved.resourceType = 'equipment';
-      const isLabour = sectionKind === 'labour' || labourUnit;
+      // Détection RH via le référentiel `labour-profiles` : le mode de
+      // facturation vient de l'unité (homme·jour / homme·mois / forfait) et le
+      // profil du libellé (chef de mission, ingénieur, ouvrier…). Une location
+      // d'engin facturée à la journée reste du matériel.
+      const labour = detectLabour({ designation, unit, sectionKind });
+      if (!labour.isLabour && (unit === 'jour' || unit === 'mois')) resolved.resourceType = 'equipment';
+      const isLabour = labour.isLabour;
       const resourceType: BoqResourceType = isLabour
         ? 'labor'
         : ((resolved.resourceType as BoqResourceType) ?? 'material');
+
       const sectionLabel = String(row.raw[SECTION_LABEL_COLUMN] ?? '').trim() || null;
 
       const dto: BoqLineDTO = {
@@ -217,6 +218,8 @@ export class BoqImportOrchestrator {
           ...(lotKey ? { lot: lotKey } : {}),
           ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(isLabour && labour.billingMode ? { labourBillingMode: labour.billingMode } : {}),
+          ...(isLabour && labour.profileCode ? { labourProfileCode: labour.profileCode } : {}),
           ...(price.corrected
             ? { priceCorrection: { originalUnitPrice: price.originalUnitPrice ?? null, reason: price.reason ?? null } }
             : {}),
@@ -225,6 +228,7 @@ export class BoqImportOrchestrator {
             ? { parties: partyMeta }
             : {}),
         },
+
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
