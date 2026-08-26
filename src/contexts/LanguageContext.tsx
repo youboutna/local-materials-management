@@ -255,7 +255,8 @@ export const translations = {
             supplier_access: "Accès Fournisseur",
             evaluation_access: "Accès Évaluation",
             access_secure: "Accès Sécurisé",
-            suppliers: "Fournisseurs"
+            suppliers: "Fournisseurs",
+            consultant_portal: "Portail Consultant"
 
         },
         role_based_route: {
@@ -1897,7 +1898,8 @@ export const translations = {
             supplier_access: "الوصول للمورد",
             evaluation_access: "وصول التقييم",
             access_secure: "وصول آمن",
-            suppliers: "الموردون"
+            suppliers: "الموردون",
+            consultant_portal: "بوابة الاستشاري"
         },
         app: {
             name: "HadraTech-GPI"
@@ -3438,7 +3440,8 @@ procurement_features: {
             supplier_portal: "Supplier Portal",
             supplier_tender_portal: "Supplier Bid Portal",
             supplier_dashboard: "Supplier Dashboard",
-            suppliers: "Suppliers"
+            suppliers: "Suppliers",
+            consultant_portal: "Consultant Portal"
         },
         role_based_route: {
             loading: "Loading...",
