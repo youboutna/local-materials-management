@@ -668,7 +668,9 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
     const pick =
       computedPhases.find((p) => p.status === "in_progress") ||
-      computedPhases.find((p) => PENDING_PHASE_STATUSES_SET.has(String(p.status))) ||
+      computedPhases.find((p) =>
+        ["not_started", "pending", "draft", "planned"].includes(String(p.status)),
+      ) ||
       computedPhases[computedPhases.length - 1];
 
     const stages = Array.isArray(pick?.stages) ? pick.stages : [];
