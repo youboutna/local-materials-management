@@ -47,6 +47,12 @@ interface Props {
 
   recipientEmail?: string;
   showComparison?: boolean;
+  /** Sélection pilotée par la route (`/dqe/:id`). `null` = vue Liste. */
+  documentId?: string | null;
+  /** Notifie la route d'un changement de sélection (navigation). */
+  onDocumentIdChange?: (id: string | null) => void;
+  /** Crée immédiatement un nouveau document (route `/dqe/new`). */
+  autoCreate?: boolean;
   onAttachToSubmission?: () => void;
   onSubmitInvoice?: () => void;
   onDistribute?: () => void;
