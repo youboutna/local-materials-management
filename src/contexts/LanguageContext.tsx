@@ -5930,7 +5930,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         }
     }, [language]);
 
-    const t = (key: string, params?: Record<string, string | number>): string => {
+    const t = (
+        key: string,
+        params?: Record<string, string | number>,
+        fallback?: string,
+    ): string => {
         type Nested = Record<string, unknown>;
 
         const lookup = (lang: Language): string | null => {
