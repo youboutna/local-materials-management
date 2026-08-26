@@ -170,7 +170,8 @@ export const InvoiceWorkflowService = {
     const def = getInvoiceDocumentType(input.type);
     if (def.code !== 'dqe' || input.target !== def.validationStatus) return undefined;
 
-    const projectId = input.lines.find((l) => l.projectId)?.projectId ?? null;
+    // Pour un DQE, `contextId` porte l'identifiant du projet.
+    const projectId = input.lines.find((l) => l.contextId)?.contextId ?? null;
     const documentId = input.lines.find((l) => l.documentId)?.documentId ?? null;
     if (!projectId) {
       return { triggered: false, error: 'Projet introuvable sur les lignes du document.' };
