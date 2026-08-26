@@ -48,7 +48,9 @@ describe('Import DQE PPGASDL Assaba Lot 1', () => {
     const dtos = BoqImportOrchestrator.toDtos(parsed.rows, mapping, { source: 'dqe', contextId: 'p1' });
     expect(dtos).toHaveLength(10);
     expect(dtos.every((d) => d.vatRate === 0.05)).toBe(true);
-    expect(dtos.reduce((s, d) => s + (d.totalHt ?? 0), 0)).toBeCloseTo(71850000, 2);
+    // Colonne « Total HT » vide (formules sans valeur en cache) → reconstruite Qté × PU.
+    expect(dtos.reduce((s, d) => s + (d.totalHt ?? 0), 0)).toBeCloseTo(35810000, 2);
+
 
     const labour = dtos.filter((d) => d.resourceType === 'labor');
     expect(labour.map((d) => d.designation)).toEqual(
