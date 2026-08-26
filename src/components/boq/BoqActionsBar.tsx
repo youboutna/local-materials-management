@@ -591,19 +591,8 @@ export const BoqActionsBar: React.FC<Props> = ({
           principale « Soumettre pour validation » (brouillon uniquement). */}
       <div className="flex w-full flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* --- Contexte (gauche) --- */}
+          {/* --- Contexte (gauche) : planification uniquement --- */}
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setPartiesOpen(true)}
-              disabled={disabled || busy !== null}
-              title={t('dqe.parties.edit_title')}
-            >
-              <Pencil className="h-4 w-4 mr-2" />
-              {t('dqe.actions.parties_menu')}
-            </Button>
-
             {planningActions.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -627,8 +616,19 @@ export const BoqActionsBar: React.FC<Props> = ({
             {primarySlot}
           </div>
 
-          {/* --- Actions secondaires (droite) --- */}
+          {/* --- Actions secondaires (droite) : Parties ▾ · Document ▾ · Workflow ▾ --- */}
           <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPartiesOpen(true)}
+            disabled={disabled || busy !== null}
+            title={t('dqe.parties.edit_title')}
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            {t('dqe.actions.parties_menu')}
+          </Button>
+
           {docActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

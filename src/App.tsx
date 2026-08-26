@@ -584,6 +584,32 @@ function App() {
                         }
                       />
 
+                      {/* DQE dans le contexte d'un projet (contexte pré-rempli) */}
+                      <Route
+                        path="/projects/:projectId/dqe/list"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <DqeHub mode="list" />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/projects/:projectId/dqe/new"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <DqeHub mode="new" />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/projects/:projectId/dqe/:id"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <DqeHub mode="detail" />
+                          </RoleBasedRoute>
+                        }
+                      />
+
                     {/* Consultant Portal — routes déclarées AVANT le catch-all */}
                     <Route
                       path="/consultant-portal"

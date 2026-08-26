@@ -264,14 +264,11 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     <div className="space-y-4">
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-col gap-3 border-b bg-muted/20">
-          <div className="flex items-center gap-3">
+          {/* Zone 2 — un seul stepper de cycle de vie, jamais de titre dupliqué. */}
+          <div className="flex flex-wrap items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => selectDocument(null)}>
               <ArrowLeft className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.retour_a_la_liste" fallback="Retour à la liste" />
             </Button>
-            <CardTitle className="flex items-center gap-2">
-              <FileSpreadsheet className="h-5 w-5" />
-              {ctx.title}
-            </CardTitle>
             <BoqWorkflowStepper
               lines={doc.lines ?? []}
               documentType={invoiceDef.code}

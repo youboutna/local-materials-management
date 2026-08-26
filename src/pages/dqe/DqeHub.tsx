@@ -1,8 +1,7 @@
 /**
  * DqeHub — routes dédiées à l'Expression de besoin (DQE) :
- *   • /dqe/list      → historique des DQE (vue Liste)
- *   • /dqe/new       → création d'un nouveau DQE (wizard : projet → document)
- *   • /dqe/:id       → détail d'un DQE
+ *   • /dqe/list | /dqe/new | /dqe/:id                              (hors contexte projet)
+ *   • /projects/:projectId/dqe/list | /new | /:id                  (contexte projet imposé)
  *
  * Aucune logique métier ici : la coquille mutualisée `DqeWorkspace` (hexagonale)
  * porte le workflow DRAFT → SUBMITTED → VALIDATED, le parser, les catalogues et
@@ -17,6 +16,7 @@ import { FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import { DqeWorkspace } from '@/components/boq/DqeWorkspace';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
 import { resolveProjectLabel } from '@/utils/entityLabels';
+import { useI18n } from '@/hooks/useI18n';
 import type { ReferentialType } from '@/config/referentials';
 
 type Mode = 'list' | 'new' | 'detail';
@@ -30,9 +30,13 @@ const DqeHub: React.FC<Props> = ({ mode }) => {
   const params = useParams();
   const [search, setSearch] = useSearchParams();
   const { projects, isLoading } = useProjectsHex();
+  const { t } = useI18n();
 
-  const projectId = search.get('projectId') ?? '';
+  /** Contexte projet imposé par la route `/projects/:projectId/dqe/...`. */
+  const scopedProjectId = params.projectId ?? null;
+  const projectId = scopedProjectId ?? search.get('projectId') ?? '';
   const documentId = mode === 'detail' ? params.id ?? null : mode === 'new' ? undefined : null;
+  const basePath = scopedProjectId ? `/projects/${scopedProjectId}/dqe` : '/dqe';
 
   const project = useMemo(
     () => (projects ?? []).find((p) => p.id === projectId) ?? null,
@@ -46,8 +50,8 @@ const DqeHub: React.FC<Props> = ({ mode }) => {
   };
 
   const goto = (docId: string | null) => {
-    const qs = projectId ? `?projectId=${projectId}` : '';
-    navigate(docId ? `/dqe/${docId}${qs}` : `/dqe/list${qs}`);
+    const qs = !scopedProjectId && projectId ? `?projectId=${projectId}` : '';
+    navigate(docId ? `${basePath}/${docId}${qs}` : `${basePath}/list${qs}`);
   };
 
   const projectLabel = project ? resolveProjectLabel(project) : '';
@@ -59,40 +63,40 @@ const DqeHub: React.FC<Props> = ({ mode }) => {
         <CardHeader className="flex flex-col gap-3 border-b bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <FileSpreadsheet className="h-5 w-5" />
-            Expression de besoin (DQE)
+            {t('dqe.navigation.module')}
             {projectLabel ? <span className="text-sm font-normal text-muted-foreground">· {projectLabel}</span> : null}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Select value={projectId} onValueChange={setProject} disabled={isLoading}>
-              <SelectTrigger className="w-[280px]">
-                <SelectValue placeholder="Sélectionner un projet" />
-              </SelectTrigger>
-              <SelectContent>
-                {(projects ?? []).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{resolveProjectLabel(p)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!scopedProjectId && (
+              <Select value={projectId} onValueChange={setProject} disabled={isLoading}>
+                <SelectTrigger className="w-[280px]">
+                  <SelectValue placeholder={t('dqe.navigation.select_project')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(projects ?? []).map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{resolveProjectLabel(p)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             {mode !== 'list' ? (
               <Button variant="outline" size="sm" onClick={() => goto(null)}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> Historique
+                <ArrowLeft className="h-4 w-4 mr-1" /> {t('dqe.navigation.list')}
               </Button>
             ) : (
               <Button
                 size="sm"
                 disabled={!projectId}
-                onClick={() => navigate(`/dqe/new?projectId=${projectId}`)}
+                onClick={() => navigate(`${basePath}/new${!scopedProjectId ? `?projectId=${projectId}` : ''}`)}
               >
-                Nouveau DQE
+                {t('dqe.navigation.new')}
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent className="p-4">
           {!projectId ? (
-            <p className="text-sm text-muted-foreground">
-              Sélectionnez un projet pour consulter ou créer une expression de besoin.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('dqe.navigation.select_project_hint')}</p>
           ) : (
             <DqeWorkspace
               routeContext="project-dqe"

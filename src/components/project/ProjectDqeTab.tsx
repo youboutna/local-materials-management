@@ -7,7 +7,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { DqeWorkspace } from '@/components/boq/DqeWorkspace';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { FileSpreadsheet, History, Plus } from 'lucide-react';
 import type { ReferentialType } from '@/config/referentials';
 import { useI18n } from '@/hooks/useI18n';
@@ -22,7 +22,8 @@ interface Props {
 
 const ProjectDqeTab: React.FC<Props> = ({ projectId, projectName, referentialCode, remainingBudget }) => {
   const { t } = useI18n();
-  const query = `?projectId=${encodeURIComponent(projectId)}`;
+  // Navigation contextualisée : le projet courant est porté par l'URL.
+  const base = `/projects/${encodeURIComponent(projectId)}/dqe`;
 
   return (
     <div className="space-y-4">
@@ -37,30 +38,20 @@ const ProjectDqeTab: React.FC<Props> = ({ projectId, projectName, referentialCod
           </p>
         </div>
 
-        <Tabs value="workspace" className="w-full lg:w-auto">
-          <TabsList className="w-full justify-start lg:w-auto">
-            <TabsTrigger value="workspace" className="gap-1">
-              <FileSpreadsheet className="h-4 w-4" />
-              {t('dqe.navigation.workspace')}
-            </TabsTrigger>
-            <TabsTrigger value="list" asChild className="gap-1">
-              <Link to={`/dqe/list${query}`}>
-                <History className="h-4 w-4" />
-                {t('dqe.navigation.list')}
-              </Link>
-            </TabsTrigger>
-            <TabsTrigger value="new" asChild className="gap-1">
-              <Link to={`/dqe/new${query}`}>
-                <Plus className="h-4 w-4" />
-                {t('dqe.navigation.new')}
-              </Link>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <Button asChild size="sm" variant="outline" className="lg:hidden">
-          <Link to={`/dqe/list${query}`}>{t('dqe.navigation.open_history')}</Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild size="sm">
+            <Link to={`${base}/new`}>
+              <Plus className="h-4 w-4 mr-1" />
+              {t('dqe.navigation.new')}
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to={`${base}/list`}>
+              <History className="h-4 w-4 mr-1" />
+              {t('dqe.navigation.list')}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <DqeWorkspace

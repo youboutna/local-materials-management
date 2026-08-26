@@ -30,6 +30,11 @@ interface PhaseMaterialsProps {
   addLabel?: string;
   /** Message affiché lorsque la liste filtrée est vide. */
   emptyLabel?: string;
+  /**
+   * Autorise la saisie manuelle. Faux quand la phase est alimentée par la
+   * chaîne DQE / devis (lecture seule).
+   */
+  allowManual?: boolean;
 }
 
 const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
@@ -39,6 +44,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
   title,
   addLabel,
   emptyLabel,
+  allowManual = true,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [selectedMaterialId, setSelectedMaterialId] = useState('');
@@ -154,6 +160,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
             <Package className="h-5 w-5" />
             {title ?? 'Matériaux de la phase'} ({phaseMaterials?.length || 0})
           </CardTitle>
+          {allowManual && (
           <Dialog open={isAdding} onOpenChange={setIsAdding}>
             <DialogTrigger asChild>
               <Button size="sm">
@@ -205,6 +212,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
