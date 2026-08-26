@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRightCircle, Calculator, FileCheck2, FileSpreadsheet, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowRightCircle, Calculator, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
@@ -47,6 +47,8 @@ import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
+
 import type { StakeholderOption } from './BoqLineTable';
 import { getEnumOptions } from '@/config/referentials/i18n/enum-labels.referential';
 import { useI18n } from '@/hooks/useI18n';
@@ -148,10 +150,23 @@ export function BoqWorkspace({
   ], [organizations, activeEmployees, activeSuppliers]);
   /** Responsable par défaut (Zone 3) — appliqué aux nouvelles lignes sans partie prenante. */
   const [defaultStakeholderId, setDefaultStakeholderId] = useState<string>(() => readPrefs().stakeholderId ?? '');
+  /** Hydratation : à défaut de préférence, le maître d'ouvrage du projet est responsable. */
+  const { organization: ownerOrganization } = useOwnerOrganization();
+  useEffect(() => {
+    if (defaultStakeholderId) return;
+    const stored = readPrefs().stakeholderId;
+    if (stored) { setDefaultStakeholderId(stored); return; }
+    if (ownerOrganization?.id) setDefaultStakeholderId(ownerOrganization.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownerOrganization?.id, defaultStakeholderId]);
   const defaultStakeholder = useMemo(
     () => stakeholders.find((s) => s.id === defaultStakeholderId) ?? null,
     [stakeholders, defaultStakeholderId],
   );
+  /** Référentiel verrouillé sur le projet actif (contexte projet = source de vérité). */
+  const referentialLocked = mode === 'planning' && !!projectId && !!projectName;
+  const effectiveReferential = referentialLocked ? referentialCode : activeReferential;
+
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
     () => (defaultStakeholder
@@ -525,49 +540,50 @@ export function BoqWorkspace({
             <div className="text-xs font-medium uppercase text-muted-foreground"><T k="auto.boqworkspace.document" fallback="Document" /></div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-lg font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</span>
-              <Badge variant={pendingCount > 0 || dirty ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
-              {signatureInfo && (
-                <Badge variant="outline" className="border-primary text-primary">
-                  {t('dqe.locked_signed')} · {signatureInfo.at} — {signatureInfo.by}
-                </Badge>
-              )}
-              {!signatureInfo && transmittedInfo && (
-                <Badge variant="outline" className="border-primary text-primary">
-                  {t('dqe.locked_transmitted')}{transmittedInfo.at ? ` · ${transmittedInfo.at}` : ''}
-                </Badge>
-              )}
             </div>
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">{t('referential.label')}</Label>
-            <Select
-              value={activeReferential ?? '__project__'}
-              onValueChange={(v) => {
-                const next = v === '__project__' ? referentialCode : (v as ReferentialType);
-                setActiveReferential(next);
-                writePrefs({ referential: next });
-              }}
-            >
-              <SelectTrigger className="h-10">
-                <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__project__">
-                  {projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
-                  {referentialCode ? ` (${referentialCode})` : ''}
-                </SelectItem>
-                {referentialOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{t('dqe.referential.enrich')} {opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {referentialLocked ? (
+              <div
+                className="flex h-10 items-center gap-2 rounded-md border bg-muted/40 px-3 text-sm"
+                title={t('dqe.referential.hint')}
+              >
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="truncate font-medium">{projectName}</span>
+                {referentialCode ? <span className="text-xs text-muted-foreground">({referentialCode})</span> : null}
+              </div>
+            ) : (
+              <Select
+                value={activeReferential ?? '__project__'}
+                onValueChange={(v) => {
+                  const next = v === '__project__' ? referentialCode : (v as ReferentialType);
+                  setActiveReferential(next);
+                  writePrefs({ referential: next });
+                }}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__project__">
+                    {projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
+                    {referentialCode ? ` (${referentialCode})` : ''}
+                  </SelectItem>
+                  {referentialOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{t('dqe.referential.enrich')} {opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <p className="text-[11px] text-muted-foreground">
               {t('dqe.referential.hint')}
             </p>
           </div>
+
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
-            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={activeReferential} />
+            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={effectiveReferential} />
             <Select
               value={defaultStakeholderId || '__none__'}
               onValueChange={(v) => {
@@ -707,7 +723,7 @@ export function BoqWorkspace({
                     onChange={setWbs}
                     phases={projectPhases.length > 0 ? projectPhases : undefined}
           
-                    referentialCode={activeReferential}
+                    referentialCode={effectiveReferential}
                   />
                 </div>
 
@@ -857,7 +873,7 @@ export function BoqWorkspace({
             source={source}
             contextId={contextId}
             projectId={projectId}
-            defaultReferentialCode={activeReferential}
+            defaultReferentialCode={effectiveReferential}
             title={importLabel ?? labels.import}
             trigger={
               <Button size="sm" variant="outline" disabled={locked}>
@@ -914,7 +930,7 @@ export function BoqWorkspace({
           lines={displayedLines}
           emptyLabel={emptyLabel ?? labels.empty}
           editable={!locked}
-          referentialCode={activeReferential}
+          referentialCode={effectiveReferential}
           phases={projectPhases.length > 0 ? projectPhases : undefined}
           stakeholders={stakeholders}
           onChange={handlePatch}
@@ -922,7 +938,30 @@ export function BoqWorkspace({
         />
       )}
       </div>
+
+      {/* Journal de traçabilité — persistance / signature / transmission.
+          Ces badges ne polluent plus l'en-tête : ils sont regroupés ici. */}
+      <div className="flex flex-wrap items-center gap-2 border-t bg-muted/10 p-3 text-xs text-muted-foreground">
+        <span className="font-medium uppercase tracking-wide">
+          <T k="dqe.journal.title" fallback="Journal de traçabilité" />
+        </span>
+        <Badge variant={dirty ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
+        <span>
+          <T k="dqe.journal.lines" fallback="Lignes persistées" /> : {doc.lines.length}
+        </span>
+        {signatureInfo && (
+          <Badge variant="outline" className="border-primary text-primary">
+            {t('dqe.locked_signed')} · {signatureInfo.at} — {signatureInfo.by}
+          </Badge>
+        )}
+        {!signatureInfo && transmittedInfo && (
+          <Badge variant="outline" className="border-primary text-primary">
+            {t('dqe.locked_transmitted')}{transmittedInfo.at ? ` · ${transmittedInfo.at}` : ''}
+          </Badge>
+        )}
+      </div>
       </section>
+
     </div>
   );
 }
