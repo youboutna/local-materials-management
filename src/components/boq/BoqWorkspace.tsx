@@ -525,46 +525,47 @@ export function BoqWorkspace({
             <div className="text-xs font-medium uppercase text-muted-foreground"><T k="auto.boqworkspace.document" fallback="Document" /></div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-lg font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</span>
-              <Badge variant={pendingCount > 0 || dirty ? 'secondary' : doc.lines.length > 0 ? 'default' : 'outline'}>{docStatus}</Badge>
-              {signatureInfo && (
-                <Badge variant="outline" className="border-primary text-primary">
-                  {t('dqe.locked_signed')} · {signatureInfo.at} — {signatureInfo.by}
-                </Badge>
-              )}
-              {!signatureInfo && transmittedInfo && (
-                <Badge variant="outline" className="border-primary text-primary">
-                  {t('dqe.locked_transmitted')}{transmittedInfo.at ? ` · ${transmittedInfo.at}` : ''}
-                </Badge>
-              )}
             </div>
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">{t('referential.label')}</Label>
-            <Select
-              value={activeReferential ?? '__project__'}
-              onValueChange={(v) => {
-                const next = v === '__project__' ? referentialCode : (v as ReferentialType);
-                setActiveReferential(next);
-                writePrefs({ referential: next });
-              }}
-            >
-              <SelectTrigger className="h-10">
-                <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__project__">
-                  {projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
-                  {referentialCode ? ` (${referentialCode})` : ''}
-                </SelectItem>
-                {referentialOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{t('dqe.referential.enrich')} {opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {referentialLocked ? (
+              <div
+                className="flex h-10 items-center gap-2 rounded-md border bg-muted/40 px-3 text-sm"
+                title={t('dqe.referential.hint')}
+              >
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="truncate font-medium">{projectName}</span>
+                {referentialCode ? <span className="text-xs text-muted-foreground">({referentialCode})</span> : null}
+              </div>
+            ) : (
+              <Select
+                value={activeReferential ?? '__project__'}
+                onValueChange={(v) => {
+                  const next = v === '__project__' ? referentialCode : (v as ReferentialType);
+                  setActiveReferential(next);
+                  writePrefs({ referential: next });
+                }}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__project__">
+                    {projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
+                    {referentialCode ? ` (${referentialCode})` : ''}
+                  </SelectItem>
+                  {referentialOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{t('dqe.referential.enrich')} {opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <p className="text-[11px] text-muted-foreground">
               {t('dqe.referential.hint')}
             </p>
           </div>
+
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
             <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={activeReferential} />
