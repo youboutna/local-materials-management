@@ -72,16 +72,21 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
     onCreate(id);
   };
 
+  const resolveTitle = (doc: BoqDocumentSummary) => {
+    if (doc.title?.trim()) return doc.title.trim();
+    return `${docPrefix.toUpperCase()} ${doc.reference}`;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">{title} · Liste</h2>
+          <h2 className="text-lg font-semibold">{title} · {t('dqe.navigation.list')}</h2>
           <Badge variant="outline">{filtered.length} / {documents.length}</Badge>
         </div>
         <Button onClick={handleNew} size="sm">
-          <Plus className="h-4 w-4 mr-1" /> Nouveau {docPrefix.toUpperCase()}
+          <Plus className="h-4 w-4 mr-1" /> {t('dqe.navigation.new')}
         </Button>
       </div>
 
@@ -118,7 +123,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
               <tr><td colSpan={6} className="text-center p-6 text-muted-foreground">Chargement…</td></tr>
             ) : filtered.length === 0 ? (
               <tr><td colSpan={6} className="text-center p-8 text-muted-foreground">
-                Aucun document. Cliquez « Nouveau {docPrefix.toUpperCase()} » pour commencer.
+                {t('dqe.empty.create_hint')}
               </td></tr>
             ) : filtered.map((d) => {
                const variant = STATUS_VARIANT[d.status] ?? STATUS_VARIANT.draft;
@@ -129,8 +134,8 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                   className="border-t hover:bg-muted/30 cursor-pointer"
                   onClick={() => onOpen(d.documentId)}
                 >
-                  <td className="p-3 font-mono text-xs">{docPrefix.toUpperCase()}-{d.reference}</td>
-                  <td className="p-3">{d.title || <span className="text-muted-foreground italic"><T k="auto.boqdocumentlist.sans_titre" fallback="Sans titre" /></span>}</td>
+                  <td className="p-3 font-medium">{docPrefix.toUpperCase()}-{d.reference}</td>
+                  <td className="p-3">{resolveTitle(d)}</td>
                   <td className="p-3 text-right">{d.lineCount}</td>
                    <td className="p-3 text-right font-medium">{d.totalHt.toLocaleString(locale, { maximumFractionDigits: 2 })} MRU</td>
                    <td className="p-3"><Badge variant={variant}>{d.status === 'mixed' ? t('dqe.status.mixed') : translateStatus(d.status)}</Badge></td>
