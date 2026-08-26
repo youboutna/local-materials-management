@@ -291,7 +291,33 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={pendingDelete.length > 0} onOpenChange={(o) => { if (!o) setPendingDelete([]); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('common.delete')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('common.confirm_delete_named', { name: deleteLabel(pendingDelete) })
+                || `Êtes-vous sûr de vouloir supprimer ${deleteLabel(pendingDelete)} ?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={() => {
+                const docs = pendingDelete;
+                setPendingDelete([]);
+                void deleteDocuments(docs);
+              }}
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 };
 
