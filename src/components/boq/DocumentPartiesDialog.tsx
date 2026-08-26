@@ -119,9 +119,13 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
 
   const patch = (p: Partial<DocumentPartiesValue>) => setDraft((prev) => ({ ...prev, ...p }));
 
+  const recipients = draft.extraRecipients ?? [];
+  const patchRecipient = (index: number, p: Partial<DocumentRecipientValue>) =>
+    patch({ extraRecipients: recipients.map((r, i) => (i === index ? { ...r, ...p } : r)) });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('dqe.parties.edit_title')}</DialogTitle>
           <DialogDescription>
@@ -137,6 +141,31 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
         )}
 
         <div className="space-y-4">
+          {/* En-tête documentaire : référence, date, devise, validité */}
+          <div className="grid grid-cols-1 gap-2 rounded-md border bg-muted/20 p-3 sm:grid-cols-4">
+            <div className="space-y-1 sm:col-span-2">
+              <Label>{t('dqe.header.reference') || 'Référence'}</Label>
+              <Input value={draft.reference ?? ''} disabled={locked}
+                onChange={(e) => patch({ reference: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('dqe.header.issue_date') || "Date d'émission"}</Label>
+              <Input type="date" value={draft.issueDate ?? ''} disabled={locked}
+                onChange={(e) => patch({ issueDate: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('dqe.header.currency') || 'Devise'}</Label>
+              <Input value={draft.currency ?? ''} disabled={locked} placeholder="MRU"
+                onChange={(e) => patch({ currency: e.target.value.toUpperCase() })} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('dqe.header.validity_days') || 'Validité (jours)'}</Label>
+              <Input type="number" min={1} value={draft.validityDays ?? ''} disabled={locked}
+                onChange={(e) => patch({ validityDays: Number(e.target.value) || undefined })} />
+            </div>
+          </div>
+
+
           <PartyAutocomplete
             label={t('dqe.parties.sender')}
             value={draft.senderName}
