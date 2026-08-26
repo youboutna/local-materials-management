@@ -225,6 +225,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
             ) : filtered.map((d) => {
                const variant = STATUS_VARIANT[d.status] ?? STATUS_VARIANT.draft;
                const readOnly = d.readOnly;
+               /** Édition possible uniquement sur un document rouvert / brouillon / rejeté. */
+               const editable = !readOnly && EDITABLE_STATUSES.has(String(d.status).toLowerCase());
+
               return (
                 <tr
                   key={d.documentId}
