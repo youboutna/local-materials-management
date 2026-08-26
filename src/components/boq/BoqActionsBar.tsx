@@ -464,7 +464,9 @@ export const BoqActionsBar: React.FC<Props> = ({
           )}
 
           {workflowSlot}
+          </div>
         </div>
+
 
         {/* --- G3 : badges d'information (jamais de boutons) --- */}
         <div className="flex flex-wrap items-center gap-2">
