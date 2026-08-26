@@ -118,11 +118,43 @@ const PartyAutocomplete: React.FC<PartyAutocompleteProps> = ({
 export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, value, locked = false, onSave }) => {
   const { t } = useI18n();
   const { suggestions } = useDocumentPartySuggestions();
-  const [draft, setDraft] = React.useState<DocumentPartiesValue>(value);
+  const withDefaults = React.useCallback((v: DocumentPartiesValue): DocumentPartiesValue => ({
+    ...v,
+    title: v.title?.trim() || 'DQE',
+    facturxTypeCode: v.facturxTypeCode?.trim() || '310',
+    currency: v.currency?.trim() || 'MRU',
+    validityDays: v.validityDays && v.validityDays > 0 ? v.validityDays : 30,
+    issueDate: v.issueDate || new Date().toISOString().slice(0, 10),
+  }), []);
+  const [draft, setDraft] = React.useState<DocumentPartiesValue>(() => withDefaults(value));
+  const [submitted, setSubmitted] = React.useState(false);
+  const titleRef = React.useRef<HTMLInputElement>(null);
+  const typeCodeRef = React.useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => { if (open) setDraft(value); }, [open, value]);
+  React.useEffect(() => {
+    if (open) { setDraft(withDefaults(value)); setSubmitted(false); }
+  }, [open, value, withDefaults]);
 
   const patch = (p: Partial<DocumentPartiesValue>) => setDraft((prev) => ({ ...prev, ...p }));
+
+  const titleError = !String(draft.title ?? '').trim();
+  const typeCodeError = !String(draft.facturxTypeCode ?? '').trim();
+
+  const handleSave = () => {
+    setSubmitted(true);
+    if (titleError || typeCodeError) {
+      toast({
+        title: t('dqe.header.error.title') || 'En-tête incomplet',
+        description: t('dqe.header.error.title_typecode')
+          || 'Veuillez renseigner le titre et le type code avant de continuer.',
+        variant: 'destructive',
+      });
+      (titleError ? titleRef : typeCodeRef).current?.focus();
+      return;
+    }
+    onSave(draft);
+    onOpenChange(false);
+  };
 
   const recipients = draft.extraRecipients ?? [];
   const patchRecipient = (index: number, p: Partial<DocumentRecipientValue>) =>
@@ -130,8 +162,9 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[85vh] w-[95vw] max-w-2xl overflow-y-auto">
         <DialogHeader>
+
           <DialogTitle>{t('dqe.parties.edit_title')}</DialogTitle>
           <DialogDescription>
             {locked ? t('dqe.parties.locked_hint') : t('dqe.parties.edit_hint')}
