@@ -253,13 +253,26 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                         size="icon"
                         variant="ghost"
                         onClick={() => onOpen(d.documentId)}
-                        title={readOnly ? t('dqe.action.view') : t('dqe.action.edit')}
+                        title={t('dqe.action.view')}
+                        aria-label={t('dqe.action.view')}
                       >
-                        {readOnly ? <Eye className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                        <Eye className="h-4 w-4" />
                       </Button>
+                      {editable && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => onOpen(d.documentId)}
+                          title={t('dqe.action.edit')}
+                          aria-label={t('dqe.action.edit')}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         size="icon"
                         variant="ghost"
+
                         onClick={() => handleDelete(d)}
                         disabled={readOnly || isDeleting}
                         title={readOnly ? t('dqe.locked_transmitted') : t('common.delete')}
