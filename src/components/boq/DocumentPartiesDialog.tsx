@@ -19,6 +19,11 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/useI18n';
 import { useDocumentPartySuggestions, type DocumentPartySuggestion } from '@/hooks/boq/useDocumentPartySuggestions';
 
+export interface DocumentRecipientValue {
+  name: string;
+  email?: string;
+}
+
 export interface DocumentPartiesValue {
   senderName?: string;
   senderAddress?: string;
@@ -26,6 +31,16 @@ export interface DocumentPartiesValue {
   senderEmail?: string;
   recipientName?: string;
   recipientEmail?: string;
+  /** Destinataires additionnels (copies / co-signataires). */
+  extraRecipients?: DocumentRecipientValue[];
+  /** Référence documentaire affichée sur le PDF (Réf. DQE / N° facture). */
+  reference?: string;
+  /** Date d'émission ISO (YYYY-MM-DD). */
+  issueDate?: string;
+  /** Devise ISO 4217. */
+  currency?: string;
+  /** Validité de l'offre en jours. */
+  validityDays?: number;
 }
 
 interface Props {
