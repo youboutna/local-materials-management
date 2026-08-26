@@ -196,13 +196,13 @@ const PhaseDetail: React.FC = () => {
 
   const { title, description, budget: storedBudget, estimatedDuration, startDate, endDate, location } = vm;
 
-  // Localisation : celle de la phase, sinon héritée du projet (aucun placeholder)
-  const projectLocation =
-    (project as unknown as { location?: string; address?: string } | null | undefined)?.location ||
-    (project as unknown as { address?: string } | null | undefined)?.address ||
-    '';
-  const effectiveLocation = location
-    ? { value: location, inherited: false }
+  // Localisation : celle de la phase, sinon héritée du projet via le résolveur
+  // canonique (zones d'intervention géocodées, adresse, coordonnées) — les
+  // placeholders type « Non spécifié » stockés en base sont ignorés.
+  const projectLocation = resolveProjectLocationLabel(project as never) ?? '';
+  const phaseLocation = resolveProjectLocationLabel({ location } as never);
+  const effectiveLocation = phaseLocation
+    ? { value: phaseLocation, inherited: false }
     : projectLocation
       ? { value: projectLocation, inherited: true }
       : { value: 'Non spécifiée', inherited: false };
