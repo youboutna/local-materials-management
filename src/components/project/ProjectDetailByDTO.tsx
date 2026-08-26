@@ -961,7 +961,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                 <div className="flex items-baseline justify-between gap-3">
                   <dt className="text-muted-foreground"><T k="auto.projectdetailbydto.localisation" fallback="Localisation" /></dt>
                   <dd className="text-right font-medium">
-                    {project.location || "Non spécifiée"}
+                    {resolveProjectLocationLabel(project as never) || "Non renseignée"}
                     {(() => {
                       const lat =
                         project?.coordinates?.latitude ??
@@ -985,14 +985,14 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground"><T k="auto.projectdetailbydto.phase_actuelle" fallback="Phase actuelle" /></span>
-                  <Badge variant={currentPhaseInfo.currentPhase ? "default" : "outline"} className="text-[11px]">
-                    {currentPhaseInfo.currentPhase || "Aucune phase"}
+                  <Badge variant={resolvedPhaseInfo.currentPhase ? "default" : "outline"} className="text-[11px]">
+                    {resolvedPhaseInfo.currentPhase || "Aucune phase planifiée"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground"><T k="auto.projectdetailbydto.etape_actuelle" fallback="Étape actuelle" /></span>
-                  <Badge variant={currentPhaseInfo.currentStage ? "secondary" : "outline"} className="text-[11px]">
-                    {currentPhaseInfo.currentStage || "N/A"}
+                  <Badge variant={resolvedPhaseInfo.currentStage ? "secondary" : "outline"} className="text-[11px]">
+                    {resolvedPhaseInfo.currentStage || "—"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3">
