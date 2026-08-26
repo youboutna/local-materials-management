@@ -184,11 +184,13 @@ export const BoqActionsBar: React.FC<Props> = ({
     recipientName: partiesOverride?.recipientName ?? parties.recipientName,
     recipientEmail: partiesOverride?.recipientEmail ?? recipientEmail,
     extraRecipients: partiesOverride?.extraRecipients ?? [],
+    title: partiesOverride?.title ?? ctx.title,
+    facturxTypeCode: partiesOverride?.facturxTypeCode ?? '310',
     reference: partiesOverride?.reference,
     issueDate: partiesOverride?.issueDate,
     currency: partiesOverride?.currency,
     validityDays: partiesOverride?.validityDays,
-  }), [partiesOverride, company, parties.senderName, parties.recipientName, recipientEmail]);
+  }), [partiesOverride, company, parties.senderName, parties.recipientName, recipientEmail, ctx.title]);
 
   const effectiveCompany = React.useMemo(() => (
     effectiveParties.senderName
@@ -210,7 +212,7 @@ export const BoqActionsBar: React.FC<Props> = ({
         issueDate: effectiveParties.issueDate ?? null,
         currency: effectiveParties.currency ?? null,
         validityDays: effectiveParties.validityDays ?? null,
-        facturxTypeCode: null,
+        facturxTypeCode: effectiveParties.facturxTypeCode ?? null,
         sender: {
           name: effectiveParties.senderName ?? '',
           address: effectiveParties.senderAddress ?? null,
@@ -255,7 +257,7 @@ export const BoqActionsBar: React.FC<Props> = ({
   const baseDocCtx = {
     company: effectiveCompany,
     docPrefix: ctx.docPrefix,
-    title: ctx.title,
+    title: effectiveParties.title || ctx.title,
     source: ctx.source,
     contextId: ctx.contextId,
     projectId: ctx.projectId,
