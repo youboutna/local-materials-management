@@ -25,6 +25,10 @@ export interface DocumentRecipientValue {
 }
 
 export interface DocumentPartiesValue {
+  /** Titre du document (obligatoire, ex. « DQE »). */
+  title?: string;
+  /** TypeCode UNTDID 1001 (310 devis, 380 facture) — obligatoire. */
+  facturxTypeCode?: string;
   senderName?: string;
   senderAddress?: string;
   senderPhone?: string;
@@ -42,6 +46,7 @@ export interface DocumentPartiesValue {
   /** Validité de l'offre en jours. */
   validityDays?: number;
 }
+
 
 interface Props {
   open: boolean;
