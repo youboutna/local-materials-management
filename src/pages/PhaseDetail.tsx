@@ -256,7 +256,15 @@ const PhaseDetail: React.FC = () => {
 
 
   return (
-    <AppLayout pageTitle={title} pageDescription={stageMeta.description}>
+    <AppLayout
+      pageTitle={title}
+      pageDescription={[
+        (project as unknown as { title?: string } | null | undefined)?.title,
+        stageMeta.label,
+      ]
+        .filter(Boolean)
+        .join(' · ')}
+    >
       <div className="container mx-auto px-4 py-4 space-y-4">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
