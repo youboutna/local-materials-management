@@ -4,7 +4,7 @@
  * Reused by QuantityTakeoff, Tender DQE Estimator, and DQE Import.
  */
 
-export type BoqUnit = 'm³' | 'm²' | 'm' | 'unité' | 'jour' | 'forfait';
+export type BoqUnit = 'm³' | 'm²' | 'm' | 'unité' | 'jour' | 'mois' | 'forfait';
 
 export interface BoqUnitDefinition {
   code: BoqUnit;
