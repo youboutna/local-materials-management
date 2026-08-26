@@ -160,7 +160,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         </div>
         <div className="flex items-center gap-2">
           {selectedDocs.length > 0 && (
-            <Button variant="destructive" size="sm" disabled={isDeleting} onClick={() => deleteDocuments(selectedDocs)}>
+            <Button variant="destructive" size="sm" disabled={isDeleting} onClick={() => setPendingDelete(selectedDocs)}>
               <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')} ({selectedDocs.length})
             </Button>
           )}
