@@ -24,7 +24,7 @@ export const FacturXPdfService = {
         afRelationship: AFRelationship.Data,
       });
       const out = await doc.save();
-      return new Blob([out], { type: 'application/pdf' });
+      return new Blob([new Uint8Array(out).buffer as ArrayBuffer], { type: 'application/pdf' });
     } catch {
       return pdf;
     }
