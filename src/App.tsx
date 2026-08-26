@@ -26,6 +26,7 @@ import MaterialCreate from "./pages/MaterialCreate";
 import MaterialDetail from "./pages/MaterialDetail";
 import MaterialEdit from "./pages/MaterialEdit";
 import Documents from "./pages/Documents";
+import DqeHub from "./pages/dqe/DqeHub";
 import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
 import Employees from "./pages/Employees";
