@@ -634,4 +634,4 @@ export interface ProjectPhaseForTender {
     order: number;
     status: string;
   }>;
-}
+}export { usePhaseResourceLinkHex } from './usePhaseResourceLinkHex';
