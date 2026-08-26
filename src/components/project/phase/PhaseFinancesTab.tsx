@@ -25,6 +25,8 @@ import { T } from '@/components/i18n/T';
 // ✅ IMPORT entityLabels
 import { getEntityLabel, formatReference } from '@/utils/entityLabels';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+import { usePhaseAggregateHex } from '@/hooks/hexagonal/usePhaseAggregateHex';
+
 
 interface PhaseCosts {
   estimatedCost: number;
