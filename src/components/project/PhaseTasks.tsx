@@ -193,18 +193,36 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Tâches de la phase ({tasks?.length || 0})
+            {plan.linkedToBoq && (
+              <Badge variant="secondary" className="gap-1">
+                <Link2 className="h-3 w-3" />
+                <T k="phase.tasks.from_boq" fallback="Alimenté par le bordereau" />
+              </Badge>
+            )}
           </CardTitle>
-          <Dialog open={isCreating} onOpenChange={setIsCreating}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { resetForm(); setEditingId(null); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                <T k="auto.phasetasks.ajouter_une_tache" fallback="Ajouter une tâche" />
+          <div className="flex items-center gap-2">
+            {plan.pendingLines > 0 && (
+              <Button variant="default" onClick={() => generateTasks()} disabled={isGenerating}>
+                <Wand2 className="h-4 w-4 mr-2" />
+                {isGenerating
+                  ? 'Génération…'
+                  : `Générer ${plan.pendingLines} tâche(s) depuis le bordereau`}
               </Button>
-            </DialogTrigger>
+            )}
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            {!plan.linkedToBoq && (
+              <DialogTrigger asChild>
+                <Button variant="outline" onClick={() => { resetForm(); setEditingId(null); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  <T k="auto.phasetasks.ajouter_une_tache" fallback="Ajouter une tâche" />
+                </Button>
+              </DialogTrigger>
+            )}
+
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
