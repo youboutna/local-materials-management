@@ -5,6 +5,7 @@
  */
 import type { ReferentialType } from '@/config/referentials';
 import { detectElementType, normalizeUnit } from '@/config/referentials/boq';
+import { detectLabour } from '@/config/referentials/boq/labour-profiles.referential';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -217,6 +218,8 @@ export class BoqImportOrchestrator {
           ...(lotKey ? { lot: lotKey } : {}),
           ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(isLabour && labour.billingMode ? { labourBillingMode: labour.billingMode } : {}),
+          ...(isLabour && labour.profileCode ? { labourProfileCode: labour.profileCode } : {}),
           ...(price.corrected
             ? { priceCorrection: { originalUnitPrice: price.originalUnitPrice ?? null, reason: price.reason ?? null } }
             : {}),
@@ -225,6 +228,7 @@ export class BoqImportOrchestrator {
             ? { parties: partyMeta }
             : {}),
         },
+
         phaseId: phaseId || null,
         milestoneId: resolved.milestoneId ?? null,
         taskId: resolved.taskId ?? null,
