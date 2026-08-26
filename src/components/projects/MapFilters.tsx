@@ -1,3 +1,4 @@
+import { useI18n } from '@/hooks/useI18n';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';

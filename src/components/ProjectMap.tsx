@@ -1,3 +1,4 @@
+import { useI18n } from '@/hooks/useI18n';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import React, { useEffect, useMemo, useState } from "react";

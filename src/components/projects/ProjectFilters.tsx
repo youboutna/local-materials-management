@@ -1,4 +1,5 @@
 
+import { useI18n } from '@/hooks/useI18n';
 import React from 'react';
 import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFilters';
 import { AutocompleteOption } from '@/components/ui/autocomplete';
@@ -42,6 +43,7 @@ const ProjectFilters: React.FC<ProjectFiltersProps> = ({
   onAutocompleteSelect
 }) => {
   const { t } = useLanguage();
+  const { translateStatus } = useI18n();
   const filters: FilterField[] = [
     {
       key: 'status',
