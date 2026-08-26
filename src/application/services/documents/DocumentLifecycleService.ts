@@ -132,6 +132,8 @@ export const DocumentLifecycleService = {
       type: input.transition.documentType,
       lines: input.lines,
       target: input.transition.targetStatus,
+      // Transition inverse : aucune propagation métier (dé-publication gérée à part).
+      propagate: false,
     });
   },
 };

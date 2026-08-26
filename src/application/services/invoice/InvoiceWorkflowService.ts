@@ -49,6 +49,25 @@ export interface InvoiceTransformInput {
   currency?: string;
 }
 
+/** Diagnostic de la propagation automatique déclenchée à la validation du DQE. */
+export interface AutoChainOutcome {
+  triggered: boolean;
+  error?: string;
+  tenderId?: string | null;
+  tenderStatus?: string;
+  publishedAt?: string | null;
+  phasesCreated?: number;
+  phasesReused?: number;
+  milestonesCreated?: number;
+  tasksCreated?: number;
+  phaseMaterials?: number;
+  phaseEmployees?: number;
+  projectResources?: number;
+  linesConsidered?: number;
+  budgetSynced?: boolean;
+  warnings?: string[];
+}
+
 export interface InvoiceTransformResult {
   documentId: string;
   documentType: InvoiceDocumentType;
@@ -99,12 +118,19 @@ export const InvoiceWorkflowService = {
    * Avance le statut métier du document (DQE : brouillon → soumis → validé ;
    * devis : reçu → en analyse → accepté). Les statuts sont ceux du référentiel
    * propre à l'étape : aucun statut de devis n'est applicable à un DQE.
+   *
+   * Effet de bord métier imposé : lorsqu'un DQE atteint son statut de
+   * validation, la chaîne d'approvisionnement est déclenchée AUTOMATIQUEMENT
+   * (planification → prévisions budgétaires → appel d'offres → publication
+   * portails). Aucun clic supplémentaire n'est requis.
    */
   async advanceStatus(input: {
     type: InvoiceDocumentType;
     lines: BoqLineDTO[];
     target?: string;
-  }): Promise<{ status: string; updated: number }> {
+    /** Désactive la propagation automatique (transitions inverses). */
+    propagate?: boolean;
+  }): Promise<{ status: string; updated: number; chain?: AutoChainOutcome }> {
     const def = getInvoiceDocumentType(input.type);
     const current = input.lines[0]?.businessStatus ?? def.initialStatus;
     const target = input.target
@@ -122,7 +148,65 @@ export const InvoiceWorkflowService = {
         } as Partial<BoqLineDTO>),
       ),
     );
-    return { status: target, updated: persistable.length };
+
+    const chain =
+      input.propagate === false
+        ? undefined
+        : await this.propagateOnValidation({ type: input.type, target, lines: persistable });
+
+    return { status: target, updated: persistable.length, chain };
+  },
+
+  /**
+   * Propagation automatique post-validation d'une expression de besoin.
+   * Ne lève jamais : un échec de propagation est retourné en diagnostic afin de
+   * ne pas annuler la transition de statut déjà persistée.
+   */
+  async propagateOnValidation(input: {
+    type: InvoiceDocumentType;
+    target: string;
+    lines: BoqLineDTO[];
+  }): Promise<AutoChainOutcome | undefined> {
+    const def = getInvoiceDocumentType(input.type);
+    if (def.code !== 'dqe' || input.target !== def.validationStatus) return undefined;
+
+    // Pour un DQE, `contextId` porte l'identifiant du projet.
+    const projectId = input.lines.find((l) => l.contextId)?.contextId ?? null;
+    const documentId = input.lines.find((l) => l.documentId)?.documentId ?? null;
+    if (!projectId) {
+      return { triggered: false, error: 'Projet introuvable sur les lignes du document.' };
+    }
+
+    try {
+      const { ProcurementChainService } = await import(
+        '@/application/services/procurement/ProcurementChainService'
+      );
+      const validated = input.lines.map((l) => ({ ...l, businessStatus: input.target }));
+      const result = await ProcurementChainService.runFromValidatedDqe({
+        projectId,
+        documentId,
+        lines: validated,
+        publish: true,
+      });
+      return {
+        triggered: true,
+        tenderId: result.tender.tenderId,
+        tenderStatus: result.tender.status,
+        publishedAt: result.tender.publishedAt,
+        phasesCreated: result.planning.phasesCreated,
+        phasesReused: result.planning.phasesReused,
+        milestonesCreated: result.planning.milestonesCreated,
+        tasksCreated: result.planning.tasksCreated,
+        phaseMaterials: result.planning.phaseMaterials,
+        phaseEmployees: result.planning.phaseEmployees,
+        projectResources: result.planning.projectResources,
+        linesConsidered: result.planning.linesConsidered,
+        budgetSynced: result.forecast.updated,
+        warnings: result.warnings,
+      };
+    } catch (error) {
+      return { triggered: false, error: error instanceof Error ? error.message : String(error) };
+    }
   },
 
 
