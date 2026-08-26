@@ -160,6 +160,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
             <Package className="h-5 w-5" />
             {title ?? 'Matériaux de la phase'} ({phaseMaterials?.length || 0})
           </CardTitle>
+          {allowManual && (
           <Dialog open={isAdding} onOpenChange={setIsAdding}>
             <DialogTrigger asChild>
               <Button size="sm">
