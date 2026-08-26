@@ -49,6 +49,25 @@ export interface InvoiceTransformInput {
   currency?: string;
 }
 
+/** Diagnostic de la propagation automatique déclenchée à la validation du DQE. */
+export interface AutoChainOutcome {
+  triggered: boolean;
+  error?: string;
+  tenderId?: string | null;
+  tenderStatus?: string;
+  publishedAt?: string | null;
+  phasesCreated?: number;
+  phasesReused?: number;
+  milestonesCreated?: number;
+  tasksCreated?: number;
+  phaseMaterials?: number;
+  phaseEmployees?: number;
+  projectResources?: number;
+  linesConsidered?: number;
+  budgetSynced?: boolean;
+  warnings?: string[];
+}
+
 export interface InvoiceTransformResult {
   documentId: string;
   documentType: InvoiceDocumentType;
@@ -173,10 +192,14 @@ export const InvoiceWorkflowService = {
         tenderId: result.tender.tenderId,
         tenderStatus: result.tender.status,
         publishedAt: result.tender.publishedAt,
-        phases: result.planning.phases ?? 0,
-        milestones: result.planning.milestones ?? 0,
-        tasks: result.planning.tasks ?? 0,
-        linesDispatched: result.planning.linesUpdated ?? 0,
+        phasesCreated: result.planning.phasesCreated,
+        phasesReused: result.planning.phasesReused,
+        milestonesCreated: result.planning.milestonesCreated,
+        tasksCreated: result.planning.tasksCreated,
+        phaseMaterials: result.planning.phaseMaterials,
+        phaseEmployees: result.planning.phaseEmployees,
+        projectResources: result.planning.projectResources,
+        linesConsidered: result.planning.linesConsidered,
         budgetSynced: result.forecast.updated,
         warnings: result.warnings,
       };
