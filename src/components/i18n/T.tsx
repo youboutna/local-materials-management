@@ -9,11 +9,12 @@ interface TProps {
 
 /**
  * Rendu réactif d'un libellé traduit sans nécessiter de hook dans le composant appelant.
- * Utilisé par le codemod Phase 6 pour remplacer les chaînes en clair des noeuds JSX.
+ * Le `fallback` est transmis à `t()` : il prime sur l'« humanisation » de la clé
+ * technique, ce qui évite les libellés parasites du type « InitialBudget ».
  */
 export const T = ({ k, fallback }: TProps) => {
     const { t } = useLanguage();
-    const value = t(k);
+    const value = t(k, undefined, fallback);
     if (!value || value === k) return <>{fallback ?? ''}</>;
     return <>{value}</>;
 };
