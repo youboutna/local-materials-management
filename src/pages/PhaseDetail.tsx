@@ -50,6 +50,8 @@ import {
   ExternalLink, AlertTriangle, Edit, Calculator, Building2, Wallet,
 } from 'lucide-react';
 import { T } from '@/components/i18n/T';
+import { usePhaseAggregateHex } from '@/hooks/hexagonal/usePhaseAggregateHex';
+import { resolveProjectLocationLabel } from '@/utils/projectLocationLabel';
 
 
 const PhaseDetail: React.FC = () => {
