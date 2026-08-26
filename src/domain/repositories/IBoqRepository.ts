@@ -11,4 +11,6 @@ export interface IBoqRepository {
   update(id: string, dto: Partial<BoqLineDTO>): Promise<BoqLineDTO>;
   updateStatus(ids: string[], status: NonNullable<BoqLineDTO['status']>, source: BoqLineDTO['source']): Promise<void>;
   delete(id: string, source: BoqLineDTO['source']): Promise<void>;
+  /** Suppression en masse : renvoie le nombre de lignes réellement supprimées. */
+  deleteMany(ids: string[], source: BoqLineDTO['source']): Promise<number>;
 }
