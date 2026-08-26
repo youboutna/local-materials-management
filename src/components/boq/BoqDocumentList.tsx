@@ -91,7 +91,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         lineIds = fetched.flat().map((l) => l.id).filter((id): id is string => Boolean(id));
       }
       const deleted = await boqRepository.deleteMany(lineIds, source);
-      if (!deleted) throw new Error(t('dqe.delete.nothing_deleted') || 'Aucune ligne supprimée côté serveur.');
+      if (!deleted) throw new Error(t('common.delete_nothing_deleted') || 'Aucune ligne supprimée côté serveur.');
 
       window.dispatchEvent(new Event('boq-kpi-refresh'));
       // 2. Resynchronisation serveur AVANT le toast de succès.
