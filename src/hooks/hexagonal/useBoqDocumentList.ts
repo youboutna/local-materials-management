@@ -40,8 +40,8 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
     });
     list.push({
       documentId,
-      // ✅ formatReference au lieu de documentId.slice(0, 8)
-      reference: formatReference(documentId, 'BOQ'),
+      // Référence courte sans préfixe technique : le contexte d'écran ajoute DQE/DEVIS/FACTURE.
+      reference: formatReference(documentId),
       title,
       status,
       totalHt,

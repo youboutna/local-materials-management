@@ -12,18 +12,24 @@ interface StatusBadgeProps {
 }
 
 const getStatusConfig = (status: StatusType) => {
-   const statusValue = status?.toLowerCase() || '';
+   const statusValue = (status ?? '')
+     .toLowerCase()
+     .normalize('NFD')
+     .replace(/[\u0300-\u036f]/g, '')
+     .replace(/[\s-]+/g, '_')
+     .replace(/_v\d+$/i, '');
    
    switch (statusValue) {
-     case 'en cours':
+      case 'in_progress':
      case 'encours':
+      case 'en_cours':
        return {
          bgColor: 'bg-primary/10',
          textColor: 'text-primary',
          borderColor: 'border-primary/30',
          dotColor: 'bg-blue-500',
        };
-     case 'terminé':
+      case 'completed':
      case 'termine':
        return {
          bgColor: 'bg-success-soft',
@@ -31,7 +37,7 @@ const getStatusConfig = (status: StatusType) => {
          borderColor: 'border-success/30',
          dotColor: 'bg-success',
        };
-     case 'en attente':
+      case 'pending':
      case 'en_attente':
        return {
          bgColor: 'bg-warning/10',
@@ -39,7 +45,7 @@ const getStatusConfig = (status: StatusType) => {
          borderColor: 'border-warning/30',
          dotColor: 'bg-amber-500',
        };
-     case 'en inspection':
+      case 'under_inspection':
      case 'en_inspection':
        return {
          bgColor: 'bg-warning/10',
@@ -54,7 +60,8 @@ const getStatusConfig = (status: StatusType) => {
          borderColor: 'border-purple-200',
          dotColor: 'bg-purple-500',
        };
-     case 'annulé':
+      case 'cancelled':
+      case 'canceled':
      case 'annule':
        return {
          bgColor: 'bg-destructive/10',

@@ -106,11 +106,15 @@ const MergedNavbar = () => {
   const additionalNavItems = [
     { name: t("nav.home"), href: "/", icon: Home },
     { name: t("project_import.title"), href: "/projects/import", icon: Upload },
+    { name: t("dqe.navigation.module"), href: "/dqe/list", icon: FileText },
     { name: t("documents.title"), href: "/documents", icon: FileText },
     { name: t("task.title") || "Tâches", href: "/tasks", icon: ClipboardList },
     { name: t("nav.employees"), href: "/employees", icon: UsersIcon },
     { name: t("nav.users"), href: "/users", icon: UsersIcon },
+    { name: t("nav.consultant_portal"), href: "/consultant-portal", icon: UsersIcon },
     { name: t("nav.suppliers"), href: "/suppliers", icon: Building2 },
+    { name: t("nav.supplier_portal"), href: "/supplier-portal", icon: Building2 },
+    { name: t("nav.supplier_tender_portal"), href: "/supplier-tender", icon: Building2 },
     {
       name: t("nav.tender_management"),
       href: "/tender-management",
