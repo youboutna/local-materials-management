@@ -12,7 +12,9 @@
 import * as XLSX from 'xlsx';
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
-import { extractDocumentParties } from './headerDetection';
+import { extractDocumentParties, type DocumentParty } from './headerDetection';
+import { extractDocumentMeta, mergeParties, type DocumentMeta } from './documentMetaDetection';
+
 import {
   detectSection,
   isRepeatedHeaderRow,
@@ -52,23 +54,46 @@ export class SpreadsheetBoqParser implements IDocumentParser {
   async parse(file: File): Promise<ParseResult> {
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: 'array' });
-    const first = wb.SheetNames[0];
-    if (!first) return { rows: [], columns: [], warnings: ['Classeur vide.'] };
-    const sheet = wb.Sheets[first];
-    const matrix: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
-    if (!matrix.length) return { rows: [], columns: [], warnings: ['Feuille vide.'] };
+    if (!wb.SheetNames.length) return { rows: [], columns: [], warnings: ['Classeur vide.'] };
 
-    // Detect header row: first row within top 15 with ≥2 known hints.
-    let headerIdx = 0;
-    let bestHits = 0;
-    const scanLimit = Math.min(matrix.length, 15);
-    for (let i = 0; i < scanLimit; i++) {
-      const hits = looksLikeHeaderRow(matrix[i] ?? []);
-      if (hits > bestHits) { bestHits = hits; headerIdx = i; }
-      if (hits >= 3) break;
+    // Passe 1 — lecture de toutes les feuilles : métadonnées documentaires
+    // (Résumé & En-tête, Conditions…) puis sélection de la feuille de postes.
+    const sheets = wb.SheetNames.map((name) => ({
+      name,
+      matrix: XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: null }) as unknown[][],
+    })).filter((s) => s.matrix.length > 0);
+    if (!sheets.length) return { rows: [], columns: [], warnings: ['Feuille vide.'] };
+
+    let meta: DocumentMeta = {};
+    let metaParties: { supplier: DocumentParty; organization: DocumentParty } = { supplier: {}, organization: {} };
+    for (const s of sheets) {
+      const res = extractDocumentMeta(s.matrix as (string | number | null)[][], meta, metaParties);
+      meta = res.meta;
+      metaParties = res.parties;
     }
 
+    // Feuille de postes = meilleur score d'en-tête tabulaire.
+    const scored = sheets.map((s) => {
+      let headerIdx = 0;
+      let bestHits = 0;
+      const scanLimit = Math.min(s.matrix.length, 15);
+      for (let i = 0; i < scanLimit; i++) {
+        const hits = looksLikeHeaderRow(s.matrix[i] ?? []);
+        if (hits > bestHits) { bestHits = hits; headerIdx = i; }
+        if (hits >= 3) break;
+      }
+      return { ...s, headerIdx, bestHits };
+    }).sort((a, b) => b.bestHits - a.bestHits);
+
+    const target = scored[0];
+    const matrix = target.matrix;
+    let headerIdx = target.headerIdx;
+    const bestHits = target.bestHits;
+
     const warnings: string[] = [];
+    if (sheets.length > 1) {
+      warnings.push(`Classeur multi-feuilles : postes lus dans « ${target.name} ».`);
+    }
     if (bestHits < 2) {
       warnings.push('En-têtes non détectés — utilisation de la 1ʳᵉ ligne comme colonnes.');
       headerIdx = 0;
@@ -84,7 +109,8 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     // En-tête administratif (client / prestataire) : balayage du document entier
     // car dans les devis Excel l'émetteur figure souvent en pied de page.
     const textMatrix: string[][] = matrix.map((line) => (line ?? []).map((c) => (c == null ? '' : String(c))));
-    const parties = extractDocumentParties(textMatrix, headerIdx);
+    const parties = mergeParties(extractDocumentParties(textMatrix, headerIdx), metaParties);
+
 
     const rows: ParsedBoqRow[] = [];
     const detectedFiscal: DetectedFiscal = {};
@@ -119,7 +145,12 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     }
 
     if (sectionsFound) warnings.push(`${sectionsFound} lot(s) détecté(s) depuis les lignes de section.`);
+    if (meta.currency) warnings.push(`Devise du document : ${meta.currency}.`);
+    if (meta.projectReference || meta.projectTitle) {
+      warnings.push(`Projet détecté : ${meta.projectTitle ?? meta.projectReference}.`);
+    }
     warnings.push(...summarizeFiscal(detectedFiscal));
-    return { rows, columns, warnings, detectedFiscal, parties };
+    return { rows, columns, warnings, detectedFiscal, parties, documentMeta: meta, sheetName: target.name };
+
   }
 }

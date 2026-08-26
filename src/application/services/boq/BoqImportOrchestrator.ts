@@ -36,6 +36,10 @@ export interface ImportMapping {
   total?: string;
   /** Colonne (réelle ou synthétique) portant le lot / chapitre du DQE. */
   lot?: string;
+  /** Colonne de taux de TVA par ligne (niveau 3 de la logique fiscale). */
+  vatRate?: string;
+  /** Colonne de régime fiscal / nature (Fourniture, RH / Prestation, Travaux BTP…). */
+  regime?: string;
 }
 
 const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
@@ -52,7 +56,16 @@ const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
   category: [/cat[eé]gorie/i, /category/i, /poste/i, /rubrique/i],
   total: [/^montant/i, /montant/i, /^total/i, /prix\s*total/i, /^p\.?\s*t\.?$/i],
   lot: [/^lot$/i, /^lot\s/i, /chapitre/i, /^section$/i],
+  vatRate: [/^tva\s*\(?%/i, /taux\s*(de\s*)?tva/i, /^vat/i],
+  regime: [/r[eé]gime/i, /^nature\s*(fiscale)?$/i],
 };
+
+/** Régimes fiscaux déclarés en colonne → type de ressource BOQ. */
+const REGIME_RESOURCE: { rx: RegExp; type: BoqResourceType }[] = [
+  { rx: /rh|prestation\s*intellect|main\s*d.?œuvre|service/i, type: 'labor' },
+  { rx: /location|engin|mat[eé]riel\s*roulant|[eé]quipement/i, type: 'equipment' },
+  { rx: /fourniture|travaux|btp|mat[eé]riau/i, type: 'material' },
+];
 
 export class BoqImportOrchestrator {
   private readonly parsers: IDocumentParser[];
@@ -81,6 +94,8 @@ export class BoqImportOrchestrator {
       'elementType',
       'category',
       'total',
+      'vatRate',
+      'regime',
       'lot',
       'phaseId',
     ];
@@ -191,12 +206,24 @@ export class BoqImportOrchestrator {
       // facturation vient de l'unité (homme·jour / homme·mois / forfait) et le
       // profil du libellé (chef de mission, ingénieur, ouvrier…). Une location
       // d'engin facturée à la journée reste du matériel.
-      const labour = detectLabour({ designation, unit, sectionKind });
+      const regimeRaw = mapping.regime ? String(get(mapping.regime) ?? '').trim() : '';
+      const regimeType = regimeRaw
+        ? REGIME_RESOURCE.find((r) => r.rx.test(regimeRaw))?.type ?? null
+        : null;
+      const labour = detectLabour({
+        designation,
+        unit,
+        sectionKind: regimeType === 'labor' ? 'labour' : sectionKind,
+      });
       if (!labour.isLabour && (unit === 'jour' || unit === 'mois')) resolved.resourceType = 'equipment';
       const isLabour = labour.isLabour;
       const resourceType: BoqResourceType = isLabour
         ? 'labor'
-        : ((resolved.resourceType as BoqResourceType) ?? 'material');
+        : (regimeType ?? (resolved.resourceType as BoqResourceType) ?? 'material');
+
+      // TVA à 3 niveaux : ligne (colonne TVA) > bloc (RH/travaux) > global.
+      const lineVatRaw = mapping.vatRate ? num(get(mapping.vatRate)) : null;
+      const lineVat = lineVatRaw == null ? null : lineVatRaw > 1 ? lineVatRaw / 100 : lineVatRaw;
 
       const sectionLabel = String(row.raw[SECTION_LABEL_COLUMN] ?? '').trim() || null;
 
@@ -211,13 +238,15 @@ export class BoqImportOrchestrator {
         width: widthN,
         height: heightN,
         unitPrice: unitPrice ?? null,
-        vatRate: isLabour ? labourVat : effectiveVat,
+        vatRate: lineVat ?? (isLabour ? labourVat : effectiveVat),
         totalHt,
         category: lotKey ?? null,
         metadata: {
           ...(lotKey ? { lot: lotKey } : {}),
           ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(regimeRaw ? { fiscalRegime: regimeRaw } : {}),
+          ...(lineVat != null ? { vatSource: 'line' } : {}),
           ...(isLabour && labour.billingMode ? { labourBillingMode: labour.billingMode } : {}),
           ...(isLabour && labour.profileCode ? { labourProfileCode: labour.profileCode } : {}),
           ...(price.corrected
