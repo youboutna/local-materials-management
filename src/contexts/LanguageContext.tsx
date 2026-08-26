@@ -30,7 +30,11 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 /** Résolution hors provider : lecture directe des tables de traduction. */
-const resolveOutsideProvider = (key: string, params?: Record<string, string | number>): string => {
+const resolveOutsideProvider = (
+    key: string,
+    params?: Record<string, string | number>,
+    fallback?: string,
+): string => {
     type Nested = Record<string, unknown>;
     let value: unknown = (translations as unknown as Record<string, Nested>).fr;
     for (const k of key.split('.')) {
@@ -45,6 +49,7 @@ const resolveOutsideProvider = (key: string, params?: Record<string, string | nu
         typeof value === 'string'
             ? value
             : (() => {
+                  if (fallback) return fallback;
                   const last = key.split('.').pop() ?? key;
                   const words = last.replace(/[_-]+/g, ' ').trim();
                   return words.charAt(0).toUpperCase() + words.slice(1);
