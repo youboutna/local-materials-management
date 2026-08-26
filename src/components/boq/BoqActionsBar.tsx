@@ -570,7 +570,13 @@ export const BoqActionsBar: React.FC<Props> = ({
               {t('dqe.badge.project_ref')} · {projectName}
             </Badge>
           )}
+          {!headerValidation.valid && (
+            <Badge variant="destructive" className="cursor-pointer" onClick={() => setPartiesOpen(true)}>
+              {t('dqe.header.error.title')} ({headerValidation.issues.length})
+            </Badge>
+          )}
           {badgesSlot}
+
         </div>
       </div>
 
