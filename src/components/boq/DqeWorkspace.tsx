@@ -264,21 +264,44 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     <div className="space-y-4">
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-col gap-3 border-b bg-muted/20">
-          {/* Zone 2 — un seul stepper de cycle de vie, jamais de titre dupliqué. */}
+          {/* Zone 1 — retour + titre du document · Zone 2 — barre de progression compacte. */}
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => selectDocument(null)}>
               <ArrowLeft className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.retour_a_la_liste" fallback="Retour à la liste" />
             </Button>
-            <BoqWorkflowStepper
-              lines={doc.lines ?? []}
-              documentType={invoiceDef.code}
-              source={ctx.source}
-              compact={props.routeContext === 'project-dqe'}
-              onReversed={() => doc.refetch?.()}
-              className="ml-auto"
-            />
-
+            <span className="text-sm font-semibold">{ctx.title}</span>
+            <div className="ml-auto max-w-full overflow-x-auto">
+              <BoqWorkflowStepper
+                lines={doc.lines ?? []}
+                documentType={invoiceDef.code}
+                source={ctx.source}
+                compact={props.routeContext === 'project-dqe'}
+                onReversed={() => doc.refetch?.()}
+                className="flex-nowrap whitespace-nowrap"
+              />
+            </div>
           </div>
+
+          {/* Barre de contexte : traçabilité permanente projet / document / parties. */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {props.projectName && (
+              <Badge variant="outline">
+                <T k="dqe.context.project" fallback="Projet" />&nbsp;: {props.projectName}
+              </Badge>
+            )}
+            <Badge variant="outline">
+              <T k="dqe.context.doc_number" fallback="N° document" />&nbsp;: {(selectedDocumentId ?? '').slice(0, 12).toUpperCase()}
+            </Badge>
+            <Badge variant="outline">
+              <T k="dqe.context.lines" fallback="Lignes" />&nbsp;: {actionableLines.length}
+            </Badge>
+            {props.recipientEmail && (
+              <Badge variant="outline">
+                <T k="dqe.context.recipient" fallback="Destinataire" />&nbsp;: {props.recipientEmail}
+              </Badge>
+            )}
+          </div>
+
 
           {/* Barre unique : G1 actions principales · G2 workflow · G3 badges. */}
           <BoqActionsBar
