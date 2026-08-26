@@ -125,34 +125,44 @@ export const BoqPdfRenderer = {
     const amount = (n: number) => `${formatNumber2(n)} ${currency}`;
     const rightX = 555;
 
-    // ---- Company header band ----
-    doc.setFillColor(COLOR.primary[0], COLOR.primary[1], COLOR.primary[2]);
-    doc.rect(0, 0, 595, 70, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
-    doc.text(sanitizeNumberSpaces(ctx.company?.name ?? ctx.senderName ?? '—'), 40, 32);
+    // ---- Company header band (hauteur dynamique : plus de superposition) ----
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
     const cLines: string[] = [];
-    if (ctx.company?.address) cLines.push(ctx.company.address);
+    if (ctx.company?.address) cLines.push(...(doc.splitTextToSize(ctx.company.address, 300) as string[]));
     const contact = [ctx.company?.phone, ctx.company?.email].filter(Boolean).join('  ·  ');
-    if (contact) cLines.push(contact);
-    cLines.forEach((t, i) => doc.text(t, 40, 48 + i * 12));
+    if (contact) cLines.push(...(doc.splitTextToSize(contact, 300) as string[]));
+    const bandHeight = Math.max(70, 40 + cLines.length * 12);
 
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
-    doc.text(ctx.title.toUpperCase(), rightX, 32, { align: 'right' });
+    doc.setFillColor(COLOR.primary[0], COLOR.primary[1], COLOR.primary[2]);
+    doc.rect(0, 0, 595, bandHeight, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+    const senderTitle = doc.splitTextToSize(
+      sanitizeNumberSpaces(ctx.company?.name ?? ctx.senderName ?? '—'),
+      300,
+    ) as string[];
+    doc.text(senderTitle.slice(0, 2), 40, 28);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text(`N° ${docNumber}`, rightX, 48, { align: 'right' });
-    doc.text(`Date : ${issueDate}`, rightX, 60, { align: 'right' });
+    cLines.forEach((t, i) => doc.text(t, 40, 30 + senderTitle.slice(0, 2).length * 14 + i * 12));
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+    const titleLines = doc.splitTextToSize(ctx.title.toUpperCase(), 230) as string[];
+    titleLines.slice(0, 2).forEach((t, i) => doc.text(t, rightX, 26 + i * 14, { align: 'right' }));
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    const metaTop = 26 + Math.min(titleLines.length, 2) * 14 + 6;
+    doc.text(`N° ${docNumber}`, rightX, metaTop, { align: 'right' });
+    doc.text(`Date : ${issueDate}`, rightX, metaTop + 12, { align: 'right' });
     doc.setTextColor(0, 0, 0);
 
-    let y = 90;
+    let y = bandHeight + 20;
 
     // ---- Bloc contexte projet / AO (D1 : libellés métier uniquement) ----
     y = section(doc, y, 'Contexte', COLOR.primary);
-    doc.setFillColor(COLOR.softBg[0], COLOR.softBg[1], COLOR.softBg[2]);
-    doc.roundedRect(40, y, 515, 60, 4, 4, 'F');
     doc.setFontSize(9);
-    const cy = y + 14;
+
+    const recipients = (ctx.recipientNames?.length ? ctx.recipientNames : [ctx.recipientName ?? '—'])
+      .filter(Boolean)
+      .join(' · ');
     const leftPairs: Array<[string, string]> = [
       ['Projet',         ctx.projectTitle ?? '—'],
       ['Appel d’offres', ctx.tenderTitle ?? '—'],
@@ -160,20 +170,40 @@ export const BoqPdfRenderer = {
     ];
     const rightPairs: Array<[string, string]> = [
       ['Émetteur',     ctx.company?.name ?? ctx.senderName ?? '—'],
-      ['Destinataire', ctx.recipientName ?? '—'],
+      ['Destinataire', recipients || '—'],
       ['Devise',       currency],
     ];
-    leftPairs.forEach(([k, v], i) => {
-      doc.setFont('helvetica', 'bold'); doc.text(`${k} :`, 52, cy + i * 14);
-      doc.setFont('helvetica', 'normal');
-      doc.text(doc.splitTextToSize(sanitizeNumberSpaces(v), 150).slice(0, 1), 130, cy + i * 14);
-    });
-    rightPairs.forEach(([k, v], i) => {
-      doc.setFont('helvetica', 'bold'); doc.text(`${k} :`, 310, cy + i * 14);
-      doc.setFont('helvetica', 'normal');
-      doc.text(doc.splitTextToSize(sanitizeNumberSpaces(v), 165), 380, cy + i * 14, { maxWidth: 165 });
-    });
-    y += 74;
+
+    // Chaque valeur est pré-découpée : la hauteur du bloc suit le contenu réel,
+    // ce qui supprime toute superposition entre lignes de l'en-tête.
+    const wrap = (pairs: Array<[string, string]>, width: number) =>
+      pairs.map(([k, v]) => ({
+        key: k,
+        value: doc.splitTextToSize(sanitizeNumberSpaces(v || '—'), width) as string[],
+      }));
+    const left = wrap(leftPairs, 150);
+    const right = wrap(rightPairs, 160);
+    const rowHeight = (rows: Array<{ value: string[] }>) =>
+      rows.reduce((acc, r) => acc + Math.max(1, r.value.length) * 11 + 3, 0);
+    const boxHeight = Math.max(rowHeight(left), rowHeight(right)) + 16;
+
+    doc.setFillColor(COLOR.softBg[0], COLOR.softBg[1], COLOR.softBg[2]);
+    doc.roundedRect(40, y, 515, boxHeight, 4, 4, 'F');
+
+    const drawPairs = (rows: Array<{ key: string; value: string[] }>, keyX: number, valX: number, valWidth: number) => {
+      let cursor = y + 14;
+      for (const row of rows) {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${row.key} :`, keyX, cursor);
+        doc.setFont('helvetica', 'normal');
+        doc.text(row.value, valX, cursor, { maxWidth: valWidth });
+        cursor += Math.max(1, row.value.length) * 11 + 3;
+      }
+    };
+    drawPairs(left, 52, 130, 150);
+    drawPairs(right, 310, 380, 160);
+    y += boxHeight + 14;
+
 
     // ---- Bandeau étape documentaire (cycle DQE → Facture / Factur-X) ----
     if (ctx.documentStage || ctx.facturxTypeCode || ctx.billedPercentage != null) {
