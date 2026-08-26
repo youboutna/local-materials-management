@@ -39,6 +39,8 @@ export interface BoqPdfContext {
   documentId?: string | null;
   senderName?: string;
   recipientName?: string;
+  /** Destinataires multiples (copies / co-signataires). */
+  recipientNames?: string[];
   currency?: string;
   /** Profil fiscal appliqué (TVA / RAS homogènes). */
   fiscalProfileCode?: string | null;
