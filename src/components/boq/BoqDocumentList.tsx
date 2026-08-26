@@ -127,7 +127,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
     }
   };
 
-  const handleDelete = (doc: BoqDocumentSummary) => deleteDocuments([doc]);
+  const handleDelete = (doc: BoqDocumentSummary) => setPendingDelete([doc]);
 
   const selectedDocs = useMemo(
     () => filtered.filter((d) => selected.includes(d.documentId) && !d.readOnly),
