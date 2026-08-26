@@ -212,6 +212,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
