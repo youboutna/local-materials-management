@@ -557,7 +557,34 @@ function App() {
                         }
                       />
 
+                      {/* Expression de besoin (DQE) — historique / création / détail */}
+                      <Route
+                        path="/dqe/list"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <DqeHub mode="list" />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/dqe/new"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <DqeHub mode="new" />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/dqe/:id"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <DqeHub mode="detail" />
+                          </RoleBasedRoute>
+                        }
+                      />
+
                       <Route path="*" element={<NotFound />} />
+
                     {/* Consultant Portal */}
                     <Route
                       path="/consultant-portal"
