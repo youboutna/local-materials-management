@@ -230,19 +230,37 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
 
   // ============= Mappers =============
 
-  private mapToEntity(data: Record<string, any>): Stakeholder {
+  private mapToEntity(
+    data: Record<string, any>,
+    identity?: {
+      name?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      position?: string | null;
+      organizationName?: string | null;
+    },
+  ): Stakeholder {
     const stakeholderType = (data.stakeholder_entity_type === 'employee' ? 'employee' : 'supplier') as any;
+    const organizationId = data.organization_id || data.supplier_id || null;
+    const displayName = identity?.name || data.external_name || data.role_description || '';
     return new Stakeholder(
       data.id,
       data.project_id,
       stakeholderType,
       (data.stakeholder_type || data.role_description || 'observer') as any,
-      data.supplier_id || null,
+      organizationId,
       data.employee_id || null,
       !!data.is_primary,
       data.stakeholder_entity_type === 'employee',
-      { name: data.role_description || '', email: '', phone: undefined, position: undefined },
-      null,
+      {
+        name: displayName,
+        email: identity?.email || data.external_email || '',
+        phone: identity?.phone || data.external_phone || undefined,
+        position: identity?.position || undefined,
+      },
+      identity?.organizationName && organizationId
+        ? { id: String(organizationId), name: identity.organizationName, type: stakeholderType }
+        : null,
       [],
       'read',
       null,
