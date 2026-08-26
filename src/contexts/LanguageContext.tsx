@@ -5966,7 +5966,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             if (import.meta.env.DEV) {
                 console.warn(`Translation key "${key}" not found for language "${language}"`);
             }
-            result = humanize();
+            result = fallback && fallback.trim() ? fallback : humanize();
         }
 
         // Handle interpolation with params like {title}
