@@ -777,6 +777,38 @@ export const BoqActionsBar: React.FC<Props> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Historique du cycle de vie : jalons franchis + signature. */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('dqe.action.history')}</DialogTitle>
+            <DialogDescription>{t('dqe.history.description')}</DialogDescription>
+          </DialogHeader>
+          <ol className="space-y-2 text-sm">
+            {DocumentLifecycleService.stages().map((stage, index) => (
+              <li key={stage.code} className="flex items-center justify-between gap-2">
+                <span className={index <= lifecycle.stageIndex ? 'font-medium' : 'text-muted-foreground'}>
+                  {stage.labels.fr}
+                </span>
+                <Badge variant={index < lifecycle.stageIndex ? 'secondary' : index === lifecycle.stageIndex ? 'default' : 'outline'}>
+                  {index <= lifecycle.stageIndex ? lifecycle.status : '—'}
+                </Badge>
+              </li>
+            ))}
+            {signedInfo && (
+              <li className="flex items-center justify-between gap-2">
+                <span className="font-medium">{t('dqe.action.signed')} — {signedInfo.by}</span>
+                <Badge variant="secondary">{new Date(signedInfo.at).toLocaleString('fr-FR')}</Badge>
+              </li>
+            )}
+          </ol>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistoryOpen(false)}>{t('common.close') || 'Fermer'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
+
   );
 };
