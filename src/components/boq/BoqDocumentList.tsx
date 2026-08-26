@@ -15,8 +15,13 @@ import { useBoqDocumentList } from '@/hooks/hexagonal/useBoqDocumentList';
 import { useToast } from '@/hooks/use-toast';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Eye, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+
 import { T } from '@/components/i18n/T';
 import { useI18n } from '@/hooks/useI18n';
 
@@ -35,6 +40,10 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'dest
   invoiced: 'default', paid: 'default', archived: 'outline', mixed: 'outline',
 };
 
+/** Statuts autorisant la réédition du document (codes canoniques minuscules côté DTO). */
+const EDITABLE_STATUSES = new Set(['draft', 'reopen', 'reopened', 'rejected']);
+
+
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
   const { t, translateStatus, locale } = useI18n();
   const { toast } = useToast();
@@ -45,6 +54,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
   const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  /** Documents en attente de confirmation de suppression (modale). */
+  const [pendingDelete, setPendingDelete] = useState<BoqDocumentSummary[]>([]);
+
 
   const visibleDocuments = useMemo(
     () => documents.filter((d) => !removedIds.includes(d.documentId)),
@@ -70,13 +82,16 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
       .map((l) => l.id)
       .filter((id): id is string => Boolean(id));
 
+  const deleteLabel = (docs: BoqDocumentSummary[]) =>
+    docs.length === 1
+      ? `${docPrefix.toUpperCase()}-${docs[0].reference}`
+      : `${docs.length} ${t('dqe.navigation.list')}`;
+
   const deleteDocuments = async (docs: BoqDocumentSummary[]) => {
     if (!docs.length || isDeleting) return;
     const ids = docs.map((d) => d.documentId);
-    const label = docs.length === 1
-      ? `${docPrefix.toUpperCase()}-${docs[0].reference}`
-      : `${docs.length} ${t('dqe.navigation.list')}`;
-    if (!window.confirm(t('common.confirm_delete_named', { name: label }) || `Supprimer ${label} ?`)) return;
+
+
 
     setIsDeleting(true);
     // 1. Retrait optimiste immédiat de la liste.
@@ -116,7 +131,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
     }
   };
 
-  const handleDelete = (doc: BoqDocumentSummary) => deleteDocuments([doc]);
+  const handleDelete = (doc: BoqDocumentSummary) => setPendingDelete([doc]);
 
   const selectedDocs = useMemo(
     () => filtered.filter((d) => selected.includes(d.documentId) && !d.readOnly),
@@ -149,7 +164,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         </div>
         <div className="flex items-center gap-2">
           {selectedDocs.length > 0 && (
-            <Button variant="destructive" size="sm" disabled={isDeleting} onClick={() => deleteDocuments(selectedDocs)}>
+            <Button variant="destructive" size="sm" disabled={isDeleting} onClick={() => setPendingDelete(selectedDocs)}>
               <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')} ({selectedDocs.length})
             </Button>
           )}
@@ -214,6 +229,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
             ) : filtered.map((d) => {
                const variant = STATUS_VARIANT[d.status] ?? STATUS_VARIANT.draft;
                const readOnly = d.readOnly;
+               /** Édition possible uniquement sur un document rouvert / brouillon / rejeté. */
+               const editable = !readOnly && EDITABLE_STATUSES.has(String(d.status).toLowerCase());
+
               return (
                 <tr
                   key={d.documentId}
@@ -239,13 +257,26 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                         size="icon"
                         variant="ghost"
                         onClick={() => onOpen(d.documentId)}
-                        title={readOnly ? t('dqe.action.view') : t('dqe.action.edit')}
+                        title={t('dqe.action.view')}
+                        aria-label={t('dqe.action.view')}
                       >
-                        {readOnly ? <Eye className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                        <Eye className="h-4 w-4" />
                       </Button>
+                      {editable && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => onOpen(d.documentId)}
+                          title={t('dqe.action.edit')}
+                          aria-label={t('dqe.action.edit')}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         size="icon"
                         variant="ghost"
+
                         onClick={() => handleDelete(d)}
                         disabled={readOnly || isDeleting}
                         title={readOnly ? t('dqe.locked_transmitted') : t('common.delete')}
@@ -260,7 +291,33 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={pendingDelete.length > 0} onOpenChange={(o) => { if (!o) setPendingDelete([]); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('common.delete')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('common.confirm_delete_named', { name: deleteLabel(pendingDelete) })
+                || `Êtes-vous sûr de vouloir supprimer ${deleteLabel(pendingDelete)} ?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={() => {
+                const docs = pendingDelete;
+                setPendingDelete([]);
+                void deleteDocuments(docs);
+              }}
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 };
 
