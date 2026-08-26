@@ -86,7 +86,24 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
     () => Object.fromEntries((milestones ?? []).map((m) => [m.id, m.title])),
     [milestones],
   );
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [internalDocumentId, setInternalDocumentId] = useState<string | null>(null);
+  const controlled = props.documentId !== undefined;
+  const selectedDocumentId = controlled ? props.documentId ?? null : internalDocumentId;
+  const selectDocument = React.useCallback((id: string | null) => {
+    if (!controlled) setInternalDocumentId(id);
+    props.onDocumentIdChange?.(id);
+  }, [controlled, props.onDocumentIdChange]);
+
+  // Route `/dqe/new` : ouvre directement un nouveau document vierge.
+  useEffect(() => {
+    if (props.autoCreate && !selectedDocumentId) {
+      const id = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+        ? crypto.randomUUID()
+        : `doc-${Date.now()}`;
+      selectDocument(id);
+    }
+  }, [props.autoCreate, selectedDocumentId, selectDocument]);
+
   const queryClient = useQueryClient();
 
   // Détail : lignes du document courant (pour la BoqActionsBar).
