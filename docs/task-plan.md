@@ -776,3 +776,20 @@ Règle : **aucun composant `.tsx` ni hook ne parle directement à une Edge Funct
 - Sélection directe depuis les catalogues Matériaux/Équipements dans le tableau de lignes (pré-remplissage désignation/unité/PU).
 - Sélecteur de Responsable (Équipe/RH) dans la carte Référentiel (Zone 3).
 - `/consultant-portal` : onglet Candidatures + validations techniques ; synchronisation budget prévisionnel bidirectionnelle.
+
+---
+
+## ✅ Sprints 1–3 — Refonte DQE / Workflow / Portails (livré)
+
+| Livrable | État | Preuve |
+| --- | --- | --- |
+| Routes DQE `/dqe/list`, `/dqe/new`, `/dqe/:id` | ✅ | `src/pages/dqe/DqeHub.tsx`, `src/App.tsx` |
+| Zone 1 — En-tête identité + actions principales | ✅ | `BoqActionsBar` (menu Document + actions secondaires) |
+| Zone 2 — Stepper visuel DRAFT → SUBMITTED → VALIDATED | ✅ | `src/components/boq/BoqWorkflowStepper.tsx` monté dans `DqeWorkspace` (détail) |
+| Zone 3 — Carte référentiel compacte (Phase / Jalon / Tâche / Responsable) | ✅ | `BoqWorkspace` : `WbsSelector` + sélecteur « Responsable par défaut » persisté (prefs document) et hérité par les nouvelles lignes (saisie, métré, import) |
+| Zone 4 — CRUD lignes / parser / totaux fiscaux | ✅ | `BoqLineTable`, `BoqImportDialog`, récap HT/TVA/RAS/Net |
+| Codes techniques EN MAJUSCULES, libellés i18n | ✅ | statut via `translateStatus`, clés `dqe.responsible.*` (fr/en/ar) |
+| Portail consultant `/consultant-portal` + `/consultant-portal/:tab` (dont `inspections`) | ✅ | `App.tsx` (catch-all `*` déplacé **après** les routes consultant — la route consultant était masquée par `NotFound`), onglets pilotés par l'URL dans `ConsultantDashboard` |
+| Stabilité `TooltipProvider` | ✅ | provider global monté dans `App.tsx`, 0 erreur console sur `/dqe/list` |
+
+Note d'architecture : aucune écriture Supabase ajoutée en UI — le stepper est purement dérivé des statuts de lignes (`resolveDocumentStatus`), le responsable par défaut est propagé via `metadata.stakeholder` du DTO puis persisté par `useBoqDocument`.

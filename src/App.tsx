@@ -584,9 +584,7 @@ function App() {
                         }
                       />
 
-                      <Route path="*" element={<NotFound />} />
-
-                    {/* Consultant Portal */}
+                    {/* Consultant Portal — routes déclarées AVANT le catch-all */}
                     <Route
                       path="/consultant-portal"
                       element={
@@ -597,6 +595,19 @@ function App() {
                         </RoleBasedRoute>
                       }
                     />
+                    <Route
+                      path="/consultant-portal/:tab"
+                      element={
+                        <RoleBasedRoute
+                          allowedRoles={["engineering_consultant", "consultant", "admin"]}
+                        >
+                          <ConsultantDashboard />
+                        </RoleBasedRoute>
+                      }
+                    />
+
+                      <Route path="*" element={<NotFound />} />
+
                     </Routes>
                   </main>
                   <Footer />
