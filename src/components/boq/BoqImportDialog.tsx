@@ -280,7 +280,7 @@ export function BoqImportDialog(props: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="w-[97vw] max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle>
           <DialogDescription>Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.</DialogDescription>
