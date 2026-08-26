@@ -562,7 +562,9 @@ const PhaseDetail: React.FC = () => {
               <TabsContent value="pert"><PERTDiagram projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="critical"><CriticalPathView projectId={projectId!} phaseId={phaseId} /></TabsContent>
               <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="team"><PhaseTeamTab phaseId={phaseId!} projectId={projectId!} /></TabsContent>
+              <TabsContent value="team">
+                <PhaseTeamTab phaseId={phaseId!} projectId={projectId!} declaredBudget={budget} />
+              </TabsContent>
             </Tabs>
           </TabsContent>
 
