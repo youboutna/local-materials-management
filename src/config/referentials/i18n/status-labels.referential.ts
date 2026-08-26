@@ -367,6 +367,23 @@ export const REFERENTIAL_LABEL_REGISTRY = {
 
 export type ReferentialLabelDomain = keyof typeof REFERENTIAL_LABEL_REGISTRY;
 
+
+/**
+ * Dernier filet : aucun code technique brut ne doit atteindre l'UI.
+ * `en_cours_v2` → « En cours » (suffixe de version et séparateurs retirés).
+ */
+export function humanizeReferentialCode(value?: string | null): string {
+  const raw = (value ?? '').trim();
+  if (!raw) return '';
+  const cleaned = raw
+    .replace(/[\s-]+/g, '_')
+    .replace(/_v\d+$/i, '')
+    .replace(/_/g, ' ')
+    .trim();
+  if (!cleaned) return '';
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+}
+
 /** Résout un libellé traduit avec fallback français puis code brut. */
 export function resolveReferentialLabel(
   domain: ReferentialLabelDomain,
@@ -379,7 +396,11 @@ export function resolveReferentialLabel(
   if (!entry) {
     // Filet de sécurité : libellé issu du référentiel des ENUM (fr/ar/en) avant
     // tout affichage d'un code technique brut.
-    return resolveAnyEnumLabel(code, language) ?? resolveAnyEnumLabel(normalizeReferentialCode(code), language) ?? code;
+    return (
+      resolveAnyEnumLabel(code, language) ??
+      resolveAnyEnumLabel(normalizeReferentialCode(code), language) ??
+      humanizeReferentialCode(code)
+    );
   }
   return entry[language] || entry.fr;
 }

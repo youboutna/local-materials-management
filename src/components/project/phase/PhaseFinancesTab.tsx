@@ -72,7 +72,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
   onCreatePayment,
 }) => {
   // ✅ Récupérer les projets pour les labels
-  const { data: projects = [] } = useProjectsHex();
+  const { projects = [] } = useProjectsHex();
 
   // ✅ RÉSOLUTION DU LABEL DU PROJET
   const projectLabel = projectId 

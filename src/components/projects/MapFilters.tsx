@@ -1,3 +1,4 @@
+import { useI18n } from '@/hooks/useI18n';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -33,6 +34,7 @@ interface MapFiltersProps {
 
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { translateStatus } = useI18n();
   const [regionFilter, setRegionFilter] = useState<string>('all');
 
   // Get unique statuses from locations
@@ -176,7 +178,7 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
                         status === 'suspendu' ? 'bg-orange-500' :
                         status === 'annulé' ? 'bg-red-500' : 'bg-gray-500'
                       }`}></div>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      {translateStatus(status)}
                     </div>
                   </SelectItem>
                 ))}

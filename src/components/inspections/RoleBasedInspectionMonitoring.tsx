@@ -64,7 +64,7 @@ const RoleBasedInspectionMonitoring = () => {
   const userRole = userRoles[0] || 'viewer';
   
   // ✅ Récupérer les projets pour les labels
-  const { data: projects = [] } = useProjectsHex();
+  const { projects = [] } = useProjectsHex();
   
   // State management
   const [searchTerm, setSearchTerm] = useState('');

@@ -37,7 +37,7 @@ const ProjectHierarchyDisplay: React.FC<ProjectHierarchyDisplayProps> = ({
   onEscalate
 }) => {
   // ✅ Récupérer les projets pour les labels
-  const { data: projects = [] } = useProjectsHex();
+  const { projects = [] } = useProjectsHex();
   
   // ✅ RÉSOLUTION DU LABEL DU PROJET
   const projectLabel = getEntityLabel(projectId, projects, 'project');

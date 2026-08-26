@@ -5,6 +5,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { UiThemeProvider } from "./contexts/UiThemeContext";
 import { HexagonalAuthProvider } from "./contexts/HexagonalAuthContext";
 import { DocumentViewerProvider } from "@/components/documents/viewer";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import MainNavbar from "./components/MainNavbar";
 import Footer from "./components/Footer";
 import { Toaster } from "./components/ui/sonner";
@@ -103,6 +104,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <ErrorBoundary>
+          <TooltipProvider delayDuration={200}>
           <UiThemeProvider>
                   <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <HexagonalAuthProvider>
@@ -577,6 +579,7 @@ function App() {
                 </HexagonalAuthProvider>
                 </BrowserRouter>
           </UiThemeProvider>
+          </TooltipProvider>
         </ErrorBoundary>
       </LanguageProvider>
     </QueryClientProvider>

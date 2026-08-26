@@ -54,7 +54,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   const { createNotification } = useNotifications();
 
   // ✅ Récupérer les projets pour les labels
-  const { data: projects = [] } = useProjectsHex();
+  const { projects = [] } = useProjectsHex();
 
   // ✅ RÉSOLUTION DES LABELS
   const projectLabel = projectId 

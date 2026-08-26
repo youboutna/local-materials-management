@@ -1,4 +1,5 @@
 
+import { useI18n } from '@/hooks/useI18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { format } from 'date-fns';
 import { T } from '@/components/i18n/T';
 
 export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO }) {
+  const { translateStatus } = useI18n();
   const getStatusColor = () => {
     switch (project.status) {
       case 'en cours': return 'bg-blue-500';
@@ -25,7 +27,7 @@ export function ProjectStatusCard({ project }: { project: ProjectWithPaymentsDTO
         <CardTitle className="text-lg flex justify-between items-center">
           <span><T k="auto.projectstatuscard.etat_du_projet" fallback="État du projet" /></span>
           <Badge className={`${getStatusColor()} text-white`}>
-            {project.status.toUpperCase()}
+            {translateStatus(project.status)}
           </Badge>
         </CardTitle>
       </CardHeader>

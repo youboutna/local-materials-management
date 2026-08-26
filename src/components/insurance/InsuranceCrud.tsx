@@ -70,7 +70,7 @@ const InsuranceCrud: React.FC = () => {
   const { toast } = useToast();
 
   // ✅ Récupérer les projets pour les labels
-  const { data: projects = [] } = useProjectsHex();
+  const { projects = [] } = useProjectsHex();
 
   const [formData, setFormData] = useState<InsuranceFormData>({
     projectId: '',
