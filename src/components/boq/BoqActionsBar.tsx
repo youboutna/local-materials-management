@@ -639,12 +639,13 @@ export const BoqActionsBar: React.FC<Props> = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {workflowActions.map((a) => (
+                {[...workflowActions, ...planningActions].map((a) => (
                   <DropdownMenuItem key={a.key} disabled={a.disabled} onSelect={() => a.onSelect()}>
                     {a.icon}
-                    {a.labelText ?? t(a.label ?? getDqeActionLabelKey(a.key))}
+                    {(a as { labelText?: string }).labelText ?? t(a.label ?? getDqeActionLabelKey(a.key))}
                   </DropdownMenuItem>
                 ))}
+
               </DropdownMenuContent>
             </DropdownMenu>
           )}
