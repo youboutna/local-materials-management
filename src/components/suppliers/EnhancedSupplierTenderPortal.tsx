@@ -35,11 +35,13 @@ import { getUserService } from '@/application/services/UserService';
 import { T } from '@/components/i18n/T';
 import { computeTenderSubmissionWindow } from '@/domain/services/tenderSubmissionWindow';
 
+import { SupplierSubmissionWizard } from '@/components/suppliers/SupplierSubmissionWizard';
 import {
   SupplierTenderDetailHeader,
   SupplierTenderList,
   type SupplierTenderViewModel,
 } from '@/components/suppliers/SupplierTenderExperience';
+
 
 
 interface PublicTender {
