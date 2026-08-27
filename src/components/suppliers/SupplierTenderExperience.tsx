@@ -204,10 +204,15 @@ export function SupplierTenderDetailHeader({
             <Download aria-hidden="true" />
             {t('supplier_experience.download_dao')}
           </Button>
-          <Button className="h-12" disabled={!canSubmit && !isSubmitted} onClick={onOpenSubmission}>
+          <Button
+            className={`h-12 ${canSubmit && !isSubmitted ? 'bg-success text-success-foreground hover:bg-success/90' : ''}`}
+            disabled={!canSubmit && !isSubmitted}
+            onClick={onOpenSubmission}
+          >
             <FileCheck2 aria-hidden="true" />
             {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission')}
           </Button>
+
         </div>
       </section>
 
