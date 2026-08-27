@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Calendar, Clock, CheckCircle, Circle, AlertCircle, ChevronDown } from 'lucide-react';
 import { format, differenceInDays, isPast, isFuture } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { T } from '@/components/i18n/T';
+
 
 interface TimelineEvent {
   date: string;
