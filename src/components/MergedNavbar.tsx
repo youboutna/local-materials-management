@@ -220,12 +220,13 @@ const MergedNavbar = () => {
                 </span>
               }
             />
-            {DEV_MODE && (
-              <span className="text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded self-center">
-                <T k="auto.mergednavbar.dev_mode" fallback="DEV MODE" />
-              </span>
-            )}
           </Link>
+          {DEV_MODE && (
+            <span className="self-center" onClick={(e) => e.stopPropagation()}>
+              <DevSessionSwitcher />
+            </span>
+          )}
+
 
           {/* Desktop Navigation - Core Items */}
           {isAuthenticated && !isSupplierOnly && (
