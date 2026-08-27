@@ -97,8 +97,13 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote, onSubmit 
 
       <div className="grid gap-4 lg:grid-cols-2">
         {visible.map((tender) => {
-
           const days = remainingDays(tender.deadlineDate);
+          const window = computeTenderSubmissionWindow({
+            status: tender.status,
+            currentPhase: tender.currentPhase,
+            deadlineDate: tender.deadlineDate,
+            launchDate: tender.launchDate,
+          });
           return (
             <Card key={tender.id} className="overflow-hidden border-border shadow-sm transition-shadow hover:shadow-md">
               <CardContent className="p-0">
@@ -106,13 +111,22 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote, onSubmit 
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge className="bg-success-soft text-success-soft-foreground hover:bg-success-soft">
-                          {t('supplier_experience.status_open')}
+                        <Badge
+                          className={
+                            window.isOpen
+                              ? 'bg-success-soft text-success-soft-foreground hover:bg-success-soft'
+                              : 'bg-muted text-muted-foreground hover:bg-muted'
+                          }
+                        >
+                          {window.isOpen
+                            ? t('supplier_experience.status_open')
+                            : t('supplier_experience.status_closed')}
                         </Badge>
                         {tender.projectReference && (
                           <span className="text-xs font-medium text-muted-foreground">{tender.projectReference}</span>
                         )}
                       </div>
+
                       <h3 className="text-lg font-bold leading-snug sm:text-xl">{tender.title}</h3>
                     </div>
                     <FileText className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
