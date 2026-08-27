@@ -43,16 +43,26 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { hasRole } = useHexagonalAuth();
+  const { hasAnyRole, isAuthenticated } = useHexagonalAuth();
+  const { hasAnyRole: hasAnyDbRole } = useCurrentUserRoles();
 
-  // Rôles habilités : ils peuvent générer un code quel que soit l'avancement (hors AO annulé).
-  const isPrivileged = ['super_admin', 'admin', 'manager', 'project_manager', 'director', 'directeur'].some((r) =>
-    hasRole?.(r),
-  );
+  // Rôles habilités : ils génèrent un code quel que soit l'avancement de l'AO (y compris DRAFT).
+  const PRIVILEGED_ROLES = [
+    'super_admin',
+    'admin',
+    'manager',
+    'project_manager',
+    'director',
+    'directeur',
+    'agent',
+  ];
+  const isPrivileged = hasAnyRole?.(PRIVILEGED_ROLES) || hasAnyDbRole?.(PRIVILEGED_ROLES) || false;
   const normalizedStatus = (tenderStatus || '').toLowerCase();
   const statusDef = TENDER_STATUSES[normalizedStatus as TenderStatusCode];
-  const isTenderActive =
-    normalizedStatus !== 'cancelled' && (isPrivileged || !['draft', 'closed'].includes(normalizedStatus));
+  // La génération dépend de l'authenticité de la session habilitée, pas du statut de l'AO.
+  const canGenerate = isAuthenticated && (isPrivileged || !['draft', 'closed', 'cancelled'].includes(normalizedStatus));
+  const isTenderActive = canGenerate;
+
 
 
   // Fetch existing secrets
