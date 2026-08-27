@@ -61,6 +61,8 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
 
   // Actions principales (max 4) exposées dans la barre sticky.
   const primaryTransitions = transitions.slice(0, 4);
+  const secondaryTransitions = transitions.slice(4);
+
 
   return (
     <div className="space-y-3">
