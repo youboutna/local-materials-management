@@ -194,16 +194,28 @@ export function SupplierSubmissionWizard({
             </span>
           )}
         </p>
-        <Button
-          className="h-12 bg-success text-success-foreground hover:bg-success/90"
-          disabled={!isComplete || isPending}
-          onClick={onSubmit}
-        >
-          <Send className="h-4 w-4" aria-hidden="true" />
-          {isPending
-            ? t('supplier_submission.submitting', undefined, 'Soumission en cours…')
-            : t('supplier_submission.submit', undefined, 'Soumettre la soumission')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {!canSubmit && blockedReason && (
+            <span className="text-xs font-medium text-muted-foreground">{blockedReason}</span>
+          )}
+          {onSaveDraft && (
+            <Button type="button" variant="outline" className="h-12" onClick={onSaveDraft} disabled={isPending}>
+              {t('supplier_submission.save_draft', undefined, 'Enregistrer le brouillon')}
+            </Button>
+          )}
+          <Button
+            className="h-12 bg-success text-success-foreground hover:bg-success/90"
+            disabled={!canSubmit || !isComplete || isPending}
+            title={!canSubmit ? blockedReason : undefined}
+            onClick={onSubmit}
+          >
+            <Send className="h-4 w-4" aria-hidden="true" />
+            {isPending
+              ? t('supplier_submission.submitting', undefined, 'Soumission en cours…')
+              : t('supplier_submission.submit', undefined, 'Soumettre la soumission')}
+          </Button>
+        </div>
+
       </div>
     </div>
   );
