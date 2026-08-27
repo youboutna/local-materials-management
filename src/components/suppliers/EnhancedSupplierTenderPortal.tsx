@@ -527,7 +527,13 @@ const EnhancedSupplierTenderPortal = () => {
 
         <TabsContent value="browse" className="space-y-6">
           {tenderViewModels.length > 0 ? (
-            <SupplierTenderList tenders={tenderViewModels} onSelect={selectTender} onCreateQuote={createQuote} />
+            <SupplierTenderList
+              tenders={tenderViewModels}
+              onSelect={selectTender}
+              onCreateQuote={createQuote}
+              onSubmit={selectTender}
+            />
+
           ) : (
             <Card>
                 <CardContent className="p-8 text-center">
