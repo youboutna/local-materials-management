@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DEV_MODE } from "@/config/constants";
+import DevSessionSwitcher from "@/components/dev/DevSessionSwitcher";
 import { motion } from "framer-motion";
 import {
   Menu,
@@ -219,12 +220,13 @@ const MergedNavbar = () => {
                 </span>
               }
             />
-            {DEV_MODE && (
-              <span className="text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded self-center">
-                <T k="auto.mergednavbar.dev_mode" fallback="DEV MODE" />
-              </span>
-            )}
           </Link>
+          {DEV_MODE && (
+            <span className="self-center" onClick={(e) => e.stopPropagation()}>
+              <DevSessionSwitcher />
+            </span>
+          )}
+
 
           {/* Desktop Navigation - Core Items */}
           {isAuthenticated && !isSupplierOnly && (

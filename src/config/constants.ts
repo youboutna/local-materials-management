@@ -87,7 +87,36 @@ const DEFAULT_DEV_USERS: Record<string, DevUserProfile> = {
     teams: ["direction"],
     preferences: { language: "fr", theme: "light" },
   },
+  supplier: {
+    id: "00000000-0000-0000-0000-000000000004",
+    email: "supplier@hadratech.com",
+    password: "DEV-SUPPLIER-001",
+    user_metadata: {
+      full_name: "Supplier Dev",
+      role: "supplier",
+      phone: "100000004",
+      national_id: "DEV-SUPPLIER-004",
+    },
+    permissions: ["tenders:read", "submissions:create", "invoices:create"],
+    teams: ["suppliers"],
+    preferences: { language: "fr", theme: "light" },
+  },
+  consultant: {
+    id: "00000000-0000-0000-0000-000000000005",
+    email: "consultant@hadratech.com",
+    password: "DEV-CONSULTANT-001",
+    user_metadata: {
+      full_name: "Consultant Dev",
+      role: "consultant",
+      phone: "100000005",
+      national_id: "DEV-CONSULTANT-005",
+    },
+    permissions: ["projects:read", "inspections:create", "reports:create"],
+    teams: ["consultants"],
+    preferences: { language: "fr", theme: "light" },
+  },
 };
+
 
 const LOCAL_USERS_STORAGE_KEY = "dev_users_overrides";
 
@@ -157,7 +186,8 @@ export interface DevRoleOptions {
     | "manager"
     | "director"
     | "agent"
-    | "supplier";
+    | "supplier"
+    | "consultant";
   description: string;
 }
 
@@ -175,6 +205,7 @@ export const DEV_ROLES: DevRoleOptions[] = [
   { role: "director", description: "Director level access" },
   { role: "agent", description: "Agent level access" },
   { role: "supplier", description: "Supplier access" },
+  { role: "consultant", description: "Consultant / mission de contrôle" },
   { role: "user", description: "Standard user" },
 ];
 

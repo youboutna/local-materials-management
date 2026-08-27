@@ -39,8 +39,12 @@ const ACTION_ICON: Partial<Record<TenderLotStatus, React.ReactNode>> = {
   cancelled: <Ban className="h-3.5 w-3.5" />,
 };
 
-export const TenderLotStatusBadge: React.FC<{ status?: TenderLotStatus }> = ({ status = 'draft' }) => {
-  const meta = STATUS_META[status] ?? STATUS_META.draft;
+export const TenderLotStatusBadge: React.FC<{ status?: TenderLotStatus; tenderStatus?: string }> = ({
+  status = 'draft',
+  tenderStatus,
+}) => {
+  const effective = tenderStatus ? syncLotStatusWithTender(status, tenderStatus) : status;
+  const meta = STATUS_META[effective] ?? STATUS_META.draft;
   return <Badge className={`text-xs ${meta.className}`}>{meta.label}</Badge>;
 };
 
@@ -48,10 +52,26 @@ interface Props {
   tenderId: string;
   lot: Pick<TenderLotRecord, 'id' | 'status' | 'awardedTo' | 'awardedAmount' | 'estimatedAmount'>;
   readOnly?: boolean;
+  /** Statut de l'AO parent — pilote la synchronisation des statuts de lot. */
+  tenderStatus?: string;
 }
 
-const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly }) => {
-  const status = (lot.status ?? 'draft') as TenderLotStatus;
+/** Statut de lot induit par le statut de l'AO parent (l'AO est la source de vérité). */
+export const syncLotStatusWithTender = (
+  lotStatus: TenderLotStatus | undefined,
+  tenderStatus?: string,
+): TenderLotStatus => {
+  const lot = (lotStatus ?? 'draft') as TenderLotStatus;
+  const tender = (tenderStatus ?? '').toLowerCase();
+  if (lot === 'awarded') return lot;
+  if (tender === 'cancelled') return 'cancelled';
+  if (['closed', 'evaluation', 'under_evaluation'].includes(tender) && lot === 'published') return 'under_evaluation';
+  if (['published', 'open'].includes(tender) && lot === 'draft') return 'published';
+  return lot;
+};
+
+const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly, tenderStatus }) => {
+  const status = syncLotStatusWithTender(lot.status as TenderLotStatus | undefined, tenderStatus);
   const setStatus = useSetTenderLotStatus(tenderId);
   const award = useAwardTenderLot(tenderId);
   const { data: submissions } = useLotSubmissions(status === 'under_evaluation' ? lot.id : undefined);
