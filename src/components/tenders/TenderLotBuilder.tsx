@@ -27,8 +27,10 @@ import {
   CheckCircle,
   AlertTriangle,
   GripVertical,
+  Lock,
   Loader2
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useProjectPhasesForLots } from '@/hooks/hexagonal';
 import { useLotPhaseBudgets } from '@/hooks/hexagonal/useLotPhaseBudgets';
