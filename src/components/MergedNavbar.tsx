@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DEV_MODE } from "@/config/constants";
+import DevSessionSwitcher from "@/components/dev/DevSessionSwitcher";
 import { motion } from "framer-motion";
 import {
   Menu,
