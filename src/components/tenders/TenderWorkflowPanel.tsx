@@ -61,19 +61,21 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
   const primaryTransitions = transitions.slice(0, 4);
 
   return (
-    <div className="space-y-6">
-      {/* Barre d'actions sticky : cycle de vie de l'AO uniquement */}
+    <div className="space-y-3">
+      {/* Barre d'actions sticky : cycle de vie de l'AO (source unique, sans redondance) */}
       <div className="sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Cycle de vie de l'AO</span>
-            {statusDef && (
-              <Badge variant="outline">{statusDef.label}</Badge>
-            )}
+            <span className="text-sm font-medium">
+              <T k="auto.tenderworkflowpanel.cycle_de_vie_de_l_ao" fallback="Cycle de vie de l'AO" />
+            </span>
+            {statusDef && <Badge variant="outline">{statusDef.label}</Badge>}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {primaryTransitions.length === 0 ? (
-              <span className="text-xs text-muted-foreground italic">Aucune action disponible</span>
+              <span className="text-xs text-muted-foreground italic">
+                <T k="auto.tenderworkflowpanel.aucune_action_disponible" fallback="Aucune action disponible" />
+              </span>
             ) : (
               primaryTransitions.map((t) => (
                 <Button
@@ -93,38 +95,30 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
         </div>
       </div>
 
+      {/* Détails (pliables) : description du statut, transitions secondaires et contexte évalué */}
+      <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm hover:bg-muted/40"
+          >
+            <span className="font-medium">
+              <T k="auto.tenderworkflowpanel.details_du_cycle" fallback="Détails du cycle & transitions" />
+            </span>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-2 pt-2">
+          {statusDef && <p className="text-sm text-muted-foreground">{statusDef.description}</p>}
 
-      {/* Statut courant + transitions */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Cycle de vie & transitions</CardTitle>
-          {statusDef && (
-            <Badge variant="outline" className="capitalize">
-              {statusDef.label}
-            </Badge>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {statusDef && (
-            <p className="text-sm text-muted-foreground">{statusDef.description}</p>
-          )}
-
-          {transitions.length === 0 ? (
-            <p className="text-sm text-muted-foreground italic">Aucune transition disponible depuis « {status} ».</p>
-          ) : (
+          {secondaryTransitions.length > 0 && (
             <div className="grid gap-2">
-              {transitions.map((t) => (
-                <div
-                  key={`${t.from}-${t.to}`}
-                  className="flex items-center justify-between gap-3 rounded-md border p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <Badge variant="secondary" className="uppercase">
-                      {t.to}
-                    </Badge>
+              {secondaryTransitions.map((t) => (
+                <div key={`${t.from}-${t.to}`} className="flex items-center justify-between gap-3 rounded-md border p-2">
+                  <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{t.label}</span>
                     {t.blockedReason && (
-                      <span className="text-xs text-destructive flex items-center gap-1">
+                      <span className="flex items-center gap-1 text-xs text-destructive">
                         <Lock className="h-3 w-3" /> {t.blockedReason}
                       </span>
                     )}
@@ -142,13 +136,14 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
             </div>
           )}
 
-          <div className="text-xs text-muted-foreground pt-2 border-t">
-            Contexte évalué : lots={String(ctx.hasLots)} · docs={String(ctx.hasDocuments)} · deadline={String(ctx.hasDeadline)} · soumissions={ctx.submissionsCount} · scores={String(ctx.hasEvaluationScores)} · lauréat={String(ctx.hasWinner)}
+          <div className="border-t pt-2 text-xs text-muted-foreground">
+            lots={String(ctx.hasLots)} · docs={String(ctx.hasDocuments)} · deadline={String(ctx.hasDeadline)} · soumissions={ctx.submissionsCount} · scores={String(ctx.hasEvaluationScores)} · lauréat={String(ctx.hasWinner)}
           </div>
-        </CardContent>
-      </Card>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
 
 export default TenderWorkflowPanel;
+
