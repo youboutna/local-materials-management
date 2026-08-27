@@ -162,16 +162,35 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote, onSubmit 
                   </dl>
                 </div>
 
-                <div className="grid gap-2 border-t bg-muted/30 p-3 sm:grid-cols-[1fr_auto]">
-                  <Button className="h-11 w-full justify-between" onClick={() => onSelect(tender.id)}>
-                    {t('supplier_experience.view_tender')}
+                <div className="flex flex-wrap items-center gap-2 border-t bg-muted/30 p-3">
+                  <Button className="h-11 flex-1 justify-between" onClick={() => onSelect(tender.id)}>
+                    <span className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                      {t('supplier_experience.view_tender')}
+                    </span>
                     <ChevronRight className="rtl-flip" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    className={`h-11 ${window.isOpen ? 'bg-success text-success-foreground hover:bg-success/90' : ''}`}
+                    disabled={!window.isOpen}
+                    title={
+                      window.isOpen
+                        ? undefined
+                        : window.deadline
+                          ? `${t('supplier_experience.status_closed')} — ${window.deadline.toLocaleDateString()}`
+                          : t('supplier_experience.status_closed')
+                    }
+                    onClick={() => (onSubmit ?? onSelect)(tender.id)}
+                  >
+                    <Send className="h-4 w-4" aria-hidden="true" />
+                    {t('supplier_experience.open_submission')}
                   </Button>
                   <Button variant="outline" className="h-11" onClick={() => onCreateQuote(tender.id)}>
                     <Calculator aria-hidden="true" />
                     {t('supplier_experience.create_quote')}
                   </Button>
                 </div>
+
               </CardContent>
             </Card>
           );
