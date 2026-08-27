@@ -65,10 +65,11 @@ const MainNavbar = () => {
         <Link to="/" className="text-xl font-bold">
          {t('app.name') || 'HadraTech-GPI'}
           {DEV_MODE && (
-            <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded">
-              <T k="auto.mainnavbar.dev" fallback="DEV" />
+            <span className="ml-2 inline-flex align-middle">
+              <DevSessionSwitcher compact />
             </span>
           )}
+
         </Link>
 
         {/* Mobile Dropdown Menu */}
