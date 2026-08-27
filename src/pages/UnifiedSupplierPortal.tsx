@@ -595,46 +595,39 @@ const UnifiedSupplierPortal = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 to-secondary/5">
-      <main className="flex-grow py-16">
+      <main className="flex-grow py-6">
         <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-primary mb-2">
+          {/* Header compact : titre + pastilles + déconnexion sur une seule ligne */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <h1 className="truncate text-lg font-bold text-primary sm:text-xl">
                 <T k="auto.unifiedsupplierportal.portail_fournisseur" fallback="Portail Fournisseur" />
               </h1>
-              <p className="text-muted-foreground">
-                Bienvenue {supplierProfile?.name || user.email}
-              </p>
+              <span className="truncate text-xs text-muted-foreground">
+                {supplierProfile?.name || user.email}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">
+                <DollarSign className="h-3.5 w-3.5" />
+                {formatAmount2(totalPayments)}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-xs">
+                <TrendingUp className="h-3.5 w-3.5 text-warning" />
+                {pendingPayments}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-xs">
+                <Bell className="h-3.5 w-3.5 text-primary" />
+                {unreadNotifications}
+              </span>
             </div>
-            <Button onClick={handleLogout} variant="outline" className="gap-2">
+            <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2">
               <LogOut className="h-4 w-4" />
               <T k="auto.unifiedsupplierportal.deconnexion" fallback="Déconnexion" />
             </Button>
           </div>
 
-          {/* Stats compactes (une seule ligne, l'appel d'offres reste visible sans scroll) */}
-          <div className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border bg-card/60 px-3 py-2 text-sm">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-success-soft px-2 py-1 font-semibold text-success">
-              <DollarSign className="h-3.5 w-3.5" />
-              {formatAmount2(totalPayments)}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1">
-              <TrendingUp className="h-3.5 w-3.5 text-warning" />
-              {pendingPayments} en attente
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1">
-              <Bell className="h-3.5 w-3.5 text-primary" />
-              {unreadNotifications} non lues
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1">
-              <FileText className="h-3.5 w-3.5 text-primary" />
-              {documents.length} documents
-            </span>
-          </div>
-
           {/* Main Content */}
-          <Tabs defaultValue="documents" className="space-y-5" value={activeTab} onValueChange={handleTabChange}>
+          <Tabs defaultValue="tenders" className="space-y-5" value={activeTab} onValueChange={handleTabChange}>
+
             <TabsList className="grid h-auto w-full grid-cols-5 p-1 lg:max-w-3xl">
               <TabsTrigger value="tenders"><T k="auto.unifiedsupplierportal.appels_d_offres" fallback="Appels d'Offres" /></TabsTrigger>
               <TabsTrigger value="devis"><T k="auto.unifiedsupplierportal.devis" fallback="Devis" /></TabsTrigger>
