@@ -186,7 +186,8 @@ export interface DevRoleOptions {
     | "manager"
     | "director"
     | "agent"
-    | "supplier";
+    | "supplier"
+    | "consultant";
   description: string;
 }
 
@@ -204,6 +205,7 @@ export const DEV_ROLES: DevRoleOptions[] = [
   { role: "director", description: "Director level access" },
   { role: "agent", description: "Agent level access" },
   { role: "supplier", description: "Supplier access" },
+  { role: "consultant", description: "Consultant / mission de contrôle" },
   { role: "user", description: "Standard user" },
 ];
 
