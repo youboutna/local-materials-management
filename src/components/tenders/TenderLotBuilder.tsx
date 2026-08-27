@@ -43,6 +43,7 @@ import {
   useDeleteTenderLot,
 } from '@/hooks/hexagonal/useTenderLotsHex';
 import TenderLotDocumentsManager from './TenderLotDocumentsManager';
+import { useTenderLotDocuments } from '@/hooks/hexagonal/useTenderLotDocumentsHex';
 import TenderLotWorkflowBar, { TenderLotStatusBadge } from './TenderLotWorkflowBar';
 import type { TenderLotStatus } from '@/dtos/transforms/TenderLotTransformer';
 import { T } from '@/components/i18n/T';
@@ -289,6 +290,10 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
     return lot.linkedPhaseIds.length;
   };
 
+  const { data: lotDocuments } = useTenderLotDocuments(tenderId);
+  const countLotDocuments = (lotId: string) =>
+    (lotDocuments ?? []).filter((d: any) => (d.lotIds ?? d.lot_ids ?? []).includes(lotId)).length;
+
   const totalEstimated = lots.reduce((sum, lot) => sum + (lot.estimatedAmount || 0), 0);
 
   return (
@@ -376,6 +381,10 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                           {(lot.estimatedAmount / 1000000).toFixed(2)}M
                         </Badge>
                       )}
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <FileText className="h-3 w-3" />
+                        {countLotDocuments(lot.id)} doc(s)
+                      </Badge>
                     </div>
                   </div>
                 </AccordionTrigger>
