@@ -53,7 +53,7 @@ function remainingDays(deadline?: string) {
 }
 
 
-export function SupplierTenderList({ tenders, onSelect, onCreateQuote }: SupplierTenderListProps) {
+export function SupplierTenderList({ tenders, onSelect, onCreateQuote, onSubmit }: SupplierTenderListProps) {
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
 
