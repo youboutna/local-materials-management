@@ -169,11 +169,18 @@ export function SupplierTenderDetailHeader({
 
       <section className="space-y-5 border-b pb-6" aria-labelledby="supplier-tender-title">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="bg-success-soft text-success-soft-foreground hover:bg-success-soft">
+          <Badge
+            className={
+              canSubmit
+                ? 'bg-success text-success-foreground hover:bg-success/90'
+                : 'bg-muted text-muted-foreground hover:bg-muted'
+            }
+          >
             {canSubmit ? t('supplier_experience.status_open') : t('supplier_experience.status_closed')}
           </Badge>
           {tender.projectReference && <span className="text-sm text-muted-foreground">{tender.projectReference}</span>}
         </div>
+
 
         <div className="max-w-3xl">
           <h2 id="supplier-tender-title" className="text-2xl font-bold leading-tight sm:text-4xl">{tender.title}</h2>
