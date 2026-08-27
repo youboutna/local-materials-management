@@ -260,6 +260,7 @@ const TenderManagement = () => {
                       <TenderLotBuilder
                         tenderId={selectedTender.id}
                         projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
+                        tenderStatus={selectedTender.status}
                       />
                     </TabsContent>
 

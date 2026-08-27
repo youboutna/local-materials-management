@@ -86,6 +86,8 @@ interface TenderLotBuilderProps {
   lots?: TenderLot[];
   onChange?: (lots: TenderLot[]) => void;
   readOnly?: boolean;
+  /** Statut de l'AO parent (synchronisation des statuts de lot). */
+  tenderStatus?: string;
 }
 
 const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
@@ -93,7 +95,8 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   projectId,
   lots: externalLots,
   onChange,
-  readOnly = false
+  readOnly = false,
+  tenderStatus
 }) => {
   const isPersistMode = !externalLots && !onChange && !!tenderId;
 
@@ -371,7 +374,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                     <Badge className="bg-primary">Lot {lot.number}</Badge>
                     <span className="font-medium">{lot.title}</span>
                     <div className="flex items-center gap-2 ml-auto mr-4">
-                      <TenderLotStatusBadge status={lot.status} />
+                      <TenderLotStatusBadge status={lot.status} tenderStatus={tenderStatus} />
                       {getLinkedPhasesCount(lot) > 0 && (
                         <Badge variant="outline" className="text-xs gap-1">
                           <Layers className="h-3 w-3" />
@@ -394,7 +397,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                 <AccordionContent>
                   <div className="px-4 pb-4 space-y-4">
                     {isPersistMode && (
-                      <TenderLotWorkflowBar tenderId={tenderId} lot={lot as any} readOnly={readOnly} />
+                      <TenderLotWorkflowBar tenderId={tenderId} lot={lot as any} readOnly={readOnly} tenderStatus={tenderStatus} />
                     )}
                     {/* Basic Info */}
 
