@@ -221,6 +221,17 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
     handleLotsChange(lots.filter(lot => lot.id !== lotId));
   };
 
+  /**
+   * Montant estimé dérivé : priorité aux lignes DQE rattachées aux phases,
+   * repli sur le budget de phase quand aucun DQE n'existe encore.
+   */
+  const computeAmountForPhases = (phaseIds: string[]): number => {
+    if (hasDqe) return LotPhaseBudgetService.computeLotAmount(budgets, phaseIds);
+    return phases
+      .filter((p) => phaseIds.includes(p.id))
+      .reduce((sum, p) => sum + (p.budget || 0), 0);
+  };
+
   const togglePhaseLink = (lotId: string, phaseId: string) => {
     const lot = lots.find(l => l.id === lotId);
     if (!lot) return;
@@ -229,7 +240,8 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
       ? lot.linkedPhaseIds.filter(id => id !== phaseId)
       : [...lot.linkedPhaseIds, phaseId];
 
-    updateLot(lotId, { linkedPhaseIds: newPhaseIds });
+    // Le montant estimé suit automatiquement les phases liées (jamais saisi à la main).
+    updateLot(lotId, { linkedPhaseIds: newPhaseIds, estimatedAmount: computeAmountForPhases(newPhaseIds) });
   };
 
   const toggleStepLink = (lotId: string, stepId: string) => {
@@ -246,12 +258,23 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   const calculateEstimatedFromPhases = (lotId: string) => {
     const lot = lots.find(l => l.id === lotId);
     if (!lot) return;
-
-    const linkedPhases = phases.filter(p => lot.linkedPhaseIds.includes(p.id));
-    const estimatedAmount = linkedPhases.reduce((sum, p) => sum + (p.budget || 0), 0);
-
-    updateLot(lotId, { estimatedAmount });
+    updateLot(lotId, { estimatedAmount: computeAmountForPhases(lot.linkedPhaseIds) });
   };
+
+  // Hydratation automatique : dès que les montants DQE sont chargés, les lots liés
+  // à des phases sont recalculés (anti-corruption : pas de valeur manuelle résiduelle).
+  useEffect(() => {
+    if (!hasDqe || readOnly) return;
+    for (const lot of lots) {
+      if (!lot.linkedPhaseIds.length) continue;
+      const derived = LotPhaseBudgetService.computeLotAmount(budgets, lot.linkedPhaseIds);
+      if (derived > 0 && Math.abs((lot.estimatedAmount || 0) - derived) > 0.01) {
+        updateLot(lot.id, { estimatedAmount: derived });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasDqe, budgets, readOnly]);
+
 
   const getLinkedPhasesCount = (lot: TenderLot) => {
     return lot.linkedPhaseIds.length;
