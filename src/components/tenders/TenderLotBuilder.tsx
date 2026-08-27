@@ -31,6 +31,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProjectPhasesForLots } from '@/hooks/hexagonal';
+import { useLotPhaseBudgets } from '@/hooks/hexagonal/useLotPhaseBudgets';
+import { LotPhaseBudgetService } from '@/application/services/tender/LotPhaseBudgetService';
+
 import {
   useTenderLots,
   useCreateTenderLot,
