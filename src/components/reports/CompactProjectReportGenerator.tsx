@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { REPORT_PROFILES, type ReportProfile, defaultSectionsFor } from '@/config/referentials/reports/report-profiles.referential';
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
 import { T } from '@/components/i18n/T';
+import { resolveProjectLocationLabel } from '@/utils/projectLocationLabel';
 
 // Local type aliases for report generation
 interface EVMMetrics {
