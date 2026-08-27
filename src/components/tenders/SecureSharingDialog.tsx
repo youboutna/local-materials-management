@@ -41,10 +41,17 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Le partage est autorisé dès que l'AO est sorti du brouillon (publié / ouvert / évalué...).
-  // Seuls les statuts non publiables bloquent la génération.
-  const NON_SHAREABLE_STATUSES = ['draft', 'cancelled', 'closed'];
-  const isTenderActive = !NON_SHAREABLE_STATUSES.includes((tenderStatus || '').toLowerCase());
+  const { hasRole } = useHexagonalAuth();
+
+  // Rôles habilités : ils peuvent générer un code quel que soit l'avancement (hors AO annulé).
+  const isPrivileged = ['super_admin', 'admin', 'manager', 'project_manager', 'director', 'directeur'].some((r) =>
+    hasRole?.(r),
+  );
+  const normalizedStatus = (tenderStatus || '').toLowerCase();
+  const statusDef = TENDER_STATUSES[normalizedStatus as TenderStatusCode];
+  const isTenderActive =
+    normalizedStatus !== 'cancelled' && (isPrivileged || !['draft', 'closed'].includes(normalizedStatus));
+
 
   // Fetch existing secrets
   const { data: secrets, isLoading } = useQuery({
