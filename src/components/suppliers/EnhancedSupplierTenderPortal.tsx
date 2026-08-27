@@ -412,18 +412,17 @@ const EnhancedSupplierTenderPortal = () => {
     });
   };
 
-  const canSubmitBid = () => {
-    // Check if deadline has passed
-    if (selectedTender?.deadline_date) {
-      const deadline = new Date(selectedTender.deadline_date);
-      const now = new Date();
-      if (now > deadline) return false;
-    }
-    console.log("electedTender?.current_phase: +", selectedTender?.current_phase);
-    console.log("selectedTender?.status: +", selectedTender?.status);
-    // Check if tender is in submission phase (phase 2)
-    return selectedTender?.current_phase === 2 || selectedTender?.status === 'published';
-  };
+  // Fenêtre de soumission calculée par le domaine (date limite = source de vérité)
+  const submissionWindow = computeTenderSubmissionWindow({
+    status: selectedTender?.status,
+    currentPhase: selectedTender?.current_phase,
+    deadlineDate: selectedTender?.deadline_date,
+    launchDate: selectedTender?.launch_date,
+    grantedBySecret: !!accessGrantedTenderId && accessGrantedTenderId === selectedTender?.id,
+  });
+
+  const canSubmitBid = () => submissionWindow.canSubmit;
+
 
   const isSubmissionComplete = () => {
     const adminFiles = Object.keys(selectedFiles).filter(key => key.startsWith('administrative')).length;
