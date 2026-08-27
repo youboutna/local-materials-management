@@ -81,19 +81,24 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
                 <T k="auto.tenderworkflowpanel.aucune_action_disponible" fallback="Aucune action disponible" />
               </span>
             ) : (
-              primaryTransitions.map((t) => (
-                <Button
-                  key={`sticky-${t.from}-${t.to}`}
-                  size="sm"
-                  variant={t.blockedReason ? 'outline' : 'default'}
-                  disabled={!!t.blockedReason || !onTransition}
-                  title={t.blockedReason || t.label}
-                  onClick={() => onTransition?.(t.to)}
-                >
-                  {t.blockedReason && <Lock className="mr-1 h-3 w-3" />}
-                  {t.label}
-                </Button>
-              ))
+              primaryTransitions.map((t) => {
+                const blocked = !!t.blockedReason || !onTransition;
+                return (
+                  <Button
+                    key={`sticky-${t.from}-${t.to}`}
+                    size="sm"
+                    variant={blocked ? 'secondary' : 'default'}
+                    className={blocked ? 'text-muted-foreground' : 'bg-success text-success-foreground hover:bg-success/90'}
+                    disabled={blocked}
+                    title={t.blockedReason || t.label}
+                    onClick={() => onTransition?.(t.to)}
+                  >
+                    {t.blockedReason && <Lock className="mr-1 h-3 w-3" />}
+                    {t.label}
+                  </Button>
+                );
+              })
+
             )}
           </div>
         </div>

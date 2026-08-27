@@ -12,6 +12,8 @@ import { format } from 'date-fns';
 import { Check, Clock, Copy, Eye, Lock, Shield, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
+import { TENDER_STATUSES, type TenderStatusCode } from '@/config/referentials/tender/tender-workflow.referential';
 
 interface SecureSharingDialogProps {
   isOpen: boolean;
@@ -41,10 +43,17 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Le partage est autorisé dès que l'AO est sorti du brouillon (publié / ouvert / évalué...).
-  // Seuls les statuts non publiables bloquent la génération.
-  const NON_SHAREABLE_STATUSES = ['draft', 'cancelled', 'closed'];
-  const isTenderActive = !NON_SHAREABLE_STATUSES.includes((tenderStatus || '').toLowerCase());
+  const { hasRole } = useHexagonalAuth();
+
+  // Rôles habilités : ils peuvent générer un code quel que soit l'avancement (hors AO annulé).
+  const isPrivileged = ['super_admin', 'admin', 'manager', 'project_manager', 'director', 'directeur'].some((r) =>
+    hasRole?.(r),
+  );
+  const normalizedStatus = (tenderStatus || '').toLowerCase();
+  const statusDef = TENDER_STATUSES[normalizedStatus as TenderStatusCode];
+  const isTenderActive =
+    normalizedStatus !== 'cancelled' && (isPrivileged || !['draft', 'closed'].includes(normalizedStatus));
+
 
   // Fetch existing secrets
   const { data: secrets, isLoading } = useQuery({
@@ -122,6 +131,16 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
               <DialogDescription className="text-sm">
                 {tenderTitle}
               </DialogDescription>
+              <div className="mt-1 flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  Statut : {statusDef?.label ?? tenderStatus}
+                </Badge>
+                {isTenderActive && (
+                  <Badge className="bg-success text-success-foreground text-xs gap-1">
+                    <Check className="h-3 w-3" /> Partage autorisé
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -138,7 +157,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
               {/* État vide intelligent (jamais bloquant pour un AO publié) */}
               {!isTenderActive && (
                 <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-                  Aucun code de partage actif. La génération est disponible dès la publication de l'appel d'offres.
+                  La génération de code est disponible dès la publication de l'appel d'offres (ou pour un profil administrateur / gestionnaire / directeur).
                 </div>
               )}
               
@@ -199,7 +218,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
               <Button 
                 onClick={() => createSecretMutation.mutate()}
                 disabled={createSecretMutation.isPending || !isTenderActive}
-                className="w-full"
+                className={`w-full ${isTenderActive ? 'bg-success text-success-foreground hover:bg-success/90' : ''}`}
               >
                 {createSecretMutation.isPending ? 'Création...' : 'Générer le code de partage'}
               </Button>

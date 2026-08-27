@@ -88,15 +88,29 @@ const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly }) => {
             <Button
               key={next}
               size="sm"
-              variant={next === 'cancelled' ? 'ghost' : 'outline'}
-              className="gap-1"
+              variant={next === 'cancelled' ? 'outline' : 'default'}
+              className={
+                next === 'cancelled'
+                  ? 'gap-1 text-muted-foreground'
+                  : 'gap-1 bg-success text-success-foreground hover:bg-success/90'
+              }
               disabled={setStatus.isPending}
               onClick={() => setStatus.mutate({ id: lot.id, status: next })}
             >
               {ACTION_ICON[next]}
-              {next === 'published' ? 'Publier le lot' : next === 'under_evaluation' ? 'Évaluer' : STATUS_META[next].label}
+              {next === 'published'
+                ? 'Publier le lot'
+                : next === 'under_evaluation'
+                  ? 'Évaluer'
+                  : next === 'cancelled'
+                    ? 'Annuler le lot'
+                    : next === 'draft'
+                      ? 'Repasser en brouillon'
+                      : STATUS_META[next].label}
+
             </Button>
           ))}
+
 
           {canAward && (
             <>

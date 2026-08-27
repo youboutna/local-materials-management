@@ -32,6 +32,7 @@ import {
 import { Loader2, Paperclip, Sparkles, Trash2, Wallet, Eye, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ProjectSelector from '@/components/selectors/ProjectSelector';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import {
   PAYMENT_DEFAULT_LEAD_TIME_DAYS,
@@ -355,23 +356,29 @@ export function UnifiedPaymentFormDialog({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label><T k="auto.unifiedpaymentformdialog.phase_liee_optionnel" fallback="Phase liée (optionnel)" /></Label>
-                  <Select value={phaseId || 'none'} onValueChange={(v) => setPhaseId(v === 'none' ? '' : v)} disabled={!projectId}>
-                    <SelectTrigger><SelectValue placeholder="Sélectionner une phase" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none"><T k="auto.unifiedpaymentformdialog.aucune" fallback="Aucune" /></SelectItem>
-                      {phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    value={phaseId}
+                    onChange={setPhaseId}
+                    options={phases.map((p) => ({ value: p.id, label: p.name }))}
+                    placeholder="Sélectionner une phase"
+                    searchPlaceholder="Filtrer les phases…"
+                    emptyLabel="Aucune phase"
+                    clearLabel="Aucune"
+                    disabled={!projectId}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label><T k="auto.unifiedpaymentformdialog.inspection_liee_optionnel" fallback="Inspection liée (optionnel)" /></Label>
-                  <Select value={inspectionId || 'none'} onValueChange={(v) => setInspectionId(v === 'none' ? '' : v)} disabled={!projectId}>
-                    <SelectTrigger><SelectValue placeholder="Sélectionner une inspection" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none"><T k="auto.unifiedpaymentformdialog.aucune" fallback="Aucune" /></SelectItem>
-                      {inspections.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    value={inspectionId}
+                    onChange={setInspectionId}
+                    options={inspections.map((i) => ({ value: i.id, label: i.label }))}
+                    placeholder="Sélectionner une inspection"
+                    searchPlaceholder="Filtrer les inspections…"
+                    emptyLabel="Aucune inspection"
+                    clearLabel="Aucune"
+                    disabled={!projectId}
+                  />
                 </div>
               </div>
 
