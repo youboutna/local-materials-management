@@ -623,11 +623,15 @@ const EnhancedSupplierTenderPortal = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded">
+                    <div className="flex flex-wrap items-center gap-2 rounded border bg-muted/40 p-3">
                       {submissionWindow.canSubmit ? (
                         <>
                           <CheckCircle className="h-5 w-5 text-success" />
-                          <span className="text-sm font-medium"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_active" fallback="Phase de soumission active" /></span>
+                          <span className="text-sm font-medium">
+                            {submissionWindow.deadline
+                              ? `La soumission est ouverte jusqu'au ${submissionWindow.deadline.toLocaleDateString('fr-FR')}.`
+                              : 'La soumission est ouverte.'}
+                          </span>
                           {submissionWindow.daysRemaining !== null && (
                             <Badge className="bg-success text-success-foreground">
                               {submissionWindow.daysRemaining} jours restants
@@ -636,20 +640,18 @@ const EnhancedSupplierTenderPortal = () => {
                         </>
                       ) : (
                         <>
-                          <XCircle className="h-5 w-5 text-destructive" />
-                          <span className="text-sm">
+                          <XCircle className="h-5 w-5 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
                             {submissionWindow.reason === 'deadline_passed'
                               ? 'Date limite dépassée'
                               : submissionWindow.reason === 'cancelled'
                                 ? 'Appel d\u2019offres clôturé / annulé'
                                 : 'Soumission non encore ouverte'}
+                            {submissionWindow.deadline
+                              ? ` — limite : ${submissionWindow.deadline.toLocaleDateString('fr-FR')}`
+                              : ''}
                           </span>
                         </>
-                      )}
-                      {submissionWindow.deadline && (
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          Limite: {submissionWindow.deadline.toLocaleDateString('fr-FR')}
-                        </span>
                       )}
                     </div>
 
@@ -673,72 +675,16 @@ const EnhancedSupplierTenderPortal = () => {
                         <SubmissionSecretDisplay submissionId={userSubmission.id} />
                       </>
                     ) : canSubmitBid() && (
-                      <div className="space-y-6">
-                        {Object.entries(DOCUMENT_CATEGORIES).map(([categoryKey, categoryLabel]) => (
-                          <Card key={categoryKey}>
-                            <CardHeader>
-                              <CardTitle className="text-lg">{categoryLabel}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-3">
-                                {REQUIRED_DOCUMENTS[categoryKey as keyof typeof REQUIRED_DOCUMENTS].map((docType) => {
-                                  const key = `${categoryKey}-${docType}`;
-                                  const file = selectedFiles[key];
-                                  
-                                  return (
-                                    <div key={docType} className="flex items-center justify-between p-3 border rounded">
-                                      <div>
-                                        <p className="font-medium text-sm">{docType}</p>
-                                        {file && (
-                                          <p className="text-xs text-muted-foreground">{file.name}</p>
-                                        )}
-                                      </div>
-                                      <div className="flex gap-2">
-                                        {file ? (
-                                          <>
-                                            <CheckCircle className="h-5 w-5 text-success" />
-                                            <Button 
-                                              variant="outline" 
-                                              size="sm"
-                                              onClick={() => removeFile(key)}
-                                            >
-                                              <T k="auto.enhancedsuppliertenderportal.remplacer" fallback="Remplacer" />
-                                            </Button>
-                                          </>
-                                        ) : (
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => handleFileSelect(categoryKey as keyof typeof DOCUMENT_CATEGORIES, docType)}
-                                          >
-                                            <Upload className="h-4 w-4 mr-1" />
-                                            <T k="auto.enhancedsuppliertenderportal.choisir" fallback="Choisir" />
-                                          </Button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-
-                        <Card>
-                          <CardContent className="p-6">
-                            <Label htmlFor="notes"><T k="auto.enhancedsuppliertenderportal.notes_supplementaires_optionnel" fallback="Notes supplémentaires (optionnel)" /></Label>
-                            <Textarea
-                              id="notes"
-                              value={submissionData.notes}
-                              onChange={(e) => setSubmissionData(prev => ({ ...prev, notes: e.target.value }))}
-                              placeholder="Ajoutez des informations complémentaires..."
-                              rows={3}
-                              className="mt-2"
-                            />
-                          </CardContent>
-                        </Card>
-
-                        {/* Submission Progress Tracker */}
+                      <SupplierSubmissionWizard
+                        files={selectedFiles}
+                        notes={submissionData.notes}
+                        isPending={submitBidMutation.isPending || uploading}
+                        isComplete={isSubmissionComplete()}
+                        onAddFiles={handleAddFiles}
+                        onRemoveFile={removeFile}
+                        onNotesChange={(notes) => setSubmissionData((prev) => ({ ...prev, notes }))}
+                        onSubmit={() => submitBidMutation.mutate()}
+                      >
                         {submissionStep !== 'idle' && (
                           <SubmissionProgressTracker
                             currentStep={submissionStep}
@@ -747,31 +693,9 @@ const EnhancedSupplierTenderPortal = () => {
                             error={submissionError}
                           />
                         )}
-
-                        <div className="flex justify-end gap-4">
-                          <div className="text-sm text-muted-foreground">
-                            Fichiers sélectionnés: {Object.keys(selectedFiles).length}
-                            {isSubmissionComplete() && (
-                              <span className="text-success ml-2">✓ Dossier complet</span>
-                            )}
-                          </div>
-                          <Button
-                            onClick={() => submitBidMutation.mutate()}
-                            disabled={!isSubmissionComplete() || submitBidMutation.isPending || uploading}
-                            size="lg"
-                          >
-                            {submitBidMutation.isPending || uploading ? (
-                              'Soumission en cours...'
-                            ) : (
-                              <>
-                                <Send className="h-4 w-4 mr-2" />
-                                <T k="auto.enhancedsuppliertenderportal.soumettre_le_dossier" fallback="Soumettre le dossier" />
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
+                      </SupplierSubmissionWizard>
                     )}
+
                   </div>
                 </CardContent>
               </Card>
