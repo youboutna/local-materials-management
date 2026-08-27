@@ -120,7 +120,7 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote, onSubmit 
                         >
                           {window.isOpen
                             ? t('supplier_experience.status_open')
-                            : t('supplier_experience.status_closed')}
+                            : t('supplier_experience.status_closed', undefined, 'Soumission fermée')}
                         </Badge>
                         {tender.projectReference && (
                           <span className="text-xs font-medium text-muted-foreground">{tender.projectReference}</span>
@@ -177,13 +177,13 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote, onSubmit 
                       window.isOpen
                         ? undefined
                         : window.deadline
-                          ? `${t('supplier_experience.status_closed')} — ${window.deadline.toLocaleDateString()}`
-                          : t('supplier_experience.status_closed')
+                          ? `${t('supplier_experience.status_closed', undefined, 'Soumission fermée')} — ${window.deadline.toLocaleDateString()}`
+                          : t('supplier_experience.status_closed', undefined, 'Soumission fermée')
                     }
                     onClick={() => (onSubmit ?? onSelect)(tender.id)}
                   >
                     <Send className="h-4 w-4" aria-hidden="true" />
-                    {t('supplier_experience.open_submission')}
+                    {t('supplier_experience.open_submission', undefined, 'Soumettre')}
                   </Button>
                   <Button variant="outline" className="h-11" onClick={() => onCreateQuote(tender.id)}>
                     <Calculator aria-hidden="true" />
@@ -249,7 +249,7 @@ export function SupplierTenderDetailHeader({
                 : 'bg-muted text-muted-foreground hover:bg-muted'
             }
           >
-            {canSubmit ? t('supplier_experience.status_open') : t('supplier_experience.status_closed')}
+            {canSubmit ? t('supplier_experience.status_open') : t('supplier_experience.status_closed', undefined, 'Soumission fermée')}
           </Badge>
           {tender.projectReference && <span className="text-sm text-muted-foreground">{tender.projectReference}</span>}
         </div>
@@ -283,7 +283,7 @@ export function SupplierTenderDetailHeader({
             onClick={onOpenSubmission}
           >
             <FileCheck2 aria-hidden="true" />
-            {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission')}
+            {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission', undefined, 'Soumettre')}
           </Button>
 
         </div>
@@ -320,7 +320,7 @@ export function SupplierTenderDetailHeader({
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 p-3 backdrop-blur md:hidden">
         <Button className="h-12 w-full" disabled={!canSubmit && !isSubmitted} onClick={onOpenSubmission}>
           <FileCheck2 aria-hidden="true" />
-          {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission')}
+          {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission', undefined, 'Soumettre')}
         </Button>
       </div>
     </div>
