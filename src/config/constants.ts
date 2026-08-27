@@ -7,8 +7,10 @@ const isDevelopment = isBrowser
 
 export const DEV_MODE =
   (isBrowser && (window as any).__APP_CONFIG__?.DEV_MODE === "true") ||
-  (typeof import.meta !== "undefined" &&
-    (import.meta as any)?.env?.VITE_DEV_MODE === "true") ||
+  // NOTE: must stay as a literal `import.meta.env.X` access — Vite only
+  // statically replaces this exact form (aliasing or `import.meta?.env`
+  // yields undefined in the browser bundle).
+  import.meta.env?.VITE_DEV_MODE === "true" ||
   false;
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
 
