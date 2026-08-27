@@ -114,14 +114,20 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
 
   const deactivateSecret = useMutation({
     mutationFn: (secretId: string) => TenderSharingService.revokeSecret(secretId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
+    onSuccess: (_res, secretId) => {
+      queryClient.setQueryData(['tender-sharing-secrets', tenderId], (prev: any) =>
+        Array.isArray(prev) ? prev.map((s: any) => (s.id === secretId ? { ...s, isActive: false } : s)) : prev,
+      );
+      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets'] });
       toast({
         title: 'Code désactivé',
         description: 'Le code de partage a été désactivé'
       });
-    }
+    },
+    onError: (e: any) =>
+      toast({ title: 'Erreur', description: e?.message ?? 'Désactivation impossible', variant: 'destructive' }),
   });
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
