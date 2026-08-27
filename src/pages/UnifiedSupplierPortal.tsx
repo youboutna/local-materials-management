@@ -613,67 +613,24 @@ const UnifiedSupplierPortal = () => {
             </Button>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="border-l-4 border-l-green-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  <T k="auto.unifiedsupplierportal.paiements_total" fallback="Paiements Total" />
-                </CardTitle>
-                <DollarSign className="h-4 w-4 text-success" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-success">
-                  {formatAmount2(totalPayments)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {paymentRequests.length} demandes
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-orange-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  <T k="auto.unifiedsupplierportal.paiements_en_attente" fallback="Paiements en Attente" />
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-warning" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-warning">
-                  {pendingPayments}
-                </div>
-                <p className="text-xs text-muted-foreground"><T k="auto.unifiedsupplierportal.en_traitement" fallback="En traitement" /></p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  <T k="auto.unifiedsupplierportal.notifications" fallback="Notifications" />
-                </CardTitle>
-                <Bell className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {unreadNotifications}
-                </div>
-                <p className="text-xs text-muted-foreground"><T k="auto.unifiedsupplierportal.non_lues" fallback="Non lues" /></p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-purple-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium"><T k="auto.unifiedsupplierportal.documents" fallback="Documents" /></CardTitle>
-                <FileText className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600">
-                  {documents.length}
-                </div>
-                <p className="text-xs text-muted-foreground"><T k="auto.unifiedsupplierportal.disponibles" fallback="Disponibles" /></p>
-              </CardContent>
-            </Card>
+          {/* Stats compactes (une seule ligne, l'appel d'offres reste visible sans scroll) */}
+          <div className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border bg-card/60 px-3 py-2 text-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-success-soft px-2 py-1 font-semibold text-success">
+              <DollarSign className="h-3.5 w-3.5" />
+              {formatAmount2(totalPayments)}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1">
+              <TrendingUp className="h-3.5 w-3.5 text-warning" />
+              {pendingPayments} en attente
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1">
+              <Bell className="h-3.5 w-3.5 text-primary" />
+              {unreadNotifications} non lues
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1">
+              <FileText className="h-3.5 w-3.5 text-primary" />
+              {documents.length} documents
+            </span>
           </div>
 
           {/* Main Content */}
@@ -681,15 +638,18 @@ const UnifiedSupplierPortal = () => {
             <TabsList className="grid h-auto w-full grid-cols-5 p-1 lg:max-w-3xl">
               <TabsTrigger value="tenders"><T k="auto.unifiedsupplierportal.appels_d_offres" fallback="Appels d'Offres" /></TabsTrigger>
               <TabsTrigger value="devis"><T k="auto.unifiedsupplierportal.devis" fallback="Devis" /></TabsTrigger>
-              <TabsTrigger value="documents"><T k="auto.unifiedsupplierportal.documents" fallback="Documents" /></TabsTrigger>
+              <TabsTrigger value="documents">
+                <T k="auto.unifiedsupplierportal.documents" fallback="Documents" /> ({documents.length})
+              </TabsTrigger>
               <TabsTrigger value="notifications" className="relative">
-                Notifications
+                Notifications ({unreadNotifications})
                 {paymentInitiationsCount > 0 && (
                   <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 px-1 text-xs">
                     {paymentInitiationsCount}
                   </Badge>
                 )}
               </TabsTrigger>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-9 min-w-0 px-2 data-[state=open]:bg-background" aria-label={t('supplier_experience.more')}>

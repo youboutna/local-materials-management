@@ -79,15 +79,20 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       return await TenderSharingService.createSharingSecret(dto);
     },
     onSuccess: (data) => {
-      // 🔥 Invalider les caches pour rafraîchir la liste
-      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
-      queryClient.invalidateQueries({ queryKey: ['tender-secrets', tenderId] });
+      // Mise à jour optimiste immédiate (aucun refresh manuel requis)
+      queryClient.setQueryData(['tender-sharing-secrets', tenderId], (prev: any) =>
+        Array.isArray(prev) ? [data, ...prev] : [data],
+      );
+      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets'] });
+      queryClient.invalidateQueries({ queryKey: ['tender-secrets'] });
+      queryClient.invalidateQueries({ queryKey: ['tender-sharing-access-logs'] });
       toast({
         title: 'Code de partage créé',
         description: `Code: ${data.secretCode}`,
       });
       setSupplierEmail('');
     },
+
     onError: (error) => {
       toast({
         title: 'Erreur',
@@ -109,14 +114,20 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
 
   const deactivateSecret = useMutation({
     mutationFn: (secretId: string) => TenderSharingService.revokeSecret(secretId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
+    onSuccess: (_res, secretId) => {
+      queryClient.setQueryData(['tender-sharing-secrets', tenderId], (prev: any) =>
+        Array.isArray(prev) ? prev.map((s: any) => (s.id === secretId ? { ...s, isActive: false } : s)) : prev,
+      );
+      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets'] });
       toast({
         title: 'Code désactivé',
         description: 'Le code de partage a été désactivé'
       });
-    }
+    },
+    onError: (e: any) =>
+      toast({ title: 'Erreur', description: e?.message ?? 'Désactivation impossible', variant: 'destructive' }),
   });
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -271,9 +282,9 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                               <Clock className="h-3 w-3 mr-1" />
                               Expire: {format(new Date(secret.expiresAt), 'dd/MM/yyyy')}
                             </Badge>
-                            <Badge variant="outline">
+                            <Badge variant={secret.accessCount > 0 ? 'default' : 'outline'}>
                               <Eye className="h-3 w-3 mr-1" />
-                              {secret.accessCount}/{secret.maxAccessCount} accès
+                              {secret.accessCount ?? 0}/{secret.maxAccessCount ?? '∞'} accès utilisés
                             </Badge>
                             {secret.workflowStage && (
                               <Badge variant="secondary">
@@ -281,8 +292,11 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                               </Badge>
                             )}
                             {secret.isActive ? (
-                              <Badge variant="default"><T k="auto.securesharingdialog.actif" fallback="Actif" /></Badge>
+                              <Badge className="bg-success text-success-foreground px-2.5 py-1 text-sm font-bold gap-1">
+                                <span aria-hidden="true">●</span> ACTIF
+                              </Badge>
                             ) : (
+
                               <Badge variant="destructive"><T k="auto.securesharingdialog.inactif" fallback="Inactif" /></Badge>
                             )}
                           </div>

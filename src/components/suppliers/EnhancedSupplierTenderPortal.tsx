@@ -33,6 +33,8 @@ import { useSearchParams } from 'react-router-dom';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { getUserService } from '@/application/services/UserService';
 import { T } from '@/components/i18n/T';
+import { computeTenderSubmissionWindow } from '@/domain/services/tenderSubmissionWindow';
+
 import {
   SupplierTenderDetailHeader,
   SupplierTenderList,
@@ -412,18 +414,17 @@ const EnhancedSupplierTenderPortal = () => {
     });
   };
 
-  const canSubmitBid = () => {
-    // Check if deadline has passed
-    if (selectedTender?.deadline_date) {
-      const deadline = new Date(selectedTender.deadline_date);
-      const now = new Date();
-      if (now > deadline) return false;
-    }
-    console.log("electedTender?.current_phase: +", selectedTender?.current_phase);
-    console.log("selectedTender?.status: +", selectedTender?.status);
-    // Check if tender is in submission phase (phase 2)
-    return selectedTender?.current_phase === 2 || selectedTender?.status === 'published';
-  };
+  // Fenêtre de soumission calculée par le domaine (date limite = source de vérité)
+  const submissionWindow = computeTenderSubmissionWindow({
+    status: selectedTender?.status,
+    currentPhase: selectedTender?.current_phase,
+    deadlineDate: selectedTender?.deadline_date,
+    launchDate: selectedTender?.launch_date,
+    grantedBySecret: !!accessGrantedTenderId && accessGrantedTenderId === selectedTender?.id,
+  });
+
+  const canSubmitBid = () => submissionWindow.canSubmit;
+
 
   const isSubmissionComplete = () => {
     const adminFiles = Object.keys(selectedFiles).filter(key => key.startsWith('administrative')).length;
@@ -622,24 +623,36 @@ const EnhancedSupplierTenderPortal = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 p-3 bg-muted/50 rounded">
-                      {canSubmitBid() ? (
+                    <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded">
+                      {submissionWindow.canSubmit ? (
                         <>
                           <CheckCircle className="h-5 w-5 text-success" />
-                          <span className="text-sm"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_active" fallback="Phase de soumission active" /></span>
+                          <span className="text-sm font-medium"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_active" fallback="Phase de soumission active" /></span>
+                          {submissionWindow.daysRemaining !== null && (
+                            <Badge className="bg-success text-success-foreground">
+                              {submissionWindow.daysRemaining} jours restants
+                            </Badge>
+                          )}
                         </>
                       ) : (
                         <>
                           <XCircle className="h-5 w-5 text-destructive" />
-                          <span className="text-sm"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_fermee" fallback="Phase de soumission fermée" /></span>
+                          <span className="text-sm">
+                            {submissionWindow.reason === 'deadline_passed'
+                              ? 'Date limite dépassée'
+                              : submissionWindow.reason === 'cancelled'
+                                ? 'Appel d\u2019offres clôturé / annulé'
+                                : 'Soumission non encore ouverte'}
+                          </span>
                         </>
                       )}
-                      {selectedTender.deadline_date && (
+                      {submissionWindow.deadline && (
                         <span className="text-xs text-muted-foreground ml-auto">
-                          Limite: {new Date(selectedTender.deadline_date).toLocaleDateString()}
+                          Limite: {submissionWindow.deadline.toLocaleDateString('fr-FR')}
                         </span>
                       )}
                     </div>
+
 
                     {userSubmission ? (
                       <>
