@@ -478,11 +478,18 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                                 />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-sm">{phase.name}</p>
+                                  {budgets?.byPhase[phase.id] && (
+                                    <p className="text-xs text-primary">
+                                      DQE: {(budgets.byPhase[phase.id].amountHt / 1000000).toFixed(2)}M MRU
+                                      {' · '}{budgets.byPhase[phase.id].lineCount} <T k="auto.tenderlotbuilder.lignes" fallback="ligne(s)" />
+                                    </p>
+                                  )}
                                   {phase.budget && (
                                     <p className="text-xs text-muted-foreground">
                                       Budget: {(phase.budget / 1000000).toFixed(2)}M MRU
                                     </p>
                                   )}
+
                                   {phase.steps && phase.steps.length > 0 && (
                                     <div className="mt-2 space-y-1">
                                       {phase.steps.slice(0, 3).map(step => (
