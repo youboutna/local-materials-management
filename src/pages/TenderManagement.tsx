@@ -258,15 +258,12 @@ const TenderManagement = () => {
                     </TabsContent>
 
                     <TabsContent value="lots" className="mt-0 space-y-6">
-                      <TenderProjectPhases
-                        tenderId={selectedTender.id}
-                        projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
-                      />
                       <TenderLotBuilder
                         tenderId={selectedTender.id}
                         projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
                       />
                     </TabsContent>
+
 
                     <TabsContent value="documents" className="mt-0">
                       <TenderDocumentsPanel tenderId={selectedTender.id} projectId={selectedTender.projectId ?? selectedTender.project_id ?? undefined} />
