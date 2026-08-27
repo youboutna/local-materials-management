@@ -3,7 +3,7 @@
  * Exporte le contexte et le Provider UNIQUEMENT
  */
 
-import React, { createContext, ReactNode, useCallback, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
