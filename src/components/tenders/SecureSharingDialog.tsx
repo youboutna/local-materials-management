@@ -41,8 +41,10 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Vérifier si le tender est actif
-  const isTenderActive = ['published', 'active', 'en_cours'].includes(tenderStatus.toLowerCase());
+  // Le partage est autorisé dès que l'AO est sorti du brouillon (publié / ouvert / évalué...).
+  // Seuls les statuts non publiables bloquent la génération.
+  const NON_SHAREABLE_STATUSES = ['draft', 'cancelled', 'closed'];
+  const isTenderActive = !NON_SHAREABLE_STATUSES.includes((tenderStatus || '').toLowerCase());
 
   // Fetch existing secrets
   const { data: secrets, isLoading } = useQuery({
@@ -133,10 +135,10 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                 <T k="auto.securesharingdialog.creer_un_nouveau_code_de_partage" fallback="Créer un nouveau code de partage" />
               </h3>
 
-              {/* Message si tender inactif */}
+              {/* État vide intelligent (jamais bloquant pour un AO publié) */}
               {!isTenderActive && (
-                <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 text-sm text-warning-foreground">
-                  ⚠️ Ce dossier n'est pas actif. La génération de codes de partage est réservée aux appels d'offres publiés.
+                <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  Aucun code de partage actif. La génération est disponible dès la publication de l'appel d'offres.
                 </div>
               )}
               

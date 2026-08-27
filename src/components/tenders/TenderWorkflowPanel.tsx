@@ -57,44 +57,42 @@ export function TenderWorkflowPanel({ tenderId, status, context, onTransition }:
     [status, ctx.hasLots, ctx.hasDocuments, ctx.hasDeadline, ctx.submissionsCount, ctx.hasEvaluationScores, ctx.hasWinner, ctx.contractSigned]
   );
 
+  // Actions principales (max 4) exposées dans la barre sticky.
+  const primaryTransitions = transitions.slice(0, 4);
+
   return (
     <div className="space-y-6">
-      {/* Wizard : fil conducteur métier */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base"><T k="auto.tenderworkflowpanel.etapes_de_preparation_referentiel" fallback="Étapes de préparation (référentiel)" /></CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-2">
-            {TENDER_WIZARD_STEPS.map((step, idx) => {
-              const done = idx < currentStep;
-              const active = idx === currentStep;
-              return (
-                <React.Fragment key={step.code}>
-                  <div
-                    className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
-                      active ? 'border-primary bg-primary/5' : done ? 'border-success/30 bg-success-soft' : 'bg-muted/20'
-                    }`}
-                  >
-                    {done ? (
-                      <CheckCircle2 className="h-4 w-4 text-success" />
-                    ) : (
-                      <Circle className={`h-4 w-4 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
-                    )}
-                    <div>
-                      <div className="font-medium">{step.label}</div>
-                      <div className="text-xs text-muted-foreground">{step.description}</div>
-                    </div>
-                  </div>
-                  {idx < TENDER_WIZARD_STEPS.length - 1 && (
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </React.Fragment>
-              );
-            })}
+      {/* Barre d'actions sticky : cycle de vie de l'AO uniquement */}
+      <div className="sticky top-0 z-20 -mx-6 border-b bg-background/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Cycle de vie de l'AO</span>
+            {statusDef && (
+              <Badge variant="outline">{statusDef.label}</Badge>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex flex-wrap items-center gap-2">
+            {primaryTransitions.length === 0 ? (
+              <span className="text-xs text-muted-foreground italic">Aucune action disponible</span>
+            ) : (
+              primaryTransitions.map((t) => (
+                <Button
+                  key={`sticky-${t.from}-${t.to}`}
+                  size="sm"
+                  variant={t.blockedReason ? 'outline' : 'default'}
+                  disabled={!!t.blockedReason || !onTransition}
+                  title={t.blockedReason || t.label}
+                  onClick={() => onTransition?.(t.to)}
+                >
+                  {t.blockedReason && <Lock className="mr-1 h-3 w-3" />}
+                  {t.label}
+                </Button>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
 
       {/* Statut courant + transitions */}
       <Card>

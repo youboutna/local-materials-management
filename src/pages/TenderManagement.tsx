@@ -7,7 +7,6 @@ import { SubmissionsInbox } from "@/components/tenders/SubmissionsInbox";
 import TenderCrud from "@/components/tenders/TenderCrud";
 import TenderDocumentsPanel from "@/components/tenders/TenderDocumentsPanel";
 import TenderLotBuilder from "@/components/tenders/TenderLotBuilder";
-import TenderProjectPhases from "@/components/tenders/TenderProjectPhases";
 import { TenderSecretsPanel } from "@/components/tenders/TenderSecretsPanel";
 import { TenderTimelineCard } from "@/components/tenders/TenderTimelineCard";
 import { TenderWorkflowPanel } from "@/components/tenders/TenderWorkflowPanel";
@@ -258,15 +257,12 @@ const TenderManagement = () => {
                     </TabsContent>
 
                     <TabsContent value="lots" className="mt-0 space-y-6">
-                      <TenderProjectPhases
-                        tenderId={selectedTender.id}
-                        projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
-                      />
                       <TenderLotBuilder
                         tenderId={selectedTender.id}
                         projectId={selectedTender.projectId ?? selectedTender.project_id ?? ''}
                       />
                     </TabsContent>
+
 
                     <TabsContent value="documents" className="mt-0">
                       <TenderDocumentsPanel tenderId={selectedTender.id} projectId={selectedTender.projectId ?? selectedTender.project_id ?? undefined} />
@@ -331,6 +327,7 @@ const TenderManagement = () => {
                       <TenderSecretsPanel
                         tenderId={selectedTender.id}
                         tenderTitle={selectedTender.title}
+                        tenderStatus={selectedTender.status}
                       />
                     </TabsContent>
                   </CardContent>
@@ -364,6 +361,7 @@ const TenderManagement = () => {
             onOpenChange={setSecureSharingOpen}
             tenderId={selectedTender.id}
             tenderTitle={selectedTender.title}
+            tenderStatus={selectedTender.status}
           />
         )}
 
