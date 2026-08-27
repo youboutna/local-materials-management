@@ -5,11 +5,12 @@
  *  - TENDER_STATUSES        (statuts métier)
  *  - getAllowedTransitions (transitions autorisées + gardes)
  */
-import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, Lock, ArrowRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Lock } from 'lucide-react';
+
 import {
   TENDER_WIZARD_STEPS,
   TENDER_STATUSES,
