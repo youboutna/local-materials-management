@@ -135,10 +135,10 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                 <T k="auto.securesharingdialog.creer_un_nouveau_code_de_partage" fallback="Créer un nouveau code de partage" />
               </h3>
 
-              {/* Message si tender inactif */}
+              {/* État vide intelligent (jamais bloquant pour un AO publié) */}
               {!isTenderActive && (
-                <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 text-sm text-warning-foreground">
-                  ⚠️ Ce dossier n'est pas actif. La génération de codes de partage est réservée aux appels d'offres publiés.
+                <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  Aucun code de partage actif. La génération est disponible dès la publication de l'appel d'offres.
                 </div>
               )}
               
