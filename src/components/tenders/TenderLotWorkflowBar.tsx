@@ -98,7 +98,16 @@ const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly }) => {
               onClick={() => setStatus.mutate({ id: lot.id, status: next })}
             >
               {ACTION_ICON[next]}
-              {next === 'published' ? 'Publier le lot' : next === 'under_evaluation' ? 'Évaluer' : STATUS_META[next].label}
+              {next === 'published'
+                ? 'Publier le lot'
+                : next === 'under_evaluation'
+                  ? 'Évaluer'
+                  : next === 'cancelled'
+                    ? 'Annuler le lot'
+                    : next === 'draft'
+                      ? 'Repasser en brouillon'
+                      : STATUS_META[next].label}
+
             </Button>
           ))}
 
