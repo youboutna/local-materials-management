@@ -623,24 +623,36 @@ const EnhancedSupplierTenderPortal = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 p-3 bg-muted/50 rounded">
-                      {canSubmitBid() ? (
+                    <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded">
+                      {submissionWindow.canSubmit ? (
                         <>
                           <CheckCircle className="h-5 w-5 text-success" />
-                          <span className="text-sm"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_active" fallback="Phase de soumission active" /></span>
+                          <span className="text-sm font-medium"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_active" fallback="Phase de soumission active" /></span>
+                          {submissionWindow.daysRemaining !== null && (
+                            <Badge className="bg-success text-success-foreground">
+                              {submissionWindow.daysRemaining} jours restants
+                            </Badge>
+                          )}
                         </>
                       ) : (
                         <>
                           <XCircle className="h-5 w-5 text-destructive" />
-                          <span className="text-sm"><T k="auto.enhancedsuppliertenderportal.phase_de_soumission_fermee" fallback="Phase de soumission fermée" /></span>
+                          <span className="text-sm">
+                            {submissionWindow.reason === 'deadline_passed'
+                              ? 'Date limite dépassée'
+                              : submissionWindow.reason === 'cancelled'
+                                ? 'Appel d\u2019offres clôturé / annulé'
+                                : 'Soumission non encore ouverte'}
+                          </span>
                         </>
                       )}
-                      {selectedTender.deadline_date && (
+                      {submissionWindow.deadline && (
                         <span className="text-xs text-muted-foreground ml-auto">
-                          Limite: {new Date(selectedTender.deadline_date).toLocaleDateString()}
+                          Limite: {submissionWindow.deadline.toLocaleDateString('fr-FR')}
                         </span>
                       )}
                     </div>
+
 
                     {userSubmission ? (
                       <>
