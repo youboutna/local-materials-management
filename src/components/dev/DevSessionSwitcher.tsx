@@ -8,7 +8,6 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -78,14 +77,15 @@ const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Badge
-          className="cursor-pointer gap-1 bg-yellow-500 text-black hover:bg-yellow-400"
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-0.5 text-xs font-medium text-black hover:bg-yellow-400"
           aria-label="Mode développement — changer de rôle"
         >
           <Wrench className="h-3 w-3" />
           {compact ? 'DEV' : 'DEV MODE'}
           <span className="font-semibold uppercase">· {activeRole}</span>
-        </Badge>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-popover">
         <DropdownMenuLabel className="flex items-center gap-2">
