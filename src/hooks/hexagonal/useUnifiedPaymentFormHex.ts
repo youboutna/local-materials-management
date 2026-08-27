@@ -103,13 +103,25 @@ export function usePaymentFormContextHex(
         status: p.status,
       })) : [];
 
-      const formattedInspections = Array.isArray(inspections) ? inspections.map((i: any) => ({
-        id: i.id,
-        label: i.label || i.title || `Inspection ${i.id.slice(0, 8)}`,
-        phaseId: i.phaseId || i.phase_id,
-        progress: i.progressAtInspection || i.progress || i.progress_at_inspection,
-        date: i.date || i.inspectionDate,
-      })) : [];
+      // Libellé métier uniquement : jamais d'UUID exposé à l'UI.
+      const formattedInspections = Array.isArray(inspections) ? inspections.map((i: any) => {
+        const rawDate = i.date || i.inspectionDate || i.inspection_date;
+        const phaseName = formattedPhases.find((p) => p.id === (i.phaseId || i.phase_id))?.name;
+        const businessName = [i.title, i.label, i.inspectionType, i.inspection_type, i.type]
+          .find((v: unknown) => typeof v === 'string' && v.trim().length > 0) as string | undefined;
+        const dateLabel = rawDate ? new Date(rawDate).toLocaleDateString('fr-FR') : undefined;
+        const parts = [
+          businessName?.trim() || (dateLabel ? `Inspection du ${dateLabel}` : 'Inspection sans titre'),
+          phaseName,
+        ].filter(Boolean);
+        return {
+          id: i.id,
+          label: parts.join(' — '),
+          phaseId: i.phaseId || i.phase_id,
+          progress: i.progressAtInspection || i.progress || i.progress_at_inspection,
+          date: rawDate,
+        };
+      }) : [];
 
       const primaryContact = supplier?.contacts?.[0];
       const formattedSupplier = supplier ? {
