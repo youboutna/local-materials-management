@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { computeTenderSubmissionWindow } from '@/domain/services/tenderSubmissionWindow';
 
 import {
   ArrowLeft,
@@ -15,10 +16,12 @@ import {
   ChevronRight,
   Clock3,
   Download,
+  Eye,
   FileCheck2,
   FileText,
   MapPin,
   Search,
+  Send,
 } from 'lucide-react';
 
 export interface SupplierTenderViewModel {
@@ -31,12 +34,15 @@ export interface SupplierTenderViewModel {
   status: string;
   projectTitle?: string;
   location?: string;
+  currentPhase?: number;
 }
 
 interface SupplierTenderListProps {
   tenders: SupplierTenderViewModel[];
   onSelect: (tenderId: string) => void;
   onCreateQuote: (tenderId: string) => void;
+  /** Ouvre directement l'étape de soumission (si la fenêtre est ouverte). */
+  onSubmit?: (tenderId: string) => void;
 }
 
 function remainingDays(deadline?: string) {
@@ -46,7 +52,8 @@ function remainingDays(deadline?: string) {
   return Math.ceil((date.getTime() - Date.now()) / 86_400_000);
 }
 
-export function SupplierTenderList({ tenders, onSelect, onCreateQuote }: SupplierTenderListProps) {
+
+export function SupplierTenderList({ tenders, onSelect, onCreateQuote, onSubmit }: SupplierTenderListProps) {
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
 
@@ -90,8 +97,13 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote }: Supplie
 
       <div className="grid gap-4 lg:grid-cols-2">
         {visible.map((tender) => {
-
           const days = remainingDays(tender.deadlineDate);
+          const window = computeTenderSubmissionWindow({
+            status: tender.status,
+            currentPhase: tender.currentPhase,
+            deadlineDate: tender.deadlineDate,
+            launchDate: tender.launchDate,
+          });
           return (
             <Card key={tender.id} className="overflow-hidden border-border shadow-sm transition-shadow hover:shadow-md">
               <CardContent className="p-0">
@@ -99,13 +111,22 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote }: Supplie
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge className="bg-success-soft text-success-soft-foreground hover:bg-success-soft">
-                          {t('supplier_experience.status_open')}
+                        <Badge
+                          className={
+                            window.isOpen
+                              ? 'bg-success-soft text-success-soft-foreground hover:bg-success-soft'
+                              : 'bg-muted text-muted-foreground hover:bg-muted'
+                          }
+                        >
+                          {window.isOpen
+                            ? t('supplier_experience.status_open')
+                            : t('supplier_experience.status_closed', undefined, 'Soumission fermée')}
                         </Badge>
                         {tender.projectReference && (
                           <span className="text-xs font-medium text-muted-foreground">{tender.projectReference}</span>
                         )}
                       </div>
+
                       <h3 className="text-lg font-bold leading-snug sm:text-xl">{tender.title}</h3>
                     </div>
                     <FileText className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" />
@@ -141,16 +162,35 @@ export function SupplierTenderList({ tenders, onSelect, onCreateQuote }: Supplie
                   </dl>
                 </div>
 
-                <div className="grid gap-2 border-t bg-muted/30 p-3 sm:grid-cols-[1fr_auto]">
-                  <Button className="h-11 w-full justify-between" onClick={() => onSelect(tender.id)}>
-                    {t('supplier_experience.view_tender')}
+                <div className="flex flex-wrap items-center gap-2 border-t bg-muted/30 p-3">
+                  <Button className="h-11 flex-1 justify-between" onClick={() => onSelect(tender.id)}>
+                    <span className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                      {t('supplier_experience.view_tender')}
+                    </span>
                     <ChevronRight className="rtl-flip" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    className={`h-11 ${window.isOpen ? 'bg-success text-success-foreground hover:bg-success/90' : ''}`}
+                    disabled={!window.isOpen}
+                    title={
+                      window.isOpen
+                        ? undefined
+                        : window.deadline
+                          ? `${t('supplier_experience.status_closed', undefined, 'Soumission fermée')} — ${window.deadline.toLocaleDateString()}`
+                          : t('supplier_experience.status_closed', undefined, 'Soumission fermée')
+                    }
+                    onClick={() => (onSubmit ?? onSelect)(tender.id)}
+                  >
+                    <Send className="h-4 w-4" aria-hidden="true" />
+                    {t('supplier_experience.open_submission', undefined, 'Soumettre')}
                   </Button>
                   <Button variant="outline" className="h-11" onClick={() => onCreateQuote(tender.id)}>
                     <Calculator aria-hidden="true" />
                     {t('supplier_experience.create_quote')}
                   </Button>
                 </div>
+
               </CardContent>
             </Card>
           );
@@ -209,7 +249,7 @@ export function SupplierTenderDetailHeader({
                 : 'bg-muted text-muted-foreground hover:bg-muted'
             }
           >
-            {canSubmit ? t('supplier_experience.status_open') : t('supplier_experience.status_closed')}
+            {canSubmit ? t('supplier_experience.status_open') : t('supplier_experience.status_closed', undefined, 'Soumission fermée')}
           </Badge>
           {tender.projectReference && <span className="text-sm text-muted-foreground">{tender.projectReference}</span>}
         </div>
@@ -243,7 +283,7 @@ export function SupplierTenderDetailHeader({
             onClick={onOpenSubmission}
           >
             <FileCheck2 aria-hidden="true" />
-            {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission')}
+            {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission', undefined, 'Soumettre')}
           </Button>
 
         </div>
@@ -280,7 +320,7 @@ export function SupplierTenderDetailHeader({
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 p-3 backdrop-blur md:hidden">
         <Button className="h-12 w-full" disabled={!canSubmit && !isSubmitted} onClick={onOpenSubmission}>
           <FileCheck2 aria-hidden="true" />
-          {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission')}
+          {isSubmitted ? t('supplier_experience.view_submission') : t('supplier_experience.open_submission', undefined, 'Soumettre')}
         </Button>
       </div>
     </div>

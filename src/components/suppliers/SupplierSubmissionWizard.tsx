@@ -48,10 +48,16 @@ export interface SupplierSubmissionWizardProps {
   notes: string;
   isPending: boolean;
   isComplete: boolean;
+  /** Fenêtre de soumission ouverte (calcul domaine). */
+  canSubmit?: boolean;
+  /** Motif affiché lorsque canSubmit = false. */
+  blockedReason?: string;
   onAddFiles: (category: SubmissionCategory, files: File[]) => void;
   onRemoveFile: (key: string) => void;
   onNotesChange: (value: string) => void;
   onSubmit: () => void;
+  /** Sauvegarde du brouillon (étapes indépendantes). */
+  onSaveDraft?: () => void;
   children?: React.ReactNode;
 }
 
@@ -61,15 +67,19 @@ export function SupplierSubmissionWizard({
   notes,
   isPending,
   isComplete,
+  canSubmit = true,
+  blockedReason,
   onAddFiles,
   onRemoveFile,
   onNotesChange,
   onSubmit,
+  onSaveDraft,
   children,
 }: SupplierSubmissionWizardProps) {
   const { t } = useLanguage();
   const [open, setOpen] = useState<string>('administrative');
   const inputs = useRef<Partial<Record<SubmissionCategory, HTMLInputElement | null>>>({});
+
 
   const entriesFor = (category: SubmissionCategory) =>
     Object.entries(files).filter(([key]) => key.startsWith(`${category}-`));
@@ -184,16 +194,28 @@ export function SupplierSubmissionWizard({
             </span>
           )}
         </p>
-        <Button
-          className="h-12 bg-success text-success-foreground hover:bg-success/90"
-          disabled={!isComplete || isPending}
-          onClick={onSubmit}
-        >
-          <Send className="h-4 w-4" aria-hidden="true" />
-          {isPending
-            ? t('supplier_submission.submitting', undefined, 'Soumission en cours…')
-            : t('supplier_submission.submit', undefined, 'Soumettre la soumission')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {!canSubmit && blockedReason && (
+            <span className="text-xs font-medium text-muted-foreground">{blockedReason}</span>
+          )}
+          {onSaveDraft && (
+            <Button type="button" variant="outline" className="h-12" onClick={onSaveDraft} disabled={isPending}>
+              {t('supplier_submission.save_draft', undefined, 'Enregistrer le brouillon')}
+            </Button>
+          )}
+          <Button
+            className="h-12 bg-success text-success-foreground hover:bg-success/90"
+            disabled={!canSubmit || !isComplete || isPending}
+            title={!canSubmit ? blockedReason : undefined}
+            onClick={onSubmit}
+          >
+            <Send className="h-4 w-4" aria-hidden="true" />
+            {isPending
+              ? t('supplier_submission.submitting', undefined, 'Soumission en cours…')
+              : t('supplier_submission.submit', undefined, 'Soumettre la soumission')}
+          </Button>
+        </div>
+
       </div>
     </div>
   );

@@ -450,6 +450,7 @@ const EnhancedSupplierTenderPortal = () => {
     deadlineDate: tender.deadline_date,
     launchDate: tender.launch_date,
     status: tender.status,
+    currentPhase: tender.current_phase,
     projectTitle: tender.project?.title,
     location: tender.project?.location,
   }));
@@ -462,9 +463,11 @@ const EnhancedSupplierTenderPortal = () => {
     deadlineDate: selectedTender.deadline_date,
     launchDate: selectedTender.launch_date,
     status: selectedTender.status,
+    currentPhase: selectedTender.current_phase,
     projectTitle: selectedTender.project?.title,
     location: selectedTender.project?.location,
   } : null;
+
 
   const selectTender = (tenderId: string) => {
     const tender = publicTenders?.find((item) => item.id === tenderId) ?? null;
@@ -524,7 +527,13 @@ const EnhancedSupplierTenderPortal = () => {
 
         <TabsContent value="browse" className="space-y-6">
           {tenderViewModels.length > 0 ? (
-            <SupplierTenderList tenders={tenderViewModels} onSelect={selectTender} onCreateQuote={createQuote} />
+            <SupplierTenderList
+              tenders={tenderViewModels}
+              onSelect={selectTender}
+              onCreateQuote={createQuote}
+              onSubmit={selectTender}
+            />
+
           ) : (
             <Card>
                 <CardContent className="p-8 text-center">
@@ -674,12 +683,19 @@ const EnhancedSupplierTenderPortal = () => {
                         {/* Display Secret Code for Evaluation Commission */}
                         <SubmissionSecretDisplay submissionId={userSubmission.id} />
                       </>
-                    ) : canSubmitBid() && (
+                    ) : (
                       <SupplierSubmissionWizard
                         files={selectedFiles}
                         notes={submissionData.notes}
                         isPending={submitBidMutation.isPending || uploading}
                         isComplete={isSubmissionComplete()}
+                        canSubmit={canSubmitBid()}
+                        blockedReason={
+                          canSubmitBid()
+                            ? undefined
+                            : t('supplier_experience.status_closed', undefined, 'Soumission fermée')
+                        }
+
                         onAddFiles={handleAddFiles}
                         onRemoveFile={removeFile}
                         onNotesChange={(notes) => setSubmissionData((prev) => ({ ...prev, notes }))}
