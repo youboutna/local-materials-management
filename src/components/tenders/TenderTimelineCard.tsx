@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Calendar, Clock, CheckCircle, Circle, AlertCircle, ChevronDown } from 'lucide-react';
 import { format, differenceInDays, isPast, isFuture } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { T } from '@/components/i18n/T';
+
 
 interface TimelineEvent {
   date: string;
@@ -26,8 +28,10 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   evaluationDate,
   attributionDate
 }) => {
+  const [open, setOpen] = useState(false);
   const events: TimelineEvent[] = [];
   const now = new Date();
+
 
   if (launchDate) {
     events.push({
@@ -88,44 +92,66 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
     }
   };
 
+  const activeEvent = events.find((e) => e.status === 'active');
+  const remainingDays = activeEvent ? differenceInDays(new Date(activeEvent.date), now) : null;
+
+  if (events.length === 0) return null;
+
   return (
-    <Card className="bg-gradient-to-br from-background to-muted/30">
-      <CardContent className="p-6">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <T k="auto.tendertimelinecard.chronologie_de_l_appel_d_offres" fallback="Chronologie de l'appel d'offres" />
-        </h3>
-        <div className="space-y-4">
-          {events.map((event, index) => (
-            <div key={index} className="flex gap-4">
-              <div className="flex flex-col items-center">
-                <div className={`p-2 rounded-full border-2 ${getStatusColor(event.status)}`}>
-                  {getStatusIcon(event.status)}
-                </div>
-                {index < events.length - 1 && (
-                  <div className="w-0.5 h-12 bg-border my-1" />
-                )}
-              </div>
-              <div className="flex-1 pb-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{event.label}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(event.date), 'dd MMMM yyyy', { locale: fr })}
-                    </p>
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <Card className="bg-gradient-to-br from-background to-muted/30">
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/40 rounded-lg"
+          >
+            <span className="flex items-center gap-2 text-sm font-semibold">
+              <Clock className="h-4 w-4" />
+              <T k="auto.tendertimelinecard.chronologie_de_l_appel_d_offres" fallback="Chronologie de l'appel d'offres" />
+              <Badge variant="outline" className="text-[10px]">{events.length}</Badge>
+            </span>
+            <span className="flex items-center gap-2">
+              {remainingDays !== null && (
+                <Badge variant="default" className="gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {remainingDays} <T k="auto.tendertimelinecard.jours_restants" fallback="jours restants" />
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+            </span>
+          </button>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="space-y-3">
+              {events.map((event, index) => (
+                <div key={index} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={`p-1.5 rounded-full border-2 ${getStatusColor(event.status)}`}>
+                      {getStatusIcon(event.status)}
+                    </div>
+                    {index < events.length - 1 && (
+                      <div className="w-0.5 h-6 bg-border my-1" />
+                    )}
                   </div>
-                  {event.status === 'active' && (
-                    <Badge variant="default" className="gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {differenceInDays(new Date(event.date), now)} jours restants
-                    </Badge>
-                  )}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium">{event.label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(event.date), 'dd MMMM yyyy', { locale: fr })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };
+

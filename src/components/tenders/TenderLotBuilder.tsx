@@ -27,10 +27,15 @@ import {
   CheckCircle,
   AlertTriangle,
   GripVertical,
+  Lock,
   Loader2
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useProjectPhasesForLots } from '@/hooks/hexagonal';
+import { useLotPhaseBudgets } from '@/hooks/hexagonal/useLotPhaseBudgets';
+import { LotPhaseBudgetService } from '@/application/services/tender/LotPhaseBudgetService';
+
 import {
   useTenderLots,
   useCreateTenderLot,
@@ -132,6 +137,10 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   const { data: phasesData, isLoading } = useProjectPhasesForLots(projectId);
   const phases: Phase[] = phasesData || [];
 
+  // Montants DQE par phase → montant estimé des lots calculé automatiquement.
+  const { budgets, hasDqe } = useLotPhaseBudgets(projectId);
+
+
   const addLot = () => {
     const nextNumber = lots.length + 1;
     if (isPersistMode) {
@@ -221,6 +230,17 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
     handleLotsChange(lots.filter(lot => lot.id !== lotId));
   };
 
+  /**
+   * Montant estimé dérivé : priorité aux lignes DQE rattachées aux phases,
+   * repli sur le budget de phase quand aucun DQE n'existe encore.
+   */
+  const computeAmountForPhases = (phaseIds: string[]): number => {
+    if (hasDqe) return LotPhaseBudgetService.computeLotAmount(budgets, phaseIds);
+    return phases
+      .filter((p) => phaseIds.includes(p.id))
+      .reduce((sum, p) => sum + (p.budget || 0), 0);
+  };
+
   const togglePhaseLink = (lotId: string, phaseId: string) => {
     const lot = lots.find(l => l.id === lotId);
     if (!lot) return;
@@ -229,7 +249,8 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
       ? lot.linkedPhaseIds.filter(id => id !== phaseId)
       : [...lot.linkedPhaseIds, phaseId];
 
-    updateLot(lotId, { linkedPhaseIds: newPhaseIds });
+    // Le montant estimé suit automatiquement les phases liées (jamais saisi à la main).
+    updateLot(lotId, { linkedPhaseIds: newPhaseIds, estimatedAmount: computeAmountForPhases(newPhaseIds) });
   };
 
   const toggleStepLink = (lotId: string, stepId: string) => {
@@ -246,12 +267,23 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   const calculateEstimatedFromPhases = (lotId: string) => {
     const lot = lots.find(l => l.id === lotId);
     if (!lot) return;
-
-    const linkedPhases = phases.filter(p => lot.linkedPhaseIds.includes(p.id));
-    const estimatedAmount = linkedPhases.reduce((sum, p) => sum + (p.budget || 0), 0);
-
-    updateLot(lotId, { estimatedAmount });
+    updateLot(lotId, { estimatedAmount: computeAmountForPhases(lot.linkedPhaseIds) });
   };
+
+  // Hydratation automatique : dès que les montants DQE sont chargés, les lots liés
+  // à des phases sont recalculés (anti-corruption : pas de valeur manuelle résiduelle).
+  useEffect(() => {
+    if (!hasDqe || readOnly) return;
+    for (const lot of lots) {
+      if (!lot.linkedPhaseIds.length) continue;
+      const derived = LotPhaseBudgetService.computeLotAmount(budgets, lot.linkedPhaseIds);
+      if (derived > 0 && Math.abs((lot.estimatedAmount || 0) - derived) > 0.01) {
+        updateLot(lot.id, { estimatedAmount: derived });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasDqe, budgets, readOnly]);
+
 
   const getLinkedPhasesCount = (lot: TenderLot) => {
     return lot.linkedPhaseIds.length;
@@ -365,13 +397,22 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label><T k="auto.tenderlotbuilder.montant_estime_mru" fallback="Montant estimé (MRU)" /></Label>
+                        <Label className="flex items-center gap-2">
+                          <T k="auto.tenderlotbuilder.montant_estime_mru" fallback="Montant estimé (MRU)" />
+                          {hasDqe && (
+                            <Badge variant="outline" className="gap-1 text-[10px]">
+                              <Lock className="h-3 w-3" />
+                              <T k="auto.tenderlotbuilder.calcul_auto_dqe" fallback="Calcul auto (DQE)" />
+                            </Badge>
+                          )}
+                        </Label>
                         <div className="flex gap-2">
                           <Input
                             type="number"
                             value={lot.estimatedAmount || ''}
                             onChange={(e) => updateLot(lot.id, { estimatedAmount: Number(e.target.value) })}
-                            disabled={readOnly}
+                            disabled={readOnly || hasDqe}
+                            readOnly={hasDqe}
                             placeholder="0"
                           />
                           {projectId && phases.length > 0 && !readOnly && (
@@ -379,13 +420,26 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                               variant="outline"
                               size="icon"
                               onClick={() => calculateEstimatedFromPhases(lot.id)}
-                              title="Calculer à partir des phases liées"
+                              title="Recalculer à partir des phases liées"
                             >
                               <DollarSign className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          {hasDqe ? (
+                            <>
+                              <T k="auto.tenderlotbuilder.derive_lignes_dqe" fallback="Dérivé des lignes DQE des phases liées" />
+                              {' · '}
+                              {LotPhaseBudgetService.countLotLines(budgets, lot.linkedPhaseIds)}{' '}
+                              <T k="auto.tenderlotbuilder.lignes" fallback="ligne(s)" />
+                            </>
+                          ) : (
+                            <T k="auto.tenderlotbuilder.derive_budgets_phases" fallback="Dérivé des budgets des phases liées (aucun DQE)" />
+                          )}
+                        </p>
                       </div>
+
                     </div>
 
                     <div className="space-y-2">
@@ -424,11 +478,18 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                                 />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-sm">{phase.name}</p>
+                                  {budgets?.byPhase[phase.id] && (
+                                    <p className="text-xs text-primary">
+                                      DQE: {(budgets.byPhase[phase.id].amountHt / 1000000).toFixed(2)}M MRU
+                                      {' · '}{budgets.byPhase[phase.id].lineCount} <T k="auto.tenderlotbuilder.lignes" fallback="ligne(s)" />
+                                    </p>
+                                  )}
                                   {phase.budget && (
                                     <p className="text-xs text-muted-foreground">
                                       Budget: {(phase.budget / 1000000).toFixed(2)}M MRU
                                     </p>
                                   )}
+
                                   {phase.steps && phase.steps.length > 0 && (
                                     <div className="mt-2 space-y-1">
                                       {phase.steps.slice(0, 3).map(step => (
