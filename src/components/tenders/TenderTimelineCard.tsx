@@ -28,8 +28,10 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   evaluationDate,
   attributionDate
 }) => {
+  const [open, setOpen] = useState(false);
   const events: TimelineEvent[] = [];
   const now = new Date();
+
 
   if (launchDate) {
     events.push({
