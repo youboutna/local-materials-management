@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
+import { Lock } from 'lucide-react';
 
 
 export interface WbsValue {
@@ -24,11 +25,16 @@ interface Props {
   referentialCode?: ReferentialType;
   /** Override dynamique (ex. phases réelles du projet). Prioritaire sur referentialCode. */
   phases?: WbsPhase[];
+  /**
+   * Champs héritant du contexte projet : affichés en lecture seule avec un cadenas
+   * (anti-corruption — la saisie manuelle ne peut plus casser le rattachement).
+   */
+  locked?: { phase?: boolean; milestone?: boolean; task?: boolean };
 }
 
 const NONE = '__none__';
 
-export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride }: Props) {
+export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride, locked }: Props) {
   const { t } = useI18n();
   const phases: WbsPhase[] = useMemo(() => {
     if (phasesOverride && phasesOverride.length > 0) return phasesOverride;
@@ -49,11 +55,14 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div>
-        <Label><T k="auto.wbsselector.phase" fallback="Phase" /></Label>
+        <Label className="flex items-center gap-1">
+          <T k="auto.wbsselector.phase" fallback="Phase" />
+          {locked?.phase && <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />}
+        </Label>
         <Select
           value={value.phaseId ?? NONE}
           onValueChange={(v) => onChange({ phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}
-          disabled={disabled}
+          disabled={disabled || locked?.phase}
         >
           <SelectTrigger><SelectValue placeholder={t('wbs.select_phase')} /></SelectTrigger>
           <SelectContent>
@@ -63,11 +72,14 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
         </Select>
       </div>
       <div>
-        <Label><T k="auto.wbsselector.jalon" fallback="Jalon" /></Label>
+        <Label className="flex items-center gap-1">
+          <T k="auto.wbsselector.jalon" fallback="Jalon" />
+          {locked?.milestone && <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />}
+        </Label>
         <Select
           value={value.milestoneId ?? NONE}
           onValueChange={(v) => onChange({ ...value, milestoneId: v === NONE ? null : v, taskId: null })}
-          disabled={disabled || !phase}
+          disabled={disabled || locked?.milestone || !phase}
         >
           <SelectTrigger><SelectValue placeholder={phase ? t('wbs.select_milestone') : t('wbs.select_phase_first')} /></SelectTrigger>
           <SelectContent>
@@ -77,11 +89,14 @@ export function WbsSelector({ value, onChange, disabled, referentialCode, phases
         </Select>
       </div>
       <div>
-        <Label><T k="auto.wbsselector.tache" fallback="Tâche" /></Label>
+        <Label className="flex items-center gap-1">
+          <T k="auto.wbsselector.tache" fallback="Tâche" />
+          {locked?.task && <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />}
+        </Label>
         <Select
           value={value.taskId ?? NONE}
           onValueChange={(v) => onChange({ ...value, taskId: v === NONE ? null : v })}
-          disabled={disabled || !milestone}
+          disabled={disabled || locked?.task || !milestone}
         >
           <SelectTrigger><SelectValue placeholder={milestone ? t('wbs.select_task') : t('wbs.select_milestone_first')} /></SelectTrigger>
           <SelectContent>
