@@ -282,9 +282,9 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                               <Clock className="h-3 w-3 mr-1" />
                               Expire: {format(new Date(secret.expiresAt), 'dd/MM/yyyy')}
                             </Badge>
-                            <Badge variant="outline">
+                            <Badge variant={secret.accessCount > 0 ? 'default' : 'outline'}>
                               <Eye className="h-3 w-3 mr-1" />
-                              {secret.accessCount}/{secret.maxAccessCount} accès
+                              {secret.accessCount ?? 0}/{secret.maxAccessCount ?? '∞'} accès utilisés
                             </Badge>
                             {secret.workflowStage && (
                               <Badge variant="secondary">
@@ -292,8 +292,11 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                               </Badge>
                             )}
                             {secret.isActive ? (
-                              <Badge variant="default"><T k="auto.securesharingdialog.actif" fallback="Actif" /></Badge>
+                              <Badge className="bg-success text-success-foreground px-2.5 py-1 text-sm font-bold gap-1">
+                                <span aria-hidden="true">●</span> ACTIF
+                              </Badge>
                             ) : (
+
                               <Badge variant="destructive"><T k="auto.securesharingdialog.inactif" fallback="Inactif" /></Badge>
                             )}
                           </div>
