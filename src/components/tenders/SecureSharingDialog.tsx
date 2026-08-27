@@ -79,15 +79,20 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       return await TenderSharingService.createSharingSecret(dto);
     },
     onSuccess: (data) => {
-      // 🔥 Invalider les caches pour rafraîchir la liste
-      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets', tenderId] });
-      queryClient.invalidateQueries({ queryKey: ['tender-secrets', tenderId] });
+      // Mise à jour optimiste immédiate (aucun refresh manuel requis)
+      queryClient.setQueryData(['tender-sharing-secrets', tenderId], (prev: any) =>
+        Array.isArray(prev) ? [data, ...prev] : [data],
+      );
+      queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets'] });
+      queryClient.invalidateQueries({ queryKey: ['tender-secrets'] });
+      queryClient.invalidateQueries({ queryKey: ['tender-sharing-access-logs'] });
       toast({
         title: 'Code de partage créé',
         description: `Code: ${data.secretCode}`,
       });
       setSupplierEmail('');
     },
+
     onError: (error) => {
       toast({
         title: 'Erreur',
