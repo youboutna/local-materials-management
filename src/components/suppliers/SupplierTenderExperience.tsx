@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+
 import {
   ArrowLeft,
   Building2,
@@ -15,6 +18,7 @@ import {
   FileCheck2,
   FileText,
   MapPin,
+  Search,
 } from 'lucide-react';
 
 export interface SupplierTenderViewModel {
@@ -44,20 +48,49 @@ function remainingDays(deadline?: string) {
 
 export function SupplierTenderList({ tenders, onSelect, onCreateQuote }: SupplierTenderListProps) {
   const { t } = useLanguage();
+  const [search, setSearch] = useState('');
+
+  const term = search.trim().toLowerCase();
+  const visible = term
+    ? tenders.filter((tender) =>
+        [tender.title, tender.description, tender.projectReference, tender.projectTitle, tender.location]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(term)),
+      )
+    : tenders;
 
   return (
     <section aria-labelledby="supplier-tenders-heading" className="space-y-4">
-      <div className="max-w-2xl">
-        <h2 id="supplier-tenders-heading" className="text-2xl font-bold sm:text-3xl">
-          {t('supplier_experience.available_tenders')}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-          {t('supplier_experience.available_tenders_description')}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0 max-w-2xl">
+          <h2 id="supplier-tenders-heading" className="text-lg font-bold sm:text-xl">
+            {t('supplier_experience.available_tenders')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('supplier_experience.available_tenders_description')}
+          </p>
+        </div>
+        <div className="relative w-full sm:w-72">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-11 pl-9"
+            aria-label={t('supplier_experience.search_tender', undefined, 'Rechercher un appel d’offres')}
+            placeholder={t('supplier_experience.search_tender', undefined, 'Rechercher un appel d’offres')}
+          />
+        </div>
       </div>
 
+      {visible.length === 0 && (
+        <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+          {t('supplier_experience.no_match', undefined, 'Aucun appel d’offres ne correspond à votre recherche.')}
+        </p>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
-        {tenders.map((tender) => {
+        {visible.map((tender) => {
+
           const days = remainingDays(tender.deadlineDate);
           return (
             <Card key={tender.id} className="overflow-hidden border-border shadow-sm transition-shadow hover:shadow-md">
