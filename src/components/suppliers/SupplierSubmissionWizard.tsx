@@ -48,10 +48,16 @@ export interface SupplierSubmissionWizardProps {
   notes: string;
   isPending: boolean;
   isComplete: boolean;
+  /** Fenêtre de soumission ouverte (calcul domaine). */
+  canSubmit?: boolean;
+  /** Motif affiché lorsque canSubmit = false. */
+  blockedReason?: string;
   onAddFiles: (category: SubmissionCategory, files: File[]) => void;
   onRemoveFile: (key: string) => void;
   onNotesChange: (value: string) => void;
   onSubmit: () => void;
+  /** Sauvegarde du brouillon (étapes indépendantes). */
+  onSaveDraft?: () => void;
   children?: React.ReactNode;
 }
 
@@ -61,15 +67,19 @@ export function SupplierSubmissionWizard({
   notes,
   isPending,
   isComplete,
+  canSubmit = true,
+  blockedReason,
   onAddFiles,
   onRemoveFile,
   onNotesChange,
   onSubmit,
+  onSaveDraft,
   children,
 }: SupplierSubmissionWizardProps) {
   const { t } = useLanguage();
   const [open, setOpen] = useState<string>('administrative');
   const inputs = useRef<Partial<Record<SubmissionCategory, HTMLInputElement | null>>>({});
+
 
   const entriesFor = (category: SubmissionCategory) =>
     Object.entries(files).filter(([key]) => key.startsWith(`${category}-`));
