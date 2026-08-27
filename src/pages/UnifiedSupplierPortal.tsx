@@ -629,7 +629,7 @@ const UnifiedSupplierPortal = () => {
           <Tabs defaultValue="tenders" className="space-y-5" value={activeTab} onValueChange={handleTabChange}>
 
             <TabsList className="grid h-auto w-full grid-cols-5 p-1 lg:max-w-3xl">
-              <TabsTrigger value="tenders"><T k="auto.unifiedsupplierportal.appels_d_offres" fallback="Appels d'Offres" /></TabsTrigger>
+              <TabsTrigger value="tenders">{t("supplier_experience.tenders_tab", undefined, "Appels d'Offres")} ({tenders?.length ?? 0})</TabsTrigger>
               <TabsTrigger value="devis"><T k="auto.unifiedsupplierportal.devis" fallback="Devis" /></TabsTrigger>
               <TabsTrigger value="documents">
                 <T k="auto.unifiedsupplierportal.documents" fallback="Documents" /> ({documents.length})
