@@ -395,13 +395,22 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label><T k="auto.tenderlotbuilder.montant_estime_mru" fallback="Montant estimé (MRU)" /></Label>
+                        <Label className="flex items-center gap-2">
+                          <T k="auto.tenderlotbuilder.montant_estime_mru" fallback="Montant estimé (MRU)" />
+                          {hasDqe && (
+                            <Badge variant="outline" className="gap-1 text-[10px]">
+                              <Lock className="h-3 w-3" />
+                              <T k="auto.tenderlotbuilder.calcul_auto_dqe" fallback="Calcul auto (DQE)" />
+                            </Badge>
+                          )}
+                        </Label>
                         <div className="flex gap-2">
                           <Input
                             type="number"
                             value={lot.estimatedAmount || ''}
                             onChange={(e) => updateLot(lot.id, { estimatedAmount: Number(e.target.value) })}
-                            disabled={readOnly}
+                            disabled={readOnly || hasDqe}
+                            readOnly={hasDqe}
                             placeholder="0"
                           />
                           {projectId && phases.length > 0 && !readOnly && (
@@ -409,13 +418,26 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                               variant="outline"
                               size="icon"
                               onClick={() => calculateEstimatedFromPhases(lot.id)}
-                              title="Calculer à partir des phases liées"
+                              title="Recalculer à partir des phases liées"
                             >
                               <DollarSign className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          {hasDqe ? (
+                            <>
+                              <T k="auto.tenderlotbuilder.derive_lignes_dqe" fallback="Dérivé des lignes DQE des phases liées" />
+                              {' · '}
+                              {LotPhaseBudgetService.countLotLines(budgets, lot.linkedPhaseIds)}{' '}
+                              <T k="auto.tenderlotbuilder.lignes" fallback="ligne(s)" />
+                            </>
+                          ) : (
+                            <T k="auto.tenderlotbuilder.derive_budgets_phases" fallback="Dérivé des budgets des phases liées (aucun DQE)" />
+                          )}
+                        </p>
                       </div>
+
                     </div>
 
                     <div className="space-y-2">
