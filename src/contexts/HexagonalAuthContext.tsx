@@ -193,15 +193,28 @@ export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
     return session?.provider || 'supabase';
   }, [session]);
 
-  const hasRole = useCallback((roleName: string): boolean => {
-    if (!user?.role) return false;
-    return String(user.role).toLowerCase() === roleName.toLowerCase();
+  const resolvedRoles = useMemo<string[]>(() => {
+    const raw: unknown[] = [
+      (user as any)?.role,
+      ...(((user as any)?.roles as unknown[]) ?? []),
+      (user as any)?.metadata?.role,
+      (user as any)?.userMetadata?.role,
+    ];
+    return Array.from(
+      new Set(raw.filter(Boolean).map((r) => String(r).toLowerCase())),
+    );
   }, [user]);
 
-  const hasAnyRole = useCallback((roleNames: string[]): boolean => {
-    if (!user?.role) return false;
-    return roleNames.some(role => String(user.role).toLowerCase() === role.toLowerCase());
-  }, [user]);
+  const hasRole = useCallback(
+    (roleName: string): boolean => resolvedRoles.includes(String(roleName).toLowerCase()),
+    [resolvedRoles],
+  );
+
+  const hasAnyRole = useCallback(
+    (roleNames: string[]): boolean => roleNames.some((r) => resolvedRoles.includes(String(r).toLowerCase())),
+    [resolvedRoles],
+  );
+
 
   // Switch Provider (avec fallback)
   const switchProvider = useCallback(async (config: AuthManagerConfig) => {
