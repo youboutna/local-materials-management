@@ -450,6 +450,7 @@ const EnhancedSupplierTenderPortal = () => {
     deadlineDate: tender.deadline_date,
     launchDate: tender.launch_date,
     status: tender.status,
+    currentPhase: tender.current_phase,
     projectTitle: tender.project?.title,
     location: tender.project?.location,
   }));
@@ -462,9 +463,11 @@ const EnhancedSupplierTenderPortal = () => {
     deadlineDate: selectedTender.deadline_date,
     launchDate: selectedTender.launch_date,
     status: selectedTender.status,
+    currentPhase: selectedTender.current_phase,
     projectTitle: selectedTender.project?.title,
     location: selectedTender.project?.location,
   } : null;
+
 
   const selectTender = (tenderId: string) => {
     const tender = publicTenders?.find((item) => item.id === tenderId) ?? null;
