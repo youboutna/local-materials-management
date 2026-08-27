@@ -41,8 +41,10 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Vérifier si le tender est actif
-  const isTenderActive = ['published', 'active', 'en_cours'].includes(tenderStatus.toLowerCase());
+  // Le partage est autorisé dès que l'AO est sorti du brouillon (publié / ouvert / évalué...).
+  // Seuls les statuts non publiables bloquent la génération.
+  const NON_SHAREABLE_STATUSES = ['draft', 'cancelled', 'closed'];
+  const isTenderActive = !NON_SHAREABLE_STATUSES.includes((tenderStatus || '').toLowerCase());
 
   // Fetch existing secrets
   const { data: secrets, isLoading } = useQuery({
