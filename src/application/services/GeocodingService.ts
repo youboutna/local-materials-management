@@ -199,7 +199,7 @@ export class GeocodingService {
 
   constructor(config: GeocodingConfig = {}) {
     this.provider = config.provider || 'openstreetmap';
-    this.apiKey = config.apiKey || (typeof window !== 'undefined' && import.meta?.env?.GEOCODING_API_KEY) || undefined;
+    this.apiKey = config.apiKey || (typeof window !== 'undefined' && import.meta.env?.GEOCODING_API_KEY) || undefined;
     this.userAgent = config.userAgent || 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)';
     this.prioritizeLocal = config.prioritizeLocal !== false; // Default to true
     
