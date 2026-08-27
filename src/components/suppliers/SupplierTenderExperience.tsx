@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { computeTenderSubmissionWindow } from '@/domain/services/tenderSubmissionWindow';
 
 import {
   ArrowLeft,
@@ -15,10 +16,12 @@ import {
   ChevronRight,
   Clock3,
   Download,
+  Eye,
   FileCheck2,
   FileText,
   MapPin,
   Search,
+  Send,
 } from 'lucide-react';
 
 export interface SupplierTenderViewModel {
@@ -31,12 +34,15 @@ export interface SupplierTenderViewModel {
   status: string;
   projectTitle?: string;
   location?: string;
+  currentPhase?: number;
 }
 
 interface SupplierTenderListProps {
   tenders: SupplierTenderViewModel[];
   onSelect: (tenderId: string) => void;
   onCreateQuote: (tenderId: string) => void;
+  /** Ouvre directement l'étape de soumission (si la fenêtre est ouverte). */
+  onSubmit?: (tenderId: string) => void;
 }
 
 function remainingDays(deadline?: string) {
@@ -45,6 +51,7 @@ function remainingDays(deadline?: string) {
   if (Number.isNaN(date.getTime())) return null;
   return Math.ceil((date.getTime() - Date.now()) / 86_400_000);
 }
+
 
 export function SupplierTenderList({ tenders, onSelect, onCreateQuote }: SupplierTenderListProps) {
   const { t } = useLanguage();
