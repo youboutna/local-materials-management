@@ -683,12 +683,19 @@ const EnhancedSupplierTenderPortal = () => {
                         {/* Display Secret Code for Evaluation Commission */}
                         <SubmissionSecretDisplay submissionId={userSubmission.id} />
                       </>
-                    ) : canSubmitBid() && (
+                    ) : (
                       <SupplierSubmissionWizard
                         files={selectedFiles}
                         notes={submissionData.notes}
                         isPending={submitBidMutation.isPending || uploading}
                         isComplete={isSubmissionComplete()}
+                        canSubmit={canSubmitBid()}
+                        blockedReason={
+                          canSubmitBid()
+                            ? undefined
+                            : t('supplier_experience.status_closed', undefined, 'Soumission fermée')
+                        }
+
                         onAddFiles={handleAddFiles}
                         onRemoveFile={removeFile}
                         onNotesChange={(notes) => setSubmissionData((prev) => ({ ...prev, notes }))}
