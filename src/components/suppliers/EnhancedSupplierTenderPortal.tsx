@@ -391,20 +391,18 @@ const EnhancedSupplierTenderPortal = () => {
     }
   });
 
-  const handleFileSelect = (category: keyof typeof DOCUMENT_CATEGORIES, documentType: string) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
-    input.onchange = (e) => {
-      const target = e.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (file) {
-        const key = `${category}-${documentType}`;
-        setSelectedFiles(prev => ({ ...prev, [key]: file }));
-      }
-    };
-    input.click();
+  /** Dépôt groupé : les fichiers sont indexés par catégorie + nom de fichier normalisé. */
+  const handleAddFiles = (category: keyof typeof DOCUMENT_CATEGORIES, files: File[]) => {
+    setSelectedFiles(prev => {
+      const next = { ...prev };
+      files.forEach((file) => {
+        const slug = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+        next[`${category}-${slug}`] = file;
+      });
+      return next;
+    });
   };
+
 
   const removeFile = (key: string) => {
     setSelectedFiles(prev => {
