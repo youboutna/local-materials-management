@@ -40,8 +40,9 @@ const STATUS_TO_STEP: Record<string, number> = {
 };
 
 export function TenderWorkflowPanel({ tenderId, status, context, onTransition }: TenderWorkflowPanelProps) {
-  const currentStep = STATUS_TO_STEP[status] ?? 0;
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const statusDef = TENDER_STATUSES[status as TenderStatusCode];
+
 
   const ctx: TenderTransitionContext = {
     hasLots: context.hasLots ?? false,
