@@ -33,6 +33,8 @@ import { useSearchParams } from 'react-router-dom';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { getUserService } from '@/application/services/UserService';
 import { T } from '@/components/i18n/T';
+import { computeTenderSubmissionWindow } from '@/domain/services/tenderSubmissionWindow';
+
 import {
   SupplierTenderDetailHeader,
   SupplierTenderList,
