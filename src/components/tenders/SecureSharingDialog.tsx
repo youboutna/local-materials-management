@@ -13,6 +13,7 @@ import { Check, Clock, Copy, Eye, Lock, Shield, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { T } from '@/components/i18n/T';
 import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { TENDER_STATUSES, type TenderStatusCode } from '@/config/referentials/tender/tender-workflow.referential';
 
 interface SecureSharingDialogProps {
