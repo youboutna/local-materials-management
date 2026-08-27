@@ -135,6 +135,10 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   const { data: phasesData, isLoading } = useProjectPhasesForLots(projectId);
   const phases: Phase[] = phasesData || [];
 
+  // Montants DQE par phase → montant estimé des lots calculé automatiquement.
+  const { budgets, hasDqe } = useLotPhaseBudgets(projectId);
+
+
   const addLot = () => {
     const nextNumber = lots.length + 1;
     if (isPersistMode) {
