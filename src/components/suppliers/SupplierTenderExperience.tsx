@@ -18,6 +18,7 @@ import {
   FileCheck2,
   FileText,
   MapPin,
+  Search,
 } from 'lucide-react';
 
 export interface SupplierTenderViewModel {
