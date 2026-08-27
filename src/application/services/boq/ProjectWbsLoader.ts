@@ -38,12 +38,29 @@ const pickOrder = (value: { order_index?: number; order?: number }, fallback: nu
   return Number.isFinite(n) ? Number(n) : fallback;
 };
 
-export async function loadProjectWbs(projectId: string): Promise<WbsPhase[]> {
+/** Phase WBS enrichie du statut réel (sert au pré-remplissage de la phase active). */
+export type ProjectWbsPhase = WbsPhase & { status?: string | null };
+
+/** Statuts considérés comme « phase active » (codes techniques base, EN/normalisés). */
+const ACTIVE_PHASE_STATUSES = new Set([
+  'in_progress',
+  'en_cours',
+  'active',
+  'ongoing',
+  'started',
+  'IN_PROGRESS',
+]);
+
+/** Vrai si le statut de phase désigne une phase en cours. */
+export const isActivePhaseStatus = (status?: string | null): boolean =>
+  !!status && ACTIVE_PHASE_STATUSES.has(String(status).toLowerCase());
+
+export async function loadProjectWbs(projectId: string): Promise<ProjectWbsPhase[]> {
   if (!projectId) return [];
   const { btpClient } = await import('@/integrations/supabase/schema-clients');
   const { data, error } = await btpClient
     .from('project_phases')
-    .select('id, phase_name, order_index, custom_phase_data')
+    .select('id, phase_name, status, order_index, custom_phase_data')
     .eq('project_id', projectId)
     .order('order_index', { ascending: true });
 
@@ -63,7 +80,9 @@ export async function loadProjectWbs(projectId: string): Promise<WbsPhase[]> {
     return {
       id: row.id,
       label: row.phase_name ?? 'Phase',
+      status: (row as { status?: string | null }).status ?? null,
       milestones,
-    } satisfies WbsPhase;
+    } satisfies ProjectWbsPhase;
   });
 }
+

@@ -29,7 +29,7 @@ import { WbsSelector, type WbsValue } from './WbsSelector';
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { MeterService } from '@/application/services/boq/MeterService';
-import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
+import { loadProjectWbs, isActivePhaseStatus, type ProjectWbsPhase } from '@/application/services/boq/ProjectWbsLoader';
 import { tenderToPlanningService } from '@/application/services/TenderToPlanningService';
 import type { ReferentialType } from '@/config/referentials';
 import { getReferentialOptions } from '@/config/referentials';
@@ -137,7 +137,7 @@ export function BoqWorkspace({
   const [autoRecs, setAutoRecs] = useState(false);
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
-  const [projectPhases, setProjectPhases] = useState<WbsPhase[]>([]);
+  const [projectPhases, setProjectPhases] = useState<ProjectWbsPhase[]>([]);
 
   // Parties prenantes assignables ligne à ligne (organisation / employé / fournisseur).
   const { data: organizations = [] } = useOrganizations();
@@ -191,6 +191,35 @@ export function BoqWorkspace({
     })();
     return () => { cancelled = true; };
   }, [projectId]);
+
+  /**
+   * Pré-remplissage du rattachement WBS : la phase active du projet (à défaut la
+   * première) est appliquée, avec son premier jalon et sa première tâche. Le
+   * contexte projet devient la source de vérité ; l'utilisateur ne re-saisit rien.
+   */
+  const contextWbs = useMemo<WbsValue | null>(() => {
+    if (projectPhases.length === 0) return null;
+    const phase = projectPhases.find((p) => isActivePhaseStatus(p.status)) ?? projectPhases[0];
+    const milestone = phase.milestones[0] ?? null;
+    const task = milestone?.tasks?.[0] ?? null;
+    return { phaseId: phase.id, milestoneId: milestone?.id ?? null, taskId: task?.id ?? null };
+  }, [projectPhases]);
+
+  /** Vrai si le projet possède une phase en cours → jalon/tâche verrouillés. */
+  const projectIsActive = useMemo(
+    () => projectPhases.some((p) => isActivePhaseStatus(p.status)),
+    [projectPhases],
+  );
+  const wbsLocked = useMemo(
+    () => ({ phase: false, milestone: projectIsActive, task: projectIsActive }),
+    [projectIsActive],
+  );
+
+  useEffect(() => {
+    if (!contextWbs) return;
+    setWbsDefault((prev) => (prev.phaseId ? prev : { ...contextWbs }));
+    setWbs((prev) => (prev.phaseId ? prev : { ...contextWbs }));
+  }, [contextWbs]);
 
   // Groupe les articles par dépôt (utilise material.warehouse / depot / location si dispo)
   const depots = useMemo(() => {
@@ -583,7 +612,7 @@ export function BoqWorkspace({
 
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
-            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={effectiveReferential} />
+            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={effectiveReferential} locked={wbsLocked} />
             <Select
               value={defaultStakeholderId || '__none__'}
               onValueChange={(v) => {
@@ -722,7 +751,7 @@ export function BoqWorkspace({
                     value={wbs}
                     onChange={setWbs}
                     phases={projectPhases.length > 0 ? projectPhases : undefined}
-          
+                    locked={wbsLocked}
                     referentialCode={effectiveReferential}
                   />
                 </div>
