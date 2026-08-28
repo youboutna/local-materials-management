@@ -135,6 +135,7 @@ const Suppliers = () => {
       nif: supplier.nif || "",
       commerce_register_ref: supplier.commerceRegisterRef || "",
     });
+    setSelectedSupplier(supplier);
     setEditingId(supplier.id);
     setIsCreating(true);
   };
