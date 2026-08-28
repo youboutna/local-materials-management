@@ -352,3 +352,16 @@ export class Supplier {
     return status;
   }
 }
+
+/** Règles métier NIF (pures) — partagées entre UI et domaine. */
+export const SUPPLIER_NIF_RULES = { MIN_LENGTH: 8, MAX_LENGTH: 20 } as const;
+
+/** Retourne un message d'erreur métier, ou null si le NIF est valide. */
+export function validateSupplierNif(nif?: string | null): string | null {
+  if (!nif || !nif.trim()) return null;
+  const value = nif.trim();
+  if (value.length < SUPPLIER_NIF_RULES.MIN_LENGTH || value.length > SUPPLIER_NIF_RULES.MAX_LENGTH) {
+    return `Le NIF doit contenir entre ${SUPPLIER_NIF_RULES.MIN_LENGTH} et ${SUPPLIER_NIF_RULES.MAX_LENGTH} caractères`;
+  }
+  return null;
+}
