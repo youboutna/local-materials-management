@@ -83,9 +83,10 @@ const Suppliers = () => {
     }
     try {
       if (editingId) {
-        updateSupplier({ id: editingId, data: formData });
+        await updateSupplier({ id: editingId, data: formData });
         toast({ title: t('common.success'), description: "Fournisseur mis à jour avec succès." });
         resetForm();
+
       } else {
         await createSupplier({
           name: formData.name,

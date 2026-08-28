@@ -17,6 +17,8 @@
  * defaults, so existing .env files keep working during migration.
  */
 
+import { resolveSupabaseConfig } from '@/config/supabaseConfig';
+
 // Canonical provider taxonomy — kept in sync with src/config/app-validate.ts
 // and src/infrastructure/RepositoryFactory.ts. Legacy aliases (`auth0`,
 // `custom`, `mysql`, `azure`, `gcs`, `ftp`) are retained only to satisfy
@@ -187,10 +189,9 @@ function buildConfig(): AppConfig {
     envOpt('VITE_KEYCLOAK_URL') ??
     defaults.auth.url;
 
-  const anonKey =
-    envOpt('VITE_SUPABASE_PUBLISHABLE_KEY') ??
-    envOpt('VITE_SUPABASE_ANON_KEY') ??
-    defaults.auth.anonKey;
+  // Clé résolue via SupabaseConfigService : jamais une clé d'un autre projet.
+  const anonKey = resolveSupabaseConfig().publishableKey || defaults.auth.anonKey;
+
 
   const projectId = envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId;
 
