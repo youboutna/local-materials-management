@@ -14,6 +14,15 @@ import {
 import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
+/** Messages métier renvoyés par l'entité Supplier -> ValidationError (et non INTERNAL_ERROR). */
+const VALIDATION_MARKERS = ['NIF', 'email', 'status'];
+
+function toDomainError(error: unknown, fallback: string): AppError {
+  const message = error instanceof Error ? error.message : fallback;
+  const isValidation = VALIDATION_MARKERS.some((marker) => message.includes(marker));
+  return new AppError(isValidation ? ErrorCode.VALIDATION_ERROR : ErrorCode.INTERNAL_ERROR, message);
+}
+
 export class SupplierService {
   constructor(private supplierRepository: ISupplierRepository) {}
 
