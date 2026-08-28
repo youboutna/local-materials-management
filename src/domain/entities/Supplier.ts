@@ -341,7 +341,8 @@ export class Supplier {
 
   private validateNif(nif: string | null): string | null {
     if (!nif) return null;
-    if (nif.length < 8 || nif.length > 20) throw new Error('NIF must be between 8 and 20 characters');
+    const error = validateSupplierNif(nif);
+    if (error) throw new Error(error);
     return nif.trim();
   }
 
