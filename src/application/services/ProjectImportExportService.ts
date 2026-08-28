@@ -1,17 +1,28 @@
+// src/application/services/ProjectImportExportService.ts
+
 /**
- * ProjectImportExportService
+ * ProjectImportExportService v2.0
  *
  * Service applicatif unifié pour l'import et l'export de projets.
  * Respecte la règle hexagonale : zéro React, zéro `supabase.from(...)`,
  * uniquement orchestration via ProjectService + transformations DTO.
  *
- * - importProjects : valide chaque ligne, déduplique par titre, délègue
- *   la création au ProjectService (qui passe par le repository et les
- *   transformers hexagonaux : référentiel + génération de phases côté
- *   workflow si project_type est mappé).
- * - exportProjects : récupère les DTO et sérialise (JSON / CSV / Excel-ready),
- *   en incluant la zone d'intervention (interventionZone) lorsqu'elle existe.
+ * @version 2.0.0
+ * @author HadraTech-GPI Team
+ * 
+ * @whatsnew v2.0.0
+ * - ✅ Import des employés avec résolution par email/externalRef
+ * - ✅ Modes d'import: create, upsert, partial_update, full_update, skip_existing, merge
+ * - ✅ Validation avancée (validateOnly, dryRun)
+ * - ✅ Traçabilité des changements (change logs)
+ * - ✅ Support multi-référentiels amélioré
+ * - ✅ Résolution des références croisées (organizations, suppliers, employees)
+ * - ✅ Gestion des stakeholders avec employeeId
  */
+
+// =============================================================================
+// IMPORTS
+// =============================================================================
 
 import { AuthService, getAuthService } from '@/application/services/AuthService';
 import { getMilestoneService } from '@/application/services/MilestoneService';
@@ -21,6 +32,7 @@ import { ProjectService, getProjectService } from '@/application/services/Projec
 import { getProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { getSupplierService } from '@/application/services/SupplierService';
 import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { getEmployeeService } from '@/application/services/EmployeeService';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
@@ -51,6 +63,23 @@ import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 // TYPES
 // =============================================================================
 
+export type ImportMode = 'create' | 'upsert' | 'partial_update' | 'full_update' | 'skip_existing' | 'merge';
+export type ConflictStrategy = 'use_import' | 'use_existing' | 'merge' | 'manual';
+
+export interface ImportOptions {
+  mode?: ImportMode;
+  conflictStrategy?: ConflictStrategy;
+  continueOnError?: boolean;
+  dryRun?: boolean;
+  validateOnly?: boolean;
+  preserveRelations?: boolean;
+  batchSize?: number;
+  ignoredFields?: string[];
+  employeeResolution?: 'email' | 'externalRef' | 'both';
+  supplierResolution?: 'name' | 'externalRef' | 'both';
+  organizationResolution?: 'name' | 'code' | 'externalRef' | 'both';
+}
+
 export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status' | 'phases' | 'stakeholders' | 'budget' | 'startDate' | 'endDate' | 'projectType' | 'tasks'>> {
   id?: string;
   reference?: string;
@@ -67,11 +96,8 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   teamSize?: number;
   latitude?: number;
   longitude?: number;
-  /** @deprecated — préférer `interventionZones` (multi). */
   interventionZone?: InterventionZoneDTO;
-  /** Zones bénéficiaires (multi-polygones). */
   interventionZones?: InterventionZoneDTO[];
-  /** Référentiel projet (ex: 'somelec', 'eter') pour génération de phases. */
   referentialCode?: ReferentialType;
   projectType?: string;
   externalRef?: string;
@@ -79,13 +105,12 @@ export interface ProjectImportRow extends Partial<Omit<CreateProjectDTO, 'status
   budgetSources?: Array<Record<string, unknown>>;
   dqeLines?: BoqLineDTO[];
   phases?: ProjectImportPhase[];
-  /** Tâches déclarées au niveau projet (référencent une phase via `phaseId`). */
   tasks?: ProjectImportTask[];
   stakeholders?: ProjectImportStakeholder[];
+  importMode?: ImportMode;
 }
 
 export interface ProjectImportPhase {
-  /** Identifiant local du jeu de données (ex: "phase-1-dream"), non-UUID toléré. */
   id?: string;
   externalRef?: string;
   name: string;
@@ -127,7 +152,6 @@ export interface ProjectImportTask {
   endDate?: string;
   dueDate?: string;
   due_date?: string;
-  /** Référence la phase locale (`phase.id` ou `phase.code`) quand la tâche est au niveau projet. */
   phaseId?: string;
   assignedTo?: string | string[];
   assigneeName?: string;
@@ -140,6 +164,7 @@ export interface ProjectImportTask {
 export interface ProjectImportStakeholder extends Partial<CreateProjectStakeholderDTO> {
   organizationId?: string;
   supplierId?: string;
+  employeeId?: string;
   externalRef?: string;
   role?: string;
 }
@@ -151,7 +176,24 @@ export interface ProjectImportResult {
   failed: number;
   errors: Array<{ row: number; title: string; message: string }>;
   createdIds: string[];
-  details: { phases: number; milestones: number; tasks: number; dqeLines: number; stakeholders: number };
+  details: { 
+    phases: number; 
+    milestones: number; 
+    tasks: number; 
+    dqeLines: number; 
+    stakeholders: number;
+    employees: number;
+    organizations: number;
+    suppliers: number;
+  };
+  changes?: Array<{
+    entityType: string;
+    entityId: string;
+    entityName: string;
+    operation: 'created' | 'updated' | 'skipped' | 'merged' | 'failed';
+    timestamp: string;
+    details?: Record<string, unknown>;
+  }>;
 }
 
 export type ProjectExportFormat = 'json' | 'csv' | 'excel-rows';
@@ -167,6 +209,8 @@ export interface ProjectImportDataset {
   projects: ProjectImportRow[];
   organizations?: ProjectImportOrganization[];
   suppliers?: ProjectImportSupplier[];
+  employees?: ProjectImportEmployee[];
+  options?: ImportOptions;
 }
 
 export interface ProjectImportOrganization {
@@ -194,6 +238,29 @@ export interface ProjectImportSupplier {
   bankInfo?: { bank?: string; account?: string; iban?: string };
 }
 
+export interface ProjectImportEmployee {
+  id: string;
+  employeeId?: string;
+  email: string;
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  position?: string;
+  department?: string;
+  role?: string;
+  type?: string;
+  skills?: string[];
+  certifications?: Array<{ 
+    name: string; 
+    issuer?: string; 
+    date?: string; 
+    expiryDate?: string;
+    certificateId?: string;
+  }>;
+  isActive?: boolean;
+}
+
 // =============================================================================
 // SERVICE
 // =============================================================================
@@ -203,6 +270,7 @@ export class ProjectImportExportService {
   private currentUserId?: string;
   private currentUserName?: string;
   private currentUserEmail?: string;
+  private employeeService: ReturnType<typeof getEmployeeService>;
 
   constructor(
     private readonly projectService: ProjectService,
@@ -215,6 +283,7 @@ export class ProjectImportExportService {
     authService?: AuthService,
   ) {
     this.authService = authService || getAuthService();
+    this.employeeService = getEmployeeService();
   }
 
   static default(): ProjectImportExportService {
@@ -223,9 +292,10 @@ export class ProjectImportExportService {
     );
   }
 
-  /**
-   * Récupère l'utilisateur courant via AuthService
-   */
+  // ===========================================================================
+  // PRIVATE HELPERS
+  // ===========================================================================
+
   private async loadCurrentUser(): Promise<void> {
     try {
       const user = await this.authService.getCurrentUser();
@@ -239,14 +309,129 @@ export class ProjectImportExportService {
     }
   }
 
-  // ============= IMPORT =============
+  private isUUID(value?: string): boolean {
+    return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
+
+  private getExternalRef(row: ProjectImportRow): string | undefined {
+    return row.externalRef || row.id || row.projectReference || row.reference;
+  }
+
+  private resolveReference(reference?: string, map?: Map<string, string>): string | undefined {
+    if (!reference) return undefined;
+    const mapped = map?.get(reference);
+    if (mapped) return mapped;
+    return this.isUUID(reference) ? reference : undefined;
+  }
+
+  private getDqeCode(line: BoqLineDTO): string | undefined {
+    const candidate = line as BoqLineDTO & { code?: string };
+    return line.btpCode ?? candidate.code;
+  }
+
+  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
+    if (!status) return undefined;
+    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'> = {
+      planifie: 'pending',
+      planned: 'pending',
+      en_cours: 'in_progress',
+      'en cours': 'in_progress',
+      termine: 'completed',
+      terminé: 'completed',
+      completed: 'completed',
+      overdue: 'delayed',
+      delayed: 'delayed',
+      en_retard: 'delayed',
+      annule: 'cancelled',
+      annulé: 'cancelled',
+      cancelled: 'cancelled',
+    };
+    return statuses[status.toLowerCase()] ?? 'pending';
+  }
+
+  private mapDqeStatus(status?: string): string {
+    const normalized = (status || '').toLowerCase().trim();
+
+    const mapping: Record<string, string> = {
+      'termine': 'validated',
+      'terminé': 'validated',
+      'completed': 'validated',
+      'en_cours': 'submitted',
+      'in_progress': 'submitted',
+      'planifie': 'draft',
+      'planifié': 'draft',
+      'planned': 'draft',
+      'annule': 'rejected',
+      'annulé': 'rejected',
+      'cancelled': 'rejected',
+      'brouillon': 'draft',
+      'draft': 'draft',
+      'soumis': 'submitted',
+      'submitted': 'submitted',
+      'valide': 'validated',
+      'validé': 'validated',
+      'validated': 'validated',
+      'rejete': 'rejected',
+      'rejeté': 'rejected',
+      'rejected': 'rejected',
+      'facture': 'invoiced',
+      'facturé': 'invoiced',
+      'invoiced': 'invoiced',
+      'paye': 'paid',
+      'payé': 'paid',
+      'paid': 'paid',
+      'archive': 'archived',
+      'archivé': 'archived',
+      'archived': 'archived'
+    };
+
+    return mapping[normalized] || 'draft';
+  }
+
+  private determineOperation(
+    existing: ProjectDTO | null,
+    mode: ImportMode
+  ): 'create' | 'update_full' | 'update_partial' | 'merge' | 'skip' {
+    if (!existing) return 'create';
+
+    switch (mode) {
+      case 'create': return 'create';
+      case 'upsert': return 'update_full';
+      case 'partial_update': return 'update_partial';
+      case 'full_update': return 'update_full';
+      case 'skip_existing': return 'skip';
+      case 'merge': return 'merge';
+      default: return 'update_full';
+    }
+  }
+
+  private findExistingProject(
+    projects: ProjectDTO[], 
+    externalRef?: string, 
+    reference?: string, 
+    title?: string
+  ): ProjectDTO | null {
+    return projects.find((project) => {
+      const candidate = project as ProjectDTO & { reference?: string };
+      return (externalRef && candidate.externalRef === externalRef) ||
+        (reference && candidate.projectReference === reference) ||
+        (reference && candidate.reference === reference) ||
+        (title && candidate.title?.trim().toLowerCase() === title.trim().toLowerCase());
+    }) ?? null;
+  }
+
+  // ===========================================================================
+  // VALIDATION
+  // ===========================================================================
 
   validateImportRows(rows: ProjectImportRow[]): Array<{ row: number; title: string; message: string }> {
     const errors: Array<{ row: number; title: string; message: string }> = [];
     const keys = new Set<string>();
+    
     rows.forEach((row, index) => {
       const title = row.title?.trim() || '(empty)';
       const key = (row.externalRef || title).toLowerCase();
+      
       if (!row.title?.trim()) {
         errors.push({ row: index + 1, title, message: 'Missing title' });
       } else if (keys.has(key)) {
@@ -254,120 +439,101 @@ export class ProjectImportExportService {
       } else {
         keys.add(key);
       }
+      
       if (!row.location?.trim() && !row.interventionZone?.address && !row.interventionZones?.length) {
         errors.push({ row: index + 1, title, message: 'Missing location or intervention zone' });
       }
+      
       (row.phases ?? []).forEach((phase, phaseIndex) => {
         if (!phase.name?.trim()) {
           errors.push({ row: index + 1, title, message: `Phase ${phaseIndex + 1} is missing a name` });
         }
       });
     });
+    
     return errors;
   }
 
-  async importDataset(dataset: ProjectImportDataset): Promise<ProjectImportResult> {
-    if (!dataset || !Array.isArray(dataset.projects)) {
-      throw new Error('Invalid import dataset: projects must be an array');
-    }
-    try {
-      // Charger l'utilisateur courant une fois pour tout l'import
-      await this.loadCurrentUser();
+  private async validateDataset(
+    dataset: ProjectImportDataset,
+    options: ImportOptions
+  ): Promise<{ errors: Array<{ row: number; title: string; message: string }>; warnings: string[] }> {
+    const errors: Array<{ row: number; title: string; message: string }> = [];
+    const warnings: string[] = [];
 
-      const references = {
-        organizations: await this.importOrganizations(dataset.organizations ?? []),
-        suppliers: await this.importSuppliers(dataset.suppliers ?? []),
-      };
-      return await this.importProjects(dataset.projects, references);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (/row-level security|permission denied|403/i.test(message)) {
-        throw new Error(
-          'Import complet refusé par la sécurité Supabase. Appliquez la migration 20260801000004_allow_full_dataset_import.sql et utilisez un compte admin, director ou manager.',
-        );
+    for (let i = 0; i < dataset.projects.length; i++) {
+      const row = dataset.projects[i];
+      const rowNum = i + 1;
+
+      if (!row.title?.trim()) {
+        errors.push({ row: rowNum, title: '(empty)', message: 'Le titre du projet est requis' });
       }
-      throw error;
+
+      if (!row.location?.trim() && !row.interventionZone?.address && !row.interventionZones?.length) {
+        errors.push({ row: rowNum, title: row.title || '(empty)', message: 'La localisation est requise' });
+      }
+
+      if (row.organizationId) {
+        const orgExists = dataset.organizations?.some(o => o.id === row.organizationId);
+        if (!orgExists) {
+          warnings.push(`L'organisation "${row.organizationId}" référencée dans le projet "${row.title}" n'existe pas dans les organisations partagées`);
+        }
+      }
+
+      if (row.phases) {
+        for (let p = 0; p < row.phases.length; p++) {
+          const phase = row.phases[p];
+          if (!phase.name?.trim()) {
+            errors.push({ row: rowNum, title: row.title || '(empty)', message: `Phase ${p + 1}: nom requis` });
+          }
+        }
+      }
     }
+
+    if (dataset.employees) {
+      const emails = new Set<string>();
+      for (const emp of dataset.employees) {
+        if (!emp.email?.trim()) {
+          errors.push({ row: 0, title: 'Employee', message: `L'email est requis pour l'employé ${emp.id || 'sans ID'}` });
+        } else if (emails.has(emp.email.toLowerCase())) {
+          warnings.push(`Email en double: ${emp.email}`);
+        } else {
+          emails.add(emp.email.toLowerCase());
+        }
+      }
+    }
+
+    return { errors, warnings };
   }
 
-  async importProjects(
-    rows: ProjectImportRow[],
-    references: { organizations?: Map<string, string>; suppliers?: Map<string, string> } = {},
-  ): Promise<ProjectImportResult> {
-    const result: ProjectImportResult = {
-      total: rows.length,
-      imported: 0,
-      skipped: 0,
-      failed: 0,
-      errors: [],
-      createdIds: [],
-      details: { phases: 0, milestones: 0, tasks: 0, dqeLines: 0, stakeholders: 0 },
-    };
+  // ===========================================================================
+  // IMPORT DEPENDENCIES
+  // ===========================================================================
 
-    const validationErrors = this.validateImportRows(rows);
-    const invalidRows = new Set(validationErrors.map((error) => error.row));
-    result.errors.push(...validationErrors);
-    result.failed += invalidRows.size;
-
-    let existingProjects: ProjectDTO[] = [];
-    try {
-      existingProjects = await this.projectService.getAllProjects();
-    } catch (e) {
-      console.warn('[ProjectImportExportService] Cannot list existing projects:', e);
-    }
-
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const titleKey = (row.title || '').trim().toLowerCase();
-      if (invalidRows.has(i + 1)) continue;
-      if (!titleKey) {
-        result.failed += 1;
-        result.errors.push({ row: i + 1, title: '(empty)', message: 'Missing title' });
-        continue;
-      }
-      try {
-        const externalRef = this.getExternalRef(row);
-        const existing = this.findExistingProject(existingProjects, externalRef, row.reference, row.title);
-        const dto = this.mapImportRowToCreateDTO(row, references.organizations);
-        const project = existing
-          ? await this.projectService.updateProject(existing.id, dto as never)
-          : await this.projectService.createProject(dto);
-        await this.importRelations(
-          project.id,
-          row,
-          result.details,
-          references.suppliers,
-          references.organizations
-        );
-        result.imported += 1;
-        if (project?.id) result.createdIds.push(project.id);
-        const existingIndex = existingProjects.findIndex((candidate) => candidate.id === project.id);
-        if (existingIndex >= 0) existingProjects[existingIndex] = project;
-        else existingProjects.push(project);
-      } catch (e) {
-        result.failed += 1;
-        result.errors.push({
-          row: i + 1,
-          title: row.title,
-          message: e instanceof Error ? e.message : String(e),
-        });
-      }
-    }
-
-    return result;
-  }
-
-  private async importOrganizations(rows: ProjectImportOrganization[]): Promise<Map<string, string>> {
+  private async importOrganizations(
+    rows: ProjectImportOrganization[],
+    options: ImportOptions
+  ): Promise<Map<string, string>> {
     const references = new Map<string, string>();
     const existing = await this.organizationService.list();
+
     for (const row of rows) {
       if (!row.id || !row.name?.trim()) continue;
-      const current = existing.find((organization) =>
-        organization.id === row.id ||
-        organization.externalRef === row.id ||
-        (!!row.code && organization.code?.trim().toLowerCase() === row.code.trim().toLowerCase()) ||
-        organization.name.trim().toLowerCase() === row.name.trim().toLowerCase(),
-      );
+
+      const strategy = options.organizationResolution || 'both';
+      const current = existing.find((org) => {
+        if (strategy === 'externalRef' || strategy === 'both') {
+          if (row.id && org.externalRef === row.id) return true;
+        }
+        if (strategy === 'name' || strategy === 'both') {
+          if (org.name?.trim().toLowerCase() === row.name.trim().toLowerCase()) return true;
+        }
+        if (strategy === 'code' || strategy === 'both') {
+          if (row.code && org.code === row.code) return true;
+        }
+        return false;
+      });
+
       const payload = {
         name: row.name.trim(),
         code: row.code,
@@ -379,6 +545,7 @@ export class ProjectImportExportService {
         isActive: row.isActive ?? true,
         externalRef: this.isUUID(row.id) ? undefined : row.id,
       };
+
       const organization = current
         ? await this.organizationService.update(current.id, payload)
         : await this.organizationService.upsert({
@@ -387,24 +554,39 @@ export class ProjectImportExportService {
           });
 
       references.set(row.id, organization.id);
+
       const existingIndex = existing.findIndex((candidate) => candidate.id === organization.id);
       if (existingIndex >= 0) existing[existingIndex] = organization;
       else existing.push(organization);
     }
+
     return references;
   }
 
-  private async importSuppliers(rows: ProjectImportSupplier[]): Promise<Map<string, string>> {
+  private async importSuppliers(
+    rows: ProjectImportSupplier[],
+    options: ImportOptions
+  ): Promise<Map<string, string>> {
     const references = new Map<string, string>();
     const existing = await this.supplierService.getAllSuppliers();
     const supplierRepository = RepositoryFactory.getSupplierRepository();
+
     for (const row of rows) {
       if (!row.id || !row.name?.trim()) continue;
-      const current = await supplierRepository.findByExternalRef(row.id) ?? existing.find((supplier) =>
-        (row.contactEmail && supplier.email === row.contactEmail) ||
-        (row.nif && supplier.nif === row.nif) ||
-        supplier.name.trim().toLowerCase() === row.name.trim().toLowerCase(),
-      );
+
+      const strategy = options.supplierResolution || 'both';
+      const current = await supplierRepository.findByExternalRef(row.id) ?? existing.find((supplier) => {
+        if (strategy === 'externalRef' || strategy === 'both') {
+          if (row.id && supplier.externalRef === row.id) return true;
+        }
+        if (strategy === 'name' || strategy === 'both') {
+          if (supplier.name?.trim().toLowerCase() === row.name.trim().toLowerCase()) return true;
+        }
+        if (row.contactEmail && supplier.email === row.contactEmail) return true;
+        if (row.nif && supplier.nif === row.nif) return true;
+        return false;
+      });
+
       const rating = row.rating == null ? undefined : {
         quality: row.rating,
         delivery: row.rating,
@@ -412,6 +594,7 @@ export class ProjectImportExportService {
         communication: row.rating,
         overall: row.rating,
       };
+
       const supplier = current
         ? await this.supplierService.updateSupplier(current.id, {
             name: row.name.trim(),
@@ -433,44 +616,135 @@ export class ProjectImportExportService {
             status: row.isActive === false ? 'inactive' : 'active',
             externalRef: row.id,
           });
+
       references.set(row.id, supplier.id);
       existing.push(supplier);
     }
+
     return references;
   }
 
-  private isUUID(value?: string): boolean {
-    return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  private async importEmployees(
+    rows: ProjectImportEmployee[],
+    options: ImportOptions
+  ): Promise<Map<string, string>> {
+    const references = new Map<string, string>();
+    const existing = await this.employeeService.getAllEmployees();
+
+    for (const row of rows) {
+      if (!row.id || !row.email?.trim()) continue;
+
+      const strategy = options.employeeResolution || 'both';
+      const current = existing.find((emp) => {
+        if (strategy === 'email' || strategy === 'both') {
+          if (emp.email?.toLowerCase() === row.email.toLowerCase()) return true;
+        }
+        if (strategy === 'externalRef' || strategy === 'both') {
+          if (row.id && emp.externalRef === row.id) return true;
+          if (row.employeeId && emp.employeeId === row.employeeId) return true;
+        }
+        return false;
+      });
+
+      const employeeData = {
+        employeeId: row.employeeId || row.id || `EMP${Date.now().toString().slice(-6)}`,
+        email: row.email,
+        fullName: row.fullName || row.firstName || row.email.split('@')[0],
+        firstName: row.firstName,
+        lastName: row.lastName,
+        phone: row.phone,
+        position: row.position,
+        department: row.department as any,
+        role: row.role as any || 'employee',
+        type: row.type as any || 'internal',
+        skills: row.skills || [],
+        certifications: row.certifications || [],
+        isActive: row.isActive !== false,
+        externalRef: row.id,
+      };
+
+      let employee;
+      if (current) {
+        const updates: any = {};
+        if (row.fullName) updates.fullName = row.fullName;
+        if (row.firstName) updates.firstName = row.firstName;
+        if (row.lastName) updates.lastName = row.lastName;
+        if (row.phone) updates.phone = row.phone;
+        if (row.position) updates.position = row.position;
+        if (row.department) updates.department = row.department;
+        if (row.role) updates.role = row.role;
+        if (row.type) updates.type = row.type;
+        if (row.skills) updates.skills = row.skills;
+        if (row.certifications) updates.certifications = row.certifications;
+        if (row.isActive !== undefined) updates.isActive = row.isActive;
+        if (row.id) updates.externalRef = row.id;
+
+        if (Object.keys(updates).length > 0) {
+          employee = await this.employeeService.updateEmployee(current.id, updates);
+        } else {
+          employee = current;
+        }
+      } else {
+        employee = await this.employeeService.createEmployee(employeeData);
+      }
+
+      references.set(row.id, employee.id);
+    }
+
+    return references;
   }
 
-  private getExternalRef(row: ProjectImportRow): string | undefined {
-    return row.externalRef || row.id || row.projectReference || row.reference;
+  private async importDependencies(
+    dataset: ProjectImportDataset,
+    options: ImportOptions
+  ): Promise<{
+    organizations: Map<string, string>;
+    suppliers: Map<string, string>;
+    employees: Map<string, string>;
+  }> {
+    const result = {
+      organizations: new Map<string, string>(),
+      suppliers: new Map<string, string>(),
+      employees: new Map<string, string>(),
+    };
+
+    if (dataset.organizations?.length) {
+      result.organizations = await this.importOrganizations(dataset.organizations, options);
+    }
+
+    if (dataset.suppliers?.length) {
+      result.suppliers = await this.importSuppliers(dataset.suppliers, options);
+    }
+
+    if (dataset.employees?.length) {
+      result.employees = await this.importEmployees(dataset.employees, options);
+    }
+
+    return result;
   }
 
-  private findExistingProject(projects: ProjectDTO[], externalRef?: string, reference?: string, title?: string): ProjectDTO | null {
-    return projects.find((project) => {
-      const candidate = project as ProjectDTO & { reference?: string };
-      return (externalRef && candidate.externalRef === externalRef) ||
-        (reference && candidate.projectReference === reference) ||
-        (reference && candidate.reference === reference) ||
-        (title && candidate.title?.trim().toLowerCase() === title.trim().toLowerCase());
-    }) ?? null;
-  }
+  // ===========================================================================
+  // MAP DTO
+  // ===========================================================================
 
-  /** Mapping pur et testable du format d'échange vers le contrat de création. */
-  public mapImportRowToCreateDTO(row: ProjectImportRow, organizations?: Map<string, string>): CreateProjectDTO {
+  public mapImportRowToCreateDTO(
+    row: ProjectImportRow, 
+    organizations?: Map<string, string>
+  ): CreateProjectDTO {
     const input = row as ProjectImportRow & {
       budget?: number | { total?: number; currency?: string; sources?: Array<Record<string, unknown>> };
       timeline?: { startDate?: string; endDate?: string };
       type?: string;
       reference?: string;
     };
+    
     const zones = row.interventionZones && row.interventionZones.length > 0
       ? row.interventionZones
       : row.interventionZone
       ? [row.interventionZone]
       : undefined;
     const firstZone = zones?.[0];
+    
     const dto: CreateProjectDTO = {
       title: row.title,
       description: row.description ?? '',
@@ -499,18 +773,97 @@ export class ProjectImportExportService {
       interventionZones: zones,
       interventionZone: firstZone,
     } as CreateProjectDTO;
+    
     return dto;
   }
 
-  /** Persiste les relations après la création du projet, en conservant l'ordre des clés étrangères. */
+  private mapPartialUpdateDTO(
+    row: ProjectImportRow,
+    organizations?: Map<string, string>
+  ): Partial<CreateProjectDTO> {
+    const dto: Partial<CreateProjectDTO> = {};
+    const ignoredFields = ['externalRef', 'id', 'reference', 'timeline', 'type', 'importMode'];
+    const fields = Object.keys(row).filter(key => !ignoredFields.includes(key));
+
+    for (const key of fields) {
+      const value = (row as any)[key];
+      if (value !== undefined && value !== null) {
+        switch (key) {
+          case 'title': dto.title = value; break;
+          case 'description': dto.description = value; break;
+          case 'status': dto.status = value as ProjectStatus; break;
+          case 'progress': dto.progress = value; break;
+          case 'budget': dto.budget = typeof value === 'number' ? value : value?.total; break;
+          case 'currency': dto.currency = value; break;
+          case 'startDate': dto.startDate = value; break;
+          case 'endDate': dto.endDate = value; break;
+          case 'location': dto.location = value; break;
+          case 'latitude': dto.latitude = value; break;
+          case 'longitude': dto.longitude = value; break;
+          case 'teamSize': dto.teamSize = value; break;
+          case 'financingSource': dto.financingSource = value; break;
+          case 'marketType': dto.marketType = value; break;
+          case 'selectionMode': dto.selectionMode = value; break;
+          case 'projectType': dto.projectType = value; break;
+          case 'referentialCode': dto.referentialCode = value as ReferentialType; break;
+          case 'organizationId': 
+            dto.organizationId = organizations?.get(value) || value; 
+            break;
+          case 'launchDate': dto.launchDate = value; break;
+          case 'attributionDate': dto.attributionDate = value; break;
+          case 'completionDate': dto.completionDate = value; break;
+          case 'externalRef': dto.externalRef = value; break;
+          case 'budgetSources': dto.budgetSources = value; break;
+          case 'interventionZones': dto.interventionZones = value; break;
+          case 'interventionZone': dto.interventionZone = value; break;
+        }
+      }
+    }
+
+    return dto;
+  }
+
+  private mapMergeDTO(
+    row: ProjectImportRow,
+    existing: ProjectDTO,
+    organizations?: Map<string, string>
+  ): Partial<CreateProjectDTO> {
+    const dto: Partial<CreateProjectDTO> = {};
+    const fields = ['title', 'description', 'status', 'progress', 'budget', 'currency',
+      'startDate', 'endDate', 'location', 'teamSize', 'financingSource',
+      'marketType', 'selectionMode', 'projectType', 'referentialCode'];
+
+    for (const field of fields) {
+      const importValue = (row as any)[field];
+      const existingValue = existing[field as keyof ProjectDTO];
+
+      if (importValue !== undefined && importValue !== null && importValue !== existingValue) {
+        (dto as any)[field] = importValue;
+      }
+    }
+
+    if (row.organizationId) {
+      const resolvedOrg = organizations?.get(row.organizationId) || row.organizationId;
+      if (resolvedOrg !== existing.organizationId) {
+        dto.organizationId = resolvedOrg;
+      }
+    }
+
+    return dto;
+  }
+
+  // ===========================================================================
+  // IMPORT RELATIONS
+  // ===========================================================================
+
   private async importRelations(
     projectId: string,
     row: ProjectImportRow,
     details: ProjectImportResult['details'],
     suppliers?: Map<string, string>,
     organizations?: Map<string, string>,
+    employees?: Map<string, string>,
   ): Promise<void> {
-    /** Résolution des identifiants locaux de phases (ex: "phase-1-dream") vers les UUID persistés. */
     const phaseIdMap = new Map<string, string>();
 
     for (const phase of row.phases ?? []) {
@@ -563,7 +916,6 @@ export class ProjectImportExportService {
         if (key) phaseIdMap.set(key, createdPhase.id);
       }
 
-      // Milestones
       const existingMilestones = await this.milestoneService.getPhaseMilestonesRaw(createdPhase.id);
       for (const milestone of phase.milestones ?? []) {
         const existingMilestone = existingMilestones.find((candidate) =>
@@ -588,12 +940,10 @@ export class ProjectImportExportService {
         details.milestones += 1;
       }
 
-      // Tâches de la phase
       for (const task of phase.tasks ?? []) {
-        await this.upsertTask(projectId, createdPhase.id, task, details, suppliers);
+        await this.upsertTask(projectId, createdPhase.id, task, details, suppliers, employees);
       }
 
-      // DQE Lines de la phase
       const dqeLines = (phase.dqeLines ?? []).map((line) => ({
         ...line,
         btpCode: line.btpCode ?? (line as BoqLineDTO & { code?: string }).code ?? undefined,
@@ -604,7 +954,6 @@ export class ProjectImportExportService {
       await this.upsertDqeLines(projectId, createdPhase.id, dqeLines, details);
     }
 
-    // DQE Lines au niveau projet
     for (const line of row.dqeLines ?? []) {
       const lineCode = this.getDqeCode(line);
       const phase = (row.phases ?? []).find((candidate) =>
@@ -626,34 +975,39 @@ export class ProjectImportExportService {
       }
     }
 
-    // Tâches au niveau projet
     for (const task of row.tasks ?? []) {
       const phaseId = task.phaseId ? phaseIdMap.get(task.phaseId) : undefined;
-      await this.upsertTask(projectId, phaseId, task, details, suppliers);
+      await this.upsertTask(projectId, phaseId, task, details, suppliers, employees);
     }
 
-    // Stakeholders
     for (const stakeholder of row.stakeholders ?? []) {
       const organizationRef = stakeholder.organizationId;
       const supplierId = this.resolveReference(stakeholder.supplierId, suppliers);
       const organizationId = this.resolveReference(organizationRef, organizations);
-      if (!supplierId && !organizationId && stakeholder.stakeholderEntityType !== 'employee') continue;
+      const employeeId = this.resolveReference(stakeholder.employeeId, employees);
+      
+      if (!supplierId && !organizationId && !employeeId && stakeholder.stakeholderEntityType !== 'employee') continue;
+      
       const stakeholders = await this.stakeholderService.getProjectStakeholders(projectId);
       const existingStakeholder = stakeholders.find((candidate) =>
         (supplierId && candidate.supplierId === supplierId) ||
-        (organizationRef && candidate.roleDescription?.includes(organizationRef)),
+        (organizationRef && candidate.roleDescription?.includes(organizationRef)) ||
+        (employeeId && candidate.employeeId === employeeId)
       );
+      
       const stakeholderData = {
         projectId,
         stakeholderType: stakeholder.stakeholderType ?? stakeholder.role ?? 'other',
-        stakeholderEntityType: (stakeholder.stakeholderEntityType ?? (supplierId ? 'supplier' : 'employee')) as 'employee' | 'supplier',
+        stakeholderEntityType: (stakeholder.stakeholderEntityType ?? 
+          (employeeId ? 'employee' : supplierId ? 'supplier' : 'organization')) as 'employee' | 'supplier' | 'organization',
         supplierId,
         organizationId,
-        externalRef: stakeholder.externalRef || `SH-${projectId}-${organizationRef || stakeholder.supplierId || 'na'}`,
-        employeeId: this.isUUID(stakeholder.employeeId) ? stakeholder.employeeId : undefined,
+        employeeId,
+        externalRef: stakeholder.externalRef || `SH-${projectId}-${organizationRef || stakeholder.supplierId || stakeholder.employeeId || 'na'}`,
         roleDescription: [stakeholder.roleDescription ?? stakeholder.role, organizationRef].filter(Boolean).join(' - '),
         isPrimary: stakeholder.isPrimary,
       };
+      
       if (existingStakeholder) {
         await this.stakeholderService.updateProjectStakeholder(existingStakeholder.id, stakeholderData);
       } else {
@@ -663,28 +1017,17 @@ export class ProjectImportExportService {
     }
   }
 
-  /**
-   * Résout une référence externe (id local non-UUID) via la table de correspondance.
-   * Retourne `undefined` plutôt qu'un id invalide pour éviter les erreurs de clé étrangère.
-   */
-  private resolveReference(reference?: string, map?: Map<string, string>): string | undefined {
-    if (!reference) return undefined;
-    const mapped = map?.get(reference);
-    if (mapped) return mapped;
-    return this.isUUID(reference) ? reference : undefined;
-  }
+  // ===========================================================================
+  // UPSERT TASK
+  // ===========================================================================
 
-  /**
-   * Upsert idempotent d'une tâche avec auto-assignation.
-   * Si assignedTo est vide, on assigne à l'utilisateur courant.
-   * assignedBy est automatiquement renseigné avec l'utilisateur courant.
-   */
   private async upsertTask(
     projectId: string,
     phaseId: string | undefined,
     task: ProjectImportTask,
     details: ProjectImportResult['details'],
     suppliers?: Map<string, string>,
+    employees?: Map<string, string>,
   ): Promise<void> {
     const name = task.title ?? task.name ?? 'Tâche importée';
     const existingTasks = phaseId
@@ -692,22 +1035,25 @@ export class ProjectImportExportService {
       : await this.taskAssignmentService.getByProject(projectId);
     const existingTask = existingTasks.find((candidate) => candidate.name === name);
 
-    // Résoudre les assignés depuis le JSON
     let assignees: string[] = [];
 
     if (task.assignedTo) {
       const raw = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
       assignees = raw
-        .map((a) => this.resolveReference(a, suppliers))
+        .map((a) => {
+          const supRef = this.resolveReference(a, suppliers);
+          if (supRef) return supRef;
+          const empRef = this.resolveReference(a, employees);
+          if (empRef) return empRef;
+          return undefined;
+        })
         .filter((a): a is string => !!a);
     }
 
-    // Si aucun assigné dans le JSON, utiliser l'utilisateur courant
     if (assignees.length === 0 && this.currentUserId) {
       assignees = [this.currentUserId];
     }
 
-    // Récupérer les informations de l'assigné
     let assigneeName = task.assigneeName || task.assignedName;
     let assigneeEmail = task.assigneeEmail || task.AssignedEmail;
 
@@ -718,16 +1064,16 @@ export class ProjectImportExportService {
       assigneeEmail = this.currentUserEmail;
     }
 
-    // Déterminer le type d'assigné
     let assigneeType: 'supplier' | 'employee' | 'user' | undefined;
     if (assignees.length > 0) {
       const isSupplier = assignees.some((id) => suppliers?.has(id));
-      assigneeType = isSupplier ? 'supplier' : 'user';
+      const isEmployee = assignees.some((id) => employees?.has(id));
+      if (isSupplier && !isEmployee) assigneeType = 'supplier';
+      else if (isEmployee && !isSupplier) assigneeType = 'employee';
+      else assigneeType = 'user';
     }
 
-    // Normaliser le statut
     let normalizedStatus = normalizeTaskStatus(task.status);
-    // Si progress est fourni, ajuster le statut en conséquence
     if (task.progress !== undefined) {
       if (task.progress >= 100) {
         normalizedStatus = TaskStatus.COMPLETED;
@@ -765,14 +1111,10 @@ export class ProjectImportExportService {
     details.tasks += 1;
   }
 
-  // =============================================================================
-  // DQE IMPORT
-  // =============================================================================
+  // ===========================================================================
+  // UPSERT DQE LINES
+  // ===========================================================================
 
-  /**
-   * Upsert des lignes DQE : normalisation du cycle de vie (previsionnel → devis →
-   * décompte → facture), du statut, et enrichissement via le référentiel DQE.
-   */
   private async upsertDqeLines(
     projectId: string,
     phaseId: string,
@@ -847,72 +1189,248 @@ export class ProjectImportExportService {
     if (count) details.dqeLines += dqeLines.length;
   }
 
-  /**
-   * Mappe les statuts du JSON vers les valeurs acceptées par la base
-   */
-  private mapDqeStatus(status?: string): string {
-    const normalized = (status || '').toLowerCase().trim();
+  // ===========================================================================
+  // MAIN IMPORT METHOD
+  // ===========================================================================
 
-    const mapping: Record<string, string> = {
-      'termine': 'validated',
-      'terminé': 'validated',
-      'completed': 'validated',
-      'en_cours': 'submitted',
-      'in_progress': 'submitted',
-      'planifie': 'draft',
-      'planifié': 'draft',
-      'planned': 'draft',
-      'annule': 'rejected',
-      'annulé': 'rejected',
-      'cancelled': 'rejected',
-      'brouillon': 'draft',
-      'draft': 'draft',
-      'soumis': 'submitted',
-      'submitted': 'submitted',
-      'valide': 'validated',
-      'validé': 'validated',
-      'validated': 'validated',
-      'rejete': 'rejected',
-      'rejeté': 'rejected',
-      'rejected': 'rejected',
-      'facture': 'invoiced',
-      'facturé': 'invoiced',
-      'invoiced': 'invoiced',
-      'paye': 'paid',
-      'payé': 'paid',
-      'paid': 'paid',
-      'archive': 'archived',
-      'archivé': 'archived',
-      'archived': 'archived'
+  async importDataset(
+    dataset: ProjectImportDataset,
+    options: ImportOptions = {}
+  ): Promise<ProjectImportResult> {
+    if (!dataset || !Array.isArray(dataset.projects)) {
+      throw new Error('Invalid import dataset: projects must be an array');
+    }
+
+    try {
+      await this.loadCurrentUser();
+
+      const mergedOptions: ImportOptions = {
+        mode: 'upsert',
+        continueOnError: false,
+        dryRun: false,
+        validateOnly: false,
+        preserveRelations: true,
+        batchSize: 50,
+        employeeResolution: 'both',
+        supplierResolution: 'both',
+        organizationResolution: 'both',
+        ...dataset.options,
+        ...options,
+      };
+
+      // Validation uniquement
+      if (mergedOptions.validateOnly || mergedOptions.dryRun) {
+        const validationResult = await this.validateDataset(dataset, mergedOptions);
+        return {
+          total: dataset.projects.length,
+          imported: 0,
+          skipped: 0,
+          failed: validationResult.errors.length,
+          errors: validationResult.errors,
+          createdIds: [],
+          details: { 
+            phases: 0, milestones: 0, tasks: 0, dqeLines: 0, stakeholders: 0,
+            employees: 0, organizations: 0, suppliers: 0 
+          },
+          changes: [],
+        };
+      }
+
+      const references = await this.importDependencies(dataset, mergedOptions);
+      const result = await this.importProjects(
+        dataset.projects, 
+        references, 
+        mergedOptions
+      );
+
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (/row-level security|permission denied|403/i.test(message)) {
+        throw new Error(
+          'Import complet refusé par la sécurité Supabase. Appliquez la migration 20260801000004_allow_full_dataset_import.sql et utilisez un compte admin, director ou manager.',
+        );
+      }
+      throw error;
+    }
+  }
+
+  async importProjects(
+    rows: ProjectImportRow[],
+    references: { 
+      organizations?: Map<string, string>; 
+      suppliers?: Map<string, string>;
+      employees?: Map<string, string>;
+    } = {},
+    options: ImportOptions = {}
+  ): Promise<ProjectImportResult> {
+    const result: ProjectImportResult = {
+      total: rows.length,
+      imported: 0,
+      skipped: 0,
+      failed: 0,
+      errors: [],
+      createdIds: [],
+      details: { 
+        phases: 0, milestones: 0, tasks: 0, dqeLines: 0, stakeholders: 0,
+        employees: references.employees?.size || 0,
+        organizations: references.organizations?.size || 0,
+        suppliers: references.suppliers?.size || 0,
+      },
+      changes: [],
     };
 
-    return mapping[normalized] || 'draft';
+    const mode = options.mode || 'upsert';
+    const continueOnError = options.continueOnError || false;
+
+    const validationErrors = this.validateImportRows(rows);
+    const invalidRows = new Set(validationErrors.map((error) => error.row));
+    result.errors.push(...validationErrors);
+    result.failed += invalidRows.size;
+
+    if (validationErrors.length > 0 && !continueOnError) {
+      return result;
+    }
+
+    let existingProjects: ProjectDTO[] = [];
+    try {
+      existingProjects = await this.projectService.getAllProjects();
+    } catch (e) {
+      console.warn('[ProjectImportExportService] Cannot list existing projects:', e);
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const titleKey = (row.title || '').trim().toLowerCase();
+      
+      if (invalidRows.has(i + 1)) continue;
+      if (!titleKey) {
+        result.failed += 1;
+        result.errors.push({ row: i + 1, title: '(empty)', message: 'Missing title' });
+        continue;
+      }
+
+      try {
+        const externalRef = this.getExternalRef(row);
+        const existing = this.findExistingProject(existingProjects, externalRef, row.reference, row.title);
+        const rowMode = row.importMode || mode;
+        const operation = this.determineOperation(existing, rowMode);
+
+        let project: ProjectDTO;
+
+        switch (operation) {
+          case 'skip':
+            result.skipped += 1;
+            result.changes?.push({
+              entityType: 'project',
+              entityId: existing?.id || '',
+              entityName: row.title,
+              operation: 'skipped',
+              timestamp: new Date().toISOString(),
+            });
+            continue;
+
+          case 'create':
+            const dto = this.mapImportRowToCreateDTO(row, references.organizations);
+            project = await this.projectService.createProject(dto);
+            result.imported += 1;
+            result.changes?.push({
+              entityType: 'project',
+              entityId: project.id,
+              entityName: project.title,
+              operation: 'created',
+              timestamp: new Date().toISOString(),
+            });
+            break;
+
+          case 'update_full':
+            const updateFullDto = this.mapImportRowToCreateDTO(row, references.organizations);
+            project = await this.projectService.updateProject(existing!.id, updateFullDto as never);
+            result.imported += 1;
+            result.changes?.push({
+              entityType: 'project',
+              entityId: project.id,
+              entityName: project.title,
+              operation: 'updated',
+              timestamp: new Date().toISOString(),
+            });
+            break;
+
+          case 'update_partial':
+            const updatePartialDto = this.mapPartialUpdateDTO(row, references.organizations);
+            project = await this.projectService.updateProject(existing!.id, updatePartialDto as never);
+            result.imported += 1;
+            result.changes?.push({
+              entityType: 'project',
+              entityId: project.id,
+              entityName: project.title,
+              operation: 'updated',
+              timestamp: new Date().toISOString(),
+            });
+            break;
+
+          case 'merge':
+            const mergeDto = this.mapMergeDTO(row, existing!, references.organizations);
+            project = await this.projectService.updateProject(existing!.id, mergeDto as never);
+            result.imported += 1;
+            result.changes?.push({
+              entityType: 'project',
+              entityId: project.id,
+              entityName: project.title,
+              operation: 'merged',
+              timestamp: new Date().toISOString(),
+            });
+            break;
+
+          default:
+            const upsertDto = this.mapImportRowToCreateDTO(row, references.organizations);
+            project = existing
+              ? await this.projectService.updateProject(existing.id, upsertDto as never)
+              : await this.projectService.createProject(upsertDto);
+            result.imported += 1;
+            result.changes?.push({
+              entityType: 'project',
+              entityId: project.id,
+              entityName: project.title,
+              operation: existing ? 'updated' : 'created',
+              timestamp: new Date().toISOString(),
+            });
+        }
+
+        if (project?.id) {
+          result.createdIds.push(project.id);
+          
+          await this.importRelations(
+            project.id,
+            row,
+            result.details,
+            references.suppliers,
+            references.organizations,
+            references.employees
+          );
+        }
+
+        const existingIndex = existingProjects.findIndex((candidate) => candidate.id === project.id);
+        if (existingIndex >= 0) existingProjects[existingIndex] = project;
+        else existingProjects.push(project);
+
+      } catch (e) {
+        result.failed += 1;
+        result.errors.push({
+          row: i + 1,
+          title: row.title,
+          message: e instanceof Error ? e.message : String(e),
+        });
+        if (!continueOnError) break;
+      }
+    }
+
+    return result;
   }
 
-  private getDqeCode(line: BoqLineDTO): string | undefined {
-    const candidate = line as BoqLineDTO & { code?: string };
-    return line.btpCode ?? candidate.code;
-  }
-
-  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
-    if (!status) return undefined;
-    const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'> = {
-      planifie: 'pending',
-      planned: 'pending',
-      en_cours: 'in_progress',
-      'en cours': 'in_progress',
-      termine: 'completed',
-      terminé: 'completed',
-      overdue: 'delayed',
-      delayed: 'delayed',
-      en_retard: 'delayed',
-      annule: 'cancelled',
-      annulé: 'cancelled',
-    };
-    return statuses[status.toLowerCase()] ?? 'pending';
-  }
-
-  // ============= EXPORT =============
+  // ===========================================================================
+  // EXPORT METHODS
+  // ===========================================================================
 
   async exportProjects(opts: ProjectExportOptions): Promise<{
     payload: string;
