@@ -145,12 +145,17 @@ const navigationItems: NavItem[] = [
   {
     label: 'auto.contextualsidebar.parametres',
     icon: Settings,
-    roles: ["admin", "director"],
+    roles: ["super_admin", "admin", "director"],
     children: [
       { label: 'auto.contextualsidebar.general', href: "/settings" },
       { label: 'auto.contextualsidebar.apparence_themes', href: "/settings?tab=appearance", icon: Palette },
+      { label: 'settings.tabs.database', href: "/settings?tab=database" },
+      { label: 'settings.tabs.storage', href: "/settings?tab=storage" },
+      { label: 'settings.tabs.keycloak', href: "/settings?tab=keycloak" },
+      { label: 'settings.tabs.system', href: "/settings?tab=system" },
     ],
   },
+
 ];
 
 
