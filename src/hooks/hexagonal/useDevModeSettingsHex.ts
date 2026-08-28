@@ -12,7 +12,9 @@ import type { DevModeStateDTO } from '@/dtos/dev/DevModeDTO';
 export function useDevModeSettingsHex() {
   const service = useMemo(() => getDevModeService(), []);
   const queryClient = useQueryClient();
-  const { login, signOut, isAuthenticated } = useHexagonalAuth();
+  const { login, signOut, isAuthenticated, hasAnyRole } = useHexagonalAuth();
+  /** Le paramétrage du mode DEV est une responsabilité administrateur. */
+  const canManageDevMode = hasAnyRole(['super_admin', 'admin', 'director', 'directeur']);
   const [state, setState] = useState<DevModeStateDTO>(() => service.getState());
   const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -58,9 +60,33 @@ export function useDevModeSettingsHex() {
     }
   }, [service, signOut, queryClient]);
 
+  const setDevModeEnabled = useCallback(
+    async (enabled: boolean) => {
+      if (!canManageDevMode) {
+        throw new Error("Seul un administrateur peut modifier le mode développement");
+      }
+      setIsSwitching(true);
+      setError(null);
+      try {
+        await service.setDevModeEnabled(enabled);
+        setState(service.getState());
+        window.location.reload();
+      } catch (err) {
+        const normalized = err instanceof Error ? err : new Error('DEV mode update failed');
+        setError(normalized);
+        throw normalized;
+      } finally {
+        setIsSwitching(false);
+      }
+    },
+    [service, canManageDevMode]
+  );
+
   return {
     state,
     isAuthenticated,
+    canManageDevMode,
+    setDevModeEnabled,
     isSwitching,
     error,
     switchToLocal,
