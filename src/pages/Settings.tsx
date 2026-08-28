@@ -94,22 +94,8 @@ const Settings = () => {
     next.set("tab", value);
     setSearchParams(next, { replace: true });
   };
-  const [activeDevRole, setDevRole] = useState(getActiveDevRole());
-  const { toast } = useToast();
 
 
-  const handleRoleChange = (role: string) => {
-    setActiveDevRole(role);
-    setDevRole(DEV_ROLES.find((r) => r.role === role) || DEV_ROLES[0]);
-
-    toast({
-      title: t("settings.dev_role_updated"),
-      description: t("settings.dev_role_changed").replace("{role}", role),
-    });
-
-    // Force reload to apply role changes
-    window.location.reload();
-  };
 
   return (
     <AppLayout pageTitle={t("settings.title")}>
