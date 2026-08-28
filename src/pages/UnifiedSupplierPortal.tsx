@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -251,6 +251,7 @@ const UnifiedSupplierPortal = () => {
   const { toast } = useToast();
   const { uploadFile: storageUpload, uploading } = useDocumentStorage();
 
+  const navigate = useNavigate();
   const { user, session, loading } = useSupplierPortalAuthHex();
   const { data: supplierProfile } = useFetchSupplierProfileHex(user);
   const { data: notificationsRaw } = useSupplierPortalNotificationsHex(supplierProfile?.id ?? "");
