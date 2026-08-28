@@ -12,8 +12,10 @@ import {
   DEV_MODE,
   DEV_ROLES,
   getActiveDevRole,
+  getDevModeOverride,
   getDevUsersSnapshot,
   setActiveDevRole,
+  setDevModeOverride,
 } from '@/config/constants';
 import { AuthAdapterFactory } from '@/infrastructure/adapters/auth/AuthAdapterFactory';
 import { getSystemSettingsService, SystemSettingsService } from '@/application/services/SystemSettingsService';
@@ -44,10 +46,28 @@ export class DevModeService {
     return {
       mode,
       devModeEnabled: DEV_MODE,
+      devModeSource: getDevModeOverride() === null ? 'ENV' : 'ADMIN',
       activeRole: mode === 'LOCAL' ? getActiveDevRole().role.toUpperCase() : null,
       adapter: AuthAdapterFactory.getKind(),
       availableRoles: this.getAvailableRoles(),
     };
+  }
+
+  /**
+   * Active/désactive le mode DEV — responsabilité administrateur.
+   * Persiste le choix dans btp.system_settings (RLS admin en écriture) et
+   * applique un override runtime local pour que les adaptateurs le lisent.
+   */
+  async setDevModeEnabled(enabled: boolean): Promise<void> {
+    setDevModeOverride(enabled);
+    AuthAdapterFactory.reset();
+    await this.persistState(enabled ? 'LOCAL' : 'API', enabled ? getActiveDevRole().role : null, enabled);
+  }
+
+  /** Retour à la valeur de configuration (.env / runtime config). */
+  async resetDevModeToEnv(): Promise<void> {
+    setDevModeOverride(null);
+    AuthAdapterFactory.reset();
   }
 
   /** Bascule vers un rôle DEV local. Retourne le profil (email/password) à authentifier. */
@@ -69,11 +89,20 @@ export class DevModeService {
   }
 
   /** Trace non bloquante du dernier mode choisi (les erreurs RLS ne cassent pas l'UI). */
-  private async persistState(mode: DevModeCode, role: string | null): Promise<void> {
+  private async persistState(
+    mode: DevModeCode,
+    role: string | null,
+    devModeEnabled?: boolean
+  ): Promise<void> {
     try {
       await this.systemSettings.setConfiguration(
         DEV_MODE_SETTING_KEY,
-        { mode, role, updatedAt: new Date().toISOString() },
+        {
+          mode,
+          role,
+          devModeEnabled: devModeEnabled ?? DEV_MODE,
+          updatedAt: new Date().toISOString(),
+        },
         DEV_MODE_SETTING_CATEGORY
       );
     } catch (error) {
