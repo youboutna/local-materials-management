@@ -24,7 +24,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAppConfig } from '@/hooks/useAppConfig';
 
-import { useAppConfig } from '@/hooks/useAppConfig';
 import {
   AlertTriangle,
   Cloud,
@@ -36,13 +35,10 @@ import {
   Palette,
 
   Settings2,
-  Shield,
   Users,
 } from "lucide-react";
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import {
   Select,
   SelectContent,
@@ -78,7 +74,6 @@ const SETTINGS_TABS: Array<{
 
 const Settings = () => {
   const { t } = useLanguage();
-  const { isDevelopmentMode } = useAuth();
   const { config, isValid } = useAppConfig();
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get("tab");
