@@ -128,14 +128,14 @@ const Settings = () => {
           </div>
 
           {/* Tablette : onglets en grille — Desktop : navigation verticale */}
-          <TabsList className="hidden h-auto w-full flex-wrap justify-start gap-1 p-1 sm:flex lg:w-56 lg:shrink-0 lg:flex-col lg:flex-nowrap lg:items-stretch lg:self-start">
+          <TabsList className="hidden h-auto w-full flex-wrap justify-start gap-1.5 bg-muted/60 p-2 sm:flex lg:w-72 lg:shrink-0 lg:flex-col lg:flex-nowrap lg:items-stretch lg:self-start">
             {SETTINGS_TABS.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="flex items-center gap-2 whitespace-nowrap lg:w-full lg:justify-start"
+                className="flex items-center gap-2.5 whitespace-nowrap px-3 py-2.5 text-sm data-[state=active]:shadow-sm lg:w-full lg:justify-start"
               >
-                <tab.icon className="h-4 w-4 shrink-0" />
+                <tab.icon className="h-[18px] w-[18px] shrink-0" />
                 <span className="truncate">{tab.label(t)}</span>
               </TabsTrigger>
             ))}
