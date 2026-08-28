@@ -6,7 +6,6 @@ import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DEV_MODE } from '@/config/constants';
-import DevSessionSwitcher from '@/components/dev/DevSessionSwitcher';
 import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2, Menu, Home, Briefcase, Package, Shield, Lock } from 'lucide-react';
 import { 
   DropdownMenu,
@@ -67,7 +66,6 @@ const MainNavbar = () => {
          {t('app.name') || 'HadraTech-GPI'}
           {DEV_MODE && (
             <span className="ml-2 inline-flex align-middle">
-              <DevSessionSwitcher compact />
             </span>
           )}
 

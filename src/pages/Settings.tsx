@@ -21,15 +21,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  DEV_ROLES,
-  getActiveDevRole,
-  setActiveDevRole,
-} from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from '@/hooks/hexagonal/useAuth';
-import { useToast } from "@/hooks/use-toast";
 import { useAppConfig } from '@/hooks/useAppConfig';
+
 import {
   AlertTriangle,
   Cloud,
@@ -41,13 +35,10 @@ import {
   Palette,
 
   Settings2,
-  Shield,
   Users,
 } from "lucide-react";
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import {
   Select,
   SelectContent,
@@ -56,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { T } from '@/components/i18n/T';
+import DevModeSettingsCard from '@/components/dev/DevModeSettingsCard';
 
 type Translate = (key: string) => string;
 
@@ -82,7 +74,6 @@ const SETTINGS_TABS: Array<{
 
 const Settings = () => {
   const { t } = useLanguage();
-  const { isDevelopmentMode } = useAuth();
   const { config, isValid } = useAppConfig();
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = searchParams.get("tab");
@@ -93,22 +84,8 @@ const Settings = () => {
     next.set("tab", value);
     setSearchParams(next, { replace: true });
   };
-  const [activeDevRole, setDevRole] = useState(getActiveDevRole());
-  const { toast } = useToast();
 
 
-  const handleRoleChange = (role: string) => {
-    setActiveDevRole(role);
-    setDevRole(DEV_ROLES.find((r) => r.role === role) || DEV_ROLES[0]);
-
-    toast({
-      title: t("settings.dev_role_updated"),
-      description: t("settings.dev_role_changed").replace("{role}", role),
-    });
-
-    // Force reload to apply role changes
-    window.location.reload();
-  };
 
   return (
     <AppLayout pageTitle={t("settings.title")}>
@@ -145,50 +122,8 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        {isDevelopmentMode && (
-            <Card className="mb-8 border-warning/30 bg-warning/10">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="mr-2 h-5 w-5" />
-                  {t("settings.dev_mode_active")}
-                </CardTitle>
-                <CardDescription>{t("settings.dev_mode_desc")}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-4">
-                  <p className="font-medium">
-                    {t("settings.current_role")}:{" "}
-                    <span className="text-warning"><TranslatedRole code={activeDevRole.role} /></span>
-                  </p>
+        <DevModeSettingsCard />
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {DEV_ROLES.map((roleOption) => (
-                      <Button
-                        key={roleOption.role}
-                        variant={
-                          roleOption.role === activeDevRole.role
-                            ? "default"
-                            : "outline"
-                        }
-                        className={
-                          roleOption.role === activeDevRole.role
-                            ? "bg-amber-600 hover:bg-amber-700"
-                            : ""
-                        }
-                        onClick={() => handleRoleChange(roleOption.role)}
-                      >
-                        <TranslatedRole code={roleOption.role} />
-                      </Button>
-                    ))}
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    {activeDevRole.description}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {/* Mobile : sélecteur compact — Desktop : onglets qui passent à la ligne */}
