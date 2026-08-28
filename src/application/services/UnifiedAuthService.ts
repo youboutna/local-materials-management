@@ -199,7 +199,9 @@ export class UnifiedAuthService {
       }
       if (!result.session) return { user: null, session: null };
       const profileResult = await this.authRepository.getProfile(result.session.user.id);
-      const unifiedSession = this.toUnifiedSession(result.session, profileResult.profile || undefined);
+      const unifiedSession = await this.hydrateRoles(
+        this.toUnifiedSession(result.session, profileResult.profile || undefined),
+      );
       return { user: unifiedSession.user, session: unifiedSession };
     } catch (error) {
       console.error('UnifiedAuthService.login failed:', error);
