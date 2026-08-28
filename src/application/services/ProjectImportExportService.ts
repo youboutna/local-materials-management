@@ -1205,6 +1205,19 @@ export class ProjectImportExportService {
     try {
       await this.loadCurrentUser();
 
+      // Enveloppe { importMode, project: {...}, phases, stakeholders } -> ligne à plat
+      dataset = {
+        ...dataset,
+        projects: dataset.projects.map((raw) => {
+          const entry = raw as ProjectImportRow & { project?: Record<string, unknown> };
+          if (entry && typeof entry === 'object' && entry.project && typeof entry.project === 'object') {
+            const { project, ...rest } = entry as Record<string, unknown> & { project: Record<string, unknown> };
+            return { ...(project as object), ...rest } as ProjectImportRow;
+          }
+          return entry;
+        }),
+      };
+
       const mergedOptions: ImportOptions = {
         mode: 'upsert',
         continueOnError: false,
