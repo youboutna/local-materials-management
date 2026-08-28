@@ -56,6 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { T } from '@/components/i18n/T';
+import DevModeSettingsCard from '@/components/dev/DevModeSettingsCard';
 
 type Translate = (key: string) => string;
 
