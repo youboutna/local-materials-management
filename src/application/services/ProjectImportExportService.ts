@@ -1086,6 +1086,7 @@ export class ProjectImportExportService {
     const taskData: Partial<CreateTaskAssignmentDTO> = {
       projectId,
       phaseId: phaseId || undefined,
+      title: name,
       name,
       description: task.description,
       status: normalizedStatus || TaskStatus.PENDING,
