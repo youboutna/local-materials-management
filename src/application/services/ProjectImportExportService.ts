@@ -653,8 +653,6 @@ export class ProjectImportExportService {
         employeeId: row.employeeId || row.id || `EMP${Date.now().toString().slice(-6)}`,
         email: row.email,
         fullName: row.fullName || row.firstName || row.email.split('@')[0],
-        firstName: row.firstName,
-        lastName: row.lastName,
         phone: row.phone,
         position: row.position,
         department: row.department as any,
