@@ -183,7 +183,9 @@ const EnhancedSupplierTenderPortal = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { uploadFile } = useDocumentStorage();
-  const { getUser, isAuthenticated } = useAuth();
+  const { getUser, user: authUser } = useAuth();
+  const isAuthenticated = Boolean(authUser);
+
   const queryClient = useQueryClient();
 
   const [searchParams] = useSearchParams();
