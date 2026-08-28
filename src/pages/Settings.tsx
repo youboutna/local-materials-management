@@ -68,6 +68,7 @@ const SETTINGS_TABS: Array<{
   { value: "alerts", icon: AlertTriangle, label: () => "Alertes" },
   { value: "notifications", icon: Mail, label: () => "Emails" },
   { value: "local-users", icon: Users, label: () => "Utilisateurs locaux" },
+  { value: "dev", icon: Wrench, label: () => "Mode dev" },
 ];
 
 
