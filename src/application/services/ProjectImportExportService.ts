@@ -640,13 +640,16 @@ export class ProjectImportExportService {
           if (emp.email?.toLowerCase() === row.email.toLowerCase()) return true;
         }
         if (strategy === 'externalRef' || strategy === 'both') {
-          if (row.id && emp.externalRef === row.id) return true;
+          if (row.id && (emp as any).externalRef === row.id) return true;
           if (row.employeeId && emp.employeeId === row.employeeId) return true;
         }
         return false;
       });
 
-      const employeeData = {
+      const employeeData: any = {
+        status: (row as any).status ?? 'active',
+        firstName: row.firstName ?? (row.fullName?.split(' ')[0] ?? row.email.split('@')[0]),
+        lastName: row.lastName ?? (row.fullName?.split(' ').slice(1).join(' ') || '-'),
         employeeId: row.employeeId || row.id || `EMP${Date.now().toString().slice(-6)}`,
         email: row.email,
         fullName: row.fullName || row.firstName || row.email.split('@')[0],
@@ -792,7 +795,7 @@ export class ProjectImportExportService {
           case 'title': dto.title = value; break;
           case 'description': dto.description = value; break;
           case 'status': dto.status = value as ProjectStatus; break;
-          case 'progress': dto.progress = value; break;
+          case 'progress': (dto as any).progress = value; break;
           case 'budget': dto.budget = typeof value === 'number' ? value : value?.total; break;
           case 'currency': dto.currency = value; break;
           case 'startDate': dto.startDate = value; break;
@@ -995,7 +998,7 @@ export class ProjectImportExportService {
         (employeeId && candidate.employeeId === employeeId)
       );
       
-      const stakeholderData = {
+      const stakeholderData: any = {
         projectId,
         stakeholderType: stakeholder.stakeholderType ?? stakeholder.role ?? 'other',
         stakeholderEntityType: (stakeholder.stakeholderEntityType ?? 
