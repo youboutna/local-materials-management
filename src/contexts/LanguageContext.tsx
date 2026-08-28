@@ -5485,6 +5485,8 @@ const PHASE_STRUCTURE_KEYS = {
         'dqe.navigation.list': 'Historique',
         'dqe.navigation.new': 'Nouveau DQE',
         'dqe.navigation.open_history': 'Ouvrir l’historique',
+        'dqe.navigation.select_project': 'Sélectionner un projet',
+        'dqe.navigation.select_project_hint': 'Sélectionnez un projet pour afficher ses expressions de besoin (DQE).',
         'dqe.header.project_ref': 'Projet',
         'dqe.empty.create_hint': 'Aucun document. Créez un DQE pour commencer.',
         'dqe.status.mixed': 'Statuts mixtes',
