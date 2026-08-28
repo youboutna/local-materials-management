@@ -1034,7 +1034,11 @@ export class ProjectImportExportService {
     const existingTasks = phaseId
       ? await this.taskAssignmentService.getByPhase(phaseId)
       : await this.taskAssignmentService.getByProject(projectId);
-    const existingTask = existingTasks.find((candidate) => candidate.name === name);
+    const existingTask = existingTasks.find(
+      (candidate) =>
+        (candidate as { title?: string }).title === name ||
+        (candidate as { name?: string }).name === name,
+    );
 
     let assignees: string[] = [];
 
@@ -1086,6 +1090,7 @@ export class ProjectImportExportService {
     const taskData: Partial<CreateTaskAssignmentDTO> = {
       projectId,
       phaseId: phaseId || undefined,
+      title: name,
       name,
       description: task.description,
       status: normalizedStatus || TaskStatus.PENDING,
