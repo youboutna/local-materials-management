@@ -91,76 +91,112 @@ const Settings = () => {
 
   return (
     <AppLayout pageTitle={t("settings.title")}>
-      <div className="max-w-6xl mx-auto">
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <CardTitle><T k="auto.settings.configuration_providers" fallback="Configuration providers" /></CardTitle>
-                <CardDescription>
-                  <T k="auto.settings.statut_des_providers_actuels_et_compatibilite_de" fallback="Statut des providers actuels et compatibilité de la configuration." />
-                </CardDescription>
-              </div>
-              <Badge variant={isValid ? 'default' : 'destructive'}>
-                {isValid ? 'Configuration valide' : 'Configuration invalide'}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm font-semibold"><T k="auto.settings.auth_provider" fallback="Auth Provider" /></p>
-                <p className="text-sm text-muted-foreground">{config.auth.provider}</p>
-              </div>
-              <div>
-                <p className="text-sm font-semibold"><T k="auto.settings.data_provider" fallback="Data Provider" /></p>
-                <p className="text-sm text-muted-foreground">{config.database.provider}</p>
-              </div>
-              <div>
-                <p className="text-sm font-semibold"><T k="auto.settings.storage_provider" fallback="Storage Provider" /></p>
-                <p className="text-sm text-muted-foreground">{config.storage.provider}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-7xl mx-auto space-y-4">
+        {/* Bandeau de statut compact (remplace la grande carte redondante) */}
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
+          <Badge variant={isValid ? "default" : "destructive"}>
+            {isValid ? "Configuration valide" : "Configuration invalide"}
+          </Badge>
+          <span className="text-muted-foreground">
+            Auth <span className="font-medium text-foreground">{config.auth.provider}</span>
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground">
+            Data <span className="font-medium text-foreground">{config.database.provider}</span>
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground">
+            Storage <span className="font-medium text-foreground">{config.storage.provider}</span>
+          </span>
+        </div>
 
-        <DevModeSettingsCard />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="lg:flex lg:gap-4">
+          {/* Mobile : sélecteur compact */}
+          <div className="sm:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger aria-label="Section des paramètres">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SETTINGS_TABS.map((tab) => (
+                  <SelectItem key={tab.value} value={tab.value}>
+                    {tab.label(t)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
+          {/* Tablette : onglets en grille — Desktop : navigation verticale */}
+          <TabsList className="hidden h-auto w-full flex-wrap justify-start gap-1 p-1 sm:flex lg:w-56 lg:shrink-0 lg:flex-col lg:flex-nowrap lg:items-stretch lg:self-start">
+            {SETTINGS_TABS.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="flex items-center gap-2 whitespace-nowrap lg:w-full lg:justify-start"
+              >
+                <tab.icon className="h-4 w-4 shrink-0" />
+                <span className="truncate">{tab.label(t)}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            {/* Mobile : sélecteur compact — Desktop : onglets qui passent à la ligne */}
-            <div className="mb-6 sm:hidden">
-              <Select value={activeTab} onValueChange={setActiveTab}>
-                <SelectTrigger aria-label="Section des paramètres">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SETTINGS_TABS.map((tab) => (
-                    <SelectItem key={tab.value} value={tab.value}>
-                      {tab.label(t)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <TabsList className="mb-6 hidden h-auto w-full flex-wrap justify-start gap-1 p-1 sm:flex">
-              {SETTINGS_TABS.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="flex items-center gap-2 whitespace-nowrap"
-                >
-                  <tab.icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{tab.label(t)}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-
-            <TabsContent value="appearance">
+          <div className="mt-4 min-w-0 flex-1 lg:mt-0">
+            <TabsContent value="appearance" className="mt-0">
               <AppearanceSettings />
             </TabsContent>
+
+            <TabsContent value="providers" className="mt-0">
+              <ProviderSettings />
+            </TabsContent>
+
+            <TabsContent value="deployment" className="mt-0">
+              <DeploymentSettings />
+            </TabsContent>
+
+            <TabsContent value="database" className="mt-0">
+              <DatabaseSettings />
+            </TabsContent>
+
+            <TabsContent value="storage" className="mt-0">
+              <StorageSettings />
+            </TabsContent>
+
+            <TabsContent value="keycloak" className="mt-0">
+              <KeycloakSettings />
+            </TabsContent>
+
+            <TabsContent value="keycloak-config" className="mt-0">
+              <KeycloakConfigurationTab />
+            </TabsContent>
+
+            <TabsContent value="system" className="mt-0">
+              <EscalationThresholdsSettings />
+            </TabsContent>
+
+            <TabsContent value="alerts" className="mt-0">
+              <AlertsProcessorSettings />
+            </TabsContent>
+
+            <TabsContent value="notifications" className="mt-0">
+              <AdminEmailsSettings />
+            </TabsContent>
+
+            <TabsContent value="local-users" className="mt-0">
+              <LocalUserManagementPanel />
+            </TabsContent>
+
+            <TabsContent value="dev" className="mt-0">
+              <DevModeSettingsCard />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
+    </AppLayout>
+  );
+};
+
+export default Settings;
 
 
             <TabsContent value="providers">
