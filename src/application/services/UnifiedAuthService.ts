@@ -130,6 +130,38 @@ export class UnifiedAuthService {
     };
   }
 
+  /**
+   * Hydrate les rôles applicatifs (public.user_roles) dans la session.
+   * Source de vérité unique des permissions — jamais dérivée du profil.
+   */
+  private static readonly ROLE_PRIORITY = [
+    'super_admin', 'admin', 'director', 'manager', 'project_manager',
+    'consultant', 'engineering_consultant', 'inspector', 'supplier', 'user',
+  ];
+
+  private async hydrateRoles(session: UnifiedAuthSession): Promise<UnifiedAuthSession> {
+    try {
+      const { SupabaseUserRoleAdapter } = await import('@/infrastructure/adapters/supabase/SupabaseUserRoleAdapter');
+      const roles = await new SupabaseUserRoleAdapter().getUserRoles(session.user.id);
+      const roleNames = Array.from(new Set(roles.map((r) => String(r.roleName).toLowerCase()))).filter(Boolean);
+      if (roleNames.length === 0) return session;
+
+      const primary =
+        UnifiedAuthService.ROLE_PRIORITY.find((r) => roleNames.includes(r)) || roleNames[0];
+
+      const user: UnifiedAuthUser = {
+        ...session.user,
+        role: primary,
+        roles: roleNames,
+        user_metadata: { ...(session.user as any).user_metadata, role: primary },
+      };
+      return { ...session, user };
+    } catch (error) {
+      console.warn('UnifiedAuthService.hydrateRoles failed, fallback on session role:', error);
+      return session;
+    }
+  }
+
   // ========== Méthodes publiques ==========
   async getCurrentSession(): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
     if (DEV_MODE) {
@@ -140,7 +172,9 @@ export class UnifiedAuthService {
       const result = await this.authRepository.getCurrentSession();
       if (result.error || !result.session) return { user: null, session: null };
       const profileResult = await this.authRepository.getProfile(result.session.user.id);
-      const unifiedSession = this.toUnifiedSession(result.session, profileResult.profile || undefined);
+      const unifiedSession = await this.hydrateRoles(
+        this.toUnifiedSession(result.session, profileResult.profile || undefined),
+      );
       return { user: unifiedSession.user, session: unifiedSession };
     } catch (error) {
       console.error('UnifiedAuthService.getCurrentSession error:', error);
