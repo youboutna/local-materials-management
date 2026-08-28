@@ -587,6 +587,25 @@ const UnifiedSupplierPortal = () => {
                 ? "Pas de compte ? S'inscrire"
                 : "Déjà inscrit ? Se connecter"}
             </Button>
+
+            {/* Voies d'accès alternatives : le portail ne doit jamais être un cul-de-sac */}
+            <div className="border-t pt-3 space-y-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate('/supplier-access')}
+              >
+                <T k="auto.unifiedsupplierportal.acces_par_code_securise" fallback="Accès par code sécurisé (appel d'offres)" />
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => navigate('/tenders-public')}
+              >
+                <T k="auto.unifiedsupplierportal.consulter_les_appels_d_offres_publics" fallback="Consulter les appels d'offres publics" />
+              </Button>
+            </div>
+
           </CardContent>
         </Card>
       </div>
