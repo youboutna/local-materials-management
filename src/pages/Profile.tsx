@@ -94,7 +94,7 @@ const Profile = () => {
                   {t("roles.user")}
                 </Label>
                 <p className="text-lg">
-                  {user?.user_metadata?.role || t("roles.user")}
+                  {(user as any)?.role || user?.user_metadata?.role || t("roles.user")}
                 </p>
               </div>
               <div>
