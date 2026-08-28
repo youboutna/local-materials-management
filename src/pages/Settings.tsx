@@ -21,14 +21,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  DEV_ROLES,
-  getActiveDevRole,
-  setActiveDevRole,
-} from "@/config/constants";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from '@/hooks/hexagonal/useAuth';
-import { useToast } from "@/hooks/use-toast";
+import { useAppConfig } from '@/hooks/useAppConfig';
+
 import { useAppConfig } from '@/hooks/useAppConfig';
 import {
   AlertTriangle,
