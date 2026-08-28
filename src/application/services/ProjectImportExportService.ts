@@ -1211,8 +1211,8 @@ export class ProjectImportExportService {
         projects: dataset.projects.map((raw) => {
           const entry = raw as ProjectImportRow & { project?: Record<string, unknown> };
           if (entry && typeof entry === 'object' && entry.project && typeof entry.project === 'object') {
-            const { project, ...rest } = entry as Record<string, unknown> & { project: Record<string, unknown> };
-            return { ...(project as object), ...rest } as ProjectImportRow;
+            const { project, ...rest } = entry as unknown as Record<string, unknown> & { project: Record<string, unknown> };
+            return { ...(project as object), ...rest } as unknown as ProjectImportRow;
           }
           return entry;
         }),
@@ -1282,8 +1282,8 @@ export class ProjectImportExportService {
     rows = (rows ?? []).map((raw) => {
       const entry = raw as ProjectImportRow & { project?: Record<string, unknown> };
       if (entry && typeof entry === 'object' && entry.project && typeof entry.project === 'object') {
-        const { project, ...rest } = entry as Record<string, unknown> & { project: Record<string, unknown> };
-        return { ...(project as object), ...rest } as ProjectImportRow;
+        const { project, ...rest } = entry as unknown as Record<string, unknown> & { project: Record<string, unknown> };
+        return { ...(project as object), ...rest } as unknown as ProjectImportRow;
       }
       return entry;
     });
