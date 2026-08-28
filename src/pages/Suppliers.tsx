@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { validateSupplierNif } from "@/domain/entities/Supplier";
 import { useToast } from '@/hooks/use-toast';
 import { useSuppliersHex } from '@/hooks/hexagonal';
 import type { SupplierFormData } from '@/hooks/hexagonal/useSuppliersManagementHex';
@@ -43,6 +44,8 @@ const Suppliers = () => {
   });
   const { toast } = useToast();
   const { t } = useLanguage();
+  const nifError = validateSupplierNif(formData.nif);
+  const isNifLocked = Boolean(editingId && selectedSupplier?.nif);
 
   // Hook hexagonal pour les fournisseurs
   const { 
@@ -74,6 +77,10 @@ const Suppliers = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (nifError) {
+      toast({ title: t('common.error'), description: nifError, variant: 'destructive' });
+      return;
+    }
     try {
       if (editingId) {
         updateSupplier({ id: editingId, data: formData });
@@ -128,6 +135,7 @@ const Suppliers = () => {
       nif: supplier.nif || "",
       commerce_register_ref: supplier.commerceRegisterRef || "",
     });
+    setSelectedSupplier(supplier);
     setEditingId(supplier.id);
     setIsCreating(true);
   };
@@ -339,7 +347,14 @@ const Suppliers = () => {
                       setFormData({ ...formData, nif: e.target.value })
                     }
                     placeholder="Ex: 123456789"
+                    disabled={isNifLocked}
+                    maxLength={20}
+                    aria-invalid={Boolean(nifError)}
+                    className={nifError ? "border-destructive" : undefined}
                   />
+                  {nifError && (
+                    <p className="mt-1 text-xs text-destructive">⚠️ {nifError}</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium">

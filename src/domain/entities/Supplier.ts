@@ -341,7 +341,8 @@ export class Supplier {
 
   private validateNif(nif: string | null): string | null {
     if (!nif) return null;
-    if (nif.length < 8 || nif.length > 20) throw new Error('NIF must be between 8 and 20 characters');
+    const error = validateSupplierNif(nif);
+    if (error) throw new Error(error);
     return nif.trim();
   }
 
@@ -350,4 +351,17 @@ export class Supplier {
     if (!validStatuses.includes(status)) throw new Error(`Invalid supplier status: ${status}`);
     return status;
   }
+}
+
+/** Règles métier NIF (pures) — partagées entre UI et domaine. */
+export const SUPPLIER_NIF_RULES = { MIN_LENGTH: 8, MAX_LENGTH: 20 } as const;
+
+/** Retourne un message d'erreur métier, ou null si le NIF est valide. */
+export function validateSupplierNif(nif?: string | null): string | null {
+  if (!nif || !nif.trim()) return null;
+  const value = nif.trim();
+  if (value.length < SUPPLIER_NIF_RULES.MIN_LENGTH || value.length > SUPPLIER_NIF_RULES.MAX_LENGTH) {
+    return `Le NIF doit contenir entre ${SUPPLIER_NIF_RULES.MIN_LENGTH} et ${SUPPLIER_NIF_RULES.MAX_LENGTH} caractères`;
+  }
+  return null;
 }

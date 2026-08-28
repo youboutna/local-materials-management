@@ -14,6 +14,15 @@ import {
 import { SupplierTransformer } from '@/dtos/transforms/SupplierTransformer';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
+/** Messages métier renvoyés par l'entité Supplier -> ValidationError (et non INTERNAL_ERROR). */
+const VALIDATION_MARKERS = ['NIF', 'email', 'status'];
+
+function toDomainError(error: unknown, fallback: string): AppError {
+  const message = error instanceof Error ? error.message : fallback;
+  const isValidation = VALIDATION_MARKERS.some((marker) => message.includes(marker));
+  return new AppError(isValidation ? ErrorCode.VALIDATION_ERROR : ErrorCode.INTERNAL_ERROR, message);
+}
+
 export class SupplierService {
   constructor(private supplierRepository: ISupplierRepository) {}
 
@@ -102,9 +111,10 @@ export class SupplierService {
       console.log('Supplier created successfully:', id);
       return newSupplier;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create supplier';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+      if (error instanceof AppError) throw error;
+      const appError = toDomainError(error, 'Failed to create supplier');
+      ErrorLogger.log(appError);
+      throw appError;
     }
   }
 
@@ -125,9 +135,10 @@ export class SupplierService {
       const refreshed = await this.supplierRepository.findById(id);
       return refreshed ?? existing;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update supplier';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+      if (error instanceof AppError) throw error;
+      const appError = toDomainError(error, 'Failed to update supplier');
+      ErrorLogger.log(appError);
+      throw appError;
     }
   }
 

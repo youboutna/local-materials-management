@@ -202,15 +202,15 @@ const MergedNavbar = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="container mx-auto px-4 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between min-h-16 gap-4">
+        <div className="flex flex-wrap items-center justify-between min-h-16 gap-2 lg:gap-4">
           {/* Brand */}
-          <Link to="/" className="flex items-center gap-3 flex-shrink-0 min-w-0">
+          <Link to="/" className="flex items-center gap-3 shrink-0 min-w-0 max-w-[55%] lg:max-w-none">
             <BrandIdentity
               size="lg"
               sealBadge
               withBands
               emphasis
-              className="max-w-[220px] sm:max-w-[420px]"
+              className="min-w-0 truncate max-w-[160px] sm:max-w-[240px] lg:max-w-[300px]"
               fallback={
                 <span className="flex items-center gap-2.5">
                   <BrandBands orientation="vertical" className="h-8" />
@@ -221,11 +221,8 @@ const MergedNavbar = () => {
               }
             />
           </Link>
-          {DEV_MODE && (
-            <span className="self-center" onClick={(e) => e.stopPropagation()}>
-              <DevSessionSwitcher />
-            </span>
-          )}
+
+
 
 
           {/* Desktop Navigation - Core Items */}
@@ -407,7 +404,13 @@ const MergedNavbar = () => {
           )}
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-3 flex-shrink-0">
+          <div className="order-last ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
+            {DEV_MODE && (
+              <span className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                <DevSessionSwitcher compact />
+              </span>
+            )}
+
             <LanguageSwitcher />
 
             {isAuthenticated && <NotificationDropdown />}

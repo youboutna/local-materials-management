@@ -183,7 +183,7 @@ const EnhancedSupplierTenderPortal = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { uploadFile } = useDocumentStorage();
-  const { getUser } = useAuth();
+  const { getUser, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   const [searchParams] = useSearchParams();
@@ -683,6 +683,14 @@ const EnhancedSupplierTenderPortal = () => {
                         {/* Display Secret Code for Evaluation Commission */}
                         <SubmissionSecretDisplay submissionId={userSubmission.id} />
                       </>
+                    ) : !(isAuthenticated || hasAccessToTender) ? (
+                      <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                        {t(
+                          'supplier_experience.auth_required',
+                          undefined,
+                          'Authentifiez-vous (compte fournisseur ou code secret) pour accéder au formulaire de soumission.',
+                        )}
+                      </div>
                     ) : (
                       <SupplierSubmissionWizard
                         files={selectedFiles}
@@ -693,7 +701,13 @@ const EnhancedSupplierTenderPortal = () => {
                         blockedReason={
                           canSubmitBid()
                             ? undefined
-                            : t('supplier_experience.status_closed', undefined, 'Soumission fermée')
+                            : submissionWindow.deadline
+                              ? t(
+                                  'supplier_experience.status_closed_deadline',
+                                  undefined,
+                                  `Soumission fermée : la date limite du ${submissionWindow.deadline.toLocaleDateString('fr-FR')} est dépassée.`,
+                                )
+                              : t('supplier_experience.status_closed', undefined, 'Soumission fermée')
                         }
 
                         onAddFiles={handleAddFiles}
