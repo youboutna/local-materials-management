@@ -404,7 +404,13 @@ const MergedNavbar = () => {
           )}
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-3 flex-shrink-0">
+          <div className="order-last ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
+            {DEV_MODE && (
+              <span className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                <DevSessionSwitcher compact />
+              </span>
+            )}
+
             <LanguageSwitcher />
 
             {isAuthenticated && <NotificationDropdown />}
