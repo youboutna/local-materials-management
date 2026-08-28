@@ -1,0 +1,531 @@
+{
+  "metadata": {
+    "source": "2D3DTECH_TEST_DATASET",
+    "version": "1.0.0",
+    "exportedAt": "2026-08-28T10:00:00Z",
+    "referential": "MR_PUBLIC_PROCUREMENT",
+    "totalRows": 3,
+    "author": "2D3DTECH",
+    "description": "Jeu de données de test pour l'import des projets 2D3DTECH"
+  },
+
+  "organizations": [
+    {
+      "id": "org-moudoun-test",
+      "name": "Projet MOUDOUN TEST",
+      "type": "public",
+      "sector": "Assainissement",
+      "description": "Projet d'Assainissement des villes de Kaédi et Rosso - TEST"
+    },
+    {
+      "id": "org-onas-test",
+      "name": "ONAS TEST",
+      "type": "public",
+      "sector": "Assainissement",
+      "description": "Office National de l'Assainissement - TEST"
+    }
+  ],
+
+  "suppliers": [
+    {
+      "id": "sup-2d3dtech-test",
+      "name": "2D3DTECH TEST",
+      "type": "prestataire",
+      "sector": "Ingénierie, Études, SIG",
+      "contactEmail": "test@2d3dtech.mr",
+      "nif": "2D3DTECH-TEST-001"
+    },
+    {
+      "id": "sup-solintelligent-test",
+      "name": "SOL INTELLIGENT TEST",
+      "type": "prestataire",
+      "sector": "Ingénierie, Conseil"
+    },
+    {
+      "id": "sup-cenop-test",
+      "name": "CENOP TEST",
+      "type": "prestataire",
+      "sector": "Ingénierie, Études"
+    }
+  ],
+
+  "employees": [
+    {
+      "id": "emp-chef-test",
+      "email": "chef.test@2d3dtech.mr",
+      "fullName": "Ahmed Ould Mohamed TEST",
+      "position": "Chef de mission TEST",
+      "department": "Direction",
+      "role": "project_manager",
+      "skills": ["Gestion de projet", "Assainissement"]
+    },
+    {
+      "id": "emp-sig-test",
+      "email": "sig.test@2d3dtech.mr",
+      "fullName": "Fatima Mint Ali TEST",
+      "position": "Spécialiste SIG TEST",
+      "department": "SIG",
+      "role": "engineer",
+      "skills": ["SIG", "GPS", "Drone"]
+    },
+    {
+      "id": "emp-controle-test",
+      "email": "controle.test@2d3dtech.mr",
+      "fullName": "Moussa Ould Ahmed TEST",
+      "position": "Ingénieur Contrôle TEST",
+      "department": "Contrôle",
+      "role": "engineer",
+      "skills": ["Contrôle", "Qualité"]
+    }
+  ],
+
+  "projects": [
+    {
+      "importMode": "upsert",
+      "project": {
+        "externalRef": "TEST-PRJ-MOUDOUN-001",
+        "projectReference": "TEST-PRJ-MOUDOUN-001",
+        "title": "TEST - Projet MOUDOUN Assainissement",
+        "description": "TEST - Études et suivi des travaux d'assainissement sans regrets",
+        "organizationId": "org-moudoun-test",
+        "status": "terminé",
+        "progress": 100,
+        "budget": 2964500,
+        "currency": "MRU",
+        "startDate": "2025-10-01",
+        "endDate": "2026-09-01",
+        "location": "Kaédi, Rosso, Mauritanie",
+        "latitude": 16.15,
+        "longitude": -13.5,
+        "teamSize": 6,
+        "financingSource": "Projet MOUDOUN",
+        "marketType": "appel_offre_local",
+        "selectionMode": "prix_le_plus_bas",
+        "projectType": "infrastructure",
+        "referentialCode": "MR_PUBLIC_PROCUREMENT",
+        "launchDate": "2025-07-15",
+        "attributionDate": "2026-01-09",
+        "completionDate": "2026-09-01"
+      },
+
+      "phases": [
+        {
+          "code": "ETUDES_TECHNIQUES",
+          "name": "TEST - Études Techniques",
+          "description": "Études d'assainissement sans regrets",
+          "startDate": "2025-10-01",
+          "endDate": "2025-12-31",
+          "progress": 100,
+          "order": 1,
+          "milestones": [
+            {
+              "title": "TEST - Validation des études",
+              "targetDate": "2025-12-31",
+              "status": "completed",
+              "progress": 100
+            }
+          ],
+          "tasks": [
+            {
+              "title": "TEST - Chef de mission",
+              "status": "completed",
+              "priority": "high",
+              "progress": 100,
+              "startDate": "2025-10-01",
+              "endDate": "2025-12-31",
+              "assignedTo": "emp-chef-test"
+            },
+            {
+              "title": "TEST - Spécialiste SIG",
+              "status": "completed",
+              "priority": "high",
+              "progress": 100,
+              "startDate": "2025-10-01",
+              "endDate": "2025-11-30",
+              "assignedTo": "emp-sig-test"
+            }
+          ],
+          "dqeLines": [
+            {
+              "btpCode": "ETUDES_TECH",
+              "designation": "TEST - Études techniques",
+              "unit": "U",
+              "quantity": 1,
+              "unitPrice": 800000,
+              "category": "PRESTATIONS",
+              "dqeType": "CONSEIL",
+              "status": "validated"
+            }
+          ]
+        },
+        {
+          "code": "SUIVI_TRAVAUX",
+          "name": "TEST - Suivi des Travaux",
+          "description": "Suivi et contrôle des travaux",
+          "startDate": "2026-01-01",
+          "endDate": "2026-06-30",
+          "progress": 100,
+          "order": 2,
+          "milestones": [
+            {
+              "title": "TEST - Fin du suivi",
+              "targetDate": "2026-06-30",
+              "status": "completed",
+              "progress": 100
+            }
+          ],
+          "tasks": [
+            {
+              "title": "TEST - Chef de mission",
+              "status": "completed",
+              "priority": "high",
+              "progress": 100,
+              "startDate": "2026-01-01",
+              "endDate": "2026-06-30",
+              "assignedTo": "emp-chef-test"
+            },
+            {
+              "title": "TEST - Ingénieur contrôle",
+              "status": "completed",
+              "priority": "high",
+              "progress": 100,
+              "startDate": "2026-01-01",
+              "endDate": "2026-06-30",
+              "assignedTo": "emp-controle-test"
+            }
+          ],
+          "dqeLines": [
+            {
+              "btpCode": "SUIVI_TRAVAUX",
+              "designation": "TEST - Suivi des travaux",
+              "unit": "U",
+              "quantity": 1,
+              "unitPrice": 1200000,
+              "category": "PRESTATIONS",
+              "dqeType": "CONTROLE",
+              "status": "validated"
+            }
+          ]
+        }
+      ],
+
+      "stakeholders": [
+        {
+          "stakeholderType": "project_manager",
+          "stakeholderEntityType": "employee",
+          "employeeId": "emp-chef-test",
+          "roleDescription": "TEST - Chef de mission",
+          "isPrimary": true
+        },
+        {
+          "stakeholderType": "engineer",
+          "stakeholderEntityType": "employee",
+          "employeeId": "emp-sig-test",
+          "roleDescription": "TEST - Spécialiste SIG",
+          "isPrimary": false
+        },
+        {
+          "stakeholderType": "supplier",
+          "stakeholderEntityType": "supplier",
+          "supplierId": "sup-cenop-test",
+          "roleDescription": "TEST - Groupement CENOP / 2D3DTECH / SOL INTELLIGENT",
+          "isPrimary": false
+        }
+      ],
+
+      "interventionZones": [
+        {
+          "type": "polygon",
+          "coordinates": [
+            { "lat": 16.2, "lng": -13.6 },
+            { "lat": 16.3, "lng": -13.4 },
+            { "lat": 16.1, "lng": -13.3 },
+            { "lat": 16.0, "lng": -13.5 }
+          ],
+          "label": "TEST - Kaédi - Rosso",
+          "address": "Kaédi, Rosso",
+          "areaSqm": 5000000,
+          "regionCode": "04",
+          "cityCode": "KAEDI-ROSSO"
+        }
+      ]
+    },
+
+    {
+      "importMode": "upsert",
+      "project": {
+        "externalRef": "TEST-PRJ-ONAS-001",
+        "projectReference": "TEST-PRJ-ONAS-001",
+        "title": "TEST - Projet ONAS Modernisation",
+        "description": "TEST - Suivi et contrôle des travaux d'extension du réseau d'assainissement",
+        "organizationId": "org-onas-test",
+        "status": "terminé",
+        "progress": 100,
+        "budget": 6665000,
+        "currency": "MRU",
+        "startDate": "2025-06-01",
+        "endDate": "2026-06-01",
+        "location": "Nouakchott, Mauritanie",
+        "latitude": 18.0735,
+        "longitude": -15.9582,
+        "teamSize": 8,
+        "financingSource": "ONAS",
+        "marketType": "appel_offre_local",
+        "selectionMode": "prix_le_plus_bas",
+        "projectType": "infrastructure",
+        "referentialCode": "MR_PUBLIC_PROCUREMENT",
+        "launchDate": "2025-04-01",
+        "attributionDate": "2025-05-15",
+        "completionDate": "2026-06-01"
+      },
+
+      "phases": [
+        {
+          "code": "CONTROLE_TRAVAUX",
+          "name": "TEST - Contrôle des Travaux",
+          "description": "TEST - Suivi et contrôle",
+          "startDate": "2025-06-01",
+          "endDate": "2026-06-01",
+          "progress": 100,
+          "order": 1,
+          "milestones": [
+            {
+              "title": "TEST - Contrôle terminé",
+              "targetDate": "2026-06-01",
+              "status": "completed",
+              "progress": 100
+            }
+          ],
+          "tasks": [
+            {
+              "title": "TEST - Chef de mission",
+              "status": "completed",
+              "priority": "high",
+              "progress": 100,
+              "startDate": "2025-06-01",
+              "endDate": "2026-06-01",
+              "assignedTo": "emp-chef-test"
+            },
+            {
+              "title": "TEST - Ingénieur contrôle",
+              "status": "completed",
+              "priority": "high",
+              "progress": 100,
+              "startDate": "2025-06-01",
+              "endDate": "2026-06-01",
+              "assignedTo": "emp-controle-test"
+            }
+          ],
+          "dqeLines": [
+            {
+              "btpCode": "CONTROLE_TRAVAUX",
+              "designation": "TEST - Suivi et contrôle",
+              "unit": "U",
+              "quantity": 1,
+              "unitPrice": 5000000,
+              "category": "PRESTATIONS",
+              "dqeType": "CONTROLE",
+              "status": "validated"
+            }
+          ]
+        }
+      ],
+
+      "stakeholders": [
+        {
+          "stakeholderType": "project_manager",
+          "stakeholderEntityType": "employee",
+          "employeeId": "emp-chef-test",
+          "roleDescription": "TEST - Chef de mission",
+          "isPrimary": true
+        },
+        {
+          "stakeholderType": "engineer",
+          "stakeholderEntityType": "employee",
+          "employeeId": "emp-controle-test",
+          "roleDescription": "TEST - Ingénieur contrôle",
+          "isPrimary": false
+        },
+        {
+          "stakeholderType": "supplier",
+          "stakeholderEntityType": "supplier",
+          "supplierId": "sup-2d3dtech-test",
+          "roleDescription": "TEST - 2D3DTECH",
+          "isPrimary": false
+        }
+      ],
+
+      "interventionZones": [
+        {
+          "type": "polygon",
+          "coordinates": [
+            { "lat": 18.08, "lng": -15.96 },
+            { "lat": 18.09, "lng": -15.94 },
+            { "lat": 18.07, "lng": -15.92 },
+            { "lat": 18.06, "lng": -15.95 }
+          ],
+          "label": "TEST - Nouakchott",
+          "address": "Nouakchott",
+          "areaSqm": 500000,
+          "regionCode": "13",
+          "cityCode": "NOUAKCHOTT"
+        }
+      ]
+    },
+
+    {
+      "importMode": "partial_update",
+      "project": {
+        "externalRef": "TEST-PRJ-PDA-001",
+        "projectReference": "TEST-PRJ-PDA-001",
+        "title": "TEST - Projet PDA Hydraulique",
+        "description": "TEST - Projet PDA LOT 1 DA",
+        "organizationId": "org-moudoun-test",
+        "status": "en_cours",
+        "progress": 40,
+        "budget": 7991561.9,
+        "currency": "MRU",
+        "startDate": "2025-12-01",
+        "endDate": "2027-06-01",
+        "location": "Mauritanie",
+        "latitude": 18.0,
+        "longitude": -12.0,
+        "teamSize": 10,
+        "financingSource": "État",
+        "marketType": "appel_offre_local",
+        "selectionMode": "prix_le_plus_bas",
+        "projectType": "infrastructure",
+        "referentialCode": "MR_PUBLIC_PROCUREMENT",
+        "launchDate": "2025-11-11",
+        "attributionDate": "2026-01-15",
+        "completionDate": "2027-06-01"
+      },
+
+      "phases": [
+        {
+          "code": "ETUDES_TECHNIQUES",
+          "name": "TEST - Études Hydrauliques",
+          "description": "TEST - Études techniques",
+          "startDate": "2025-12-01",
+          "endDate": "2026-03-31",
+          "progress": 80,
+          "order": 1,
+          "milestones": [
+            {
+              "title": "TEST - Validation des études",
+              "targetDate": "2026-03-31",
+              "status": "in_progress",
+              "progress": 80
+            }
+          ],
+          "tasks": [
+            {
+              "title": "TEST - Chef de mission",
+              "status": "in_progress",
+              "priority": "high",
+              "progress": 80,
+              "startDate": "2025-12-01",
+              "endDate": "2026-03-31",
+              "assignedTo": "emp-chef-test"
+            },
+            {
+              "title": "TEST - Spécialiste SIG",
+              "status": "in_progress",
+              "priority": "high",
+              "progress": 80,
+              "startDate": "2025-12-01",
+              "endDate": "2026-02-28",
+              "assignedTo": "emp-sig-test"
+            }
+          ],
+          "dqeLines": [
+            {
+              "btpCode": "ETUDES_HYDRO",
+              "designation": "TEST - Études hydrauliques",
+              "unit": "U",
+              "quantity": 1,
+              "unitPrice": 2000000,
+              "category": "PRESTATIONS",
+              "dqeType": "CONSEIL",
+              "status": "validated"
+            }
+          ]
+        },
+        {
+          "code": "SUIVI_TRAVAUX",
+          "name": "TEST - Suivi des Travaux",
+          "description": "TEST - Suivi et contrôle",
+          "startDate": "2026-04-01",
+          "endDate": "2027-05-31",
+          "progress": 10,
+          "order": 2,
+          "milestones": [
+            {
+              "title": "TEST - Démarrage des travaux",
+              "targetDate": "2026-05-01",
+              "status": "pending",
+              "progress": 0
+            }
+          ],
+          "tasks": [
+            {
+              "title": "TEST - Chef de mission",
+              "status": "pending",
+              "priority": "high",
+              "progress": 0,
+              "startDate": "2026-04-01",
+              "endDate": "2027-05-31",
+              "assignedTo": "emp-chef-test"
+            }
+          ],
+          "dqeLines": [
+            {
+              "btpCode": "SUIVI_HYDRO",
+              "designation": "TEST - Suivi des travaux",
+              "unit": "U",
+              "quantity": 1,
+              "unitPrice": 3000000,
+              "category": "PRESTATIONS",
+              "dqeType": "CONTROLE",
+              "status": "draft"
+            }
+          ]
+        }
+      ],
+
+      "stakeholders": [
+        {
+          "stakeholderType": "project_manager",
+          "stakeholderEntityType": "employee",
+          "employeeId": "emp-chef-test",
+          "roleDescription": "TEST - Chef de mission",
+          "isPrimary": true
+        },
+        {
+          "stakeholderType": "supplier",
+          "stakeholderEntityType": "supplier",
+          "supplierId": "sup-solintelligent-test",
+          "roleDescription": "TEST - Groupement 2D3DTECH / SOL INTELLIGENT",
+          "isPrimary": false
+        }
+      ],
+
+      "interventionZones": [
+        {
+          "type": "polygon",
+          "coordinates": [
+            { "lat": 18.0, "lng": -12.1 },
+            { "lat": 18.1, "lng": -11.9 },
+            { "lat": 17.9, "lng": -11.8 },
+            { "lat": 17.8, "lng": -12.0 }
+          ],
+          "label": "TEST - Mauritanie",
+          "address": "Mauritanie",
+          "areaSqm": 10000000,
+          "regionCode": "00",
+          "cityCode": "MAURITANIE"
+        }
+      ]
+    }
+  ]
+}
