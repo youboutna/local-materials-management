@@ -231,7 +231,7 @@ export class UnifiedAuthService {
       );
       if (userInfo.picture) profile.updateAvatarUrl(userInfo.picture);
       await this.authRepository.upsertProfile(profile);
-      const unifiedSession = this.toUnifiedSession(signInResult.session, profile);
+      const unifiedSession = await this.hydrateRoles(this.toUnifiedSession(signInResult.session, profile));
       return { user: unifiedSession.user, session: unifiedSession };
     } catch (error) {
       console.error('UnifiedAuthService.loginWithOAuth failed:', error);
