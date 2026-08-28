@@ -5,14 +5,51 @@ const isDevelopment = isBrowser
   ? window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
   : false;
 
-export const DEV_MODE =
+/**
+ * Override administrateur du mode DEV (persisté par DevModeService).
+ * Le fichier `.env` n'est plus la seule source : un administrateur peut
+ * activer/désactiver le mode DEV depuis /settings sans redéploiement.
+ */
+export const DEV_MODE_OVERRIDE_KEY = "hadratech.dev_mode_override";
+
+const readDevModeOverride = (): boolean | null => {
+  if (!isBrowser) return null;
+  try {
+    const raw = window.localStorage.getItem(DEV_MODE_OVERRIDE_KEY);
+    if (raw === "true") return true;
+    if (raw === "false") return false;
+  } catch {
+    /* stockage indisponible */
+  }
+  return null;
+};
+
+const envDevMode =
   (isBrowser && (window as any).__APP_CONFIG__?.DEV_MODE === "true") ||
   // NOTE: must stay as a literal `import.meta.env.X` access — Vite only
   // statically replaces this exact form (aliasing or `import.meta?.env`
   // yields undefined in the browser bundle).
   import.meta.env?.VITE_DEV_MODE === "true" ||
   false;
+
+export const DEV_MODE = readDevModeOverride() ?? envDevMode;
+
+/** Lecture du réglage administrateur courant (null = valeur .env utilisée). */
+export const getDevModeOverride = (): boolean | null => readDevModeOverride();
+
+/** Écriture du réglage administrateur (appelée uniquement par DevModeService). */
+export const setDevModeOverride = (enabled: boolean | null): void => {
+  if (!isBrowser) return;
+  try {
+    if (enabled === null) window.localStorage.removeItem(DEV_MODE_OVERRIDE_KEY);
+    else window.localStorage.setItem(DEV_MODE_OVERRIDE_KEY, String(enabled));
+  } catch {
+    /* stockage indisponible */
+  }
+};
+
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
+
 
 // Development-mode user registry (local accounts, overridable via localStorage)
 export interface DevUserProfile {

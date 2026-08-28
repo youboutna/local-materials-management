@@ -16,6 +16,8 @@ export interface DevModeStateDTO {
   mode: DevModeCode;
   /** DEV_MODE activé au niveau de la configuration (env / runtime config). */
   devModeEnabled: boolean;
+  /** Origine du réglage : ADMIN (override persisté) ou ENV (.env / runtime config). */
+  devModeSource: 'ADMIN' | 'ENV';
   /** Rôle DEV actif (uniquement pertinent en mode LOCAL). */
   activeRole: string | null;
   /** Adaptateur d'authentification réellement instancié. */
