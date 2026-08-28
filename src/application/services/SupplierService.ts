@@ -111,9 +111,10 @@ export class SupplierService {
       console.log('Supplier created successfully:', id);
       return newSupplier;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create supplier';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+      if (error instanceof AppError) throw error;
+      const appError = toDomainError(error, 'Failed to create supplier');
+      ErrorLogger.log(appError);
+      throw appError;
     }
   }
 
@@ -134,9 +135,10 @@ export class SupplierService {
       const refreshed = await this.supplierRepository.findById(id);
       return refreshed ?? existing;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update supplier';
-      ErrorLogger.log(new AppError(ErrorCode.INTERNAL_ERROR, errorMessage));
-      throw new AppError(ErrorCode.INTERNAL_ERROR, errorMessage);
+      if (error instanceof AppError) throw error;
+      const appError = toDomainError(error, 'Failed to update supplier');
+      ErrorLogger.log(appError);
+      throw appError;
     }
   }
 
