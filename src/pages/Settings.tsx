@@ -145,50 +145,8 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        {isDevelopmentMode && (
-            <Card className="mb-8 border-warning/30 bg-warning/10">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="mr-2 h-5 w-5" />
-                  {t("settings.dev_mode_active")}
-                </CardTitle>
-                <CardDescription>{t("settings.dev_mode_desc")}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-4">
-                  <p className="font-medium">
-                    {t("settings.current_role")}:{" "}
-                    <span className="text-warning"><TranslatedRole code={activeDevRole.role} /></span>
-                  </p>
+        <DevModeSettingsCard />
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {DEV_ROLES.map((roleOption) => (
-                      <Button
-                        key={roleOption.role}
-                        variant={
-                          roleOption.role === activeDevRole.role
-                            ? "default"
-                            : "outline"
-                        }
-                        className={
-                          roleOption.role === activeDevRole.role
-                            ? "bg-amber-600 hover:bg-amber-700"
-                            : ""
-                        }
-                        onClick={() => handleRoleChange(roleOption.role)}
-                      >
-                        <TranslatedRole code={roleOption.role} />
-                      </Button>
-                    ))}
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    {activeDevRole.description}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             {/* Mobile : sélecteur compact — Desktop : onglets qui passent à la ligne */}
