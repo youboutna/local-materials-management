@@ -32,7 +32,26 @@ const envDevMode =
   import.meta.env?.VITE_DEV_MODE === "true" ||
   false;
 
-export const DEV_MODE = readDevModeOverride() ?? envDevMode;
+/**
+ * Mode DEV dynamique — à préférer à la constante `DEV_MODE` dans tout code
+ * exécuté après le démarrage (adaptateurs, services, UI) afin de refléter
+ * immédiatement une surcharge administrateur.
+ */
+export const isDevMode = (): boolean => readDevModeOverride() ?? envDevMode;
+
+/** Valeur figée au chargement du module (compatibilité ascendante). */
+export const DEV_MODE = isDevMode();
+
+/** Mode hors-ligne complet (DEV_USERS, aucun appel réseau). */
+export const IS_LOCAL_BYPASS =
+  ((isBrowser && (window as any).__APP_CONFIG__?.APP_MODE) ||
+    import.meta.env?.VITE_APP_MODE) === 'local-bypass';
+
+/** La déconnexion est masquée uniquement en mode local-bypass. */
+export const ENABLE_LOGOUT = !IS_LOCAL_BYPASS;
+
+export const APP_NAME = import.meta.env?.VITE_APP_NAME || 'HadraTech-GPI';
+export const APP_VERSION = import.meta.env?.VITE_APP_VERSION || '1.0.0';
 
 /** Lecture du réglage administrateur courant (null = valeur .env utilisée). */
 export const getDevModeOverride = (): boolean | null => readDevModeOverride();
