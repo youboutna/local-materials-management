@@ -1,11 +1,27 @@
+// src/dtos/entities/EmployeeDTO.ts
+// VERSION CORRIGÉE v2.0 - Support pour l'import
+// 
+// Modifications:
+// 1. Ajout du champ externalRef pour support des références externes
+// 2. Ajout du champ employeeId comme alias pour l'ID employé
+// 3. Ajout des champs manquants pour l'import (fullName, firstName, lastName)
+// 4. Extension du champ skills pour support des compétences
+// 5. Ajout des champs certifications avec structure complète
+// 6. Ajout des DTOs d'import spécifiques
+
 /**
+ * EmployeeDTO.ts
  * Employee Data Transfer Objects
  * Centralized and standardized for hexagonal architecture
  * Following clean code principles: camelCase only, no business logic
  */
 
-import { BaseEntityDTO, ContactInfoDTO } from '../shared';
 import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
+import { BaseEntityDTO, ContactInfoDTO } from '../shared';
+
+// =============================================================================
+// Enums (inchangés)
+// =============================================================================
 
 /**
  * Employee status enumeration
@@ -47,7 +63,11 @@ export enum EmployeeRole {
   SPECIALIST = 'specialist',
   COORDINATOR = 'coordinator',
   SUPERVISOR = 'supervisor',
-  MANAGER = 'manager'
+  MANAGER = 'manager',
+  // NOUVEAUX rôles 
+  EXPERT = 'expert',
+  ENGINEER = 'engineer',
+  TECHNICIAN = 'technician'
 }
 
 /**
@@ -68,13 +88,21 @@ export enum EmployeeDepartment {
   LEGAL = 'legal',
   PROCUREMENT = 'procurement',
   MAINTENANCE = 'maintenance',
-  SECURITY = 'security'
+  SECURITY = 'security',
+  // NOUVEAUX départements pour 
+  DIRECTION = 'direction',
+  EXPLOITATION = 'exploitation',
+  SUIVI = 'suivi',
+  CONTROLE = 'controle',
+  SIG = 'sig',
+  TERRAIN = 'terrain',
+  JURIDIQUE = 'juridique'
 }
 
-/**
- * Main Employee DTO
- * Core employee data structure
- */
+// =============================================================================
+// Main Employee DTO - AVEC CHAMPS COMPLETS
+// =============================================================================
+
 export interface EmployeeDTO extends BaseEntityDTO {
   // Core identification
   id: string;
@@ -83,19 +111,20 @@ export interface EmployeeDTO extends BaseEntityDTO {
   fullName?: string;
   email?: string;
   phone?: string;
-  isActive?:boolean;
+  isActive?: boolean;
   nationalId?: string;
   userId?: string | null;
+
+  // NOUVEAU - Référence externe pour l'import
+  externalRef?: string;
 
   // Organisation & organigramme
   organizationId?: string | null;
   organizationName?: string;
   managerId?: string | null;
   superiorId?: string | null;
-  /** Intitulé du poste dans l'organigramme (btp.organizational_hierarchy) */
   positionTitle?: string;
   hierarchyLevel?: number;
-
 
   // Classification
   type: EmployeeType;
@@ -110,6 +139,7 @@ export interface EmployeeDTO extends BaseEntityDTO {
   startDate?: string;
   endDate?: string;
   probationEndDate?: string;
+
   // Financial
   salary?: number;
   hourlyRate?: number;
@@ -117,9 +147,9 @@ export interface EmployeeDTO extends BaseEntityDTO {
   bonus?: number;
   benefits?: string[];
 
-  // Skills and qualifications
+  // Skills and qualifications - AVEC STRUCTURE COMPLÈTE
   skills?: string[];
-  certifications?: string[];
+  certifications?: CertificationDTO[];
   education?: Array<{
     degree: string;
     institution: string;
@@ -170,10 +200,77 @@ export interface EmployeeDTO extends BaseEntityDTO {
   updatedAt: string;
 }
 
+// =============================================================================
+// Certification DTO - NOUVEAU
+// =============================================================================
+
+export interface CertificationDTO {
+  id?: string;
+  name: string;
+  issuer?: string;
+  date?: string;
+  expiryDate?: string;
+  certificateId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+// =============================================================================
+// Employee Import DTO - NOUVEAU pour l'import
+// =============================================================================
+
 /**
- * Employee creation request interface
- * Input for creating new employees
+ * Employee import interface
+ * Input for importing employees from external sources
  */
+export interface EmployeeImportDTO {
+  // Identifiants
+  id: string;
+  employeeId?: string;
+  externalRef?: string;
+
+  // Identité
+  email: string;
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+
+  // Contact
+  phone?: string;
+
+  // Poste
+  position?: string;
+  department?: string;
+  role?: string;
+  type?: string;
+
+  // Compétences
+  skills?: string[];
+  certifications?: CertificationImportDTO[];
+
+  // Statut
+  isActive?: boolean;
+  status?: string;
+
+  // Image
+  avatar?: string;
+}
+
+// =============================================================================
+// Certification Import DTO - NOUVEAU
+// =============================================================================
+
+export interface CertificationImportDTO {
+  name: string;
+  issuer?: string;
+  date?: string;
+  expiryDate?: string;
+  certificateId?: string;
+}
+
+// =============================================================================
+// Employee Creation DTO (inchangé avec ajouts)
+// =============================================================================
+
 export interface CreateEmployeeDTO {
   firstName: string;
   lastName: string;
@@ -203,7 +300,7 @@ export interface CreateEmployeeDTO {
   bonus?: number;
   benefits?: string[];
   skills?: string[];
-  certifications?: string[];
+  certifications?: CertificationDTO[];
   education?: Array<{
     degree: string;
     institution: string;
@@ -237,12 +334,15 @@ export interface CreateEmployeeDTO {
   avatar?: string;
   tags?: string[];
   notes?: string;
+  // NOUVEAU
+  externalRef?: string;
+  isActive?: boolean;
 }
 
-/**
- * Employee update request interface
- * Input for updating existing employees
- */
+// =============================================================================
+// Employee Update DTO (inchangé avec ajouts)
+// =============================================================================
+
 export interface UpdateEmployeeDTO {
   firstName?: string;
   lastName?: string;
@@ -274,7 +374,7 @@ export interface UpdateEmployeeDTO {
   bonus?: number;
   benefits?: string[];
   skills?: string[];
-  certifications?: string[];
+  certifications?: CertificationDTO[];
   education?: Array<{
     degree: string;
     institution: string;
@@ -308,16 +408,18 @@ export interface UpdateEmployeeDTO {
   avatar?: string;
   tags?: string[];
   notes?: string;
+  // NOUVEAU
+  externalRef?: string;
 
   // Metadata
   updatedBy?: string;
   changeReason?: string;
 }
 
-/**
- * Employee summary interface (base)
- * Lightweight employee representation for lists
- */
+// =============================================================================
+// Employee Summary (inchangé)
+// =============================================================================
+
 export interface EmployeeSummaryDTOBase extends BaseEntityDTO {
   id: string;
   type: EmployeeType;
@@ -329,10 +431,10 @@ export interface EmployeeSummaryDTOBase extends BaseEntityDTO {
   fullName?: string;
 }
 
-/**
- * Employee statistics interface
- * Performance metrics for employee management
- */
+// =============================================================================
+// Employee Statistics (inchangé)
+// =============================================================================
+
 export interface EmployeeStatisticsDTO {
   totalEmployees: number;
   activeEmployees: number;
@@ -348,10 +450,10 @@ export interface EmployeeStatisticsDTO {
   lastUpdated?: string;
 }
 
-/**
- * Employee skill interface
- * Employee skill tracking data
- */
+// =============================================================================
+// Employee Skill (inchangé)
+// =============================================================================
+
 export interface EmployeeSkillDTO {
   id: string;
   employeeId: string;
@@ -366,10 +468,10 @@ export interface EmployeeSkillDTO {
   updatedAt: string;
 }
 
-/**
- * Employee project assignment interface
- * Project assignment tracking data
- */
+// =============================================================================
+// Employee Project Assignment (inchangé)
+// =============================================================================
+
 export interface EmployeeProjectAssignmentDTO {
   id: string;
   employeeId: string;
@@ -388,10 +490,10 @@ export interface EmployeeProjectAssignmentDTO {
   updatedAt: string;
 }
 
-/**
- * Employee filter interface
- * Filter criteria for employee queries
- */
+// =============================================================================
+// Employee Filter (inchangé)
+// =============================================================================
+
 export interface EmployeeFilterDTO {
   department?: EmployeeDepartment;
   role?: EmployeeRole;
@@ -412,10 +514,10 @@ export interface EmployeeFilterDTO {
   };
 }
 
-/**
- * Employee details interface
- * Extended employee data structure
- */
+// =============================================================================
+// Employee Details (inchangé)
+// =============================================================================
+
 export interface EmployeeDetailsDTO extends EmployeeDTO {
   contactInfo?: ContactInfoDTO;
   managerDetails?: {
@@ -434,7 +536,6 @@ export interface EmployeeDetailsDTO extends EmployeeDTO {
     averageCompletionTime: number;
     qualityScore: number;
   };
-  // Detailed documents with metadata (inherits basic documents from EmployeeDTO)
   documentDetails?: Array<{
     id: string;
     name: string;
@@ -443,7 +544,10 @@ export interface EmployeeDetailsDTO extends EmployeeDTO {
   }>;
 }
 
-// Add search-related interfaces
+// =============================================================================
+// Search Interfaces (inchangé)
+// =============================================================================
+
 export interface SearchEmployeesOptions {
   searchTerm?: string;
   departmentFilter?: string[];
@@ -458,10 +562,12 @@ export interface SearchEmployeesResult {
   total: number;
 }
 
-// Legacy compatibility types from transforms (avoid conflicts with enum)
+// =============================================================================
+// Legacy Compatibility (inchangé)
+// =============================================================================
+
 export type EmployeeDepartmentLegacy = 'engineering' | 'construction' | 'quality' | 'administration' | 'finance' | 'procurement';
 
-// Legacy request DTOs for backward compatibility
 export interface CreateEmployeeRequestDTO {
   fullName: string;
   position?: string;
@@ -494,18 +600,194 @@ export interface UserResponseDto {
   updatedAt: string;
 }
 
-/** Libellés multilingues de EmployeeStatus (référentiel i18n — code technique inchangé). */
+// =============================================================================
+// Libellés multilingues (inchangé)
+// =============================================================================
+
 export const EMPLOYEE_STATUS_LABELS: Readonly<Record<EmployeeStatus, EnumLabel>> =
     ENUM_LABELS.EmployeeStatus as Readonly<Record<EmployeeStatus, EnumLabel>>;
 
-/** Libellés multilingues de EmployeeType (référentiel i18n — code technique inchangé). */
 export const EMPLOYEE_TYPE_LABELS: Readonly<Record<EmployeeType, EnumLabel>> =
     ENUM_LABELS.EmployeeType as Readonly<Record<EmployeeType, EnumLabel>>;
 
-/** Libellés multilingues de EmployeeRole (référentiel i18n — code technique inchangé). */
 export const EMPLOYEE_ROLE_LABELS: Readonly<Record<EmployeeRole, EnumLabel>> =
     ENUM_LABELS.EmployeeRole as Readonly<Record<EmployeeRole, EnumLabel>>;
 
-/** Libellés multilingues de EmployeeDepartment (référentiel i18n — code technique inchangé). */
 export const EMPLOYEE_DEPARTMENT_LABELS: Readonly<Record<EmployeeDepartment, EnumLabel>> =
     ENUM_LABELS.EmployeeDepartment as Readonly<Record<EmployeeDepartment, EnumLabel>>;
+
+// =============================================================================
+// NOUVEAU - Transformateur pour l'import
+// =============================================================================
+
+export class EmployeeImportTransformer {
+  /**
+   * Normalise un email
+   */
+  static normalizeEmail(email?: string): string | undefined {
+    if (!email) return undefined;
+    return email.trim().toLowerCase();
+  }
+
+  /**
+   * Normalise un nom complet
+   */
+  static normalizeFullName(fullName?: string): string | undefined {
+    if (!fullName) return undefined;
+    return fullName.trim();
+  }
+
+  /**
+   * Normalise un prénom
+   */
+  static normalizeFirstName(firstName?: string): string | undefined {
+    if (!firstName) return undefined;
+    return firstName.trim();
+  }
+
+  /**
+   * Normalise un nom de famille
+   */
+  static normalizeLastName(lastName?: string): string | undefined {
+    if (!lastName) return undefined;
+    return lastName.trim();
+  }
+
+  /**
+   * Normalise un département
+   */
+  static normalizeDepartment(department?: string): EmployeeDepartment | undefined {
+    if (!department) return undefined;
+    const normalized = department.toLowerCase().trim();
+    const mapping: Record<string, EmployeeDepartment> = {
+      'engineering': EmployeeDepartment.ENGINEERING,
+      'construction': EmployeeDepartment.ENGINEERING,
+      'qualite': EmployeeDepartment.QUALITY_ASSURANCE,
+      'quality': EmployeeDepartment.QUALITY_ASSURANCE,
+      'administration': EmployeeDepartment.ADMINISTRATION,
+      'finance': EmployeeDepartment.FINANCE,
+      'comptabilite': EmployeeDepartment.FINANCE,
+      'achat': EmployeeDepartment.PROCUREMENT,
+      'procurement': EmployeeDepartment.PROCUREMENT,
+      'exploitation': EmployeeDepartment.EXPLOITATION,
+      'suivi': EmployeeDepartment.SUIVI,
+      'controle': EmployeeDepartment.CONTROLE,
+      'sig': EmployeeDepartment.SIG,
+      'terrain': EmployeeDepartment.TERRAIN,
+      'juridique': EmployeeDepartment.JURIDIQUE,
+      'direction': EmployeeDepartment.DIRECTION,
+      'hr': EmployeeDepartment.HUMAN_RESOURCES,
+      'rh': EmployeeDepartment.HUMAN_RESOURCES,
+    };
+    return mapping[normalized] || EmployeeDepartment.ADMINISTRATION;
+  }
+
+  /**
+   * Normalise un rôle
+   */
+  static normalizeRole(role?: string): EmployeeRole | undefined {
+    if (!role) return undefined;
+    const normalized = role.toLowerCase().trim();
+    const mapping: Record<string, EmployeeRole> = {
+      'project_manager': EmployeeRole.PROJECT_MANAGER,
+      'project manager': EmployeeRole.PROJECT_MANAGER,
+      'chef de projet': EmployeeRole.PROJECT_MANAGER,
+      'expert': EmployeeRole.EXPERT,
+      'ingenieur': EmployeeRole.ENGINEER,
+      'engineer': EmployeeRole.ENGINEER,
+      'technicien': EmployeeRole.TECHNICIAN,
+      'technician': EmployeeRole.TECHNICIAN,
+      'supervisor': EmployeeRole.SUPERVISOR,
+      'superviseur': EmployeeRole.SUPERVISOR,
+      'consultant': EmployeeRole.CONSULTANT,
+      'specialiste': EmployeeRole.SPECIALIST,
+      'specialist': EmployeeRole.SPECIALIST,
+      'manager': EmployeeRole.MANAGER,
+      'coordinateur': EmployeeRole.COORDINATOR,
+      'coordinator': EmployeeRole.COORDINATOR,
+    };
+    return mapping[normalized] || EmployeeRole.EMPLOYEE;
+  }
+
+  /**
+   * Transforme un EmployeeImportDTO en CreateEmployeeDTO
+   */
+  static toCreateEmployeeDTO(importDTO: EmployeeImportDTO): CreateEmployeeDTO {
+    const fullName = importDTO.fullName || `${importDTO.firstName || ''} ${importDTO.lastName || ''}`.trim();
+    const firstName = importDTO.firstName || fullName.split(' ')[0] || '';
+    const lastName = importDTO.lastName || fullName.split(' ').slice(1).join(' ') || '';
+
+    return {
+      employeeId: importDTO.employeeId || importDTO.id || `EMP-${Date.now().toString().slice(-6)}`,
+      email: this.normalizeEmail(importDTO.email) || '',
+      fullName: fullName || importDTO.email || '',
+      firstName: firstName || '',
+      lastName: lastName || '',
+      phone: importDTO.phone,
+      position: importDTO.position,
+      department: this.normalizeDepartment(importDTO.department) || EmployeeDepartment.ADMINISTRATION,
+      role: this.normalizeRole(importDTO.role) || EmployeeRole.EMPLOYEE,
+      type: EmployeeType.FULL_TIME,
+      status: EmployeeStatus.ACTIVE,
+      skills: importDTO.skills || [],
+      certifications: importDTO.certifications?.map(c => ({
+        name: c.name,
+        issuer: c.issuer,
+        date: c.date,
+        expiryDate: c.expiryDate,
+        certificateId: c.certificateId,
+      })) || [],
+      isActive: importDTO.isActive !== false,
+      externalRef: importDTO.externalRef || importDTO.id,
+      avatar: importDTO.avatar,
+    };
+  }
+
+  /**
+   * Transforme un EmployeeImportDTO en UpdateEmployeeDTO
+   */
+  static toUpdateEmployeeDTO(importDTO: EmployeeImportDTO): UpdateEmployeeDTO {
+    const updates: UpdateEmployeeDTO = {};
+
+    if (importDTO.fullName) updates.fullName = importDTO.fullName;
+    if (importDTO.firstName) updates.firstName = importDTO.firstName;
+    if (importDTO.lastName) updates.lastName = importDTO.lastName;
+    if (importDTO.email) updates.email = this.normalizeEmail(importDTO.email);
+    if (importDTO.phone) updates.phone = importDTO.phone;
+    if (importDTO.position) updates.position = importDTO.position;
+    if (importDTO.department) updates.department = this.normalizeDepartment(importDTO.department);
+    if (importDTO.role) updates.role = this.normalizeRole(importDTO.role);
+    if (importDTO.skills) updates.skills = importDTO.skills;
+    if (importDTO.certifications) {
+      updates.certifications = importDTO.certifications.map(c => ({
+        name: c.name,
+        issuer: c.issuer,
+        date: c.date,
+        expiryDate: c.expiryDate,
+        certificateId: c.certificateId,
+      }));
+    }
+    if (importDTO.isActive !== undefined) updates.isActive = importDTO.isActive;
+    if (importDTO.externalRef) updates.externalRef = importDTO.externalRef;
+    if (importDTO.avatar) updates.avatar = importDTO.avatar;
+
+    return updates;
+  }
+
+  /**
+   * Trouve un employé existant par email ou référence externe
+   */
+  static findExisting(
+    importDTO: EmployeeImportDTO,
+    existingEmployees: EmployeeDTO[]
+  ): EmployeeDTO | null {
+    const email = this.normalizeEmail(importDTO.email);
+    const externalRef = importDTO.externalRef || importDTO.id;
+
+    return existingEmployees.find(emp =>
+      (email && emp.email?.toLowerCase() === email) ||
+      (externalRef && emp.externalRef === externalRef) ||
+      (importDTO.employeeId && emp.employeeId === importDTO.employeeId)
+    ) || null;
+  }
+}

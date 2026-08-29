@@ -1,3 +1,14 @@
+// src/dtos/transforms/MilestoneTransformer.ts
+// VERSION CORRIGÉE v2.0 - Support pour l'import
+// 
+// Modifications:
+// 1. Ajout de la méthode fromImportData pour transformer les données d'import
+// 2. Ajout de la méthode toImportData pour exporter en format d'import
+// 3. Ajout de la méthode normalizeImportData pour normaliser les données d'import
+// 4. Support complet de materialUsage dans les transformations
+// 5. Support des champs priority, type, weight, stageType, deliverables, dependencies
+// 6. Support des alias snake_case/camelCase pour l'import
+
 /**
  * Milestone Transformer - Hexagonal Architecture
  * Handles transformations between layers in hexagonal architecture
@@ -10,24 +21,31 @@
  * - Rule #3: Transformer pattern applied (Entity ↔ DTO conversion)
  * - Rule #4: Domain purity maintained (no DTOs in entities)
  * - Rule #5: UI/DOMAIN separation (clean boundaries)
+ * 
+ * VERSION CORRIGÉE v2.0 - Support import 2D3DTECH
  */
 
 import {
-    MaterialUsage,
-    Milestone,
-    MilestoneDeliverable,
-    MilestoneDependency,
-    MilestoneStatus
+  MaterialUsage,
+  Milestone,
+  MilestoneDeliverable,
+  MilestoneDependency,
+  MilestoneStatus
 } from '@/domain/entities/Milestone';
 import {
-    MilestonePriority as DTOPriority,
-    MilestoneStatus as DTOStatus,
-    MilestoneDTO,
-    MilestoneType
+  MilestonePriority as DTOPriority,
+  MilestoneStatus as DTOStatus,
+  MilestoneDTO,
+  MilestoneImportDTO,
+  MilestoneImportTransformer,
+  MilestoneType
 } from '@/dtos/entities/MilestoneDTO';
 import { UserRoleDTO } from '@/dtos/entities/UserDTO';
 
-// Request DTOs for API
+// =============================================================================
+// REQUEST DTOs
+// =============================================================================
+
 export interface CreateMilestoneRequestDTO {
   projectId: string;
   phaseId?: string;
@@ -71,9 +89,14 @@ export interface UpdateMilestoneRequestDTO {
   actualMaterialCost?: number;
 }
 
+// =============================================================================
+// MILESTONE TRANSFORMER - VERSION CORRIGÉE
+// =============================================================================
+
 export class MilestoneTransformer {
   
-  // =================== DATABASE ↔ DOMAIN ===================  
+  // =================== DATABASE ↔ DOMAIN ===================
+  
   /**
    * Supabase Row → Domain Model
    * Following hexagonal architecture: Infrastructure → Application → Domain
@@ -85,7 +108,7 @@ export class MilestoneTransformer {
       dependencies.push(...row.dependencies.map((dep: any, index: number) => ({
         id: `${row.id}_dep_${index}`,
         type: 'finish_to_start' as const,
-        description: `Dependency on milestone ${dep}`
+        description: dep
       })));
     }
 
@@ -124,7 +147,7 @@ export class MilestoneTransformer {
         phaseId: (row.phase_id as string) || undefined,
         stageType: (row.stage_type as string) || undefined,
         notes: (row.notes as string) || undefined,
-        weight: (row.weight as number) ||1,
+        weight: (row.weight as number) || 1,
         isCritical: (row.is_critical as boolean) || false,
         type: (row.type as MilestoneType) || 'checkpoint',
         priority: (row.priority as DTOPriority) || 'normal',
@@ -180,6 +203,8 @@ export class MilestoneTransformer {
     };
   }
 
+  // =================== LEGACY TRANSFORMATIONS ===================
+  
   static toLegacyFormat(dto: MilestoneDTO): Record<string, unknown> {
     return {
       id: dto.id,
@@ -462,6 +487,237 @@ export class MilestoneTransformer {
     };
   }
 
+  // =================== NOUVEAU - IMPORT TRANSFORMATIONS ===================
+
+  /**
+   * Import Data → Domain Model
+   * Following hexagonal architecture: Import → DTOs → Application → Domain
+   * 
+   * @param importData - Données d'import normalisées
+   * @param projectId - ID du projet
+   * @param id - ID du jalon (optionnel, généré si non fourni)
+   * @returns Milestone - Entité domaine
+   */
+  static fromImportData(importData: MilestoneImportDTO, projectId: string, id?: string): Milestone {
+    const normalized = this.normalizeImportData(importData);
+    const milestoneId = id || `milestone-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    // Normaliser le statut
+    const status = MilestoneImportTransformer.normalizeStatus(importData.status) || 'pending';
+    const priority = MilestoneImportTransformer.normalizePriority(importData.priority) || 'normal';
+    const type = MilestoneImportTransformer.normalizeType(importData.type) || 'checkpoint';
+
+    // Normaliser les dates
+    const targetDate = MilestoneImportTransformer.normalizeDate(
+      importData.target_date ?? importData.targetDate
+    ) || new Date().toISOString();
+    
+    const completionDate = MilestoneImportTransformer.normalizeDate(
+      importData.completion_date ?? importData.completionDate
+    );
+
+    // Extraire les dépendances
+    const dependencies: MilestoneDependency[] = [];
+    if (importData.dependencies) {
+      dependencies.push(...importData.dependencies.map((dep, index) => ({
+        id: `${milestoneId}_dep_${index}`,
+        type: 'finish_to_start' as const,
+        description: dep
+      })));
+    }
+
+    // Extraire les livrables
+    const deliverables: MilestoneDeliverable[] = [];
+    if (importData.deliverables) {
+      deliverables.push(...importData.deliverables.map((del, index) => ({
+        id: `${milestoneId}_del_${index}`,
+        name: del,
+        description: '',
+        status: 'pending' as const,
+        dueDate: targetDate,
+        assignedTo: undefined
+      })));
+    }
+
+    // Extraire le materialUsage
+    const materialUsage = importData.materialUsage || [];
+
+    return new Milestone(
+      milestoneId,
+      projectId,
+      MilestoneImportTransformer.normalizeTitle(importData.title || importData.name || 'Jalon importé'),
+      importData.description || null,
+      targetDate,
+      completionDate || null,
+      status,
+      priority,
+      importData.progress ?? importData.progressPercent ?? null,
+      dependencies,
+      deliverables,
+      null, // assignedTo
+      null, // createdBy
+      new Date().toISOString(),
+      new Date().toISOString(),
+      {
+        templateId: undefined,
+        constructionPhase: undefined,
+        phaseId: importData.phaseId,
+        stageType: importData.stageType ?? importData.stage_type,
+        notes: importData.notes,
+        weight: importData.weight || 1,
+        isCritical: priority === 'critical',
+        type: type,
+        priority: priority,
+        tags: [],
+        predecessorIds: importData.dependencies || [],
+        expectedDeliverables: importData.deliverables || [],
+        approvalRequirements: [],
+        relativeOffsetDays: 0
+      },
+      materialUsage,
+      importData.materialCostEstimate ?? null,
+      importData.actualMaterialCost ?? null
+    );
+  }
+
+  /**
+   * Import Data → Supabase Insert Object
+   * Following hexagonal architecture: Import → Application → Infrastructure
+   */
+  static importToSupabase(importData: MilestoneImportDTO, projectId: string): Record<string, unknown> {
+    const now = new Date().toISOString();
+    const normalized = this.normalizeImportData(importData);
+    
+    const targetDate = MilestoneImportTransformer.normalizeDate(
+      importData.target_date ?? importData.targetDate
+    ) || new Date().toISOString();
+    
+    const completionDate = MilestoneImportTransformer.normalizeDate(
+      importData.completion_date ?? importData.completionDate
+    );
+
+    return {
+      project_id: projectId,
+      phase_id: importData.phaseId,
+      title: MilestoneImportTransformer.normalizeTitle(importData.title || importData.name || 'Jalon importé'),
+      description: importData.description,
+      target_date: targetDate,
+      completion_date: completionDate || null,
+      status: MilestoneImportTransformer.normalizeStatus(importData.status) || 'pending',
+      priority: MilestoneImportTransformer.normalizePriority(importData.priority) || 'normal',
+      weight: importData.weight || 1,
+      type: MilestoneImportTransformer.normalizeType(importData.type) || 'checkpoint',
+      is_critical: (MilestoneImportTransformer.normalizePriority(importData.priority) || 'normal') === 'critical',
+      dependencies: importData.dependencies || [],
+      deliverables: importData.deliverables || [],
+      tags: [],
+      approval_requirements: [],
+      stage_type: importData.stageType ?? importData.stage_type,
+      notes: importData.notes,
+      material_usage: importData.materialUsage || [],
+      material_cost_estimate: importData.materialCostEstimate,
+      actual_material_cost: importData.actualMaterialCost,
+      external_ref: importData.externalRef,
+      created_at: now,
+      updated_at: now
+    };
+  }
+
+  /**
+   * Normalise les données d'import - NOUVEAU
+   */
+  static normalizeImportData(importData: MilestoneImportDTO): MilestoneImportDTO {
+    return {
+      externalRef: importData.externalRef,
+      phaseId: importData.phaseId,
+      title: MilestoneImportTransformer.normalizeTitle(importData.title || importData.name),
+      name: importData.name,
+      description: importData.description,
+      targetDate: MilestoneImportTransformer.normalizeDate(importData.target_date ?? importData.targetDate),
+      target_date: MilestoneImportTransformer.normalizeDate(importData.target_date ?? importData.targetDate),
+      completionDate: MilestoneImportTransformer.normalizeDate(importData.completion_date ?? importData.completionDate),
+      completion_date: MilestoneImportTransformer.normalizeDate(importData.completion_date ?? importData.completionDate),
+      status: importData.status,
+      progress: importData.progress ?? importData.progressPercent ?? 0,
+      progressPercent: importData.progress ?? importData.progressPercent ?? 0,
+      priority: importData.priority,
+      type: importData.type,
+      stageType: importData.stageType ?? importData.stage_type,
+      stage_type: importData.stageType ?? importData.stage_type,
+      weight: importData.weight,
+      dependencies: importData.dependencies || [],
+      deliverables: importData.deliverables || [],
+      notes: importData.notes,
+      materialUsage: importData.materialUsage || [],
+      materialCostEstimate: importData.materialCostEstimate,
+      actualMaterialCost: importData.actualMaterialCost,
+      metadata: importData.metadata
+    };
+  }
+
+  /**
+   * Domain Model → Import Data - NOUVEAU
+   * Pour l'export au format d'import
+   */
+  static toImportData(milestone: Milestone): MilestoneImportDTO {
+    return {
+      externalRef: milestone.configuration.templateId,
+      phaseId: milestone.configuration.phaseId,
+      title: milestone.title,
+      name: milestone.title,
+      description: milestone.description || undefined,
+      targetDate: milestone.targetDate || undefined,
+      target_date: milestone.targetDate || undefined,
+      completionDate: milestone.completionDate || undefined,
+      completion_date: milestone.completionDate || undefined,
+      status: milestone.status,
+      progress: milestone.progressPercentage || 0,
+      progressPercent: milestone.progressPercentage || 0,
+      priority: milestone.configuration.priority,
+      type: milestone.configuration.type,
+      stageType: milestone.configuration.stageType,
+      stage_type: milestone.configuration.stageType,
+      weight: milestone.configuration.weight,
+      dependencies: milestone.dependencies.map(dep => dep.description),
+      deliverables: milestone.deliverables.map(del => del.name),
+      notes: milestone.configuration.notes,
+      materialUsage: milestone.materialUsage,
+      materialCostEstimate: milestone.materialCostEstimate ?? undefined,
+      actualMaterialCost: milestone.actualMaterialCost ?? undefined
+    };
+  }
+
+  /**
+   * DTO → Import Data - NOUVEAU
+   */
+  static dtoToImportData(dto: MilestoneDTO): MilestoneImportDTO {
+    return {
+      externalRef: dto.templateId,
+      phaseId: dto.phaseId,
+      title: dto.title,
+      name: dto.title,
+      description: dto.description,
+      targetDate: dto.targetDate,
+      target_date: dto.targetDate,
+      completionDate: dto.completionDate,
+      completion_date: dto.completionDate,
+      status: dto.status,
+      progress: dto.progress,
+      progressPercent: dto.progress,
+      priority: dto.priority,
+      type: dto.type,
+      stageType: dto.stageType,
+      stage_type: dto.stageType,
+      weight: dto.weight,
+      dependencies: dto.dependencies,
+      deliverables: dto.deliverables,
+      notes: dto.notes,
+      materialUsage: dto.materialUsage,
+      materialCostEstimate: dto.materialCostEstimate,
+      actualMaterialCost: dto.actualMaterialCost
+    };
+  }
+
   // =================== UI ↔ DTO ===================
   
   /**
@@ -484,7 +740,12 @@ export class MilestoneTransformer {
       assignedTo: formData.assignedTo as string,
       tags: Array.isArray(formData.tags) ? formData.tags as string[] : [],
       templateId: formData.templateId as string,
-      approvalRequirements: Array.isArray(formData.approvalRequirements) ? formData.approvalRequirements as string[] : []
+      approvalRequirements: Array.isArray(formData.approvalRequirements) ? formData.approvalRequirements as string[] : [],
+      stageType: formData.stageType as string,
+      notes: formData.notes as string,
+      materialUsage: formData.materialUsage as MaterialUsage[],
+      materialCostEstimate: formData.materialCostEstimate as number,
+      actualMaterialCost: formData.actualMaterialCost as number
     };
   }
 
@@ -512,7 +773,6 @@ export class MilestoneTransformer {
       canEdit: dto.status !== 'completed',
       canDelete: dto.status === 'pending',
       canComplete: ['pending', 'in_progress'].includes(dto.status as 'pending' | 'in_progress' | 'completed' | 'delayed'),
-      // Visual indicators
       badgeVariant: this.getBadgeVariant(dto.status, daysRemaining),
       icon: this.getStatusIcon(dto.status)
     };
@@ -537,7 +797,10 @@ export class MilestoneTransformer {
       assignedTo: formData.assignedTo as string,
       progressPercentage: Number(formData.progressPercentage) || 0,
       notes: formData.notes as string,
-      tags: Array.isArray(formData.tags) ? formData.tags as string[] : []
+      tags: Array.isArray(formData.tags) ? formData.tags as string[] : [],
+      materialUsage: formData.materialUsage as MaterialUsage[],
+      materialCostEstimate: formData.materialCostEstimate as number,
+      actualMaterialCost: formData.actualMaterialCost as number
     };
   }
 
@@ -569,6 +832,23 @@ export class MilestoneTransformer {
    */
   static manyFromDTO(dtos: MilestoneDTO[]): Milestone[] {
     return dtos.map(dto => this.fromDTO(dto));
+  }
+
+  /**
+   * Multiple Import Data → Domain Models - NOUVEAU
+   */
+  static manyFromImportData(
+    importDataList: MilestoneImportDTO[],
+    projectId: string
+  ): Milestone[] {
+    return importDataList.map(data => this.fromImportData(data, projectId));
+  }
+
+  /**
+   * Multiple Domain Models → Import Data - NOUVEAU
+   */
+  static manyToImportData(milestones: Milestone[]): MilestoneImportDTO[] {
+    return milestones.map(milestone => this.toImportData(milestone));
   }
 
   // =================== ENUM CONVERSIONS ===================
@@ -687,3 +967,5 @@ export class MilestoneTransformer {
     };
   }
 }
+
+export default MilestoneTransformer;

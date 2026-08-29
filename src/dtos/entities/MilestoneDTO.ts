@@ -1,13 +1,32 @@
+// src/dtos/entities/MilestoneDTO.ts
+// VERSION CORRIGÉE v2.0 - Support pour l'import
+// 
+// Modifications:
+// 1. Ajout du champ externalRef pour support des références externes
+// 2. Ajout du champ progressPercent comme alias de progress
+// 3. Ajout du champ target_date comme alias de targetDate (support snake_case)
+// 4. Ajout du champ completion_date comme alias de completionDate (support snake_case)
+// 5. Ajout du champ stageType pour support des types de stage
+// 6. Ajout du champ deliverables en tant que tableau
+// 7. Support complet de materialUsage avec MaterialUsageDTO
+// 8. Ajout des champs materialCostEstimate et actualMaterialCost
+// 9. Ajout de l'interface MilestoneImportDTO pour l'import
+
 /**
  * MilestoneDTO - Centralized DTO Structure
  * Following PROMPTS.md naming conventions and hexagonal architecture
  * 
  * Jalon de projet avec méthodologie PM (Waterfall, PERT, CPM)
+ * VERSION CORRIGÉE v2.0 - Support import 2D3DTECH
  */
 
 import { UserRoleDTO } from "./UserDTO";
 
-export type MilestoneStatus = 'pending' | 'in_progress' | 'completed' | 'delayed';
+// =============================================================================
+// TYPES DE BASE
+// =============================================================================
+
+export type MilestoneStatus = 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled';
 
 /**
  * Milestone type according to PM standards
@@ -27,10 +46,21 @@ export type MilestoneType = 'gate' | 'deliverable' | 'checkpoint' | 'event';
  */
 export type MilestonePriority = 'critical' | 'high' | 'normal' | 'low';
 
-/**
- * Milestone template in a referential (used for auto-generation)
- * Aligned with Waterfall phase-gate methodology
- */
+// =============================================================================
+// MATERIAL USAGE DTO - NOUVEAU
+// =============================================================================
+
+export interface MaterialUsageDTO {
+  materialId: string;
+  plannedQuantity: number;
+  usedQuantity: number;
+  unitCost?: number;
+}
+
+// =============================================================================
+// MILESTONE TEMPLATE DTO
+// =============================================================================
+
 export interface MilestoneTemplateDTO {
   id: string;
   name: string;
@@ -53,73 +83,102 @@ export interface MilestoneTemplateDTO {
   deliverables?: string[];
   /** Approval requirements for gate milestones */
   approvalRequirements?: string[];
-  requiresInspection?: true;
+  requiresInspection?: boolean;
 }
+
+// =============================================================================
+// MILESTONE DTO - VERSION COMPLÈTE
+// =============================================================================
 
 /**
  * Milestone instance attached to a phase
  * Supports full PERT/CPM scheduling with dependencies
- * Database DTO format (snake_case)
+ * Database DTO format (snake_case) + CamelCase pour l'UI
  */
 export interface MilestoneDTO {
-  assignedTo: UserRoleDTO;
-  createdBy: UserRoleDTO;
-  completedate: string | number | Date;
-
+  // Identifiants
   id: string;
   projectId: string;
   phaseId?: string;
+  externalRef?: string; // NOUVEAU - Support références externes
+
+  // Informations Générales
   title: string;
   description?: string;
+  
+  // Dates
   targetDate: string;
+  /** Alias snake_case pour targetDate - NOUVEAU */
+  target_date?: string;
   /** Earliest start date (PERT forward pass) */
   earlyStartDate?: string;
   /** Latest finish date without delay (PERT backward pass) */
   lateFinishDate?: string;
   completionDate?: string;
+  /** Alias snake_case pour completionDate - NOUVEAU */
+  completion_date?: string;
+  /** Alias pour completionDate (legacy) */
+  completedate?: string;
+  
+  // Statut et Progression
   status: MilestoneStatus;
-  /** Milestone type */
+  progress?: number;
+  /** Alias pour progress - NOUVEAU */
+  progressPercent?: number;
+  
+  // Classification
   type: MilestoneType;
-  /** Priority level */
   priority: MilestonePriority;
-  /** Stage category for workflow grouping */
+  /** Stage category for workflow grouping - NOUVEAU */
   stageType?: string;
+  /** Alias pour stageType - NOUVEAU */
+  stage_type?: string;
+  
+  // Poids et Métriques
   weight: number;
-  notes?: string;
-  /** Whether from referential template or custom */
-  isFromTemplate: boolean;
-  templateId?: string;
-  /** Predecessor milestone IDs (FS - Finish-to-Start dependencies) */
-  dependencies?: string[];
   /** Float/slack time in days (0 = critical path) */
   floatDays?: number;
   /** Is on critical path */
   isOnCriticalPath?: boolean;
-  /** Deliverables list */
+  
+  // Notes
+  notes?: string;
+  
+  // Template
+  isFromTemplate: boolean;
+  templateId?: string;
+  
+  // Dépendances et Livrables
+  /** Predecessor milestone IDs (FS - Finish-to-Start dependencies) */
+  dependencies?: string[];
+  /** Deliverables list - NOUVEAU */
   deliverables?: string[];
-  /** Approval status for gate milestones */
+  
+  // Approbation
   approvalStatus?: 'pending' | 'approved' | 'rejected' | 'not_applicable';
-  /** Approved by user ID */
   approvedBy?: string;
-  /** Approval date */
   approvalDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  
+  // ============================================
+  // NOUVEAU - Support materialUsage
+  // ============================================
   materialUsage?: MaterialUsageDTO[];
   materialCostEstimate?: number;
   actualMaterialCost?: number;
+  
+  // Assignation
+  assignedTo: UserRoleDTO;
+  createdBy: UserRoleDTO;
+  
+  // Métadonnées
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface MaterialUsageDTO {
-  materialId: string;
-  plannedQuantity: number;
-  usedQuantity: number;
-  unitCost?: number;
-}
+// =============================================================================
+// MILESTONE SUMMARY DTO
+// =============================================================================
 
-/**
- * Summary for timeline views (Gantt chart compatible)
- */
 export interface MilestoneSummaryDTO {
   id: string;
   title: string;
@@ -128,19 +187,18 @@ export interface MilestoneSummaryDTO {
   status: MilestoneStatus;
   type: MilestoneType;
   priority: MilestonePriority;
-  phaseDame?: string;
+  phaseName?: string;
   phaseId?: string;
   weight: number;
   isCritical?: boolean;
-  /** Float days for scheduling visualization */
   floatDays?: number;
-  /** Percent complete (0-100) for in-progress milestones */
   percentComplete?: number;
 }
 
-/**
- * Form data for creating/updating milestones
- */
+// =============================================================================
+// MILESTONE FORM DTO
+// =============================================================================
+
 export interface MilestoneFormDTO {
   title: string;
   description?: string;
@@ -154,66 +212,137 @@ export interface MilestoneFormDTO {
   dependencies?: string[];
 }
 
-/**
- * Progress summary for a phase based on milestones
- * Aligned with Earned Value Management (EVM) concepts
- */
+// =============================================================================
+// MILESTONE PROGRESS DTO
+// =============================================================================
+
 export interface MilestoneProgressDTO {
   totalMilestones: number;
   completedMilestones: number;
   delayedMilestones: number;
-  /** Weighted progress (0-100) */
   weightedProgress: number;
-  /** Schedule Performance Index (SPI) = Earned Value / Planned Value */
   schedulePerformanceIndex?: number;
-  /** Critical path status */
   criticalPathStatus: 'on_track' | 'at_risk' | 'delayed';
-  /** Days of float remaining on critical path */
   criticalPathFloatDays?: number;
   nextMilestone?: MilestoneSummaryDTO;
   overdueMilestones: MilestoneSummaryDTO[];
-  /** Upcoming milestones in next 14 days */
   upcomingMilestones: MilestoneSummaryDTO[];
 }
 
-/**
- * PERT estimation for milestone duration
- */
+// =============================================================================
+// PERT ESTIMATE DTO
+// =============================================================================
+
 export interface PERTEstimateDTO {
   milestoneId: string;
-  /** Optimistic duration (days) */
   optimistic: number;
-  /** Most likely duration (days) */
   mostLikely: number;
-  /** Pessimistic duration (days) */
   pessimistic: number;
-  /** Expected duration = (O + 4M + P) / 6 */
   expectedDuration: number;
-  /** Standard deviation = (P - O) / 6 */
   standardDeviation: number;
 }
 
-/**
- * Critical path analysis result
- */
+// =============================================================================
+// CRITICAL PATH DTO
+// =============================================================================
+
 export interface CriticalPathDTO {
   projectId: string;
-  /** List of milestone IDs on critical path */
   criticalPathMilestones: string[];
-  /** Total project duration based on critical path */
   totalDurationDays: number;
-  /** Project end date based on critical path */
   estimatedEndDate: string;
-  /** Near-critical paths (float < 5 days) */
   nearCriticalPaths: Array<{
     milestones: string[];
     floatDays: number;
   }>;
 }
 
-/**
- * Milestone role in phase gate methodology
- */
+// =============================================================================
+// GENERATED MILESTONE DTO
+// =============================================================================
+
+export interface GeneratedMilestoneDTO {
+  title: string;
+  description?: string;
+  targetDate: string;
+  type: 'gate' | 'deliverable' | 'checkpoint' | 'event';
+  priority: 'critical' | 'high' | 'normal' | 'low';
+  weight: number;
+  deliverables?: string[];
+  dependencies?: string[];
+  phaseId: string;
+  requiresInspection?: boolean;
+  inspectionType?: string;
+  templateId?: string;
+  phaseCode?: string;
+}
+
+// =============================================================================
+// MILESTONE IMPORT DTO - NOUVEAU POUR L'IMPORT 2D3DTECH
+// =============================================================================
+
+export interface MilestoneImportDTO {
+  // Identifiants
+  externalRef?: string;
+  phaseId?: string;
+  
+  // Informations Générales
+  title: string;
+  name?: string;
+  description?: string;
+  
+  // Dates
+  targetDate?: string;
+  target_date?: string;
+  completionDate?: string;
+  completion_date?: string;
+  
+  // Statut et Progression
+  status?: string;
+  progress?: number;
+  progressPercent?: number;
+  
+  // Priorité et Type
+  priority?: string;
+  type?: string;
+  stageType?: string;
+  stage_type?: string;
+  
+  // Poids et Dépendances
+  weight?: number;
+  dependencies?: string[];
+  deliverables?: string[];
+  
+  // Notes
+  notes?: string;
+  
+  // ============================================
+  // Support materialUsage - NOUVEAU
+  // ============================================
+  materialUsage?: MaterialUsageDTO[];
+  materialCostEstimate?: number;
+  actualMaterialCost?: number;
+  
+  // Métadonnées
+  metadata?: Record<string, unknown>;
+}
+
+// =============================================================================
+// MILESTONE STATUS LABELS
+// =============================================================================
+
+export const MILESTONE_STATUS_LABELS: Record<MilestoneStatus, string> = {
+  pending: 'En attente',
+  in_progress: 'En cours',
+  completed: 'Terminé',
+  delayed: 'En retard',
+  cancelled: 'Annulé'
+};
+
+// =============================================================================
+// MILESTONE TYPE CONFIGURATION
+// =============================================================================
+
 export const MILESTONE_TYPES: Record<MilestoneType, { label: string; description: string; icon: string }> = {
   gate: {
     label: 'Point de décision',
@@ -237,9 +366,10 @@ export const MILESTONE_TYPES: Record<MilestoneType, { label: string; description
   }
 };
 
-/**
- * Priority labels and colors
- */
+// =============================================================================
+// MILESTONE PRIORITY CONFIGURATION
+// =============================================================================
+
 export const MILESTONE_PRIORITIES: Record<MilestonePriority, { label: string; color: string }> = {
   critical: { label: 'Critique', color: 'destructive' },
   high: { label: 'Haute', color: 'warning' },
@@ -247,192 +377,167 @@ export const MILESTONE_PRIORITIES: Record<MilestonePriority, { label: string; co
   low: { label: 'Basse', color: 'secondary' }
 };
 
-/**
- * Generated Milestone DTO
- * Used for milestone generation from templates
- */
-export interface GeneratedMilestoneDTO {
-  title: string;
-  description?: string;
-  targetDate: string;
-  type: 'gate' | 'deliverable' | 'checkpoint' | 'event';
-  priority: 'critical' | 'high' | 'normal' | 'low';
-  weight: number;
-  deliverables?: string[];
-  dependencies?: string[];
-  phaseId: string;
-  requiresInspection?: boolean;
-  inspectionType?: string;
-  templateId?: string;
-  phaseCode?: string;
+// =============================================================================
+// MILESTONE TRANSFORMER - NOUVEAU
+// =============================================================================
+
+export class MilestoneImportTransformer {
+  /**
+   * Normalise un titre de jalon
+   */
+  static normalizeTitle(title?: string): string {
+    return title?.trim() || 'Jalon sans titre';
+  }
+
+  /**
+   * Normalise une date de jalon
+   */
+  static normalizeDate(date?: string): string | undefined {
+    if (!date) return undefined;
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return undefined;
+      return d.toISOString();
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Normalise le statut d'un jalon
+   */
+  static normalizeStatus(status?: string): MilestoneStatus | undefined {
+    if (!status) return undefined;
+    const normalized = status.toLowerCase().trim();
+    const mapping: Record<string, MilestoneStatus> = {
+      'planifie': 'pending',
+      'planned': 'pending',
+      'en_cours': 'in_progress',
+      'en cours': 'in_progress',
+      'in_progress': 'in_progress',
+      'termine': 'completed',
+      'terminé': 'completed',
+      'completed': 'completed',
+      'overdue': 'delayed',
+      'delayed': 'delayed',
+      'en_retard': 'delayed',
+      'annule': 'cancelled',
+      'annulé': 'cancelled',
+      'cancelled': 'cancelled',
+    };
+    return mapping[normalized] || 'pending';
+  }
+
+  /**
+   * Normalise la priorité d'un jalon
+   */
+  static normalizePriority(priority?: string): MilestonePriority | undefined {
+    if (!priority) return undefined;
+    const normalized = priority.toLowerCase().trim();
+    const mapping: Record<string, MilestonePriority> = {
+      'low': 'low',
+      'medium': 'normal',
+      'high': 'high',
+      'critical': 'critical',
+      'haute': 'high',
+      'elevee': 'high',
+      'élevée': 'high',
+      'moyenne': 'normal',
+      'basse': 'low',
+      'faible': 'low',
+      'normal': 'normal',
+    };
+    return mapping[normalized] || 'normal';
+  }
+
+  /**
+   * Normalise le type d'un jalon
+   */
+  static normalizeType(type?: string): MilestoneType | undefined {
+    if (!type) return undefined;
+    const normalized = type.toLowerCase().trim();
+    const mapping: Record<string, MilestoneType> = {
+      'gate': 'gate',
+      'deliverable': 'deliverable',
+      'checkpoint': 'checkpoint',
+      'event': 'event',
+      'point de decision': 'gate',
+      'decision': 'gate',
+      'livrable': 'deliverable',
+      'controle': 'checkpoint',
+      'evenement': 'event',
+      'evenement cle': 'event',
+      'evenement clé': 'event',
+    };
+    return mapping[normalized] || 'checkpoint';
+  }
+
+  /**
+   * Transforme un MilestoneImportDTO en données de création
+   */
+  static toCreateData(importData: MilestoneImportDTO, projectId: string): any {
+    const targetDate = this.normalizeDate(importData.target_date ?? importData.targetDate) || new Date().toISOString();
+    const completionDate = this.normalizeDate(importData.completion_date ?? importData.completionDate);
+
+    return {
+      projectId,
+      phaseId: importData.phaseId,
+      title: this.normalizeTitle(importData.title || importData.name),
+      description: importData.description,
+      targetDate,
+      completionDate,
+      status: this.normalizeStatus(importData.status) || 'pending',
+      progress: importData.progress ?? importData.progressPercent ?? 0,
+      priority: this.normalizePriority(importData.priority) || 'normal',
+      type: this.normalizeType(importData.type) || 'checkpoint',
+      weight: importData.weight ?? 0.2,
+      notes: importData.notes,
+      stageType: importData.stageType ?? importData.stage_type,
+      deliverables: importData.deliverables || [],
+      dependencies: importData.dependencies || [],
+      externalRef: importData.externalRef,
+      materialUsage: importData.materialUsage,
+      materialCostEstimate: importData.materialCostEstimate,
+      actualMaterialCost: importData.actualMaterialCost,
+    };
+  }
+
+  /**
+   * Transforme un MilestoneImportDTO en données de mise à jour
+   */
+  static toUpdateData(importData: MilestoneImportDTO): any {
+    const updates: any = {};
+
+    if (importData.title || importData.name) {
+      updates.title = this.normalizeTitle(importData.title || importData.name);
+    }
+    if (importData.description) updates.description = importData.description;
+    if (importData.target_date || importData.targetDate) {
+      updates.targetDate = this.normalizeDate(importData.target_date ?? importData.targetDate);
+    }
+    if (importData.completion_date || importData.completionDate) {
+      updates.completionDate = this.normalizeDate(importData.completion_date ?? importData.completionDate);
+    }
+    if (importData.status) updates.status = this.normalizeStatus(importData.status);
+    if (importData.progress !== undefined || importData.progressPercent !== undefined) {
+      updates.progress = importData.progress ?? importData.progressPercent;
+    }
+    if (importData.priority) updates.priority = this.normalizePriority(importData.priority);
+    if (importData.type) updates.type = this.normalizeType(importData.type);
+    if (importData.weight !== undefined) updates.weight = importData.weight;
+    if (importData.notes) updates.notes = importData.notes;
+    if (importData.stageType || importData.stage_type) {
+      updates.stageType = importData.stageType ?? importData.stage_type;
+    }
+    if (importData.deliverables) updates.deliverables = importData.deliverables;
+    if (importData.dependencies) updates.dependencies = importData.dependencies;
+    if (importData.externalRef) updates.externalRef = importData.externalRef;
+    if (importData.materialUsage) updates.materialUsage = importData.materialUsage;
+    if (importData.materialCostEstimate !== undefined) updates.materialCostEstimate = importData.materialCostEstimate;
+    if (importData.actualMaterialCost !== undefined) updates.actualMaterialCost = importData.actualMaterialCost;
+
+    return updates;
+  }
 }
 
-/* =============================================================================
- * CHECKPOINT & VERIFICATION (canonical)
- * Un checkpoint n'est pas une entité autonome : c'est l'action de vérification
- * d'un jalon (milestone) d'un projet ou d'une phase. Les DTO associés sont donc
- * définis ici, aux côtés du MilestoneDTO. Les anciens fichiers
- * (CheckpointDTO.ts, CheckpointVerificationDTO.ts,
- * CheckpointVerificationResultDTO.ts, VerificationItemDTO.ts) ne sont plus que
- * des ré-exports de compatibilité.
- * ========================================================================== */
-
-export type VerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
-
-/** Catégories de vérification (union de tous les usages métier) */
-export type CheckpointCategory =
-  | 'inspection'
-  | 'resource'
-  | 'document'
-  | 'service_fait'
-  | 'approval'
-  | 'material'
-  | 'payment'
-  | 'pv'
-  | 'quality'
-  | 'safety'
-  | 'documentation'
-  | 'delivery';
-
-export type CheckpointType = 'gate' | 'review' | 'approval' | 'delivery';
-
-/** Item de vérification individuel rattaché à un checkpoint de jalon */
-export interface VerificationItemDTO {
-  id: string;
-  name?: string;
-  category: CheckpointCategory;
-  title: string;
-  description?: string;
-  status: VerificationStatus;
-  required: boolean;
-  /** Poids dans le calcul global (0-1) */
-  weight: number;
-  referenceId?: string;
-  referenceType?: 'inspection' | 'document' | 'material' | 'payment' | 'pv';
-  verifiedBy?: string;
-  verifiedAt?: string;
-  completedAt?: string;
-  notes?: string;
-  evidenceUrls?: string[];
-}
-
-/** Résultat de vérification d'un checkpoint de jalon */
-export interface CheckpointVerificationResultDTO {
-  checkpointId: string;
-  milestoneId: string;
-  overallStatus: VerificationStatus;
-  /** Score 0-100 */
-  verificationScore: number;
-  verificationItems: VerificationItemDTO[];
-  requiredItemsCount: number;
-  verifiedItemsCount: number;
-  failedItemsCount: number;
-  blockingIssues: string[];
-  warnings: string[];
-  canProceed: boolean;
-  verifiedAt?: string;
-  verifiedBy?: string;
-}
-
-/** Checkpoint : vérifications requises rattachées à un jalon */
-export interface CheckpointDTO {
-  id: string;
-  projectId: string;
-  phaseId?: string;
-  stepId?: string;
-  milestoneId: string;
-
-  title: string;
-  description?: string;
-  checkpointType: CheckpointType;
-
-  /** % de progression qui déclenche ce checkpoint */
-  triggerProgress: number;
-  /** % du budget phase lié à ce checkpoint */
-  financialWeight: number;
-
-  status: VerificationStatus;
-  progress: number;
-
-  requiredInspections: string[];
-  requiredDocuments: string[];
-  requiredApprovals: string[];
-
-  verificationResult?: CheckpointVerificationResultDTO;
-
-  triggersPayment: boolean;
-  paymentAmount?: number;
-  triggersNotification: boolean;
-  notificationRecipients?: string[];
-
-  targetDate?: string;
-  completionDate?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/* --- Requêtes / réponses de vérification --- */
-
-export interface VerifyCheckpointRequestDto {
-  checkpoint: CheckpointDTO;
-  projectId?: string;
-  phaseId?: string;
-}
-
-export interface CheckpointVerificationResult {
-  id: string;
-  checkpointId: string;
-  projectId: string;
-  verified: boolean;
-  verifiedAt?: string;
-  verifiedBy?: string;
-  notes?: string;
-  documents?: string[];
-  status: 'pending' | 'verified' | 'rejected';
-}
-
-export interface VerifyCheckpointResponseDto {
-  result: CheckpointVerificationResult;
-  errors?: string[];
-}
-
-export interface VerifyInspectionsRequestDto {
-  requiredInspectionIds: string[];
-  triggerProgress: number;
-  projectId: string;
-}
-
-export interface VerifyDocumentsRequestDto {
-  requiredDocumentIds: string[];
-  projectId: string;
-}
-
-export interface VerifyApprovalsRequestDto {
-  requiredApprovalIds: string[];
-  projectId: string;
-}
-
-export interface VerifyResourcesRequestDto {
-  stepId: string;
-  projectId: string;
-}
-
-export interface VerifyServiceFaitRequestDto {
-  checkpointId: string;
-  projectId: string;
-}
-
-export interface CreateCheckpointVerificationDto {
-  checkpointId: string;
-  projectId: string;
-  verifiedBy: string;
-  notes?: string;
-  documents?: string[];
-}
-
-export interface UpdateCheckpointVerificationDto {
-  verified?: boolean;
-  notes?: string;
-  documents?: string[];
-  status?: 'pending' | 'verified' | 'rejected';
-}
+export default MilestoneImportTransformer;
