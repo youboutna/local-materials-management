@@ -264,6 +264,17 @@ export class BoqImportOrchestrator {
         resourceType,
       };
 
+      // Fiscalité ligne à ligne : régime (référentiel TAX_REGIMES) + imputation
+      // PCM. La TVA détectée sur la ligne/le bloc reste prioritaire.
+      const tax = TaxService.resolve(
+        { ...dto, accountCode: (row.raw['compte'] ?? row.raw['Compte'] ?? null) as string | null, vatRate: lineVat },
+        { vatRate: effectiveVat },
+      );
+      dto.taxRegimeCode = tax.regimeCode;
+      dto.accountCode = tax.accountCode;
+      if (lineVat == null && tax.origin === 'account') dto.vatRate = tax.vatRate;
+      if (!dto.rasRate && tax.rasRate) dto.rasRate = tax.rasRate;
+
       out.push(dto);
     }
     return out;
