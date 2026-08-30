@@ -549,7 +549,7 @@ export class MilestoneTransformer {
       importData.description || null,
       targetDate,
       completionDate || null,
-      status as unknown as Parameters<typeof Milestone>[6],
+      status as unknown as ConstructorParameters<typeof Milestone>[6],
       priority,
       importData.progress ?? importData.progressPercent ?? null,
       dependencies,
