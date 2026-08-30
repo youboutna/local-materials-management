@@ -11,6 +11,7 @@ import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { mergeDimensions } from './parsers/dimensionExtraction';
 import { reconcileLinePrice } from './parsers/priceCoherence';
+import { TaxService } from '@/application/services/TaxService';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
