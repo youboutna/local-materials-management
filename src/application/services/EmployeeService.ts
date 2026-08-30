@@ -186,8 +186,8 @@ export class EmployeeService {
       skills: employee.skills || [],
       certifications: (employee.certifications || []).map((c, index) =>
         typeof c === 'string'
-          ? ({ id: `cert-${index}`, name: c } as EmployeeDTO['certifications'][number])
-          : (c as EmployeeDTO['certifications'][number]),
+          ? ({ id: `cert-${index}`, name: c } as CertificationDTO)
+          : (c as CertificationDTO),
       ),
     };
   }
