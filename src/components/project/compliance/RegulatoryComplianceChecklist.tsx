@@ -37,7 +37,22 @@ interface Props {
   /** false en mode création (projet non persisté) : le questionnaire reste consultable */
   canPersist?: boolean;
   onChanged?: () => void;
+  /**
+   * Portée du contrôle : `project` (maître d'ouvrage) ou `tender_submission`
+   * (recevabilité d'une offre). En portée soumission, le composant est contrôlé
+   * par le parent (aucune persistance directe).
+   */
+  scope?: 'project' | 'tender_submission';
+  /** Mode contrôlé : réponses fournies par le parent. */
+  value?: Record<string, RegulatoryAnswer>;
+  onValueChange?: (answers: Record<string, RegulatoryAnswer>) => void;
+  /** Restreint le questionnaire à certains domaines du référentiel. */
+  domainKeys?: string[];
+  /** Masque l'action « Ajouter la pièce » (contrôle sans dépôt de document). */
+  hideUpload?: boolean;
+  title?: string;
 }
+
 
 const ANSWER_COLORS: Record<RegulatoryAnswer, string> = {
   compliant: 'bg-success-soft text-success',
