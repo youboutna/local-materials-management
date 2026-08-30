@@ -89,17 +89,31 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
           {title}
           <span className="text-xs font-normal text-muted-foreground">({rows.length})</span>
         </CardTitle>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Numéro ou intitulé"
-            className="pl-8"
-            aria-label="Rechercher un contrat"
-          />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Numéro ou intitulé"
+              className="pl-8"
+              aria-label="Rechercher un contrat"
+            />
+          </div>
+          {!readOnly && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Nouveau contrat
+            </Button>
+          )}
         </div>
       </CardHeader>
+
 
       <CardContent>
         {query.isLoading && (
