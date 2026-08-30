@@ -118,6 +118,7 @@ const navigationItems: NavItem[] = [
       { label: 'nav.supplier_portal', href: "/supplier-portal" },
       { label: 'nav.supplier_tender_portal', href: "/supplier-tender" },
       { label: 'nav.tender_management', href: "/tender-management" },
+      { label: 'auto.contextualsidebar.contrats', href: "/contracts", roles: ["admin", "director", "manager"] },
       { label: 'auto.contextualsidebar.partage_codes', action: 'secretManager', icon: KeyRound },
     ],
   },

@@ -67,7 +67,9 @@ export enum EmployeeRole {
   // NOUVEAUX rôles 
   EXPERT = 'expert',
   ENGINEER = 'engineer',
-  TECHNICIAN = 'technician'
+  TECHNICIAN = 'technician',
+  /** Rôle générique par défaut. */
+  EMPLOYEE = 'employee'
 }
 
 /**

@@ -74,7 +74,7 @@ const Dashboard: React.FC = () => {
       ...p,
       description: p.description || '',
       location: p.location || '',
-      status: p.status as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
+      status: p.status as unknown as 'en cours' | 'terminé' | 'en attente' | 'suspendu' | 'annulé',
       progress: p.progress,
       budget: p.budget,
       teamSize: p.teamSize || 0,

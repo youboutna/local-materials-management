@@ -128,8 +128,8 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
     projectReference: initialData?.projectReference || '',
     allowsInitialPayment: initialData?.allowsInitialPayment || false,
     initialPaymentPercentage: initialData?.initialPaymentPercentage || 0,
-    currentPhase: initialData?.currentPhase || 'pre_construction',
-    currentStage: initialData?.currentStage || 'planningDesign',
+    currentPhase: initialData?.currentPhase || 'PRE_CONSTRUCTION',
+    currentStage: initialData?.currentStage || 'PLANNING_DESIGN',
     phases: initialData?.phases || [],
     interventionZones: (initialData as any)?.interventionZones || [],
   });

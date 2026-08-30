@@ -44,7 +44,7 @@ function getProjectHealthStatus(project: ProjectDTO): 'healthy' | 'warning' | 'c
 }
 
 function calculateProjectRisk(project: ProjectDTO): 'low' | 'medium' | 'high' {
-  const isOverdue = project.endDate && new Date(project.endDate) < new Date() && project.status !== 'completed';
+  const isOverdue = project.endDate && new Date(project.endDate) < new Date() && String(project.status).toUpperCase() !== 'COMPLETED';
   const lowProgress = project.progress < 30;
   if (isOverdue && lowProgress) return 'high';
   if (isOverdue || lowProgress) return 'medium';
@@ -163,7 +163,7 @@ export function useProjectsEnhanced(): UseProjectsEnhancedResult {
   const getOverdueProjects = (): ProjectDTO[] => {
     return projects.filter(project => {
       if (!project.endDate) return false;
-      return new Date(project.endDate) < new Date() && project.status !== 'completed';
+      return new Date(project.endDate) < new Date() && String(project.status).toUpperCase() !== 'COMPLETED';
     });
   };
 
@@ -230,7 +230,7 @@ export function useProjectCalculations() {
     const totalProgress = projects.reduce((sum, p) => sum + p.progress, 0) / (projects.length || 1);
     const overdueCount = projects.filter(p => {
       if (!p.endDate) return false;
-      return new Date(p.endDate) < new Date() && p.status !== 'completed';
+      return new Date(p.endDate) < new Date() && String(p.status).toUpperCase() !== 'COMPLETED';
     }).length;
     const highRiskCount = projects.filter(p => 
       calculateProjectRisk(p) === 'high'

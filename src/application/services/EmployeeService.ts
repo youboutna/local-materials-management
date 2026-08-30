@@ -6,6 +6,7 @@
 import { Employee } from '@/domain/entities/Employee';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import {
+    CertificationDTO,
     CreateEmployeeDTO,
     EmployeeDepartment,
     EmployeeDTO,
@@ -184,7 +185,11 @@ export class EmployeeService {
     return {
       ...EmployeeTransformer.toDTO(employee),
       skills: employee.skills || [],
-      certifications: (employee.certifications || []).map(c => typeof c === 'string' ? c : (c as { name?: string }).name || ''),
+      certifications: (employee.certifications || []).map((c, index) =>
+        typeof c === 'string'
+          ? ({ id: `cert-${index}`, name: c } as CertificationDTO)
+          : (c as CertificationDTO),
+      ),
     };
   }
 

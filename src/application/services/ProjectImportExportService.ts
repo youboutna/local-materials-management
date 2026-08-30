@@ -45,6 +45,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
+import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
 
 // =============================================================================
 // TYPES - VERSION CORRIGÉE AVEC SUPPORT MATERIALUSAGE
@@ -615,7 +616,7 @@ export class ProjectImportExportService {
         const customData = candidate.customPhaseData as { phaseCode?: string } | null;
         return (phase.code && customData?.phaseCode === phase.code) ||
           (phase.name && candidate.phaseName === phase.name) ||
-          (phase.externalRef && candidate.externalRef === phase.externalRef);
+          (phase.externalRef && (candidate as { externalRef?: string }).externalRef === phase.externalRef);
       }) ?? null;
 
       const phaseCode = phase.code || `phase-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -1400,8 +1401,8 @@ export class ProjectImportExportService {
         employeeId: row.employeeId || row.id || `EMP${Date.now().toString().slice(-6)}`,
         email: row.email,
         fullName: row.fullName || row.firstName || row.email.split('@')[0],
-        firstName: row.firstName,
-        lastName: row.lastName,
+        firstName: row.firstName || (row.fullName || '').split(' ')[0] || row.email.split('@')[0],
+        lastName: row.lastName || (row.fullName || '').split(' ').slice(1).join(' ') || '-',
         phone: row.phone,
         position: row.position,
         department: row.department as any,
@@ -1435,7 +1436,10 @@ export class ProjectImportExportService {
           employee = current;
         }
       } else {
-        employee = await this.employeeService.createEmployee(employeeData);
+        employee = await this.employeeService.createEmployee({
+          status: EmployeeStatus.ACTIVE,
+          ...employeeData,
+        });
       }
 
       references.set(row.id, employee.id);

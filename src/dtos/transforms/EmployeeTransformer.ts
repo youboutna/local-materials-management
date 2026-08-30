@@ -302,7 +302,14 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       [EmployeeDepartment.LEGAL]: 'administration',
       [EmployeeDepartment.PROCUREMENT]: 'procurement',
       [EmployeeDepartment.MAINTENANCE]: 'construction',
-      [EmployeeDepartment.SECURITY]: 'administration'
+      [EmployeeDepartment.SECURITY]: 'administration',
+      [EmployeeDepartment.DIRECTION]: 'administration',
+      [EmployeeDepartment.EXPLOITATION]: 'construction',
+      [EmployeeDepartment.SUIVI]: 'quality',
+      [EmployeeDepartment.CONTROLE]: 'quality',
+      [EmployeeDepartment.SIG]: 'engineering',
+      [EmployeeDepartment.TERRAIN]: 'construction',
+      [EmployeeDepartment.JURIDIQUE]: 'administration'
     };
     return mapping[dept] || 'administration';
   }

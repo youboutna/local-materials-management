@@ -4,7 +4,10 @@
  */
 
 import { btpClient } from '@/integrations/supabase/schema-clients';
-import type { IContractRepository } from '@/domain/repositories/IContractRepository';
+import type {
+  IContractRepository,
+  ContractQueryFilters,
+} from '@/domain/repositories/IContractRepository';
 import type {
   ContractRecordDTO,
   CreateContractRecordDTO,
@@ -41,6 +44,26 @@ export class SupabaseContractAdapter implements IContractRepository {
       .maybeSingle();
     if (error) throw error;
     return data ? toDto(data) : null;
+  }
+
+  async findAll(filters: ContractQueryFilters = {}): Promise<ContractRecordDTO[]> {
+    let query = (btpClient as any)
+      .from('contracts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.contractType) query = query.eq('contract_type', filters.contractType);
+    if (filters.search) {
+      query = query.or(
+        `title.ilike.%${filters.search}%,contract_number.ilike.%${filters.search}%`,
+      );
+    }
+    query = query.limit(filters.limit ?? 200);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map(toDto);
   }
 
   async findByProjectId(projectId: string): Promise<ContractRecordDTO[]> {

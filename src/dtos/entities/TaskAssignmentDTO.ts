@@ -103,6 +103,8 @@ export interface CreateTaskAssignmentDTO {
   endDate?: string;
   dueDate?: string;
   estimatedDuration?: number;
+  estimatedHours?: number;
+  actualHours?: number;
   quantity?: number;
   unit?: string;
   dailyRate?: number;

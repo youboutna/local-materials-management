@@ -124,7 +124,7 @@ export class ProjectAnalyticsService {
       return {
         title: projectData.project.title || '',
         description: projectData.project.description || '',
-        status: (projectData.project.status as 'planning' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold') || 'en cours',
+        status: projectData.project.status,
         progress: overallProgress,
         budget,
         location: projectData.project.location || '',

@@ -541,3 +541,150 @@ export class MilestoneImportTransformer {
 }
 
 export default MilestoneImportTransformer;
+/* ------------------------------------------------------------------------- */
+/* Checkpoints : un checkpoint est une action de vérification d'un jalon.     */
+/* Définitions canoniques (les fichiers CheckpointDTO / VerificationItemDTO   */
+/* ne sont que des ré-exports de compatibilité).                             */
+/* ------------------------------------------------------------------------- */
+
+/** Statut d'un item ou d'un checkpoint de vérification. */
+export type VerificationStatus = 'pending' | 'in_progress' | 'verified' | 'failed' | 'skipped';
+
+/** Catégorie d'un item de vérification. */
+export type CheckpointCategory =
+  | 'inspection'
+  | 'resource'
+  | 'document'
+  | 'service_fait'
+  | 'approval'
+  | 'material'
+  | 'payment'
+  | 'pv';
+
+/** Nature du checkpoint rattaché au jalon. */
+export type CheckpointType =
+  | 'gate'
+  | 'deliverable'
+  | 'progress'
+  | 'payment'
+  | 'inspection'
+  | 'approval'
+  | 'custom';
+
+/** Item élémentaire de vérification (preuve attendue). */
+export interface VerificationItemDTO {
+  id: string;
+  title: string;
+  category: CheckpointCategory;
+  status: VerificationStatus;
+  required: boolean;
+  /** Poids relatif dans le score (0-1 ou pondération libre). */
+  weight: number;
+  description?: string;
+  referenceId?: string;
+  referenceType?: string;
+  notes?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+}
+
+/** Checkpoint d'un jalon (projet / phase / étape). */
+export interface CheckpointDTO {
+  id: string;
+  projectId: string;
+  phaseId?: string;
+  stepId?: string;
+  milestoneId: string;
+  title: string;
+  description?: string;
+  checkpointType: CheckpointType;
+  triggerProgress: number;
+  financialWeight: number;
+  status: VerificationStatus;
+  progress: number;
+  requiredInspections: string[];
+  requiredDocuments: string[];
+  requiredApprovals: string[];
+  verificationResult?: CheckpointVerificationResultDTO;
+  triggersPayment: boolean;
+  paymentAmount?: number;
+  triggersNotification: boolean;
+  notificationRecipients?: string[];
+  targetDate?: string;
+  completionDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Résultat consolidé d'une vérification de checkpoint. */
+export interface CheckpointVerificationResultDTO {
+  id: string;
+  checkpointId: string;
+  projectId: string;
+  verified: boolean;
+  status: 'pending' | 'verified' | 'rejected';
+  verifiedAt?: string;
+  verifiedBy?: string;
+  notes?: string;
+  score?: number;
+  items?: VerificationItemDTO[];
+  blockingIssues?: string[];
+  warnings?: string[];
+  canProceed?: boolean;
+}
+
+/** Alias historique. */
+export type CheckpointVerificationResult = CheckpointVerificationResultDTO;
+
+export interface CreateCheckpointVerificationDto {
+  checkpointId: string;
+  projectId: string;
+  items?: VerificationItemDTO[];
+  notes?: string;
+  verifiedBy?: string;
+}
+
+export interface UpdateCheckpointVerificationDto {
+  id: string;
+  status?: 'pending' | 'verified' | 'rejected';
+  verified?: boolean;
+  notes?: string;
+  items?: VerificationItemDTO[];
+}
+
+export interface VerifyCheckpointRequestDto {
+  checkpoint: CheckpointDTO;
+  projectId?: string;
+  phaseId?: string;
+}
+
+export interface VerifyCheckpointResponseDto {
+  result: CheckpointVerificationResultDTO;
+  errors?: string[];
+}
+
+export interface VerifyInspectionsRequestDto {
+  requiredInspectionIds: string[];
+  triggerProgress: number;
+  projectId: string;
+}
+
+export interface VerifyDocumentsRequestDto {
+  requiredDocumentIds: string[];
+  projectId: string;
+}
+
+export interface VerifyApprovalsRequestDto {
+  requiredApprovalIds: string[];
+  projectId: string;
+}
+
+export interface VerifyResourcesRequestDto {
+  stepId: string;
+  projectId: string;
+}
+
+export interface VerifyServiceFaitRequestDto {
+  checkpointId: string;
+  projectId: string;
+}

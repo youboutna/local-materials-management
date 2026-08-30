@@ -641,7 +641,7 @@ export class EnhancedValidationService {
 
     // Check definitive reception
     const definitiveReception = receptions.find(r => r.type === 'definitive');
-    if (!definitiveReception && project.status === 'completed') {
+    if (!definitiveReception && String(project.status).toUpperCase() === 'COMPLETED') {
       issues.push(this.createIssue(
         ValidationCategory.RECEPTION,
         'high',

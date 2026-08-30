@@ -426,15 +426,15 @@ export class MonitoringDashboardService {
     const filteredProjects = this.filterProjects(projects, filters);
 
     const activeProjects = filteredProjects.filter(p => 
-      ['en_cours', 'en_construction', 'en_inspection', 'en_attente'].includes(p.status)
+      ['IN_PROGRESS', 'UNDER_CONSTRUCTION', 'UNDER_INSPECTION', 'ON_HOLD'].includes(String(p.status).toUpperCase())
     ).length;
-    const completedProjects = filteredProjects.filter(p => p.status === 'termine').length;
+    const completedProjects = filteredProjects.filter(p => String(p.status).toUpperCase() === 'COMPLETED').length;
     const atRiskProjects = filteredProjects.filter(p => 
-      (p.progress || 0) < 50 && p.status !== 'termine'
+      (p.progress || 0) < 50 && String(p.status).toUpperCase() !== 'COMPLETED'
     ).length;
     const delayedProjects = filteredProjects.filter(p => {
       if (!p.endDate) return false;
-      return new Date(p.endDate) < new Date() && p.status !== 'termine';
+      return new Date(p.endDate) < new Date() && String(p.status).toUpperCase() !== 'COMPLETED';
     }).length;
 
     const totalBudget = filteredProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
@@ -503,7 +503,7 @@ export class MonitoringDashboardService {
     let score = 100;
     const progress = project.progress || 0;
 
-    if (project.endDate && new Date(project.endDate) < new Date() && project.status !== 'termine') {
+    if (project.endDate && new Date(project.endDate) < new Date() && String(project.status).toUpperCase() !== 'COMPLETED') {
       score -= 30;
     }
     // Dérive budgétaire : consommation supérieure à l'avancement
@@ -512,7 +512,7 @@ export class MonitoringDashboardService {
     else if (drift > 10) score -= 15;
     else if (drift > 0) score -= 5;
 
-    if (progress < 25 && project.status !== 'en_attente') score -= 10;
+    if (progress < 25 && String(project.status).toUpperCase() !== 'ON_HOLD') score -= 10;
 
     return Math.max(0, Math.min(100, score));
   }
@@ -540,7 +540,7 @@ export class MonitoringDashboardService {
     // 100 = consommation alignée sur l'avancement, pénalité proportionnelle à la dérive
     const budget = Math.max(0, Math.min(100, Math.round(100 - Math.abs(consumption - productivity))));
 
-    const onTime = projects.filter(p => !(p.endDate && new Date(p.endDate) < new Date() && p.status !== 'termine')).length;
+    const onTime = projects.filter(p => !(p.endDate && new Date(p.endDate) < new Date() && String(p.status).toUpperCase() !== 'COMPLETED')).length;
     const schedule = Math.round((onTime / projects.length) * 100);
 
     const team = openTasks > 0

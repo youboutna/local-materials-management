@@ -6,6 +6,7 @@ import InspectionPaymentValidation from "@/components/inspections/InspectionPaym
 import { AppLayout } from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AssociatedPaymentsPanel } from "@/components/common/AssociatedPaymentsPanel";
+import ContractList from "@/components/contracts/ContractList";
 import { T } from '@/components/i18n/T';
 
 const ProjectDetail = () => {
@@ -37,12 +38,15 @@ const ProjectDetail = () => {
   return (
     <AppLayout pageTitle={t("nav.projects")}>
       <Tabs defaultValue="info" className="mt-4">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2 lg:w-auto lg:inline-grid">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3 lg:w-auto lg:inline-grid">
           <TabsTrigger value="info" className="flex items-center gap-2">
             <T k="auto.projectdetail.informations" fallback="Informations" />
           </TabsTrigger>
           <TabsTrigger value="finance" className="flex items-center gap-2">
             Finance &amp; Paiements
+          </TabsTrigger>
+          <TabsTrigger value="contrats" className="flex items-center gap-2">
+            Contrats
           </TabsTrigger>
         </TabsList>
 
@@ -59,6 +63,10 @@ const ProjectDetail = () => {
               // Invalider les caches si nécessaire
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="contrats" className="mt-6">
+          <ContractList projectId={id} title="Contrats du projet" />
         </TabsContent>
       </Tabs>
     </AppLayout>

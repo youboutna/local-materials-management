@@ -80,7 +80,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
         ? rawMilestones.filter((m) => m.phaseId === phaseId)
         : rawMilestones;
       const milestonesData: MilestoneSummaryDTO[] = filtered.map((m) => ({
-        id: m.id, title: m.title, target_date: m.targetDate, status: m.status,
+        id: m.id, title: m.title, target_date: m.targetDate, status: m.status as MilestoneSummaryDTO['status'],
         type: m.type || 'checkpoint', priority: m.priority || 'medium',
         weight: m.weight || 0.2, phase_id: m.phaseId, phase_name: undefined,
         completion_date: m.completionDate, is_critical: m.priority === 'critical',

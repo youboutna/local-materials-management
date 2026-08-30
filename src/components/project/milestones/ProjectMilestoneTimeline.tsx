@@ -62,7 +62,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
         priority: m.priority || 'medium',
         weight: m.weight || 0.2,
         phaseId: m.phaseId,
-        phaseDame: undefined,
+        phaseName: undefined,
         completionDate: m.completionDate,
         isCritical: m.priority === 'critical',
       }));
@@ -138,7 +138,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
 
   // Group milestones by phase
   const groupedMilestones = milestones.reduce((acc, m) => {
-    const key = m.phaseDame || 'Projet global';
+    const key = m.phaseName || 'Projet global';
     if (!acc[key]) acc[key] = [];
     acc[key].push(m);
     return acc;

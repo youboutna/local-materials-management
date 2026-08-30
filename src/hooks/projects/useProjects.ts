@@ -75,7 +75,7 @@ export const useProjects = (): UseProjectsResult => {
     queryFn: async (): Promise<ProjectData[]> => {
       try {
         const projectDTOs = await projectService.getAllProjects();
-        return projectDTOs as ProjectData[];
+        return projectDTOs as unknown as ProjectData[];
       } catch (err) {
         console.error('Error fetching projects:', err);
         throw err;
