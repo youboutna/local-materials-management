@@ -21,6 +21,8 @@ import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectEdit from "./pages/ProjectEdit";
 import ProjectImport from "./pages/ProjectImport";
+import ContractsList from "./pages/ContractsList";
+import ContractDetail from "./pages/ContractDetail";
 import Materials from "./pages/Materials";
 import MaterialCreate from "./pages/MaterialCreate";
 import MaterialDetail from "./pages/MaterialDetail";
@@ -320,6 +322,22 @@ function App() {
                         }
                       />
                       <Route path="/tasks/:taskId" element={<TaskDetail />} />
+                      <Route
+                        path="/contracts"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <ContractsList />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/contracts/:id"
+                        element={
+                          <RoleBasedRoute disallowedRoles={["supplier"]}>
+                            <ContractDetail />
+                          </RoleBasedRoute>
+                        }
+                      />
                       <Route
                         path="/tenders/:id"
                         element={
