@@ -214,9 +214,13 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileCheck className="h-5 w-5" />
-            <T k="auto.regulatorycompliancechecklist.questionnaire_de_conformite_reglementaire" fallback="Questionnaire de conformité réglementaire" />
+            {title ? (
+              title
+            ) : (
+              <T k="auto.regulatorycompliancechecklist.questionnaire_de_conformite_reglementaire" fallback="Questionnaire de conformité réglementaire" />
+            )}
             <Badge variant="outline" className="ml-auto">
-              {compliantCount}/{REGULATORY_TOTAL_ITEMS} conformes
+              {compliantCount}/{totalItems} conformes
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -226,11 +230,19 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({
             {answeredCount} contrôle(s) renseigné(s) — référentiel marchés publics (administratif, procédure,
             études, environnement, HSE, garanties).
           </p>
-          {!canPersist && (
+          {!canPersist && scope === 'project' && (
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Mode création : les réponses sont conservées localement et enregistrées après la sauvegarde du projet.
+              </AlertDescription>
+            </Alert>
+          )}
+          {scope === 'tender_submission' && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Recevabilité de l'offre : les réponses sont enregistrées avec l'évaluation de la soumission.
               </AlertDescription>
             </Alert>
           )}
@@ -242,7 +254,8 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({
         </CardContent>
       </Card>
 
-      {REGULATORY_COMPLIANCE_DOMAINS.map((domain) => (
+      {domains.map((domain) => (
+
         <Card key={domain.key}>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">{domain.label}</CardTitle>
