@@ -4,7 +4,10 @@
  */
 
 import { btpClient } from '@/integrations/supabase/schema-clients';
-import type { IContractRepository } from '@/domain/repositories/IContractRepository';
+import type {
+  IContractRepository,
+  ContractQueryFilters,
+} from '@/domain/repositories/IContractRepository';
 import type {
   ContractRecordDTO,
   CreateContractRecordDTO,
