@@ -13,7 +13,7 @@ import { AuthUserStatus } from "@/domain/entities/AuthUser";
 import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from "@/dtos/entities/AuthDTO";
 
 // ✅ IMPORT des modules locaux (correction)
-import { DEV_MODE } from "@/config/constants";
+import { isDevMode } from "@/config/constants";
 import { LocalAuthAdapter } from "@/infrastructure/adapters/local/LocalAuthAdapter";
 
 // Use existing DTOs for AuthManager internal operations
@@ -241,8 +241,8 @@ export class AuthManager {
    * ✅ CORRECTION : utilisation d'imports statiques, plus de require()
    */
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
-    // DEV_MODE short-circuit: wrap LocalAuthAdapter to match AuthManager's local IAuthRepository shape
-    if (DEV_MODE) {
+    // Mode DEV dynamique (surcharge admin incluse) : court-circuit: wrap LocalAuthAdapter to match AuthManager's local IAuthRepository shape
+    if (isDevMode()) {
       const local = new LocalAuthAdapter();
       const wrapper: IAuthRepository = {
         authenticate: async (_provider, credentials) => {
