@@ -16,6 +16,7 @@ import autoTable from 'jspdf-autotable';
 import { DocumentIdentityService } from './DocumentIdentityService';
 import { documentUnitLabel } from '@/config/referentials/boq/unit-codes.referential';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { TaxService } from '@/application/services/TaxService';
 import { buildVatBuckets } from '@/config/referentials/boq/tax-regimes.referential';
 import { formatNumber2, sanitizeNumberSpaces } from '@/utils/reportNumbers';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
