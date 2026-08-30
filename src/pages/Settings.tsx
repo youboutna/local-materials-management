@@ -10,6 +10,7 @@ import StorageSettings from "@/components/admin/StorageSettings";
 import { AppLayout } from "@/components/layout";
 import { AdminEmailsSettings } from "@/components/settings/AdminEmailsSettings";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
+import SystemSettingsPanel from "@/components/admin/SystemSettingsPanel";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,18 +58,20 @@ const SETTINGS_TABS: Array<{
   value: string;
   icon: React.ComponentType<{ className?: string }>;
   label: (t: Translate) => string;
+  /** Masqué en mode DEV : configuration d'infrastructure non pertinente hors API réelle. */
+  hideInDev?: boolean;
 }> = [
   { value: "appearance", icon: Palette, label: () => "Apparence" },
-  { value: "providers", icon: Cloud, label: () => "Providers" },
-  { value: "deployment", icon: Settings2, label: () => "Déploiement" },
+  { value: "providers", hideInDev: true, icon: Cloud, label: () => "Providers" },
+  { value: "deployment", hideInDev: true, icon: Settings2, label: () => "Déploiement" },
   { value: "database", icon: Database, label: (t) => t("settings.tabs.database") },
   { value: "storage", icon: Folder, label: (t) => t("settings.tabs.storage") },
-  { value: "keycloak", icon: Key, label: (t) => t("settings.tabs.keycloak") },
-  { value: "keycloak-config", icon: Cog, label: (t) => t("settings.tabs.keycloak_config") },
+  { value: "keycloak", hideInDev: true, icon: Key, label: (t) => t("settings.tabs.keycloak") },
+  { value: "keycloak-config", hideInDev: true, icon: Cog, label: (t) => t("settings.tabs.keycloak_config") },
   { value: "system", icon: Cog, label: (t) => t("settings.tabs.system") },
   { value: "alerts", icon: AlertTriangle, label: () => "Alertes" },
   { value: "notifications", icon: Mail, label: () => "Emails" },
-  { value: "local-users", icon: Users, label: () => "Utilisateurs locaux" },
+  { value: "local-users", hideInDev: true, icon: Users, label: () => "Utilisateurs locaux" },
   { value: "dev", icon: Wrench, label: () => "Mode dev" },
 ];
 
@@ -76,11 +79,14 @@ const SETTINGS_TABS: Array<{
 
 const Settings = () => {
   const { t } = useLanguage();
-  const { config, isValid } = useAppConfig();
+  const { config, isValid, isDevMode } = useAppConfig();
   const [searchParams, setSearchParams] = useSearchParams();
+  const visibleTabs = SETTINGS_TABS.filter((tab) => !isDevMode || !tab.hideInDev);
   const urlTab = searchParams.get("tab");
   const activeTab =
-    urlTab && SETTINGS_TABS.some((s) => s.value === urlTab) ? urlTab : "database";
+    urlTab && visibleTabs.some((s) => s.value === urlTab)
+      ? urlTab
+      : visibleTabs[0]?.value ?? "appearance";
   const setActiveTab = (value: string) => {
     const next = new URLSearchParams(searchParams);
     next.set("tab", value);
@@ -108,6 +114,7 @@ const Settings = () => {
           <span className="text-muted-foreground">
             Storage <span className="font-medium text-foreground">{config.storage.provider}</span>
           </span>
+          {isDevMode && <Badge variant="secondary">Mode DEV</Badge>}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="lg:flex lg:gap-4">
@@ -118,7 +125,7 @@ const Settings = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SETTINGS_TABS.map((tab) => (
+                {visibleTabs.map((tab) => (
                   <SelectItem key={tab.value} value={tab.value}>
                     {tab.label(t)}
                   </SelectItem>
@@ -129,7 +136,7 @@ const Settings = () => {
 
           {/* Tablette : onglets en grille — Desktop : navigation verticale */}
           <TabsList className="hidden h-auto w-full flex-wrap justify-start gap-1.5 bg-muted/60 p-2 sm:flex lg:w-72 lg:shrink-0 lg:flex-col lg:flex-nowrap lg:items-stretch lg:self-start">
-            {SETTINGS_TABS.map((tab) => (
+            {visibleTabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
@@ -170,7 +177,8 @@ const Settings = () => {
               <KeycloakConfigurationTab />
             </TabsContent>
 
-            <TabsContent value="system" className="mt-0">
+            <TabsContent value="system" className="mt-0 space-y-4">
+              <SystemSettingsPanel />
               <EscalationThresholdsSettings />
             </TabsContent>
 
