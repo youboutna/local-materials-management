@@ -45,6 +45,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
+import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
 
 // =============================================================================
 // TYPES - VERSION CORRIGÉE AVEC SUPPORT MATERIALUSAGE

@@ -91,7 +91,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   // Use hexagonal hook for payment validation (Rule #5: UI Layer Separation)
   const paymentValidation = usePaymentTransferValidation({
     projectId: project.id,
-    project
+    project: project as unknown as Parameters<typeof usePaymentTransferValidation>[0]['project'],
   });
 
   // Destructure validation results for template usage
