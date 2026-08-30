@@ -128,6 +128,8 @@ export class BoqLineMapper {
       unitPrice,
       vatRate: row.vat_rate ?? 0,
       rasRate: row.ras_rate ?? 0,
+      taxRegimeCode: (row.metadata as { taxRegimeCode?: string } | null)?.taxRegimeCode ?? null,
+      accountCode: (row.metadata as { accountCode?: string } | null)?.accountCode ?? null,
       fees: row.fees ?? 0,
       totalHt: storedTotal ?? (unitPrice != null ? quantity * unitPrice + Number(row.fees ?? 0) : null),
       materialId: row.resource_id ?? row.material_id ?? null,
@@ -208,7 +210,13 @@ export class BoqLineMapper {
       sender_id: dto.submittedBy ?? null,
       status: dto.status ?? 'draft',
       document_id: dto.documentId ?? null,
-      metadata: { ...(dto.metadata ?? {}), ...(dto.title ? { title: dto.title } : {}) },
+      metadata: {
+        ...(dto.metadata ?? {}),
+        ...(dto.title ? { title: dto.title } : {}),
+        // Fiscalité ligne à ligne : régime + imputation comptable (PCM).
+        ...(dto.taxRegimeCode ? { taxRegimeCode: dto.taxRegimeCode } : {}),
+        ...(dto.accountCode ? { accountCode: dto.accountCode } : {}),
+      },
     };
   }
 

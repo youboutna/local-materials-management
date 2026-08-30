@@ -19,6 +19,10 @@ export interface BoqLineDTO {
   unitPrice?: number | null;
   vatRate?: number | null;
   rasRate?: number | null;
+  /** Régime de prestation fiscal (référentiel TAX_REGIMES) résolu ou choisi. */
+  taxRegimeCode?: string | null;
+  /** Compte imputé du Plan Comptable Mauritanien (porte le régime de TVA). */
+  accountCode?: string | null;
   fees?: number | null;
   totalHt?: number | null;
   materialId?: string | null;
