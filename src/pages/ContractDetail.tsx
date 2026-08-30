@@ -255,6 +255,3 @@ export default function ContractDetail() {
     </AppLayout>
   );
 }
-
-  );
-}
