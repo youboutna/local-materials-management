@@ -158,13 +158,38 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
                     </TableCell>
                     <TableCell>{formatDate(contract.startDate)}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/contracts/${contract.id}`)}
-                      >
-                        Ouvrir
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/contracts/${contract.id}`)}
+                        >
+                          Ouvrir
+                        </Button>
+                        {!readOnly && (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Modifier le contrat"
+                              onClick={() => {
+                                setEditing(contract);
+                                setFormOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Supprimer le contrat"
+                              onClick={() => setToDelete(contract)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -173,6 +198,31 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
           </div>
         )}
       </CardContent>
+
+      <ContractFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        projectId={projectId ?? null}
+        contract={editing}
+      />
+
+      <AlertDialog open={!!toDelete} onOpenChange={(open) => !open && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce contrat ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {toDelete?.contractNumber} — cette action supprime aussi ses lignes contractuelles.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
+
