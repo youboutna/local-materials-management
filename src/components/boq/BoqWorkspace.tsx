@@ -35,6 +35,7 @@ import type { ReferentialType } from '@/config/referentials';
 import { getReferentialOptions } from '@/config/referentials';
 import { BOQ_FISCAL_PROFILES, getFiscalProfile, getFiscalProfileLabel } from '@/config/referentials/boq/default-values.referential';
 import { resolveLineTax } from '@/config/referentials/boq/tax-regimes.referential';
+import { TaxService } from '@/application/services/TaxService';
 import { formatCurrency } from '@/utils/phaseDisplayHelpers';
 import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
@@ -302,7 +303,7 @@ export function BoqWorkspace({
     const ht = htBase * (1 + (Number(overheadPct) || 0) / 100);
     const profile = getFiscalProfile(fiscalCode);
     // La TVA/RAS dépendent de la nature du poste (travaux, fourniture, consulting…).
-    const tax = resolveLineTax({ category, designation: form.designation, elementType }, profile);
+    const tax = TaxService.resolve({ category, designation: form.designation, elementType, totalHt: ht }, profile);
     const tva = ht * tax.vatRate;
     return { ht, tva, ttc: ht + tva, ras: ht * tax.rasRate, qty: computedQuantity, regimeLabel: tax.regimeLabel };
   }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct, category, form.designation, elementType]);
@@ -331,6 +332,8 @@ export function BoqWorkspace({
       return;
     }
     const profile = getFiscalProfile(fiscalCode);
+    // Fiscalité résolue une seule fois (régime + imputation PCM) pour la ligne saisie.
+    const manualTax = TaxService.resolve({ category, designation: form.designation, elementType }, profile);
     const overheadNote = (Number(overheadPct) || 0) > 0 ? `Frais généraux ${overheadPct}%` : null;
     const effectivePu = (Number(form.unitPrice) || 0) * (1 + (Number(overheadPct) || 0) / 100);
     const effectiveWbs: WbsValue = {
@@ -350,14 +353,16 @@ export function BoqWorkspace({
       quantity: computedQuantity,
       unitPrice: effectivePu,
       totalHt: computedQuantity * effectivePu,
-      rasRate: resolveLineTax({ category, designation: form.designation, elementType }, profile).rasRate,
+      rasRate: manualTax.rasRate,
       fees: 0,
       resourceType: catToResource(category),
       materialId: materialId || null,
       phaseId: effectiveWbs.phaseId,
       milestoneId: effectiveWbs.milestoneId,
       taskId: effectiveWbs.taskId,
-      vatRate: resolveLineTax({ category, designation: form.designation, elementType }, profile).vatRate,
+      vatRate: manualTax.vatRate,
+      taxRegimeCode: manualTax.regimeCode,
+      accountCode: manualTax.accountCode,
       note: [
         category === 'overhead' ? 'Frais généraux' : null,
         overheadNote,
@@ -490,6 +495,7 @@ export function BoqWorkspace({
   // ---- Ajout inline d'une ligne vide (édition dans le tableau) ---------------
   const addEmptyRow = () => {
     const profile = getFiscalProfile(fiscalCode);
+    const newRowTax = TaxService.resolve({ designation: null }, profile);
     setDraftLines((prev) => [...prev, {
       source, contextId,
       documentId: documentId ?? null,
@@ -499,8 +505,9 @@ export function BoqWorkspace({
       quantity: 0,
       unitPrice: 0,
       totalHt: 0,
-      vatRate: profile.vatRate,
-      rasRate: profile.withholdingRate,
+      vatRate: newRowTax.vatRate,
+      rasRate: newRowTax.rasRate,
+      taxRegimeCode: newRowTax.regimeCode,
       fees: 0,
       resourceType: 'material',
       phaseId: wbsDefault.phaseId ?? null,
