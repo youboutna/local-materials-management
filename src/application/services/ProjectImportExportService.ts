@@ -788,8 +788,13 @@ export class ProjectImportExportService {
     }
 
     // 7. IMPORTER LES DQE LINES PROJET
+    let fallbackDqePhaseId: string | undefined;
     for (const line of row.dqeLines ?? []) {
-      const targetPhaseId = line.phaseId ? phaseIdMap.get(line.phaseId) : undefined;
+      let targetPhaseId = line.phaseId ? phaseIdMap.get(line.phaseId) : undefined;
+      if (!targetPhaseId) {
+        fallbackDqePhaseId = fallbackDqePhaseId ?? await this.ensureImportDqePhase(projectId, row, details);
+        targetPhaseId = fallbackDqePhaseId;
+      }
       const dqeLine = {
         ...line,
         btpCode: line.btpCode ?? (line as BoqLineDTO & { code?: string }).code ?? undefined,
@@ -841,6 +846,44 @@ export class ProjectImportExportService {
   // ===========================================================================
   // UPSERT TASK - CORRIGÉ
   // ===========================================================================
+
+  /**
+   * Rattache les lignes DQE projet sans phase explicite à une phase d'import dédiée
+   * plutôt que de les ignorer.
+   */
+  private async ensureImportDqePhase(
+    projectId: string,
+    row: ProjectImportRow,
+    details: ProjectImportResult['details'],
+  ): Promise<string> {
+    const phaseCode = 'IMPORT_DQE';
+    const existingPhases = await this.phaseService.getPhasesByProject(projectId);
+    const existing = existingPhases.find((candidate) => {
+      const customData = candidate.customPhaseData as { phaseCode?: string } | null;
+      return customData?.phaseCode === phaseCode || candidate.phaseName === 'DQE importé';
+    });
+    if (existing) return existing.id;
+
+    const created = await this.phaseService.createPhase({
+      id: '',
+      projectId,
+      name: 'DQE importé',
+      phaseCode,
+      type: PhaseTransformer.normalizeDbPhaseType(phaseCode) as never,
+      description: 'Phase générée automatiquement pour les lignes DQE importées sans phase.',
+      status: PhaseStatus.PENDING,
+      priority: PhasePriority.MEDIUM,
+      progress: 0,
+      startDate: row.startDate,
+      endDate: row.endDate,
+      customPhaseData: { phaseCode },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as PhaseDTO, projectId);
+
+    details.phases += 1;
+    return created.id;
+  }
 
   private async upsertTask(
     projectId: string,
@@ -1019,11 +1062,12 @@ export class ProjectImportExportService {
   // ===========================================================================
 
   async importDataset(
-    dataset: ProjectImportDataset,
+    input: ProjectImportDataset | unknown,
     options: ImportOptions = {}
   ): Promise<ProjectImportResult> {
-    if (!dataset || !Array.isArray(dataset.projects)) {
-      throw new Error('Invalid import dataset: projects must be an array');
+    const dataset = this.normalizeDataset(input);
+    if (dataset.projects.length === 0) {
+      throw new Error('Invalid import dataset: projects must be a non-empty array');
     }
 
     try {
@@ -1110,6 +1154,10 @@ export class ProjectImportExportService {
 
     const mode = options.mode || 'upsert';
     const continueOnError = options.continueOnError || false;
+
+    // Normalisation défensive : accepte enveloppes imbriquées et alias
+    rows = rows.map((row) => this.normalizeImportRow(row));
+    result.total = rows.length;
 
     const validationErrors = this.validateImportRows(rows);
     const invalidRows = new Set(validationErrors.map((error) => error.row));
