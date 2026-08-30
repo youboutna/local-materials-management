@@ -33,6 +33,7 @@ import {
   useSaveSubmissionEvaluation 
 } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
+import type { RegulatoryAnswer } from '@/config/referentials/compliance/regulatory-compliance.referential';
 
 interface SubmissionEvaluationPanelProps {
   submissionId: string;
@@ -63,6 +64,9 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
 
   // Questionnaire détaillé (référentiel de critères pondérés)
   const [criterionScores, setCriterionScores] = useState<Record<string, number>>({});
+
+  // Recevabilité réglementaire (même référentiel que la conformité projet)
+  const [regulatoryAnswers, setRegulatoryAnswers] = useState<Record<string, RegulatoryAnswer>>({});
 
 
   // Use hexagonal hooks
@@ -102,6 +106,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
           accessed_sections: ['evaluation'],
           metadata: {
             scores,
+            regulatoryCompliance: regulatoryAnswers,
             timestamp: new Date().toISOString()
           }
         });
@@ -245,6 +250,9 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
         <TabsContent value="evaluation" className="space-y-4">
           {/* Questionnaire piloté par référentiel : alimente automatiquement les 3 scores */}
           <EvaluationQuestionnaire
+            showRegulatoryChecklist
+            regulatoryAnswers={regulatoryAnswers}
+            onRegulatoryChange={setRegulatoryAnswers}
             value={criterionScores}
             onChange={({ scores: next, byCategory }) => {
               setCriterionScores(next);

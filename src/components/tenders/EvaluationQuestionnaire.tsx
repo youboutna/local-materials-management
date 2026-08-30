@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
 import { ClipboardCheck, AlertCircle } from 'lucide-react';
+import RegulatoryComplianceChecklist from '@/components/project/compliance/RegulatoryComplianceChecklist';
+import type { RegulatoryAnswer } from '@/config/referentials/compliance/regulatory-compliance.referential';
 import { useI18n } from '@/hooks/useI18n';
 import {
   DEFAULT_CATEGORY_WEIGHTS,
@@ -39,6 +41,11 @@ interface EvaluationQuestionnaireProps {
   weights?: CategoryWeighting[];
   readOnly?: boolean;
   title?: string;
+  /** Affiche le questionnaire de recevabilité réglementaire (même référentiel que le projet). */
+  showRegulatoryChecklist?: boolean;
+  /** Réponses de recevabilité (mode contrôlé). */
+  regulatoryAnswers?: Record<string, RegulatoryAnswer>;
+  onRegulatoryChange?: (answers: Record<string, RegulatoryAnswer>) => void;
 }
 
 export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = ({
@@ -48,6 +55,9 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
   weights = DEFAULT_CATEGORY_WEIGHTS,
   readOnly = false,
   title = "Questionnaire d'évaluation",
+  showRegulatoryChecklist = false,
+  regulatoryAnswers,
+  onRegulatoryChange,
 }) => {
   const { t } = useI18n();
   const result = useMemo(() => computeGlobalScore(value, weights, criteria), [value, weights, criteria]);
@@ -73,6 +83,17 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {showRegulatoryChecklist && (
+          <RegulatoryComplianceChecklist
+            scope="tender_submission"
+            title="Recevabilité réglementaire du soumissionnaire"
+            value={regulatoryAnswers ?? {}}
+            onValueChange={(next) => onRegulatoryChange?.(next)}
+            hideUpload
+            domainKeys={['administrative', 'procurement', 'financial']}
+          />
+        )}
+
         {weights.map((weighting) => {
           const catCriteria = criteria.filter((c) => c.category === weighting.category);
           if (catCriteria.length === 0) return null;
