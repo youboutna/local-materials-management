@@ -303,15 +303,18 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({
                       </SelectContent>
                     </Select>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setUploadTarget({ domain, item })}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      <T k="auto.regulatorycompliancechecklist.ajouter_la_piece" fallback="Ajouter la pièce" />
-                    </Button>
+                    {!hideUpload && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setUploadTarget({ domain, item })}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        <T k="auto.regulatorycompliancechecklist.ajouter_la_piece" fallback="Ajouter la pièce" />
+                      </Button>
+                    )}
+
                   </div>
                 </div>
               );
