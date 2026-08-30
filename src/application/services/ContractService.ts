@@ -5,7 +5,10 @@
  * déléguée à `IContractRepository` (btp.contracts).
  */
 
-import type { IContractRepository } from '@/domain/repositories/IContractRepository';
+import type {
+  IContractRepository,
+  ContractQueryFilters,
+} from '@/domain/repositories/IContractRepository';
 import type {
   ContractRecordDTO,
   CreateContractRecordDTO,
@@ -15,6 +18,27 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // ✅ IMPORT formatReference et validateEntityLabel
 import { formatReference, validateEntityLabel } from '@/utils/entityLabels';
+
+/** Statuts autorisés — référentiel unique côté application. */
+export const CONTRACT_STATUSES = [
+  'draft',
+  'signed',
+  'active',
+  'suspended',
+  'closed',
+  'cancelled',
+] as const;
+
+export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
+
+export const CONTRACT_STATUS_LABELS: Record<string, string> = {
+  draft: 'Brouillon',
+  signed: 'Signé',
+  active: 'En cours',
+  suspended: 'Suspendu',
+  closed: 'Clôturé',
+  cancelled: 'Annulé',
+};
 
 export interface AwardContractInput {
   projectId: string;
@@ -36,6 +60,25 @@ export function buildContractNumber(tenderId: string, at: Date = new Date()): st
 
 export class ContractService {
   constructor(private repository: IContractRepository = new SupabaseContractAdapter()) {}
+
+  /** Tous les contrats (vue administration / suivi). */
+  async listAll(filters: ContractQueryFilters = {}): Promise<ContractRecordDTO[]> {
+    return this.repository.findAll(filters);
+  }
+
+  async getById(id: string): Promise<ContractRecordDTO | null> {
+    if (!id) return null;
+    return this.repository.findById(id);
+  }
+
+  /** Transition de statut contrôlée (draft → signed → active → closed / cancelled). */
+  async changeStatus(id: string, status: string): Promise<ContractRecordDTO> {
+    if (!id) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Contrat requis');
+    if (!(CONTRACT_STATUSES as readonly string[]).includes(status)) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, `Statut de contrat invalide : ${status}`);
+    }
+    return this.repository.updateStatus(id, status);
+  }
 
   async listByProject(projectId: string): Promise<ContractRecordDTO[]> {
     if (!projectId) return [];
