@@ -101,10 +101,12 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
     paymentStatus,
     maxAllowedAmount: maxToleranceAmount
   } = paymentValidation;
+  const projectBudget = project.budget ?? 0;
+  const projectProgress = project.progress ?? 0;
   const totalPaid = project.payments ? project.payments.reduce((sum, p) => sum + p.amount, 0) : 0;
-  const paymentProgressPercent = project.budget > 0 ? Math.min(100, (totalPaid / project.budget) * 100) : 0;
-  const initialPaymentPercentage = project.initialPaymentPercentage || 0;
-  const progressBasedAmount = (project.budget * project.progress) / 100;
+  const paymentProgressPercent = projectBudget > 0 ? Math.min(100, (totalPaid / projectBudget) * 100) : 0;
+  const initialPaymentPercentage = (project as { initialPaymentPercentage?: number }).initialPaymentPercentage || 0;
+  const progressBasedAmount = (projectBudget * projectProgress) / 100;
   
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
@@ -144,7 +146,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   };
   
   // Calculate remaining budget
-  const remainingBudget = project.budget - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
+  const remainingBudget = projectBudget - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
   
   // Use hexagonal hook values (Rule #5: UI Layer Separation)
   const maxToleranceAmountCalc = paymentValidation.maxAllowedAmount;

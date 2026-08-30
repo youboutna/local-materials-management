@@ -1435,7 +1435,10 @@ export class ProjectImportExportService {
           employee = current;
         }
       } else {
-        employee = await this.employeeService.createEmployee(employeeData);
+        employee = await this.employeeService.createEmployee({
+          status: EmployeeStatus.ACTIVE,
+          ...employeeData,
+        });
       }
 
       references.set(row.id, employee.id);
