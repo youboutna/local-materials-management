@@ -1,19 +1,37 @@
 /**
- * ContractDetail — fiche contrat : entête, montants, transitions de statut.
+ * ContractDetail — fiche contrat : entête, montants, lignes figées, transitions de statut.
  */
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ArrowLeft, Loader2, FileDown, Pencil, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContractStatusBadge } from '@/components/contracts/ContractStatusBadge';
+import ContractLinesTable from '@/components/contracts/ContractLinesTable';
+import ContractFormDialog from '@/components/contracts/ContractFormDialog';
+import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import {
   CONTRACT_STATUSES,
   CONTRACT_STATUS_LABELS,
+  CONTRACT_TYPE_LABELS,
 } from '@/application/services/ContractService';
-import { useContractHex, useContractStatusMutation } from '@/hooks/hexagonal/useContractsHex';
+import { getContractPdfService } from '@/application/services/ContractPdfService';
+import {
+  useContractHex,
+  useContractStatusMutation,
+  useContractLinesHex,
+  useContractMutations,
+} from '@/hooks/hexagonal/useContractsHex';
 
 const formatAmount = (value: number, currency: string) =>
   `${new Intl.NumberFormat('fr-FR').format(value || 0)} ${currency}`;
@@ -25,7 +43,11 @@ export default function ContractDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: contract, isLoading, error } = useContractHex(id);
+  const { data: lines = [] } = useContractLinesHex(id);
   const { changeStatus, isPending } = useContractStatusMutation();
+  const { attachSignedDocument } = useContractMutations();
+  const [editOpen, setEditOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const handleStatus = async (status: string) => {
     if (!id) return;
@@ -36,6 +58,29 @@ export default function ContractDetail() {
       toast.error(e instanceof Error ? e.message : 'Mise à jour impossible');
     }
   };
+
+  const handleExportPdf = () => {
+    if (!contract) return;
+    try {
+      getContractPdfService().download(contract, lines, {
+        supplierName: String((contract.metadata as any)?.supplierName ?? ''),
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Export PDF impossible');
+    }
+  };
+
+  const handleSignedUploaded = async () => {
+    if (!id) return;
+    setUploadOpen(false);
+    try {
+      await attachSignedDocument(id, {});
+      toast.success('Contrat signé rattaché');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Rattachement impossible');
+    }
+  };
+
 
   return (
     <AppLayout pageTitle="Contrat">
