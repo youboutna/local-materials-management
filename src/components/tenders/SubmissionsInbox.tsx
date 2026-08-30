@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { AwardedTenderPreviewDialog } from './AwardedTenderPreviewDialog';
+import GenerateContractButton from '@/components/contracts/GenerateContractButton';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
 
