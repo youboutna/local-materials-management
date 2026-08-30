@@ -375,6 +375,78 @@ export class ProjectImportExportService {
     return row.externalRef || row.id || row.projectReference || row.reference;
   }
 
+  // ===========================================================================
+  // NORMALISATION UNIQUE DU DATASET
+  // Accepte les projets plats ET les enveloppes
+  // { project, phases, milestones, tasks, dqeLines, stakeholders, interventionZones }
+  // ===========================================================================
+
+  normalizeImportRow(input: unknown): ProjectImportRow {
+    const raw = (input ?? {}) as Record<string, unknown>;
+    const envelope = (raw.project ?? raw.projet) as Record<string, unknown> | undefined;
+    const base: Record<string, unknown> = envelope
+      ? { ...envelope }
+      : { ...raw };
+
+    // Collections : celles de l'enveloppe prévalent, sinon celles du projet
+    const pick = <T,>(key: string, altKey?: string): T | undefined => {
+      const fromEnvelope = envelope ? (raw[key] ?? (altKey ? raw[altKey] : undefined)) : undefined;
+      const fromBase = base[key] ?? (altKey ? base[altKey] : undefined);
+      return (fromEnvelope ?? fromBase) as T | undefined;
+    };
+
+    const row = base as ProjectImportRow & Record<string, unknown>;
+
+    // Alias de champs
+    row.title = String(
+      (base.title ?? base.name ?? base.nom ?? base.intitule ?? '') as string,
+    ).trim();
+    row.description = (base.description ?? base.desc ?? undefined) as string | undefined;
+    row.projectReference = (base.projectReference ?? base.reference ?? base.ref) as string | undefined;
+    row.externalRef = (base.externalRef ?? base.id ?? row.projectReference) as string | undefined;
+    row.location = (base.location ?? base.lieu ?? base.localisation ?? base.address) as string | undefined;
+
+    const timeline = base.timeline as { startDate?: string; endDate?: string } | undefined;
+    row.startDate = (base.startDate ?? base.dateDebut ?? base.start_date ?? timeline?.startDate) as string | undefined;
+    row.endDate = (base.endDate ?? base.dateFin ?? base.end_date ?? timeline?.endDate) as string | undefined;
+
+    const budget = base.budget as number | { total?: number; currency?: string; sources?: Array<Record<string, unknown>> } | undefined;
+    if (budget !== undefined) row.budget = budget;
+    row.currency = (base.currency
+      ?? (typeof budget === 'object' ? budget?.currency : undefined)
+      ?? undefined) as string | undefined;
+
+    // Collections relationnelles
+    row.phases = pick<ProjectImportPhase[]>('phases', 'plannedPhases') ?? [];
+    row.milestones = pick<ProjectImportMilestone[]>('milestones', 'jalons') ?? [];
+    row.tasks = pick<ProjectImportTask[]>('tasks', 'taches') ?? [];
+    row.dqeLines = pick<BoqLineDTO[]>('dqeLines', 'dqe') ?? [];
+    row.stakeholders = pick<ProjectImportStakeholder[]>('stakeholders', 'parties') ?? [];
+
+    const zones = pick<InterventionZoneDTO[]>('interventionZones');
+    const zone = pick<InterventionZoneDTO>('interventionZone');
+    if (zones?.length) row.interventionZones = zones;
+    if (zone) row.interventionZone = zone;
+
+    return row as ProjectImportRow;
+  }
+
+  normalizeDataset(input: unknown): ProjectImportDataset {
+    const raw = (input ?? {}) as Record<string, unknown>;
+    const projectsSource = Array.isArray(raw) ? raw : (raw.projects ?? raw.projets ?? []);
+    const projects = (Array.isArray(projectsSource) ? projectsSource : [projectsSource])
+      .map((item) => this.normalizeImportRow(item));
+
+    return {
+      projects,
+      organizations: raw.organizations as ProjectImportOrganization[] | undefined,
+      suppliers: raw.suppliers as ProjectImportSupplier[] | undefined,
+      employees: raw.employees as ProjectImportEmployee[] | undefined,
+      options: raw.options as ImportOptions | undefined,
+    };
+  }
+
+
   private resolveReference(reference?: string, map?: Map<string, string>): string | undefined {
     if (!reference) return undefined;
     const mapped = map?.get(reference);
