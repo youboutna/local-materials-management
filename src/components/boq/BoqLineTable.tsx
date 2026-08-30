@@ -15,6 +15,7 @@ import { getPhasesForReferential, type ReferentialType } from '@/config/referent
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import { T } from '@/components/i18n/T';
+import { TaxService } from '@/application/services/TaxService';
 
 export interface StakeholderOption {
   id: string;
@@ -39,7 +40,8 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
 const UNITS = DQE_UNIT_CODES;
-const DATA_COLS = 17;
+const DATA_COLS = 18;
+const TAX_REGIMES_OPTIONS = TaxService.listRegimes();
 const RESOURCE_TYPES: { value: BoqResourceType; label: string }[] = [
   { value: 'material', label: 'Métré / matériau' },
   { value: 'labor', label: "RH / prestation" },
@@ -118,6 +120,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               <TableHead className="text-right">h</TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.qte" fallback="Qté" /></TableHead>
               <TableHead className="text-right">PU</TableHead>
+              <TableHead className="min-w-[170px]"><T k="auto.boqlinetable.regime_tva" fallback="Régime TVA" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.tva" fallback="TVA %" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.ras" fallback="RAS %" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.frais" fallback="Frais" /></TableHead>
@@ -153,6 +156,26 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.height ?? ''} onChange={(e) => patch(i, { height: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-20 text-right" /> : (l.height ?? '—')}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.quantity ?? 0} onChange={(e) => patch(i, { quantity: Number(e.target.value) || 0 })} className="h-8 w-24 text-right" /> : l.quantity}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.unitPrice ?? 0} onChange={(e) => patch(i, { unitPrice: Number(e.target.value) || 0 })} className="h-8 w-28 text-right" /> : (l.unitPrice != null ? fmt(l.unitPrice) : '—')}</TableCell>
+                  <TableCell>
+                    {editable ? (
+                      <Select
+                        value={l.taxRegimeCode ?? TaxService.detectTaxRegime(l).code}
+                        onValueChange={(v) => {
+                          const regime = TAX_REGIMES_OPTIONS.find((r) => r.code === v);
+                          patch(i, { taxRegimeCode: v, vatRate: regime?.vatRate ?? 0, rasRate: regime?.withholdingRate ?? 0 });
+                        }}
+                      >
+                        <SelectTrigger className="h-8 min-w-[160px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {TAX_REGIMES_OPTIONS.map((r) => (
+                            <SelectItem key={r.code} value={r.code}>{r.labels.fr}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{TaxService.detectTaxRegime(l).labels.fr}</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" step={0.01} value={l.vatRate ?? 0} onChange={(e) => patch(i, { vatRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.vatRate ?? 0) * 100).toFixed(0)}%`}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" step={0.01} value={l.rasRate ?? 0} onChange={(e) => patch(i, { rasRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.rasRate ?? 0) * 100).toFixed(0)}%`}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.fees ?? 0} onChange={(e) => patch(i, { fees: Number(e.target.value) || 0 })} className="h-8 w-24 text-right" /> : fmt(l.fees ?? 0)}</TableCell>
