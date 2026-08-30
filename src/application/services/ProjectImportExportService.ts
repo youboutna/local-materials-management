@@ -615,7 +615,7 @@ export class ProjectImportExportService {
         const customData = candidate.customPhaseData as { phaseCode?: string } | null;
         return (phase.code && customData?.phaseCode === phase.code) ||
           (phase.name && candidate.phaseName === phase.name) ||
-          (phase.externalRef && candidate.externalRef === phase.externalRef);
+          (phase.externalRef && (candidate as { externalRef?: string }).externalRef === phase.externalRef);
       }) ?? null;
 
       const phaseCode = phase.code || `phase-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;

@@ -945,6 +945,16 @@ export interface CreateProjectDTO {
 
   // Workflow configuration
   paymentWorkflowConfig?: Record<string, unknown>;
+
+  /** Avancement initial (import de données existantes). */
+  progress?: number;
+  /** Bureau d'études / maître d'œuvre. */
+  engineeringConsultant?: string;
+  /** Nom du client (libellé libre). */
+  clientName?: string;
+  /** Zones d'intervention importées. */
+  interventionZones?: Array<Record<string, unknown>>;
+  interventionZone?: string;
 }
 
 // Update Project DTO - standardized pattern  

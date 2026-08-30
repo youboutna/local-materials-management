@@ -7,7 +7,7 @@ export interface ProjectStakeholderDTO {
   id: string;
   projectId: string;
   stakeholderType: string;
-  stakeholderEntityType: 'employee' | 'supplier';
+  stakeholderEntityType: 'employee' | 'supplier' | 'organization';
   employeeId?: string;
   supplierId?: string;
   organizationId?: string;
@@ -26,7 +26,7 @@ export interface ProjectStakeholderDTO {
 export interface CreateProjectStakeholderDTO {
   projectId: string;
   stakeholderType: string;
-  stakeholderEntityType: 'employee' | 'supplier';
+  stakeholderEntityType: 'employee' | 'supplier' | 'organization';
   employeeId?: string;
   supplierId?: string;
   organizationId?: string;
@@ -37,7 +37,7 @@ export interface CreateProjectStakeholderDTO {
 
 export interface UpdateProjectStakeholderDTO {
   stakeholderType?: string;
-  stakeholderEntityType?: 'employee' | 'supplier';
+  stakeholderEntityType?: 'employee' | 'supplier' | 'organization';
   employeeId?: string;
   supplierId?: string;
   organizationId?: string;
