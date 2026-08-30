@@ -398,7 +398,7 @@ export class MilestoneService {
 
       // Si une date de completion est fournie, l'ajouter
       if (completionDate) {
-        createData.actual_completion_date = completionDate;
+        (createData as Record<string, unknown>).actual_completion_date = completionDate;
       }
 
       const milestone = await this.createMilestone(createData);

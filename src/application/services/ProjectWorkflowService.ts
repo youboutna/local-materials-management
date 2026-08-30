@@ -514,7 +514,7 @@ export class ProjectWorkflowService {
         projectId,
         currentStep: 1,
         isDraft: false,
-        isComplete: projectDTO.status === ProjectStatus.TERMINE || projectDTO.status === ProjectStatus.COMPLETED,
+        isComplete: projectDTO.status === ProjectStatus.COMPLETED,
         projectData: projectDTO,
         relatedData: {
           phases: phaseData,

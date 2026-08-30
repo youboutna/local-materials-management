@@ -78,7 +78,7 @@ export interface ProjectAlertDTO {
 }
 
 /** Ré-export de compatibilité : projet agrégé avec paiements. */
-export type { ProjectWithPayments } from './ProjectWithPaymentsDTO';
+export type { ProjectWithPaymentsDTO as ProjectWithPayments } from './ProjectWithPaymentsDTO';
 
 export enum ProjectStatus {
   // Initial states

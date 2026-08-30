@@ -44,7 +44,7 @@ const RegionalDashboard = () => {
         : 0;
       
       const activeProjects = regionProjects.filter(p => p.status === ProjectStatus.EN_COURS || p.status === ProjectStatus.EN_ATTENTE).length;
-      const completedProjects = regionProjects.filter(p => p.status === ProjectStatus.TERMINE || p.status === ProjectStatus.COMPLETED).length;
+      const completedProjects = regionProjects.filter(p => p.status === ProjectStatus.COMPLETED).length;
 
       return {
         region,
