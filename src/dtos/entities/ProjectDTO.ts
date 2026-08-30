@@ -65,6 +65,21 @@ export const NOTIFICATION_ROLES = {
 // PROJECT STATUS - CODES TECHNIQUES STANDARDISÉS (ANGLAIS, MAJUSCULES, SANS V2)
 // =============================================================================
 
+/** Alerte projet minimale (vue détaillée). */
+export interface ProjectAlertDTO {
+  id: string;
+  title: string;
+  message?: string;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  type?: string;
+  createdAt?: string;
+  acknowledged?: boolean;
+  resolved?: boolean;
+}
+
+/** Ré-export de compatibilité : projet agrégé avec paiements. */
+export type { ProjectWithPayments } from './ProjectWithPaymentsDTO';
+
 export enum ProjectStatus {
   // Initial states
   DRAFT = 'DRAFT',
@@ -107,6 +122,8 @@ export enum ProjectStatus {
   SUSPENDU = 'SUSPENDED',
   EN_RETARD = 'DELAYED',
   ANNULE = 'CANCELLED',
+  /** @deprecated alias historique — utiliser IN_PROGRESS. */
+  EN_COURS_LEGACY = 'IN_PROGRESS',
 }
 
 // =============================================================================
@@ -211,7 +228,7 @@ export function getProjectStatusLabel(status: ProjectStatus | string, lang: Supp
   const code = typeof status === 'string' ? status : status;
   const label = getEnumLabel('ProjectStatus', code, lang);
   if (label !== code) return label;
-  return typeof status === 'string' ? status : status.toString();
+  return String(status);
 }
 
 /**
@@ -618,7 +635,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
   payments: PaymentDTO[];
   materials: MaterialDTO[];
   stakeholders: StakeholderDTO[];
-  alerts: Alert[];
+  alerts: ProjectAlertDTO[];
   inspections: InspectionDTO[];
   
   // Insurance related collections

@@ -18,14 +18,14 @@ interface ConstructionPhaseSelectorProps {
 }
 
 const CONSTRUCTION_PHASES: { value: ConstructionPhase; label: string; description: string }[] = [
-  { value: 'pre_construction', label: 'Pré-construction', description: 'Planification et conception' },
-  { value: 'site_preparation', label: 'Préparation du site', description: 'Nettoyage et terrassement' },
-  { value: 'foundation', label: 'Fondation', description: 'Travaux de fondation' },
-  { value: 'structure', label: 'Structure', description: 'Structure principale' },
-  { value: 'exterior', label: 'Extérieur', description: 'Travaux extérieurs' },
-  { value: 'finishing', label: 'Finitions', description: 'Travaux de finition' },
-  { value: 'post_construction', label: 'Post-construction', description: 'Inspections finales' },
-  { value: 'handover', label: 'Livraison', description: 'Remise des clés' }
+  { value: 'PRE_CONSTRUCTION', label: 'Pré-construction', description: 'Planification et conception' },
+  { value: 'SITE_PREPARATION', label: 'Préparation du site', description: 'Nettoyage et terrassement' },
+  { value: 'FOUNDATION', label: 'Fondation', description: 'Travaux de fondation' },
+  { value: 'STRUCTURE', label: 'Structure', description: 'Structure principale' },
+  { value: 'EXTERIOR', label: 'Extérieur', description: 'Travaux extérieurs' },
+  { value: 'FINISHING', label: 'Finitions', description: 'Travaux de finition' },
+  { value: 'POST_CONSTRUCTION', label: 'Post-construction', description: 'Inspections finales' },
+  { value: 'HANDOVER', label: 'Livraison', description: 'Remise des clés' }
 ];
 
 const ConstructionPhaseSelector: React.FC<ConstructionPhaseSelectorProps> = ({
