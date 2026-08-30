@@ -15,14 +15,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, FileSignature, Search } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Loader2, FileSignature, Search, Plus, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ContractStatusBadge } from './ContractStatusBadge';
-import { useContractsHex, useProjectContractsHex } from '@/hooks/hexagonal/useContractsHex';
+import ContractFormDialog from './ContractFormDialog';
+import { useContractsHex, useProjectContractsHex, useContractMutations } from '@/hooks/hexagonal/useContractsHex';
 import type { ContractRecordDTO } from '@/dtos/entities/ContractRecordDTO';
 
 interface ContractListProps {
   projectId?: string;
   title?: string;
+  /** Masque les actions d'écriture (lecture seule, ex. portail fournisseur). */
+  readOnly?: boolean;
 }
 
 const formatAmount = (value: number, currency: string) =>
@@ -31,9 +45,13 @@ const formatAmount = (value: number, currency: string) =>
 const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleDateString('fr-FR') : '—';
 
-export default function ContractList({ projectId, title = 'Contrats' }: ContractListProps) {
+export default function ContractList({ projectId, title = 'Contrats', readOnly = false }: ContractListProps) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<ContractRecordDTO | null>(null);
+  const [toDelete, setToDelete] = useState<ContractRecordDTO | null>(null);
+  const { deleteContract, isPending } = useContractMutations();
 
   const globalQuery = useContractsHex();
   const projectQuery = useProjectContractsHex(projectId);
@@ -49,6 +67,19 @@ export default function ContractList({ projectId, title = 'Contrats' }: Contract
         c.contractNumber?.toLowerCase().includes(needle),
     );
   }, [query.data, search]);
+
+  const handleDelete = async () => {
+    if (!toDelete) return;
+    try {
+      await deleteContract(toDelete.id);
+      toast.success('Contrat supprimé');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Suppression impossible');
+    } finally {
+      setToDelete(null);
+    }
+  };
+
 
   return (
     <Card>
