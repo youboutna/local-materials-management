@@ -6,6 +6,7 @@
 import { Employee } from '@/domain/entities/Employee';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
 import {
+    CertificationDTO,
     CreateEmployeeDTO,
     EmployeeDepartment,
     EmployeeDTO,
