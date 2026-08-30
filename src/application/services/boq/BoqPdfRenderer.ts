@@ -234,14 +234,18 @@ export const BoqPdfRenderer = {
       const quantity = Number(l.quantity ?? 0);
       const unitPrice = Number(l.unitPrice ?? 0);
       const totalHt = Number(l.totalHt ?? quantity * unitPrice + Number(l.fees ?? 0));
-      const tax = resolveLineTax(
+      // Priorité fiscale unifiée : saisie > compte PCM > régime > mots-clés > profil.
+      const tax = TaxService.resolve(
         {
           vatRate: l.vatRate,
           rasRate: l.rasRate,
+          taxRegimeCode: l.taxRegimeCode ?? null,
+          accountCode: l.accountCode ?? null,
           resourceType: l.resourceType ?? null,
           category: l.category ?? null,
           elementType: l.elementType ?? null,
           designation: l.designation ?? null,
+          totalHt,
         },
         profile,
       );
