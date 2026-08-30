@@ -375,6 +375,78 @@ export class ProjectImportExportService {
     return row.externalRef || row.id || row.projectReference || row.reference;
   }
 
+  // ===========================================================================
+  // NORMALISATION UNIQUE DU DATASET
+  // Accepte les projets plats ET les enveloppes
+  // { project, phases, milestones, tasks, dqeLines, stakeholders, interventionZones }
+  // ===========================================================================
+
+  normalizeImportRow(input: unknown): ProjectImportRow {
+    const raw = (input ?? {}) as Record<string, unknown>;
+    const envelope = (raw.project ?? raw.projet) as Record<string, unknown> | undefined;
+    const base: Record<string, unknown> = envelope
+      ? { ...envelope }
+      : { ...raw };
+
+    // Collections : celles de l'enveloppe prévalent, sinon celles du projet
+    const pick = <T,>(key: string, altKey?: string): T | undefined => {
+      const fromEnvelope = envelope ? (raw[key] ?? (altKey ? raw[altKey] : undefined)) : undefined;
+      const fromBase = base[key] ?? (altKey ? base[altKey] : undefined);
+      return (fromEnvelope ?? fromBase) as T | undefined;
+    };
+
+    const row = base as ProjectImportRow & Record<string, unknown>;
+
+    // Alias de champs
+    row.title = String(
+      (base.title ?? base.name ?? base.nom ?? base.intitule ?? '') as string,
+    ).trim();
+    row.description = (base.description ?? base.desc ?? undefined) as string | undefined;
+    row.projectReference = (base.projectReference ?? base.reference ?? base.ref) as string | undefined;
+    row.externalRef = (base.externalRef ?? base.id ?? row.projectReference) as string | undefined;
+    row.location = (base.location ?? base.lieu ?? base.localisation ?? base.address) as string | undefined;
+
+    const timeline = base.timeline as { startDate?: string; endDate?: string } | undefined;
+    row.startDate = (base.startDate ?? base.dateDebut ?? base.start_date ?? timeline?.startDate) as string | undefined;
+    row.endDate = (base.endDate ?? base.dateFin ?? base.end_date ?? timeline?.endDate) as string | undefined;
+
+    const budget = base.budget as number | { total?: number; currency?: string; sources?: Array<Record<string, unknown>> } | undefined;
+    if (budget !== undefined) row.budget = budget;
+    row.currency = (base.currency
+      ?? (typeof budget === 'object' ? budget?.currency : undefined)
+      ?? undefined) as string | undefined;
+
+    // Collections relationnelles
+    row.phases = pick<ProjectImportPhase[]>('phases', 'plannedPhases') ?? [];
+    row.milestones = pick<ProjectImportMilestone[]>('milestones', 'jalons') ?? [];
+    row.tasks = pick<ProjectImportTask[]>('tasks', 'taches') ?? [];
+    row.dqeLines = pick<BoqLineDTO[]>('dqeLines', 'dqe') ?? [];
+    row.stakeholders = pick<ProjectImportStakeholder[]>('stakeholders', 'parties') ?? [];
+
+    const zones = pick<InterventionZoneDTO[]>('interventionZones');
+    const zone = pick<InterventionZoneDTO>('interventionZone');
+    if (zones?.length) row.interventionZones = zones;
+    if (zone) row.interventionZone = zone;
+
+    return row as ProjectImportRow;
+  }
+
+  normalizeDataset(input: unknown): ProjectImportDataset {
+    const raw = (input ?? {}) as Record<string, unknown>;
+    const projectsSource = Array.isArray(raw) ? raw : (raw.projects ?? raw.projets ?? []);
+    const projects = (Array.isArray(projectsSource) ? projectsSource : [projectsSource])
+      .map((item) => this.normalizeImportRow(item));
+
+    return {
+      projects,
+      organizations: raw.organizations as ProjectImportOrganization[] | undefined,
+      suppliers: raw.suppliers as ProjectImportSupplier[] | undefined,
+      employees: raw.employees as ProjectImportEmployee[] | undefined,
+      options: raw.options as ImportOptions | undefined,
+    };
+  }
+
+
   private resolveReference(reference?: string, map?: Map<string, string>): string | undefined {
     if (!reference) return undefined;
     const mapped = map?.get(reference);
@@ -716,8 +788,13 @@ export class ProjectImportExportService {
     }
 
     // 7. IMPORTER LES DQE LINES PROJET
+    let fallbackDqePhaseId: string | undefined;
     for (const line of row.dqeLines ?? []) {
-      const targetPhaseId = line.phaseId ? phaseIdMap.get(line.phaseId) : undefined;
+      let targetPhaseId = line.phaseId ? phaseIdMap.get(line.phaseId) : undefined;
+      if (!targetPhaseId) {
+        fallbackDqePhaseId = fallbackDqePhaseId ?? await this.ensureImportDqePhase(projectId, row, details);
+        targetPhaseId = fallbackDqePhaseId;
+      }
       const dqeLine = {
         ...line,
         btpCode: line.btpCode ?? (line as BoqLineDTO & { code?: string }).code ?? undefined,
@@ -769,6 +846,44 @@ export class ProjectImportExportService {
   // ===========================================================================
   // UPSERT TASK - CORRIGÉ
   // ===========================================================================
+
+  /**
+   * Rattache les lignes DQE projet sans phase explicite à une phase d'import dédiée
+   * plutôt que de les ignorer.
+   */
+  private async ensureImportDqePhase(
+    projectId: string,
+    row: ProjectImportRow,
+    details: ProjectImportResult['details'],
+  ): Promise<string> {
+    const phaseCode = 'IMPORT_DQE';
+    const existingPhases = await this.phaseService.getPhasesByProject(projectId);
+    const existing = existingPhases.find((candidate) => {
+      const customData = candidate.customPhaseData as { phaseCode?: string } | null;
+      return customData?.phaseCode === phaseCode || candidate.phaseName === 'DQE importé';
+    });
+    if (existing) return existing.id;
+
+    const created = await this.phaseService.createPhase({
+      id: '',
+      projectId,
+      name: 'DQE importé',
+      phaseCode,
+      type: PhaseTransformer.normalizeDbPhaseType(phaseCode) as never,
+      description: 'Phase générée automatiquement pour les lignes DQE importées sans phase.',
+      status: PhaseStatus.PENDING,
+      priority: PhasePriority.MEDIUM,
+      progress: 0,
+      startDate: row.startDate,
+      endDate: row.endDate,
+      customPhaseData: { phaseCode },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as PhaseDTO, projectId);
+
+    details.phases += 1;
+    return created.id;
+  }
 
   private async upsertTask(
     projectId: string,
@@ -947,11 +1062,12 @@ export class ProjectImportExportService {
   // ===========================================================================
 
   async importDataset(
-    dataset: ProjectImportDataset,
+    input: ProjectImportDataset | unknown,
     options: ImportOptions = {}
   ): Promise<ProjectImportResult> {
-    if (!dataset || !Array.isArray(dataset.projects)) {
-      throw new Error('Invalid import dataset: projects must be an array');
+    const dataset = this.normalizeDataset(input);
+    if (dataset.projects.length === 0) {
+      throw new Error('Invalid import dataset: projects must be a non-empty array');
     }
 
     try {
@@ -1038,6 +1154,10 @@ export class ProjectImportExportService {
 
     const mode = options.mode || 'upsert';
     const continueOnError = options.continueOnError || false;
+
+    // Normalisation défensive : accepte enveloppes imbriquées et alias
+    rows = rows.map((row) => this.normalizeImportRow(row));
+    result.total = rows.length;
 
     const validationErrors = this.validateImportRows(rows);
     const invalidRows = new Set(validationErrors.map((error) => error.row));

@@ -66,6 +66,7 @@ export default function ProjectFileImporter({
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [importDetails, setImportDetails] = useState<Record<string, number> | null>(null);
   const [importMode, setImportMode] = useState<ImportMode>("create");
   const [templateReferential, setTemplateReferential] = useState<ReferentialType>("CUSTOM_STANDARD");
   const [templateFormat, setTemplateFormat] = useState<TemplateFormat>("json");
@@ -379,7 +380,16 @@ export default function ProjectFileImporter({
       const dataset = Array.isArray(rawData)
         ? { projects: rawData }
         : rawData;
-      const importResult = await projectImportService.importDataset(dataset);
+      const serviceMode =
+        importMode === "create"
+          ? "create"
+          : importMode === "update"
+            ? "upsert"
+            : "partial_update";
+      const importResult = await projectImportService.importDataset(dataset, {
+        mode: serviceMode,
+        continueOnError: true,
+      } as never);
       const errors = importResult.errors.map(
         (error) => `${t("projects.import.line")} ${error.row}: ${error.message}`,
       );
@@ -391,8 +401,12 @@ export default function ProjectFileImporter({
         success: totalProcessed > 0,
         message,
         importedCount: totalProcessed,
+        imported: totalProcessed,
+        failed: importResult.failed,
+        skipped: importResult.skipped,
         errors: errors.length > 0 ? errors : undefined,
       };
+      setImportDetails(importResult.details ?? null);
 
       setImportResult(result);
       onImportComplete?.(result);
@@ -430,6 +444,7 @@ export default function ProjectFileImporter({
   const clearSelection = () => {
     setSelectedFile(null);
     setImportResult(null);
+    setImportDetails(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -633,6 +648,20 @@ export default function ProjectFileImporter({
               }
             >
               {importResult.message}
+              {importDetails && (
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {Object.entries(importDetails)
+                    .filter(([, value]) => typeof value === "number")
+                    .map(([key, value]) => (
+                      <span
+                        key={key}
+                        className="rounded-md border border-border bg-background/60 px-2 py-0.5 text-foreground"
+                      >
+                        {t(`projects.import.details.${key}`)}: {value}
+                      </span>
+                    ))}
+                </div>
+              )}
               {importResult.errors && importResult.errors.length > 0 && (
                 <details className="mt-2">
                   <summary className="cursor-pointer font-medium">
