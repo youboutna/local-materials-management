@@ -15,14 +15,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, FileSignature, Search } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Loader2, FileSignature, Search, Plus, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ContractStatusBadge } from './ContractStatusBadge';
-import { useContractsHex, useProjectContractsHex } from '@/hooks/hexagonal/useContractsHex';
+import ContractFormDialog from './ContractFormDialog';
+import { useContractsHex, useProjectContractsHex, useContractMutations } from '@/hooks/hexagonal/useContractsHex';
 import type { ContractRecordDTO } from '@/dtos/entities/ContractRecordDTO';
 
 interface ContractListProps {
   projectId?: string;
   title?: string;
+  /** Masque les actions d'écriture (lecture seule, ex. portail fournisseur). */
+  readOnly?: boolean;
 }
 
 const formatAmount = (value: number, currency: string) =>
@@ -31,9 +45,13 @@ const formatAmount = (value: number, currency: string) =>
 const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleDateString('fr-FR') : '—';
 
-export default function ContractList({ projectId, title = 'Contrats' }: ContractListProps) {
+export default function ContractList({ projectId, title = 'Contrats', readOnly = false }: ContractListProps) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<ContractRecordDTO | null>(null);
+  const [toDelete, setToDelete] = useState<ContractRecordDTO | null>(null);
+  const { deleteContract, isPending } = useContractMutations();
 
   const globalQuery = useContractsHex();
   const projectQuery = useProjectContractsHex(projectId);
@@ -50,6 +68,19 @@ export default function ContractList({ projectId, title = 'Contrats' }: Contract
     );
   }, [query.data, search]);
 
+  const handleDelete = async () => {
+    if (!toDelete) return;
+    try {
+      await deleteContract(toDelete.id);
+      toast.success('Contrat supprimé');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Suppression impossible');
+    } finally {
+      setToDelete(null);
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -58,17 +89,31 @@ export default function ContractList({ projectId, title = 'Contrats' }: Contract
           {title}
           <span className="text-xs font-normal text-muted-foreground">({rows.length})</span>
         </CardTitle>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Numéro ou intitulé"
-            className="pl-8"
-            aria-label="Rechercher un contrat"
-          />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Numéro ou intitulé"
+              className="pl-8"
+              aria-label="Rechercher un contrat"
+            />
+          </div>
+          {!readOnly && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Nouveau contrat
+            </Button>
+          )}
         </div>
       </CardHeader>
+
 
       <CardContent>
         {query.isLoading && (
@@ -113,13 +158,38 @@ export default function ContractList({ projectId, title = 'Contrats' }: Contract
                     </TableCell>
                     <TableCell>{formatDate(contract.startDate)}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/contracts/${contract.id}`)}
-                      >
-                        Ouvrir
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/contracts/${contract.id}`)}
+                        >
+                          Ouvrir
+                        </Button>
+                        {!readOnly && (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Modifier le contrat"
+                              onClick={() => {
+                                setEditing(contract);
+                                setFormOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Supprimer le contrat"
+                              onClick={() => setToDelete(contract)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -128,6 +198,31 @@ export default function ContractList({ projectId, title = 'Contrats' }: Contract
           </div>
         )}
       </CardContent>
+
+      <ContractFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        projectId={projectId ?? null}
+        contract={editing}
+      />
+
+      <AlertDialog open={!!toDelete} onOpenChange={(open) => !open && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce contrat ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {toDelete?.contractNumber} — cette action supprime aussi ses lignes contractuelles.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
+

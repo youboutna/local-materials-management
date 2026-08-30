@@ -37,7 +37,22 @@ interface Props {
   /** false en mode création (projet non persisté) : le questionnaire reste consultable */
   canPersist?: boolean;
   onChanged?: () => void;
+  /**
+   * Portée du contrôle : `project` (maître d'ouvrage) ou `tender_submission`
+   * (recevabilité d'une offre). En portée soumission, le composant est contrôlé
+   * par le parent (aucune persistance directe).
+   */
+  scope?: 'project' | 'tender_submission';
+  /** Mode contrôlé : réponses fournies par le parent. */
+  value?: Record<string, RegulatoryAnswer>;
+  onValueChange?: (answers: Record<string, RegulatoryAnswer>) => void;
+  /** Restreint le questionnaire à certains domaines du référentiel. */
+  domainKeys?: string[];
+  /** Masque l'action « Ajouter la pièce » (contrôle sans dépôt de document). */
+  hideUpload?: boolean;
+  title?: string;
 }
+
 
 const ANSWER_COLORS: Record<RegulatoryAnswer, string> = {
   compliant: 'bg-success-soft text-success',
@@ -64,19 +79,43 @@ function itemCodeOf(item: ComplianceItemDTO): string | undefined {
   return item.subcategory || item.externalReferences?.[0] || item.externalReferences?.[0];
 }
 
-const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist = false, onChanged }) => {
+const RegulatoryComplianceChecklist: React.FC<Props> = ({
+  projectId,
+  canPersist = false,
+  onChanged,
+  scope = 'project',
+  value,
+  onValueChange,
+  domainKeys,
+  hideUpload = false,
+  title,
+}) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const complianceService = useMemo(() => getComplianceService(), []);
 
-  const [answers, setAnswers] = useState<Record<string, RegulatoryAnswer>>({});
+  const controlled = value !== undefined;
+  const [internalAnswers, setInternalAnswers] = useState<Record<string, RegulatoryAnswer>>({});
+  const answers = controlled ? (value as Record<string, RegulatoryAnswer>) : internalAnswers;
   const [existing, setExisting] = useState<Record<string, ComplianceItemDTO>>({});
   const [loading, setLoading] = useState(false);
   const [savingCode, setSavingCode] = useState<string | null>(null);
   const [uploadTarget, setUploadTarget] = useState<{ domain: RegulatoryDomain; item: RegulatoryCheckItem } | null>(null);
 
+  const domains = useMemo(
+    () =>
+      domainKeys && domainKeys.length > 0
+        ? REGULATORY_COMPLIANCE_DOMAINS.filter((d) => domainKeys.includes(d.key))
+        : REGULATORY_COMPLIANCE_DOMAINS,
+    [domainKeys],
+  );
+  const totalItems = useMemo(
+    () => (domains === REGULATORY_COMPLIANCE_DOMAINS ? REGULATORY_TOTAL_ITEMS : domains.reduce((s, d) => s + d.items.length, 0)),
+    [domains],
+  );
+
   const loadItems = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId || controlled || scope !== 'project') return;
     setLoading(true);
     try {
       const items = await complianceService.getComplianceByProject(projectId);
@@ -89,36 +128,44 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
         nextAnswers[code] = statusToAnswer(it.status);
       });
       setExisting(map);
-      setAnswers((prev) => ({ ...nextAnswers, ...prev }));
+      setInternalAnswers((prev) => ({ ...nextAnswers, ...prev }));
     } catch (error) {
       console.warn('[RegulatoryComplianceChecklist] load failed:', error);
     } finally {
       setLoading(false);
     }
-  }, [projectId, complianceService]);
+  }, [projectId, complianceService, controlled, scope]);
 
   useEffect(() => {
     loadItems();
   }, [loadItems]);
 
-  const answeredCount = REGULATORY_COMPLIANCE_DOMAINS.reduce(
+  const answeredCount = domains.reduce(
     (sum, d) => sum + d.items.filter((i) => answers[i.code] && answers[i.code] !== 'not_applicable').length,
     0
   );
-  const compliantCount = REGULATORY_COMPLIANCE_DOMAINS.reduce(
+  const compliantCount = domains.reduce(
     (sum, d) => sum + d.items.filter((i) => answers[i.code] === 'compliant').length,
     0
   );
-  const completion = Math.round((compliantCount / REGULATORY_TOTAL_ITEMS) * 100);
+  const completion = totalItems > 0 ? Math.round((compliantCount / totalItems) * 100) : 0;
 
   const handleAnswer = async (
     domain: RegulatoryDomain,
     item: RegulatoryCheckItem,
     answer: RegulatoryAnswer
   ) => {
-    setAnswers((prev) => ({ ...prev, [item.code]: answer }));
+    const next = { ...answers, [item.code]: answer };
+    if (controlled) {
+      onValueChange?.(next);
+    } else {
+      setInternalAnswers(next);
+      onValueChange?.(next);
+    }
 
-    if (!canPersist || !projectId) return;
+    if (!canPersist || !projectId || scope !== 'project') return;
+
+
 
     setSavingCode(item.code);
     try {
@@ -167,9 +214,13 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileCheck className="h-5 w-5" />
-            <T k="auto.regulatorycompliancechecklist.questionnaire_de_conformite_reglementaire" fallback="Questionnaire de conformité réglementaire" />
+            {title ? (
+              title
+            ) : (
+              <T k="auto.regulatorycompliancechecklist.questionnaire_de_conformite_reglementaire" fallback="Questionnaire de conformité réglementaire" />
+            )}
             <Badge variant="outline" className="ml-auto">
-              {compliantCount}/{REGULATORY_TOTAL_ITEMS} conformes
+              {compliantCount}/{totalItems} conformes
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -179,11 +230,19 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
             {answeredCount} contrôle(s) renseigné(s) — référentiel marchés publics (administratif, procédure,
             études, environnement, HSE, garanties).
           </p>
-          {!canPersist && (
+          {!canPersist && scope === 'project' && (
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Mode création : les réponses sont conservées localement et enregistrées après la sauvegarde du projet.
+              </AlertDescription>
+            </Alert>
+          )}
+          {scope === 'tender_submission' && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Recevabilité de l'offre : les réponses sont enregistrées avec l'évaluation de la soumission.
               </AlertDescription>
             </Alert>
           )}
@@ -195,7 +254,8 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
         </CardContent>
       </Card>
 
-      {REGULATORY_COMPLIANCE_DOMAINS.map((domain) => (
+      {domains.map((domain) => (
+
         <Card key={domain.key}>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">{domain.label}</CardTitle>
@@ -243,15 +303,18 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({ projectId, canPersist 
                       </SelectContent>
                     </Select>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setUploadTarget({ domain, item })}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      <T k="auto.regulatorycompliancechecklist.ajouter_la_piece" fallback="Ajouter la pièce" />
-                    </Button>
+                    {!hideUpload && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setUploadTarget({ domain, item })}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        <T k="auto.regulatorycompliancechecklist.ajouter_la_piece" fallback="Ajouter la pièce" />
+                      </Button>
+                    )}
+
                   </div>
                 </div>
               );

@@ -23,6 +23,8 @@ export interface ContractRecordDTO {
   currency: string;
   signedAt: string | null;
   signedBy: string | null;
+  signedDocumentId: string | null;
+  signedDocumentUrl: string | null;
   metadata: Record<string, unknown> | null;
   createdAt: string | null;
   updatedAt: string | null;
@@ -42,5 +44,11 @@ export interface CreateContractRecordDTO {
   totalAmount: number;
   currency?: string;
   signedAt?: string | null;
+  signedDocumentId?: string | null;
+  signedDocumentUrl?: string | null;
   metadata?: Record<string, unknown> | null;
 }
+
+export type UpdateContractRecordDTO = Partial<Omit<CreateContractRecordDTO, 'contractNumber'>> & {
+  contractNumber?: string;
+};

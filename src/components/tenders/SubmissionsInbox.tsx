@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { AwardedTenderPreviewDialog } from './AwardedTenderPreviewDialog';
+import GenerateContractButton from '@/components/contracts/GenerateContractButton';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
 
@@ -139,17 +140,28 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
                   <T k="auto.submissionsinbox.evaluer" fallback="Évaluer" />
                 </Button>
                 {s.status === 'approved' && projectId && (s.tender_estimate_id || s.estimate_id) && (
-                  <Button
-                    size="sm"
-                    onClick={() => setAwardTarget({
-                      estimateId: s.tender_estimate_id ?? s.estimate_id,
-                      supplierName: s.supplier_name,
-                      supplierId: s.supplier_id,
-                    })}
-                  >
-                    <FileSignature className="h-3.5 w-3.5 mr-1" /> <T k="auto.submissionsinbox.attribuer" fallback="Attribuer" />
-                  </Button>
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => setAwardTarget({
+                        estimateId: s.tender_estimate_id ?? s.estimate_id,
+                        supplierName: s.supplier_name,
+                        supplierId: s.supplier_id,
+                      })}
+                    >
+                      <FileSignature className="h-3.5 w-3.5 mr-1" /> <T k="auto.submissionsinbox.attribuer" fallback="Attribuer" />
+                    </Button>
+                    <GenerateContractButton
+                      projectId={projectId}
+                      tenderId={tenderId}
+                      winningEstimateId={s.tender_estimate_id ?? s.estimate_id}
+                      supplierId={s.supplier_id}
+                      supplierName={s.supplier_name}
+                      totalAmount={Number(s.total_amount ?? s.estimate_total ?? 0)}
+                    />
+                  </>
                 )}
+
               </div>
             </li>
           ))}
