@@ -7,6 +7,7 @@
  */
 import { BoqCalculatorService, type BoqLineTotals } from './BoqCalculatorService';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { TaxService } from '@/application/services/TaxService';
 
 export interface DevisSection {
   key: string;
@@ -47,25 +48,31 @@ export class DevisGenerator {
   /** CSV (RFC 4180-ish; comma sep) — safe for Excel FR when reopened as UTF-8. */
   static toCsv(doc: DevisDocument): string {
     const header = [
-      'section', 'designation', 'unite', 'quantite', 'pu_ht', 'tva', 'total_ht', 'total_ttc',
+      'section', 'designation', 'unite', 'quantite', 'pu_ht',
+      'regime_tva', 'compte_pcm', 'tva', 'montant_tva', 'total_ht', 'total_ttc',
     ].join(',');
     const rows: string[] = [header];
     for (const s of doc.sections) {
       for (const l of s.lines) {
         const t = BoqCalculatorService.computeTotals(l);
+        // Traçabilité fiscale : régime + imputation comptable exportés avec la ligne.
+        const tax = TaxService.resolve(l);
         rows.push([
           csv(s.label),
           csv(l.designation ?? ''),
           csv(l.unit ?? ''),
           num(t.quantity),
           num(l.unitPrice ?? 0),
-          num(l.vatRate ?? 0),
+          csv(tax.regimeLabel),
+          csv(tax.accountCode ?? ''),
+          num(l.vatRate ?? tax.vatRate),
+          num(t.totalTtc - t.totalHt),
           num(t.totalHt),
           num(t.totalTtc),
         ].join(','));
       }
     }
-    rows.push(['', 'TOTAL', '', '', '', '', num(doc.totals.totalHt), num(doc.totals.totalTtc)].join(','));
+    rows.push(['', 'TOTAL', '', '', '', '', '', '', num(doc.totals.totalTtc - doc.totals.totalHt), num(doc.totals.totalHt), num(doc.totals.totalTtc)].join(','));
     return rows.join('\n');
   }
 }
