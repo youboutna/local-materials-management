@@ -65,7 +65,10 @@ export const setDevModeOverride = (enabled: boolean | null): void => {
   } catch {
     /* stockage indisponible */
   }
+  // Notifie l'UI (useAppConfig, navbars) du changement de mode.
+  window.dispatchEvent(new CustomEvent("dev-mode-changed", { detail: enabled }));
 };
+
 
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
 

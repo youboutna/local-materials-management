@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
-import { DEV_MODE } from '@/config/constants';
+import { DEV_MODE, ENABLE_LOGOUT } from '@/config/constants';
 import { Globe, Database, Cog, ClipboardList, LogOut, Upload, Users, FileText, Building2, Menu, Home, Briefcase, Package, Shield, Lock } from 'lucide-react';
 import { 
   DropdownMenu,
@@ -201,7 +201,7 @@ const MainNavbar = () => {
                     <LanguageSwitcher />
                   </div>
                   
-                  {!DEV_MODE && (authUser || isAuthenticated) && (
+                  {ENABLE_LOGOUT && (authUser || isAuthenticated) && (
                     <DropdownMenuItem onClick={handleDisconnect}>
                       <LogOut className="h-4 w-4 mr-3" />
                       {t('auth.logout') || 'Déconnexion'}
@@ -503,8 +503,8 @@ const MainNavbar = () => {
           {isUserAuthenticated ? (
             <div className="flex items-center gap-2">
     
-              {/* Only show logout if not in dev mode or actually authenticated */}
-              {!DEV_MODE && (authUser || isAuthenticated) && (
+              {/* Déconnexion masquée uniquement en mode local-bypass */}
+              {ENABLE_LOGOUT && (authUser || isAuthenticated) && (
                 <Button 
                   variant="outline"
                   size="sm"

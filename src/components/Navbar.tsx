@@ -1,3 +1,4 @@
+import { ENABLE_LOGOUT } from '@/config/constants';
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -156,14 +157,18 @@ const Navbar = () => {
                       <span>{t("settings.title")}</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="cursor-pointer"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>{t("auth.logout")}</span>
-                  </DropdownMenuItem>
+                  {ENABLE_LOGOUT && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="cursor-pointer"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>{t("auth.logout")}</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -254,10 +259,12 @@ const Navbar = () => {
                                   {t('nav.profile')}
                             </Link>
                           </Button>
-                          <Button size="sm" variant="outline" onClick={handleLogout} className="flex-1">
-                            <LogOut className="h-4 w-4 mr-2" />
-                            {t('auth.logout')}
-                          </Button>
+                          {ENABLE_LOGOUT && (
+                            <Button size="sm" variant="outline" onClick={handleLogout} className="flex-1">
+                              <LogOut className="h-4 w-4 mr-2" />
+                              {t('auth.logout')}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ) : (

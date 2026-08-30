@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import ErrorBoundary from './components/ErrorBoundary';
-import { DEV_MODE } from './config/constants';
+import { isDevMode } from './config/constants';
 import { setAlignmentRepository } from '@/application/services/boq/AlignmentService';
 import { SupabaseAlignmentRepository } from '@/infrastructure/adapters/supabase/SupabaseAlignmentRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -25,7 +25,7 @@ try { RepositoryFactory.init(); } catch (e) { console.warn('[RepositoryFactory.i
 try { setAlignmentRepository(new SupabaseAlignmentRepository()); } catch { /* noop */ }
 
 // Development mode uses local adapters; authentication remains mandatory.
-if (DEV_MODE) {
+if (isDevMode()) {
   console.log('🛠️ Development mode active: local authentication enabled');
 }
 
