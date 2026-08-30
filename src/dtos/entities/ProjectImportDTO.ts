@@ -589,12 +589,6 @@ export class ImportDTOTransformer {
       'suspended': 'SUSPENDED',
       'cancelled': 'CANCELLED',
       'draft': 'DRAFT',
-      // Court
-      'en_cours': 'IN_PROGRESS',
-      'termine': 'COMPLETED',
-      'en_attente': 'PENDING',
-      'suspendu': 'SUSPENDED',
-      'annule': 'CANCELLED',
     };
     return mapping[normalized] || 'DRAFT';
   }
@@ -679,7 +673,7 @@ export class ImportDTOTransformer {
       organizationId: String(source.organizationId || ''),
       status: this.normalizeStatus(String(source.status || '')),
       progress: typeof source.progress === 'number' ? source.progress : Number(source.progress) || 0,
-      budget: this.normalizeBudget(source.budget || source.budgetTotal),
+      budget: this.normalizeBudget((source.budget ?? source.budgetTotal) as string | number | undefined),
       currency: String(source.currency || 'MRU'),
       startDate: this.normalizeDate(String(source.startDate || source.dateDebut || '')),
       endDate: this.normalizeDate(String(source.endDate || source.dateFin || '')),
