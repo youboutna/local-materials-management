@@ -46,6 +46,26 @@ export class SupabaseContractAdapter implements IContractRepository {
     return data ? toDto(data) : null;
   }
 
+  async findAll(filters: ContractQueryFilters = {}): Promise<ContractRecordDTO[]> {
+    let query = (btpClient as any)
+      .from('contracts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.contractType) query = query.eq('contract_type', filters.contractType);
+    if (filters.search) {
+      query = query.or(
+        `title.ilike.%${filters.search}%,contract_number.ilike.%${filters.search}%`,
+      );
+    }
+    query = query.limit(filters.limit ?? 200);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map(toDto);
+  }
+
   async findByProjectId(projectId: string): Promise<ContractRecordDTO[]> {
     const { data, error } = await (btpClient as any)
       .from('contracts')
