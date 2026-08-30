@@ -11,6 +11,7 @@ import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { mergeDimensions } from './parsers/dimensionExtraction';
 import { reconcileLinePrice } from './parsers/priceCoherence';
+import { TaxService } from '@/application/services/TaxService';
 import { BoqCalculatorService } from './BoqCalculatorService';
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
@@ -263,6 +264,17 @@ export class BoqImportOrchestrator {
         taskId: resolved.taskId ?? null,
         resourceType,
       };
+
+      // Fiscalité ligne à ligne : régime (référentiel TAX_REGIMES) + imputation
+      // PCM. La TVA détectée sur la ligne/le bloc reste prioritaire.
+      const tax = TaxService.resolve(
+        { ...dto, accountCode: (row.raw['compte'] ?? row.raw['Compte'] ?? null) as string | null, vatRate: lineVat },
+        { vatRate: effectiveVat },
+      );
+      dto.taxRegimeCode = tax.regimeCode;
+      dto.accountCode = tax.accountCode;
+      if (lineVat == null && tax.origin === 'account') dto.vatRate = tax.vatRate;
+      if (!dto.rasRate && tax.rasRate) dto.rasRate = tax.rasRate;
 
       out.push(dto);
     }

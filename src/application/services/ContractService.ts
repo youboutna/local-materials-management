@@ -21,6 +21,7 @@ import type {
 } from '@/dtos/entities/ContractLineDTO';
 import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
 import { TenderEstimateService } from './TenderEstimateService';
+import { TaxService } from '@/application/services/TaxService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 // ✅ IMPORT formatReference et validateEntityLabel
@@ -241,24 +242,44 @@ export class ContractService {
     const vatRate = options.vatRate ?? 0;
     const currency = options.currency ?? 'MRU';
 
-    const payload: CreateContractLineDTO[] = items.map((item, index) => ({
-      contractId,
-      sourceEstimateItemId: item.id,
-      lineCode: item.itemCode ?? null,
-      designation: item.description || item.itemCode || `Ligne ${index + 1}`,
-      unit: item.unit ?? null,
-      quantity: Number(item.quantity || 0),
-      unitPrice: Number(item.unitPrice || 0),
-      vatRate,
-      currency,
-      category: item.category ?? null,
-      displayOrder: index,
-      metadata: {
-        sourceEstimateId: estimateId,
-        resourceKind: item.resourceKind ?? null,
-        supplierId: item.supplierId ?? null,
-      },
-    }));
+    // TVA **par ligne** : régime résolu via TaxService (compte PCM > régime >
+    // mots-clés), le taux du contrat ne servant que de profil par défaut.
+    const payload: CreateContractLineDTO[] = items.map((item, index) => {
+      const tax = TaxService.resolve(
+        {
+          designation: item.description ?? item.itemCode ?? null,
+          quantity: Number(item.quantity || 0),
+          unitPrice: Number(item.unitPrice || 0),
+          accountCode: item.itemCode ?? null,
+          category: item.category ?? null,
+          resourceType: item.resourceKind ?? null,
+          vatRate: item.vatRate ?? null,
+        },
+        { vatRate },
+      );
+      return {
+        contractId,
+        sourceEstimateItemId: item.id,
+        lineCode: item.itemCode ?? null,
+        designation: item.description || item.itemCode || `Ligne ${index + 1}`,
+        unit: item.unit ?? null,
+        quantity: Number(item.quantity || 0),
+        unitPrice: Number(item.unitPrice || 0),
+        vatRate: tax.vatRate,
+        currency,
+        category: item.category ?? null,
+        displayOrder: index,
+        metadata: {
+          sourceEstimateId: estimateId,
+          resourceKind: item.resourceKind ?? null,
+          supplierId: item.supplierId ?? null,
+          taxRegimeCode: tax.regimeCode,
+          accountCode: tax.accountCode,
+          taxAmount: tax.vatAmount,
+          vatCategoryCode: tax.vatCategoryCode,
+        },
+      };
+    });
 
     const created = await this.repository.createLines(payload);
     await this.syncTotalFromLines(contractId);
