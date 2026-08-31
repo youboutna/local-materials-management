@@ -18,6 +18,8 @@ import { ProjectService, getProjectService } from '@/application/services/Projec
 import { getProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { getSupplierService } from '@/application/services/SupplierService';
 import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { TaxService } from '@/application/services/TaxService';
+
 import { getEmployeeService } from '@/application/services/EmployeeService';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -1007,7 +1009,7 @@ export class ProjectImportExportService {
       const unitPrice =
         dqeLine.unitPrice != null ? Number(dqeLine.unitPrice) : null;
 
-      const boqData: BoqLineDTO = {
+      const rawBoqData: BoqLineDTO = {
         source: 'dqe',
         contextId: projectId,
         projectId,
@@ -1029,6 +1031,9 @@ export class ProjectImportExportService {
         status: mappedStatus,
         sourceType: 'import',
         taxRate: dqeLine.taxRate as number | undefined,
+        vatRate: (dqeLine.vatRate as number | undefined) ?? null,
+        taxRegimeCode: (dqeLine.taxRegimeCode as string | undefined) ?? null,
+        accountCode: (dqeLine.accountCode as string | undefined) ?? null,
         discount: dqeLine.discount as number | undefined,
         metadata: {
           dqeCategory: categoryCode ?? null,
@@ -1040,6 +1045,22 @@ export class ProjectImportExportService {
           targetMargin: dqeCategory?.targetMargin ?? null,
         },
       } as BoqLineDTO;
+
+      // Fiscalité ligne à ligne : manuel > compte PCM > régime > mots-clés.
+      const tax = TaxService.resolve(rawBoqData as never);
+      const boqData: BoqLineDTO = {
+        ...rawBoqData,
+        vatRate: tax.vatRate,
+        taxRegimeCode: rawBoqData.taxRegimeCode ?? tax.regimeCode ?? null,
+        accountCode: rawBoqData.accountCode ?? tax.accountCode ?? null,
+        metadata: {
+          ...(rawBoqData.metadata as Record<string, unknown>),
+          taxOrigin: tax.origin,
+          vatAmount: tax.vatAmount,
+          totalTtc: tax.totalTtc,
+        },
+      } as BoqLineDTO;
+
 
       const existingLine = existingLines.find(
         (line) =>
