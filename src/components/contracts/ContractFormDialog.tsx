@@ -1,8 +1,15 @@
 /**
  * ContractFormDialog — création manuelle / édition d'un contrat.
- * Aucun accès Supabase : passe par useContractMutations.
+ * Aucun accès Supabase : passe par useContractMutations et les hooks sélecteurs.
+ *
+ * Fonctions couvertes :
+ *  - autocomplétion Projet → Phase → AO attribué
+ *  - attributaires multiples (groupement) : supplierId principal + metadata.awardedSupplierIds
+ *  - fiscalité : régime TVA (TaxService) → TVA et TTC calculés
+ *  - devise, dates, contenu WYSIWYG, lien du contrat signé
+ *  - actions : Annuler / Sauvegarder / Générer le PDF / Importer un document
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -22,7 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
+import { FileDown, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   CONTRACT_STATUSES,
@@ -30,7 +42,15 @@ import {
   CONTRACT_TYPES,
   CONTRACT_TYPE_LABELS,
 } from '@/application/services/ContractService';
-import { useContractMutations } from '@/hooks/hexagonal/useContractsHex';
+import { getContractPdfService } from '@/application/services/ContractPdfService';
+import { TaxService } from '@/application/services/TaxService';
+import {
+  useContractLinesHex,
+  useContractMutations,
+} from '@/hooks/hexagonal/useContractsHex';
+import { useProjectsSelector, useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
+import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
+import { useTendersHex } from '@/hooks/hexagonal/useTendersHex';
 import type { ContractRecordDTO } from '@/dtos/entities/ContractRecordDTO';
 
 interface ContractFormDialogProps {
@@ -47,26 +67,45 @@ interface FormState {
   title: string;
   contractType: string;
   status: string;
+  projectId: string;
+  phaseId: string;
+  tenderId: string;
+  supplierIds: string[];
+  taxRegimeCode: string;
+  vatRate: string;
   startDate: string;
   endDate: string;
   totalAmount: string;
   currency: string;
   signedDocumentUrl: string;
+  contentHtml: string;
   notes: string;
 }
+
+const CURRENCIES = ['MRU', 'EUR', 'USD'] as const;
 
 const emptyState: FormState = {
   contractNumber: '',
   title: '',
   contractType: 'works',
   status: 'draft',
+  projectId: '',
+  phaseId: '',
+  tenderId: '',
+  supplierIds: [],
+  taxRegimeCode: 'TRAVAUX_BTP',
+  vatRate: '16',
   startDate: '',
   endDate: '',
   totalAmount: '0',
   currency: 'MRU',
   signedDocumentUrl: '',
+  contentHtml: '',
   notes: '',
 };
+
+const money = (value: number, currency: string) =>
+  `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value || 0)} ${currency}`;
 
 export default function ContractFormDialog({
   open,
@@ -78,29 +117,136 @@ export default function ContractFormDialog({
 }: ContractFormDialogProps) {
   const { createContract, updateContract, isPending } = useContractMutations();
   const [form, setForm] = useState<FormState>(emptyState);
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [uploadOpen, setUploadOpen] = useState(false);
+
+  const { data: projects = [] } = useProjectsSelector({ enabled: open });
+  const { data: suppliers = [] } = useSuppliersSelector(supplierSearch, open);
+  const { phases } = usePhasesHex(form.projectId || undefined);
+  const { tenders } = useTendersHex();
+  const { data: contractLines = [] } = useContractLinesHex(contract?.id);
+
+  const regimes = useMemo(() => TaxService.listRegimes(), []);
+
+  const awardedTenders = useMemo(
+    () =>
+      tenders.filter(
+        (t) =>
+          (!form.projectId || t.projectId === form.projectId) &&
+          ['awarded', 'attributed', 'closed', 'under_evaluation'].includes(String(t.status)),
+      ),
+    [tenders, form.projectId],
+  );
 
   useEffect(() => {
     if (!open) return;
+    const meta = (contract?.metadata ?? {}) as Record<string, unknown>;
     if (contract) {
       setForm({
         contractNumber: contract.contractNumber ?? '',
         title: contract.title ?? '',
         contractType: contract.contractType ?? 'works',
         status: contract.status ?? 'draft',
+        projectId: contract.projectId ?? '',
+        phaseId: String(meta.phaseId ?? ''),
+        tenderId: contract.tenderId ?? '',
+        supplierIds: Array.isArray(meta.awardedSupplierIds)
+          ? (meta.awardedSupplierIds as string[])
+          : contract.supplierId
+            ? [contract.supplierId]
+            : [],
+        taxRegimeCode: String(meta.taxRegimeCode ?? 'TRAVAUX_BTP'),
+        vatRate: String(
+          meta.vatRate != null ? Number(meta.vatRate) * (Number(meta.vatRate) <= 1 ? 100 : 1) : 16,
+        ),
         startDate: contract.startDate?.slice(0, 10) ?? '',
         endDate: contract.endDate?.slice(0, 10) ?? '',
         totalAmount: String(contract.totalAmount ?? 0),
         currency: contract.currency ?? 'MRU',
         signedDocumentUrl: contract.signedDocumentUrl ?? '',
-        notes: String((contract.metadata as any)?.notes ?? ''),
+        contentHtml: String(meta.contentHtml ?? ''),
+        notes: String(meta.notes ?? ''),
       });
     } else {
-      setForm(emptyState);
+      setForm({
+        ...emptyState,
+        projectId: projectId ?? '',
+        tenderId: tenderId ?? '',
+      });
     }
-  }, [open, contract]);
+  }, [open, contract, projectId, tenderId]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  /** Pré-remplissage depuis l'appel d'offres attribué. */
+  const applyTender = (id: string) => {
+    setForm((prev) => {
+      const tender = awardedTenders.find((t) => t.id === id);
+      if (!tender) return { ...prev, tenderId: id };
+      const project = projects.find((p) => p.id === (tender.projectId ?? prev.projectId));
+      return {
+        ...prev,
+        tenderId: id,
+        projectId: tender.projectId ?? prev.projectId,
+        title:
+          prev.title ||
+          `Contrat — ${project?.title ?? tender.title} — ${tender.tenderNumber ?? tender.title}`,
+        totalAmount:
+          Number(prev.totalAmount) > 0
+            ? prev.totalAmount
+            : String(tender.budgetMax ?? tender.budgetMin ?? 0),
+        startDate: prev.startDate || (tender.attributionDate?.slice(0, 10) ?? ''),
+        endDate: prev.endDate || (tender.deadlineDate?.slice(0, 10) ?? ''),
+      };
+    });
+  };
+
+  /** Intitulé automatique « Contrat — Projet X — Lot/Phase Y ». */
+  const autoTitle = () => {
+    const project = projects.find((p) => p.id === form.projectId);
+    const phase = phases.find((p) => p.id === form.phaseId);
+    const parts = ['Contrat', project?.title, phase?.phaseName ?? phase?.name].filter(Boolean);
+    if (parts.length < 2) {
+      toast.info('Sélectionnez un projet pour générer l’intitulé.');
+      return;
+    }
+    set('title', parts.join(' — '));
+  };
+
+  const amountHt = Number(form.totalAmount) || 0;
+  const vatRateValue = (Number(form.vatRate) || 0) / 100;
+  const vatAmount = Math.round(amountHt * vatRateValue * 100) / 100;
+  const amountTtc = Math.round((amountHt + vatAmount) * 100) / 100;
+
+  const buildPayload = () => ({
+    contractNumber: form.contractNumber.trim() || undefined,
+    title: form.title.trim(),
+    contractType: form.contractType,
+    status: form.status,
+    startDate: form.startDate || null,
+    endDate: form.endDate || null,
+    totalAmount: amountHt,
+    currency: form.currency,
+    signedDocumentUrl: form.signedDocumentUrl.trim() || null,
+    projectId: form.projectId || contract?.projectId || projectId || null,
+    tenderId: form.tenderId || contract?.tenderId || tenderId || null,
+    supplierId: form.supplierIds[0] ?? contract?.supplierId ?? null,
+    metadata: {
+      ...((contract?.metadata as Record<string, unknown>) ?? {}),
+      phaseId: form.phaseId || null,
+      awardedSupplierIds: form.supplierIds,
+      awardedSupplierNames: form.supplierIds
+        .map((id) => suppliers.find((s) => s.id === id)?.name)
+        .filter(Boolean),
+      taxRegimeCode: form.taxRegimeCode || null,
+      vatRate: vatRateValue,
+      vatAmount,
+      totalTtc: amountTtc,
+      contentHtml: form.contentHtml || null,
+      notes: form.notes.trim() || null,
+    } as Record<string, unknown>,
+  });
 
   const handleSubmit = async () => {
     if (!form.title.trim()) {
@@ -108,21 +254,7 @@ export default function ContractFormDialog({
       return;
     }
     try {
-      const payload = {
-        contractNumber: form.contractNumber.trim() || undefined,
-        title: form.title.trim(),
-        contractType: form.contractType,
-        status: form.status,
-        startDate: form.startDate || null,
-        endDate: form.endDate || null,
-        totalAmount: Number(form.totalAmount) || 0,
-        currency: form.currency,
-        signedDocumentUrl: form.signedDocumentUrl.trim() || null,
-        projectId: contract?.projectId ?? projectId ?? null,
-        tenderId: contract?.tenderId ?? tenderId ?? null,
-        metadata: form.notes.trim() ? { notes: form.notes.trim() } : null,
-      };
-
+      const payload = buildPayload();
       const saved = contract
         ? await updateContract(contract.id, payload)
         : await createContract(payload);
@@ -135,26 +267,124 @@ export default function ContractFormDialog({
     }
   };
 
+  const handleGeneratePdf = () => {
+    const project = projects.find((p) => p.id === form.projectId);
+    const draft: ContractRecordDTO = {
+      ...(contract ?? {
+        id: 'draft',
+        sourceEstimateId: null,
+        signedAt: null,
+        signedBy: null,
+        signedDocumentId: null,
+        createdAt: null,
+        updatedAt: null,
+      }),
+      ...buildPayload(),
+      contractNumber: form.contractNumber.trim() || contract?.contractNumber || 'CONTRAT-BROUILLON',
+    } as ContractRecordDTO;
+
+    getContractPdfService().download(draft, contractLines, {
+      projectName: project?.title,
+      supplierName: form.supplierIds
+        .map((id) => suppliers.find((s) => s.id === id)?.name)
+        .filter(Boolean)
+        .join(', '),
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{contract ? 'Modifier le contrat' : 'Nouveau contrat'}</DialogTitle>
           <DialogDescription>
-            Saisie manuelle ou import d'un contrat existant. Le numéro est généré automatiquement
-            s'il est laissé vide.
+            Rattachement projet / phase / appel d'offres, attributaires, fiscalité et contenu du
+            contrat. Le numéro est généré automatiquement s'il est laissé vide.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          {/* Rattachement */}
+          <div className="space-y-1.5">
+            <Label>Projet</Label>
+            <SearchableSelect
+              value={form.projectId}
+              onChange={(v) => setForm((prev) => ({ ...prev, projectId: v, phaseId: '' }))}
+              options={projects.map((p) => ({
+                value: p.id,
+                label: p.title,
+                description: p.project_reference ?? undefined,
+              }))}
+              placeholder="Rechercher un projet…"
+              clearLabel="Aucun projet"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Phase / Lot</Label>
+            <SearchableSelect
+              value={form.phaseId}
+              onChange={(v) => set('phaseId', v)}
+              options={phases.map((p) => ({
+                value: p.id,
+                label: (p as { phaseName?: string; name?: string }).phaseName ??
+                  (p as { name?: string }).name ?? 'Phase',
+              }))}
+              placeholder={form.projectId ? 'Sélectionner une phase…' : 'Choisir un projet d’abord'}
+              disabled={!form.projectId}
+              clearLabel="Aucune phase"
+            />
+          </div>
+
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Appel d'offres attribué</Label>
+            <SearchableSelect
+              value={form.tenderId}
+              onChange={applyTender}
+              options={awardedTenders.map((t) => ({
+                value: t.id,
+                label: t.title,
+                description: t.tenderNumber ?? undefined,
+              }))}
+              placeholder="Rechercher un appel d'offres…"
+              clearLabel="Contrat hors AO"
+            />
+            <p className="text-xs text-muted-foreground">
+              La sélection pré-remplit l'intitulé, le montant et les dates d'exécution.
+            </p>
+          </div>
+
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Attributaire(s)</Label>
+            <MultiSelectCombobox
+              values={form.supplierIds}
+              onChange={(v) => set('supplierIds', v)}
+              options={suppliers.map((s) => ({
+                value: s.id,
+                label: s.name,
+                description: s.category ?? undefined,
+              }))}
+              placeholder="Sélectionner les titulaires (groupement possible)…"
+              searchPlaceholder="Rechercher un fournisseur…"
+            />
+          </div>
+
+          <Separator className="sm:col-span-2" />
+
+          {/* Identification */}
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="contract-title">Intitulé *</Label>
-            <Input
-              id="contract-title"
-              value={form.title}
-              onChange={(e) => set('title', e.target.value)}
-              placeholder="Contrat de travaux — Lot 1"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="contract-title"
+                value={form.title}
+                onChange={(e) => set('title', e.target.value)}
+                placeholder="Contrat de travaux — Lot 1"
+              />
+              <Button type="button" variant="outline" onClick={autoTitle}>
+                Auto
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-1.5">
@@ -192,6 +422,19 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5">
+            <Label>Devise</Label>
+            <Select value={form.currency} onValueChange={(v) => set('currency', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Fiscalité */}
+          <div className="space-y-1.5">
             <Label htmlFor="contract-amount">Montant HT</Label>
             <Input
               id="contract-amount"
@@ -202,6 +445,53 @@ export default function ContractFormDialog({
             />
           </div>
 
+          <div className="space-y-1.5">
+            <Label>Régime fiscal</Label>
+            <Select
+              value={form.taxRegimeCode}
+              onValueChange={(code) => {
+                const regime = regimes.find((r) => r.code === code);
+                setForm((prev) => ({
+                  ...prev,
+                  taxRegimeCode: code,
+                  vatRate: String(Math.round((regime?.vatRate ?? 0) * 100)),
+                }));
+              }}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {regimes.map((r) => (
+                  <SelectItem key={r.code} value={r.code}>
+                    {r.labels.fr} — {Math.round(r.vatRate * 100)} %
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="contract-vat">Taux TVA (%)</Label>
+            <Input
+              id="contract-vat"
+              type="number"
+              min="0"
+              max="100"
+              value={form.vatRate}
+              onChange={(e) => set('vatRate', e.target.value)}
+            />
+          </div>
+
+          <div className="rounded-md border border-border bg-muted/40 p-3 text-sm sm:col-span-2">
+            <div className="flex justify-between"><span>Total HT</span><span>{money(amountHt, form.currency)}</span></div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>TVA ({form.vatRate || 0} %)</span><span>{money(vatAmount, form.currency)}</span>
+            </div>
+            <div className="mt-1 flex justify-between font-semibold">
+              <span>Total TTC</span><span>{money(amountTtc, form.currency)}</span>
+            </div>
+          </div>
+
+          {/* Dates */}
           <div className="space-y-1.5">
             <Label htmlFor="contract-start">Début</Label>
             <Input
@@ -224,11 +514,40 @@ export default function ContractFormDialog({
 
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="contract-url">Lien du contrat signé (optionnel)</Label>
-            <Input
-              id="contract-url"
-              value={form.signedDocumentUrl}
-              onChange={(e) => set('signedDocumentUrl', e.target.value)}
-              placeholder="https://…"
+            <div className="flex gap-2">
+              <Input
+                id="contract-url"
+                value={form.signedDocumentUrl}
+                onChange={(e) => set('signedDocumentUrl', e.target.value)}
+                placeholder="https://…"
+              />
+              <Button type="button" variant="outline" onClick={() => setUploadOpen((v) => !v)}>
+                <Upload className="mr-2 h-4 w-4" />
+                Importer
+              </Button>
+            </div>
+          </div>
+
+          {uploadOpen && (
+            <div className="sm:col-span-2 rounded-md border border-border p-3">
+              <ProjectDocumentUpload
+                projectId={form.projectId || null}
+                context="project"
+                contextLabel={`Contrat ${form.contractNumber || form.title || 'brouillon'}`}
+                onDocumentUploaded={() => {
+                  setUploadOpen(false);
+                  toast.success('Document rattaché au contrat');
+                }}
+              />
+            </div>
+          )}
+
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label>Contenu du contrat</Label>
+            <RichTextEditor
+              value={form.contentHtml}
+              onChange={(html) => set('contentHtml', html)}
+              placeholder="Objet, obligations des parties, modalités de paiement…"
             />
           </div>
 
@@ -243,12 +562,18 @@ export default function ContractFormDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {contract ? 'Enregistrer' : 'Créer le contrat'}
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+          <Button type="button" variant="outline" onClick={handleGeneratePdf}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Générer le contrat
           </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+            <Button onClick={handleSubmit} disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {contract ? 'Enregistrer' : 'Créer le contrat'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
