@@ -18,6 +18,8 @@ import { ProjectService, getProjectService } from '@/application/services/Projec
 import { getProjectStakeholderService } from '@/application/services/ProjectStakeholderService';
 import { getSupplierService } from '@/application/services/SupplierService';
 import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
+import { TaxService } from '@/application/services/TaxService';
+
 import { getEmployeeService } from '@/application/services/EmployeeService';
 import { getReferential, type ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
