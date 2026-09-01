@@ -1229,7 +1229,10 @@ export class ProjectImportExportService {
           originalDQEType: dqeLine.dqeType ?? null,
           dqeTypeLabel: getDQETypeLabel(dqeType, 'fr'),
           targetMargin: dqeCategory?.targetMargin ?? null,
+          documentRef: (dqeLine.documentRef as string | undefined) ?? null,
+          documentTitle: (dqeLine.documentTitle as string | undefined) ?? null,
         },
+
       } as BoqLineDTO;
 
       // Fiscalité ligne à ligne : manuel > compte PCM > régime > mots-clés.
