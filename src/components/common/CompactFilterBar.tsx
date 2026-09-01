@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Search, Filter, RotateCcw, X, SlidersHorizontal } from 'lucide-react';
+import Autocomplete, { AutocompleteOption } from '@/components/ui/autocomplete';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -230,6 +231,7 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
                     <FilterSelect filter={filter} className="w-full max-w-none" />
                   </div>
                 ))}
+                {inlineExtra}
               </div>
 
               {drawerFilters.length > 0 && (
