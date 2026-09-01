@@ -44,8 +44,8 @@ export interface AuthUser {
   lastPasswordChange?: string;
   failedLoginAttempts?: number;
   lockedUntil?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   // Extended fields for compatibility
   role?: string;
   metadata?: Record<string, unknown>;
@@ -59,6 +59,7 @@ export interface AuthUser {
   username?: string;
   keycloakId?: string;
   roles?: string[];
+  nationalId?: string;
 }
 
 export interface AuthSession {
