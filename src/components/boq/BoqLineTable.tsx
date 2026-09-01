@@ -130,6 +130,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               <TableHead className="text-right"><T k="auto.boqlinetable.ras" fallback="RAS %" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.frais" fallback="Frais" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableHead>
+              <TableHead className="text-right"><T k="dqe.line.total_ttc" fallback="Total TTC" /></TableHead>
               {hasActions && <TableHead className="w-8" />}
             </TableRow>
           </TableHeader>
