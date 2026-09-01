@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import CompactFilterBar from '@/components/common/CompactFilterBar';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -314,26 +315,14 @@ const NotificationsCenterPage = () => {
             </Card>
           </div>
 
-          {/* Search and Filter */}
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Rechercher dans les notifications..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  <T k="auto.notificationscenter.filtres" fallback="Filtres" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Barre de recherche compacte (sticky) */}
+          <CompactFilterBar
+            className="mb-4"
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Rechercher dans les notifications..."
+            onReset={() => setSearchTerm('')}
+          />
 
           {/* Tabbed Interface */}
           <Tabs defaultValue="all" className="w-full">

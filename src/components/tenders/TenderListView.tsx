@@ -3,6 +3,7 @@
  */
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import CompactFilterBar from '@/components/common/CompactFilterBar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -82,27 +83,27 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Rechercher (titre, N°, description)…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </div>
-        <Select value={sort} onValueChange={(v: any) => setSort(v)}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="deadline">Deadline ↓</SelectItem>
-            <SelectItem value="title">Titre A→Z</SelectItem>
-            <SelectItem value="status"><T k="auto.tenderlistview.statut" fallback="Statut" /></SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <CompactFilterBar
+        searchValue={q}
+        onSearchChange={setQ}
+        searchPlaceholder="Rechercher (titre, N°, description)…"
+        filters={[
+          {
+            key: 'sort',
+            label: 'Tri',
+            placeholder: 'Tri',
+            value: sort,
+            onChange: (v) => setSort(v as typeof sort),
+            options: [
+              { value: 'deadline', label: 'Deadline ↓' },
+              { value: 'title', label: 'Titre A→Z' },
+              { value: 'status', label: 'Statut' },
+            ],
+          },
+        ]}
+        resultCount={filtered.length}
+        onReset={() => { setQ(''); setSort('deadline'); }}
+      />
 
       {filtered.length === 0 ? (
         <div className="text-center text-sm text-muted-foreground py-8">

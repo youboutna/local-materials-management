@@ -9,6 +9,7 @@
 
 import { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import CompactFilterBar from '@/components/common/CompactFilterBar';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,18 +39,15 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un appel d'offres…"
-            className="pl-8"
-          />
-        </div>
-        <Badge variant="secondary">{filtered.length} AO ouvert{filtered.length > 1 ? 's' : ''}</Badge>
-      </div>
+      <CompactFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Rechercher un appel d'offres…"
+        onReset={() => setSearch('')}
+        trailing={
+          <Badge variant="secondary">{filtered.length} AO ouvert{filtered.length > 1 ? 's' : ''}</Badge>
+        }
+      />
 
       {isLoading && <p className="text-sm text-muted-foreground text-center py-8">Chargement…</p>}
       {isError && <p className="text-sm text-destructive text-center py-8"><T k="auto.publictenderslist.erreur_lors_du_chargement" fallback="Erreur lors du chargement." /></p>}
