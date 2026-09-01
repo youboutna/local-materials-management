@@ -119,6 +119,12 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
       inlineExtra={inlineExtra}
       trailing={trailing}
       sticky={sticky}
+      isLoading={isLoading}
+      onGoToFirstResult={onGoToFirstResult}
+      presetsKey={presetsKey}
+      syncUrl={syncUrl}
+      urlNamespace={urlNamespace}
+
     />
   );
 };
