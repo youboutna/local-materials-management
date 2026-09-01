@@ -52,7 +52,14 @@ export interface PcmCgiAccount {
   parent: string | null;
   children: string[];
   treatments: PcmTaxTreatment[];
+  /** Code sans parenthèses, tel qu'attendu par un import Odoo (« (0)646 » → « 0646 »). */
+  odooCode?: string;
+  /** Type de compte Odoo (Charges, Revenus, Banque et espèces, Hors bilan…). */
+  odooType?: string;
+  /** Lettrage des paiements Odoo (comptes tiers / trésorerie). */
+  reconcile?: boolean;
 }
+
 
 export const PCM_CGI_ACCOUNTS = raw as unknown as PcmCgiAccount[];
 
