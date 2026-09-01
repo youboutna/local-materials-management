@@ -113,10 +113,9 @@ const RoleBasedRoute = ({
       if (home !== DEFAULT_MANAGEMENT_HOME && !location.pathname.startsWith(home)) {
         return <Navigate to={home} replace />;
       }
-    }
-
 
       return (
+
         <div className="min-h-screen bg-gradient-to-br from-adrar-50 to-terracotta-50 flex items-center justify-center">
           <div className="max-w-md mx-auto text-center p-8 bg-white rounded-xl shadow-elegant">
             <div className="w-16 h-16 mx-auto mb-4 bg-destructive/10 rounded-full flex items-center justify-center">
