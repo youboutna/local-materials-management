@@ -194,7 +194,64 @@ export class TaxService {
       vatAmount,
       rasAmount,
       totalTtc: round2(totalHt + vatAmount),
+      isDigitalService: TaxService.DIGITAL_REGIME_CODES.includes(regime.code),
+      deductibility: this.checkDeductibility({
+        supplierNif: line.supplierNif ?? null,
+        supplierNifStatus: line.supplierNifStatus ?? 'unknown',
+        amount: round2(totalHt + vatAmount),
+        paymentMethod: line.paymentMethod ?? null,
+        hasNormalizedInvoice: line.hasNormalizedInvoice ?? null,
+      }, lang),
+      fiscalReferenceCode: FISCAL_REFERENCE.code,
     };
+  }
+
+  /** Régimes relevant de l'économie numérique (LFR 2026). */
+  static readonly DIGITAL_REGIME_CODES: string[] = ['SERVICES_NUMERIQUES', 'PLATEFORME_NUMERIQUE'];
+
+  /** Critères de localisation d'un service numérique (sélecteur UI). */
+  static listDigitalLocalizationCriteria() {
+    return DIGITAL_SERVICE_LOCALIZATION_CRITERIA;
+  }
+
+  /**
+   * TVA due en Mauritanie sur un service numérique dès qu'un critère de
+   * localisation du consommateur est rempli (faisceau d'indices LFR 2026).
+   */
+  static isDigitalServiceTaxableInMr(line: TaxableLine): boolean {
+    const regime = this.detectTaxRegime(line);
+    if (!TaxService.DIGITAL_REGIME_CODES.includes(regime.code)) return false;
+    return (line.digitalLocalizationCriteria ?? []).length > 0;
+  }
+
+  /**
+   * Taxe sur les transactions électroniques : 0,1 % du montant réglé,
+   * plafonnée (référentiel `ELECTRONIC_TRANSACTION_TAX`).
+   */
+  static electronicTransactionTax(amount: number, paymentMethod?: string | null): number {
+    const method = String(paymentMethod ?? '').toLowerCase();
+    const eligible =
+      !paymentMethod ||
+      ELECTRONIC_TRANSACTION_TAX.appliesTo.some((m) => method.includes(m)) ||
+      method.includes('mobile') ||
+      method.includes('bankily') ||
+      method.includes('transfer');
+    if (!eligible) return 0;
+    const raw = Math.max(0, Number(amount) || 0) * ELECTRONIC_TRANSACTION_TAX.rate;
+    return round2(Math.min(raw, ELECTRONIC_TRANSACTION_TAX.capAmount));
+  }
+
+  /** Retenue de 10 % sur les commissions d'agents / distributeurs (LFR 2026). */
+  static agentCommissionWithholding(commissionAmount: number): number {
+    return round2(Math.max(0, Number(commissionAmount) || 0) * AGENT_COMMISSION_TAX.rate);
+  }
+
+  /** Contrôle de déductibilité d'une charge (NIF actif, espèces, facture normalisée). */
+  static checkDeductibility(
+    input: DeductibilityInput,
+    lang: 'fr' | 'ar' | 'en' = 'fr',
+  ): DeductibilityResult {
+    return SupplierNifValidationService.checkDeductibility(input, lang);
   }
 
   /**
