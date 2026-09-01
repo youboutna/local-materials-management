@@ -457,15 +457,14 @@ const MergedNavbar = () => {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  {!DEV_MODE && (
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>{t("auth.logout")}</span>
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{t("auth.logout")}</span>
+                  </DropdownMenuItem>
+
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
