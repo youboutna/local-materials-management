@@ -9,6 +9,8 @@ import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getI18nService } from '@/application/services/I18nService';
 import type { ReferentialLanguage } from '@/config/referentials/i18n/status-labels.referential';
+import { getGeoLocationLabelService, type GeoResolvableInput } from '@/application/services/geo/GeoLocationLabelService';
+import type { GeoAdminLevel } from '@/config/referentials/geo/mauritania-geo.referential';
 
 export const useI18n = () => {
   const { language, setLanguage, t } = useLanguage();
