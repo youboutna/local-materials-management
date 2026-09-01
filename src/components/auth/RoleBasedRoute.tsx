@@ -103,8 +103,19 @@ const RoleBasedRoute = ({
   // Check roles if specified
   if (allowedRoles.length > 0 && isAuthenticated) {
     const hasRequiredRole = hasAnyRole(allowedRoles);
-    
+
+    // Rediriger les profils non gestionnaires vers leur portail d'accueil
     if (!hasRequiredRole) {
+      const home = resolveHomeRouteForRoles([
+        ...(userRoles ?? []),
+        ...(userRole ? [userRole] : []),
+      ]);
+      if (home !== DEFAULT_MANAGEMENT_HOME && !location.pathname.startsWith(home)) {
+        return <Navigate to={home} replace />;
+      }
+    }
+
+
       return (
         <div className="min-h-screen bg-gradient-to-br from-adrar-50 to-terracotta-50 flex items-center justify-center">
           <div className="max-w-md mx-auto text-center p-8 bg-white rounded-xl shadow-elegant">
