@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Target
 } from "lucide-react";
+import { formatAmount2 } from "@/utils/reportNumbers";
 
 import { cn } from "@/lib/utils";
 import { T } from '@/components/i18n/T';
