@@ -25,7 +25,7 @@ const RoleBasedRoute = ({
 }: RoleBasedRouteProps) => {
   const { t } = useLanguage();
   const { isAuthenticated, user, loading } = useAuth();
-  const { hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
+  const { userRoles, hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
   const location = useLocation();
 
   // Track initial resolution to avoid blocking UI on refocus
