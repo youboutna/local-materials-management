@@ -234,9 +234,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher référence ou titre…" className="pl-8" />
+          <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} placeholder="Rechercher référence ou titre…" className="pl-8" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Statut" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all"><T k="auto.boqdocumentlist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
@@ -245,22 +245,36 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
             ))}
           </SelectContent>
         </Select>
+        <Input
+          type="date"
+          value={fromDate}
+          onChange={(e) => { setFromDate(e.target.value); setPage(0); }}
+          className="w-[150px]"
+          aria-label="Créé après le"
+        />
+        <Input
+          type="date"
+          value={toDate}
+          onChange={(e) => { setToDate(e.target.value); setPage(0); }}
+          className="w-[150px]"
+          aria-label="Créé avant le"
+        />
+        <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+          <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {PAGE_SIZES.map((n) => <SelectItem key={n} value={String(n)}>{n} / page</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0}>
+          <Download className="h-4 w-4 mr-1" /> CSV
+        </Button>
       </div>
 
       <div className="rounded-lg border overflow-x-auto">
-        <table className="w-full min-w-[720px] table-fixed text-sm">
-          <colgroup>
-            <col className="w-10" />
-            <col className="w-[18%]" />
-            <col />
-            <col className="w-[9%]" />
-            <col className="w-[18%]" />
-            <col className="w-[14%]" />
-            <col className="w-[7rem]" />
-          </colgroup>
+        <table className="w-full min-w-[1080px] text-sm">
           <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="p-3 text-left">
+              <th className="p-3 text-left w-10">
                 <Checkbox
                   checked={allChecked}
                   disabled={allSelectable.length === 0}
@@ -268,22 +282,42 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                   aria-label={t('common.select_all')}
                 />
               </th>
-              <th className="text-left p-3"><T k="auto.boqdocumentlist.reference" fallback="Référence" /></th>
-              <th className="text-left p-3"><T k="auto.boqdocumentlist.intitule" fallback="Intitulé" /></th>
-              <th className="text-right p-3"><T k="auto.boqdocumentlist.lignes" fallback="Lignes" /></th>
-              <th className="text-right p-3"><T k="auto.boqdocumentlist.montant_ht" fallback="Montant HT" /></th>
-              <th className="text-left p-3"><T k="auto.boqdocumentlist.statut" fallback="Statut" /></th>
-              <th className="text-right p-3"><T k="auto.boqdocumentlist.actions" fallback="Actions" /></th>
+              <th className="text-left p-3 cursor-pointer select-none" onClick={() => toggleSort('reference')}>
+                <T k="auto.boqdocumentlist.reference" fallback="Référence" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-left p-3 cursor-pointer select-none" onClick={() => toggleSort('title')}>
+                <T k="auto.boqdocumentlist.intitule" fallback="Intitulé" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-right p-3 cursor-pointer select-none" onClick={() => toggleSort('lineCount')}>
+                <T k="auto.boqdocumentlist.lignes" fallback="Lignes" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-right p-3 cursor-pointer select-none" onClick={() => toggleSort('totalHt')}>
+                <T k="auto.boqdocumentlist.montant_ht" fallback="Montant HT" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-right p-3"><T k="dqe.list.vat" fallback="TVA" /></th>
+              <th className="text-right p-3 cursor-pointer select-none" onClick={() => toggleSort('totalTtc')}>
+                <T k="dqe.list.total_ttc" fallback="Montant TTC" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-left p-3 cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                <T k="auto.boqdocumentlist.statut" fallback="Statut" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-left p-3 cursor-pointer select-none" onClick={() => toggleSort('createdAt')}>
+                <T k="dqe.list.created_at" fallback="Créé le" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-left p-3 cursor-pointer select-none" onClick={() => toggleSort('updatedAt')}>
+                <T k="dqe.list.updated_at" fallback="Modifié le" /> <ArrowUpDown className="inline h-3 w-3" />
+              </th>
+              <th className="text-right p-3 w-[7rem]"><T k="auto.boqdocumentlist.actions" fallback="Actions" /></th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="text-center p-6 text-muted-foreground">Chargement…</td></tr>
+              <tr><td colSpan={11} className="text-center p-6 text-muted-foreground">Chargement…</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="text-center p-8 text-muted-foreground">
+              <tr><td colSpan={11} className="text-center p-8 text-muted-foreground">
                 {t('dqe.empty.create_hint')}
               </td></tr>
-            ) : filtered.map((d) => {
+            ) : pageRows.map((d) => {
                const variant = STATUS_VARIANT[d.status] ?? STATUS_VARIANT.draft;
                const readOnly = d.readOnly;
                /** Édition possible uniquement sur un document rouvert / brouillon / rejeté. */
@@ -303,11 +337,15 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                       aria-label={`${docPrefix.toUpperCase()}-${d.reference}`}
                     />
                   </td>
-                  <td className="p-3 font-medium truncate">{docPrefix.toUpperCase()}-{d.reference}</td>
-                  <td className="p-3 truncate">{resolveTitle(d)}</td>
+                  <td className="p-3 font-medium whitespace-nowrap">{docPrefix.toUpperCase()}-{d.reference}</td>
+                  <td className="p-3 max-w-[260px] truncate">{resolveTitle(d)}</td>
                   <td className="p-3 text-right">{d.lineCount}</td>
-                   <td className="p-3 text-right font-medium">{d.totalHt.toLocaleString(locale, { maximumFractionDigits: 2 })} MRU</td>
-                   <td className="p-3"><Badge variant={variant}>{d.status === 'mixed' ? t('dqe.status.mixed') : translateStatus(d.status)}</Badge></td>
+                  <td className="p-3 text-right font-medium whitespace-nowrap">{fmtMoney(d.totalHt)} MRU</td>
+                  <td className="p-3 text-right whitespace-nowrap">{fmtMoney(d.totalVat)}</td>
+                  <td className="p-3 text-right font-semibold whitespace-nowrap">{fmtMoney(d.totalTtc)} MRU</td>
+                  <td className="p-3"><Badge variant={variant}>{d.status === 'mixed' ? t('dqe.status.mixed') : translateStatus(d.status)}</Badge></td>
+                  <td className="p-3 whitespace-nowrap text-muted-foreground">{fmtDate(d.createdAt)}</td>
+                  <td className="p-3 whitespace-nowrap text-muted-foreground">{fmtDate(d.updatedAt)}</td>
                   <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1">
                       <Button
@@ -348,6 +386,24 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
           </tbody>
         </table>
       </div>
+
+      {filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>
+            {safePage * pageSize + 1}–{Math.min(filtered.length, (safePage + 1) * pageSize)} / {filtered.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={safePage === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span>Page {safePage + 1} / {totalPages}</span>
+            <Button variant="outline" size="sm" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
 
       <AlertDialog open={pendingDelete.length > 0} onOpenChange={(o) => { if (!o) setPendingDelete([]); }}>
         <AlertDialogContent>
