@@ -23,10 +23,16 @@ export interface LoginCredentials {
   password: string;
 }
 
+/**
+ * Type utilisateur authentifié CANONIQUE de l'application.
+ * `@/domain/repositories/IAuthRepository` réexporte ce type : il n'existe
+ * qu'une seule définition d'AuthUser côté port + DTO.
+ */
 export interface AuthUser {
   id: string;
-  email: string;
+  email?: string;
   name?: string;
+
   fullName?: string;
   phone?: string;
   nationalId?: string;
