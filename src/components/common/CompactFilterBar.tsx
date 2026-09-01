@@ -58,6 +58,11 @@ export interface CompactFilterBarProps {
   totalCount?: number;
   /** Contenu libre aligné à droite (actions, compteurs) */
   trailing?: ReactNode;
+  /** Contrôles additionnels rendus sur la même ligne (desktop) */
+  inlineExtra?: ReactNode;
+  /** Suggestions d'autocomplétion pour la recherche */
+  autocompleteOptions?: AutocompleteOption[];
+  onAutocompleteSelect?: (option: AutocompleteOption) => void;
   className?: string;
   sticky?: boolean;
 }
