@@ -592,18 +592,33 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   return (
     <>
-      {/* Zone 2 — barre de workflow : droite = Parties · Document ▾ · Workflow ▾
-          (les actions de planification sont regroupées dans Workflow ▾) puis
-          l'action principale « Soumettre pour validation » (brouillon seul). */}
-      <div className="flex w-full flex-col gap-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            {primarySlot}
-          </div>
+      {/* Barre unique et compacte : contexte + badges à gauche, actions à droite.
+          Tout tient sur une seule ligne sur desktop, wrap naturel sur mobile. */}
+      <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1.5">
+        {/* --- Contexte & badges d'information (jamais de boutons) --- */}
+        {contextSlot}
+        {primarySlot}
+        {signedInfo && (
+          <Badge variant="secondary" className="gap-1">
+            <PenTool className="h-3 w-3" />
+            {t('dqe.action.signed')} — {signedInfo.by}
+          </Badge>
+        )}
+        {gateKind && (
+          <Badge variant={gate.allowed ? 'outline' : 'destructive'}>
+            {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} —{' '}
+            {gate.allowed ? t('dqe.gate.validated') : t('dqe.gate.validation_required')}
+          </Badge>
+        )}
+        {!headerValidation.valid && (
+          <Badge variant="destructive" className="cursor-pointer" onClick={() => setPartiesOpen(true)}>
+            {t('dqe.header.error.title')} ({headerValidation.issues.length})
+          </Badge>
+        )}
+        {badgesSlot}
 
-
-          {/* --- Actions secondaires (droite) : Parties ▾ · Document ▾ · Workflow ▾ --- */}
-          <div className="flex flex-wrap items-center gap-2">
+        {/* --- Actions : Parties · Document ▾ · Workflow ▾ · action principale --- */}
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
           <Button
             size="sm"
             variant="outline"
@@ -611,6 +626,7 @@ export const BoqActionsBar: React.FC<Props> = ({
             disabled={disabled || busy !== null}
             title={t('dqe.parties.edit_title')}
           >
+
             <Pencil className="h-4 w-4 mr-2" />
             {t('dqe.actions.parties_menu')}
           </Button>
