@@ -51,7 +51,7 @@ const MainNavbar = () => {
       if (authUser) {
         await signOut();
       }
-      if (keycloakUser || isAuthenticated) {
+      if (authUser || isAuthenticated) {
         logout();
       }
     } catch (error) {

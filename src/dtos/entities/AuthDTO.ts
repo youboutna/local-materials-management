@@ -59,7 +59,6 @@ export interface AuthUser {
   username?: string;
   keycloakId?: string;
   roles?: string[];
-  nationalId?: string;
 }
 
 export interface AuthSession {
