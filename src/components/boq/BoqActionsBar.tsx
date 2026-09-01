@@ -623,7 +623,8 @@ export const BoqActionsBar: React.FC<Props> = ({
         {badgesSlot}
 
         {/* --- Actions : Parties · Document ▾ · Workflow ▾ · action principale --- */}
-        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+        <div className="ml-auto flex flex-nowrap items-center gap-1.5">
+
           <Button
             size="sm"
             variant="outline"
