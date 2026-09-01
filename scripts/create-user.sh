@@ -13,23 +13,42 @@
 
 set -e
 
+# ============================================================================
+# COULEURS
+# ============================================================================
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-NC='\033[0m'
+BLUE='\033[0;34m'
 BOLD='\033[1m'
+NC='\033[0m'
 
+# ============================================================================
+# CHEMINS
+# ============================================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Charger les variables d'environnement
-if [ -f "$PROJECT_ROOT/.env" ]; then
-    export $(cat "$PROJECT_ROOT/.env" | grep -v '^#' | xargs)
-fi
+# ============================================================================
+# CHARGEMENT DU .ENV
+# ============================================================================
+load_env() {
+    if [ -f "$PROJECT_ROOT/.env" ]; then
+        echo -e "${BLUE}📄 Chargement de .env${NC}"
+        export $(cat "$PROJECT_ROOT/.env" | grep -v '^#' | grep -v '^$' | xargs)
+    else
+        echo -e "${YELLOW}⚠️  .env non trouvé, utilisation des variables d'environnement existantes${NC}"
+    fi
+}
+load_env
 
-# ============================
+# ============================================================================
 # FONCTIONS
-# ============================
+# ============================================================================
+log_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
+log_success() { echo -e "${GREEN}✅ $1${NC}"; }
+log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+log_error() { echo -e "${RED}❌ $1${NC}"; }
 
 show_help() {
     cat << EOF
@@ -61,13 +80,13 @@ ${BOLD}Examples:${NC}
 ${BOLD}Variables d'environnement:${NC}
   VITE_SUPABASE_URL       URL du projet Supabase
   VITE_SUPABASE_ANON_KEY  Clé publishable (sb_publishable_...)
+  VITE_SUPABASE_PROJECT_ID ID du projet Supabase
 EOF
 }
 
-# ============================
+# ============================================================================
 # PARSING DES ARGUMENTS
-# ============================
-
+# ============================================================================
 ADMIN=false
 EMAIL=""
 PASSWORD=""
@@ -76,6 +95,7 @@ NAME=""
 PHONE=""
 NATIONAL_ID=""
 SQL_FILE=""
+AUTO_CONFIRM=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -87,61 +107,77 @@ while [[ $# -gt 0 ]]; do
         --phone) PHONE="$2"; shift ;;
         --national-id) NATIONAL_ID="$2"; shift ;;
         --file) SQL_FILE="$2"; shift ;;
+        --yes|-y) AUTO_CONFIRM=true ;;
         --help|-h) show_help; exit 0 ;;
-        *) echo -e "${RED}❌ Unknown option: $1${NC}"; show_help; exit 1 ;;
+        *) log_error "Option inconnue: $1"; show_help; exit 1 ;;
     esac
     shift
 done
 
-echo -e "${GREEN}${BOLD}👤 Création d'utilisateur HadraTech-GPI${NC}"
+# ============================================================================
+# BANNIÈRE
+# ============================================================================
+echo ""
+echo -e "${GREEN}${BOLD}╔═══════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}${BOLD}║              👤 CRÉATION D'UTILISATEUR                      ║${NC}"
+echo -e "${GREEN}${BOLD}╚═══════════════════════════════════════════════════════════════╝${NC}"
+echo ""
 echo -e "${YELLOW}📋 FLOW: auth.users → public.profiles → public.user_roles${NC}"
 echo ""
 
-# ============================
+# ============================================================================
 # VÉRIFICATION DE L'ENVIRONNEMENT
-# ============================
-
-# Vérifier Supabase URL
-if [ -z "$VITE_SUPABASE_URL" ]; then
-    echo -e "${RED}❌ VITE_SUPABASE_URL non défini dans .env${NC}"
-    echo "   Ajoutez: VITE_SUPABASE_URL=https://votre-projet.supabase.co"
-    exit 1
-fi
-echo -e "${GREEN}✅ Supabase URL: ${VITE_SUPABASE_URL}${NC}"
-
-# Vérifier la clé
-if [ -n "$VITE_SUPABASE_ANON_KEY" ] || [ -n "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
-    echo -e "${GREEN}✅ Clé publishable trouvée${NC}"
-else
-    echo -e "${RED}❌ Aucune clé trouvée. Ajoutez VITE_SUPABASE_ANON_KEY ou VITE_SUPABASE_PUBLISHABLE_KEY${NC}"
-    exit 1
-fi
-
-# Vérifier que ts-node est installé (uniquement pour les modes qui appellent TS)
-if [ "$ADMIN" = true ] || [ -n "$EMAIL" ]; then
-    if ! command -v npx >/dev/null 2>&1; then
-        echo -e "${RED}❌ npx non trouvé. Installez Node.js.${NC}"
+# ============================================================================
+check_supabase_config() {
+    # Vérifier Supabase URL
+    if [ -z "$VITE_SUPABASE_URL" ]; then
+        log_error "VITE_SUPABASE_URL non défini dans .env"
+        echo "   Ajoutez: VITE_SUPABASE_URL=https://votre-projet.supabase.co"
         exit 1
     fi
-fi
+    log_success "Supabase URL: ${VITE_SUPABASE_URL}"
 
+    # Vérifier la clé
+    if [ -n "$VITE_SUPABASE_ANON_KEY" ]; then
+        log_success "Clé anon trouvée"
+    elif [ -n "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+        log_success "Clé publishable trouvée"
+    else
+        log_error "Aucune clé trouvée. Ajoutez VITE_SUPABASE_ANON_KEY ou VITE_SUPABASE_PUBLISHABLE_KEY"
+        exit 1
+    fi
+
+    # Vérifier que ts-node est installé (uniquement pour les modes qui appellent TS)
+    if [ "$ADMIN" = true ] || [ -n "$EMAIL" ]; then
+        if ! command -v npx >/dev/null 2>&1; then
+            log_error "npx non trouvé. Installez Node.js."
+            exit 1
+        fi
+    fi
+}
+
+check_supabase_config
 echo ""
 
-# ============================
+# ============================================================================
 # EXÉCUTION
-# ============================
+# ============================================================================
 
+# ============================================================================
+# MODE ADMIN PAR DÉFAUT
+# ============================================================================
 if [ "$ADMIN" = true ]; then
-    # Mode admin par défaut → appelle create-user.ts
     echo -e "${YELLOW}📝 Création de l'admin par défaut...${NC}"
     echo "   Email: admin@hadratech.com"
     echo "   Rôle: admin"
     echo "   🔄 Appel de create-user.ts"
+    echo ""
     npx ts-node "$SCRIPT_DIR/create-user.ts" --admin
+    log_success "Admin créé"
 
-# ============================
+# ============================================================================
 # MODE FICHIER SQL (INDÉPENDANT - N'APPELLE PAS TS)
-# ============================
+# ============================================================================
 elif [ -n "$SQL_FILE" ]; then
     echo -e "${YELLOW}📝 Exécution du fichier SQL: $SQL_FILE${NC}"
     echo -e "   ℹ️  Mode indépendant (n'appelle pas create-user.ts)"
@@ -155,7 +191,7 @@ elif [ -n "$SQL_FILE" ]; then
         elif [ -f "$(pwd)/$SQL_FILE" ]; then
             SQL_FILE="$(pwd)/$SQL_FILE"
         else
-            echo -e "${RED}❌ Fichier non trouvé: $SQL_FILE${NC}"
+            log_error "Fichier non trouvé: $SQL_FILE"
             exit 1
         fi
     fi
@@ -165,21 +201,25 @@ elif [ -n "$SQL_FILE" ]; then
     echo -e "   📄 $LINES lignes de SQL à exécuter"
 
     # Copier dans seed.sql
+    mkdir -p "$PROJECT_ROOT/supabase"
     cp "$SQL_FILE" "$PROJECT_ROOT/supabase/seed.sql"
-    echo -e "   ✅ Copié dans supabase/seed.sql"
+    log_success "Copié dans supabase/seed.sql"
 
     # Vérifier si la stack locale est démarrée
     if npx supabase status 2>/dev/null | grep -q "Started"; then
         echo -e "   Target: local (Docker)"
         
-        # Utiliser sql-paths si disponible
+        # Exécuter le SQL
         if npx supabase db reset --help 2>/dev/null | grep -q "sql-paths"; then
-            npx supabase db reset --sql-paths seed.sql
+            npx supabase db reset --sql-paths seed.sql 2>/dev/null || {
+                log_warning "Reset échoué, tentative d'exécution directe..."
+                npx supabase db execute --file "$PROJECT_ROOT/supabase/seed.sql"
+            }
         else
-            npx supabase db reset --no-seed
+            npx supabase db reset --no-seed 2>/dev/null || true
             npx supabase db execute --file "$PROJECT_ROOT/supabase/seed.sql"
         fi
-        echo -e "${GREEN}✅ SQL exécuté (local)${NC}"
+        log_success "SQL exécuté (local)"
     else
         echo -e "   Target: cloud (Dashboard Supabase)"
         echo -e "${YELLOW}ℹ️  La stack locale n'est pas démarrée.${NC}"
@@ -200,17 +240,35 @@ elif [ -n "$SQL_FILE" ]; then
         cat "$SQL_FILE"
         echo "---"
         echo ""
+        
+        if [ "$AUTO_CONFIRM" = false ]; then
+            read -p "Voulez-vous copier ce contenu dans le SQL Editor ? (o/N) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[OoYy]$ ]]; then
+                echo "📋 Contenu copié dans le presse-papiers (si disponible)"
+                if command -v pbcopy >/dev/null 2>&1; then
+                    cat "$SQL_FILE" | pbcopy
+                    log_success "Contenu copié dans le presse-papiers"
+                elif command -v xclip >/dev/null 2>&1; then
+                    cat "$SQL_FILE" | xclip -selection clipboard
+                    log_success "Contenu copié dans le presse-papiers"
+                else
+                    log_warning "Pas de commande de copie disponible"
+                fi
+            fi
+        fi
         exit 1
     fi
 
-# ============================
+# ============================================================================
 # MODE UTILISATEUR INDIVIDUEL → APPELLE CREATE-USER.TS
-# ============================
+# ============================================================================
 elif [ -n "$EMAIL" ] && [ -n "$PASSWORD" ] && [ -n "$ROLE" ]; then
     echo -e "${YELLOW}📝 Création de l'utilisateur: $EMAIL${NC}"
     echo "   Rôle: $ROLE"
     echo "   Nom: ${NAME:-'(non spécifié)'}"
     echo "   🔄 Appel de create-user.ts"
+    echo ""
 
     # Construire les arguments pour le script TS
     ARGS="--email \"$EMAIL\" --password \"$PASSWORD\" --role \"$ROLE\""
@@ -225,10 +283,14 @@ elif [ -n "$EMAIL" ] && [ -n "$PASSWORD" ] && [ -n "$ROLE" ]; then
         ARGS="$ARGS --national-id \"$NATIONAL_ID\""
     fi
 
+    # Exécuter le script TypeScript
     npx ts-node "$SCRIPT_DIR/create-user.ts" $ARGS
+    log_success "Utilisateur créé"
 
+# ============================================================================
+# MODE INTERACTIF
+# ============================================================================
 else
-    # Mode interactif → appelle create-user.ts
     echo -e "${YELLOW}📝 Mode interactif...${NC}"
     echo "   Répondez aux questions pour créer un utilisateur."
     echo "   🔄 Appel de create-user.ts"
@@ -236,9 +298,17 @@ else
     npx ts-node "$SCRIPT_DIR/create-user.ts"
 fi
 
-# ============================
+# ============================================================================
 # FIN
-# ============================
-
+# ============================================================================
 echo ""
 echo -e "${GREEN}${BOLD}✅ Opération terminée !${NC}"
+echo ""
+
+# Afficher les prochaines étapes
+if [ -z "$SQL_FILE" ]; then
+    echo -e "${BLUE}📋 Prochaines étapes:${NC}"
+    echo "  1. Vérifier l'utilisateur dans Supabase Dashboard"
+    echo "  2. Tester la connexion: npm run dev"
+    echo "  3. Vérifier les permissions"
+fi

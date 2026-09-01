@@ -319,7 +319,8 @@ const Auth = () => {
                         ))}
                       </div>
                       <p className="text-[11px] text-warning mt-2">
-                        Utilisateurs DEV : {Object.values(DEV_USERS).map((u) => u.email).join(' · ')}
+                        Utilisateurs DEV : 
+                         {/* {Object.values(DEV_USERS).map((u) => u.email).join(' · ')} */}
                       </p>
                     </div>
                   )}

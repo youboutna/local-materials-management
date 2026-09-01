@@ -1,15 +1,15 @@
-/**
- * ContractFormDialog — création manuelle / édition d'un contrat.
- * Aucun accès Supabase : passe par useContractMutations et les hooks sélecteurs.
- *
- * Fonctions couvertes :
- *  - autocomplétion Projet → Phase → AO attribué
- *  - attributaires multiples (groupement) : supplierId principal + metadata.awardedSupplierIds
- *  - fiscalité : régime TVA (TaxService) → TVA et TTC calculés
- *  - devise, dates, contenu WYSIWYG, lien du contrat signé
- *  - actions : Annuler / Sauvegarder / Générer le PDF / Importer un document
- */
-import { useEffect, useMemo, useState } from 'react';
+// src/components/contracts/ContractFormDialog.tsx
+
+import { getContractPdfService } from '@/application/services/ContractPdfService';
+import {
+  CONTRACT_STATUSES,
+  CONTRACT_STATUS_LABELS,
+  CONTRACT_TYPES,
+  CONTRACT_TYPE_LABELS,
+} from '@/application/services/ContractService';
+import { TaxService } from '@/application/services/TaxService';
+import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -18,11 +18,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Select,
   SelectContent,
@@ -30,28 +30,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SearchableSelect } from '@/components/ui/searchable-select';
-import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
-import { FileDown, Loader2, Upload } from 'lucide-react';
-import { toast } from 'sonner';
-import {
-  CONTRACT_STATUSES,
-  CONTRACT_STATUS_LABELS,
-  CONTRACT_TYPES,
-  CONTRACT_TYPE_LABELS,
-} from '@/application/services/ContractService';
-import { getContractPdfService } from '@/application/services/ContractPdfService';
-import { TaxService } from '@/application/services/TaxService';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import type { TaxRegimeDefinition } from '@/config/referentials/boq/tax-regimes.referential';
+import type { ContractRecordDTO } from '@/dtos/entities/ContractRecordDTO';
+import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import {
   useContractLinesHex,
   useContractMutations,
 } from '@/hooks/hexagonal/useContractsHex';
-import { useProjectsSelector, useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
 import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
+import { useProjectsSelector, useSuppliersSelector } from '@/hooks/hexagonal/useSelectorsHex';
 import { useTendersHex } from '@/hooks/hexagonal/useTendersHex';
-import type { ContractRecordDTO } from '@/dtos/entities/ContractRecordDTO';
+import { FileDown, Loader2, Upload } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface ContractFormDialogProps {
   open: boolean;
@@ -82,6 +79,10 @@ interface FormState {
   notes: string;
 }
 
+// ============================================================================
+// CONSTANTES
+// ============================================================================
+
 const CURRENCIES = ['MRU', 'EUR', 'USD'] as const;
 
 const emptyState: FormState = {
@@ -104,8 +105,16 @@ const emptyState: FormState = {
   notes: '',
 };
 
+// ============================================================================
+// UTILITAIRES
+// ============================================================================
+
 const money = (value: number, currency: string) =>
   `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value || 0)} ${currency}`;
+
+// ============================================================================
+// COMPOSANT PRINCIPAL
+// ============================================================================
 
 export default function ContractFormDialog({
   open,
@@ -120,6 +129,10 @@ export default function ContractFormDialog({
   const [supplierSearch, setSupplierSearch] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
 
+  // ==========================================================================
+  // HOOKS
+  // ==========================================================================
+
   const { data: projects = [] } = useProjectsSelector({ enabled: open });
   const { data: suppliers = [] } = useSuppliersSelector(supplierSearch, open);
   const { phases } = usePhasesHex(form.projectId || undefined);
@@ -127,6 +140,10 @@ export default function ContractFormDialog({
   const { data: contractLines = [] } = useContractLinesHex(contract?.id);
 
   const regimes = useMemo(() => TaxService.listRegimes(), []);
+
+  // ==========================================================================
+  // FILTRES ET DÉRIVÉS
+  // ==========================================================================
 
   const awardedTenders = useMemo(
     () =>
@@ -137,6 +154,10 @@ export default function ContractFormDialog({
       ),
     [tenders, form.projectId],
   );
+
+  // ==========================================================================
+  // EFFETS
+  // ==========================================================================
 
   useEffect(() => {
     if (!open) return;
@@ -176,6 +197,10 @@ export default function ContractFormDialog({
     }
   }, [open, contract, projectId, tenderId]);
 
+  // ==========================================================================
+  // FONCTIONS UTILITAIRES
+  // ==========================================================================
+
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -205,8 +230,9 @@ export default function ContractFormDialog({
   /** Intitulé automatique « Contrat — Projet X — Lot/Phase Y ». */
   const autoTitle = () => {
     const project = projects.find((p) => p.id === form.projectId);
-    const phase = phases.find((p) => p.id === form.phaseId);
-    const parts = ['Contrat', project?.title, phase?.phaseName ?? phase?.name].filter(Boolean);
+    const phase = phases.find((p) => p.id === form.phaseId) as PhaseDTO | undefined;
+    const phaseName = phase?.phaseName || phase?.name || '';
+    const parts = ['Contrat', project?.title, phaseName].filter(Boolean);
     if (parts.length < 2) {
       toast.info('Sélectionnez un projet pour générer l’intitulé.');
       return;
@@ -214,10 +240,18 @@ export default function ContractFormDialog({
     set('title', parts.join(' — '));
   };
 
+  // ==========================================================================
+  // CALCULS FINANCIERS
+  // ==========================================================================
+
   const amountHt = Number(form.totalAmount) || 0;
   const vatRateValue = (Number(form.vatRate) || 0) / 100;
   const vatAmount = Math.round(amountHt * vatRateValue * 100) / 100;
   const amountTtc = Math.round((amountHt + vatAmount) * 100) / 100;
+
+  // ==========================================================================
+  // ACTIONS
+  // ==========================================================================
 
   const buildPayload = () => ({
     contractNumber: form.contractNumber.trim() || undefined,
@@ -292,6 +326,10 @@ export default function ContractFormDialog({
     });
   };
 
+  // ==========================================================================
+  // RENDU
+  // ==========================================================================
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
@@ -313,7 +351,7 @@ export default function ContractFormDialog({
               options={projects.map((p) => ({
                 value: p.id,
                 label: p.title,
-                description: p.project_reference ?? undefined,
+                description: p.projectReference ?? undefined,
               }))}
               placeholder="Rechercher un projet…"
               clearLabel="Aucun projet"
@@ -325,11 +363,14 @@ export default function ContractFormDialog({
             <SearchableSelect
               value={form.phaseId}
               onChange={(v) => set('phaseId', v)}
-              options={phases.map((p) => ({
-                value: p.id,
-                label: (p as { phaseName?: string; name?: string }).phaseName ??
-                  (p as { name?: string }).name ?? 'Phase',
-              }))}
+              options={phases.map((p) => {
+                // ✅ Correction : utiliser PhaseDTO avec phaseName
+                const phase = p as unknown as PhaseDTO;
+                return {
+                  value: phase.id,
+                  label: phase.phaseName || phase.name || 'Phase',
+                };
+              })}
               placeholder={form.projectId ? 'Sélectionner une phase…' : 'Choisir un projet d’abord'}
               disabled={!form.projectId}
               clearLabel="Aucune phase"
@@ -362,7 +403,7 @@ export default function ContractFormDialog({
               options={suppliers.map((s) => ({
                 value: s.id,
                 label: s.name,
-                description: s.category ?? undefined,
+                description: (s as any).type || (s as any).category || undefined,
               }))}
               placeholder="Sélectionner les titulaires (groupement possible)…"
               searchPlaceholder="Rechercher un fournisseur…"
@@ -403,7 +444,9 @@ export default function ContractFormDialog({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {CONTRACT_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>{CONTRACT_TYPE_LABELS[type]}</SelectItem>
+                  <SelectItem key={type} value={type}>
+                    {CONTRACT_TYPE_LABELS[type as keyof typeof CONTRACT_TYPE_LABELS] || type}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -415,7 +458,9 @@ export default function ContractFormDialog({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {CONTRACT_STATUSES.map((status) => (
-                  <SelectItem key={status} value={status}>{CONTRACT_STATUS_LABELS[status]}</SelectItem>
+                  <SelectItem key={status} value={status}>
+                    {CONTRACT_STATUS_LABELS[status as keyof typeof CONTRACT_STATUS_LABELS] || status}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -440,6 +485,7 @@ export default function ContractFormDialog({
               id="contract-amount"
               type="number"
               min="0"
+              step="0.01"
               value={form.totalAmount}
               onChange={(e) => set('totalAmount', e.target.value)}
             />
@@ -460,11 +506,15 @@ export default function ContractFormDialog({
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {regimes.map((r) => (
-                  <SelectItem key={r.code} value={r.code}>
-                    {r.labels.fr} — {Math.round(r.vatRate * 100)} %
-                  </SelectItem>
-                ))}
+                {regimes.map((r) => {
+                  // ✅ Correction : utiliser labels plutôt que label
+                  const regime = r as TaxRegimeDefinition & { labels?: { fr: string } };
+                  return (
+                    <SelectItem key={regime.code} value={regime.code}>
+                      {regime.labels?.fr || regime.label || regime.code} — {Math.round((regime.vatRate ?? 0) * 100)} %
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -476,18 +526,24 @@ export default function ContractFormDialog({
               type="number"
               min="0"
               max="100"
+              step="0.01"
               value={form.vatRate}
               onChange={(e) => set('vatRate', e.target.value)}
             />
           </div>
 
           <div className="rounded-md border border-border bg-muted/40 p-3 text-sm sm:col-span-2">
-            <div className="flex justify-between"><span>Total HT</span><span>{money(amountHt, form.currency)}</span></div>
+            <div className="flex justify-between">
+              <span>Total HT</span>
+              <span>{money(amountHt, form.currency)}</span>
+            </div>
             <div className="flex justify-between text-muted-foreground">
-              <span>TVA ({form.vatRate || 0} %)</span><span>{money(vatAmount, form.currency)}</span>
+              <span>TVA ({form.vatRate || 0} %)</span>
+              <span>{money(vatAmount, form.currency)}</span>
             </div>
             <div className="mt-1 flex justify-between font-semibold">
-              <span>Total TTC</span><span>{money(amountTtc, form.currency)}</span>
+              <span>Total TTC</span>
+              <span>{money(amountTtc, form.currency)}</span>
             </div>
           </div>
 
@@ -568,7 +624,9 @@ export default function ContractFormDialog({
             Générer le contrat
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
             <Button onClick={handleSubmit} disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {contract ? 'Enregistrer' : 'Créer le contrat'}

@@ -1,29 +1,32 @@
-/**
- * OAuth Login Component
- * Social login buttons for OAuth providers following hexagonal architecture
- * Following PROMPTS.md rules: UI Component → Service → Domain ← Adapter → DB
- */
+// src/components/auth/OAuthLogin.tsx
 
-import React, { useEffect, useState } from 'react';
+import { T } from '@/components/i18n/T';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useOAuthLogin } from '@/hooks/hexagonal/useOAuthLogin';
-import { Github, Chrome, Briefcase } from 'lucide-react';
+import { getAppConfig } from '@/config/app';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { T } from '@/components/i18n/T';
+import { useOAuthLogin } from '@/hooks/hexagonal/useOAuthLogin';
+import { Briefcase, Building, Chrome, Github, Key, Shield } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
+// ✅ Ajout de l'icône Keycloak
 const PROVIDER_ICONS = {
   google: Chrome,
   github: Github,
-  microsoft: Briefcase
+  microsoft: Briefcase,
+  keycloak: Key,
+  auth0: Shield,
+  gitlab: Building,
 } as const;
 
 const PROVIDER_LABELS = {
   google: 'Google',
   github: 'GitHub',
-  microsoft: 'Microsoft'
+  microsoft: 'Microsoft',
+  keycloak: 'Keycloak',
+  auth0: 'Auth0',
+  gitlab: 'GitLab',
 } as const;
 
 interface OAuthLoginProps {
@@ -42,13 +45,13 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
   const { t } = useLanguage();
   const { 
     initiateOAuthLogin, 
-    availableProviders,
     getOAuthProviders,
     isHandlingCallback 
   } = useOAuthLogin();
 
   const [providers, setProviders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentProvider, setCurrentProvider] = useState<string>('');
 
   // Load OAuth providers on mount
   useEffect(() => {
@@ -57,6 +60,10 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
         setIsLoading(true);
         const oAuthProviders = await getOAuthProviders();
         setProviders(oAuthProviders.filter(p => p.enabled));
+        
+        // Récupérer le fournisseur actuel depuis la config
+        const config = getAppConfig();
+        setCurrentProvider(config.auth.provider);
       } catch (error) {
         console.error('Failed to load OAuth providers:', error);
         setProviders([]);
@@ -67,6 +74,20 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
 
     loadProviders();
   }, [getOAuthProviders]);
+
+  // ✅ Fonction pour obtenir le libellé du fournisseur
+  const getProviderLabel = (providerName: string): string => {
+    return PROVIDER_LABELS[providerName as keyof typeof PROVIDER_LABELS] || providerName;
+  };
+
+  // ✅ Fonction pour obtenir l'icône du fournisseur
+  const getProviderIcon = (providerName: string) => {
+    const Icon = PROVIDER_ICONS[providerName as keyof typeof PROVIDER_ICONS];
+    if (Icon) return <Icon className="h-5 w-5" />;
+    
+    // Icône par défaut
+    return <Shield className="h-5 w-5" />;
+  };
 
   const handleProviderLogin = async (provider: string) => {
     try {
@@ -100,12 +121,17 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
       <CardHeader className="text-center pb-4">
         <CardTitle className="text-lg">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
+        {currentProvider && (
+          <Badge variant="outline" className="mt-2">
+            {t("auto.oauthlogin.provider_actif") || "Fournisseur actif"} : {currentProvider}
+          </Badge>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
           {providers.map((provider) => {
-            const IconComponent = PROVIDER_ICONS[provider.providerName as keyof typeof PROVIDER_ICONS];
-            const label = PROVIDER_LABELS[provider.providerName as keyof typeof PROVIDER_LABELS] || provider.providerName;
+            const label = getProviderLabel(provider.providerName);
+            const icon = getProviderIcon(provider.providerName);
 
             return (
               <Button
@@ -115,8 +141,8 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
                 onClick={() => handleProviderLogin(provider.providerName)}
                 disabled={isHandlingCallback}
               >
-                {IconComponent && <IconComponent className="h-5 w-5" />}
-                <span>Continuer avec {label}</span>
+                {icon}
+                <span>{t("auto.oauthlogin.continuer_avec") || "Continuer avec"} {label}</span>
                 <Badge variant="secondary" className="ml-auto">
                   <T k="auto.oauthlogin.oauth" fallback="OAuth" />
                 </Badge>

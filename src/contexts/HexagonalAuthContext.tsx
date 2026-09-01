@@ -1,308 +1,449 @@
-/**
- * Hexagonal Auth Context - Provider
- * Exporte le contexte et le Provider UNIQUEMENT
- */
+// src/contexts/HexagonalAuthContext.tsx
 
-import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { getUnifiedAuthService, OAuthLoginData } from '@/application/services/UnifiedAuthService';
-import { AuthProvider, AuthManagerConfig } from '@/config/app';
-import { AUTH_ERROR_MESSAGES, AUTH_SUCCESS_MESSAGES } from '@/config/auth';
-import { DEV_MODE } from '@/config/constants';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
-import { HexagonalAuthContextType } from './HexagonalAuthContext.types';
+import { getAuthManager, type AuthManagerConfig } from '@/application/services/AuthManager';
+import type { AuthProvider } from '@/config/app';
+import { getAppConfig } from '@/config/app';
+import { getOAuthProviderConfig } from '@/config/referentials/oauth-providers.referential';
+import type { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
+import type { AuthUser } from '@/dtos/entities/AuthDTO';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-// Création du contexte
-export const HexagonalAuthContext = createContext<HexagonalAuthContextType | undefined>(undefined);
+// ============================================================================
+// TYPES
+// ============================================================================
 
-// Provider
-export function HexagonalAuthProvider({ children }: { children: ReactNode }) {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
+export interface OAuthProviderConfig {
+  id: string;
+  providerName: string;
+  enabled: boolean;
+  clientId?: string;
+  clientSecret?: string;
+  redirectUri?: string;
+  scopes?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface HexagonalAuthContextType {
+  // Core auth state
+  user: AuthUser | null;
+  loading: boolean;
+  error: Error | null;
+  isAuthenticated: boolean;
+  currentProvider: AuthProvider;
   
+  // Auth actions
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  loginWithOAuth: (provider: string) => Promise<void>;
+  
+  // OAuth specific - ✅ AJOUTÉ
+  getOAuthProviders: () => Promise<OAuthProviderConfig[]>;
+  generateOAuthUrl: (provider: string, redirectUri: string) => Promise<string>;
+  
+  // Utility
+  hasRole: (roleName: string) => boolean;
+  hasAnyRole: (roleNames: string[]) => boolean;
+  
+  // Email editor
+  showEmailEditor: boolean;
+  unconfirmedEmail: string | null;
+  updateEmail: (newEmail: string) => Promise<void>;
+  cancelEmailEdit: () => void;
+  triggerEmailEditor: (email: string) => void;
+  
+  // Provider switch
+  switchProvider: (config: AuthManagerConfig) => Promise<void>;
+  supportedProviders: Array<{ value: AuthProvider; label: string; description: string }>;
+  refetch: () => void;
+  getCurrentProvider: () => AuthProvider;
+  isDevelopmentMode: boolean;
+}
+
+// ============================================================================
+// CONTEXTE
+// ============================================================================
+
+const HexagonalAuthContext = createContext<HexagonalAuthContextType | undefined>(undefined);
+
+// ============================================================================
+// PROVIDER
+// ============================================================================
+
+export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [currentProvider, setCurrentProvider] = useState<AuthProvider>('supabase');
-  const [switching, setSwitching] = useState(false);
+  const [isDevelopmentMode, setIsDevelopmentMode] = useState(false);
   const [showEmailEditor, setShowEmailEditor] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
-  
-  const unifiedAuthService = getUnifiedAuthService();
 
-  const {
-    data: sessionData,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['unified-auth', 'session'],
-    queryFn: async () => {
-      try {
-        const result = await unifiedAuthService.getCurrentSession();
-        return result;
-      } catch (err) {
-        console.error('Error fetching current session:', err);
-        return { user: null, session: null };
-      }
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
-    refetchOnMount: true,
-    refetchOnWindowFocus: false
-  });
+  const authManager = getAuthManager();
 
-  const user = sessionData?.user || null;
-  const session = sessionData?.session || null;
-  const isAuthenticated = !!user && !!session;
+  // ==========================================================================
+  // CHARGEMENT DE LA CONFIGURATION
+  // ==========================================================================
 
-  const triggerEmailEditor = useCallback((email: string) => {
-    setUnconfirmedEmail(email);
-    setShowEmailEditor(true);
+  useEffect(() => {
+    try {
+      const config = getAppConfig();
+      setCurrentProvider(config.auth.provider);
+      setIsDevelopmentMode(config.mode === 'development' || config.mode === 'local-bypass');
+    } catch (e) {
+      console.warn('Erreur de configuration:', e);
+    }
   }, []);
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginCredentials) => {
-      const result = await unifiedAuthService.login(credentials);
-      return result;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['unified-auth'] });
-      const userName = data.user?.fullName || data.user?.email || 'Utilisateur';
-      toast.success(`Bienvenue ${userName}!`);
-      navigate('/dashboard');
-      setShowEmailEditor(false);
-      setUnconfirmedEmail(null);
-    },
-    onError: (error: any) => {
-      console.error('Login error:', error);
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('Email not confirmed') || errorMessage.includes(AUTH_ERROR_MESSAGES.EMAIL_NOT_CONFIRMED)) {
-        toast.warning(AUTH_ERROR_MESSAGES.EMAIL_NOT_CONFIRMED);
-      } else {
-        toast.error(error?.message || AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS);
+  // ==========================================================================
+  // CHARGEMENT DE L'UTILISATEUR
+  // ==========================================================================
+
+  const loadUser = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { user: currentUser } = await authManager.getCurrentUser();
+      setUser(currentUser);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de chargement'));
+    } finally {
+      setLoading(false);
+    }
+  }, [authManager]);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  // ==========================================================================
+  // ACTIONS D'AUTHENTIFICATION
+  // ==========================================================================
+
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    try {
+      setLoading(true);
+      const { session, error } = await authManager.signInWithCredentials(credentials);
+      if (error) throw error;
+      if (session?.user) {
+        setUser(session.user);
       }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de connexion'));
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  });
+  }, [authManager]);
 
-  const oAuthLoginMutation = useMutation({
-    mutationFn: async (oAuthData: OAuthLoginData) => {
-      const result = await unifiedAuthService.loginWithOAuth(oAuthData);
-      return result;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['unified-auth'] });
-      const userName = data.user?.fullName || data.user?.email || 'Utilisateur';
-      toast.success(`Bienvenue ${userName}!`);
-      navigate('/dashboard');
-      setShowEmailEditor(false);
-      setUnconfirmedEmail(null);
-    },
-    onError: (error: any) => {
-      console.error('OAuth login error:', error);
-      toast.error(error?.message || 'Erreur de connexion OAuth');
+  const logout = useCallback(async () => {
+    try {
+      setLoading(true);
+      await authManager.signOut();
+      setUser(null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de déconnexion'));
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  });
+  }, [authManager]);
 
-  const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterData) => {
-      const result = await unifiedAuthService.register(userData);
-      return result;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['unified-auth'] });
-      const userName = data?.fullName || data?.email || 'Utilisateur';
-      toast.success(`Compte créé avec succès! Bienvenue ${userName}!`);
-      navigate('/dashboard');
-      setShowEmailEditor(false);
-      setUnconfirmedEmail(null);
-    },
-    onError: (error: any) => {
-      console.error('Registration error:', error);
-      toast.error(error?.message || "Échec de l'inscription. Veuillez réessayer.");
+  const register = useCallback(async (data: RegisterData) => {
+    try {
+      setLoading(true);
+      const { user, error } = await authManager.signUp(data);
+      if (error) throw error;
+      if (user) {
+        setUser(user);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur d\'inscription'));
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  });
+  }, [authManager]);
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await unifiedAuthService.logout();
-    },
-    onSuccess: () => {
-      queryClient.clear();
-      toast.success("Déconnexion réussie");
-      navigate('/auth');
-      setShowEmailEditor(false);
-      setUnconfirmedEmail(null);
-    },
-    onError: (error: any) => {
-      console.error('Logout error:', error);
-      toast.error("Erreur lors de la déconnexion");
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      setLoading(true);
+      const { error } = await authManager.resetPassword(email);
+      if (error) throw error;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de réinitialisation'));
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  });
+  }, [authManager]);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    try {
+      setLoading(true);
+      const { error } = await authManager.updatePassword(newPassword);
+      if (error) throw error;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de mise à jour'));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [authManager]);
+
+  // ==========================================================================
+  // OAuth FUNCTIONS - ✅ AJOUTÉ
+  // ==========================================================================
+
+  /**
+   * Récupère la liste des fournisseurs OAuth disponibles
+   */
+  const getOAuthProviders = useCallback(async (): Promise<OAuthProviderConfig[]> => {
+    try {
+      const config = getAppConfig();
+      const provider = config.auth.provider;
+      const providerConfig = getOAuthProviderConfig(provider);
+
+      // Construire la liste des providers disponibles
+      let providers: OAuthProviderConfig[] = [];
+
+      switch (provider) {
+        case 'supabase':
+          providers = [
+            {
+              id: 'google',
+              providerName: 'google',
+              enabled: true,
+              scopes: providerConfig.scopes || ['openid', 'profile', 'email'],
+            },
+            {
+              id: 'github',
+              providerName: 'github',
+              enabled: true,
+              scopes: ['user:email'],
+            },
+          ];
+          break;
+        case 'keycloak':
+          providers = [
+            {
+              id: 'keycloak',
+              providerName: 'keycloak',
+              enabled: true,
+              scopes: providerConfig.scopes || ['openid', 'profile', 'email', 'roles'],
+            },
+          ];
+          break;
+        case 'auth0':
+          providers = [
+            {
+              id: 'auth0',
+              providerName: 'auth0',
+              enabled: true,
+              scopes: providerConfig.scopes || ['openid', 'profile', 'email'],
+            },
+          ];
+          break;
+        default:
+          providers = [];
+      }
+
+      return providers;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des providers OAuth:', error);
+      return [];
+    }
+  }, []);
+
+  /**
+   * Génère l'URL d'authentification OAuth pour un fournisseur
+   */
+  const generateOAuthUrl = useCallback(async (provider: string, redirectUri: string): Promise<string> => {
+    try {
+      const config = getAppConfig();
+      const providerConfig = getOAuthProviderConfig(config.auth.provider as AuthProvider);
+      
+      let authUrl = '';
+      
+      switch (config.auth.provider) {
+        case 'supabase':
+          authUrl = `${config.auth.url}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUri)}`;
+          break;
+        case 'keycloak':
+          authUrl = `${config.auth.url}/realms/${config.auth.realm}/protocol/openid-connect/auth?client_id=${config.auth.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${(providerConfig.scopes || ['openid', 'profile', 'email']).join('%20')}`;
+          break;
+        case 'auth0':
+          authUrl = `${config.auth.url}/authorize?client_id=${config.auth.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${(providerConfig.scopes || ['openid', 'profile', 'email']).join(' ')}`;
+          break;
+        default:
+          throw new Error(`OAuth non supporté pour le fournisseur ${config.auth.provider}`);
+      }
+      
+      return authUrl;
+    } catch (error) {
+      console.error('Erreur lors de la génération de l\'URL OAuth:', error);
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Connexion avec OAuth
+   */
+  const loginWithOAuth = useCallback(async (provider: string) => {
+    try {
+      setLoading(true);
+      const config = getAppConfig();
+      const redirectUri = `${window.location.origin}/auth/callback`;
+      const authUrl = await generateOAuthUrl(provider, redirectUri);
+      
+      // Rediriger l'utilisateur vers l'URL d'authentification
+      window.location.href = authUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de connexion OAuth'));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [generateOAuthUrl]);
+
+  // ==========================================================================
+  // UTILITAIRES
+  // ==========================================================================
+
+  const hasRole = useCallback((roleName: string): boolean => {
+    if (!user) return false;
+    return user.role === roleName || (user.roles && user.roles.includes(roleName));
+  }, [user]);
+
+  const hasAnyRole = useCallback((roleNames: string[]): boolean => {
+    if (!user) return false;
+    return roleNames.some(role => hasRole(role));
+  }, [user, hasRole]);
+
+  const switchProvider = useCallback(async (config: AuthManagerConfig) => {
+    try {
+      await authManager.switchProvider(config);
+      setCurrentProvider(config.provider);
+      await loadUser();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de changement de fournisseur'));
+      throw err;
+    }
+  }, [authManager, loadUser]);
+
+  const refetch = useCallback(() => {
+    loadUser();
+  }, [loadUser]);
+
+  const getCurrentProvider = useCallback(() => currentProvider, [currentProvider]);
+
+  // ==========================================================================
+  // ÉDITEUR D'EMAIL
+  // ==========================================================================
 
   const updateEmail = useCallback(async (newEmail: string) => {
-    if (!unconfirmedEmail) {
-      toast.error("Aucun email à modifier.");
-      return;
-    }
     try {
-      await unifiedAuthService.updateEmail(unconfirmedEmail, newEmail);
-      toast.success(AUTH_SUCCESS_MESSAGES.EMAIL_UPDATED.replace('{email}', newEmail));
-      setShowEmailEditor(false);
+      setLoading(true);
+      // Logique de mise à jour d'email
+      // À implémenter selon le provider
       setUnconfirmedEmail(null);
-    } catch (error: any) {
-      console.error('Update email error:', error);
-      toast.error(error?.message || AUTH_ERROR_MESSAGES.EMAIL_UPDATE_FAILED);
+      setShowEmailEditor(false);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur de mise à jour'));
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  }, [unconfirmedEmail, unifiedAuthService]);
+  }, []);
 
   const cancelEmailEdit = useCallback(() => {
     setShowEmailEditor(false);
     setUnconfirmedEmail(null);
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    try {
-      await loginMutation.mutateAsync(credentials);
-    } catch (error) { throw error; }
-  }, [loginMutation]);
+  const triggerEmailEditor = useCallback((email: string) => {
+    setUnconfirmedEmail(email);
+    setShowEmailEditor(true);
+  }, []);
 
-  const loginWithOAuth = useCallback(async (oAuthData: OAuthLoginData) => {
-    await oAuthLoginMutation.mutateAsync(oAuthData);
-  }, [oAuthLoginMutation]);
+  // ==========================================================================
+  // FOURNISSEURS SUPPORTÉS
+  // ==========================================================================
 
-  const register = useCallback(async (data: RegisterData) => {
-    await registerMutation.mutateAsync(data);
-  }, [registerMutation]);
-
-  const logout = useCallback(async () => {
-    await logoutMutation.mutateAsync();
-  }, [logoutMutation]);
-
-  const getOAuthProviders = useCallback(async () => {
-    return await unifiedAuthService.getAvailableOAuthProviders();
-  }, [unifiedAuthService]);
-
-  const generateOAuthUrl = useCallback(async (provider: string, redirectUri: string) => {
-    return await unifiedAuthService.generateOAuthLoginUrl(provider, redirectUri);
-  }, [unifiedAuthService]);
-
-  const getCurrentProvider = useCallback((): AuthProvider => {
-    return session?.provider || 'supabase';
-  }, [session]);
-
-  const resolvedRoles = useMemo<string[]>(() => {
-    const raw: unknown[] = [
-      (user as any)?.role,
-      ...(((user as any)?.roles as unknown[]) ?? []),
-      (user as any)?.metadata?.role,
-      (user as any)?.userMetadata?.role,
+  const supportedProviders = useMemo(() => {
+    return [
+      { value: 'supabase' as AuthProvider, label: 'Supabase', description: 'Géré par Supabase' },
+      { value: 'keycloak' as AuthProvider, label: 'Keycloak', description: 'SSO Entreprise' },
+      { value: 'auth0' as AuthProvider, label: 'Auth0', description: 'Plateforme Auth0' },
+      { value: 'local' as AuthProvider, label: 'Local (DEV)', description: 'Mode développement' },
+      { value: 'custom' as AuthProvider, label: 'Custom', description: 'Personnalisé' },
     ];
-    return Array.from(
-      new Set(raw.filter(Boolean).map((r) => String(r).toLowerCase())),
-    );
-  }, [user]);
+  }, []);
 
-  const hasRole = useCallback(
-    (roleName: string): boolean => resolvedRoles.includes(String(roleName).toLowerCase()),
-    [resolvedRoles],
-  );
+  // ==========================================================================
+  // VALUE
+  // ==========================================================================
 
-  const hasAnyRole = useCallback(
-    (roleNames: string[]): boolean => roleNames.some((r) => resolvedRoles.includes(String(r).toLowerCase())),
-    [resolvedRoles],
-  );
-
-
-  // Switch Provider (avec fallback)
-  const switchProvider = useCallback(async (config: AuthManagerConfig) => {
-    try {
-      setSwitching(true);
-      const { getAuthManager } = await import('@/application/services/AuthManager');
-      const authManager = getAuthManager();
-
-      if (typeof authManager.switchProvider === 'function') {
-        await authManager.switchProvider(config);
-      } else {
-        setCurrentProvider(config.provider);
-        toast.success(`Provider changed to ${config.provider} (local).`);
-        return;
-      }
-
-      setCurrentProvider(config.provider);
-      await refetch();
-      toast.success(`Fournisseur changé pour ${config.provider}.`);
-    } catch (error) {
-      console.error('❌ Error switching provider:', error);
-      toast.error("Échec du changement de fournisseur d'authentification.");
-    } finally {
-      setSwitching(false);
-    }
-  }, [refetch]);
-
-  // Listener Supabase avec reset de l'éditeur
-  useEffect(() => {
-    if (DEV_MODE) {
-      console.log('🛠️ DEV_MODE=true — skipping Supabase listener.');
-      return;
-    }
-    console.log('🔧 Setting up hexagonal auth state listener...');
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔄 Hexagonal auth state changed:', event, session?.user?.email || 'no user');
-        queryClient.invalidateQueries({ queryKey: ['unified-auth'] });
-        if (event === 'SIGNED_OUT') {
-          queryClient.clear();
-          setShowEmailEditor(false);
-          setUnconfirmedEmail(null);
-        } else if (event === 'SIGNED_IN' && session) {
-          setTimeout(() => refetch(), 100);
-        }
-      }
-    );
-    return () => subscription.unsubscribe();
-  }, [queryClient, refetch]);
-
-  const contextValue: HexagonalAuthContextType = {
+  const value: HexagonalAuthContextType = {
     user,
-    session,
-    isAuthenticated,
-    isLoading: isLoading || switching || loginMutation.isPending || registerMutation.isPending,
-    loading: isLoading || switching || loginMutation.isPending || registerMutation.isPending,
-    error: error?.message || null,
-    isDevelopmentMode: DEV_MODE,
-    currentProvider: session?.provider || currentProvider,
-    supportedProviders: [
-      { value: 'supabase' as AuthProvider, label: 'Supabase', description: 'Auth managée Supabase' },
-      { value: 'gotrue' as AuthProvider, label: 'GoTrue', description: 'Auth self-hosted GoTrue' },
-      { value: 'keycloak' as AuthProvider, label: 'Keycloak', description: 'SSO Keycloak' },
-      { value: 'local' as AuthProvider, label: 'Local', description: 'Mode développement local' },
-    ],
-    switchProvider,
+    loading,
+    error,
+    isAuthenticated: !!user,
+    currentProvider,
+    isDevelopmentMode,
+    
+    // Auth actions
     login,
-    loginWithOAuth,
-    register,
     logout,
-    signOut: logout,
+    register,
+    resetPassword,
+    updatePassword,
+    loginWithOAuth,
+    
+    // OAuth specific - ✅ EXPOSÉ
     getOAuthProviders,
     generateOAuthUrl,
-    refetch,
-    getCurrentProvider,
+    
+    // Utility
     hasRole,
     hasAnyRole,
+    switchProvider,
+    refetch,
+    getCurrentProvider,
+    
+    // Email editor
     showEmailEditor,
     unconfirmedEmail,
     updateEmail,
     cancelEmailEdit,
     triggerEmailEditor,
+    
+    // Providers
+    supportedProviders,
   };
 
   return (
-    <HexagonalAuthContext.Provider value={contextValue}>
+    <HexagonalAuthContext.Provider value={value}>
       {children}
     </HexagonalAuthContext.Provider>
   );
-}
+};
+
+// ============================================================================
+// HOOK
+// ============================================================================
+
+export const useHexagonalAuth = (): HexagonalAuthContextType => {
+  const context = useContext(HexagonalAuthContext);
+  if (!context) {
+    throw new Error('useHexagonalAuth doit être utilisé à l\'intérieur d\'un HexagonalAuthProvider');
+  }
+  return context;
+};
+
+// ============================================================================
+// EXPORT
+// ============================================================================
+
+export default HexagonalAuthContext;

@@ -17,19 +17,23 @@
  * defaults, so existing .env files keep working during migration.
  */
 
-import { resolveSupabaseConfig } from '@/config/supabaseConfig';
+
 
 // Canonical provider taxonomy — kept in sync with src/config/app-validate.ts
 // and src/infrastructure/RepositoryFactory.ts. Legacy aliases (`auth0`,
 // `custom`, `mysql`, `azure`, `gcs`, `ftp`) are retained only to satisfy
 // existing consumers; they map to no real adapter and are rejected by
 // validateProviders() at startup.
+// src/config/app.ts
+// Version finale avec résolution cohérente de Supabase
+
+import { resolveSupabaseConfig } from '@/config/supabaseConfig';
+
 export type Environment = 'development' | 'production' | 'staging';
 export type AppMode = 'development' | 'production' | 'local-bypass';
 export type AuthProvider = 'supabase' | 'gotrue' | 'keycloak' | 'local' | 'auth0' | 'custom';
 export type DatabaseProvider = 'supabase' | 'postgrest' | 'local' | 'postgresql' | 'mysql';
 export type StorageProvider = 'supabase' | 's3' | 'minio' | 'local' | 'azure' | 'gcs' | 'ftp';
-export type { AuthManagerConfig } from '@/application/services/AuthManager';
 
 export interface AppConfig {
   environment: Environment;
@@ -54,7 +58,6 @@ export interface AppConfig {
     extraSearchPath: string[];
     maxRows: number;
   };
-  /** Alias of `database` for plan-v4 naming. */
   data: {
     provider: DatabaseProvider;
     url?: string;
@@ -96,9 +99,6 @@ const splitList = (raw: string | undefined, fallback: string[]): string[] =>
         .filter(Boolean)
     : fallback;
 
-// ---------------------------------------------------------------------------
-// Constants shared across the app
-// ---------------------------------------------------------------------------
 export const DEFAULT_SCHEMAS = ['public', 'btp', 'auth', 'storage', 'graphql_public'];
 export const BTP_SCHEMA = 'btp';
 export const DEFAULT_EXTRA_SEARCH_PATH = ['public', 'extensions', 'btp'];
@@ -122,7 +122,7 @@ function resolveEnvironment(mode: AppMode): Environment {
 }
 
 // ---------------------------------------------------------------------------
-// Per-mode defaults (overridable via VITE_* variables)
+// Per-mode defaults
 // ---------------------------------------------------------------------------
 interface ModeDefaults {
   auth: { provider: AuthProvider; url: string; anonKey: string; projectId?: string };
@@ -189,9 +189,9 @@ function buildConfig(): AppConfig {
     envOpt('VITE_KEYCLOAK_URL') ??
     defaults.auth.url;
 
-  // Clé résolue via SupabaseConfigService : jamais une clé d'un autre projet.
-  const anonKey = resolveSupabaseConfig().publishableKey || defaults.auth.anonKey;
-
+  // ✅ Clé résolue via SupabaseConfigService : jamais une clé d'un autre projet
+  const supabaseConfig = resolveSupabaseConfig();
+  const anonKey = supabaseConfig.publishableKey || defaults.auth.anonKey;
 
   const projectId = envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId;
 
@@ -209,9 +209,8 @@ function buildConfig(): AppConfig {
     maxRows: Number(envOpt('VITE_PGRST_MAX_ROWS') ?? (mode === 'local-bypass' ? 100 : 1000)),
   };
 
-  // Email configuration
-  const emailProvider = (envOpt('VITE_EMAIL_PROVIDER') as 'smtp' | 'resend' | 'sendgrid') || 
-                        defaults.email.provider;
+  const emailProvider = (envOpt('VITE_EMAIL_PROVIDER') as 'smtp' | 'resend' | 'sendgrid') ||
+    defaults.email.provider;
 
   return {
     environment,

@@ -1,21 +1,42 @@
-/**
- * RichTextEditor — éditeur WYSIWYG minimal (tiptap) utilisé pour le corps
- * des contrats. Présentation uniquement : la valeur remonte en HTML.
- */
-import * as React from 'react';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import { Bold, Italic, List, ListOrdered, Heading2, Undo2, Redo2 } from 'lucide-react';
+// src/components/ui/rich-text-editor.tsx
+
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import {
+  Bold,
+  Heading2,
+  Italic,
+  List,
+  ListOrdered,
+  Redo2,
+  Undo2,
+} from 'lucide-react';
+import * as React from 'react';
+
+// ============================================================================
+// INTERFACES
+// ============================================================================
 
 interface RichTextEditorProps {
+  /** Contenu HTML de l'éditeur */
   value: string;
+  /** Callback déclenché à chaque modification */
   onChange: (html: string) => void;
+  /** Placeholder affiché lorsque l'éditeur est vide */
   placeholder?: string;
+  /** Classes CSS supplémentaires */
   className?: string;
+  /** Mode lecture seule */
   editable?: boolean;
+  /** Hauteur minimale en pixels */
+  minHeight?: number;
 }
+
+// ============================================================================
+// COMPOSANT PRINCIPAL
+// ============================================================================
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   value,
@@ -23,6 +44,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = 'Rédigez le contenu du contrat…',
   className,
   editable = true,
+  minHeight = 160,
 }) => {
   const editor = useEditor({
     extensions: [StarterKit],
@@ -31,61 +53,115 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onUpdate: ({ editor: instance }) => onChange(instance.getHTML()),
     editorProps: {
       attributes: {
-        class:
-          'prose prose-sm max-w-none min-h-[160px] px-3 py-2 focus:outline-none text-foreground',
+        class: cn(
+          'prose prose-sm max-w-none focus:outline-none px-3 py-2 text-foreground',
+          'placeholder:text-muted-foreground',
+          !editable && 'cursor-default'
+        ),
+        style: {
+          minHeight: `${minHeight}px`,
+        },
         'data-placeholder': placeholder,
       },
     },
   });
 
+  // Synchroniser la valeur externe
   React.useEffect(() => {
     if (!editor) return;
-    if ((value || '') !== editor.getHTML()) {
+    const currentHtml = editor.getHTML();
+    if ((value || '') !== currentHtml) {
       editor.commands.setContent(value || '', { emitUpdate: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, editor]);
+
+  // ==========================================================================
+  // RENDU
+  // ==========================================================================
 
   if (!editor) return null;
 
-  const toolButton = (
+  const renderToolButton = (
     key: string,
     icon: React.ReactNode,
     action: () => void,
-    active?: boolean,
-  ) => (
-    <Button
-      key={key}
-      type="button"
-      size="sm"
-      variant={active ? 'secondary' : 'ghost'}
-      className="h-7 w-7 p-0"
-      onClick={action}
-      aria-label={key}
-    >
-      {icon}
-    </Button>
-  );
+    isActive?: boolean,
+    disabled?: boolean
+  ) => {
+    const active = isActive !== undefined ? isActive : false;
+    const isDisabled = disabled !== undefined ? disabled : !editable;
+
+    return (
+      <Button
+        key={key}
+        type="button"
+        size="sm"
+        variant={active ? 'secondary' : 'ghost'}
+        className="h-7 w-7 p-0"
+        onClick={action}
+        disabled={isDisabled}
+        aria-label={key}
+      >
+        {icon}
+      </Button>
+    );
+  };
 
   return (
     <div className={cn('rounded-md border border-input bg-background', className)}>
-      <div className="flex flex-wrap items-center gap-1 border-b border-border px-2 py-1">
-        {toolButton('gras', <Bold className="h-3.5 w-3.5" />, () =>
-          editor.chain().focus().toggleBold().run(), editor.isActive('bold'))}
-        {toolButton('italique', <Italic className="h-3.5 w-3.5" />, () =>
-          editor.chain().focus().toggleItalic().run(), editor.isActive('italic'))}
-        {toolButton('titre', <Heading2 className="h-3.5 w-3.5" />, () =>
-          editor.chain().focus().toggleHeading({ level: 2 }).run(), editor.isActive('heading', { level: 2 }))}
-        {toolButton('liste', <List className="h-3.5 w-3.5" />, () =>
-          editor.chain().focus().toggleBulletList().run(), editor.isActive('bulletList'))}
-        {toolButton('liste-ordonnee', <ListOrdered className="h-3.5 w-3.5" />, () =>
-          editor.chain().focus().toggleOrderedList().run(), editor.isActive('orderedList'))}
-        <span className="mx-1 h-4 w-px bg-border" />
-        {toolButton('annuler', <Undo2 className="h-3.5 w-3.5" />, () =>
-          editor.chain().focus().undo().run())}
-        {toolButton('refaire', <Redo2 className="h-3.5 w-3.5" />, () =>
-          editor.chain().focus().redo().run())}
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-2 py-1.5">
+        {/* Formatage du texte */}
+        {renderToolButton(
+          'gras',
+          <Bold className="h-3.5 w-3.5" />,
+          () => editor.chain().focus().toggleBold().run(),
+          editor.isActive('bold')
+        )}
+        {renderToolButton(
+          'italique',
+          <Italic className="h-3.5 w-3.5" />,
+          () => editor.chain().focus().toggleItalic().run(),
+          editor.isActive('italic')
+        )}
+        {renderToolButton(
+          'titre',
+          <Heading2 className="h-3.5 w-3.5" />,
+          () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+          editor.isActive('heading', { level: 2 })
+        )}
+        {renderToolButton(
+          'liste',
+          <List className="h-3.5 w-3.5" />,
+          () => editor.chain().focus().toggleBulletList().run(),
+          editor.isActive('bulletList')
+        )}
+        {renderToolButton(
+          'liste-ordonnee',
+          <ListOrdered className="h-3.5 w-3.5" />,
+          () => editor.chain().focus().toggleOrderedList().run(),
+          editor.isActive('orderedList')
+        )}
+
+        <span className="mx-1 h-5 w-px bg-border" />
+
+        {/* Annuler/Refaire */}
+        {renderToolButton(
+          'annuler',
+          <Undo2 className="h-3.5 w-3.5" />,
+          () => editor.chain().focus().undo().run(),
+          false,
+          !editor.can().undo()
+        )}
+        {renderToolButton(
+          'refaire',
+          <Redo2 className="h-3.5 w-3.5" />,
+          () => editor.chain().focus().redo().run(),
+          false,
+          !editor.can().redo()
+        )}
       </div>
+
+      {/* Contenu de l'éditeur */}
       <EditorContent editor={editor} />
     </div>
   );

@@ -2,11 +2,10 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Configuration Supabase
-const SUPABASE_URL = "https://ttrfbzonzcyimfmezuqv.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0cmZiem9uemN5aW1mbWV6dXF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDk1NzU1NSwiZXhwIjoyMTAwNTMzNTU1fQ.YcaoNMsGrKNznJI3_Ck7EIC6w1oFCfueN03KZPrKocE";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
 async function debugProjects() {
   console.log("=== DIAGNOSTIC DES PROJETS ===\n");
