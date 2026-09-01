@@ -564,17 +564,19 @@ const MergedNavbar = () => {
                                 <T k="auto.mergednavbar.profile" fallback="Profile" />
                               </Link>
                             </Button>
-                            {!DEV_MODE && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleLogout}
-                                className="flex-1"
-                              >
-                                <LogOut className="h-4 w-4 mr-2" />
-                                <T k="auto.mergednavbar.logout" fallback="Logout" />
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setIsOpen(false);
+                                handleLogout();
+                              }}
+                              className="flex-1"
+                            >
+                              <LogOut className="h-4 w-4 mr-2" />
+                              <T k="auto.mergednavbar.logout" fallback="Logout" />
+                            </Button>
+
                           </div>
                         </>
                       ) : (
