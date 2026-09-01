@@ -326,7 +326,7 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
         </div>
 
         {onSearchChange && (
-          <div className="relative min-w-[160px] flex-1 sm:max-w-[280px]">
+          <div ref={searchWrapRef} className="relative min-w-[160px] flex-1 sm:max-w-[280px]">
             {autocompleteOptions.length > 0 ? (
               <Autocomplete
                 value={searchValue}
@@ -350,8 +350,12 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
                   onKeyDown={handleKeyDown}
                   placeholder={placeholder}
                   aria-label={placeholder}
-                  className="h-8 pl-8 text-sm"
+                  title={shortcutsHint}
+                  className="h-8 pl-8 pr-7 text-sm"
                 />
+                {isLoading && (
+                  <Loader2 className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
+                )}
               </>
             )}
           </div>
@@ -365,13 +369,68 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
           {inlineExtra}
         </div>
 
-
-        {(hasAdvanced || inlineFilters.length > 0) && (
+        {presetsKey && (
           <Popover>
             <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2 text-xs">
+                <Bookmark className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t('filters.presets') || 'Presets'}</span>
+                {presets.length > 0 && (
+                  <Badge variant="secondary" className="h-4 px-1 text-[10px]">{presets.length}</Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[min(20rem,calc(100vw-2rem))] space-y-3">
+              <div className="space-y-1">
+                {presets.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('filters.presets.empty') || 'Aucun preset enregistré.'}
+                  </p>
+                )}
+                {presets.map((preset) => (
+                  <div key={preset.name} className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 flex-1 justify-start px-2 text-xs"
+                      onClick={() => applyPreset(preset)}
+                    >
+                      {preset.name}
+                    </Button>
+                    <button
+                      type="button"
+                      aria-label={`delete-preset-${preset.name}`}
+                      className="p-1 text-muted-foreground hover:text-destructive"
+                      onClick={() => deletePreset(preset.name)}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5 border-t pt-2">
+                <Input
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  placeholder={t('filters.presets.name') || 'Nom du preset'}
+                  className="h-8 text-xs"
+                />
+                <Button size="sm" className="h-8 px-2 text-xs" onClick={savePreset}>
+                  {t('filters.presets.save') || 'Enregistrer'}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+
+        {(hasAdvanced || inlineFilters.length > 0) && (
+          <Popover open={advancedOpen} onOpenChange={setAdvancedOpen}>
+            <PopoverTrigger asChild>
               <Button
+                ref={advancedTriggerRef}
                 variant="outline"
                 size="sm"
+                title={shortcutsHint}
                 className={cn('h-8 gap-1.5 px-2 text-xs', !hasAdvanced && 'sm:hidden')}
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -385,6 +444,7 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
                 )}
               </Button>
             </PopoverTrigger>
+
             <PopoverContent align="end" className="w-[min(22rem,calc(100vw-2rem))] space-y-4">
               {/* Sur mobile, les filtres principaux sont proposés ici */}
               <div className="space-y-3 sm:hidden">
