@@ -209,9 +209,6 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
           </div>
         }
       />
-      <div className="hidden">
-      </div>
-
       <Table>
         <TableHeader>
           <TableRow>

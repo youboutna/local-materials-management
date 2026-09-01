@@ -8,6 +8,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import CompactFilterBar from '@/components/common/CompactFilterBar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
@@ -231,44 +232,65 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} placeholder="Rechercher référence ou titre…" className="pl-8" />
-        </div>
-        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
-          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Statut" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all"><T k="auto.boqdocumentlist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
-             {Object.keys(STATUS_VARIANT).map((code) => (
-               <SelectItem key={code} value={code}>{code === 'mixed' ? t('dqe.status.mixed') : translateStatus(code)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          type="date"
-          value={fromDate}
-          onChange={(e) => { setFromDate(e.target.value); setPage(0); }}
-          className="w-[150px]"
-          aria-label="Créé après le"
-        />
-        <Input
-          type="date"
-          value={toDate}
-          onChange={(e) => { setToDate(e.target.value); setPage(0); }}
-          className="w-[150px]"
-          aria-label="Créé avant le"
-        />
-        <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
-          <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {PAGE_SIZES.map((n) => <SelectItem key={n} value={String(n)}>{n} / page</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0}>
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-      </div>
+      <CompactFilterBar
+        searchValue={search}
+        onSearchChange={(v) => { setSearch(v); setPage(0); }}
+        searchPlaceholder="Rechercher référence ou titre…"
+        filters={[
+          {
+            key: 'status',
+            label: t('auto.boqdocumentlist.tous_les_statuts'),
+            placeholder: t('auto.boqdocumentlist.tous_les_statuts'),
+            value: statusFilter,
+            onChange: (v) => { setStatusFilter(v); setPage(0); },
+            options: Object.keys(STATUS_VARIANT).map((code) => ({
+              value: code,
+              label: code === 'mixed' ? t('dqe.status.mixed') : translateStatus(code),
+            })),
+          },
+          {
+            key: 'pageSize',
+            label: 'Lignes / page',
+            placeholder: `${pageSize} / page`,
+            value: String(pageSize),
+            onChange: (v) => { setPageSize(Number(v)); setPage(0); },
+            options: PAGE_SIZES.map((n) => ({ value: String(n), label: `${n} / page` })),
+            advanced: true,
+          },
+        ]}
+        advancedActiveCount={(fromDate ? 1 : 0) + (toDate ? 1 : 0)}
+        advancedContent={
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Créé après le</span>
+              <Input
+                type="date"
+                value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setPage(0); }}
+                aria-label="Créé après le"
+                className="h-8"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Créé avant le</span>
+              <Input
+                type="date"
+                value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setPage(0); }}
+                aria-label="Créé avant le"
+                className="h-8"
+              />
+            </div>
+          </div>
+        }
+        resultCount={filtered.length}
+        onReset={() => { setSearch(''); setStatusFilter('all'); setFromDate(''); setToDate(''); setPage(0); }}
+        trailing={
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0}>
+            <Download className="h-4 w-4 mr-1" /> CSV
+          </Button>
+        }
+      />
 
       <div className="rounded-lg border overflow-x-auto">
         <table className="w-full min-w-[1080px] text-sm">
