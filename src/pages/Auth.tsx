@@ -67,13 +67,22 @@ const Auth = () => {
     }
   }, [location]);
 
-  // ✅ Redirection si déjà authentifié
+  // ✅ Redirection si déjà authentifié : page d'accueil selon le rôle
   useEffect(() => {
     if (user) {
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
-      navigate(from);
+      const roles = [
+        ...(user.roles ?? []),
+        ...(user.role ? [user.role] : []),
+      ];
+      const home = resolveHomeRouteForRoles(roles);
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+      // Les profils non gestionnaires sont toujours envoyés vers leur portail dédié
+      const isManagement = home === DEFAULT_MANAGEMENT_HOME;
+      const target = isManagement ? (from || home) : (from?.startsWith(home) ? from : home);
+      navigate(target, { replace: true });
     }
   }, [user, navigate, location]);
+
 
   // ✅ Reset du formulaire quand l'utilisateur se déconnecte
   useEffect(() => {
