@@ -18,6 +18,17 @@ export interface WbsValue {
   taskId?: string | null;
 }
 
+/**
+ * Périmètre documentaire multi-options : restreint les choix proposés.
+ * Une liste vide = aucune restriction sur ce niveau.
+ */
+export interface WbsScopeValue {
+  phaseIds: string[];
+  milestoneIds: string[];
+  taskIds: string[];
+}
+
+
 interface Props {
   value: WbsValue;
   onChange: (next: WbsValue) => void;
