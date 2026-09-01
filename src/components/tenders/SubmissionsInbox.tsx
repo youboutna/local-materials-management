@@ -32,6 +32,8 @@ export interface SubmissionsInboxProps {
 }
 
 export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSubmission, onEvaluate }: SubmissionsInboxProps) {
+  const { t } = useLanguage();
+  const { translateStatus } = useI18n();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [awardTarget, setAwardTarget] = useState<{ estimateId: string; supplierName?: string; supplierId?: string } | null>(null);
