@@ -51,7 +51,14 @@ export interface ResponsiveFiltersProps {
   inlineExtra?: ReactNode;
   trailing?: ReactNode;
   sticky?: boolean;
+  /** Recherche/pagination en cours (skeleton + indicateur). */
+  isLoading?: boolean;
+  onGoToFirstResult?: () => void;
+  presetsKey?: string;
+  syncUrl?: boolean;
+  urlNamespace?: string;
 }
+
 
 const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   title,
