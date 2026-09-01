@@ -79,7 +79,11 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
   const milestoneOf = (phaseId?: string | null, milestoneId?: string | null) => phaseOf(phaseId)?.milestones.find((m) => m.id === milestoneId);
   const taskOf = (phaseId?: string | null, milestoneId?: string | null, taskId?: string | null) => milestoneOf(phaseId, milestoneId)?.tasks.find((t) => t.id === taskId);
   const lineTotal = (l: BoqLineDTO) => l.totalHt || ((l.quantity || 0) * (l.unitPrice ?? 0) + (l.fees ?? 0));
+  const lineVat = (l: BoqLineDTO) => lineTotal(l) * (l.vatRate ?? 0);
+  const lineTtc = (l: BoqLineDTO) => lineTotal(l) + lineVat(l);
   const total = lines.reduce((acc, l) => acc + lineTotal(l), 0);
+  const totalVat = lines.reduce((acc, l) => acc + lineVat(l), 0);
+  const totalTtc = total + totalVat;
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => {
     const next: Partial<BoqLineDTO> = { ...p };
