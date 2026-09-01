@@ -66,7 +66,45 @@ export interface CompactFilterBarProps {
   onAutocompleteSelect?: (option: AutocompleteOption) => void;
   className?: string;
   sticky?: boolean;
+  /** Recherche/pagination en cours : affiche l'indicateur « résultats en cours ». */
+  isLoading?: boolean;
+  /** Focus du premier résultat (raccourci Alt+Entrée). */
+  onGoToFirstResult?: () => void;
+  /** Active la sauvegarde de presets de filtres (clé de stockage locale). */
+  presetsKey?: string;
+  /** Persiste recherche / selects / tiroir avancé dans l'URL. */
+  syncUrl?: boolean;
+  /** Préfixe des paramètres d'URL (pages avec plusieurs barres). */
+  urlNamespace?: string;
 }
+
+interface FilterPreset {
+  name: string;
+  search: string;
+  values: Record<string, string>;
+}
+
+const PRESET_PREFIX = 'hadratech.filter-presets.';
+
+const readPresets = (key?: string): FilterPreset[] => {
+  if (!key) return [];
+  try {
+    const raw = localStorage.getItem(PRESET_PREFIX + key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as FilterPreset[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writePresets = (key: string, presets: FilterPreset[]) => {
+  try {
+    localStorage.setItem(PRESET_PREFIX + key, JSON.stringify(presets));
+  } catch {
+    /* stockage indisponible : les presets restent en mémoire */
+  }
+};
+
 
 const ALL = 'all';
 
