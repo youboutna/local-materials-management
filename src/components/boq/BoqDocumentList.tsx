@@ -292,8 +292,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         }
       />
 
-      <div className="rounded-lg border overflow-x-auto">
+      <div className="hidden rounded-lg border overflow-x-auto md:block">
         <table className="w-full min-w-[1080px] text-sm">
+
           <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
               <th className="p-3 text-left w-10">
