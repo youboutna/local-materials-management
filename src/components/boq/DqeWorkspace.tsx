@@ -263,7 +263,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
-        <CardHeader className="flex flex-col gap-3 border-b bg-muted/20">
+        <CardHeader className="flex flex-col gap-2 border-b bg-muted/20 py-3">
           {/* Zone 1 — retour + titre du document · Zone 2 — barre de progression compacte. */}
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => selectDocument(null)}>
