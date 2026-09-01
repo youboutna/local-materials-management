@@ -54,6 +54,14 @@ export interface TaxableLine {
   resourceType?: string | null;
   category?: string | null;
   elementType?: string | null;
+  /** NIF du fournisseur (déductibilité LFR 2026). */
+  supplierNif?: string | null;
+  supplierNifStatus?: 'active' | 'inactive' | 'unknown' | null;
+  /** Moyen de paiement prévu (`especes`, `virement`, `mobile_money`…). */
+  paymentMethod?: string | null;
+  hasNormalizedInvoice?: boolean | null;
+  /** Critères de localisation du consommateur pour un service numérique. */
+  digitalLocalizationCriteria?: DigitalServiceCriterionCode[] | null;
 }
 
 export interface LineTaxResult extends ResolvedLineTax {
