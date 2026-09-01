@@ -56,8 +56,12 @@ interface Props {
   onPublish?: () => void;
   /** Actions principales additionnelles (groupe 1). */
   primarySlot?: React.ReactNode;
-  /** Actions de workflow / validation additionnelles (groupe 2). */
-  workflowSlot?: React.ReactNode;
+  /** Actions de workflow / validation additionnelles (groupe 2).
+   *  Peut être une fonction recevant l'en-tête documentaire effectif (émetteur /
+   *  destinataires édités via « Parties ») afin que le PDF, le XML Factur-X et
+   *  les actions de facturation partagent exactement la même source. */
+  workflowSlot?: React.ReactNode | ((header: DocumentHeaderDTO) => React.ReactNode);
+
   /** Badges d'information additionnels (groupe 3). */
   badgesSlot?: React.ReactNode;
 }
