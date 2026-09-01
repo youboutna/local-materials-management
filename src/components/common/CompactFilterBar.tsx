@@ -166,7 +166,8 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
   isLoading = false,
   onGoToFirstResult,
   presetsKey,
-  syncUrl = false,
+  syncUrl = true,
+
   urlNamespace = '',
 }) => {
   const { t } = useLanguage();
