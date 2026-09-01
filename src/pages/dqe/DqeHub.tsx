@@ -57,27 +57,33 @@ const DqeHub: React.FC<Props> = ({ mode }) => {
   const projectLabel = project ? resolveProjectLabel(project) : '';
   const referentialCode = (project as { referentialCode?: ReferentialType } | null)?.referentialCode;
 
+  const projectOptions = useMemo(
+    () => (projects ?? []).map((p) => ({ value: p.id, label: resolveProjectLabel(p) })),
+    [projects],
+  );
+
   return (
-    <div className="container mx-auto px-4 py-6 space-y-4">
+    <div className="container mx-auto px-3 py-4 space-y-4 sm:px-4 sm:py-6">
       <Card>
-        <CardHeader className="flex flex-col gap-3 border-b bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <FileSpreadsheet className="h-5 w-5" />
-            {t('dqe.navigation.module')}
-            {projectLabel ? <span className="text-sm font-normal text-muted-foreground">· {projectLabel}</span> : null}
+        <CardHeader className="flex flex-col gap-3 border-b bg-muted/20 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
+          <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg">
+            <FileSpreadsheet className="h-5 w-5 shrink-0" />
+            <span className="truncate">{t('dqe.navigation.module')}</span>
+            {projectLabel ? (
+              <span className="hidden truncate text-sm font-normal text-muted-foreground sm:inline">· {projectLabel}</span>
+            ) : null}
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {!scopedProjectId && (
-              <Select value={projectId} onValueChange={setProject} disabled={isLoading}>
-                <SelectTrigger className="w-[280px]">
-                  <SelectValue placeholder={t('dqe.navigation.select_project')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(projects ?? []).map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{resolveProjectLabel(p)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={projectId}
+                onChange={setProject}
+                options={projectOptions}
+                disabled={isLoading}
+                placeholder={t('dqe.navigation.select_project')}
+                searchPlaceholder={t('dqe.navigation.select_project')}
+                className="w-full sm:w-[280px]"
+              />
             )}
             {mode !== 'list' ? (
               <Button variant="outline" size="sm" onClick={() => goto(null)}>
@@ -94,7 +100,8 @@ const DqeHub: React.FC<Props> = ({ mode }) => {
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-4">
+        <CardContent className="p-3 sm:p-4">
+
           {!projectId ? (
             <p className="text-sm text-muted-foreground">{t('dqe.navigation.select_project_hint')}</p>
           ) : (
