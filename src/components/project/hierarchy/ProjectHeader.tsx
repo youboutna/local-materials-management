@@ -104,9 +104,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   // Affichage monétaire unifié : mêmes séparateurs que les rapports et les
   // onglets financiers (espaces simples, jamais d'espace insécable étroit).
   const formatCurrency = (amount: number, currency = "MRU") =>
-    formatAmount2(amount, currency).replace(/,\d{2}$/, (match) =>
-      Number.isInteger(amount) ? "" : match,
-    );
+    formatAmount2(amount, currency).replace(",00 ", " ");
 
   const getDaysRemaining = () => {
     if (!project.endDate) return "N/A";
