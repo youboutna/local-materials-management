@@ -1,14 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Filter, MapPin, DollarSign, Target } from 'lucide-react';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 import { useI18n } from '@/hooks/useI18n';
-import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
+import CompactFilterBar, { CompactFilterField } from '@/components/common/CompactFilterBar';
 
 interface InteractiveMapFiltersProps {
   projects: ProjectData[];
@@ -18,11 +14,13 @@ interface InteractiveMapFiltersProps {
 const LAT_BOUNDS: [number, number] = [10, 30];
 const LNG_BOUNDS: [number, number] = [-25, 0];
 
-const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
-  projects,
-  onFiltersChange
-}) => {
+/**
+ * Filtres de la carte interactive — barre compacte : wilaya + statut en ligne,
+ * budget et bornes GPS dans le tiroir « Avancé » pour ne pas repousser la carte.
+ */
+const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({ projects, onFiltersChange }) => {
   const { translateStatus, translateGeo, geoRegionOptionsFrom, matchesRegion } = useI18n();
+  const { t } = useLanguage();
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [budgetRange, setBudgetRange] = useState<[number, number] | null>(null);
@@ -31,7 +29,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
 
   // Statuts disponibles = codes techniques, libellés résolus par référentiel
   const availableStatuses = useMemo(
-    () => Array.from(new Set(projects.map(p => p.status).filter(Boolean))) as string[],
+    () => Array.from(new Set(projects.map((p) => p.status).filter(Boolean))) as string[],
     [projects],
   );
 
@@ -41,13 +39,13 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
     [projects, geoRegionOptionsFrom],
   );
 
-  const budgets = useMemo(() => projects.map(p => p.budget ?? 0), [projects]);
+  const budgets = useMemo(() => projects.map((p) => p.budget ?? 0), [projects]);
   const minBudget = budgets.length ? Math.min(...budgets) : 0;
   const maxBudget = budgets.length ? Math.max(...budgets) : 0;
   const effectiveBudget: [number, number] = budgetRange ?? [minBudget, maxBudget];
 
   const applyFilters = useCallback(() => {
-    const filtered = projects.filter(project => {
+    const filtered = projects.filter((project) => {
       // Filtre wilaya : comparaison par code technique (jamais par libellé)
       if (selectedRegion !== 'all' && !matchesRegion(project as unknown as Record<string, unknown>, selectedRegion)) {
         return false;
@@ -100,135 +98,101 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
     applyFilters();
   }, [applyFilters]);
 
+  const filters: CompactFilterField[] = [
+    {
+      key: 'region',
+      label: t('auto.interactivemapfilters.region'),
+      placeholder: t('auto.interactivemapfilters.toutes_les_regions'),
+      allLabel: t('auto.interactivemapfilters.toutes_les_regions'),
+      value: selectedRegion,
+      onChange: setSelectedRegion,
+      options: regionOptions.map((option) => ({
+        value: option.code,
+        label: option.label,
+        secondaryLabel: option.secondaryLabel,
+      })),
+    },
+    {
+      key: 'status',
+      label: t('auto.interactivemapfilters.statut'),
+      placeholder: t('auto.interactivemapfilters.tous_les_statuts'),
+      allLabel: t('auto.interactivemapfilters.tous_les_statuts'),
+      value: selectedStatus,
+      onChange: setSelectedStatus,
+      options: availableStatuses.map((status) => ({ value: status, label: translateStatus(status) })),
+    },
+  ];
+
+  const advancedActiveCount =
+    (budgetRange ? 1 : 0) +
+    (gpsLatRange[0] !== LAT_BOUNDS[0] || gpsLatRange[1] !== LAT_BOUNDS[1] ? 1 : 0) +
+    (gpsLngRange[0] !== LNG_BOUNDS[0] || gpsLngRange[1] !== LNG_BOUNDS[1] ? 1 : 0);
+
   return (
-    <Card className="bg-gradient-to-br from-card via-card/90 to-muted/20 backdrop-blur-sm border-border/50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Filter className="h-5 w-5 text-primary" />
-          <T k="auto.interactivemapfilters.filtres_carte_interactive" fallback="Filtres Carte Interactive" />
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Wilaya */}
+    <CompactFilterBar
+      title={t('auto.interactivemapfilters.filtres_carte_interactive')}
+      filters={filters}
+      onReset={resetFilters}
+      resultCount={undefined}
+      advancedActiveCount={advancedActiveCount}
+      trailing={
+        <span className="hidden md:inline">
+          {selectedRegion !== 'all' ? `${translateGeo(selectedRegion)} · ${translateGeo('MR')}` : translateGeo('MR')}
+        </span>
+      }
+      className="mb-3"
+      advancedContent={
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              <T k="auto.interactivemapfilters.region" fallback="Wilaya" />
-            </Label>
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-60">
-                <SelectItem value="all"><T k="auto.interactivemapfilters.toutes_les_regions" fallback="Toutes les wilayas" /></SelectItem>
-                {regionOptions.map((option) => (
-                  <SelectItem key={option.code} value={option.code}>
-                    <span className="flex items-center gap-2">
-                      <span>{option.label}</span>
-                      {option.secondaryLabel && (
-                        <span className="text-xs text-muted-foreground">{option.secondaryLabel}</span>
-                      )}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Statut */}
-          <div className="space-y-2">
-            <Label><T k="auto.interactivemapfilters.statut" fallback="Statut" /></Label>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all"><T k="auto.interactivemapfilters.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
-                {availableStatuses.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {translateStatus(status)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Budget */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-success" />
-              <T k="auto.interactivemapfilters.budget_mru" fallback="Budget (MRU)" />
-            </Label>
-            <div className="px-2">
-              <Slider
-                value={effectiveBudget}
-                onValueChange={(value) => setBudgetRange(value as [number, number])}
-                min={minBudget}
-                max={Math.max(maxBudget, minBudget + 1)}
-                step={Math.max(1, Math.round((maxBudget - minBudget) / 100) || 1)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>{(effectiveBudget[0] / 1_000_000).toFixed(1)}M</span>
-                <span>{(effectiveBudget[1] / 1_000_000).toFixed(1)}M</span>
-              </div>
+            <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+              <span>{t('auto.interactivemapfilters.budget_mru')}</span>
+              <span>
+                {(effectiveBudget[0] / 1_000_000).toFixed(1)}M → {(effectiveBudget[1] / 1_000_000).toFixed(1)}M
+              </span>
             </div>
+            <Slider
+              value={effectiveBudget}
+              onValueChange={(value) => setBudgetRange(value as [number, number])}
+              min={minBudget}
+              max={Math.max(maxBudget, minBudget + 1)}
+              step={Math.max(1, Math.round((maxBudget - minBudget) / 100) || 1)}
+            />
           </div>
 
-          {/* Reset */}
           <div className="space-y-2">
-            <Label>&nbsp;</Label>
-            <Button variant="outline" onClick={resetFilters} className="w-full">
-              <T k="auto.interactivemapfilters.reinitialiser" fallback="Réinitialiser" />
-            </Button>
+            <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+              <span>Latitude</span>
+              <span>
+                {gpsLatRange[0].toFixed(2)}° → {gpsLatRange[1].toFixed(2)}°
+              </span>
+            </div>
+            <Slider
+              value={gpsLatRange}
+              onValueChange={(value) => setGpsLatRange(value as [number, number])}
+              min={LAT_BOUNDS[0]}
+              max={LAT_BOUNDS[1]}
+              step={0.1}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+              <span>Longitude</span>
+              <span>
+                {gpsLngRange[0].toFixed(2)}° → {gpsLngRange[1].toFixed(2)}°
+              </span>
+            </div>
+            <Slider
+              value={gpsLngRange}
+              onValueChange={(value) => setGpsLngRange(value as [number, number])}
+              min={LNG_BOUNDS[0]}
+              max={LNG_BOUNDS[1]}
+              step={0.1}
+            />
           </div>
         </div>
-
-        {/* Coordonnées GPS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/50">
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-primary" />
-              Latitude ({gpsLatRange[0].toFixed(2)}° → {gpsLatRange[1].toFixed(2)}°)
-            </Label>
-            <div className="px-2">
-              <Slider
-                value={gpsLatRange}
-                onValueChange={(value) => setGpsLatRange(value as [number, number])}
-                min={LAT_BOUNDS[0]}
-                max={LAT_BOUNDS[1]}
-                step={0.1}
-                className="w-full"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-primary" />
-              Longitude ({gpsLngRange[0].toFixed(2)}° → {gpsLngRange[1].toFixed(2)}°)
-            </Label>
-            <div className="px-2">
-              <Slider
-                value={gpsLngRange}
-                onValueChange={(value) => setGpsLngRange(value as [number, number])}
-                min={LNG_BOUNDS[0]}
-                max={LNG_BOUNDS[1]}
-                step={0.1}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-
-        {selectedRegion !== 'all' && (
-          <p className="text-xs text-muted-foreground">
-            {translateGeo(selectedRegion)} · {translateGeo('MR')}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      }
+    />
   );
 };
 
