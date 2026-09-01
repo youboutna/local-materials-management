@@ -19,7 +19,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, Filter, RotateCcw, X, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, RotateCcw, X, SlidersHorizontal, Loader2, Bookmark } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+
 import Autocomplete, { AutocompleteOption } from '@/components/ui/autocomplete';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
