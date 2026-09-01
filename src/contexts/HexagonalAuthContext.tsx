@@ -27,6 +27,10 @@ export interface HexagonalAuthContextType {
   // Core auth state
   user: AuthUser | null;
   loading: boolean;
+  /** Alias de `loading` (compat présentation) */
+  isLoading: boolean;
+  /** Session courante (compat présentation) */
+  session: { user: AuthUser | null } | null;
   error: Error | null;
   isAuthenticated: boolean;
   currentProvider: AuthProvider;
