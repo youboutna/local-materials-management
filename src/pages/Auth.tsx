@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEV_MODE, DEV_USERS, setActiveDevRole } from '@/config/constants';
+import { resolveHomeRouteForRoles, DEFAULT_MANAGEMENT_HOME } from '@/config/referentials/auth/role-home-routes.referential';
+
 import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
 import {
     Eye,
