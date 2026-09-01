@@ -68,7 +68,7 @@ const ProjectScaffoldCard: React.FC<ProjectScaffoldCardProps> = ({ projectId, on
               <li>• DQE prévisionnel à générer et répartir sur les phases depuis le budget</li>
             )}
             {plan?.needsTasks && (
-              <li>• {plan.pendingLines ?? plan.pendingTaskLines} ligne(s) de bordereau à convertir en tâches</li>
+              <li>• {plan.pendingTaskLines} ligne(s) de bordereau à convertir en tâches</li>
             )}
             {!plan?.phaseCount && <li>• Générez d'abord les phases depuis un référentiel</li>}
           </ul>
