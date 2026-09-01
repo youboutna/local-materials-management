@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Search, Filter, RotateCcw, X, SlidersHorizontal } from 'lucide-react';
+import Autocomplete, { AutocompleteOption } from '@/components/ui/autocomplete';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -58,6 +59,11 @@ export interface CompactFilterBarProps {
   totalCount?: number;
   /** Contenu libre aligné à droite (actions, compteurs) */
   trailing?: ReactNode;
+  /** Contrôles additionnels rendus sur la même ligne (desktop) */
+  inlineExtra?: ReactNode;
+  /** Suggestions d'autocomplétion pour la recherche */
+  autocompleteOptions?: AutocompleteOption[];
+  onAutocompleteSelect?: (option: AutocompleteOption) => void;
   className?: string;
   sticky?: boolean;
 }
@@ -112,6 +118,9 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
   resultCount,
   totalCount,
   trailing,
+  inlineExtra,
+  autocompleteOptions = [],
+  onAutocompleteSelect,
   className,
   sticky = true,
 }) => {
@@ -155,15 +164,33 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
 
         {onSearchChange && (
           <div className="relative min-w-[160px] flex-1 sm:max-w-[280px]">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              aria-label={placeholder}
-              className="h-8 pl-8 text-sm"
-            />
+            {autocompleteOptions.length > 0 ? (
+              <Autocomplete
+                value={searchValue}
+                onChange={onSearchChange}
+                onSelect={(option) => {
+                  onSearchChange(option.label);
+                  onSearchSubmit?.();
+                  onAutocompleteSelect?.(option);
+                }}
+                options={autocompleteOptions}
+                placeholder={placeholder}
+                minSearchLength={1}
+                maxSuggestions={6}
+              />
+            ) : (
+              <>
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchValue}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={placeholder}
+                  aria-label={placeholder}
+                  className="h-8 pl-8 text-sm"
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -172,7 +199,9 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
           {inlineFilters.map((filter) => (
             <FilterSelect key={filter.key} filter={filter} />
           ))}
+          {inlineExtra}
         </div>
+
 
         {(hasAdvanced || inlineFilters.length > 0) && (
           <Popover>
@@ -202,6 +231,7 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
                     <FilterSelect filter={filter} className="w-full max-w-none" />
                   </div>
                 ))}
+                {inlineExtra}
               </div>
 
               {drawerFilters.length > 0 && (

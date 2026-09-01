@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import CompactFilterBar from '@/components/common/CompactFilterBar';
 import { Input } from '@/components/ui/input';
 import { Download, Edit, Lock, Unlock, FileText, Check, X, Trash2 } from 'lucide-react';
 import { PaymentDTO } from '@/dtos/entities/PaymentDTO';
@@ -176,30 +177,38 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-4 items-center mb-4">
-        <Input
-          placeholder="Rechercher (date, projet, contractant, montant...)"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-64"
-        />
-        <ToggleGroup type="single" value={statusFilter} onValueChange={(val) => setStatusFilter(val || 'all')}>
-          <ToggleGroupItem value="all"><T k="auto.paymentcrud.tous" fallback="Tous" /></ToggleGroupItem>
-          <ToggleGroupItem value="pending"><T k="auto.paymentcrud.en_attente" fallback="En attente" /></ToggleGroupItem>
-          <ToggleGroupItem value="approved"><T k="auto.paymentcrud.valides" fallback="Validés" /></ToggleGroupItem>
-          <ToggleGroupItem value="blocked"><T k="auto.paymentcrud.bloques" fallback="Bloqués" /></ToggleGroupItem>
-          <ToggleGroupItem value="rejected"><T k="auto.paymentcrud.rejetes" fallback="Rejetés" /></ToggleGroupItem>
-        </ToggleGroup>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-1" /> <T k="auto.paymentcrud.exporter_csv" fallback="Exporter CSV" />
-        </Button>
-        {onCreatePayment && (
-          <Button onClick={onCreatePayment} className="ml-auto">
-            + Nouveau Paiement
-          </Button>
-        )}
-      </div>
-
+      <CompactFilterBar
+        className="mb-4"
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher (date, projet, contractant, montant...)"
+        filters={[
+          {
+            key: 'status',
+            label: 'Statut',
+            placeholder: 'Tous',
+            value: statusFilter,
+            onChange: (v) => setStatusFilter(v || 'all'),
+            options: [
+              { value: 'pending', label: 'En attente' },
+              { value: 'approved', label: 'Validés' },
+              { value: 'blocked', label: 'Bloqués' },
+              { value: 'rejected', label: 'Rejetés' },
+            ],
+          },
+        ]}
+        onReset={() => { setSearchTerm(''); setStatusFilter('all'); }}
+        trailing={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-1" /> CSV
+            </Button>
+            {onCreatePayment && (
+              <Button size="sm" onClick={onCreatePayment}>+ Nouveau Paiement</Button>
+            )}
+          </div>
+        }
+      />
       <Table>
         <TableHeader>
           <TableRow>

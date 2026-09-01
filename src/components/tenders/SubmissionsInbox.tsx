@@ -10,6 +10,9 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ClipboardCheck, Eye, Clock, AlertTriangle, FileSignature } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import CompactFilterBar from '@/components/common/CompactFilterBar';
+import { useI18n } from '@/hooks/useI18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +32,8 @@ export interface SubmissionsInboxProps {
 }
 
 export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSubmission, onEvaluate }: SubmissionsInboxProps) {
+  const { t } = useLanguage();
+  const { translateStatus } = useI18n();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [awardTarget, setAwardTarget] = useState<{ estimateId: string; supplierName?: string; supplierId?: string } | null>(null);
@@ -86,27 +91,26 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher fournisseur ou email…"
-              className="pl-8 h-9"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all"><T k="auto.submissionsinbox.tous_statuts" fallback="Tous statuts" /></SelectItem>
-              <SelectItem value="submitted"><TranslatedStatus code="submitted" /></SelectItem>
-              <SelectItem value="under_review"><TranslatedStatus code="under_review" /></SelectItem>
-              <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
-              <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <CompactFilterBar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher fournisseur ou email…"
+          filters={[
+            {
+              key: 'status',
+              label: t('auto.submissionsinbox.tous_statuts'),
+              placeholder: t('auto.submissionsinbox.tous_statuts'),
+              value: statusFilter,
+              onChange: setStatusFilter,
+              options: ['submitted', 'under_review', 'approved', 'rejected'].map((code) => ({
+                value: code,
+                label: translateStatus(code),
+              })),
+            },
+          ]}
+          resultCount={filtered.length}
+          onReset={() => { setSearch(''); setStatusFilter('all'); }}
+        />
 
         {isLoading && <p className="text-sm text-muted-foreground py-6 text-center">Chargement…</p>}
         {isError && <p className="text-sm text-destructive py-6 text-center"><T k="auto.submissionsinbox.erreur_de_chargement" fallback="Erreur de chargement." /></p>}

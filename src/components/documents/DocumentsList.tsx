@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import CompactFilterBar from '@/components/common/CompactFilterBar';
+import { useI18n } from '@/hooks/useI18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Search, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +28,9 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const { translateStatus } = useI18n();
+  const DOCUMENT_TYPE_OPTIONS = ['inspection_report','location_photo','project_report','contract','supplier_info','task_assignment','employee_record'];
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -154,68 +159,32 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Search className="h-5 w-5 mr-2" />
-              <T k="auto.documentslist.recherche_et_filtres" fallback="Recherche et Filtres" />
-            </div>
-            {filterType !== 'all' && (
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                <T k="auto.documentslist.effacer_les_filtres" fallback="Effacer les filtres" />
-              </Button>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium"><T k="auto.documentslist.recherche" fallback="Recherche" /></label>
-              <Input
-                placeholder="Rechercher par titre ou description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium"><T k="auto.documentslist.type_de_document" fallback="Type de document" /></label>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all"><T k="auto.documentslist.tous_les_types" fallback="Tous les types" /></SelectItem>
-                  <SelectItem value="inspection_report"><T k="auto.documentslist.rapport_d_inspection" fallback="Rapport d'inspection" /></SelectItem>
-                  <SelectItem value="location_photo"><T k="auto.documentslist.photo_de_localisation" fallback="Photo de localisation" /></SelectItem>
-                  <SelectItem value="project_report"><T k="auto.documentslist.rapport_de_projet" fallback="Rapport de projet" /></SelectItem>
-                  <SelectItem value="contract"><T k="auto.documentslist.contrat" fallback="Contrat" /></SelectItem>
-                  <SelectItem value="supplier_info"><T k="auto.documentslist.information_fournisseur" fallback="Information fournisseur" /></SelectItem>
-                  <SelectItem value="task_assignment"><T k="auto.documentslist.affectation_de_tache" fallback="Affectation de tâche" /></SelectItem>
-                  <SelectItem value="employee_record"><T k="auto.documentslist.dossier_employe" fallback="Dossier employé" /></SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium"><T k="auto.documentslist.statut" fallback="Statut" /></label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all"><T k="auto.documentslist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
-                  <SelectItem value="draft"><TranslatedStatus code="draft" /></SelectItem>
-                  <SelectItem value="pending_review"><TranslatedStatus code="pending_review" /></SelectItem>
-                  <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Barre de recherche compacte (sticky) */}
+      <CompactFilterBar
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Rechercher par titre ou description..."
+        filters={[
+          {
+            key: 'type',
+            label: t('auto.documentslist.type_de_document'),
+            placeholder: t('auto.documentslist.tous_les_types'),
+            value: filterType,
+            onChange: setFilterType,
+            options: DOCUMENT_TYPE_OPTIONS.map((code) => ({ value: code, label: getDocumentTypeLabel(code) })),
+          },
+          {
+            key: 'status',
+            label: t('auto.documentslist.statut'),
+            placeholder: t('auto.documentslist.tous_les_statuts'),
+            value: filterStatus,
+            onChange: setFilterStatus,
+            options: ['draft', 'pending_review', 'approved'].map((code) => ({ value: code, label: translateStatus(code) })),
+          },
+        ]}
+        resultCount={documents?.length}
+        onReset={clearFilters}
+      />
 
       {/* Documents List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

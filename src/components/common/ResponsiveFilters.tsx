@@ -1,25 +1,16 @@
-import React, { useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Search, Filter, RotateCcw, X } from "lucide-react";
-import Autocomplete, { AutocompleteOption } from "@/components/ui/autocomplete";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { T } from '@/components/i18n/T';
+/**
+ * ResponsiveFilters
+ * Façade historique conservée pour toutes les listes (projets, matériaux, employés,
+ * inspections, fournisseurs, appels d'offres, documents…). L'implémentation délègue
+ * désormais à `CompactFilterBar` : une seule barre compacte, sticky et responsive,
+ * afin que les résultats restent visibles sans scroller.
+ *
+ * Couche présentation uniquement.
+ */
+
+import React, { ReactNode, useMemo } from 'react';
+import CompactFilterBar, { CompactFilterField } from '@/components/common/CompactFilterBar';
+import { AutocompleteOption } from '@/components/ui/autocomplete';
 
 export interface FilterOption {
   value: string;
@@ -34,367 +25,88 @@ export interface FilterField {
   options: FilterOption[];
   value: string;
   onChange: (value: string) => void;
+  /** Repousse ce filtre dans le tiroir « Avancé » */
+  advanced?: boolean;
 }
 
 export interface ResponsiveFiltersProps {
+  title?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
-  onSearchSubmit?: () => void; // New prop for Enter key press
+  onSearchSubmit?: () => void;
   searchPlaceholder?: string;
   filters: FilterField[];
   onReset: () => void;
   resultCount?: number;
+  totalCount?: number;
   className?: string;
+  /** Conservé pour compatibilité : le tiroir mobile est désormais toujours disponible */
   showMobileDropdown?: boolean;
   autocompleteOptions?: AutocompleteOption[];
   onAutocompleteSelect?: (option: AutocompleteOption) => void;
+  /** Contrôles additionnels (sliders, plages…) rendus dans le tiroir « Avancé » */
+  advancedContent?: ReactNode;
+  advancedActiveCount?: number;
+  /** Contrôles rendus sur la même ligne que les filtres */
+  inlineExtra?: ReactNode;
+  trailing?: ReactNode;
+  sticky?: boolean;
 }
 
 const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
-  searchValue = "",
+  title,
+  searchValue = '',
   onSearchChange,
   onSearchSubmit,
-  searchPlaceholder = "Rechercher...",
+  searchPlaceholder,
   filters,
   onReset,
   resultCount,
-  className = "",
-  showMobileDropdown = true,
-  autocompleteOptions = [],
+  totalCount,
+  className,
+  autocompleteOptions,
   onAutocompleteSelect,
+  advancedContent,
+  advancedActiveCount,
+  inlineExtra,
+  trailing,
+  sticky = true,
 }) => {
-  // Handle search input change - pass through immediately
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      if (onSearchChange) {
-        onSearchChange(value);
-      }
-    },
-    [onSearchChange]
-  );
-
-  // Handle Enter key press
-  const handleKeyPress = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && onSearchSubmit) {
-        onSearchSubmit();
-      }
-    },
-    [onSearchSubmit]
-  );
-
-  // Handle autocomplete selection
-  const handleAutocompleteSelect = useCallback(
-    (option: AutocompleteOption) => {
-      onAutocompleteSelect?.(option);
-    },
-    [onAutocompleteSelect]
-  );
-
-  const activeFiltersCount = filters.filter(
-    (f) => f.value && f.value !== "all"
-  ).length;
-  const hasActiveFilters =
-    activeFiltersCount > 0 || (searchValue && searchValue.trim().length > 0);
-
-  // Desktop View — ultra compact single row
-  const DesktopFilters = () => (
-    <div
-      data-filters-card
-      className={`hidden md:flex md:flex-wrap md:items-center gap-2 py-2 px-2 rounded-lg border border-border/60 bg-card/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80 sticky top-0 z-20 ${className}`}
-    >
-      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0 pl-1">
-        <Filter className="h-3.5 w-3.5" />
-        <span><T k="auto.responsivefilters.filtres" fallback="Filtres" /></span>
-        {activeFiltersCount > 0 && (
-          <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-            {activeFiltersCount}
-          </Badge>
-        )}
-      </div>
-
-      {onSearchChange && (
-        <div className="relative flex-1 min-w-[180px] max-w-[260px]">
-          {autocompleteOptions.length > 0 ? (
-            <Autocomplete
-              value={searchValue}
-              onChange={handleSearchChange}
-              onSelect={(option) => {
-                onSearchChange?.(option.label);
-                onSearchSubmit?.();
-                onAutocompleteSelect?.(option);
-              }}
-              options={autocompleteOptions}
-              placeholder={searchPlaceholder}
-              minSearchLength={1}
-              maxSuggestions={6}
-            />
-          ) : (
-            <>
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground h-3.5 w-3.5" />
-              <Input
-                placeholder={searchPlaceholder}
-                value={searchValue}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="pl-8 h-8 text-sm"
-              />
-            </>
-          )}
-        </div>
-      )}
-
-      {filters.map((filter) => (
-        <Select
-          key={filter.key}
-          value={filter.value}
-          onValueChange={filter.onChange}
-        >
-          <SelectTrigger className="h-8 text-xs w-auto min-w-[130px] max-w-[180px]">
-            <SelectValue placeholder={filter.placeholder} />
-          </SelectTrigger>
-          <SelectContent>
-            {!filter.options.find((opt) => opt.value === "all") && (
-              <SelectItem value="all">
-                Tous les {filter.label.toLowerCase()}
-              </SelectItem>
-            )}
-            {filter.options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                <div className="flex items-center justify-between w-full">
-                  <span>{option.label}</span>
-                  {option.count !== undefined && (
-                    <Badge variant="outline" className="ml-2 text-xs">
-                      {option.count}
-                    </Badge>
-                  )}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ))}
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onReset}
-        className="h-8 px-2 text-xs"
-        disabled={!hasActiveFilters}
-        title="Réinitialiser"
-      >
-        <RotateCcw className="h-3.5 w-3.5" />
-      </Button>
-
-      {hasActiveFilters && (
-        <div className="flex flex-wrap items-center gap-1">
-          {searchValue && searchValue.trim().length > 0 && (
-            <Badge variant="secondary" className="h-6 px-1.5 gap-1 text-[11px]">
-              <Search className="h-3 w-3" />"{searchValue}"
-              <button
-                className="ml-0.5 hover:text-destructive"
-                onClick={() => onSearchChange?.("")}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {filters
-            .filter((f) => f.value && f.value !== "all")
-            .map((filter) => {
-              const option = filter.options.find(
-                (o) => o.value === filter.value
-              );
-              return (
-                <Badge
-                  key={filter.key}
-                  variant="secondary"
-                  className="h-6 px-1.5 gap-1 text-[11px]"
-                >
-                  {option?.label || filter.value}
-                  <button
-                    className="ml-0.5 hover:text-destructive"
-                    onClick={() => filter.onChange("all")}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              );
-            })}
-        </div>
-      )}
-
-      {resultCount !== undefined && (
-        <span className="ml-auto text-xs text-muted-foreground shrink-0 pr-1">
-          {resultCount} résultat{resultCount > 1 ? "s" : ""}
-        </span>
-      )}
-    </div>
-  );
-
-  // Mobile View
-  const MobileFilters = () => (
-    <div className={`md:hidden sticky top-0 z-20 rounded-lg border border-border/60 bg-card/95 px-2 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80 ${className}`}>
-      <div className="flex items-center gap-2">
-      {/* Search Bar Always Visible */}
-      {onSearchChange && (
-        <div className="relative flex-1 min-w-0">
-          {autocompleteOptions.length > 0 ? (
-            <Autocomplete
-              value={searchValue}
-              onChange={handleSearchChange}
-              onSelect={handleAutocompleteSelect}
-              options={autocompleteOptions}
-              placeholder={searchPlaceholder}
-              minSearchLength={1}
-              maxSuggestions={6}
-            />
-          ) : (
-            <>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder={searchPlaceholder}
-                value={searchValue}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="pl-10"
-              />
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Filter Dropdown */}
-      {showMobileDropdown && (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 shrink-0 flex items-center gap-1.5 text-xs">
-                <Filter className="h-4 w-4" />
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-80 p-4" align="start">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                Filtres
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onReset}
-                    className="h-auto p-1"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-
-              <div className="space-y-4">
-                {filters.map((filter) => (
-                  <div key={filter.key} className="space-y-2">
-                    <label className="text-sm font-medium">
-                      {filter.label}
-                    </label>
-                    <Select
-                      value={filter.value}
-                      onValueChange={filter.onChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={filter.placeholder} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {!filter.options.find((opt) => opt.value === "all") && (
-                          <SelectItem value="all">
-                            Tous les {filter.label.toLowerCase()}
-                          </SelectItem>
-                        )}
-                        {filter.options.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            <div className="flex items-center justify-between w-full">
-                              <span>{option.label}</span>
-                              {option.count !== undefined && (
-                                <Badge
-                                  variant="outline"
-                                  className="ml-2 text-xs"
-                                >
-                                  {option.count}
-                                </Badge>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {resultCount !== undefined && (
-            <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-              {resultCount}
-            </span>
-          )}
-        </>
-      )}
-      </div>
-
-      {/* Active Filters Display */}
-      {hasActiveFilters && (
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {searchValue && searchValue.trim().length > 0 && (
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Search className="h-3 w-3" />"{searchValue}"
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-auto p-0 ml-1"
-                onClick={() => onSearchChange?.("")}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </Badge>
-          )}
-          {filters
-            .filter((f) => f.value && f.value !== "all")
-            .map((filter) => {
-              const option = filter.options.find(
-                (o) => o.value === filter.value
-              );
-              return (
-                <Badge
-                  key={filter.key}
-                  variant="secondary"
-                  className="flex items-center gap-1"
-                >
-                  {filter.label}: {option?.label || filter.value}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto p-0 ml-1"
-                    onClick={() => filter.onChange("all")}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              );
-            })}
-        </div>
-      )}
-    </div>
+  const compactFilters = useMemo<CompactFilterField[]>(
+    () =>
+      filters.map((filter) => ({
+        key: filter.key,
+        label: filter.label,
+        placeholder: filter.placeholder,
+        value: filter.value,
+        onChange: filter.onChange,
+        options: filter.options,
+        allLabel: filter.placeholder,
+        advanced: filter.advanced,
+      })),
+    [filters],
   );
 
   return (
-    <>
-      {DesktopFilters()}
-      {MobileFilters()}
-    </>
+    <CompactFilterBar
+      title={title}
+      searchValue={searchValue}
+      onSearchChange={onSearchChange}
+      onSearchSubmit={onSearchSubmit}
+      searchPlaceholder={searchPlaceholder}
+      filters={compactFilters}
+      onReset={onReset}
+      resultCount={resultCount}
+      totalCount={totalCount}
+      className={className}
+      autocompleteOptions={autocompleteOptions}
+      onAutocompleteSelect={onAutocompleteSelect}
+      advancedContent={advancedContent}
+      advancedActiveCount={advancedActiveCount}
+      inlineExtra={inlineExtra}
+      trailing={trailing}
+      sticky={sticky}
+    />
   );
 };
 
