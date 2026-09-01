@@ -351,7 +351,7 @@ export default function ContractFormDialog({
               options={projects.map((p) => ({
                 value: p.id,
                 label: p.title,
-                description: p.projectReference ?? undefined,
+                description: (p as { project_reference?: string | null }).project_reference ?? undefined,
               }))}
               placeholder="Rechercher un projet…"
               clearLabel="Aucun projet"
