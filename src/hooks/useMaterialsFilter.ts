@@ -184,6 +184,7 @@ export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
     categories,
     localTypes,
     regions,
+    regionOptions,
     
     // Helper functions
     getStockLevel,
