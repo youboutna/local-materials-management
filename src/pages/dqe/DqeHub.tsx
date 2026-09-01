@@ -10,7 +10,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Button } from '@/components/ui/button';
 import { FileSpreadsheet, ArrowLeft } from 'lucide-react';
 import { DqeWorkspace } from '@/components/boq/DqeWorkspace';
