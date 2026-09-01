@@ -409,22 +409,67 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         </table>
       </div>
 
+      {/* Vue cartes — mobile */}
+      <div className="grid gap-2 md:hidden">
+        {isLoading ? (
+          <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Chargement…</div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">{t('dqe.empty.create_hint')}</div>
+        ) : pageRows.map((d) => {
+          const readOnly = d.readOnly;
+          const editable = !readOnly && EDITABLE_STATUSES.has(String(d.status).toLowerCase());
+          return (
+            <div key={d.documentId} className="rounded-lg border p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <button type="button" className="min-w-0 text-left" onClick={() => onOpen(d.documentId)}>
+                  <div className="text-sm font-semibold">{docPrefix.toUpperCase()}-{d.reference}</div>
+                  <div className="truncate text-xs text-muted-foreground">{resolveTitle(d)}</div>
+                </button>
+                <Badge variant={STATUS_VARIANT[d.status] ?? STATUS_VARIANT.draft}>
+                  {d.status === 'mixed' ? t('dqe.status.mixed') : translateStatus(d.status)}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                <span>{d.lineCount} {t('dqe.navigation.list')}</span>
+                <span className="text-right">{fmtDate(d.createdAt)}</span>
+                <span>HT {fmtMoney(d.totalHt)} MRU</span>
+                <span className="text-right font-semibold text-foreground">TTC {fmtMoney(d.totalTtc)} MRU</span>
+              </div>
+              <div className="flex justify-end gap-1">
+                <Button size="sm" variant="outline" onClick={() => onOpen(d.documentId)}>
+                  <Eye className="h-4 w-4" />
+                </Button>
+                {editable && (
+                  <Button size="sm" variant="outline" onClick={() => onOpen(d.documentId)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={readOnly || isDeleting}
+                  onClick={() => handleDelete(d)}
+                  title={readOnly ? t('dqe.locked_transmitted') : t('common.delete')}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {filtered.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>
-            {safePage * pageSize + 1}–{Math.min(filtered.length, (safePage + 1) * pageSize)} / {filtered.length}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={safePage === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span>Page {safePage + 1} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <DataPagination
+          page={safePage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(n) => { setPageSize(n); setPage(0); }}
+          pageSizeOptions={PAGE_SIZES}
+        />
       )}
+
 
 
       <AlertDialog open={pendingDelete.length > 0} onOpenChange={(o) => { if (!o) setPendingDelete([]); }}>
