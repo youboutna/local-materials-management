@@ -76,6 +76,10 @@ export function ListToolbar({
       filters={filters}
       inlineExtra={children}
       resultCount={resultCount}
+      isLoading={isLoading}
+      presetsKey={presetsKey}
+      syncUrl={syncUrl}
+
       onReset={
         onReset ??
         (() => {
