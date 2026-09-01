@@ -56,16 +56,19 @@ describe('Dataset 2D3DTECH — normalisation & fan-out', () => {
     expect(stakeholders.some((s) => s.stakeholderEntityType === 'supplier')).toBe(true);
   });
 
-  it('cohérence budget projet / total HT du DQE', () => {
+  it('cohérence total HT des lignes / document DQE déclaré', () => {
+    const docs = (raw.dqeDocuments as Array<Record<string, unknown>>);
     for (const project of normalized.projects) {
       const totalHt = (project.dqeLines ?? []).reduce(
         (acc, l) => acc + Number((l as unknown as { totalPrice?: number }).totalPrice ?? 0),
         0,
       );
-      const budget = typeof project.budget === 'number' ? project.budget : project.budget?.total ?? 0;
-      if (budget > 0 && totalHt > 0) {
-        expect(Math.abs(totalHt - budget) / budget).toBeLessThan(0.5);
-      }
+      if (totalHt === 0) continue;
+      const doc = docs.find((d) => d.projectId === project.id);
+      expect(doc, `document DQE manquant pour ${project.title}`).toBeTruthy();
+      const declared = Number(doc?.totalHT ?? 0);
+      expect(Math.abs(totalHt - declared) / declared).toBeLessThan(0.02);
     }
   });
 });
+
