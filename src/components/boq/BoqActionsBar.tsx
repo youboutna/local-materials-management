@@ -597,7 +597,9 @@ export const BoqActionsBar: React.FC<Props> = ({
     <>
       {/* Barre unique et compacte : contexte + badges à gauche, actions à droite.
           Tout tient sur une seule ligne sur desktop, wrap naturel sur mobile. */}
-      <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1.5">
+      {/* Ligne unique : contexte, badges puis actions — défilement horizontal si nécessaire. */}
+      <div className="flex w-full flex-nowrap items-center gap-x-2 overflow-x-auto pb-1 [&>*]:shrink-0 [&_.badge-nowrap]:whitespace-nowrap">
+
         {/* --- Contexte & badges d'information (jamais de boutons) --- */}
         {contextSlot}
         {primarySlot}
