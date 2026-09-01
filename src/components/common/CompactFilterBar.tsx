@@ -161,6 +161,11 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
   onAutocompleteSelect,
   className,
   sticky = true,
+  isLoading = false,
+  onGoToFirstResult,
+  presetsKey,
+  syncUrl = false,
+  urlNamespace = '',
 }) => {
   const { t } = useLanguage();
   const placeholder = searchPlaceholder ?? t('auto.listtoolbar.rechercher');
@@ -173,12 +178,132 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
     activeFilters.length + advancedActiveCount + (searchValue.trim() ? 1 : 0);
   const hasAdvanced = drawerFilters.length > 0 || Boolean(advancedContent);
 
+  const [advancedOpen, setAdvancedOpen] = React.useState(false);
+  const searchWrapRef = React.useRef<HTMLDivElement>(null);
+  const advancedTriggerRef = React.useRef<HTMLButtonElement>(null);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') onSearchSubmit?.();
+      if (e.key === 'Enter') {
+        if (e.altKey) onGoToFirstResult?.();
+        else onSearchSubmit?.();
+      }
     },
-    [onSearchSubmit],
+    [onSearchSubmit, onGoToFirstResult],
   );
+
+  // === Raccourcis clavier globaux ===
+  const focusSearch = useCallback(() => {
+    searchWrapRef.current?.querySelector('input')?.focus();
+  }, []);
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = !!target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+      // Ctrl/⌘+K ou « / » → focus recherche
+      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !typing)) {
+        e.preventDefault();
+        focusSearch();
+        return;
+      }
+      if (!e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k === 'f' && hasAdvanced) {
+        e.preventDefault();
+        setAdvancedOpen((v) => !v);
+      } else if (k === 'r' && onReset) {
+        e.preventDefault();
+        onReset();
+      } else if (e.key === 'Enter' && onGoToFirstResult) {
+        e.preventDefault();
+        onGoToFirstResult();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focusSearch, hasAdvanced, onReset, onGoToFirstResult]);
+
+  const shortcutsHint = [
+    `${t('filters.shortcut.search') || 'Recherche'} : Ctrl+K · /`,
+    hasAdvanced ? `${t('filters.shortcut.advanced') || 'Avancé'} : Alt+F` : null,
+    onReset ? `${t('filters.shortcut.reset') || 'Réinitialiser'} : Alt+R` : null,
+    onGoToFirstResult ? `${t('filters.shortcut.first') || 'Premier résultat'} : Alt+Entrée` : null,
+  ]
+    .filter(Boolean)
+    .join(' | ');
+
+  // === Persistance URL (recherche, selects, tiroir avancé) ===
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramName = useCallback((key: string) => `${urlNamespace}${key}`, [urlNamespace]);
+  const hydratedRef = React.useRef(false);
+  const filtersRef = React.useRef(filters);
+  filtersRef.current = filters;
+
+  React.useEffect(() => {
+    if (!syncUrl || hydratedRef.current) return;
+    hydratedRef.current = true;
+    const q = searchParams.get(paramName('q'));
+    if (q && onSearchChange && q !== searchValue) onSearchChange(q);
+    filtersRef.current.forEach((f) => {
+      const v = searchParams.get(paramName(f.key));
+      if (v && v !== f.value) f.onChange(v);
+    });
+    if (searchParams.get(paramName('adv')) === '1') setAdvancedOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncUrl]);
+
+  const filterSignature = filters.map((f) => `${f.key}=${f.value}`).join('&');
+  React.useEffect(() => {
+    if (!syncUrl || !hydratedRef.current) return;
+    const next = new URLSearchParams(window.location.search);
+    if (searchValue.trim()) next.set(paramName('q'), searchValue);
+    else next.delete(paramName('q'));
+    filtersRef.current.forEach((f) => {
+      if (f.value && f.value !== ALL) next.set(paramName(f.key), f.value);
+      else next.delete(paramName(f.key));
+    });
+    if (advancedOpen) next.set(paramName('adv'), '1');
+    else next.delete(paramName('adv'));
+    const current = window.location.search.replace(/^\?/, '');
+    if (next.toString() !== current) setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncUrl, searchValue, filterSignature, advancedOpen]);
+
+  // === Presets de filtres ===
+  const [presets, setPresets] = React.useState<FilterPreset[]>(() => readPresets(presetsKey));
+  const [presetName, setPresetName] = React.useState('');
+
+  const savePreset = () => {
+    if (!presetsKey) return;
+    const name = presetName.trim() || `${t('auto.responsivefilters.filtres')} ${presets.length + 1}`;
+    const preset: FilterPreset = {
+      name,
+      search: searchValue,
+      values: Object.fromEntries(filters.map((f) => [f.key, f.value])),
+    };
+    const next = [...presets.filter((p) => p.name !== name), preset];
+    setPresets(next);
+    writePresets(presetsKey, next);
+    setPresetName('');
+  };
+
+  const applyPreset = (preset: FilterPreset) => {
+    onSearchChange?.(preset.search ?? '');
+    filters.forEach((f) => {
+      const v = preset.values?.[f.key];
+      if (v !== undefined && v !== f.value) f.onChange(v);
+    });
+    onSearchSubmit?.();
+  };
+
+  const deletePreset = (name: string) => {
+    if (!presetsKey) return;
+    const next = presets.filter((p) => p.name !== name);
+    setPresets(next);
+    writePresets(presetsKey, next);
+  };
+
 
   return (
     <div
