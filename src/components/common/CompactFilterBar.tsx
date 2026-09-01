@@ -117,6 +117,9 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
   resultCount,
   totalCount,
   trailing,
+  inlineExtra,
+  autocompleteOptions = [],
+  onAutocompleteSelect,
   className,
   sticky = true,
 }) => {
