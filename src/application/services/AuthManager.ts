@@ -15,6 +15,10 @@ import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from
 // ✅ IMPORT des modules locaux (correction)
 import { isDevMode } from "@/config/constants";
 import { LocalAuthAdapter } from "@/infrastructure/adapters/local/LocalAuthAdapter";
+import { SupabaseAuthAdapter as RealSupabaseAuthAdapter } from "@/infrastructure/adapters/supabase/SupabaseAuthAdapter";
+import { KeycloakAuthAdapter as RealKeycloakAuthAdapter } from "@/infrastructure/adapters/auth/KeycloakAuthAdapter";
+import { keycloakConfig } from "@/integrations/keycloak/config";
+import type { IAuthRepository as DomainAuthRepository } from "@/domain/repositories/IAuthRepository";
 
 // Use existing DTOs for AuthManager internal operations
 export type AuthCredentials = LoginData;
@@ -134,7 +138,11 @@ export class AuthManager {
 
     switch (config.provider) {
       case "keycloak":
-        return wrapDomainAdapter(new RealKeycloakAuthAdapter());
+        return wrapDomainAdapter(new RealKeycloakAuthAdapter({
+          url: config.url || keycloakConfig.url,
+          realm: config.realm || keycloakConfig.realm,
+          clientId: config.clientId || keycloakConfig.clientId,
+        }));
       case "supabase":
       case "auth0":
       case "custom":
