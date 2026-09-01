@@ -181,7 +181,7 @@ const Materials: React.FC = () => {
             />
           </TabsContent>
 
-          <TabsContent value="interactive" className="space-y-6">
+          <TabsContent value="interactive" className="space-y-3">
             <InteractiveMaterialsMapView materials={filteredMaterials} />
           </TabsContent>
         </Tabs>

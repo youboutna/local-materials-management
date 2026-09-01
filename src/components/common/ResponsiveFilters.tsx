@@ -101,7 +101,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   const DesktopFilters = () => (
     <div
       data-filters-card
-      className={`hidden md:flex md:flex-wrap md:items-center gap-2 py-2 px-2 rounded-md border bg-card ${className}`}
+      className={`hidden md:flex md:flex-wrap md:items-center gap-2 py-2 px-2 rounded-lg border border-border/60 bg-card/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80 sticky top-0 z-20 ${className}`}
     >
       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0 pl-1">
         <Filter className="h-3.5 w-3.5" />
@@ -234,10 +234,11 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
 
   // Mobile View
   const MobileFilters = () => (
-    <div className={`md:hidden ${className}`}>
+    <div className={`md:hidden sticky top-0 z-20 rounded-lg border border-border/60 bg-card/95 px-2 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/80 ${className}`}>
+      <div className="flex items-center gap-2">
       {/* Search Bar Always Visible */}
       {onSearchChange && (
-        <div className="relative mb-4">
+        <div className="relative flex-1 min-w-0">
           {autocompleteOptions.length > 0 ? (
             <Autocomplete
               value={searchValue}
@@ -265,12 +266,11 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
 
       {/* Filter Dropdown */}
       {showMobileDropdown && (
-        <div className="flex items-center justify-between mb-4">
+        <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="h-9 shrink-0 flex items-center gap-1.5 text-xs">
                 <Filter className="h-4 w-4" />
-                Filtres
                 {activeFiltersCount > 0 && (
                   <Badge variant="secondary" className="ml-1">
                     {activeFiltersCount}
@@ -337,16 +337,17 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
           </DropdownMenu>
 
           {resultCount !== undefined && (
-            <span className="text-sm text-muted-foreground">
-              {resultCount} résultat{resultCount !== 1 ? "s" : ""}
+            <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+              {resultCount}
             </span>
           )}
-        </div>
+        </>
       )}
+      </div>
 
       {/* Active Filters Display */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="mt-1.5 flex flex-wrap gap-1">
           {searchValue && searchValue.trim().length > 0 && (
             <Badge variant="secondary" className="flex items-center gap-1">
               <Search className="h-3 w-3" />"{searchValue}"

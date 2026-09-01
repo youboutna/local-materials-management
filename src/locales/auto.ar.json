@@ -5020,5 +5020,7 @@
   "wbs.select_milestone_first": "اختر معلماً",
   "wbs.select_phase": "اختر مرحلة",
   "wbs.select_phase_first": "اختر مرحلة",
-  "wbs.select_task": "اختر مهمة"
+  "wbs.select_task": "اختر مهمة",
+  "auto.compactfilterbar.avance": "متقدم",
+  "auto.responsivefilters.resultats": "نتيجة"
 }
