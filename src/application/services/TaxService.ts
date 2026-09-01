@@ -25,6 +25,18 @@ import {
   PCM_ACCOUNT_TAXES,
   type PcmAccountTax,
 } from '@/config/referentials/boq/pcm-accounts.referential';
+import {
+  AGENT_COMMISSION_TAX,
+  DIGITAL_SERVICE_LOCALIZATION_CRITERIA,
+  ELECTRONIC_TRANSACTION_TAX,
+  FISCAL_REFERENCE,
+  type DigitalServiceCriterionCode,
+} from '@/config/referentials/fiscal/lfr-2026.referential';
+import {
+  SupplierNifValidationService,
+  type DeductibilityInput,
+  type DeductibilityResult,
+} from '@/application/services/SupplierNifValidationService';
 
 /** Entrée minimale exploitable par le service (DQE, devis, contrat, facture). */
 export interface TaxableLine {
