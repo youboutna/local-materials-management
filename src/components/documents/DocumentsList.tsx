@@ -28,6 +28,9 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const { translateStatus } = useI18n();
+  const DOCUMENT_TYPE_OPTIONS = ['inspection_report','location_photo','project_report','contract','supplier_info','task_assignment','employee_record'];
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -164,16 +167,16 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
         filters={[
           {
             key: 'type',
-            label: translateLabel('auto.documentslist.type_de_document', 'Type de document'),
-            placeholder: translateLabel('auto.documentslist.tous_les_types', 'Tous les types'),
+            label: t('auto.documentslist.type_de_document'),
+            placeholder: t('auto.documentslist.tous_les_types'),
             value: filterType,
             onChange: setFilterType,
-            options: DOCUMENT_TYPE_OPTIONS.map((code) => ({ value: code, label: translateDocumentType(code) })),
+            options: DOCUMENT_TYPE_OPTIONS.map((code) => ({ value: code, label: getDocumentTypeLabel(code) })),
           },
           {
             key: 'status',
-            label: translateLabel('auto.documentslist.statut', 'Statut'),
-            placeholder: translateLabel('auto.documentslist.tous_les_statuts', 'Tous les statuts'),
+            label: t('auto.documentslist.statut'),
+            placeholder: t('auto.documentslist.tous_les_statuts'),
             value: filterStatus,
             onChange: setFilterStatus,
             options: ['draft', 'pending_review', 'approved'].map((code) => ({ value: code, label: translateStatus(code) })),
