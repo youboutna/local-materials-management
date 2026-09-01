@@ -319,7 +319,7 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const hasRole = useCallback((roleName: string): boolean => {
     if (!user) return false;
-    return user.role === roleName || (user.roles && user.roles.includes(roleName));
+    return user.role === roleName || !!user.roles?.includes(roleName);
   }, [user]);
 
   const hasAnyRole = useCallback((roleNames: string[]): boolean => {
