@@ -1,23 +1,23 @@
-import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * ListToolbar
- * Barre d'outils partagée (recherche libre + filtres rapides) pour les listes
+ * Barre d'outils partagée (recherche libre + filtres d'expiration) pour les listes
  * contractuelles : Garanties bancaires, Assurances.
+ * Implémentation déléguée à `CompactFilterBar` pour un comportement identique
+ * (compact, sticky, responsive) sur toutes les pages de recherche.
+ *
  * Couche présentation uniquement : le filtrage s'applique aux données déjà chargées.
  */
 
-import { ReactNode } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { ReactNode, useMemo } from 'react';
+import CompactFilterBar, { CompactFilterField } from '@/components/common/CompactFilterBar';
 import { ExpiryFilter } from '@/lib/expiryUx';
-import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-const EXPIRY_FILTERS: { value: ExpiryFilter; label: string }[] = [
-  { value: 'all', label: 'auto.listtoolbar.tous' },
-  { value: 'active', label: 'auto.listtoolbar.actifs' },
-  { value: 'expiring', label: 'auto.listtoolbar.expire_bientot' },
-  { value: 'expired', label: 'auto.listtoolbar.expires' },
+const EXPIRY_VALUES: { value: ExpiryFilter; labelKey: string }[] = [
+  { value: 'all', labelKey: 'auto.listtoolbar.tous' },
+  { value: 'active', labelKey: 'auto.listtoolbar.actifs' },
+  { value: 'expiring', labelKey: 'auto.listtoolbar.expire_bientot' },
+  { value: 'expired', labelKey: 'auto.listtoolbar.expires' },
 ];
 
 interface ListToolbarProps {
@@ -26,9 +26,10 @@ interface ListToolbarProps {
   searchPlaceholder?: string;
   expiryFilter?: ExpiryFilter;
   onExpiryFilterChange?: (value: ExpiryFilter) => void;
-  /** Filtres additionnels (Select de type, etc.) */
+  /** Filtres additionnels (Select de type, etc.) rendus sur la même ligne */
   children?: ReactNode;
   resultCount?: number;
+  onReset?: () => void;
   className?: string;
 }
 
@@ -40,44 +41,42 @@ export function ListToolbar({
   onExpiryFilterChange,
   children,
   resultCount,
+  onReset,
   className,
 }: ListToolbarProps) {
   const { t } = useLanguage();
-  const placeholder = searchPlaceholder ?? t('auto.listtoolbar.rechercher');
+
+  const filters = useMemo<CompactFilterField[]>(() => {
+    if (!expiryFilter || !onExpiryFilterChange) return [];
+    return [
+      {
+        key: 'expiry',
+        label: t('auto.listtoolbar.expires'),
+        placeholder: t('auto.listtoolbar.tous'),
+        value: expiryFilter,
+        onChange: (value) => onExpiryFilterChange(value as ExpiryFilter),
+        options: EXPIRY_VALUES.map((f) => ({ value: f.value, label: t(f.labelKey) })),
+      },
+    ];
+  }, [expiryFilter, onExpiryFilterChange, t]);
+
   return (
-    <div className={cn('mb-4 flex flex-wrap items-center gap-2', className)}>
-      <div className="relative min-w-[16rem] flex-1">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={placeholder}
-          className="pl-8"
-          aria-label={placeholder}
-        />
-      </div>
-
-      {expiryFilter && onExpiryFilterChange && (
-        <div className="flex flex-wrap items-center gap-1">
-          {EXPIRY_FILTERS.map((f) => (
-            <Button
-              key={f.value}
-              size="sm"
-              variant={expiryFilter === f.value ? 'default' : 'outline'}
-              onClick={() => onExpiryFilterChange(f.value)}
-            >
-              {t(f.label)}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {children}
-
-      {typeof resultCount === 'number' && (
-        <span className="ml-auto text-sm text-muted-foreground">{resultCount} résultat(s)</span>
-      )}
-    </div>
+    <CompactFilterBar
+      className={className ? `mb-3 ${className}` : 'mb-3'}
+      searchValue={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder={searchPlaceholder}
+      filters={filters}
+      inlineExtra={children}
+      resultCount={resultCount}
+      onReset={
+        onReset ??
+        (() => {
+          onSearchChange('');
+          onExpiryFilterChange?.('all');
+        })
+      }
+    />
   );
 }
 
