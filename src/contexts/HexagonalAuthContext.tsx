@@ -43,7 +43,7 @@ export interface HexagonalAuthContextType {
   register: (data: RegisterData) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
-  loginWithOAuth: (provider: string) => Promise<void>;
+  loginWithOAuth: (provider: string | { provider: string; code?: string; state?: string; redirectUri?: string }) => Promise<void>;
   
   // OAuth specific - ✅ AJOUTÉ
   getOAuthProviders: () => Promise<OAuthProviderConfig[]>;
@@ -296,7 +296,8 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   /**
    * Connexion avec OAuth
    */
-  const loginWithOAuth = useCallback(async (provider: string) => {
+  const loginWithOAuth = useCallback(async (input: string | { provider: string; code?: string; state?: string; redirectUri?: string }) => {
+    const provider = typeof input === 'string' ? input : input.provider;
     try {
       setLoading(true);
       const config = getAppConfig();
