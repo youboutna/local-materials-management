@@ -15,6 +15,19 @@ export interface AuthUser {
   nationalId?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Alias / champs de compatibilité présentation (Keycloak, Supabase metadata)
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  keycloakId?: string;
+  roles?: string[];
+  avatarUrl?: string;
+  picture?: string;
+  full_name?: string;
+  avatar_url?: string;
+  userMetadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AuthSession {
