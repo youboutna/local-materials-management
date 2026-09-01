@@ -317,7 +317,7 @@ const Projects: React.FC = () => {
             />
           </TabsContent>
 
-          <TabsContent value="map" className="space-y-6">
+          <TabsContent value="map" className="space-y-3">
             <MapFilters
               locations={originalMapLocations}
               onFilterChange={handleMapFilterChange}
@@ -433,7 +433,7 @@ const Projects: React.FC = () => {
               )}
           </TabsContent>
 
-          <TabsContent value="interactive" className="space-y-6">
+          <TabsContent value="interactive" className="space-y-3">
             {/* Interactive Map Filters */}
             <InteractiveMapFilters
               projects={projects || []}
