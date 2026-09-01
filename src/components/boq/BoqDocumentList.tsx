@@ -248,16 +248,8 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
               label: code === 'mixed' ? t('dqe.status.mixed') : translateStatus(code),
             })),
           },
-          {
-            key: 'pageSize',
-            label: 'Lignes / page',
-            placeholder: `${pageSize} / page`,
-            value: String(pageSize),
-            onChange: (v) => { setPageSize(Number(v)); setPage(0); },
-            options: PAGE_SIZES.map((n) => ({ value: String(n), label: `${n} / page` })),
-            advanced: true,
-          },
         ]}
+
         advancedActiveCount={(fromDate ? 1 : 0) + (toDate ? 1 : 0)}
         advancedContent={
           <div className="grid grid-cols-2 gap-2">
