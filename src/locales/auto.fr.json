@@ -5018,5 +5018,7 @@
   "wbs.select_milestone_first": "Sélectionner un jalon",
   "wbs.select_phase": "Sélectionner une phase",
   "wbs.select_phase_first": "Sélectionner une phase",
-  "wbs.select_task": "Sélectionner une tâche"
+  "wbs.select_task": "Sélectionner une tâche",
+  "auto.compactfilterbar.avance": "Avancé",
+  "auto.responsivefilters.resultats": "résultat(s)"
 }
