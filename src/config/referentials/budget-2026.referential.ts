@@ -4646,3 +4646,86 @@ export function getReferentialSummary(): {
     totalCP
   };
 }
+// ============================================================
+// PROFIL FISCAL & COMPTABLE (LFR 2026 × PCM/CGI)
+// ============================================================
+// Doctrine : aucun taux ni imputation codés en dur dans l'UI. Le profil
+// budgétaire relie une ligne de la LF 2026 à son régime fiscal (LFR 2026)
+// et à son compte du Plan Comptable Mauritanien harmonisé CGI.
+
+import {
+  FISCAL_REFERENCE,
+  DEDUCTIBILITY_RULES,
+  getCashDeductibleCeiling,
+} from './fiscal/lfr-2026.referential';
+import {
+  PCM_CGI_REFERENCE,
+  resolvePcmCgiAccount,
+  getPcmCgiTreatment,
+  isPcmVatExempt,
+} from './fiscal/pcm-cgi.referential';
+
+export interface BudgetFiscalProfile {
+  /** Corpus fiscal appliqué (LFR 2026). */
+  fiscalReferenceCode: string;
+  /** Corpus comptable appliqué (PCM × CGI). */
+  accountingReferenceCode: string;
+  /** Compte PCM d'imputation par défaut. */
+  accountCode: string;
+  accountLabel: string | null;
+  /** Régime TVA déduit du compte (0.16 = 16 %). */
+  vatExempt: boolean;
+  /** Qualification IS/IBAPP du compte. */
+  isQualification: string | null;
+  /** Plafond de règlement en espèces déductible applicable. */
+  cashDeductibleCeiling: number;
+  /** Seuil au-delà duquel la facture normalisée est exigée. */
+  normalizedInvoiceThreshold: number;
+}
+
+/**
+ * Imputation comptable par défaut selon le type de financement / dépense
+ * d'une ligne budgétaire (référentiel, jamais codé côté UI).
+ */
+export const BUDGET_ACCOUNT_MAPPING: Record<string, string> = {
+  investment: '624',   // Études et recherches
+  works: '610',        // Sous-traitance générale
+  supplies: '601',     // Matières premières et approvisionnements
+  services: '624',
+  operating: '6066',   // Fournitures de bureau et administratives
+  personnel: '660',    // Charges de personnel
+  default: '610',
+};
+
+/** Profil fiscal d'une ligne budgétaire (ou d'une nature de dépense). */
+export function getBudgetFiscalProfile(
+  lineCodeOrNature: string,
+  options: { sectorCode?: string | null; accountCode?: string | null } = {},
+): BudgetFiscalProfile {
+  const line = findBudgetLine(lineCodeOrNature)?.line;
+  const natureKey = (line?.projectTypes?.[0] ?? lineCodeOrNature ?? 'default').toLowerCase();
+  const accountCode =
+    options.accountCode ??
+    BUDGET_ACCOUNT_MAPPING[natureKey] ??
+    BUDGET_ACCOUNT_MAPPING.default;
+  const account = resolvePcmCgiAccount(accountCode);
+  const isTreatment = getPcmCgiTreatment(accountCode, 'IS/IBAPP');
+
+  return {
+    fiscalReferenceCode: FISCAL_REFERENCE.code,
+    accountingReferenceCode: PCM_CGI_REFERENCE.code,
+    accountCode,
+    accountLabel: account?.labelFr ?? null,
+    vatExempt: isPcmVatExempt(accountCode),
+    isQualification: isTreatment?.qualification ?? null,
+    cashDeductibleCeiling: getCashDeductibleCeiling(options.sectorCode),
+    normalizedInvoiceThreshold: DEDUCTIBILITY_RULES.normalizedInvoiceThreshold,
+  };
+}
+
+/** Métadonnées de traçabilité affichées dans les états budgétaires. */
+export const BUDGET_2026_FISCAL_REFERENCE = {
+  budget: { code: 'MR_LF_2026', labelFr: 'Loi de Finances 2026' },
+  fiscal: FISCAL_REFERENCE,
+  accounting: PCM_CGI_REFERENCE,
+} as const;

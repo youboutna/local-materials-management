@@ -9,6 +9,7 @@
 
 import {
   DEDUCTIBILITY_RULES,
+  getCashDeductibleCeiling,
   getDeductibilityIssueLabel,
   type DeductibilityIssueCode,
 } from '@/config/referentials/fiscal/lfr-2026.referential';
@@ -31,6 +32,8 @@ export interface DeductibilityInput {
   paymentMethod?: string | null;
   /** Vrai si une facture normalisée / électronique est rattachée. */
   hasNormalizedInvoice?: boolean | null;
+  /** Secteur d'activité (plafond espèces dérogatoire, ex. `HALIEUTIQUE_EXPORT`). */
+  sectorCode?: string | null;
 }
 
 export interface DeductibilityResult {
@@ -101,7 +104,8 @@ export class SupplierNifValidationService {
     const amount = Number(input.amount ?? 0);
     const method = String(input.paymentMethod ?? '').toLowerCase();
     const isCash = method.includes('espece') || method.includes('cash') || method.includes('numeraire');
-    if (isCash && amount > DEDUCTIBILITY_RULES.cashPaymentDeductibleCeiling) {
+    const cashCeiling = getCashDeductibleCeiling(input.sectorCode);
+    if (isCash && amount > cashCeiling) {
       issues.push({
         code: 'CASH_ABOVE_CEILING',
         message: getDeductibilityIssueLabel('CASH_ABOVE_CEILING', lang),

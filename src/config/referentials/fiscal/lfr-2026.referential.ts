@@ -75,10 +75,28 @@ export const DEDUCTIBILITY_RULES = {
   nifMaxLength: 20,
   /** Au-delà de ce montant, un règlement en espèces n'est pas déductible. */
   cashPaymentDeductibleCeiling: 200000,
+  /**
+   * Plafonds sectoriels dérogatoires (LFR 2026, art. relatif aux charges
+   * payées en espèces) : export / transformation des produits halieutiques.
+   */
+  cashPaymentDeductibleCeilingBySector: {
+    HALIEUTIQUE_EXPORT: 50000,
+    HALIEUTIQUE_TRANSFORMATION: 50000,
+  } as Record<string, number>,
   /** Facture normalisée / électronique exigée au-delà de ce montant. */
   normalizedInvoiceThreshold: 500000,
   legalBasis: 'LFR 2026 — conditions de déductibilité et traçabilité',
 } as const;
+
+/** Plafond espèces applicable, en tenant compte du secteur d'activité. */
+export function getCashDeductibleCeiling(sectorCode?: string | null): number {
+  const key = String(sectorCode ?? '').toUpperCase();
+  return (
+    DEDUCTIBILITY_RULES.cashPaymentDeductibleCeilingBySector[key] ??
+    DEDUCTIBILITY_RULES.cashPaymentDeductibleCeiling
+  );
+}
+
 
 export type DeductibilityIssueCode =
   | 'MISSING_NIF'

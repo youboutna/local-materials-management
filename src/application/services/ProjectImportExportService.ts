@@ -433,11 +433,196 @@ export class ProjectImportExportService {
     return row as ProjectImportRow;
   }
 
+  /**
+   * Fan-out des blocs racine (`phases`, `milestones`, `tasks`, `boqLines`,
+   * `stakeholders`, `dqeDocuments`) vers les projets correspondants.
+   * Permet d'avaler un dataset "à plat" (généré / déduit) sans imbrication.
+   */
+  private attachRootCollections(
+    projects: ProjectImportRow[],
+    raw: Record<string, unknown>,
+  ): void {
+    const index = new Map<string, ProjectImportRow>();
+    for (const project of projects) {
+      for (const key of [project.id, project.externalRef, project.projectReference, project.reference, project.title]) {
+        if (key) index.set(String(key), project);
+      }
+    }
+    if (index.size === 0) return;
+
+    const groupOf = (item: Record<string, unknown>): ProjectImportRow | undefined => {
+      for (const key of ['projectId', 'project_id', 'projectRef', 'projectReference', 'project']) {
+        const value = item[key];
+        if (typeof value === 'string' && index.has(value)) return index.get(value);
+      }
+      return projects.length === 1 ? projects[0] : undefined;
+    };
+
+    const rootArray = (key: string, altKey?: string): Array<Record<string, unknown>> => {
+      const value = raw[key] ?? (altKey ? raw[altKey] : undefined);
+      return Array.isArray(value) ? (value as Array<Record<string, unknown>>) : [];
+    };
+
+    // Phases
+    for (const item of rootArray('phases')) {
+      const target = groupOf(item);
+      if (!target) continue;
+      const order = Number(item.order ?? item.orderIndex ?? (target.phases?.length ?? 0) + 1);
+      target.phases = [
+        ...(target.phases ?? []),
+        {
+          id: item.id as string | undefined,
+          externalRef: (item.externalRef as string | undefined) ?? (item.id as string | undefined),
+          name: String(item.name ?? item.title ?? `Phase ${order}`),
+          code: (item.code as string | undefined) ?? `PH${order}`,
+          description: item.description as string | undefined,
+          startDate: item.startDate as string | undefined,
+          endDate: item.endDate as string | undefined,
+          progress: item.progress as number | undefined,
+          order,
+          status: item.status as string | undefined,
+          estimatedCost: item.estimatedCost as number | undefined,
+          actualCost: item.actualCost as number | undefined,
+          budget: item.budget as number | undefined,
+          weight: item.weight as number | undefined,
+        },
+      ];
+    }
+
+    // Jalons
+    for (const item of rootArray('milestones', 'jalons')) {
+      const target = groupOf(item);
+      if (!target) continue;
+      target.milestones = [
+        ...(target.milestones ?? []),
+        {
+          externalRef: (item.externalRef as string | undefined) ?? (item.id as string | undefined),
+          phaseId: item.phaseId as string | undefined,
+          title: (item.title as string | undefined) ?? (item.name as string | undefined),
+          name: item.name as string | undefined,
+          description: item.description as string | undefined,
+          targetDate: (item.targetDate as string | undefined) ?? (item.target_date as string | undefined),
+          completionDate: (item.completionDate as string | undefined) ?? (item.completion_date as string | undefined),
+          status: item.status as string | undefined,
+          progress: item.progress as number | undefined,
+          priority: item.priority as string | undefined,
+          weight: item.weight as number | undefined,
+        },
+      ];
+    }
+
+    // Tâches
+    for (const item of rootArray('tasks', 'taches')) {
+      const target = groupOf(item);
+      if (!target) continue;
+      target.tasks = [
+        ...(target.tasks ?? []),
+        {
+          id: item.id as string | undefined,
+          title: (item.title as string | undefined) ?? (item.name as string | undefined),
+          name: item.name as string | undefined,
+          description: item.description as string | undefined,
+          status: item.status as string | undefined,
+          priority: item.priority as string | undefined,
+          progress: item.progress as number | undefined,
+          startDate: item.startDate as string | undefined,
+          endDate: item.endDate as string | undefined,
+          dueDate: (item.dueDate as string | undefined) ?? (item.due_date as string | undefined),
+          phaseId: item.phaseId as string | undefined,
+          assignedTo: item.assignedTo as string | string[] | undefined,
+          assigneeEmail: item.assigneeEmail as string | undefined,
+          estimatedHours: item.estimatedHours as number | undefined,
+          actualHours: item.actualHours as number | undefined,
+        },
+      ];
+    }
+
+    // Documents DQE (métadonnées : référence / titre portés sur les lignes)
+    const dqeDocByProject = new Map<ProjectImportRow, Record<string, unknown>>();
+    for (const item of rootArray('dqeDocuments', 'dqe_documents')) {
+      const target = groupOf(item);
+      if (target && !dqeDocByProject.has(target)) dqeDocByProject.set(target, item);
+    }
+
+    // Lignes DQE / BOQ
+    for (const item of rootArray('boqLines', 'dqeLines')) {
+      const target = groupOf(item);
+      if (!target) continue;
+      const quantity = Number(item.quantity ?? 0);
+      const unitPrice = item.unitPrice != null ? Number(item.unitPrice) : null;
+      const totalHt =
+        item.totalHt != null
+          ? Number(item.totalHt)
+          : item.totalHT != null
+            ? Number(item.totalHT)
+            : unitPrice != null
+              ? quantity * unitPrice
+              : null;
+      const doc = dqeDocByProject.get(target);
+      target.dqeLines = [
+        ...(target.dqeLines ?? []),
+        {
+          phaseId: item.phaseId as string | undefined,
+          designation: String(item.designation ?? item.description ?? item.label ?? 'Ligne DQE'),
+          unit: String(item.unit ?? 'unité'),
+          quantity,
+          unitPrice,
+          totalPrice: totalHt,
+          code: (item.code as string | undefined) ?? (item.id as string | undefined),
+          btpCode: item.btpCode as string | undefined,
+          category: (item.category as string | undefined) ?? (item.dqeCategory as string | undefined),
+          taxRate: item.taxRate as number | undefined,
+          vatRate:
+            item.vatRate != null
+              ? Number(item.vatRate)
+              : item.taxRate != null
+                ? Number(item.taxRate) / 100
+                : undefined,
+          taxRegimeCode: item.taxRegimeCode as string | undefined,
+          accountCode: item.accountCode as string | undefined,
+          status: item.status as string | undefined,
+          documentRef: doc?.reference ?? doc?.id,
+          documentTitle: doc?.title,
+        } as unknown as BoqLineDTO,
+      ];
+    }
+
+    // Parties prenantes
+    for (const item of rootArray('stakeholders', 'parties')) {
+      const target = groupOf(item);
+      if (!target) continue;
+      const entityType =
+        (item.stakeholderEntityType as 'employee' | 'supplier' | 'organization' | undefined) ??
+        (item.employeeId ? 'employee' : item.supplierId ? 'supplier' : item.organizationId ? 'organization' : undefined) ??
+        (typeof item.type === 'string' && ['employee', 'supplier', 'organization'].includes(item.type)
+          ? (item.type as 'employee' | 'supplier' | 'organization')
+          : undefined);
+      target.stakeholders = [
+        ...(target.stakeholders ?? []),
+        {
+          externalRef: (item.externalRef as string | undefined) ?? (item.id as string | undefined),
+          stakeholderType: (item.stakeholderType as string | undefined) ?? (item.role as string | undefined),
+          stakeholderEntityType: entityType,
+          organizationId: item.organizationId as string | undefined,
+          supplierId: item.supplierId as string | undefined,
+          employeeId: item.employeeId as string | undefined,
+          role: item.role as string | undefined,
+          roleDescription: (item.roleDescription as string | undefined) ?? (item.name as string | undefined),
+          isPrimary: item.isPrimary as boolean | undefined,
+        },
+      ];
+    }
+  }
+
   normalizeDataset(input: unknown): ProjectImportDataset {
     const raw = (input ?? {}) as Record<string, unknown>;
     const projectsSource = Array.isArray(raw) ? raw : (raw.projects ?? raw.projets ?? []);
     const projects = (Array.isArray(projectsSource) ? projectsSource : [projectsSource])
       .map((item) => this.normalizeImportRow(item));
+
+    if (!Array.isArray(raw)) {
+      this.attachRootCollections(projects, raw);
+    }
 
     return {
       projects,
@@ -447,6 +632,7 @@ export class ProjectImportExportService {
       options: raw.options as ImportOptions | undefined,
     };
   }
+
 
 
   private resolveReference(reference?: string, map?: Map<string, string>): string | undefined {
@@ -1043,7 +1229,10 @@ export class ProjectImportExportService {
           originalDQEType: dqeLine.dqeType ?? null,
           dqeTypeLabel: getDQETypeLabel(dqeType, 'fr'),
           targetMargin: dqeCategory?.targetMargin ?? null,
+          documentRef: (dqeLine.documentRef as string | undefined) ?? null,
+          documentTitle: (dqeLine.documentTitle as string | undefined) ?? null,
         },
+
       } as BoqLineDTO;
 
       // Fiscalité ligne à ligne : manuel > compte PCM > régime > mots-clés.
