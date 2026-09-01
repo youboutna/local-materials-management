@@ -101,13 +101,12 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number, currency = "MRU") => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "decimal",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount) + " " + currency;
-  };
+  // Affichage monétaire unifié : mêmes séparateurs que les rapports et les
+  // onglets financiers (espaces simples, jamais d'espace insécable étroit).
+  const formatCurrency = (amount: number, currency = "MRU") =>
+    formatAmount2(amount, currency).replace(/,\d{2}$/, (match) =>
+      Number.isInteger(amount) ? "" : match,
+    );
 
   const getDaysRemaining = () => {
     if (!project.endDate) return "N/A";
