@@ -34,6 +34,7 @@ export interface UnifiedAuthUser {
   lastName?: string;
   username?: string;
   keycloakId?: string;
+  picture?: string;
   roles?: string[];
   full_name?: string;
   avatar_url?: string;

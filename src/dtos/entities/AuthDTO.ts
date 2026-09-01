@@ -13,7 +13,7 @@ export interface LoginData {
 export interface RegisterData {
   email: string;
   password: string;
-  fullName: string;
+  fullName?: string;
   phone?: string;
   nationalId?: string;
 }
@@ -43,7 +43,16 @@ export interface AuthUser {
   // Extended fields for compatibility
   role?: string;
   metadata?: Record<string, unknown>;
-  userMetadata?: Record<string, unknown>;
+  userMetadata?: Record<string, any>;
+  user_metadata?: Record<string, any>;
+  full_name?: string;
+  avatar_url?: string;
+  picture?: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  keycloakId?: string;
+  roles?: string[];
 }
 
 export interface AuthSession {

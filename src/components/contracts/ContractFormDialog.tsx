@@ -351,7 +351,7 @@ export default function ContractFormDialog({
               options={projects.map((p) => ({
                 value: p.id,
                 label: p.title,
-                description: p.projectReference ?? undefined,
+                description: (p as { project_reference?: string | null }).project_reference ?? undefined,
               }))}
               placeholder="Rechercher un projet…"
               clearLabel="Aucun projet"
@@ -508,7 +508,7 @@ export default function ContractFormDialog({
               <SelectContent>
                 {regimes.map((r) => {
                   // ✅ Correction : utiliser labels plutôt que label
-                  const regime = r as TaxRegimeDefinition & { labels?: { fr: string } };
+                  const regime = r as TaxRegimeDefinition & { labels?: { fr?: string }; label?: string };
                   return (
                     <SelectItem key={regime.code} value={regime.code}>
                       {regime.labels?.fr || regime.label || regime.code} — {Math.round((regime.vatRate ?? 0) * 100)} %

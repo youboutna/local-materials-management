@@ -27,6 +27,10 @@ export interface HexagonalAuthContextType {
   // Core auth state
   user: AuthUser | null;
   loading: boolean;
+  /** Alias de `loading` (compat présentation) */
+  isLoading: boolean;
+  /** Session courante (compat présentation) */
+  session: { user: AuthUser | null; provider?: string; expires_at?: string | number } | null;
   error: Error | null;
   isAuthenticated: boolean;
   currentProvider: AuthProvider;
@@ -34,10 +38,12 @@ export interface HexagonalAuthContextType {
   // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  /** Alias de `logout` (compat présentation) */
+  signOut: () => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
-  loginWithOAuth: (provider: string) => Promise<void>;
+  loginWithOAuth: (provider: string | { provider: string; code?: string; state?: string; redirectUri?: string }) => Promise<void>;
   
   // OAuth specific - ✅ AJOUTÉ
   getOAuthProviders: () => Promise<OAuthProviderConfig[]>;
@@ -290,7 +296,8 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   /**
    * Connexion avec OAuth
    */
-  const loginWithOAuth = useCallback(async (provider: string) => {
+  const loginWithOAuth = useCallback(async (input: string | { provider: string; code?: string; state?: string; redirectUri?: string }) => {
+    const provider = typeof input === 'string' ? input : input.provider;
     try {
       setLoading(true);
       const config = getAppConfig();
@@ -313,7 +320,7 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const hasRole = useCallback((roleName: string): boolean => {
     if (!user) return false;
-    return user.role === roleName || (user.roles && user.roles.includes(roleName));
+    return user.role === roleName || !!user.roles?.includes(roleName);
   }, [user]);
 
   const hasAnyRole = useCallback((roleNames: string[]): boolean => {
@@ -388,12 +395,15 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const value: HexagonalAuthContextType = {
     user,
     loading,
+    isLoading: loading,
+    session: user ? { user } : null,
     error,
     isAuthenticated: !!user,
     currentProvider,
     isDevelopmentMode,
-    
+
     // Auth actions
+    signOut: logout,
     login,
     logout,
     register,

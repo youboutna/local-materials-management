@@ -46,6 +46,7 @@ type SignUpData = RegisterData;
 // Internal session type for AuthManager - extends existing AuthSession
 type AuthManagerSession = Omit<AuthSession, "user"> & {
   expiresAt: number;
+  user?: AuthUser | null;
 };
 
 interface IAuthRepository {

@@ -457,15 +457,14 @@ const MergedNavbar = () => {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  {!DEV_MODE && (
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>{t("auth.logout")}</span>
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{t("auth.logout")}</span>
+                  </DropdownMenuItem>
+
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -565,17 +564,19 @@ const MergedNavbar = () => {
                                 <T k="auto.mergednavbar.profile" fallback="Profile" />
                               </Link>
                             </Button>
-                            {!DEV_MODE && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleLogout}
-                                className="flex-1"
-                              >
-                                <LogOut className="h-4 w-4 mr-2" />
-                                <T k="auto.mergednavbar.logout" fallback="Logout" />
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setIsOpen(false);
+                                handleLogout();
+                              }}
+                              className="flex-1"
+                            >
+                              <LogOut className="h-4 w-4 mr-2" />
+                              <T k="auto.mergednavbar.logout" fallback="Logout" />
+                            </Button>
+
                           </div>
                         </>
                       ) : (

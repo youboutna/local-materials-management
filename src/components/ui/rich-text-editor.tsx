@@ -58,9 +58,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           'placeholder:text-muted-foreground',
           !editable && 'cursor-default'
         ),
-        style: {
-          minHeight: `${minHeight}px`,
-        },
+        style: `min-height:${minHeight}px`,
         'data-placeholder': placeholder,
       },
     },
