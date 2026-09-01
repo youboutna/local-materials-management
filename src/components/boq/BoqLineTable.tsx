@@ -187,11 +187,33 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                   <TableCell className="text-right">{editable ? <Input type="number" step={0.01} value={l.rasRate ?? 0} onChange={(e) => patch(i, { rasRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.rasRate ?? 0) * 100).toFixed(0)}%`}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.fees ?? 0} onChange={(e) => patch(i, { fees: Number(e.target.value) || 0 })} className="h-8 w-24 text-right" /> : fmt(l.fees ?? 0)}</TableCell>
                   <TableCell className="text-right font-medium">{fmt(lineTotal(l))}</TableCell>
+                  <TableCell className="text-right font-semibold">{fmt(lineTtc(l))}</TableCell>
                   {hasActions && <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne"><Trash2 className="h-4 w-4" /></Button></TableCell>}
                 </TableRow>
               );
             })}
-            {lines.length > 0 && <TableRow><TableCell colSpan={DATA_COLS - 1} className="text-right font-semibold"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableCell><TableCell className="text-right font-bold">{fmt(total)}</TableCell>{hasActions && <TableCell />}</TableRow>}
+            {lines.length > 0 && (
+              <>
+                <TableRow>
+                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableCell>
+                  <TableCell className="text-right font-bold">{fmt(total)}</TableCell>
+                  <TableCell />
+                  {hasActions && <TableCell />}
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_vat" fallback="Total TVA" /></TableCell>
+                  <TableCell className="text-right font-bold">{fmt(totalVat)}</TableCell>
+                  <TableCell />
+                  {hasActions && <TableCell />}
+                </TableRow>
+                <TableRow className="bg-muted/40">
+                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_ttc" fallback="Total TTC" /></TableCell>
+                  <TableCell />
+                  <TableCell className="text-right font-bold">{fmt(totalTtc)}</TableCell>
+                  {hasActions && <TableCell />}
+                </TableRow>
+              </>
+            )}
           </TableBody>
         </Table>
       </div>
