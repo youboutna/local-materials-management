@@ -334,7 +334,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
                 </>
               ) : null
             }
-            workflowSlot={
+            workflowSlot={(header) => (
               <InvoiceWorkflowActions
                 compact
                 documentType={invoiceDef.code}
@@ -345,15 +345,18 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
                 projectId={props.projectId}
                 projectName={props.projectName}
                 tenderId={props.tenderId}
-                sellerName={props.projectName}
-                buyerName={props.recipientEmail}
-                recipientEmail={props.recipientEmail}
+                /* Émetteur / destinataire = en-tête édité via « Parties » :
+                   le PDF et le XML Factur-X restent strictement alignés. */
+                sellerName={header.sender?.name || undefined}
+                buyerName={header.recipients?.[0]?.name || undefined}
+                recipientEmail={header.recipients?.[0]?.email ?? props.recipientEmail}
                 docPrefix={ctx.docPrefix}
                 projectBudget={props.remainingBudget ?? null}
                 disabled={doc.isLoading}
                 onTransformed={() => doc.refetch?.()}
               />
-            }
+            )}
+
           />
         </CardHeader>
 
