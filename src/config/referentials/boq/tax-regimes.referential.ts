@@ -78,7 +78,6 @@ export const TAX_REGIMES: TaxRegimeDefinition[] = [
     vatCategoryCode: 'S',
     // LFR 2026 : TVA due en Mauritanie dès qu'un critère de localisation du
     // consommateur est rempli (IP, indicatif, adresse de facturation, paiement).
-    matchals: undefined as never,
     matchers: ['numerique', 'digital', 'logiciel', 'software', 'saas', 'licence', 'license', 'abonnement', 'subscription', 'hebergement', 'hosting', 'cloud', 'infogerance', 'streaming', 'en ligne', 'online'],
   },
   {
