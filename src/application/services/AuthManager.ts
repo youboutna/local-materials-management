@@ -127,40 +127,22 @@ export class AuthManager {
    * ✅ CORRECTION : utilisation d'imports statiques, plus de require()
    */
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
-    // Mode DEV dynamique (surcharge admin incluse) : court-circuit: wrap LocalAuthAdapter to match AuthManager's local IAuthRepository shape
+    // Mode DEV dynamique (surcharge admin incluse) : DEV_USERS hors-ligne
     if (isDevMode()) {
-      const local = new LocalAuthAdapter();
-      const wrapper: IAuthRepository = {
-        authenticate: async (_provider, credentials) => {
-          const { session, error } = await local.signIn({ email: credentials.email, password: credentials.password });
-          if (error || !session) return { success: false, error: { code: 'AUTH_FAILED', message: error?.message ?? 'Invalid credentials' } };
-          return { success: true, user: session.user as unknown as AuthUser, token: session.accessToken };
-        },
-        getCurrentSession: () => local.getCurrentSession() as any,
-        getCurrentUser: () => local.getCurrentUser() as any,
-        signIn: (c) => local.signIn(c) as any,
-        signUp: (d) => local.signUp(d) as any,
-        signOut: () => local.signOut(),
-        resetPassword: (e) => local.resetPassword(e),
-        updatePassword: (p) => local.updatePassword(p),
-      };
-      return wrapper;
+      return wrapDomainAdapter(new LocalAuthAdapter());
     }
-
 
     switch (config.provider) {
-      case "supabase":
-        return new SupabaseAuthAdapter();
       case "keycloak":
-        return new KeycloakAuthAdapter(config);
+        return wrapDomainAdapter(new RealKeycloakAuthAdapter());
+      case "supabase":
       case "auth0":
-        return new Auth0Adapter(config);
       case "custom":
-        return new DatabaseAuthAdapter(config);
       default:
-        return new SupabaseAuthAdapter();
+        return wrapDomainAdapter(new RealSupabaseAuthAdapter());
     }
   }
+
 
   /**
    * Get current auth adapter
