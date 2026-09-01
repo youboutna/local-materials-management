@@ -1213,6 +1213,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                   </CardContent>
                 </Card>
 
+                <ProjectScaffoldCard
+                  projectId={projectId!}
+                  onCompleted={() => {
+                    refetchPhases();
+                    queryClient.invalidateQueries({ queryKey: ["project-detail", projectId] });
+                  }}
+                />
+
+
                 <PhaseList
                   phases={computedPhases}
                   projectId={projectId!}
