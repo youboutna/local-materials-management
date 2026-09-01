@@ -6,6 +6,7 @@ import { getAppConfig } from '@/config/app';
 import { getOAuthProviderConfig } from '@/config/referentials/oauth-providers.referential';
 import type { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
 import type { AuthUser } from '@/dtos/entities/AuthDTO';
+import { toast } from 'sonner';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 // ============================================================================
@@ -135,9 +136,12 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (session?.user) {
         setUser(session.user);
       }
+      toast.success('Connexion réussie');
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erreur de connexion'));
-      throw err;
+      const e = err instanceof Error ? err : new Error('Erreur de connexion');
+      setError(e);
+      toast.error(e.message || 'Erreur de connexion');
+      throw e;
     } finally {
       setLoading(false);
     }
@@ -148,9 +152,12 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(true);
       await authManager.signOut();
       setUser(null);
+      toast.success('Vous avez été déconnecté');
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erreur de déconnexion'));
-      throw err;
+      const e = err instanceof Error ? err : new Error('Erreur de déconnexion');
+      setError(e);
+      toast.error(e.message || 'Erreur de déconnexion');
+      throw e;
     } finally {
       setLoading(false);
     }
@@ -164,9 +171,12 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (user) {
         setUser(user);
       }
+      toast.success('Compte créé. Vérifiez votre email.');
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erreur d\'inscription'));
-      throw err;
+      const e = err instanceof Error ? err : new Error("Erreur d'inscription");
+      setError(e);
+      toast.error(e.message || "Erreur d'inscription");
+      throw e;
     } finally {
       setLoading(false);
     }
