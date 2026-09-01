@@ -13,7 +13,7 @@ export interface LoginData {
 export interface RegisterData {
   email: string;
   password: string;
-  fullName: string;
+  fullName?: string;
   phone?: string;
   nationalId?: string;
 }
@@ -44,6 +44,15 @@ export interface AuthUser {
   role?: string;
   metadata?: Record<string, unknown>;
   userMetadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+  full_name?: string;
+  avatar_url?: string;
+  picture?: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  keycloakId?: string;
+  roles?: string[];
 }
 
 export interface AuthSession {
