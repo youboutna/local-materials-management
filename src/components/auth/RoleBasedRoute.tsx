@@ -109,9 +109,10 @@ const RoleBasedRoute = ({
     // Rediriger les profils non gestionnaires vers leur portail d'accueil
     if (!hasRequiredRole) {
       const home = resolveHomeRouteForRoles([
-        ...(userRoles ?? []),
-        ...(userRole ? [userRole] : []),
+        ...((userRoles ?? []) as unknown as string[]),
+        ...(userRole ? [String(userRole)] : []),
       ]);
+
       if (home !== DEFAULT_MANAGEMENT_HOME && !location.pathname.startsWith(home)) {
         return <Navigate to={home} replace />;
       }
