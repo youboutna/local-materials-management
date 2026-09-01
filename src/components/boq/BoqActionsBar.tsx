@@ -690,38 +690,9 @@ export const BoqActionsBar: React.FC<Props> = ({
           )}
 
           {typeof workflowSlot === 'function' ? workflowSlot(header) : workflowSlot}
-          </div>
-        </div>
-
-
-        {/* --- G3 : badges d'information (jamais de boutons) --- */}
-        <div className="flex flex-wrap items-center gap-2">
-          {signedInfo && (
-            <Badge variant="secondary" className="gap-1">
-              <PenTool className="h-3 w-3" />
-              {t('dqe.action.signed')} — {signedInfo.by}
-            </Badge>
-          )}
-          {gateKind && (
-            <Badge variant={gate.allowed ? 'outline' : 'destructive'}>
-              {BOQ_INJECTION_GATE_REFERENTIAL.gates[gateKind].label} —{' '}
-              {gate.allowed ? t('dqe.gate.validated') : t('dqe.gate.validation_required')}
-            </Badge>
-          )}
-          {projectName && (
-            <Badge variant="outline">
-              {t('dqe.badge.project_ref')} · {projectName}
-            </Badge>
-          )}
-          {!headerValidation.valid && (
-            <Badge variant="destructive" className="cursor-pointer" onClick={() => setPartiesOpen(true)}>
-              {t('dqe.header.error.title')} ({headerValidation.issues.length})
-            </Badge>
-          )}
-          {badgesSlot}
-
         </div>
       </div>
+
 
 
 
