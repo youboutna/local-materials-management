@@ -33,6 +33,8 @@ import { useI18n } from '@/hooks/useI18n';
 import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referentials/boq/dqe-actions.referential';
 import { DocumentPartiesDialog, type DocumentPartiesValue } from './DocumentPartiesDialog';
 import { DocumentHeaderService } from '@/application/services/boq/DocumentHeaderService';
+import type { DocumentHeaderDTO } from '@/dtos/boq/DocumentHeaderDTO';
+
 import { useProcurementChain } from '@/hooks/hexagonal/useProcurementChainHex';
 import { ProcurementChainService } from '@/application/services/procurement/ProcurementChainService';
 import { Rocket } from 'lucide-react';
