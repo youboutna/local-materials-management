@@ -214,23 +214,24 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">{title} · {t('dqe.navigation.list')}</h2>
-          <Badge variant="outline">{filtered.length} / {visibleDocuments.length}</Badge>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <FileSpreadsheet className="h-5 w-5 shrink-0 text-muted-foreground" />
+          <h2 className="truncate text-base font-semibold sm:text-lg">{title} · {t('dqe.navigation.list')}</h2>
+          <Badge variant="outline" className="shrink-0">{filtered.length} / {visibleDocuments.length}</Badge>
         </div>
         <div className="flex items-center gap-2">
           {selectedDocs.length > 0 && (
-            <Button variant="destructive" size="sm" disabled={isDeleting} onClick={() => setPendingDelete(selectedDocs)}>
+            <Button variant="destructive" size="sm" className="flex-1 sm:flex-none" disabled={isDeleting} onClick={() => setPendingDelete(selectedDocs)}>
               <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')} ({selectedDocs.length})
             </Button>
           )}
-          <Button onClick={handleNew} size="sm">
+          <Button onClick={handleNew} size="sm" className="flex-1 sm:flex-none">
             <Plus className="h-4 w-4 mr-1" /> {t('dqe.navigation.new')}
           </Button>
         </div>
       </div>
+
 
       <CompactFilterBar
         searchValue={search}
