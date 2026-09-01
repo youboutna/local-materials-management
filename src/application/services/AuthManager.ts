@@ -15,6 +15,10 @@ import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from
 // ✅ IMPORT des modules locaux (correction)
 import { isDevMode } from "@/config/constants";
 import { LocalAuthAdapter } from "@/infrastructure/adapters/local/LocalAuthAdapter";
+import { SupabaseAuthAdapter as RealSupabaseAuthAdapter } from "@/infrastructure/adapters/supabase/SupabaseAuthAdapter";
+import { KeycloakAuthAdapter as RealKeycloakAuthAdapter } from "@/infrastructure/adapters/auth/KeycloakAuthAdapter";
+import { keycloakConfig } from "@/integrations/keycloak/config";
+import type { IAuthRepository as DomainAuthRepository } from "@/domain/repositories/IAuthRepository";
 
 // Use existing DTOs for AuthManager internal operations
 export type AuthCredentials = LoginData;
@@ -60,159 +64,44 @@ interface IAuthRepository {
   updatePassword(newPassword: string): Promise<{ error: Error | null }>;
 }
 
-class SupabaseAuthAdapter implements IAuthRepository {
-  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    return { success: true, user: undefined, token: undefined };
-  }
-
-  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signOut(): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async resetPassword(email: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
+/**
+ * Adaptation des vrais adaptateurs d'infrastructure (port domaine IAuthRepository)
+ * vers la forme interne attendue par l'AuthManager.
+ *
+ * ⚠️ Historiquement des classes "stub" renvoyaient { session: null, error: null },
+ * ce qui rendait le bouton « Se connecter » totalement inopérant (aucun appel réseau,
+ * aucune erreur). Ne jamais réintroduire de stub ici.
+ */
+function wrapDomainAdapter(repo: DomainAuthRepository): IAuthRepository {
+  return {
+    authenticate: async (_provider, credentials) => {
+      const { session, error } = await repo.signIn({
+        email: credentials.email,
+        password: credentials.password,
+      });
+      if (error || !session) {
+        return {
+          success: false,
+          error: { code: "AUTH_FAILED", message: error?.message ?? "Invalid credentials" },
+        };
+      }
+      return {
+        success: true,
+        user: session.user as unknown as AuthUser,
+        token: session.accessToken,
+      };
+    },
+    getCurrentSession: () => repo.getCurrentSession() as any,
+    getCurrentUser: () => repo.getCurrentUser() as any,
+    signIn: (c) => repo.signIn(c) as any,
+    signUp: (d) => repo.signUp(d) as any,
+    signOut: () => repo.signOut(),
+    resetPassword: (e) => repo.resetPassword(e),
+    updatePassword: (p) => repo.updatePassword(p),
+  };
 }
 
-class KeycloakAuthAdapter implements IAuthRepository {
-  private config: AuthManagerConfig;
 
-  constructor(config: AuthManagerConfig) {
-    this.config = config;
-  }
-
-  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    return { success: true, user: undefined, token: undefined };
-  }
-
-  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signOut(): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async resetPassword(email: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-}
-
-class Auth0Adapter implements IAuthRepository {
-  private config: AuthManagerConfig;
-
-  constructor(config: AuthManagerConfig) {
-    this.config = config;
-  }
-
-  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    return { success: true, user: undefined, token: undefined };
-  }
-
-  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signOut(): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async resetPassword(email: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-}
-
-class DatabaseAuthAdapter implements IAuthRepository {
-  private config: AuthManagerConfig;
-
-  constructor(config: AuthManagerConfig) {
-    this.config = config;
-  }
-
-  async authenticate(provider: AuthProvider, credentials: AuthCredentials): Promise<AuthResult> {
-    return { success: true, user: undefined, token: undefined };
-  }
-
-  async getCurrentSession(): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async getCurrentUser(): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    return { session: null, error: null };
-  }
-
-  async signUp(data: RegisterData): Promise<{ user: AuthUser | null; error: Error | null }> {
-    return { user: null, error: null };
-  }
-
-  async signOut(): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async resetPassword(email: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-
-  async updatePassword(newPassword: string): Promise<{ error: Error | null }> {
-    return { error: null };
-  }
-}
 
 export class AuthManager {
   private currentAdapter: IAuthRepository | null = null;
@@ -242,40 +131,26 @@ export class AuthManager {
    * ✅ CORRECTION : utilisation d'imports statiques, plus de require()
    */
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
-    // Mode DEV dynamique (surcharge admin incluse) : court-circuit: wrap LocalAuthAdapter to match AuthManager's local IAuthRepository shape
+    // Mode DEV dynamique (surcharge admin incluse) : DEV_USERS hors-ligne
     if (isDevMode()) {
-      const local = new LocalAuthAdapter();
-      const wrapper: IAuthRepository = {
-        authenticate: async (_provider, credentials) => {
-          const { session, error } = await local.signIn({ email: credentials.email, password: credentials.password });
-          if (error || !session) return { success: false, error: { code: 'AUTH_FAILED', message: error?.message ?? 'Invalid credentials' } };
-          return { success: true, user: session.user as unknown as AuthUser, token: session.accessToken };
-        },
-        getCurrentSession: () => local.getCurrentSession() as any,
-        getCurrentUser: () => local.getCurrentUser() as any,
-        signIn: (c) => local.signIn(c) as any,
-        signUp: (d) => local.signUp(d) as any,
-        signOut: () => local.signOut(),
-        resetPassword: (e) => local.resetPassword(e),
-        updatePassword: (p) => local.updatePassword(p),
-      };
-      return wrapper;
+      return wrapDomainAdapter(new LocalAuthAdapter());
     }
-
 
     switch (config.provider) {
-      case "supabase":
-        return new SupabaseAuthAdapter();
       case "keycloak":
-        return new KeycloakAuthAdapter(config);
+        return wrapDomainAdapter(new RealKeycloakAuthAdapter({
+          url: config.url || keycloakConfig.url,
+          realm: config.realm || keycloakConfig.realm,
+          clientId: config.clientId || keycloakConfig.clientId,
+        }));
+      case "supabase":
       case "auth0":
-        return new Auth0Adapter(config);
       case "custom":
-        return new DatabaseAuthAdapter(config);
       default:
-        return new SupabaseAuthAdapter();
+        return wrapDomainAdapter(new RealSupabaseAuthAdapter());
     }
   }
+
 
   /**
    * Get current auth adapter
