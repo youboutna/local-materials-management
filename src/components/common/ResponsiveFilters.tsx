@@ -51,7 +51,14 @@ export interface ResponsiveFiltersProps {
   inlineExtra?: ReactNode;
   trailing?: ReactNode;
   sticky?: boolean;
+  /** Recherche/pagination en cours (skeleton + indicateur). */
+  isLoading?: boolean;
+  onGoToFirstResult?: () => void;
+  presetsKey?: string;
+  syncUrl?: boolean;
+  urlNamespace?: string;
 }
+
 
 const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   title,
@@ -71,6 +78,12 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   inlineExtra,
   trailing,
   sticky = true,
+  isLoading,
+  onGoToFirstResult,
+  presetsKey,
+  syncUrl,
+  urlNamespace,
+
 }) => {
   const compactFilters = useMemo<CompactFilterField[]>(
     () =>
@@ -106,6 +119,12 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
       inlineExtra={inlineExtra}
       trailing={trailing}
       sticky={sticky}
+      isLoading={isLoading}
+      onGoToFirstResult={onGoToFirstResult}
+      presetsKey={presetsKey}
+      syncUrl={syncUrl}
+      urlNamespace={urlNamespace}
+
     />
   );
 };

@@ -33,6 +33,8 @@ import { useI18n } from '@/hooks/useI18n';
 import { getDqeActionLabelKey, DQE_TRANSFER_LABEL_KEYS } from '@/config/referentials/boq/dqe-actions.referential';
 import { DocumentPartiesDialog, type DocumentPartiesValue } from './DocumentPartiesDialog';
 import { DocumentHeaderService } from '@/application/services/boq/DocumentHeaderService';
+import type { DocumentHeaderDTO } from '@/dtos/boq/DocumentHeaderDTO';
+
 import { useProcurementChain } from '@/hooks/hexagonal/useProcurementChainHex';
 import { ProcurementChainService } from '@/application/services/procurement/ProcurementChainService';
 import { Rocket } from 'lucide-react';
@@ -56,8 +58,12 @@ interface Props {
   onPublish?: () => void;
   /** Actions principales additionnelles (groupe 1). */
   primarySlot?: React.ReactNode;
-  /** Actions de workflow / validation additionnelles (groupe 2). */
-  workflowSlot?: React.ReactNode;
+  /** Actions de workflow / validation additionnelles (groupe 2).
+   *  Peut être une fonction recevant l'en-tête documentaire effectif (émetteur /
+   *  destinataires édités via « Parties ») afin que le PDF, le XML Factur-X et
+   *  les actions de facturation partagent exactement la même source. */
+  workflowSlot?: React.ReactNode | ((header: DocumentHeaderDTO) => React.ReactNode);
+
   /** Badges d'information additionnels (groupe 3). */
   badgesSlot?: React.ReactNode;
 }
@@ -667,7 +673,7 @@ export const BoqActionsBar: React.FC<Props> = ({
             </Button>
           )}
 
-          {workflowSlot}
+          {typeof workflowSlot === 'function' ? workflowSlot(header) : workflowSlot}
           </div>
         </div>
 

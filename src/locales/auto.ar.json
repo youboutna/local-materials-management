@@ -5022,5 +5022,14 @@
   "wbs.select_phase_first": "اختر مرحلة",
   "wbs.select_task": "اختر مهمة",
   "auto.compactfilterbar.avance": "متقدم",
-  "auto.responsivefilters.resultats": "نتيجة"
+  "auto.responsivefilters.resultats": "نتيجة",
+  "filters.presets": "إعدادات مسبقة",
+  "filters.presets.empty": "لا توجد إعدادات محفوظة.",
+  "filters.presets.name": "اسم الإعداد",
+  "filters.presets.save": "حفظ",
+  "filters.loading": "جارٍ تحميل النتائج…",
+  "filters.shortcut.search": "بحث",
+  "filters.shortcut.advanced": "متقدم",
+  "filters.shortcut.reset": "إعادة تعيين",
+  "filters.shortcut.first": "أول نتيجة"
 }
