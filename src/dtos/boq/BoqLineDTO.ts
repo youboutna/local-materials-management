@@ -66,6 +66,8 @@ export interface BoqLineDTO {
   title?: string | null;
   /** Horodatage création (lecture seule). */
   createdAt?: string | null;
+  /** Horodatage dernière modification (lecture seule). */
+  updatedAt?: string | null;
 }
 
 export interface BoqLineFilter {
@@ -86,8 +88,14 @@ export interface BoqDocumentSummary {
   title: string;
   status: BoqStatus | 'mixed';
   totalHt: number;
+  /** TVA cumulée des lignes (taux ligne à ligne). */
+  totalVat: number;
+  /** Total TTC = HT + TVA. */
+  totalTtc: number;
   lineCount: number;
   createdAt: string;
+  /** Dernière modification observée sur les lignes du document. */
+  updatedAt: string;
   /** Vrai uniquement après signature ou transfert métier effectif. */
   readOnly: boolean;
 }
