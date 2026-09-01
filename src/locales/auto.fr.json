@@ -5020,5 +5020,14 @@
   "wbs.select_phase_first": "Sélectionner une phase",
   "wbs.select_task": "Sélectionner une tâche",
   "auto.compactfilterbar.avance": "Avancé",
-  "auto.responsivefilters.resultats": "résultat(s)"
+  "auto.responsivefilters.resultats": "résultat(s)",
+  "filters.presets": "Presets",
+  "filters.presets.empty": "Aucun preset enregistré.",
+  "filters.presets.name": "Nom du preset",
+  "filters.presets.save": "Enregistrer",
+  "filters.loading": "Résultats en cours…",
+  "filters.shortcut.search": "Recherche",
+  "filters.shortcut.advanced": "Avancé",
+  "filters.shortcut.reset": "Réinitialiser",
+  "filters.shortcut.first": "Premier résultat"
 }
