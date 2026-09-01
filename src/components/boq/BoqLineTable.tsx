@@ -9,13 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import { T } from '@/components/i18n/T';
 import { TaxService } from '@/application/services/TaxService';
+import { PcmAccountSelect } from './PcmAccountSelect';
+
 
 export interface StakeholderOption {
   id: string;
@@ -40,7 +42,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
 const UNITS = DQE_UNIT_CODES;
-const DATA_COLS = 20;
+const DATA_COLS = 21;
 const TAX_REGIMES_OPTIONS = TaxService.listRegimes();
 const RESOURCE_TYPES: { value: BoqResourceType; label: string }[] = [
   { value: 'material', label: 'Métré / matériau' },
@@ -79,11 +81,17 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
   const milestoneOf = (phaseId?: string | null, milestoneId?: string | null) => phaseOf(phaseId)?.milestones.find((m) => m.id === milestoneId);
   const taskOf = (phaseId?: string | null, milestoneId?: string | null, taskId?: string | null) => milestoneOf(phaseId, milestoneId)?.tasks.find((t) => t.id === taskId);
   const lineTotal = (l: BoqLineDTO) => l.totalHt || ((l.quantity || 0) * (l.unitPrice ?? 0) + (l.fees ?? 0));
-  const lineVat = (l: BoqLineDTO) => lineTotal(l) * (l.vatRate ?? 0);
+  // Fiscalité temps réel ligne à ligne : TVA, RAS, TTC et déductibilité LFR 2026,
+  // résolues par TaxService (régime + compte PCM), jamais recalculées à la main.
+  const taxOf = (l: BoqLineDTO) => TaxService.resolve({ ...l, totalHt: lineTotal(l) });
+  const lineVat = (l: BoqLineDTO) => taxOf(l).vatAmount;
+  const lineRas = (l: BoqLineDTO) => taxOf(l).rasAmount;
   const lineTtc = (l: BoqLineDTO) => lineTotal(l) + lineVat(l);
   const total = lines.reduce((acc, l) => acc + lineTotal(l), 0);
   const totalVat = lines.reduce((acc, l) => acc + lineVat(l), 0);
+  const totalRas = lines.reduce((acc, l) => acc + lineRas(l), 0);
   const totalTtc = total + totalVat;
+
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => {
     const next: Partial<BoqLineDTO> = { ...p };
@@ -126,6 +134,8 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               <TableHead className="text-right"><T k="auto.boqlinetable.qte" fallback="Qté" /></TableHead>
               <TableHead className="text-right">PU</TableHead>
               <TableHead className="min-w-[170px]"><T k="auto.boqlinetable.regime_tva" fallback="Régime TVA" /></TableHead>
+              <TableHead className="min-w-[200px]"><T k="dqe.line.pcm_account" fallback="Compte PCM" /></TableHead>
+
               <TableHead className="text-right"><T k="auto.boqlinetable.tva" fallback="TVA %" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.ras" fallback="RAS %" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.frais" fallback="Frais" /></TableHead>
@@ -149,7 +159,18 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               const task = taskOf(l.phaseId, l.milestoneId, l.taskId);
               return (
                 <TableRow key={l.id ?? `row-${i}`}>
-                  <TableCell className="text-right text-xs text-muted-foreground">{i + 1}</TableCell>
+                  <TableCell className="text-right text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      {i + 1}
+                      {taxOf(l).deductibility.deductible ? null : (
+                        <span title={`Non déductible (LFR 2026) : ${taxOf(l).deductibility.issues.map((x) => x.message).join(' • ')}`}>
+                          <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                        </span>
+                      )}
+
+                    </span>
+                  </TableCell>
+
                   <TableCell>{editable ? <Input value={l.designation} onChange={(e) => patch(i, { designation: e.target.value })} className="h-8 min-w-[220px]" /> : <span className="font-medium">{l.designation}</span>}</TableCell>
                   <TableCell>{editable ? <Select value={l.phaseId ?? NONE} onValueChange={(v) => patch(i, { phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}><SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent></Select> : phase ? <Badge variant="secondary">{phase.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
                   <TableCell>{editable ? <Select value={l.milestoneId ?? NONE} onValueChange={(v) => patch(i, { milestoneId: v === NONE ? null : v, taskId: null })} disabled={!l.phaseId}><SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{milestones.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}</SelectContent></Select> : milestone ? <Badge variant="outline">{milestone.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
@@ -183,8 +204,28 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                       <span className="text-xs text-muted-foreground">{TaxService.detectTaxRegime(l).labels.fr}</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">{editable ? <Input type="number" step={0.01} value={l.vatRate ?? 0} onChange={(e) => patch(i, { vatRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.vatRate ?? 0) * 100).toFixed(0)}%`}</TableCell>
-                  <TableCell className="text-right">{editable ? <Input type="number" step={0.01} value={l.rasRate ?? 0} onChange={(e) => patch(i, { rasRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.rasRate ?? 0) * 100).toFixed(0)}%`}</TableCell>
+                  <TableCell>
+                    {editable ? (
+                      <PcmAccountSelect
+                        value={l.accountCode ?? taxOf(l).accountCode}
+                        onChange={(code) => patch(i, { accountCode: code })}
+                        className="min-w-[190px]"
+                      />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {taxOf(l).accountCode ? `${taxOf(l).accountCode} · ${taxOf(l).accountLabel ?? ''}` : '—'}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {editable ? <Input type="number" step={0.01} value={l.vatRate ?? 0} onChange={(e) => patch(i, { vatRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.vatRate ?? 0) * 100).toFixed(0)}%`}
+                    <div className="text-[10px] text-muted-foreground">{fmt(lineVat(l))}</div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {editable ? <Input type="number" step={0.01} value={l.rasRate ?? 0} onChange={(e) => patch(i, { rasRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.rasRate ?? 0) * 100).toFixed(0)}%`}
+                    <div className="text-[10px] text-muted-foreground">{fmt(lineRas(l))}</div>
+                  </TableCell>
+
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.fees ?? 0} onChange={(e) => patch(i, { fees: Number(e.target.value) || 0 })} className="h-8 w-24 text-right" /> : fmt(l.fees ?? 0)}</TableCell>
                   <TableCell className="text-right font-medium">{fmt(lineTotal(l))}</TableCell>
                   <TableCell className="text-right font-semibold">{fmt(lineTtc(l))}</TableCell>
@@ -206,6 +247,13 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                   <TableCell />
                   {hasActions && <TableCell />}
                 </TableRow>
+                <TableRow>
+                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_ras" fallback="Total retenues RAS" /></TableCell>
+                  <TableCell className="text-right font-bold">-{fmt(totalRas)}</TableCell>
+                  <TableCell />
+                  {hasActions && <TableCell />}
+                </TableRow>
+
                 <TableRow className="bg-muted/40">
                   <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_ttc" fallback="Total TTC" /></TableCell>
                   <TableCell />

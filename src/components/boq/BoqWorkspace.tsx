@@ -25,7 +25,9 @@ import { ArrowRightCircle, Calculator, FileCheck2, FileSpreadsheet, Loader2, Loc
 import { useEffect, useMemo, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
+import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
 import { WbsSelector, type WbsValue } from './WbsSelector';
+
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import { MeterService } from '@/application/services/boq/MeterService';
@@ -127,6 +129,11 @@ export function BoqWorkspace({
   const [openImport, setOpenImport] = useState(false);
   const { materials } = useMaterialsHex();
   const [fiscalCode, setFiscalCode] = useState<string>(() => readPrefs().fiscalCode ?? 'MR_STANDARD');
+  /** Contrôles LFR 2026 du document (NIF fournisseur, moyen de paiement, facture normalisée). */
+  const [compliance, setCompliance] = useState<FiscalComplianceValue>({
+    supplierNif: null, supplierNifStatus: 'unknown', paymentMethod: 'virement', hasNormalizedInvoice: false,
+  });
+
   const [overheadPct, setOverheadPct] = useState<number>(0);
   const [category, setCategory] = useState<ManualCategory>('material');
   const [materialId, setMaterialId] = useState<string>('');
@@ -949,14 +956,27 @@ export function BoqWorkspace({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 border-b bg-muted/20 p-4 text-sm md:grid-cols-4">
-        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.total_ht" fallback="Total HT" /></div><div className="font-medium">{formatCurrency(totals.totalHt)}</div></div>
-        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.tva" fallback="TVA" /></div><div className="font-medium">{formatCurrency(totals.totalTva)}</div></div>
-        {(totals.withholding ?? 0) > 0 ? (
-          <div><div className="text-muted-foreground"><T k="auto.boqworkspace.ras" fallback="RAS" /></div><div className="font-medium">{formatCurrency(totals.withholding ?? 0)}</div></div>
-        ) : <div />}
-        <div><div className="text-muted-foreground"><T k="auto.boqworkspace.net_a_payer" fallback="Net à payer" /></div><div className="font-semibold">{formatCurrency(totals.netToPay ?? totals.totalTtc)}</div></div>
-      </div>
+      {/* Aperçu fiscal temps réel + contrôles de conformité LFR 2026 (avant génération) */}
+      <FiscalCompliancePanel
+        lines={displayedLines}
+        value={compliance}
+        onChange={(patch) => {
+          const next = { ...compliance, ...patch };
+          setCompliance(next);
+          // Les contrôles du document se propagent aux lignes (déductibilité par ligne).
+          setDraftLines((prev) => prev.map((l) => ({
+            ...l,
+            supplierNif: next.supplierNif ?? null,
+            supplierNifStatus: next.supplierNifStatus ?? 'unknown',
+            paymentMethod: next.paymentMethod ?? null,
+          })));
+          if (displayedLines.length > 0) setDirty(true);
+        }}
+        profile={getFiscalProfile(fiscalCode)}
+        lang={lang as 'fr' | 'ar' | 'en'}
+        disabled={locked}
+      />
+
 
       <div className="p-4">
       {doc.isLoading ? (
