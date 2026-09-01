@@ -394,12 +394,15 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const value: HexagonalAuthContextType = {
     user,
     loading,
+    isLoading: loading,
+    session: user ? { user } : null,
     error,
     isAuthenticated: !!user,
     currentProvider,
     isDevelopmentMode,
-    
+
     // Auth actions
+    signOut: logout,
     login,
     logout,
     register,
