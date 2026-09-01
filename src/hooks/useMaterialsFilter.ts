@@ -115,7 +115,10 @@ export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
       }
 
       // Region filter
-      if (selectedRegion !== "all" && material.originLocation !== selectedRegion) {
+      if (
+        selectedRegion !== "all" &&
+        !geoService.matchesRegion(material as unknown as Record<string, unknown>, selectedRegion)
+      ) {
         return false;
       }
 
