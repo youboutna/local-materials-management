@@ -23,6 +23,12 @@ export interface BoqLineDTO {
   taxRegimeCode?: string | null;
   /** Compte imputé du Plan Comptable Mauritanien (porte le régime de TVA). */
   accountCode?: string | null;
+  /** NIF du fournisseur (condition de déductibilité — LFR 2026). */
+  supplierNif?: string | null;
+  /** Statut du NIF fournisseur (`active` requis pour déduire la charge). */
+  supplierNifStatus?: 'active' | 'inactive' | 'unknown' | null;
+  /** Moyen de paiement prévu (`especes`, `virement`, `mobile_money`…). */
+  paymentMethod?: string | null;
   fees?: number | null;
   totalHt?: number | null;
   materialId?: string | null;

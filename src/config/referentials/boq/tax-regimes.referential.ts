@@ -71,6 +71,25 @@ export const TAX_REGIMES: TaxRegimeDefinition[] = [
     matchers: ['transport', 'logistique', 'logistics', 'fret', 'acheminement', 'carburant', 'fuel'],
   },
   {
+    code: 'SERVICES_NUMERIQUES',
+    labels: { fr: 'Services numériques', ar: 'الخدمات الرقمية', en: 'Digital services' },
+    vatRate: 0.16,
+    withholdingRate: 0.05,
+    vatCategoryCode: 'S',
+    // LFR 2026 : TVA due en Mauritanie dès qu'un critère de localisation du
+    // consommateur est rempli (IP, indicatif, adresse de facturation, paiement).
+    matchers: ['numerique', 'digital', 'logiciel', 'software', 'saas', 'licence', 'license', 'abonnement', 'subscription', 'hebergement', 'hosting', 'cloud', 'infogerance', 'streaming', 'en ligne', 'online'],
+  },
+  {
+    code: 'PLATEFORME_NUMERIQUE',
+    labels: { fr: 'Plateforme numérique / intermédiation', ar: 'منصة رقمية / وساطة', en: 'Digital platform / intermediation' },
+    vatRate: 0.16,
+    withholdingRate: 0.10,
+    vatCategoryCode: 'S',
+    // LFR 2026 : retenue de 10 % sur les commissions d'agents / distributeurs.
+    matchers: ['plateforme', 'platform', 'marketplace', 'commission', 'intermediation', 'agent', 'distributeur', 'mobile money', 'paiement mobile'],
+  },
+  {
     code: 'EXONERE_BAILLEUR',
     labels: { fr: 'Exonéré (financement bailleur)', ar: 'معفى (تمويل خارجي)', en: 'Exempt (donor funded)' },
     vatRate: 0,

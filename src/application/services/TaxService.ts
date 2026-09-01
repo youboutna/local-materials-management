@@ -25,6 +25,18 @@ import {
   PCM_ACCOUNT_TAXES,
   type PcmAccountTax,
 } from '@/config/referentials/boq/pcm-accounts.referential';
+import {
+  AGENT_COMMISSION_TAX,
+  DIGITAL_SERVICE_LOCALIZATION_CRITERIA,
+  ELECTRONIC_TRANSACTION_TAX,
+  FISCAL_REFERENCE,
+  type DigitalServiceCriterionCode,
+} from '@/config/referentials/fiscal/lfr-2026.referential';
+import {
+  SupplierNifValidationService,
+  type DeductibilityInput,
+  type DeductibilityResult,
+} from '@/application/services/SupplierNifValidationService';
 
 /** Entrée minimale exploitable par le service (DQE, devis, contrat, facture). */
 export interface TaxableLine {
@@ -42,6 +54,14 @@ export interface TaxableLine {
   resourceType?: string | null;
   category?: string | null;
   elementType?: string | null;
+  /** NIF du fournisseur (déductibilité LFR 2026). */
+  supplierNif?: string | null;
+  supplierNifStatus?: 'active' | 'inactive' | 'unknown' | null;
+  /** Moyen de paiement prévu (`especes`, `virement`, `mobile_money`…). */
+  paymentMethod?: string | null;
+  hasNormalizedInvoice?: boolean | null;
+  /** Critères de localisation du consommateur pour un service numérique. */
+  digitalLocalizationCriteria?: DigitalServiceCriterionCode[] | null;
 }
 
 export interface LineTaxResult extends ResolvedLineTax {
@@ -53,6 +73,12 @@ export interface LineTaxResult extends ResolvedLineTax {
   vatAmount: number;
   rasAmount: number;
   totalTtc: number;
+  /** Vrai si la ligne relève des services numériques (LFR 2026). */
+  isDigitalService: boolean;
+  /** Contrôle de déductibilité (NIF, espèces, facture normalisée). */
+  deductibility: DeductibilityResult;
+  /** Version du corpus fiscal appliqué. */
+  fiscalReferenceCode: string;
 }
 
 export interface FiscalProfileHints {
@@ -168,7 +194,64 @@ export class TaxService {
       vatAmount,
       rasAmount,
       totalTtc: round2(totalHt + vatAmount),
+      isDigitalService: TaxService.DIGITAL_REGIME_CODES.includes(regime.code),
+      deductibility: this.checkDeductibility({
+        supplierNif: line.supplierNif ?? null,
+        supplierNifStatus: line.supplierNifStatus ?? 'unknown',
+        amount: round2(totalHt + vatAmount),
+        paymentMethod: line.paymentMethod ?? null,
+        hasNormalizedInvoice: line.hasNormalizedInvoice ?? null,
+      }, lang),
+      fiscalReferenceCode: FISCAL_REFERENCE.code,
     };
+  }
+
+  /** Régimes relevant de l'économie numérique (LFR 2026). */
+  static readonly DIGITAL_REGIME_CODES: string[] = ['SERVICES_NUMERIQUES', 'PLATEFORME_NUMERIQUE'];
+
+  /** Critères de localisation d'un service numérique (sélecteur UI). */
+  static listDigitalLocalizationCriteria() {
+    return DIGITAL_SERVICE_LOCALIZATION_CRITERIA;
+  }
+
+  /**
+   * TVA due en Mauritanie sur un service numérique dès qu'un critère de
+   * localisation du consommateur est rempli (faisceau d'indices LFR 2026).
+   */
+  static isDigitalServiceTaxableInMr(line: TaxableLine): boolean {
+    const regime = this.detectTaxRegime(line);
+    if (!TaxService.DIGITAL_REGIME_CODES.includes(regime.code)) return false;
+    return (line.digitalLocalizationCriteria ?? []).length > 0;
+  }
+
+  /**
+   * Taxe sur les transactions électroniques : 0,1 % du montant réglé,
+   * plafonnée (référentiel `ELECTRONIC_TRANSACTION_TAX`).
+   */
+  static electronicTransactionTax(amount: number, paymentMethod?: string | null): number {
+    const method = String(paymentMethod ?? '').toLowerCase();
+    const eligible =
+      !paymentMethod ||
+      ELECTRONIC_TRANSACTION_TAX.appliesTo.some((m) => method.includes(m)) ||
+      method.includes('mobile') ||
+      method.includes('bankily') ||
+      method.includes('transfer');
+    if (!eligible) return 0;
+    const raw = Math.max(0, Number(amount) || 0) * ELECTRONIC_TRANSACTION_TAX.rate;
+    return round2(Math.min(raw, ELECTRONIC_TRANSACTION_TAX.capAmount));
+  }
+
+  /** Retenue de 10 % sur les commissions d'agents / distributeurs (LFR 2026). */
+  static agentCommissionWithholding(commissionAmount: number): number {
+    return round2(Math.max(0, Number(commissionAmount) || 0) * AGENT_COMMISSION_TAX.rate);
+  }
+
+  /** Contrôle de déductibilité d'une charge (NIF actif, espèces, facture normalisée). */
+  static checkDeductibility(
+    input: DeductibilityInput,
+    lang: 'fr' | 'ar' | 'en' = 'fr',
+  ): DeductibilityResult {
+    return SupplierNifValidationService.checkDeductibility(input, lang);
   }
 
   /**
@@ -213,12 +296,24 @@ export class TaxService {
     const totalHt = round2(resolved.reduce((s, r) => s + r.totalHt, 0));
     const totalVat = round2(resolved.reduce((s, r) => s + r.vatAmount, 0));
     const totalRas = round2(resolved.reduce((s, r) => s + r.rasAmount, 0));
+    const totalTtc = round2(totalHt + totalVat);
+    const paymentMethod = lines.find((l) => l.paymentMethod)?.paymentMethod ?? null;
+    const electronicTransactionTax = paymentMethod
+      ? this.electronicTransactionTax(totalTtc, paymentMethod)
+      : 0;
+    const deductibilityIssues = resolved.flatMap((r) => r.deductibility.issues);
     return {
       totalHt,
       totalVat,
       totalRas,
-      totalTtc: round2(totalHt + totalVat),
-      netToPay: round2(totalHt + totalVat - totalRas),
+      totalTtc,
+      netToPay: round2(totalHt + totalVat - totalRas - electronicTransactionTax),
+      /** Taxe LFR 2026 sur les transactions électroniques (0,1 % plafonné). */
+      electronicTransactionTax,
+      /** Anomalies de déductibilité constatées sur les lignes. */
+      deductibilityIssues,
+      deductible: deductibilityIssues.length === 0,
+      fiscalReferenceCode: FISCAL_REFERENCE.code,
       buckets: [...byRate.values()].sort((a, b) => b.vatRate - a.vatRate),
       lines: resolved,
     };
