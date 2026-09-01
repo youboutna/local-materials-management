@@ -6,29 +6,14 @@
 
 import { UserProfile } from '@/domain/entities/UserProfile';
 
-export interface AuthUser {
-  id: string;
-  email?: string;
-  fullName?: string;
-  role?: string;
-  phone?: string;
-  nationalId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  // Alias / champs de compatibilité présentation (Keycloak, Supabase metadata)
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  keycloakId?: string;
-  roles?: string[];
-  avatarUrl?: string;
-  picture?: string;
-  full_name?: string;
-  avatar_url?: string;
-  userMetadata?: Record<string, any>;
-  user_metadata?: Record<string, any>;
-  metadata?: Record<string, any>;
-}
+/**
+ * Type utilisateur unique de l'application (défini dans les DTOs).
+ * Réexporté ici pour que le port domaine et la couche présentation
+ * partagent exactement la même forme (aucun doublon divergent).
+ */
+export type { AuthUser } from '@/dtos/entities/AuthDTO';
+import type { AuthUser } from '@/dtos/entities/AuthDTO';
+
 
 export interface AuthSession {
   accessToken: string;
