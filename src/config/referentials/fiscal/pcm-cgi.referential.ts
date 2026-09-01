@@ -52,7 +52,14 @@ export interface PcmCgiAccount {
   parent: string | null;
   children: string[];
   treatments: PcmTaxTreatment[];
+  /** Code sans parenthèses, tel qu'attendu par un import Odoo (« (0)646 » → « 0646 »). */
+  odooCode?: string;
+  /** Type de compte Odoo (Charges, Revenus, Banque et espèces, Hors bilan…). */
+  odooType?: string;
+  /** Lettrage des paiements Odoo (comptes tiers / trésorerie). */
+  reconcile?: boolean;
 }
+
 
 export const PCM_CGI_ACCOUNTS = raw as unknown as PcmCgiAccount[];
 
@@ -119,6 +126,41 @@ export function listPcmAccountsByRisk(risk: PcmRisk): PcmCgiAccount[] {
 export function listPcmAccountsByStatement(statement: PcmStatement): PcmCgiAccount[] {
   return PCM_CGI_ACCOUNTS.filter((a) => a.statement === statement);
 }
+
+/** Comptes d'un type de compte Odoo (Charges, Revenus, Banque et espèces…). */
+export function listPcmAccountsByOdooType(odooType: string): PcmCgiAccount[] {
+  return PCM_CGI_ACCOUNTS.filter((a) => a.odooType === odooType);
+}
+
+/** Code au format import Odoo (sans parenthèses pour les comptes hors bilan). */
+export function getPcmOdooCode(code?: string | null): string | null {
+  const account = resolvePcmCgiAccount(code) ?? getPcmCgiAccount(code);
+  if (!account) return null;
+  return account.odooCode ?? account.code.replace('(0)', '0');
+}
+
+/**
+ * Export CSV prêt pour l'import Odoo (Comptabilité → Plan comptable).
+ * Le nom de société est un paramètre : jamais figé dans le référentiel.
+ */
+export function toOdooChartCsv(companyName: string): string {
+  const header = 'Code,Nom du compte,Type,Lettrage des paiements,Sociétés,État,Risque CGI,Hiérarchie';
+  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const lines = PCM_CGI_ACCOUNTS.map((a) =>
+    [
+      a.odooCode ?? a.code.replace('(0)', '0'),
+      esc(`${a.labelFr} - ${a.labelAr}`),
+      a.odooType ?? '',
+      a.reconcile ? 'True' : 'False',
+      esc(companyName),
+      a.statement,
+      a.risk,
+      a.parent ? a.parent.replace('(0)', '0') : '',
+    ].join(','),
+  );
+  return [header, ...lines].join('\n');
+}
+
 
 export const PCM_CGI_REFERENCE = {
   code: 'MR_PCM_CGI_2026',
