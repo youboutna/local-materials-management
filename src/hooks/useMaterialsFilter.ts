@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { MaterialUIDTO } from '@/dtos/transforms';
+import { getGeoLocationLabelService } from '@/application/services/geo/GeoLocationLabelService';
+
+const geoService = getGeoLocationLabelService();
 
 export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
   const [searchTerm, setSearchTerm] = useState("");
