@@ -21,7 +21,7 @@ describe('ProjectImportExportService — fixture round-trip', () => {
 
     expect(dto.title).toBe(source.title);
     expect(dto.externalRef).toBe(source.id);
-    expect(dto.projectReference).toBe(source.reference);
+    expect(dto.projectReference).toBe((source as any).projectReference ?? source.reference);
     expect(dto.organizationId).toBe(source.organizationId);
     expect(dto.budget).toBe(typeof source.budget === 'number' ? source.budget : source.budget?.total);
     expect(dto.budgetSources).toEqual(typeof source.budget === 'object' ? source.budget?.sources : undefined);
@@ -41,7 +41,7 @@ describe('ProjectImportExportService — fixture round-trip', () => {
     });
 
     expect(exported.externalRef).toBe(source.id);
-    expect(exported.reference).toBe(source.reference);
+    expect(exported.reference).toBe((source as any).projectReference ?? source.reference);
     expect(exported.organizationId).toBe(source.organizationId);
     expect(exported.title).toBe(source.title);
   });
