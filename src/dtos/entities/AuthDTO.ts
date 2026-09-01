@@ -43,8 +43,8 @@ export interface AuthUser {
   // Extended fields for compatibility
   role?: string;
   metadata?: Record<string, unknown>;
-  userMetadata?: Record<string, unknown>;
-  user_metadata?: Record<string, unknown>;
+  userMetadata?: Record<string, any>;
+  user_metadata?: Record<string, any>;
   full_name?: string;
   avatar_url?: string;
   picture?: string;

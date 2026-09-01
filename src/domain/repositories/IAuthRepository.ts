@@ -25,9 +25,9 @@ export interface AuthUser {
   picture?: string;
   full_name?: string;
   avatar_url?: string;
-  userMetadata?: Record<string, unknown>;
-  user_metadata?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
+  userMetadata?: Record<string, any>;
+  user_metadata?: Record<string, any>;
+  metadata?: Record<string, any>;
 }
 
 export interface AuthSession {

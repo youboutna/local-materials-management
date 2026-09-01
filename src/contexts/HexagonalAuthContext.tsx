@@ -30,7 +30,7 @@ export interface HexagonalAuthContextType {
   /** Alias de `loading` (compat présentation) */
   isLoading: boolean;
   /** Session courante (compat présentation) */
-  session: { user: AuthUser | null } | null;
+  session: { user: AuthUser | null; provider?: string; expires_at?: string | number } | null;
   error: Error | null;
   isAuthenticated: boolean;
   currentProvider: AuthProvider;

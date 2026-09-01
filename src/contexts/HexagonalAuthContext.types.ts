@@ -341,7 +341,7 @@ export function isSupportedProvider(provider: string): provider is AuthProvider 
  */
 export function hasRole(user: UnifiedAuthUser | null, roleName: string): boolean {
   if (!user) return false;
-  return user.role === roleName || (user.roles && user.roles.includes(roleName));
+  return user.role === roleName || !!user.roles?.includes(roleName);
 }
 
 /**
