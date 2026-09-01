@@ -273,12 +273,15 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [syncUrl, searchValue, filterSignature, advancedOpen]);
 
-  // === Presets de filtres ===
-  const [presets, setPresets] = React.useState<FilterPreset[]>(() => readPresets(presetsKey));
+  // === Presets de filtres (clé par défaut : route + namespace) ===
+  const presetStoreKey = React.useMemo(
+    () => presetsKey ?? `${window.location.pathname}${urlNamespace ? `#${urlNamespace}` : ''}`,
+    [presetsKey, urlNamespace],
+  );
+  const [presets, setPresets] = React.useState<FilterPreset[]>(() => readPresets(presetStoreKey));
   const [presetName, setPresetName] = React.useState('');
 
   const savePreset = () => {
-    if (!presetsKey) return;
     const name = presetName.trim() || `${t('auto.responsivefilters.filtres')} ${presets.length + 1}`;
     const preset: FilterPreset = {
       name,
@@ -287,7 +290,7 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
     };
     const next = [...presets.filter((p) => p.name !== name), preset];
     setPresets(next);
-    writePresets(presetsKey, next);
+    writePresets(presetStoreKey, next);
     setPresetName('');
   };
 
@@ -301,11 +304,11 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
   };
 
   const deletePreset = (name: string) => {
-    if (!presetsKey) return;
     const next = presets.filter((p) => p.name !== name);
     setPresets(next);
-    writePresets(presetsKey, next);
+    writePresets(presetStoreKey, next);
   };
+
 
 
   return (
