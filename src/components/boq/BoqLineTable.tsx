@@ -111,6 +111,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12 text-right">N°</TableHead>
               <TableHead className="min-w-[240px]"><T k="auto.boqlinetable.designation" fallback="Désignation" /></TableHead>
               <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.phase" fallback="Phase" /></TableHead>
               <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.jalon" fallback="Jalon" /></TableHead>
