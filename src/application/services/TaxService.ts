@@ -296,12 +296,24 @@ export class TaxService {
     const totalHt = round2(resolved.reduce((s, r) => s + r.totalHt, 0));
     const totalVat = round2(resolved.reduce((s, r) => s + r.vatAmount, 0));
     const totalRas = round2(resolved.reduce((s, r) => s + r.rasAmount, 0));
+    const totalTtc = round2(totalHt + totalVat);
+    const paymentMethod = lines.find((l) => l.paymentMethod)?.paymentMethod ?? null;
+    const electronicTransactionTax = paymentMethod
+      ? this.electronicTransactionTax(totalTtc, paymentMethod)
+      : 0;
+    const deductibilityIssues = resolved.flatMap((r) => r.deductibility.issues);
     return {
       totalHt,
       totalVat,
       totalRas,
-      totalTtc: round2(totalHt + totalVat),
-      netToPay: round2(totalHt + totalVat - totalRas),
+      totalTtc,
+      netToPay: round2(totalHt + totalVat - totalRas - electronicTransactionTax),
+      /** Taxe LFR 2026 sur les transactions électroniques (0,1 % plafonné). */
+      electronicTransactionTax,
+      /** Anomalies de déductibilité constatées sur les lignes. */
+      deductibilityIssues,
+      deductible: deductibilityIssues.length === 0,
+      fiscalReferenceCode: FISCAL_REFERENCE.code,
       buckets: [...byRate.values()].sort((a, b) => b.vatRate - a.vatRate),
       lines: resolved,
     };
