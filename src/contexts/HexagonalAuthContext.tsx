@@ -38,6 +38,8 @@ export interface HexagonalAuthContextType {
   // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  /** Alias de `logout` (compat présentation) */
+  signOut: () => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
