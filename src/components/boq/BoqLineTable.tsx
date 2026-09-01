@@ -40,7 +40,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
 const UNITS = DQE_UNIT_CODES;
-const DATA_COLS = 18;
+const DATA_COLS = 20;
 const TAX_REGIMES_OPTIONS = TaxService.listRegimes();
 const RESOURCE_TYPES: { value: BoqResourceType; label: string }[] = [
   { value: 'material', label: 'Métré / matériau' },
