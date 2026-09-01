@@ -667,7 +667,7 @@ export const BoqActionsBar: React.FC<Props> = ({
             </Button>
           )}
 
-          {workflowSlot}
+          {typeof workflowSlot === 'function' ? workflowSlot(header) : workflowSlot}
           </div>
         </div>
 
