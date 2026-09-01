@@ -66,6 +66,8 @@ interface Props {
 
   /** Badges d'information additionnels (groupe 3). */
   badgesSlot?: React.ReactNode;
+  /** Badges de contexte (projet / n° document / lignes) affichés sur la même ligne. */
+  contextSlot?: React.ReactNode;
 }
 
 
@@ -76,7 +78,8 @@ interface Props {
 export const BoqActionsBar: React.FC<Props> = ({
   ctx, lines, projectName, recipientEmail, disabled = false,
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
-  primarySlot, workflowSlot, badgesSlot,
+  primarySlot, workflowSlot, badgesSlot, contextSlot,
+
 }) => {
 
 
