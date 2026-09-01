@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import CompactFilterBar from '@/components/common/CompactFilterBar';
+import DataPagination from '@/components/common/DataPagination';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
@@ -214,23 +216,24 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">{title} · {t('dqe.navigation.list')}</h2>
-          <Badge variant="outline">{filtered.length} / {visibleDocuments.length}</Badge>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <FileSpreadsheet className="h-5 w-5 shrink-0 text-muted-foreground" />
+          <h2 className="truncate text-base font-semibold sm:text-lg">{title} · {t('dqe.navigation.list')}</h2>
+          <Badge variant="outline" className="shrink-0">{filtered.length} / {visibleDocuments.length}</Badge>
         </div>
         <div className="flex items-center gap-2">
           {selectedDocs.length > 0 && (
-            <Button variant="destructive" size="sm" disabled={isDeleting} onClick={() => setPendingDelete(selectedDocs)}>
+            <Button variant="destructive" size="sm" className="flex-1 sm:flex-none" disabled={isDeleting} onClick={() => setPendingDelete(selectedDocs)}>
               <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')} ({selectedDocs.length})
             </Button>
           )}
-          <Button onClick={handleNew} size="sm">
+          <Button onClick={handleNew} size="sm" className="flex-1 sm:flex-none">
             <Plus className="h-4 w-4 mr-1" /> {t('dqe.navigation.new')}
           </Button>
         </div>
       </div>
+
 
       <CompactFilterBar
         searchValue={search}
@@ -248,16 +251,8 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
               label: code === 'mixed' ? t('dqe.status.mixed') : translateStatus(code),
             })),
           },
-          {
-            key: 'pageSize',
-            label: 'Lignes / page',
-            placeholder: `${pageSize} / page`,
-            value: String(pageSize),
-            onChange: (v) => { setPageSize(Number(v)); setPage(0); },
-            options: PAGE_SIZES.map((n) => ({ value: String(n), label: `${n} / page` })),
-            advanced: true,
-          },
         ]}
+
         advancedActiveCount={(fromDate ? 1 : 0) + (toDate ? 1 : 0)}
         advancedContent={
           <div className="grid grid-cols-2 gap-2">
@@ -292,8 +287,9 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         }
       />
 
-      <div className="rounded-lg border overflow-x-auto">
+      <div className="hidden rounded-lg border overflow-x-auto md:block">
         <table className="w-full min-w-[1080px] text-sm">
+
           <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
             <tr>
               <th className="p-3 text-left w-10">
@@ -409,22 +405,67 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         </table>
       </div>
 
+      {/* Vue cartes — mobile */}
+      <div className="grid gap-2 md:hidden">
+        {isLoading ? (
+          <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Chargement…</div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">{t('dqe.empty.create_hint')}</div>
+        ) : pageRows.map((d) => {
+          const readOnly = d.readOnly;
+          const editable = !readOnly && EDITABLE_STATUSES.has(String(d.status).toLowerCase());
+          return (
+            <div key={d.documentId} className="rounded-lg border p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <button type="button" className="min-w-0 text-left" onClick={() => onOpen(d.documentId)}>
+                  <div className="text-sm font-semibold">{docPrefix.toUpperCase()}-{d.reference}</div>
+                  <div className="truncate text-xs text-muted-foreground">{resolveTitle(d)}</div>
+                </button>
+                <Badge variant={STATUS_VARIANT[d.status] ?? STATUS_VARIANT.draft}>
+                  {d.status === 'mixed' ? t('dqe.status.mixed') : translateStatus(d.status)}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                <span>{d.lineCount} {t('dqe.navigation.list')}</span>
+                <span className="text-right">{fmtDate(d.createdAt)}</span>
+                <span>HT {fmtMoney(d.totalHt)} MRU</span>
+                <span className="text-right font-semibold text-foreground">TTC {fmtMoney(d.totalTtc)} MRU</span>
+              </div>
+              <div className="flex justify-end gap-1">
+                <Button size="sm" variant="outline" onClick={() => onOpen(d.documentId)}>
+                  <Eye className="h-4 w-4" />
+                </Button>
+                {editable && (
+                  <Button size="sm" variant="outline" onClick={() => onOpen(d.documentId)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={readOnly || isDeleting}
+                  onClick={() => handleDelete(d)}
+                  title={readOnly ? t('dqe.locked_transmitted') : t('common.delete')}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {filtered.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span>
-            {safePage * pageSize + 1}–{Math.min(filtered.length, (safePage + 1) * pageSize)} / {filtered.length}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={safePage === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span>Page {safePage + 1} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={safePage >= totalPages - 1} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <DataPagination
+          page={safePage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(n) => { setPageSize(n); setPage(0); }}
+          pageSizeOptions={PAGE_SIZES}
+        />
       )}
+
 
 
       <AlertDialog open={pendingDelete.length > 0} onOpenChange={(o) => { if (!o) setPendingDelete([]); }}>

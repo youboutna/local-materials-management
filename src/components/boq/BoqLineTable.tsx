@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash2, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Trash2, AlertTriangle } from 'lucide-react';
+import DataPagination from '@/components/common/DataPagination';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
@@ -265,7 +266,14 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
           </TableBody>
         </Table>
       </div>
-      {usePaging && <div className="flex items-center justify-between text-xs text-muted-foreground"><span>Lignes {start + 1} à {Math.min(end, lines.length)} sur {lines.length}</span><div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}><ChevronLeft className="h-4 w-4" /> <T k="auto.boqlinetable.precedent" fallback="Précédent" /></Button><span>Page {safePage + 1} / {totalPages}</span><Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}><T k="auto.boqlinetable.suivant" fallback="Suivant" /> <ChevronRight className="h-4 w-4" /></Button></div></div>}
+      {usePaging && (
+        <DataPagination
+          page={safePage}
+          totalItems={lines.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
+      )}
     </div>
   );
 }
