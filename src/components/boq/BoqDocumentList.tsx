@@ -44,12 +44,21 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'outline' | 'dest
 const EDITABLE_STATUSES = new Set(['draft', 'reopen', 'reopened', 'rejected']);
 
 
+type SortKey = 'reference' | 'title' | 'lineCount' | 'totalHt' | 'totalTtc' | 'status' | 'createdAt' | 'updatedAt';
+
+const PAGE_SIZES = [20, 50, 100];
+
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
   const { t, translateStatus, locale } = useI18n();
   const { toast } = useToast();
   const { documents, rawLines, isLoading, invalidate } = useBoqDocumentList({ source, contextId, projectId });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'createdAt', dir: 'desc' });
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   /** Suppression optimiste : documents retirés visuellement avant la resynchro serveur. */
   const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -65,15 +74,63 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
-    return visibleDocuments.filter((d) => {
+    const rows = visibleDocuments.filter((d) => {
       if (statusFilter !== 'all' && d.status !== statusFilter) return false;
+      if (fromDate && (d.createdAt ?? '').slice(0, 10) < fromDate) return false;
+      if (toDate && (d.createdAt ?? '').slice(0, 10) > toDate) return false;
       if (!s) return true;
       return (
         d.reference.toLowerCase().includes(s) ||
         d.title.toLowerCase().includes(s)
       );
     });
-  }, [visibleDocuments, search, statusFilter]);
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const va = a[sort.key];
+      const vb = b[sort.key];
+      if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+      return String(va ?? '').localeCompare(String(vb ?? '')) * dir;
+    });
+  }, [visibleDocuments, search, statusFilter, fromDate, toDate, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageRows = useMemo(
+    () => filtered.slice(safePage * pageSize, safePage * pageSize + pageSize),
+    [filtered, safePage, pageSize],
+  );
+
+  const toggleSort = (key: SortKey) =>
+    setSort((prev) => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' }));
+
+  const fmtDate = (iso: string) => (iso ? new Date(iso).toLocaleDateString(locale) : '—');
+  const fmtMoney = (n: number) => n.toLocaleString(locale, { maximumFractionDigits: 2 });
+
+  /** Export CSV de la liste filtrée (séparateur `;`, compatible Excel FR). */
+  const exportCsv = () => {
+    const header = ['Référence', 'Intitulé', 'Lignes', 'Montant HT', 'TVA', 'Montant TTC', 'Statut', 'Créé le', 'Modifié le'];
+    const rows = filtered.map((d) => [
+      `${docPrefix.toUpperCase()}-${d.reference}`,
+      d.title ?? '',
+      d.lineCount,
+      d.totalHt,
+      d.totalVat,
+      d.totalTtc,
+      d.status,
+      d.createdAt,
+      d.updatedAt,
+    ]);
+    const csv = [header, ...rows]
+      .map((r) => r.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(';'))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${docPrefix}-liste-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   /** Ids des lignes appartenant aux documents ciblés (fallback legacy : document_id null). */
   const lineIdsOf = (documentIds: string[]) =>
