@@ -26,6 +26,7 @@ import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectMetricsPanel from "@/components/project/ProjectMetricsPanel";
 import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
+import ProjectScaffoldCard from "@/components/project/ProjectScaffoldCard";
 import ProjectConsultantDesignation from "@/components/project/stakeholders/ProjectConsultantDesignation";
 
 import { getActualCostService } from "@/application/services/ActualCostService";
@@ -1212,6 +1213,15 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
                     </div>
                   </CardContent>
                 </Card>
+
+                <ProjectScaffoldCard
+                  projectId={projectId!}
+                  onCompleted={() => {
+                    refetchPhases();
+                    queryClient.invalidateQueries({ queryKey: ["project-detail", projectId] });
+                  }}
+                />
+
 
                 <PhaseList
                   phases={computedPhases}
