@@ -3,6 +3,8 @@ import { ReactNode, useEffect, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { resolveHomeRouteForRoles, DEFAULT_MANAGEMENT_HOME } from '@/config/referentials/auth/role-home-routes.referential';
+
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -23,7 +25,7 @@ const RoleBasedRoute = ({
 }: RoleBasedRouteProps) => {
   const { t } = useLanguage();
   const { isAuthenticated, user, loading } = useAuth();
-  const { hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
+  const { userRoles, hasAnyRole, isLoading: rolesLoading } = useCurrentUserRoles();
   const location = useLocation();
 
   // Track initial resolution to avoid blocking UI on refocus
@@ -103,9 +105,20 @@ const RoleBasedRoute = ({
   // Check roles if specified
   if (allowedRoles.length > 0 && isAuthenticated) {
     const hasRequiredRole = hasAnyRole(allowedRoles);
-    
+
+    // Rediriger les profils non gestionnaires vers leur portail d'accueil
     if (!hasRequiredRole) {
+      const home = resolveHomeRouteForRoles([
+        ...((userRoles ?? []) as unknown as string[]),
+        ...(userRole ? [String(userRole)] : []),
+      ]);
+
+      if (home !== DEFAULT_MANAGEMENT_HOME && !location.pathname.startsWith(home)) {
+        return <Navigate to={home} replace />;
+      }
+
       return (
+
         <div className="min-h-screen bg-gradient-to-br from-adrar-50 to-terracotta-50 flex items-center justify-center">
           <div className="max-w-md mx-auto text-center p-8 bg-white rounded-xl shadow-elegant">
             <div className="w-16 h-16 mx-auto mb-4 bg-destructive/10 rounded-full flex items-center justify-center">
