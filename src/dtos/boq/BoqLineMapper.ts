@@ -158,6 +158,7 @@ export class BoqLineMapper {
       documentId: row.document_id ?? null,
       title: (row.metadata as { title?: string } | null)?.title ?? null,
       createdAt: row.created_at ?? null,
+      updatedAt: row.updated_at ?? null,
     };
   }
 
