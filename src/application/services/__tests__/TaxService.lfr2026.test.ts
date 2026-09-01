@@ -37,7 +37,7 @@ describe('TaxService — LFR 2026', () => {
     const res = TaxService.checkDeductibility({
       supplierNif: 'MR12345678',
       supplierNifStatus: 'active',
-      amount: 300000,
+      amount: 600000,
       paymentMethod: 'especes',
       hasNormalizedInvoice: false,
     });
