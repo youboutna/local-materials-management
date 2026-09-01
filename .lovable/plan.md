@@ -1,9 +1,11 @@
 # Compléter l’import projet et ses sous-objets
 
 ## Objectif
+
 Rendre l’import JSON réellement complet et idempotent : les champs projet et les relations présentes dans le fichier doivent être persistés puis relus, sans succès partiel silencieux.
 
 ## Corrections
+
 1. **Normalisation unique du dataset**
    - Conserver aussi bien les projets plats que les enveloppes `{ project, phases, milestones, tasks, dqeLines, stakeholders, interventionZones }`.
    - Normaliser les alias (`projectReference`/`reference`, `name`/`title`, dates, budgets) avant validation et persistance.
@@ -24,6 +26,3 @@ Rendre l’import JSON réellement complet et idempotent : les champs projet et 
 5. **Preuve de non-régression**
    - Ajouter des tests ciblés sur l’enveloppe imbriquée, la référence projet, les relations et les champs DQE enrichis.
    - Exécuter les tests du service et vérifier le build de prévisualisation.
-
-## Limite constatée sur le fichier joint
-Le fichier `import_2d3dtech-json.json` fourni dans ce message contient 8 projets plats mais aucune collection `phases`, `milestones`, `tasks`, `dqeLines`, `stakeholders` ou `interventionZones` sous ces projets. L’import corrigé persistera intégralement ces collections lorsqu’elles existent, mais ne peut pas inventer celles absentes du fichier source.
