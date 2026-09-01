@@ -26,6 +26,7 @@ import ProjectBudgetTracking from "@/components/project/ProjectBudgetTracking";
 import ProjectDqeTab from "@/components/project/ProjectDqeTab";
 import ProjectMetricsPanel from "@/components/project/ProjectMetricsPanel";
 import ProjectResourcesContainer from "@/components/project/resources/ProjectResourcesContainer";
+import ProjectScaffoldCard from "@/components/project/ProjectScaffoldCard";
 import ProjectConsultantDesignation from "@/components/project/stakeholders/ProjectConsultantDesignation";
 
 import { getActualCostService } from "@/application/services/ActualCostService";
