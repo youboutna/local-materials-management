@@ -263,7 +263,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
-        <CardHeader className="flex flex-col gap-3 border-b bg-muted/20">
+        <CardHeader className="flex flex-col gap-2 border-b bg-muted/20 py-3">
           {/* Zone 1 — retour + titre du document · Zone 2 — barre de progression compacte. */}
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => selectDocument(null)}>
@@ -282,28 +282,7 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             </div>
           </div>
 
-          {/* Barre de contexte : traçabilité permanente projet / document / parties. */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {props.projectName && (
-              <Badge variant="outline">
-                <T k="dqe.context.project" fallback="Projet" />&nbsp;: {props.projectName}
-              </Badge>
-            )}
-            <Badge variant="outline">
-              <T k="dqe.context.doc_number" fallback="N° document" />&nbsp;: {(selectedDocumentId ?? '').slice(0, 12).toUpperCase()}
-            </Badge>
-            <Badge variant="outline">
-              <T k="dqe.context.lines" fallback="Lignes" />&nbsp;: {actionableLines.length}
-            </Badge>
-            {props.recipientEmail && (
-              <Badge variant="outline">
-                <T k="dqe.context.recipient" fallback="Destinataire" />&nbsp;: {props.recipientEmail}
-              </Badge>
-            )}
-          </div>
-
-
-          {/* Barre unique : G1 actions principales · G2 workflow · G3 badges. */}
+          {/* Barre unique : contexte + badges à gauche · actions à droite. */}
           <BoqActionsBar
             ctx={ctx}
             lines={actionableLines}
@@ -314,7 +293,28 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             onSubmitInvoice={props.onSubmitInvoice}
             onDistribute={props.onDistribute}
             onPublish={props.onPublish}
+            contextSlot={
+              <>
+                {props.projectName && (
+                  <Badge variant="outline" className="max-w-[18rem] truncate" title={props.projectName}>
+                    <T k="dqe.context.project" fallback="Projet" />&nbsp;: {props.projectName}
+                  </Badge>
+                )}
+                <Badge variant="outline">
+                  <T k="dqe.context.doc_number" fallback="N° document" />&nbsp;: {(selectedDocumentId ?? '').slice(0, 12).toUpperCase()}
+                </Badge>
+                <Badge variant="outline">
+                  <T k="dqe.context.lines" fallback="Lignes" />&nbsp;: {actionableLines.length}
+                </Badge>
+                {props.recipientEmail && (
+                  <Badge variant="outline" className="hidden max-w-[14rem] truncate md:inline-flex">
+                    <T k="dqe.context.recipient" fallback="Destinataire" />&nbsp;: {props.recipientEmail}
+                  </Badge>
+                )}
+              </>
+            }
             badgesSlot={
+
               consistency.report ? (
                 <>
                   <Badge variant={consistency.report.planningFed ? 'secondary' : 'outline'}>
