@@ -28,8 +28,8 @@ import { T } from '@/components/i18n/T';
 
 const MainNavbar = () => {
   const { language, setLanguage, t } = useLanguage();
-  const { user: authUser, signOut } = useAuth();
-  const { user: keycloakUser, isAuthenticated, logout } = useAuth();
+  const { user: authUser, isAuthenticated, logout, signOut } = useAuth();
+
   const { hasRole, hasAnyRole } = useCurrentUserRoles();
 
   // DEV_MODE uses local credentials but still requires an authenticated session.
@@ -51,7 +51,7 @@ const MainNavbar = () => {
       if (authUser) {
         await signOut();
       }
-      if (keycloakUser || isAuthenticated) {
+      if (authUser || isAuthenticated) {
         logout();
       }
     } catch (error) {
