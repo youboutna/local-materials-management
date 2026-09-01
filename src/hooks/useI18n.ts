@@ -18,6 +18,7 @@ export const useI18n = () => {
 
   return useMemo(() => {
     const service = getI18nService();
+    const geoService = getGeoLocationLabelService();
     service.setLanguage(lang);
 
     /** Locale BCP-47 dérivée de la langue UI courante (jamais figée sur fr-FR). */
