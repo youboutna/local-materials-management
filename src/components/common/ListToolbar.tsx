@@ -31,6 +31,9 @@ interface ListToolbarProps {
   resultCount?: number;
   onReset?: () => void;
   className?: string;
+  isLoading?: boolean;
+  presetsKey?: string;
+  syncUrl?: boolean;
 }
 
 export function ListToolbar({
@@ -43,7 +46,11 @@ export function ListToolbar({
   resultCount,
   onReset,
   className,
+  isLoading,
+  presetsKey,
+  syncUrl,
 }: ListToolbarProps) {
+
   const { t } = useLanguage();
 
   const filters = useMemo<CompactFilterField[]>(() => {
