@@ -71,6 +71,7 @@ export interface BoqDbRow {
   document_id?: string | null;
   metadata?: Record<string, unknown> | null;
   created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export const BOQ_LINE_TYPE_BY_SOURCE: Record<BoqSource, BoqDbRow['line_type']> = {
@@ -157,6 +158,7 @@ export class BoqLineMapper {
       documentId: row.document_id ?? null,
       title: (row.metadata as { title?: string } | null)?.title ?? null,
       createdAt: row.created_at ?? null,
+      updatedAt: row.updated_at ?? null,
     };
   }
 

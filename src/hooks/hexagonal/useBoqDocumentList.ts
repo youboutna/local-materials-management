@@ -28,7 +28,9 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
     if (statuses.size === 1) status = [...statuses][0] as BoqDocumentSummary['status'];
     else status = 'mixed';
     const totalHt = group.reduce((s, l) => s + (l.totalHt ?? 0), 0);
+    const totalVat = group.reduce((s, l) => s + (l.totalHt ?? 0) * (l.vatRate ?? 0), 0);
     const createdAt = group.map((g) => g.createdAt ?? '').sort()[0] ?? '';
+    const updatedAt = group.map((g) => g.updatedAt ?? g.createdAt ?? '').sort().reverse()[0] ?? '';
     const title = group.find((g) => g.title)?.title ?? '';
     const readOnly = group.some((line) => {
       const metadata = line.metadata as {
@@ -45,8 +47,11 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
       title,
       status,
       totalHt,
+      totalVat,
+      totalTtc: totalHt + totalVat,
       lineCount: group.length,
       createdAt,
+      updatedAt,
       readOnly,
     });
   }

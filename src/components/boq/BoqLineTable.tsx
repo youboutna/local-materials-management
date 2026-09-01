@@ -40,7 +40,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
 const UNITS = DQE_UNIT_CODES;
-const DATA_COLS = 18;
+const DATA_COLS = 20;
 const TAX_REGIMES_OPTIONS = TaxService.listRegimes();
 const RESOURCE_TYPES: { value: BoqResourceType; label: string }[] = [
   { value: 'material', label: 'Métré / matériau' },
@@ -79,7 +79,11 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
   const milestoneOf = (phaseId?: string | null, milestoneId?: string | null) => phaseOf(phaseId)?.milestones.find((m) => m.id === milestoneId);
   const taskOf = (phaseId?: string | null, milestoneId?: string | null, taskId?: string | null) => milestoneOf(phaseId, milestoneId)?.tasks.find((t) => t.id === taskId);
   const lineTotal = (l: BoqLineDTO) => l.totalHt || ((l.quantity || 0) * (l.unitPrice ?? 0) + (l.fees ?? 0));
+  const lineVat = (l: BoqLineDTO) => lineTotal(l) * (l.vatRate ?? 0);
+  const lineTtc = (l: BoqLineDTO) => lineTotal(l) + lineVat(l);
   const total = lines.reduce((acc, l) => acc + lineTotal(l), 0);
+  const totalVat = lines.reduce((acc, l) => acc + lineVat(l), 0);
+  const totalTtc = total + totalVat;
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => {
     const next: Partial<BoqLineDTO> = { ...p };
@@ -107,6 +111,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12 text-right">N°</TableHead>
               <TableHead className="min-w-[240px]"><T k="auto.boqlinetable.designation" fallback="Désignation" /></TableHead>
               <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.phase" fallback="Phase" /></TableHead>
               <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.jalon" fallback="Jalon" /></TableHead>
@@ -125,6 +130,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               <TableHead className="text-right"><T k="auto.boqlinetable.ras" fallback="RAS %" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.frais" fallback="Frais" /></TableHead>
               <TableHead className="text-right"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableHead>
+              <TableHead className="text-right"><T k="dqe.line.total_ttc" fallback="Total TTC" /></TableHead>
               {hasActions && <TableHead className="w-8" />}
             </TableRow>
           </TableHeader>
@@ -143,6 +149,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               const task = taskOf(l.phaseId, l.milestoneId, l.taskId);
               return (
                 <TableRow key={l.id ?? `row-${i}`}>
+                  <TableCell className="text-right text-xs text-muted-foreground">{i + 1}</TableCell>
                   <TableCell>{editable ? <Input value={l.designation} onChange={(e) => patch(i, { designation: e.target.value })} className="h-8 min-w-[220px]" /> : <span className="font-medium">{l.designation}</span>}</TableCell>
                   <TableCell>{editable ? <Select value={l.phaseId ?? NONE} onValueChange={(v) => patch(i, { phaseId: v === NONE ? null : v, milestoneId: null, taskId: null })}><SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{phases.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}</SelectContent></Select> : phase ? <Badge variant="secondary">{phase.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
                   <TableCell>{editable ? <Select value={l.milestoneId ?? NONE} onValueChange={(v) => patch(i, { milestoneId: v === NONE ? null : v, taskId: null })} disabled={!l.phaseId}><SelectTrigger className="h-8"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{milestones.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}</SelectContent></Select> : milestone ? <Badge variant="outline">{milestone.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
@@ -180,11 +187,33 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                   <TableCell className="text-right">{editable ? <Input type="number" step={0.01} value={l.rasRate ?? 0} onChange={(e) => patch(i, { rasRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.rasRate ?? 0) * 100).toFixed(0)}%`}</TableCell>
                   <TableCell className="text-right">{editable ? <Input type="number" value={l.fees ?? 0} onChange={(e) => patch(i, { fees: Number(e.target.value) || 0 })} className="h-8 w-24 text-right" /> : fmt(l.fees ?? 0)}</TableCell>
                   <TableCell className="text-right font-medium">{fmt(lineTotal(l))}</TableCell>
+                  <TableCell className="text-right font-semibold">{fmt(lineTtc(l))}</TableCell>
                   {hasActions && <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne"><Trash2 className="h-4 w-4" /></Button></TableCell>}
                 </TableRow>
               );
             })}
-            {lines.length > 0 && <TableRow><TableCell colSpan={DATA_COLS - 1} className="text-right font-semibold"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableCell><TableCell className="text-right font-bold">{fmt(total)}</TableCell>{hasActions && <TableCell />}</TableRow>}
+            {lines.length > 0 && (
+              <>
+                <TableRow>
+                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableCell>
+                  <TableCell className="text-right font-bold">{fmt(total)}</TableCell>
+                  <TableCell />
+                  {hasActions && <TableCell />}
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_vat" fallback="Total TVA" /></TableCell>
+                  <TableCell className="text-right font-bold">{fmt(totalVat)}</TableCell>
+                  <TableCell />
+                  {hasActions && <TableCell />}
+                </TableRow>
+                <TableRow className="bg-muted/40">
+                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_ttc" fallback="Total TTC" /></TableCell>
+                  <TableCell />
+                  <TableCell className="text-right font-bold">{fmt(totalTtc)}</TableCell>
+                  {hasActions && <TableCell />}
+                </TableRow>
+              </>
+            )}
           </TableBody>
         </Table>
       </div>
