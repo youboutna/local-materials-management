@@ -73,6 +73,12 @@ export interface LineTaxResult extends ResolvedLineTax {
   vatAmount: number;
   rasAmount: number;
   totalTtc: number;
+  /** Vrai si la ligne relève des services numériques (LFR 2026). */
+  isDigitalService: boolean;
+  /** Contrôle de déductibilité (NIF, espèces, facture normalisée). */
+  deductibility: DeductibilityResult;
+  /** Version du corpus fiscal appliqué. */
+  fiscalReferenceCode: string;
 }
 
 export interface FiscalProfileHints {
