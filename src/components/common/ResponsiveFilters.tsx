@@ -78,6 +78,12 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
   inlineExtra,
   trailing,
   sticky = true,
+  isLoading,
+  onGoToFirstResult,
+  presetsKey,
+  syncUrl,
+  urlNamespace,
+
 }) => {
   const compactFilters = useMemo<CompactFilterField[]>(
     () =>
