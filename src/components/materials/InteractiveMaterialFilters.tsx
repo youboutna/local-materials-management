@@ -3,6 +3,7 @@ import ResponsiveFilters, { FilterField } from '@/components/common/ResponsiveFi
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useI18n } from '@/hooks/useI18n';
 
 interface InteractiveMaterialFiltersProps {
   searchTerm: string;
@@ -38,6 +39,8 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
   gpsCount
 }) => {
   const { t } = useLanguage();
+  // Libellés wilaya résolus depuis le référentiel géographique (codes techniques)
+  const { translateGeo, translateCategory } = useI18n();
   const filters: FilterField[] = [
     {
       key: 'category',
@@ -45,7 +48,7 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
       placeholder: t('auto.interactivematerialfilters.toutes_les_categories'),
       value: selectedCategory,
       onChange: onCategoryChange,
-      options: categories.map(category => ({ value: category, label: category }))
+      options: categories.map(category => ({ value: category, label: translateCategory(category) }))
     },
     {
       key: 'region',
@@ -53,7 +56,7 @@ const InteractiveMaterialFilters: React.FC<InteractiveMaterialFiltersProps> = ({
       placeholder: t('auto.interactivematerialfilters.toutes_les_regions'),
       value: selectedRegion,
       onChange: onRegionChange,
-      options: regions.map(region => ({ value: region, label: region }))
+      options: regions.map(region => ({ value: region, label: translateGeo(region) }))
     },
     {
       key: 'stockLevel',

@@ -9,6 +9,8 @@ import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getI18nService } from '@/application/services/I18nService';
 import type { ReferentialLanguage } from '@/config/referentials/i18n/status-labels.referential';
+import { getGeoLocationLabelService, type GeoResolvableInput } from '@/application/services/geo/GeoLocationLabelService';
+import type { GeoAdminLevel } from '@/config/referentials/geo/mauritania-geo.referential';
 
 export const useI18n = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -16,6 +18,7 @@ export const useI18n = () => {
 
   return useMemo(() => {
     const service = getI18nService();
+    const geoService = getGeoLocationLabelService();
     service.setLanguage(lang);
 
     /** Locale BCP-47 dérivée de la langue UI courante (jamais figée sur fr-FR). */
@@ -58,6 +61,19 @@ export const useI18n = () => {
       translateDocumentType: (code?: string | null) => service.translateDocumentType(code, lang),
       translateDepartment: (code?: string | null) => service.translateDepartment(code, lang),
       translateTerm: (code?: string | null) => service.translateTerm(code, lang),
+
+      // ── Géographie (référentiel Mauritanie : codes techniques uniques) ──
+      translateGeo: (code?: string | null) => geoService.translate(code, lang),
+      translateGeoLevel: (level: GeoAdminLevel) => geoService.translateLevel(level, lang),
+      geoRegionOptions: () => geoService.listRegionOptions(lang),
+      geoCityOptions: (regionCode?: string | null) => geoService.listCityOptions(regionCode, lang),
+      geoRegionOptionsFrom: (inputs: (GeoResolvableInput | null | undefined)[]) =>
+        geoService.listRegionOptionsFrom(inputs, lang),
+      resolveRegionCode: (input?: GeoResolvableInput | null) => geoService.resolveRegionCode(input),
+      resolveCityCode: (input?: GeoResolvableInput | null) => geoService.resolveCityCode(input),
+      matchesRegion: (input: GeoResolvableInput | null | undefined, regionCode: string) =>
+        geoService.matchesRegion(input, regionCode),
+      formatLocationLabel: (input?: GeoResolvableInput | null) => geoService.formatLocationLabel(input, lang),
     };
     // `t` et `setLanguage` sont recréés à chaque rendu du provider : la langue
     // suffit comme clé de mémoïsation (les fonctions restent fonctionnellement stables).

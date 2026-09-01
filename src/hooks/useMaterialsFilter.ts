@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { MaterialUIDTO } from '@/dtos/transforms';
+import { getGeoLocationLabelService } from '@/application/services/geo/GeoLocationLabelService';
+
+const geoService = getGeoLocationLabelService();
 
 export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,10 +67,15 @@ export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
     [materials]
   );
   
-  const regions = useMemo(() => 
-    Array.from(new Set(materials.map((m) => m.originLocation).filter(Boolean))) as string[],
+  /**
+   * Wilayas présentes dans le stock matériaux, exposées en **codes techniques**
+   * (référentiel Mauritanie) : plus de filtre sur le texte libre `originLocation`.
+   */
+  const regionOptions = useMemo(
+    () => geoService.listRegionOptionsFrom(materials as unknown as Record<string, unknown>[], 'fr'),
     [materials]
   );
+  const regions = useMemo(() => regionOptions.map((option) => option.code), [regionOptions]);
   
   // Get stock level for material
   const getStockLevel = (available: number) => {
@@ -107,7 +115,10 @@ export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
       }
 
       // Region filter
-      if (selectedRegion !== "all" && material.originLocation !== selectedRegion) {
+      if (
+        selectedRegion !== "all" &&
+        !geoService.matchesRegion(material as unknown as Record<string, unknown>, selectedRegion)
+      ) {
         return false;
       }
 
@@ -173,6 +184,7 @@ export const useMaterialsFilter = (materials: MaterialUIDTO[]) => {
     categories,
     localTypes,
     regions,
+    regionOptions,
     
     // Helper functions
     getStockLevel,

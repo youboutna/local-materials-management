@@ -1,15 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Filter, MapPin, DollarSign, Target } from 'lucide-react';
 import { ProjectData } from '@/dtos/entities/ProjectDTO';
-import { MAURITANIA_REGIONS, GeographicUnit } from '@/utils/mauritania';
-import { isLocationInRegion, findRegionByLocation } from '@/utils/mauritaniaUtils';
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
+import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
 
 interface InteractiveMapFiltersProps {
@@ -17,51 +15,61 @@ interface InteractiveMapFiltersProps {
   onFiltersChange: (filteredProjects: ProjectData[]) => void;
 }
 
+const LAT_BOUNDS: [number, number] = [10, 30];
+const LNG_BOUNDS: [number, number] = [-25, 0];
+
 const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
   projects,
   onFiltersChange
 }) => {
+  const { translateStatus, translateGeo, geoRegionOptionsFrom, matchesRegion } = useI18n();
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 100000000]);
-  const [gpsLatRange, setGpsLatRange] = useState<[number, number]>([10, 30]);
-  const [gpsLngRange, setGpsLngRange] = useState<[number, number]>([-25, 0]);
+  const [budgetRange, setBudgetRange] = useState<[number, number] | null>(null);
+  const [gpsLatRange, setGpsLatRange] = useState<[number, number]>(LAT_BOUNDS);
+  const [gpsLngRange, setGpsLngRange] = useState<[number, number]>(LNG_BOUNDS);
 
-  // Get unique statuses from projects
-  const availableStatuses = [...new Set(projects.map(p => p.status))];
-  
-  // Get budget range from projects
-  const budgets = projects.map(p => p.budget);
-  const minBudget = Math.min(...budgets);
-  const maxBudget = Math.max(...budgets);
+  // Statuts disponibles = codes techniques, libellés résolus par référentiel
+  const availableStatuses = useMemo(
+    () => Array.from(new Set(projects.map(p => p.status).filter(Boolean))) as string[],
+    [projects],
+  );
+
+  // Wilayas réellement représentées (codes techniques uniques)
+  const regionOptions = useMemo(
+    () => geoRegionOptionsFrom(projects as unknown as Record<string, unknown>[]),
+    [projects, geoRegionOptionsFrom],
+  );
+
+  const budgets = useMemo(() => projects.map(p => p.budget ?? 0), [projects]);
+  const minBudget = budgets.length ? Math.min(...budgets) : 0;
+  const maxBudget = budgets.length ? Math.max(...budgets) : 0;
+  const effectiveBudget: [number, number] = budgetRange ?? [minBudget, maxBudget];
 
   const applyFilters = useCallback(() => {
     const filtered = projects.filter(project => {
-      // Region filter
-      if (selectedRegion !== 'all' && project.location) {
-        const region = MAURITANIA_REGIONS.find(r => r.code === selectedRegion);
-        if (region) {
-          return isLocationInRegion(project.location, region);
-        }
+      // Filtre wilaya : comparaison par code technique (jamais par libellé)
+      if (selectedRegion !== 'all' && !matchesRegion(project as unknown as Record<string, unknown>, selectedRegion)) {
+        return false;
       }
 
-      // Status filter
       if (selectedStatus !== 'all' && project.status !== selectedStatus) {
         return false;
       }
 
-      // Budget filter
-      if (project.budget < budgetRange[0] || project.budget > budgetRange[1]) {
+      const budget = project.budget ?? 0;
+      if (budget < effectiveBudget[0] || budget > effectiveBudget[1]) {
         return false;
       }
 
-      // GPS coordinates filter
       const coords = getProjectCoordinates(project);
       if (coords) {
-        if (coords.latitude < gpsLatRange[0] || 
-            coords.latitude > gpsLatRange[1] ||
-            coords.longitude < gpsLngRange[0] || 
-            coords.longitude > gpsLngRange[1]) {
+        if (
+          coords.latitude < gpsLatRange[0] ||
+          coords.latitude > gpsLatRange[1] ||
+          coords.longitude < gpsLngRange[0] ||
+          coords.longitude > gpsLngRange[1]
+        ) {
           return false;
         }
       }
@@ -69,20 +77,28 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
       return true;
     });
     onFiltersChange(filtered);
-  }, [selectedRegion, selectedStatus, budgetRange, gpsLatRange, gpsLngRange, projects]);
+  }, [
+    projects,
+    selectedRegion,
+    selectedStatus,
+    effectiveBudget,
+    gpsLatRange,
+    gpsLngRange,
+    matchesRegion,
+    onFiltersChange,
+  ]);
 
   const resetFilters = () => {
     setSelectedRegion('all');
     setSelectedStatus('all');
-    setBudgetRange([minBudget, maxBudget]);
-    setGpsLatRange([10, 30]);
-    setGpsLngRange([-25, 0]);
-    onFiltersChange(projects);
+    setBudgetRange(null);
+    setGpsLatRange(LAT_BOUNDS);
+    setGpsLngRange(LNG_BOUNDS);
   };
 
   React.useEffect(() => {
     applyFilters();
-  }, [applyFilters, selectedRegion, selectedStatus, budgetRange, gpsLatRange, gpsLngRange, projects, onFiltersChange]);
+  }, [applyFilters]);
 
   return (
     <Card className="bg-gradient-to-br from-card via-card/90 to-muted/20 backdrop-blur-sm border-border/50">
@@ -94,68 +110,73 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Region Filter */}
+          {/* Wilaya */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary" />
-              <T k="auto.interactivemapfilters.region" fallback="Région" />
+              <T k="auto.interactivemapfilters.region" fallback="Wilaya" />
             </Label>
             <Select value={selectedRegion} onValueChange={setSelectedRegion}>
               <SelectTrigger>
-                <SelectValue placeholder="Toutes les régions" />
+                <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all"><T k="auto.interactivemapfilters.toutes_les_regions" fallback="Toutes les régions" /></SelectItem>
-                {MAURITANIA_REGIONS.map((region) => (
-                  <SelectItem key={region.code} value={region.code}>
-                    {region.name}
+              <SelectContent className="max-h-60">
+                <SelectItem value="all"><T k="auto.interactivemapfilters.toutes_les_regions" fallback="Toutes les wilayas" /></SelectItem>
+                {regionOptions.map((option) => (
+                  <SelectItem key={option.code} value={option.code}>
+                    <span className="flex items-center gap-2">
+                      <span>{option.label}</span>
+                      {option.secondaryLabel && (
+                        <span className="text-xs text-muted-foreground">{option.secondaryLabel}</span>
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Status Filter */}
+          {/* Statut */}
           <div className="space-y-2">
             <Label><T k="auto.interactivemapfilters.statut" fallback="Statut" /></Label>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger>
-                <SelectValue placeholder="Tous les statuts" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all"><T k="auto.interactivemapfilters.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
                 {availableStatuses.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {status}
+                    {translateStatus(status)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Budget Range */}
+          {/* Budget */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
-                 <DollarSign className="h-4 w-4 text-success" />
+              <DollarSign className="h-4 w-4 text-success" />
               <T k="auto.interactivemapfilters.budget_mru" fallback="Budget (MRU)" />
             </Label>
             <div className="px-2">
               <Slider
-                value={budgetRange}
+                value={effectiveBudget}
                 onValueChange={(value) => setBudgetRange(value as [number, number])}
                 min={minBudget}
-                max={maxBudget}
-                step={1000000}
+                max={Math.max(maxBudget, minBudget + 1)}
+                step={Math.max(1, Math.round((maxBudget - minBudget) / 100) || 1)}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>{(budgetRange[0] / 1000000).toFixed(1)}M</span>
-                <span>{(budgetRange[1] / 1000000).toFixed(1)}M</span>
+                <span>{(effectiveBudget[0] / 1_000_000).toFixed(1)}M</span>
+                <span>{(effectiveBudget[1] / 1_000_000).toFixed(1)}M</span>
               </div>
             </div>
           </div>
 
-          {/* Reset Button */}
+          {/* Reset */}
           <div className="space-y-2">
             <Label>&nbsp;</Label>
             <Button variant="outline" onClick={resetFilters} className="w-full">
@@ -164,19 +185,19 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
           </div>
         </div>
 
-        {/* GPS Coordinates Filter */}
+        {/* Coordonnées GPS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/50">
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
-              Latitude ({gpsLatRange[0].toFixed(2)}° à {gpsLatRange[1].toFixed(2)}°)
+              Latitude ({gpsLatRange[0].toFixed(2)}° → {gpsLatRange[1].toFixed(2)}°)
             </Label>
             <div className="px-2">
               <Slider
                 value={gpsLatRange}
                 onValueChange={(value) => setGpsLatRange(value as [number, number])}
-                min={10}
-                max={30}
+                min={LAT_BOUNDS[0]}
+                max={LAT_BOUNDS[1]}
                 step={0.1}
                 className="w-full"
               />
@@ -186,20 +207,26 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
-              Longitude ({gpsLngRange[0].toFixed(2)}° à {gpsLngRange[1].toFixed(2)}°)
+              Longitude ({gpsLngRange[0].toFixed(2)}° → {gpsLngRange[1].toFixed(2)}°)
             </Label>
             <div className="px-2">
               <Slider
                 value={gpsLngRange}
                 onValueChange={(value) => setGpsLngRange(value as [number, number])}
-                min={-25}
-                max={0}
+                min={LNG_BOUNDS[0]}
+                max={LNG_BOUNDS[1]}
                 step={0.1}
                 className="w-full"
               />
             </div>
           </div>
         </div>
+
+        {selectedRegion !== 'all' && (
+          <p className="text-xs text-muted-foreground">
+            {translateGeo(selectedRegion)} · {translateGeo('MR')}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

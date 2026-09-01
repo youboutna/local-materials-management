@@ -1,28 +1,18 @@
-import { useI18n } from '@/hooks/useI18n';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { MapLocation } from '@/domain/entities/Location';
-import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { MAURITANIA_REGIONS, MAURITANIA_CITIES, GeographicUnit, Region, City } from '@/utils/mauritania';
-import { 
-  isLocationInRegion, 
-  findRegionByLocation, 
-  getCitiesByWilaya, 
-  getWilayaByCode,
-  getWilayaCapital,
-  searchRegions,
-  searchCities
-} from '@/utils/mauritaniaUtils';
-import { MapPin, Filter, Building, Users } from 'lucide-react';
+import { MapPin, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
 
 interface MapFiltersProps {
@@ -30,111 +20,45 @@ interface MapFiltersProps {
   onFilterChange: (filteredLocations: MapLocation[]) => void;
 }
 
-
-
 const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
+  const { translateStatus, translateGeo, geoRegionOptionsFrom, matchesRegion, formatLocationLabel } = useI18n();
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const { translateStatus } = useI18n();
   const [regionFilter, setRegionFilter] = useState<string>('all');
 
-  // Get unique statuses from locations
-  const availableStatuses = React.useMemo(() => {
-    const statuses = new Set<string>();
-    locations.forEach(location => {
-      if (location.status) {
-        statuses.add(location.status);
-      }
-    });
-    return Array.from(statuses);
-  }, [locations]);
+  // Codes de statut présents (libellés résolus par référentiel)
+  const availableStatuses = useMemo(
+    () => Array.from(new Set(locations.map(l => l.status).filter(Boolean))) as string[],
+    [locations],
+  );
 
-  // Get budget range from projects
-  const budgets = locations.map(p => p.budget ?? 0);
-  const minBudget = Math.min(...budgets);
-  const maxBudget = Math.max(...budgets);
-
-  // Enhanced location matching using Mauritania utilities
-  const matchesLocation = useCallback((itemLocation: string, selectedRegionCode: string): boolean => {
-    if (!itemLocation || selectedRegionCode === 'all') return true;
-    
-    const selectedRegion = getWilayaByCode(selectedRegionCode);
-    if (!selectedRegion) return false;
-    
-    // 1. Direct region matching using utility function
-    if (isLocationInRegion(itemLocation, selectedRegion)) {
-      return true;
-    }
-    
-    // 2. Check if item location matches any city in the selected region
-    const citiesInRegion = getCitiesByWilaya(selectedRegionCode);
-    const cityMatch = citiesInRegion.some(city => {
-      const cityNameMatch = itemLocation.toLowerCase().includes(city.name.toLowerCase()) ||
-                           city.name.toLowerCase().includes(itemLocation.toLowerCase()) ||
-                           itemLocation.toLowerCase().includes(city.nameAr.toLowerCase()) ||
-                           city.nameAr.toLowerCase().includes(itemLocation.toLowerCase());
-      
-      // Check search terms if available
-      if (city.searchTerms) {
-        const searchMatch = city.searchTerms.some(term => 
-          itemLocation.toLowerCase().includes(term.toLowerCase()) ||
-          term.toLowerCase().includes(itemLocation.toLowerCase())
-        );
-        return cityNameMatch || searchMatch;
-      }
-      
-      return cityNameMatch;
-    });
-    
-    if (cityMatch) return true;
-    
-    // 3. Fallback: search for any region that matches the item location
-    const matchingRegions = searchRegions(itemLocation);
-    return matchingRegions.some(region => region.code === selectedRegionCode);
-  }, []);
-  
-  // Get region statistics for enhanced UI
-  const regionStats = useMemo(() => {
-    return MAURITANIA_REGIONS.map(region => {
-      const cities = getCitiesByWilaya(region.code);
-      const capital = getWilayaCapital(region.code);
-      return {
-        ...region,
-        cityCount: cities.length,
-        hasCapital: !!capital,
-        capitalName: capital?.name || 'N/A'
-      };
-    });
-  }, []);
-  
-  // Get available regions based on current locations
-  const availableRegions = useMemo(() => {
-    const regionCodes = new Set<string>();
-    locations.forEach(location => {
-      if (location.region) {
-        const matchedRegion = findRegionByLocation(location.region);
-        if (matchedRegion) {
-          regionCodes.add(matchedRegion.code);
-        }
-      }
-    });
-    return MAURITANIA_REGIONS.filter(region => regionCodes.has(region.code));
-  }, [locations]);
+  // Wilayas présentes, résolues par code technique depuis n'importe quel champ
+  const regionOptions = useMemo(
+    () => geoRegionOptionsFrom(locations as unknown as Record<string, unknown>[]),
+    [locations, geoRegionOptionsFrom],
+  );
 
   const filteredLocations = useMemo(() => {
-    let filtered = locations;
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(item => item.status === statusFilter);
-    }
-    if (regionFilter !== 'all') {
-      filtered = filtered.filter(item => matchesLocation(item.region || '', regionFilter));
-    }
-    return filtered;
-  }, [locations, statusFilter, regionFilter, matchesLocation]);
+    return locations.filter(item => {
+      if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+      if (regionFilter !== 'all' && !matchesRegion(item as unknown as Record<string, unknown>, regionFilter)) return false;
+      return true;
+    });
+  }, [locations, statusFilter, regionFilter, matchesRegion]);
 
-  // Apply filters and update the parent component
   useEffect(() => {
     onFilterChange(filteredLocations);
   }, [filteredLocations, onFilterChange]);
+
+  const statusDotClass = (status: string) => {
+    const code = status.toLowerCase();
+    if (code.includes('cours')) return 'bg-blue-500';
+    if (code.includes('termin') || code.includes('completed')) return 'bg-success';
+    if (code.includes('attente') || code.includes('pending')) return 'bg-yellow-500';
+    if (code.includes('inspect')) return 'bg-purple-500';
+    if (code.includes('suspend')) return 'bg-orange-500';
+    if (code.includes('annul') || code.includes('cancel')) return 'bg-destructive';
+    return 'bg-muted-foreground';
+  };
 
   return (
     <Card className="mb-6 shadow-md">
@@ -143,238 +67,112 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
           <Filter className="h-5 w-5 text-muted-foreground" />
           <h3 className="text-lg font-medium"><T k="auto.mapfilters.filtres_de_la_carte" fallback="Filtres de la carte" /></h3>
           <Badge variant="secondary" className="ml-auto">
-            {locations.length} projet{locations.length > 1 ? 's' : ''}
+            {filteredLocations.length} / {locations.length}
           </Badge>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Statut */}
           <div className="space-y-2">
-            <Label htmlFor="status-filter" className="text-sm font-medium flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <Label htmlFor="status-filter" className="text-sm font-medium">
               <T k="auto.mapfilters.statut_du_projet" fallback="Statut du projet" />
             </Label>
-            <Select 
-              value={statusFilter} 
-              onValueChange={setStatusFilter}
-            >
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger id="status-filter" className="w-full">
-                <SelectValue placeholder="Filtrer par statut" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <T k="auto.mapfilters.tous_les_statuts" fallback="Tous les statuts" />
-                  </div>
+                  <T k="auto.mapfilters.tous_les_statuts" fallback="Tous les statuts" />
                 </SelectItem>
                 {availableStatuses.map(status => (
                   <SelectItem key={status} value={status}>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${
-                        status === 'en cours' ? 'bg-blue-500' :
-                        status === 'terminé' ? 'bg-success' :
-                        status === 'en attente' ? 'bg-yellow-500' :
-                        status === 'en inspection' ? 'bg-purple-500' :
-                        status === 'suspendu' ? 'bg-orange-500' :
-                        status === 'annulé' ? 'bg-red-500' : 'bg-gray-500'
-                      }`}></div>
+                    <span className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${statusDotClass(status)}`} />
                       {translateStatus(status)}
-                    </div>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {statusFilter !== 'all' && (
-              <p className="text-xs text-muted-foreground">
-                Filtré par: {statusFilter}
-              </p>
-            )}
           </div>
-          
+
+          {/* Wilaya (code technique + libellé multilingue) */}
           <div className="space-y-2">
             <Label htmlFor="region-filter" className="text-sm font-medium flex items-center gap-2">
               <MapPin className="h-4 w-4 text-success" />
-              Région/Wilaya
+              <T k="auto.mapfilters.region_wilaya" fallback="Wilaya" />
             </Label>
-            <Select 
-              value={regionFilter} 
-              onValueChange={(value) => {
-                console.log('MapFilters - Region filter changed to:', value);
-                setRegionFilter(value);
-              }}
-            >
+            <Select value={regionFilter} onValueChange={setRegionFilter}>
               <SelectTrigger id="region-filter" className="w-full">
-                <SelectValue placeholder="Filtrer par région" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-60 overflow-y-auto">
                 <SelectItem value="all">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-3 w-3 text-muted-foreground" />
-                    <T k="auto.mapfilters.toutes_les_regions" fallback="Toutes les régions" />
-                  </div>
+                  <T k="auto.mapfilters.toutes_les_regions" fallback="Toutes les wilayas" />
                 </SelectItem>
-                {availableRegions.map(region => {
-                  const stats = regionStats.find(s => s.code === region.code);
-                  return (
-                    <SelectItem key={region.code} value={region.code}>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-3 w-3 text-success" />
-                          <span className="font-medium">{region.name}</span>
-                          {region.economicImportance === 'capital' && (
-                            <Badge variant="secondary" className="text-xs px-1"><T k="auto.mapfilters.capitale" fallback="Capitale" /></Badge>
-                          )}
-                          {region.economicImportance === 'economic' && (
-                            <Badge variant="secondary" className="text-xs px-1"><T k="auto.mapfilters.economique" fallback="Économique" /></Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground pl-5">
-                          <span>{region.nameAr}</span>
-                          {stats && (
-                            <>
-                              <span>•</span>
-                              <span>{stats.cityCount} villes</span>
-                              {stats.hasCapital && (
-                                <>
-                                  <span>•</span>
-                                  <span>Cap: {stats.capitalName}</span>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
+                {regionOptions.map(option => (
+                  <SelectItem key={option.code} value={option.code}>
+                    <span className="flex items-center gap-2">
+                      <span className="font-medium">{option.label}</span>
+                      {option.secondaryLabel && (
+                        <span className="text-xs text-muted-foreground">{option.secondaryLabel}</span>
+                      )}
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            {regionFilter !== 'all' && (
-              <p className="text-xs text-muted-foreground">
-                Filtré par: {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}
-                {(() => {
-                  const stats = regionStats.find(s => s.code === regionFilter);
-                  return stats ? ` (${stats.cityCount} villes)` : '';
-                })()}
-              </p>
-            )}
           </div>
 
-          {/* Results Summary */}
+          {/* Résultats */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+            <Label className="text-sm font-medium">
               <T k="auto.mapfilters.resultats" fallback="Résultats" />
             </Label>
             <div className="p-3 bg-muted rounded-lg">
-              <div className="text-lg font-bold text-foreground">
-                {(() => {
-                  let count = locations.length;
-                  
-                  if (statusFilter !== 'all') {
-                    count = locations.filter(item => item.status === statusFilter).length;
-                  }
-                  
-                  if (regionFilter !== 'all') {
-                    let filtered = locations;
-                    if (statusFilter !== 'all') {
-                      filtered = filtered.filter(item => item.status === statusFilter);
-                    }
-                    count = filtered.filter(item => matchesLocation(item.region || '', regionFilter)).length;
-                  }
-                  
-                  return count;
-                })()}
-              </div>
+              <div className="text-lg font-bold text-foreground">{filteredLocations.length}</div>
               <div className="text-xs text-muted-foreground">
-                projet{(() => {
-                  let count = locations.length;
-                  
-                  if (statusFilter !== 'all') {
-                    count = locations.filter(item => item.status === statusFilter).length;
-                  }
-                  
-                  if (regionFilter !== 'all') {
-                    let filtered = locations;
-                    if (statusFilter !== 'all') {
-                      filtered = filtered.filter(item => item.status === statusFilter);
-                    }
-                    count = filtered.filter(item => matchesLocation(item.region || '', regionFilter)).length;
-                  }
-                  
-                  return count > 1 ? 's' : '';
-                })()} affiché{(() => {
-                  let count = locations.length;
-                  
-                  if (statusFilter !== 'all') {
-                    count = locations.filter(item => item.status === statusFilter).length;
-                  }
-                  
-                  if (regionFilter !== 'all') {
-                    let filtered = locations;
-                    if (statusFilter !== 'all') {
-                      filtered = filtered.filter(item => item.status === statusFilter);
-                    }
-                    count = filtered.filter(item => matchesLocation(item.region || '', regionFilter)).length;
-                  }
-                  
-                  return count > 1 ? 's' : '';
-                })()}
-              </div>
-              
-              {/* Enhanced Debug Info */}
-              <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
-                <div>Total disponible: {locations.length}</div>
-                {regionFilter !== 'all' && (() => {
-                  const region = getWilayaByCode(regionFilter);
-                  const stats = regionStats.find(s => s.code === regionFilter);
-                  return region ? (
-                    <div>
-                      <div>Région: {region.name}</div>
-                      <div className="flex gap-2">
-                        <span>{stats?.cityCount || 0} villes</span>
-                        {stats?.hasCapital && <span>• Cap: {stats.capitalName}</span>}
-                      </div>
-                    </div>
-                  ) : null;
-                })()}
-                {statusFilter !== 'all' && <div>Statut: {statusFilter}</div>}
+                {regionFilter !== 'all'
+                  ? `${translateGeo(regionFilter)} · ${translateGeo('MR')}`
+                  : translateGeo('MR')}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Active Filters Display */}
         {(statusFilter !== 'all' || regionFilter !== 'all') && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground"><T k="auto.mapfilters.filtres_actifs" fallback="Filtres actifs:" /></span>
-              {statusFilter !== 'all' && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Statut: {statusFilter}
-                  <button
-                    onClick={() => setStatusFilter('all')}
-                    className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
-                    title="Supprimer ce filtre"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {regionFilter !== 'all' && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Région: {MAURITANIA_REGIONS.find(r => r.code === regionFilter)?.name}
-                  <button
-                    onClick={() => setRegionFilter('all')}
-                    className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
-                    title="Supprimer ce filtre"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-            </div>
+          <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted-foreground">
+              <T k="auto.mapfilters.filtres_actifs" fallback="Filtres actifs:" />
+            </span>
+            {statusFilter !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {translateStatus(statusFilter)}
+                <button onClick={() => setStatusFilter('all')} className="ml-1 rounded-full px-1 hover:bg-muted">×</button>
+              </Badge>
+            )}
+            {regionFilter !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {translateGeo(regionFilter)}
+                <button onClick={() => setRegionFilter('all')} className="ml-1 rounded-full px-1 hover:bg-muted">×</button>
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto"
+              onClick={() => { setStatusFilter('all'); setRegionFilter('all'); }}
+            >
+              <T k="auto.mapfilters.reinitialiser" fallback="Réinitialiser" />
+            </Button>
           </div>
+        )}
+
+        {filteredLocations.length === 1 && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {formatLocationLabel(filteredLocations[0] as unknown as Record<string, unknown>)}
+          </p>
         )}
       </CardContent>
     </Card>
