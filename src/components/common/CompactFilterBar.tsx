@@ -488,13 +488,23 @@ export const CompactFilterBar: React.FC<CompactFilterBarProps> = ({
 
         <div className="ml-auto flex shrink-0 items-center gap-2 pr-1 text-xs text-muted-foreground">
           {trailing}
-          {resultCount !== undefined && (
-            <span>
-              {resultCount}
-              {totalCount !== undefined ? ` / ${totalCount}` : ''} {t('auto.responsivefilters.resultats')}
+          {isLoading ? (
+            <span className="flex items-center gap-1" role="status" aria-live="polite">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <span className="hidden sm:inline">
+                {t('filters.loading') || 'Résultats en cours…'}
+              </span>
             </span>
+          ) : (
+            resultCount !== undefined && (
+              <span aria-live="polite">
+                {resultCount}
+                {totalCount !== undefined ? ` / ${totalCount}` : ''} {t('auto.responsivefilters.resultats')}
+              </span>
+            )
           )}
         </div>
+
       </div>
 
       {(activeFilters.length > 0 || searchValue.trim().length > 0) && (
