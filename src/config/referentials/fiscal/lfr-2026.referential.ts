@@ -54,6 +54,26 @@ export const AGENT_COMMISSION_TAX = {
 } as const;
 
 /**
+ * Moyens de paiement (LFR 2026) — pilotent la taxe sur les transactions
+ * électroniques et le plafond de déductibilité des règlements en espèces.
+ */
+export const PAYMENT_MEANS = [
+  { code: 'especes', labels: { fr: 'Espèces', ar: 'نقدا', en: 'Cash' }, electronic: false, cashLimited: true },
+  { code: 'virement', labels: { fr: 'Virement bancaire', ar: 'تحويل بنكي', en: 'Bank transfer' }, electronic: true, cashLimited: false },
+  { code: 'cheque', labels: { fr: 'Chèque', ar: 'شيك', en: 'Cheque' }, electronic: false, cashLimited: false },
+  { code: 'carte', labels: { fr: 'Carte bancaire', ar: 'بطاقة بنكية', en: 'Bank card' }, electronic: true, cashLimited: false },
+  { code: 'mobile_money', labels: { fr: 'Mobile money (Bankily, Masrvi…)', ar: 'المحفظة الإلكترونية', en: 'Mobile money' }, electronic: true, cashLimited: false },
+] as const;
+
+export type PaymentMeanCode = (typeof PAYMENT_MEANS)[number]['code'];
+
+export function getPaymentMeanLabel(code?: string | null, lang: 'fr' | 'ar' | 'en' = 'fr'): string {
+  const found = PAYMENT_MEANS.find((m) => m.code === code);
+  return found ? found.labels[lang] : (code ?? '');
+}
+
+
+/**
  * Critères de localisation d'un service numérique (TVA due en Mauritanie).
  * Un seul critère suffit (faisceau d'indices).
  */

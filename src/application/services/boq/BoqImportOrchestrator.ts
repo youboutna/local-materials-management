@@ -267,14 +267,28 @@ export class BoqImportOrchestrator {
 
       // Fiscalité ligne à ligne : régime (référentiel TAX_REGIMES) + imputation
       // PCM. La TVA détectée sur la ligne/le bloc reste prioritaire.
+      const rawPick = (...keys: string[]): string | null => {
+        for (const k of keys) {
+          const v = row.raw[k] ?? row.raw[k.toLowerCase()] ?? row.raw[k.toUpperCase()];
+          if (v != null && String(v).trim()) return String(v).trim();
+        }
+        return null;
+      };
+      // Conditions de déductibilité LFR 2026 lues dans la source si présentes.
+      const supplierNif = rawPick('nif', 'NIF', 'nif_fournisseur', 'Nif fournisseur');
+      const paymentMethod = rawPick('mode_paiement', 'Mode de paiement', 'moyen_paiement', 'payment_method');
+      if (supplierNif) { dto.supplierNif = supplierNif; dto.supplierNifStatus = 'unknown'; }
+      if (paymentMethod) dto.paymentMethod = paymentMethod.toLowerCase().replace(/\s+/g, '_');
+
       const tax = TaxService.resolve(
-        { ...dto, accountCode: (row.raw['compte'] ?? row.raw['Compte'] ?? null) as string | null, vatRate: lineVat },
+        { ...dto, accountCode: rawPick('compte', 'Compte', 'compte_pcm', 'account_code'), vatRate: lineVat },
         { vatRate: effectiveVat },
       );
       dto.taxRegimeCode = tax.regimeCode;
       dto.accountCode = tax.accountCode;
       if (lineVat == null && tax.origin === 'account') dto.vatRate = tax.vatRate;
       if (!dto.rasRate && tax.rasRate) dto.rasRate = tax.rasRate;
+
 
       out.push(dto);
     }

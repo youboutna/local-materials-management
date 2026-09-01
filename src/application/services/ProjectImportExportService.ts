@@ -864,7 +864,25 @@ export class ProjectImportExportService {
   ): Promise<void> {
     const phaseIdMap = new Map<string, string>();
 
+    // 0. AUTO-ÉCHAFAUDAGE : JSON « léger » sans phases → structure issue du
+    // référentiel projet (doctrine légos métier : jamais de phases codées en dur).
+    if (!(row.phases ?? []).length && row.referentialCode) {
+      const existing = await this.phaseService.getPhasesByProject(projectId);
+      if (!existing.length) {
+        try {
+          const generated = await this.phaseService.createPhasesFromReferential(
+            projectId,
+            row.referentialCode as ReferentialType,
+          );
+          details.phases += generated.length;
+        } catch (error) {
+          console.warn('[ProjectImport] auto-génération des phases impossible', error);
+        }
+      }
+    }
+
     // 1. IMPORTER LES PHASES
+
     for (const phase of row.phases ?? []) {
       const phaseConfig = row.referentialCode
         ? getReferential(row.referentialCode as ReferentialType)?.phases.find((candidate) => candidate.code === phase.code)
