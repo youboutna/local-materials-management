@@ -363,54 +363,49 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
 
 
         <CardContent className="p-0">
-          <BoqWorkspace
-            source={ctx.source}
-            contextId={ctx.contextId}
-            projectId={props.projectId}
-            projectName={props.projectName}
-            mode={mode}
-            referentialCode={props.referentialCode}
-            defaultEmail={props.recipientEmail}
+          <DqeTabs
             documentId={selectedDocumentId}
+            projectId={props.projectId ?? ctx.contextId}
+            lines={doc.lines ?? []}
+            referentialCode={props.referentialCode}
+            workspace={
+              <BoqWorkspace
+                source={ctx.source}
+                contextId={ctx.contextId}
+                projectId={props.projectId}
+                projectName={props.projectName}
+                mode={mode}
+                referentialCode={props.referentialCode}
+                defaultEmail={props.recipientEmail}
+                documentId={selectedDocumentId}
+              />
+            }
+            comparison={props.showComparison ? (
+              doc.isLoading || dqeCompare.isLoading ? (
+                <div className="text-sm text-muted-foreground">Chargement…</div>
+              ) : (
+                <BoqComparisonTable
+                  reference={doc.lines ?? []}
+                  candidate={dqeCompare.lines ?? []}
+                  labels={{ reference: 'Expression de besoin', candidate: 'DQE' }}
+                />
+              )
+            ) : undefined}
+            budget={props.showComparison ? (
+              doc.isLoading || dqeCompare.isLoading ? (
+                <div className="text-sm text-muted-foreground">Chargement…</div>
+              ) : (
+                <BoqBudgetDashboard
+                  planned={doc.lines ?? []}
+                  actual={dqeCompare.lines ?? []}
+                  phaseLabels={phaseLabels}
+                  milestoneLabels={milestoneLabels}
+                />
+              )
+            ) : undefined}
           />
         </CardContent>
       </Card>
-
-      {props.showComparison ? (
-        <Card>
-          <CardContent className="p-4">
-            <Tabs defaultValue="compare" className="space-y-4">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="compare"><GitCompare className="h-4 w-4 mr-1" /> Comparaison besoin ↔ DQE</TabsTrigger>
-                <TabsTrigger value="budget"><LayoutDashboard className="h-4 w-4 mr-1" /> <T k="auto.dqeworkspace.suivi_budget" fallback="Suivi budget" /></TabsTrigger>
-              </TabsList>
-              <TabsContent value="compare">
-                {doc.isLoading || dqeCompare.isLoading ? (
-                  <div className="text-sm text-muted-foreground">Chargement…</div>
-                ) : (
-                  <BoqComparisonTable
-                    reference={doc.lines ?? []}
-                    candidate={dqeCompare.lines ?? []}
-                    labels={{ reference: 'Expression de besoin', candidate: 'DQE' }}
-                  />
-                )}
-              </TabsContent>
-              <TabsContent value="budget">
-                {doc.isLoading || dqeCompare.isLoading ? (
-                  <div className="text-sm text-muted-foreground">Chargement…</div>
-                ) : (
-                  <BoqBudgetDashboard
-                    planned={doc.lines ?? []}
-                    actual={dqeCompare.lines ?? []}
-                    phaseLabels={phaseLabels}
-                    milestoneLabels={milestoneLabels}
-                  />
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      ) : null}
     </div>
   );
 };
