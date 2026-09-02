@@ -87,7 +87,7 @@ export const DqeTabs: React.FC<DqeTabsProps> = ({
         <TabsContent value="summary" className="mt-0"><SummaryTab lines={lines} totals={calculatedTotals} controls={evaluatedControls} /></TabsContent>
         <TabsContent value="lines" className="mt-0"><LinesTab lines={lines} workspace={workspace} onLinesChange={onLinesChange} locked={locked} referentialCode={referentialCode} /></TabsContent>
         <TabsContent value="perimeter" className="mt-0"><PerimeterTab phases={phases} value={perimeter} onChange={onPerimeterChange} locked={locked} /></TabsContent>
-        <TabsContent value="totals" className="mt-0"><TotalsTab lines={lines} totals={calculatedTotals} controls={evaluatedControls} onTotalsUpdate={onTotalsUpdate} /></TabsContent>
+        <TabsContent value="totals" className="mt-0"><TotalsTab lines={lines} totals={calculatedTotals} controls={evaluatedControls} /></TabsContent>
         <TabsContent value="controls" className="mt-0"><ControlsTab controls={evaluatedControls} /></TabsContent>
         <TabsContent value="documents" className="mt-0"><DocumentsTab documentId={documentId} /></TabsContent>
         <TabsContent value="comparison" className="mt-0">{comparison ?? <EmptyTab label="Comparaison indisponible pour ce contexte" />}</TabsContent>
