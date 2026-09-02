@@ -28,7 +28,6 @@ interface DqeTabsProps {
   controls?: ControlResult[];
   onLinesChange?: (lines: BoqLineDTO[]) => void;
   onPerimeterChange?: (perimeter: WbsScopeValue) => void;
-  onTotalsUpdate?: (totals: ReturnType<typeof BoqCalculatorService.aggregate>) => void;
   locked?: boolean;
   referentialCode?: ReferentialType;
   phases?: WbsPhase[];
@@ -42,14 +41,14 @@ const tabClass = 'relative flex min-w-max items-center gap-2 rounded-none border
 
 export const DqeTabs: React.FC<DqeTabsProps> = ({
   documentId, projectId, lines, totals, controls, onLinesChange, onPerimeterChange,
-  onTotalsUpdate, locked = false, referentialCode, phases = [], perimeter, workspace,
+  locked = false, referentialCode, phases = [], perimeter, workspace,
   comparison, budget,
 }) => {
   const [activeTab, setActiveTab] = useState('summary');
   const calculatedTotals = useMemo(() => totals ?? BoqCalculatorService.aggregate(lines), [lines, totals]);
   const evaluatedControls = useMemo(() => controls ?? BoqControlsService.evaluate(lines), [controls, lines]);
   const failedControls = evaluatedControls.filter((control) => !control.passed).length;
-  const visibleControls = evaluatedControls.length;
+  
 
   const tabs = [
     { id: 'summary', label: 'Résumé', icon: LayoutDashboard },
