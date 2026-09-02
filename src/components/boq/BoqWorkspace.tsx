@@ -816,7 +816,8 @@ export function BoqWorkspace({
                   <WbsSelector
                     value={wbs}
                     onChange={setWbs}
-                    phases={projectPhases.length > 0 ? projectPhases : undefined}
+                    phases={availablePhases}
+                    scope={wbsScope}
                     locked={wbsLocked}
                     referentialCode={effectiveReferential}
                   />
