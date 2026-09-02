@@ -10,6 +10,20 @@ import type { ControlResult } from '@/application/services/boq/BoqControlsServic
 interface Props { lines: BoqLineDTO[]; totals: ReturnType<typeof BoqCalculatorService.aggregate>; controls: ControlResult[]; }
 const money = (value: number) => `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(value)} MRU`;
 
+function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+        <div className="min-w-0">
+          <p className="truncate text-xs text-muted-foreground">{label}</p>
+          <p className="text-lg font-semibold">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function SummaryTab({ lines, totals, controls }: Props) {
   const phases = useMemo(() => {
     const grouped = new Map<string, number>();
