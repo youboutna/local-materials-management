@@ -31,6 +31,7 @@ import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompl
 import { WbsSelector, applyWbsScope, type WbsValue, type WbsScopeValue } from './WbsSelector';
 import { WbsScopeSelector, EMPTY_WBS_SCOPE } from './WbsScopeSelector';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
+import { DocumentContextSummary, type DocumentContextItem } from './DocumentContextSummary';
 
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
