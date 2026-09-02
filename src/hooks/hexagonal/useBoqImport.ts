@@ -77,5 +77,5 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx.referentialCode]);
 
-  return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, commit, setDtos, numberFormat, applyNumberFormat };
+  return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, commit, setDtos, numberFormat, applyNumberFormat, reset };
 }
