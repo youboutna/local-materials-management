@@ -650,28 +650,24 @@ export function BoqWorkspace({
                 {referentialCode ? <span className="text-xs text-muted-foreground">({referentialCode})</span> : null}
               </div>
             ) : (
-              <Select
-                value={activeReferential ?? '__project__'}
-                onValueChange={(v) => {
-                  const next = v === '__project__' ? referentialCode : (v as ReferentialType);
-                  setActiveReferential(next);
-                  writePrefs({ referential: next });
+              <MultiSelectCombobox
+                values={enrichReferentials}
+                onChange={(vals) => {
+                  const next = vals as ReferentialType[];
+                  setEnrichReferentials(next);
+                  setActiveReferential(next[0] ?? referentialCode);
+                  writePrefs({ referentials: next, referential: next[0] });
                 }}
-              >
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__project__">
-                    {projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
-                    {referentialCode ? ` (${referentialCode})` : ''}
-                  </SelectItem>
-                  {referentialOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{t('dqe.referential.enrich')} {opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={referentialOptions.map((opt) => ({
+                  value: opt.value,
+                  label: `${t('dqe.referential.enrich')} ${opt.label}`,
+                  description: opt.description,
+                }))}
+                placeholder={projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
+                searchPlaceholder={t('referential.label')}
+              />
             )}
+
             <p className="text-[11px] text-muted-foreground">
               {t('dqe.referential.hint')}
             </p>
