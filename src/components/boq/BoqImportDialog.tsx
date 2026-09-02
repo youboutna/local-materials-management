@@ -97,6 +97,14 @@ export function BoqImportDialog(props: Props) {
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat, reset } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
+  const setOpen = (v: boolean) => {
+    if (!v) {
+      reset();
+      setDropzoneReset((value) => value + 1);
+    }
+    setOpenInternal(v);
+    props.onOpenChange?.(v);
+  };
 
   const isAltReferential = !!referentialCode && !!projectReferentialCode && referentialCode !== projectReferentialCode;
   const altPhases = useMemo(
