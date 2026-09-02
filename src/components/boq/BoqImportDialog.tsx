@@ -85,14 +85,6 @@ export function BoqImportDialog(props: Props) {
   const [openInternal, setOpenInternal] = useState(false);
   const [dropzoneReset, setDropzoneReset] = useState(0);
   const open = props.open ?? openInternal;
-  const setOpen = (v: boolean) => {
-    if (!v) {
-      reset();
-      setDropzoneReset((value) => value + 1);
-    }
-    setOpenInternal(v);
-    props.onOpenChange?.(v);
-  };
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);

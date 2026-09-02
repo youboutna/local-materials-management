@@ -73,7 +73,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
     const nextPages = pageSize > 0 ? Math.max(1, Math.ceil(lines.length / pageSize)) : 1;
     if (pageSize !== previousPageSize.current) {
       setPage(0);
-    } else if (lines.length > previousLength.current) {
+    } else if (lines.length > previousLength.current && previousLength.current > 0) {
       setPage(nextPages - 1);
     } else if (previousPages !== nextPages) {
       setPage((current) => Math.min(current, nextPages - 1));

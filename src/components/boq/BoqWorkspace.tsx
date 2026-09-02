@@ -764,7 +764,7 @@ export function BoqWorkspace({
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">
+            <span className="text-xs font-semibold text-muted-foreground" aria-live="polite">
               <T k="dqe.lines.results" fallback="Résultats" /> · {displayedLines.length}
             </span>
             <Button size="sm" onClick={addEmptyRow} disabled={locked}><Plus className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.ajouter_une_ligne" fallback="Ajouter une ligne" /></Button>
@@ -1100,7 +1100,6 @@ export function BoqWorkspace({
           onChange={handlePatch}
           onRemove={handleRemove}
           pageSize={linePageSize}
-          onPageSizeChange={setLinePageSize}
         />
       )}
       </div>
