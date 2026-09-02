@@ -9,7 +9,7 @@ import type { ReferentialType } from '@/config/referentials';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType }) {
   const [parseResult, setParseResult] = useState<UnifiedParseResult | null>(null);
@@ -18,18 +18,33 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   const [numberFormat, setNumberFormat] = useState<NumberFormatMode>('auto');
   const [isBusy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const parseRun = useRef(0);
+
+  /** Abandonne complètement la session d’import, y compris le fichier analysé. */
+  const reset = useCallback(() => {
+    parseRun.current += 1;
+    setParseResult(null);
+    setMapping({});
+    setDtos([]);
+    setError(null);
+    setBusy(false);
+  }, []);
 
   const parseFile = useCallback(async (file: File, format: NumberFormatMode = numberFormat) => {
+    const run = ++parseRun.current;
     setBusy(true); setError(null);
     try {
       const res = await unifiedBoqParser.parse(file);
+      if (run !== parseRun.current) return;
       setParseResult(res);
       setMapping(res.autoMapping);
       setNumberFormat(format);
       setDtos(unifiedBoqParser.toMeterInputs(res, res.autoMapping, { ...ctx, numberFormat: format }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally { setBusy(false); }
+      if (run === parseRun.current) setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (run === parseRun.current) setBusy(false);
+    }
   }, [ctx, numberFormat]);
 
   const applyMapping = useCallback((next: ImportMapping) => {
@@ -62,5 +77,5 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx.referentialCode]);
 
-  return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, commit, setDtos, numberFormat, applyNumberFormat };
+  return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, commit, setDtos, numberFormat, applyNumberFormat, reset };
 }

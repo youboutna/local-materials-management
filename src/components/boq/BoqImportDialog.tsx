@@ -83,8 +83,8 @@ export function BoqImportDialog(props: Props) {
   const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
+  const [dropzoneReset, setDropzoneReset] = useState(0);
   const open = props.open ?? openInternal;
-  const setOpen = (v: boolean) => { setOpenInternal(v); props.onOpenChange?.(v); };
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
@@ -94,9 +94,17 @@ export function BoqImportDialog(props: Props) {
   const [budgetDecision, setBudgetDecision] = useState<EdbBudgetDecision>('KEEP_DISCREPANCY');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
-  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat } =
+  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat, reset } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
+  const setOpen = (v: boolean) => {
+    if (!v) {
+      reset();
+      setDropzoneReset((value) => value + 1);
+    }
+    setOpenInternal(v);
+    props.onOpenChange?.(v);
+  };
 
   const isAltReferential = !!referentialCode && !!projectReferentialCode && referentialCode !== projectReferentialCode;
   const altPhases = useMemo(
@@ -319,7 +327,11 @@ export function BoqImportDialog(props: Props) {
                 {NUMBER_FORMAT_OPTIONS.find((o) => o.value === numberFormat)?.hint}
               </p>
             </div>
-            <ImportDropzone onFile={(f) => parseFile(f, numberFormat)} disabled={isBusy} />
+            <ImportDropzone
+              onFile={(f) => parseFile(f, numberFormat)}
+              disabled={isBusy}
+              resetSignal={dropzoneReset}
+            />
           </div>
         )}
 

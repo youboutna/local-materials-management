@@ -1,0 +1,4 @@
+- [x] Recentrer l’onglet Lignes DQE autour d’une barre de résultats avec actions et choix du nombre de lignes
+- [x] Garantir pagination et visibilité immédiate d’une ligne ajoutée
+- [x] Réinitialiser parseur et champ fichier à l’annulation d’un import
+- [x] Vérifier le build et les scénarios clés

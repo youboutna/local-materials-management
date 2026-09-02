@@ -2,7 +2,7 @@
  * src/components/boq/ImportDropzone.tsx
  * ImportDropzone — thin file input wired to useBoqImport.
  */
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { T } from '@/components/i18n/T';
@@ -11,10 +11,16 @@ interface Props {
   onFile: (file: File) => void;
   accept?: string;
   disabled?: boolean;
+  resetSignal?: number;
 }
 
-export function ImportDropzone({ onFile, accept = '.pdf,.xlsx,.xls,.csv', disabled }: Props) {
+export function ImportDropzone({ onFile, accept = '.pdf,.xlsx,.xls,.csv', disabled, resetSignal = 0 }: Props) {
   const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (ref.current) ref.current.value = '';
+  }, [resetSignal]);
+
   return (
     <div
       onDrop={(e) => {

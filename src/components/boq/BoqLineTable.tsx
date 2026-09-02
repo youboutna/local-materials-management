@@ -2,7 +2,7 @@
  * src/components/boq/BoqLineTable.tsx
  * BoqLineTable — grille unique saisie/import alignée sur les colonnes parseur.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -38,6 +38,8 @@ interface Props {
   onChange?: (index: number, patch: Partial<BoqLineDTO>) => void;
   onRemove?: (index: number) => void;
   pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
+  pageSizeOptions?: number[];
 }
 
 const fmt = (n: number) =>
@@ -60,10 +62,25 @@ const STAKEHOLDER_GROUPS: { type: StakeholderOption['type']; label: string }[] =
 const stakeholderOf = (l: BoqLineDTO) =>
   (l.metadata as { stakeholder?: { id?: string; name?: string; type?: string } } | null)?.stakeholder ?? null;
 
-export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10 }: Props) {
+export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions }: Props) {
 
   const [page, setPage] = useState(0);
-  useEffect(() => { setPage(0); }, [lines.length]);
+  const previousLength = useRef(lines.length);
+  const previousPageSize = useRef(pageSize);
+
+  useEffect(() => {
+    const previousPages = pageSize > 0 ? Math.max(1, Math.ceil(previousLength.current / pageSize)) : 1;
+    const nextPages = pageSize > 0 ? Math.max(1, Math.ceil(lines.length / pageSize)) : 1;
+    if (pageSize !== previousPageSize.current) {
+      setPage(0);
+    } else if (lines.length > previousLength.current && previousLength.current > 0) {
+      setPage(nextPages - 1);
+    } else if (previousPages !== nextPages) {
+      setPage((current) => Math.min(current, nextPages - 1));
+    }
+    previousLength.current = lines.length;
+    previousPageSize.current = pageSize;
+  }, [lines.length, pageSize]);
 
   const phases: WbsPhase[] = useMemo(() => {
     if (phasesOverride?.length) return phasesOverride;
@@ -273,6 +290,8 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
           totalItems={lines.length}
           pageSize={pageSize}
           onPageChange={setPage}
+          onPageSizeChange={onPageSizeChange}
+          pageSizeOptions={pageSizeOptions}
         />
       )}
     </div>
