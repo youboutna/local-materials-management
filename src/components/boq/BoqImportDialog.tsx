@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getPhasesForReferential, getReferentialOptions, type ReferentialType } from '@/config/referentials';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
@@ -28,7 +29,7 @@ import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { useBoqImportAssist } from '@/hooks/hexagonal/useBoqImportAssist';
 import { BoqAssistPanel } from '@/components/boq/BoqAssistPanel';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { BoqLineTable } from './BoqLineTable';
 import { ImportDropzone } from './ImportDropzone';
@@ -58,6 +59,8 @@ interface Props {
   onImported?: (count: number) => void;
   onParsed?: (lines: BoqLineDTO[]) => void;
   commitOnSubmit?: boolean;
+  /** Affichage intégré dans l'espace DQE, avec retour vers les résultats. */
+  variant?: 'dialog' | 'inline';
 }
 
 interface RowIssue { index: number; designation: string; message: string }
@@ -84,7 +87,7 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
 }
 
 export function BoqImportDialog(props: Props) {
-  const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true, contextItems = [], fiscalProfileCode } = props;
+  const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true, contextItems = [], fiscalProfileCode, variant = 'dialog' } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
   const [dropzoneReset, setDropzoneReset] = useState(0);
@@ -357,7 +360,17 @@ export function BoqImportDialog(props: Props) {
               </section>
             )}
 
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Collapsible defaultOpen className="rounded-md border">
+              <div className="flex items-center justify-between gap-2 bg-muted/30 px-3 py-2">
+                <div className="text-sm font-medium">Configuration et enrichissement de l'import</div>
+                <CollapsibleTrigger asChild>
+                  <Button type="button" variant="ghost" size="sm" className="h-8 gap-1">
+                    <ChevronDown className="h-4 w-4" /> Afficher / réduire
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent className="space-y-4 border-t p-3">
+            <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">
                   <T k="auto.boqimportdialog.referentiel_projet" fallback="Référentiel projet" /> <span className="text-xs text-muted-foreground">(lecture seule)</span>
@@ -452,9 +465,11 @@ export function BoqImportDialog(props: Props) {
               />
             </section>
 
-
-
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
+              </CollapsibleContent>
+            </Collapsible>
+
+
 
             {assistResult && (
               <BoqAssistPanel result={assistResult} onApply={applyAssist} disabled={isBusy || isCatalogsLoading} />
