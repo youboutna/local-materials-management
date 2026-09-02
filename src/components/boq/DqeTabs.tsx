@@ -7,7 +7,6 @@ import React, { useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, BarChart3, DollarSign, FileSpreadsheet, FolderOpen, GitCompare, LayoutDashboard, ListChecks, Ruler, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { SummaryTab } from './tabs/SummaryTab';
 import { LinesTab } from './tabs/LinesTab';
 import { PerimeterTab } from './tabs/PerimeterTab';
