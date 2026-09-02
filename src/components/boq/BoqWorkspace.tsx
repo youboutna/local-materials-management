@@ -22,8 +22,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRightCircle, Calculator, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ArrowRightCircle, Calculator, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
 import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
@@ -375,17 +375,24 @@ export function BoqWorkspace({
   const [baselineLines, setBaselineLines] = useState<BoqLineDTO[]>([]);
   const [dirty, setDirty] = useState(false);
 
+  /**
+   * Synchronisation tampon ↔ persistance.
+   * Un seul effet : le changement de document réinitialise le tampon SANS écraser
+   * les lignes déjà chargées (l'ancien double effet vidait le tampon lorsque
+   * `documentId` et `doc.lines` arrivaient dans le même commit → tableau vide
+   * alors que N lignes étaient persistées).
+   */
+  const docKey = `${source}::${contextId ?? ''}::${documentId ?? ''}`;
+  const docKeyRef = useRef(docKey);
   useEffect(() => {
-    if (dirty) return;
+    const switched = docKeyRef.current !== docKey;
+    if (switched) docKeyRef.current = docKey;
+    if (!switched && dirty) return;
+    if (switched) setDirty(false);
     setDraftLines(doc.lines);
     setBaselineLines(doc.lines);
-  }, [doc.lines, dirty]);
+  }, [docKey, doc.lines, dirty, source]);
 
-  useEffect(() => {
-    setDirty(false);
-    setDraftLines([]);
-    setBaselineLines([]);
-  }, [documentId, contextId]);
 
   const handleCreate = () => {
     if (!form.designation?.trim()) {
@@ -980,7 +987,20 @@ export function BoqWorkspace({
             commitOnSubmit={false}
             onParsed={handleParsedImport}
           />
+
+          {/* Recharge les lignes persistées (utile après un import ou un transfert externe). */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => { setDirty(false); void doc.refetch?.(); }}
+            disabled={doc.isLoading}
+            title="Recharger les lignes persistées"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${doc.isLoading ? 'animate-spin' : ''}`} />
+            <T k="dqe.action.refresh" fallback="Actualiser" />
+          </Button>
           </div>
+
           <div className="flex flex-wrap items-center gap-2">
             {isDocumentEmpty ? null : (
               <AlertDialog>
