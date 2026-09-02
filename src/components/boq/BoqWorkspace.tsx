@@ -1025,9 +1025,9 @@ export function BoqWorkspace({
             <T k="dqe.action.refresh" fallback="Actualiser" />
           </Button>
           <div className="flex items-center gap-2 border-l pl-2 text-xs text-muted-foreground">
-            <span className="whitespace-nowrap"><T k="dqe.lines.show" fallback="Afficher" /></span>
+            <label htmlFor="dqe-line-page-size" className="whitespace-nowrap"><T k="dqe.lines.show" fallback="Afficher" /></label>
             <Select value={String(linePageSize)} onValueChange={(value) => setLinePageSize(Number(value))}>
-              <SelectTrigger className="h-8 w-[76px]" aria-label="Nombre de lignes affichées"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="dqe-line-page-size" className="h-8 w-[76px]" aria-label="Nombre de lignes affichées"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}
               </SelectContent>
