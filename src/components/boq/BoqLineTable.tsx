@@ -40,6 +40,8 @@ interface Props {
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
   pageSizeOptions?: number[];
+  /** Position des lignes ajoutées par le parent, pour afficher immédiatement la nouvelle saisie. */
+  newRowsAt?: 'start' | 'end';
 }
 
 const fmt = (n: number) =>
@@ -62,7 +64,7 @@ const STAKEHOLDER_GROUPS: { type: StakeholderOption['type']; label: string }[] =
 const stakeholderOf = (l: BoqLineDTO) =>
   (l.metadata as { stakeholder?: { id?: string; name?: string; type?: string } } | null)?.stakeholder ?? null;
 
-export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions }: Props) {
+export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions, newRowsAt = 'end' }: Props) {
 
   const [page, setPage] = useState(0);
   const previousLength = useRef(lines.length);
@@ -74,7 +76,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
     if (pageSize !== previousPageSize.current) {
       setPage(0);
     } else if (lines.length > previousLength.current && previousLength.current > 0) {
-      setPage(nextPages - 1);
+      setPage(newRowsAt === 'start' ? 0 : nextPages - 1);
     } else if (previousPages !== nextPages) {
       setPage((current) => Math.min(current, nextPages - 1));
     }

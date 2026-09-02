@@ -11,7 +11,7 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType }) {
+export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string }) {
   const [parseResult, setParseResult] = useState<UnifiedParseResult | null>(null);
   const [mapping, setMapping] = useState<ImportMapping>({});
   const [dtos, setDtos] = useState<BoqLineDTO[]>([]);
