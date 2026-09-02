@@ -179,7 +179,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               const tasks = milestone?.tasks ?? [];
               const task = taskOf(l.phaseId, l.milestoneId, l.taskId);
               return (
-                <TableRow key={l.id ?? `row-${i}`}>
+                <TableRow key={l.id ?? String((l.metadata as { clientRowId?: string } | null)?.clientRowId ?? `row-${i}`)}>
                   <TableCell className="text-right text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       {i + 1}

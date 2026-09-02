@@ -230,7 +230,24 @@ export function BoqWorkspace({
     return merged.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
   }, [projectPhases, referentialCode, enrichReferentials, referentialLocked, lang]);
 
-
+  const documentContextItems = useMemo<DocumentContextItem[]>(() => {
+    const scopedPhaseLabels = wbsScope.phaseIds
+      .map((id) => availablePhases.find((phase) => phase.id === id)?.label)
+      .filter((label): label is string => Boolean(label));
+    const selectedReferentialLabels = enrichReferentials
+      .map((code) => referentialOptions.find((option) => option.value === code)?.label ?? code)
+      .filter(Boolean);
+    const wbsValue = scopedPhaseLabels.length > 0
+      ? `${scopedPhaseLabels.slice(0, 2).join(' · ')}${scopedPhaseLabels.length > 2 ? ` +${scopedPhaseLabels.length - 2}` : ''}`
+      : `${availablePhases.length} ${t('dqe.context.phases', { defaultValue: 'phase(s)' })}`;
+    return [
+      { label: t('dqe.context.wbs', { defaultValue: 'Périmètre WBS' }), value: wbsValue },
+      { label: t('dqe.context.classification', { defaultValue: 'Classification' }), value: wbsDefault.phaseId ?? t('dqe.context.not_set', { defaultValue: 'Non définie' }) },
+      { label: t('dqe.context.responsible', { defaultValue: 'Responsable' }), value: defaultStakeholder?.name ?? t('dqe.context.not_set', { defaultValue: 'Non défini' }) },
+      { label: t('dqe.context.referentials', { defaultValue: 'Référentiels' }), value: selectedReferentialLabels.length > 0 ? selectedReferentialLabels.join(' · ') : t('dqe.context.project_default', { defaultValue: 'Projet courant' }) },
+      { label: t('dqe.context.fiscal_profile', { defaultValue: 'Profil fiscal' }), value: getFiscalProfileLabel(fiscalCode, lang) },
+    ];
+  }, [availablePhases, defaultStakeholder?.name, enrichReferentials, fiscalCode, lang, referentialOptions, t, wbsDefault.phaseId, wbsScope.phaseIds]);
 
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
@@ -567,6 +584,7 @@ export function BoqWorkspace({
   const addEmptyRow = () => {
     const profile = getFiscalProfile(fiscalCode);
     const newRowTax = TaxService.resolve({ designation: null }, profile);
+    const clientRowId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
     setDraftLines((prev) => [{
       source, contextId,
       documentId: documentId ?? null,
@@ -585,7 +603,7 @@ export function BoqWorkspace({
       milestoneId: wbsDefault.milestoneId ?? null,
       taskId: wbsDefault.taskId ?? null,
       sourceType: 'rapide',
-      metadata: defaultLineMetadata,
+      metadata: { ...(defaultLineMetadata ?? {}), clientRowId },
       status: 'draft',
 
     }, ...prev]);
@@ -780,6 +798,7 @@ export function BoqWorkspace({
                 <DialogTitle>{t('dqe.action.takeoff')}</DialogTitle>
                 <DialogDescription><T k="auto.boqworkspace.calculez_les_quantites_puis_ajoutez_les_lignes_o" fallback="Calculez les quantités puis ajoutez les lignes obtenues au document courant." /></DialogDescription>
               </DialogHeader>
+              <DocumentContextSummary items={documentContextItems} />
               <div className="grid grid-cols-6 gap-3">
                 <div className="col-span-3">
                   <Label><T k="auto.boqworkspace.categorie" fallback="Catégorie" /></Label>
@@ -1004,6 +1023,8 @@ export function BoqWorkspace({
             contextId={contextId}
             projectId={projectId}
             defaultReferentialCode={effectiveReferential}
+            fiscalProfileCode={fiscalCode}
+            contextItems={documentContextItems}
             title={importLabel ?? labels.import}
             trigger={
               <Button size="sm" variant="outline" disabled={locked}>
