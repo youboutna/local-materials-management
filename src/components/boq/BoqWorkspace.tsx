@@ -987,7 +987,20 @@ export function BoqWorkspace({
             commitOnSubmit={false}
             onParsed={handleParsedImport}
           />
+
+          {/* Recharge les lignes persistées (utile après un import ou un transfert externe). */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => { setDirty(false); void doc.refetch?.(); }}
+            disabled={doc.isLoading}
+            title="Recharger les lignes persistées"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${doc.isLoading ? 'animate-spin' : ''}`} />
+            <T k="dqe.action.refresh" fallback="Actualiser" />
+          </Button>
           </div>
+
           <div className="flex flex-wrap items-center gap-2">
             {isDocumentEmpty ? null : (
               <AlertDialog>
