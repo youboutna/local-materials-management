@@ -32,6 +32,12 @@ interface MultiSelectComboboxProps {
   emptyLabel?: string;
   disabled?: boolean;
   className?: string;
+  /** Affiche les badges de sélection sous le déclencheur (défaut : true). */
+  showBadges?: boolean;
+  /** Nombre de badges affichés avant repli « +N » (défaut : 3). */
+  maxVisibleBadges?: number;
+  /** Hauteur compacte alignée sur les champs de formulaire denses. */
+  size?: 'default' | 'sm';
 }
 
 export const MultiSelectCombobox: React.FC<MultiSelectComboboxProps> = ({
@@ -43,6 +49,9 @@ export const MultiSelectCombobox: React.FC<MultiSelectComboboxProps> = ({
   emptyLabel = 'Aucun résultat',
   disabled,
   className,
+  showBadges = true,
+  maxVisibleBadges = 3,
+  size = 'default',
 }) => {
   const [open, setOpen] = React.useState(false);
 
@@ -50,9 +59,12 @@ export const MultiSelectCombobox: React.FC<MultiSelectComboboxProps> = ({
     onChange(values.includes(value) ? values.filter((v) => v !== value) : [...values, value]);
 
   const selected = options.filter((o) => values.includes(o.value));
+  const visibleBadges = selected.slice(0, maxVisibleBadges);
+  const hiddenBadgeCount = selected.length - visibleBadges.length;
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-1.5', className)}>
+
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
