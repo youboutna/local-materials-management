@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqAssistPanel.tsx
  * BoqAssistPanel — restitution des diagnostics d'import (BoqImportAssistService).
  * Présentation uniquement : aucun calcul, aucune requête.
  */

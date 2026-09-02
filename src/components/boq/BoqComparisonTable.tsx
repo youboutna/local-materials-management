@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqComparisonTable.tsx
  * BoqComparisonTable — side-by-side comparison of two BOQ sets.
  * Used to compare tender estimate vs supplier bid, or planning vs actual.
  */

@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/ImportMappingWizard.tsx
  * ImportMappingWizard — preview + column mapping for a parsed BOQ file.
  * Emits BoqLineDTO[] via useBoqImport.
  */

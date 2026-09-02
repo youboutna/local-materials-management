@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqWorkflowStepper.tsx
  * BoqWorkflowStepper — Zone 2 du DQE : stepper documentaire ÉTENDU et interactif.
  *
  * Jalons (référentiel `document-lifecycle`) :

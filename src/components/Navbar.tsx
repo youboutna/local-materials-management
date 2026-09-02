@@ -1,3 +1,6 @@
+
+/**src/components/Navbar.tsx */
+
 import { ENABLE_LOGOUT } from '@/config/constants';
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";

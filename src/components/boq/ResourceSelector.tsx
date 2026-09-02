@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/ResourceSelector.tsx
  * ResourceSelector — sélecteur unifié Matériau / Main d'œuvre / Équipement.
  *
  * Consommé par AdvancedQuantityCalculator, TenderEstimatorForm et

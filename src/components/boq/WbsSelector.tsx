@@ -1,4 +1,4 @@
-/**
+/**src/components/boq/WbsSelector.tsx
  * WbsSelector — cascade Phase → Jalon → Tâche, driven by config referential.
  * Les libellés proviennent du glossaire i18n (jamais l'acronyme brut « WBS »).
  */

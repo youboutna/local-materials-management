@@ -1,5 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 /**
+ * src/components/boq/BoqKpiHeader.tsx
  * BoqKpiHeader — KPI band (Total HT, TVA, TTC, count) computed via BoqCalculatorService.
  */
 import React, { useMemo } from 'react';
@@ -29,7 +30,7 @@ export const BoqKpiHeader: React.FC<Props> = ({ lines, currency = 'MRU' }) => {
   const cells: Array<[string, string]> = [
     [t('auto.boqkpiheader.lignes'), String(lines.length)],
     [t('auto.boqkpiheader.total_ht'), `${fmt(totals.totalHt)} ${currency}`],
-    ['TVA', `${fmt(totals.totalTva)} ${currency}`],
+    [t('auto.boqkpiheader.tva'), `${fmt(totals.totalTva)} ${currency}`],
     [t('auto.boqkpiheader.total_ttc'), `${fmt(totals.totalTtc)} ${currency}`],
   ];
 

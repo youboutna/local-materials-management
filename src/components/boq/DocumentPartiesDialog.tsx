@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/DocumentPartiesDialog.tsx
  * DocumentPartiesDialog — édition de l'en-tête documentaire (émetteur /
  * destinataire) avec autocomplétion sur les organisations et fournisseurs.
  *

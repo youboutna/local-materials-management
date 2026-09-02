@@ -1,4 +1,4 @@
-/**
+/**src/components/boq/DqeWorkspace.tsx
  * DqeWorkspace — coquille mutualisée Liste ↔ Détail pour les 4 contextes :
  *   • project-dqe       (Expression de besoin / DQE projet)
  *   • tender-estimate   (DQE Appel d'offres)

@@ -1,5 +1,6 @@
 import { T } from '@/components/i18n/T';
 /**
+ * src/components/boq/PriceSummary.tsx
  * PriceSummary — displays Qty × PU = HT + VAT + TTC. Format FR.
  */
 interface Props {

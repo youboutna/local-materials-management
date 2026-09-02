@@ -1,3 +1,6 @@
+
+/**src/components/layout/PageHeader.tsx */
+
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {

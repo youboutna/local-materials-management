@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqDocumentList.tsx
  * BoqDocumentList — Vue Liste des documents BOQ pour un contexte donné
  * (Projet DQE, Estimation tender, Devis fournisseur, Facture fournisseur).
  * Agrège btp.boq_lines par `document_id` via useBoqDocumentList.

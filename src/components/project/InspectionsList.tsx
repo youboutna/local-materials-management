@@ -1,4 +1,4 @@
-/**
+/**src/components/project/InspectionsList.tsx
  * InspectionsList - Display project inspections
  * MIGRATED TO HEXAGONAL ARCHITECTURE
  */

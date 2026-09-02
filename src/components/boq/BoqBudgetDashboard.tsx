@@ -1,4 +1,5 @@
 /**
+ * /src/components/boq/BoqBudgetDashboard.tsx
  * BoqBudgetDashboard — P2: suivi budget par jalon avec écarts prévu/réel.
  *
  * - "Prévu" = expression de besoin (source='quantity_takeoff')

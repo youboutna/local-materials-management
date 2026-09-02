@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/EdbValidationPanel.tsx
  * EdbValidationPanel — rapport de validation EDB affiché AVANT toute écriture.
  * Erreurs de calcul bloquantes + écart budgétaire avec décision explicite (A/B/C).
  */

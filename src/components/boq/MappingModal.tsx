@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/MappingModal.tsx
  * MappingModal — assistant de mapping partagé (colonnes fichier → BoqLineDTO)
  * consommé par BoqImportDialog, portail fournisseur (import facture) et
  * l'AdvancedQuantityCalculator quand un fichier est ingéré via UnifiedBoqParser.

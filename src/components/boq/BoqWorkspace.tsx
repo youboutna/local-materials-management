@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqWorkspace.tsx
  * BoqWorkspace — composant mutualisé de gestion BOQ pour 3 contextes existants :
  *  - Projet DQE prévisionnel      (source='dqe' | 'quantity_takeoff', mode='planning')
  *  - Portail fournisseur / Devis  (source='tender_estimate',           mode='bid')

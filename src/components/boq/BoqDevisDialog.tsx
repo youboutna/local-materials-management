@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqDevisDialog.tsx
  * BoqDevisDialog — génération devis/facture PDF depuis BoqLineDTO[]
  * avec e-signature (dessin/upload) + téléchargement + envoi email.
  *

@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqLineTable.tsx
  * BoqLineTable — grille unique saisie/import alignée sur les colonnes parseur.
  */
 import { useEffect, useMemo, useState } from 'react';

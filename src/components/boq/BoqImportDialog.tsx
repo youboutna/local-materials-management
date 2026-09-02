@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqImportDialog.tsx
  * BoqImportDialog — one dialog for ALL BOQ imports.
  * Sources: 'quantity_takeoff' | 'dqe' | 'supplier_bid' | 'tender_estimate'.
  *

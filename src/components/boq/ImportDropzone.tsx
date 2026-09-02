@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/ImportDropzone.tsx
  * ImportDropzone — thin file input wired to useBoqImport.
  */
 import { useRef } from 'react';

@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/WbsScopeSelector.tsx
  * WbsScopeSelector — périmètre documentaire multi-options (phases / jalons / tâches).
  * Sert à restreindre les options proposées par WbsSelector : un DQE enrichi peut
  * couvrir plusieurs phases, jalons et tâches à la fois.

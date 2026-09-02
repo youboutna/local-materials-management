@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/PcmAccountSelect.tsx
  * PcmAccountSelect — sélecteur de compte du Plan Comptable Mauritanien (PCM × CGI)
  * avec recherche fr / ar / code, utilisable directement dans les lignes de DQE,
  * devis et factures.
