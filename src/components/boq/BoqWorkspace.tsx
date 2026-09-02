@@ -566,7 +566,7 @@ export function BoqWorkspace({
   const addEmptyRow = () => {
     const profile = getFiscalProfile(fiscalCode);
     const newRowTax = TaxService.resolve({ designation: null }, profile);
-    setDraftLines((prev) => [...prev, {
+    setDraftLines((prev) => [{
       source, contextId,
       documentId: documentId ?? null,
       designation: '',
@@ -587,7 +587,7 @@ export function BoqWorkspace({
       metadata: defaultLineMetadata,
       status: 'draft',
 
-    }]);
+    }, ...prev]);
     setDirty(true);
   };
 
@@ -1100,6 +1100,7 @@ export function BoqWorkspace({
           onChange={handlePatch}
           onRemove={handleRemove}
           pageSize={linePageSize}
+          newRowsAt="start"
         />
       )}
       </div>

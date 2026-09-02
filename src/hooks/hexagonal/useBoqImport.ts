@@ -39,7 +39,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
       setParseResult(res);
       setMapping(res.autoMapping);
       setNumberFormat(format);
-      setDtos(unifiedBoqParser.toMeterInputs(res, res.autoMapping, { ...ctx, numberFormat: format }));
+      setDtos(unifiedBoqParser.toMeterInputs(res, res.autoMapping, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat: format }));
     } catch (e) {
       if (run === parseRun.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -49,13 +49,13 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
 
   const applyMapping = useCallback((next: ImportMapping) => {
     setMapping(next);
-    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, next, { ...ctx, numberFormat }));
+    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, next, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat }));
   }, [parseResult, ctx, numberFormat]);
 
   /** Rejoue le mapping courant avec une autre convention numérique. */
   const applyNumberFormat = useCallback((next: NumberFormatMode) => {
     setNumberFormat(next);
-    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, mapping, { ...ctx, numberFormat: next }));
+    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, mapping, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat: next }));
   }, [parseResult, mapping, ctx]);
 
   const commit = useCallback(async (lines: BoqLineDTO[] = dtos) => {
@@ -73,7 +73,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
 
   // Re-classify existing rows when the project referential changes.
   useEffect(() => {
-    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, mapping, { ...ctx, numberFormat }));
+    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, mapping, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx.referentialCode]);
 
