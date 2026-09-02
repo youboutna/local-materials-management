@@ -18,9 +18,11 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   const [numberFormat, setNumberFormat] = useState<NumberFormatMode>('auto');
   const [isBusy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const parseRun = useRef(0);
 
   /** Abandonne complètement la session d’import, y compris le fichier analysé. */
   const reset = useCallback(() => {
+    parseRun.current += 1;
     setParseResult(null);
     setMapping({});
     setDtos([]);
@@ -29,16 +31,20 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   }, []);
 
   const parseFile = useCallback(async (file: File, format: NumberFormatMode = numberFormat) => {
+    const run = ++parseRun.current;
     setBusy(true); setError(null);
     try {
       const res = await unifiedBoqParser.parse(file);
+      if (run !== parseRun.current) return;
       setParseResult(res);
       setMapping(res.autoMapping);
       setNumberFormat(format);
       setDtos(unifiedBoqParser.toMeterInputs(res, res.autoMapping, { ...ctx, numberFormat: format }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally { setBusy(false); }
+      if (run === parseRun.current) setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (run === parseRun.current) setBusy(false);
+    }
   }, [ctx, numberFormat]);
 
   const applyMapping = useCallback((next: ImportMapping) => {

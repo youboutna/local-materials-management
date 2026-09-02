@@ -83,8 +83,16 @@ export function BoqImportDialog(props: Props) {
   const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
+  const [dropzoneReset, setDropzoneReset] = useState(0);
   const open = props.open ?? openInternal;
-  const setOpen = (v: boolean) => { setOpenInternal(v); props.onOpenChange?.(v); };
+  const setOpen = (v: boolean) => {
+    if (!v) {
+      reset();
+      setDropzoneReset((value) => value + 1);
+    }
+    setOpenInternal(v);
+    props.onOpenChange?.(v);
+  };
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
   const [referentialCode, setReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
@@ -319,7 +327,11 @@ export function BoqImportDialog(props: Props) {
                 {NUMBER_FORMAT_OPTIONS.find((o) => o.value === numberFormat)?.hint}
               </p>
             </div>
-            <ImportDropzone onFile={(f) => parseFile(f, numberFormat)} disabled={isBusy} />
+            <ImportDropzone
+              onFile={(f) => parseFile(f, numberFormat)}
+              disabled={isBusy}
+              resetSignal={dropzoneReset}
+            />
           </div>
         )}
 
