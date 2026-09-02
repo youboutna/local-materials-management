@@ -94,7 +94,7 @@ export function BoqImportDialog(props: Props) {
   const [budgetDecision, setBudgetDecision] = useState<EdbBudgetDecision>('KEEP_DISCREPANCY');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
-  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat } =
+  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat, reset } =
     useBoqImport({ source, contextId, phaseId, referentialCode });
   const { toast } = useToast();
 

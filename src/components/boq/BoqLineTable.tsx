@@ -63,7 +63,7 @@ const stakeholderOf = (l: BoqLineDTO) =>
 export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10 }: Props) {
 
   const [page, setPage] = useState(0);
-  useEffect(() => { setPage(0); }, [lines.length]);
+  useEffect(() => { setPage(0); }, [lines.length, pageSize]);
 
   const phases: WbsPhase[] = useMemo(() => {
     if (phasesOverride?.length) return phasesOverride;

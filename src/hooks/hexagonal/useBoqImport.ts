@@ -19,6 +19,15 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   const [isBusy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** Abandonne complètement la session d’import, y compris le fichier analysé. */
+  const reset = useCallback(() => {
+    setParseResult(null);
+    setMapping({});
+    setDtos([]);
+    setError(null);
+    setBusy(false);
+  }, []);
+
   const parseFile = useCallback(async (file: File, format: NumberFormatMode = numberFormat) => {
     setBusy(true); setError(null);
     try {
