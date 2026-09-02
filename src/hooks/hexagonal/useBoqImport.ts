@@ -9,7 +9,7 @@ import type { ReferentialType } from '@/config/referentials';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType }) {
   const [parseResult, setParseResult] = useState<UnifiedParseResult | null>(null);

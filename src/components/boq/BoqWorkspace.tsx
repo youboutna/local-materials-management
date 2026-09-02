@@ -148,6 +148,7 @@ export function BoqWorkspace({
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
   const [openImport, setOpenImport] = useState(false);
+  const [linePageSize, setLinePageSize] = useState(10);
   const { materials } = useMaterialsHex();
   const [fiscalCode, setFiscalCode] = useState<string>(() => readPrefs().fiscalCode ?? 'MR_STANDARD');
   /** Contrôles LFR 2026 du document (NIF fournisseur, moyen de paiement, facture normalisée). */
@@ -761,8 +762,11 @@ export function BoqWorkspace({
           </CollapsibleContent>
         </Collapsible>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground">
+              <T k="dqe.lines.results" fallback="Résultats" /> · {displayedLines.length}
+            </span>
             <Button size="sm" onClick={addEmptyRow} disabled={locked}><Plus className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.ajouter_une_ligne" fallback="Ajouter une ligne" /></Button>
 
 
@@ -1020,6 +1024,15 @@ export function BoqWorkspace({
             <RefreshCw className={`h-4 w-4 mr-1 ${doc.isLoading ? 'animate-spin' : ''}`} />
             <T k="dqe.action.refresh" fallback="Actualiser" />
           </Button>
+          <div className="flex items-center gap-2 border-l pl-2 text-xs text-muted-foreground">
+            <span className="whitespace-nowrap"><T k="dqe.lines.show" fallback="Afficher" /></span>
+            <Select value={String(linePageSize)} onValueChange={(value) => setLinePageSize(Number(value))}>
+              <SelectTrigger className="h-8 w-[76px]" aria-label="Nombre de lignes affichées"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -1086,6 +1099,8 @@ export function BoqWorkspace({
           stakeholders={stakeholders}
           onChange={handlePatch}
           onRemove={handleRemove}
+          pageSize={linePageSize}
+          onPageSizeChange={setLinePageSize}
         />
       )}
       </div>
