@@ -7,6 +7,8 @@
 import { useMemo } from 'react';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { WbsScopeValue } from './WbsSelector';
+
+export type { WbsScopeValue } from './WbsSelector';
 import { MultiSelectCombobox, type MultiSelectOption } from '@/components/ui/multi-select-combobox';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/hooks/useI18n';
