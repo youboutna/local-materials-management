@@ -26,7 +26,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
 import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
-import { WbsSelector, type WbsValue, type WbsScopeValue } from './WbsSelector';
+import { WbsSelector, applyWbsScope, type WbsValue, type WbsScopeValue } from './WbsSelector';
 import { WbsScopeSelector, EMPTY_WBS_SCOPE } from './WbsScopeSelector';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 
@@ -1040,7 +1040,7 @@ export function BoqWorkspace({
           emptyLabel={emptyLabel ?? labels.empty}
           editable={!locked}
           referentialCode={effectiveReferential}
-          phases={projectPhases.length > 0 ? projectPhases : undefined}
+          phases={applyWbsScope(availablePhases, wbsScope)}
           stakeholders={stakeholders}
           onChange={handlePatch}
           onRemove={handleRemove}
