@@ -36,6 +36,8 @@ interface Props {
   referentialCode?: ReferentialType;
   /** Override dynamique (ex. phases réelles du projet). Prioritaire sur referentialCode. */
   phases?: WbsPhase[];
+  /** Périmètre documentaire : restreint les options proposées (liste vide = pas de filtre). */
+  scope?: WbsScopeValue;
   /**
    * Champs héritant du contexte projet : affichés en lecture seule avec un cadenas
    * (anti-corruption — la saisie manuelle ne peut plus casser le rattachement).
@@ -45,21 +47,46 @@ interface Props {
 
 const NONE = '__none__';
 
-export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride, locked }: Props) {
+/** Applique le périmètre documentaire (phases/jalons/tâches retenus) à l'arbre WBS. */
+export function applyWbsScope(phases: WbsPhase[], scope?: WbsScopeValue): WbsPhase[] {
+  if (!scope) return phases;
+  const keepPhase = scope.phaseIds.length > 0;
+  const keepMilestone = scope.milestoneIds.length > 0;
+  const keepTask = scope.taskIds.length > 0;
+  if (!keepPhase && !keepMilestone && !keepTask) return phases;
+
+  return phases
+    .filter((p) => !keepPhase || scope.phaseIds.includes(p.id))
+    .map((p) => ({
+      ...p,
+      milestones: p.milestones
+        .filter((m) => !keepMilestone || scope.milestoneIds.includes(m.id))
+        .map((m) => ({
+          ...m,
+          tasks: m.tasks.filter((tk) => !keepTask || scope.taskIds.includes(tk.id)),
+        })),
+    }));
+}
+
+export function WbsSelector({ value, onChange, disabled, referentialCode, phases: phasesOverride, locked, scope }: Props) {
   const { t } = useI18n();
   const phases: WbsPhase[] = useMemo(() => {
-    if (phasesOverride && phasesOverride.length > 0) return phasesOverride;
-    if (!referentialCode) return WBS_REFERENTIAL;
-    return getPhasesForReferential(referentialCode).map((phase) => ({
-      id: phase.code,
-      label: phase.label,
-      milestones: phase.steps.map((step) => ({
-        id: step.code,
-        label: step.label,
-        tasks: step.tasks.map((task) => ({ id: task.code, label: task.label })),
-      })),
-    }));
-  }, [phasesOverride, referentialCode]);
+    const base: WbsPhase[] = (phasesOverride && phasesOverride.length > 0)
+      ? phasesOverride
+      : !referentialCode
+        ? WBS_REFERENTIAL
+        : getPhasesForReferential(referentialCode).map((phase) => ({
+            id: phase.code,
+            label: phase.label,
+            milestones: phase.steps.map((step) => ({
+              id: step.code,
+              label: step.label,
+              tasks: step.tasks.map((task) => ({ id: task.code, label: task.label })),
+            })),
+          }));
+    return applyWbsScope(base, scope);
+  }, [phasesOverride, referentialCode, scope]);
+
   const phase = useMemo(() => phases.find((p) => p.id === value.phaseId) ?? null, [phases, value.phaseId]);
   const milestone = useMemo(() => phase?.milestones.find((m) => m.id === value.milestoneId) ?? null, [phase, value.milestoneId]);
 

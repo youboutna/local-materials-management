@@ -26,7 +26,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
 import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
-import { WbsSelector, type WbsValue } from './WbsSelector';
+import { WbsSelector, applyWbsScope, type WbsValue, type WbsScopeValue } from './WbsSelector';
+import { WbsScopeSelector, EMPTY_WBS_SCOPE } from './WbsScopeSelector';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
@@ -34,7 +36,8 @@ import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs, isActivePhaseStatus, type ProjectWbsPhase } from '@/application/services/boq/ProjectWbsLoader';
 import { tenderToPlanningService } from '@/application/services/TenderToPlanningService';
 import type { ReferentialType } from '@/config/referentials';
-import { getReferentialOptions } from '@/config/referentials';
+import { getReferentialOptions, getPhasesForReferential } from '@/config/referentials';
+
 import { BOQ_FISCAL_PROFILES, getFiscalProfile, getFiscalProfileLabel } from '@/config/referentials/boq/default-values.referential';
 import { resolveLineTax } from '@/config/referentials/boq/tax-regimes.referential';
 import { TaxService } from '@/application/services/TaxService';
@@ -108,21 +111,37 @@ export function BoqWorkspace({
   // Préférences du document persistées (référentiel enrichi + profil fiscal) :
   // la sélection survit à la navigation, le référentiel projet reste le défaut.
   const prefsKey = `boq-prefs:${contextId}`;
-  const readPrefs = (): { referential?: ReferentialType; fiscalCode?: string; stakeholderId?: string } => {
+  type BoqPrefs = {
+    referential?: ReferentialType;
+    referentials?: ReferentialType[];
+    fiscalCode?: string;
+    stakeholderId?: string;
+    wbsScope?: WbsScopeValue;
+  };
+  const readPrefs = (): BoqPrefs => {
     try { return JSON.parse(localStorage.getItem(prefsKey) ?? '{}'); } catch { return {}; }
   };
-  const writePrefs = (patch: { referential?: ReferentialType; fiscalCode?: string; stakeholderId?: string }) => {
+  const writePrefs = (patch: BoqPrefs) => {
     try { localStorage.setItem(prefsKey, JSON.stringify({ ...readPrefs(), ...patch })); } catch { /* stockage indisponible */ }
   };
 
+  /** Référentiels enrichissant le document (multi-options) — le référentiel projet reste le socle. */
+  const [enrichReferentials, setEnrichReferentials] = useState<ReferentialType[]>(() => {
+    const p = readPrefs();
+    return p.referentials ?? (p.referential ? [p.referential] : []);
+  });
   const [activeReferential, setActiveReferential] = useState<ReferentialType | undefined>(
-    () => readPrefs().referential ?? referentialCode,
+    () => readPrefs().referentials?.[0] ?? readPrefs().referential ?? referentialCode,
   );
   useEffect(() => {
-    setActiveReferential(readPrefs().referential ?? referentialCode);
+    const p = readPrefs();
+    const refs = p.referentials ?? (p.referential ? [p.referential] : []);
+    setEnrichReferentials(refs);
+    setActiveReferential(refs[0] ?? referentialCode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [referentialCode, contextId]);
   const referentialOptions = useMemo(() => getReferentialOptions('fr'), []);
+
 
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
@@ -146,6 +165,14 @@ export function BoqWorkspace({
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<ProjectWbsPhase[]>([]);
+  /** Périmètre WBS du document (multi-options), persisté avec les préférences. */
+  const [wbsScope, setWbsScope] = useState<WbsScopeValue>(() => readPrefs().wbsScope ?? EMPTY_WBS_SCOPE);
+  useEffect(() => {
+    setWbsScope(readPrefs().wbsScope ?? EMPTY_WBS_SCOPE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextId]);
+  const updateWbsScope = (next: WbsScopeValue) => { setWbsScope(next); writePrefs({ wbsScope: next }); };
+
 
   // Parties prenantes assignables ligne à ligne (organisation / employé / fournisseur).
   const { data: organizations = [] } = useOrganizations();
@@ -174,6 +201,32 @@ export function BoqWorkspace({
   /** Référentiel verrouillé sur le projet actif (contexte projet = source de vérité). */
   const referentialLocked = mode === 'planning' && !!projectId && !!projectName;
   const effectiveReferential = referentialLocked ? referentialCode : activeReferential;
+
+  /**
+   * Arbre WBS proposé = phases réelles du projet + union des phases des référentiels
+   * sélectionnés (multi-options). Aucune donnée en dur : tout vient des référentiels.
+   */
+  const availablePhases = useMemo<WbsPhase[]>(() => {
+    const codes = referentialLocked
+      ? (referentialCode ? [referentialCode] : [])
+      : Array.from(new Set([...(referentialCode ? [referentialCode] : []), ...enrichReferentials]));
+    const fromReferentials: WbsPhase[] = codes.flatMap((code) =>
+      getPhasesForReferential(code, lang as 'fr' | 'ar' | 'en').map((phase) => ({
+        id: phase.code,
+        label: phase.label,
+        milestones: phase.steps.map((step) => ({
+          id: step.code,
+          label: step.label,
+          tasks: step.tasks.map((task) => ({ id: task.code, label: task.label })),
+        })),
+      })),
+    );
+    const merged: WbsPhase[] = [...projectPhases, ...fromReferentials];
+    const seen = new Set<string>();
+    return merged.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
+  }, [projectPhases, referentialCode, enrichReferentials, referentialLocked, lang]);
+
+
 
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
@@ -597,36 +650,35 @@ export function BoqWorkspace({
                 {referentialCode ? <span className="text-xs text-muted-foreground">({referentialCode})</span> : null}
               </div>
             ) : (
-              <Select
-                value={activeReferential ?? '__project__'}
-                onValueChange={(v) => {
-                  const next = v === '__project__' ? referentialCode : (v as ReferentialType);
-                  setActiveReferential(next);
-                  writePrefs({ referential: next });
+              <MultiSelectCombobox
+                values={enrichReferentials}
+                onChange={(vals) => {
+                  const next = vals as ReferentialType[];
+                  setEnrichReferentials(next);
+                  setActiveReferential(next[0] ?? referentialCode);
+                  writePrefs({ referentials: next, referential: next[0] });
                 }}
-              >
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder={projectName ? `${t('dqe.referential.project_default')} — ${projectName}` : t('dqe.referential.project_default')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__project__">
-                    {projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
-                    {referentialCode ? ` (${referentialCode})` : ''}
-                  </SelectItem>
-                  {referentialOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{t('dqe.referential.enrich')} {opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={referentialOptions.map((opt) => ({
+                  value: opt.value,
+                  label: `${t('dqe.referential.enrich')} ${opt.label}`,
+                  description: opt.description,
+                }))}
+                placeholder={projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
+                searchPlaceholder={t('referential.label')}
+              />
             )}
+
             <p className="text-[11px] text-muted-foreground">
               {t('dqe.referential.hint')}
             </p>
           </div>
 
           <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.perimetre_du_document" fallback="Périmètre du document" /></Label>
+            <WbsScopeSelector phases={availablePhases} value={wbsScope} onChange={updateWbsScope} disabled={locked} />
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
-            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={effectiveReferential} locked={wbsLocked} />
+            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={availablePhases} scope={wbsScope} referentialCode={effectiveReferential} locked={wbsLocked} />
+
             <Select
               value={defaultStakeholderId || '__none__'}
               onValueChange={(v) => {
@@ -764,7 +816,8 @@ export function BoqWorkspace({
                   <WbsSelector
                     value={wbs}
                     onChange={setWbs}
-                    phases={projectPhases.length > 0 ? projectPhases : undefined}
+                    phases={availablePhases}
+                    scope={wbsScope}
                     locked={wbsLocked}
                     referentialCode={effectiveReferential}
                   />
@@ -987,7 +1040,7 @@ export function BoqWorkspace({
           emptyLabel={emptyLabel ?? labels.empty}
           editable={!locked}
           referentialCode={effectiveReferential}
-          phases={projectPhases.length > 0 ? projectPhases : undefined}
+          phases={applyWbsScope(availablePhases, wbsScope)}
           stakeholders={stakeholders}
           onChange={handlePatch}
           onRemove={handleRemove}
