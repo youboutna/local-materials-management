@@ -516,25 +516,6 @@ export function BoqImportDialog(props: Props) {
     </Button>
   );
 
-  /* Mode « contenu d'onglet / page » : même corps, sans overlay modal, afin de
-   * laisser toute la largeur disponible pour vérifier et corriger les lignes. */
-  if (variant === 'inline') {
-    return (
-      <section className="space-y-4" aria-label={title ?? 'Importer BOQ'}>
-        <header className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h3 className="text-base font-semibold">{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</h3>
-            <p className="text-xs text-muted-foreground">
-              Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">{cancelButton}{submitButton}</div>
-        </header>
-        {body}
-        <div className="flex flex-wrap justify-end gap-2 border-t pt-3">{cancelButton}{submitButton}</div>
-      </section>
-    );
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
