@@ -375,17 +375,24 @@ export function BoqWorkspace({
   const [baselineLines, setBaselineLines] = useState<BoqLineDTO[]>([]);
   const [dirty, setDirty] = useState(false);
 
+  /**
+   * Synchronisation tampon ↔ persistance.
+   * Un seul effet : le changement de document réinitialise le tampon SANS écraser
+   * les lignes déjà chargées (l'ancien double effet vidait le tampon lorsque
+   * `documentId` et `doc.lines` arrivaient dans le même commit → tableau vide
+   * alors que N lignes étaient persistées).
+   */
+  const docKey = `${source}::${contextId ?? ''}::${documentId ?? ''}`;
+  const docKeyRef = useRef(docKey);
   useEffect(() => {
-    if (dirty) return;
+    const switched = docKeyRef.current !== docKey;
+    if (switched) docKeyRef.current = docKey;
+    if (!switched && dirty) return;
+    if (switched) setDirty(false);
     setDraftLines(doc.lines);
     setBaselineLines(doc.lines);
-  }, [doc.lines, dirty]);
+  }, [docKey, doc.lines, dirty, source]);
 
-  useEffect(() => {
-    setDirty(false);
-    setDraftLines([]);
-    setBaselineLines([]);
-  }, [documentId, contextId]);
 
   const handleCreate = () => {
     if (!form.designation?.trim()) {
