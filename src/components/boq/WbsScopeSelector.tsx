@@ -83,9 +83,9 @@ export function WbsScopeSelector({ phases, value, onChange, disabled }: Props) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
+    <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+      <div className="min-w-0 space-y-1">
+        <Label className="text-[11px] text-muted-foreground">
           <T k="auto.wbsscope.phases" fallback="Phases du document" />
         </Label>
         <MultiSelectCombobox
@@ -94,10 +94,12 @@ export function WbsScopeSelector({ phases, value, onChange, disabled }: Props) {
           options={phaseOptions}
           disabled={disabled}
           placeholder={t('wbs.select_phase')}
+          showBadges={false}
+          size="sm"
         />
       </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
+      <div className="min-w-0 space-y-1">
+        <Label className="text-[11px] text-muted-foreground">
           <T k="auto.wbsscope.jalons" fallback="Jalons du document" />
         </Label>
         <MultiSelectCombobox
@@ -106,10 +108,12 @@ export function WbsScopeSelector({ phases, value, onChange, disabled }: Props) {
           options={milestoneOptions}
           disabled={disabled || milestoneOptions.length === 0}
           placeholder={t('wbs.select_milestone')}
+          showBadges={false}
+          size="sm"
         />
       </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
+      <div className="min-w-0 space-y-1">
+        <Label className="text-[11px] text-muted-foreground">
           <T k="auto.wbsscope.taches" fallback="Tâches du document" />
         </Label>
         <MultiSelectCombobox
@@ -118,6 +122,8 @@ export function WbsScopeSelector({ phases, value, onChange, disabled }: Props) {
           options={taskOptions}
           disabled={disabled || taskOptions.length === 0}
           placeholder={t('wbs.select_task')}
+          showBadges={false}
+          size="sm"
         />
       </div>
     </div>

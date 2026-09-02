@@ -64,7 +64,6 @@ export const MultiSelectCombobox: React.FC<MultiSelectComboboxProps> = ({
 
   return (
     <div className={cn('space-y-1.5', className)}>
-
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -73,7 +72,7 @@ export const MultiSelectCombobox: React.FC<MultiSelectComboboxProps> = ({
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
-            className="w-full justify-between font-normal"
+            className={cn('w-full justify-between font-normal', size === 'sm' && 'h-9 text-xs')}
           >
             <span className={cn('truncate', values.length === 0 && 'text-muted-foreground')}>
               {values.length === 0
@@ -115,11 +114,11 @@ export const MultiSelectCombobox: React.FC<MultiSelectComboboxProps> = ({
         </PopoverContent>
       </Popover>
 
-      {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {selected.map((option) => (
-            <Badge key={option.value} variant="secondary" className="gap-1">
-              {option.label}
+      {showBadges && visibleBadges.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {visibleBadges.map((option) => (
+            <Badge key={option.value} variant="secondary" className="max-w-full gap-1 text-[11px]">
+              <span className="max-w-[12rem] truncate">{option.label}</span>
               <button
                 type="button"
                 aria-label={`Retirer ${option.label}`}
@@ -130,6 +129,7 @@ export const MultiSelectCombobox: React.FC<MultiSelectComboboxProps> = ({
               </button>
             </Badge>
           ))}
+          {hiddenBadgeCount > 0 && <Badge variant="outline" className="text-[11px]">+{hiddenBadgeCount}</Badge>}
         </div>
       )}
     </div>
