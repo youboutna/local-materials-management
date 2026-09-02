@@ -452,9 +452,10 @@ export function BoqImportDialog(props: Props) {
               />
             </section>
 
-
-
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
+            </CollapsibleContent>
+            </Collapsible>
+
 
             {assistResult && (
               <BoqAssistPanel result={assistResult} onApply={applyAssist} disabled={isBusy || isCatalogsLoading} />
