@@ -674,8 +674,11 @@ export function BoqWorkspace({
           </div>
 
           <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.perimetre_du_document" fallback="Périmètre du document" /></Label>
+            <WbsScopeSelector phases={availablePhases} value={wbsScope} onChange={updateWbsScope} disabled={locked} />
             <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
-            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={projectPhases.length > 0 ? projectPhases : undefined} referentialCode={effectiveReferential} locked={wbsLocked} />
+            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={availablePhases} scope={wbsScope} referentialCode={effectiveReferential} locked={wbsLocked} />
+
             <Select
               value={defaultStakeholderId || '__none__'}
               onValueChange={(v) => {
