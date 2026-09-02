@@ -500,16 +500,53 @@ export function BoqImportDialog(props: Props) {
           </>
         )}
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </>
+  );
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}><T k="auto.boqimportdialog.annuler" fallback="Annuler" /></Button>
-          <Button onClick={onSubmit} disabled={isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0}>
-            {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Importer {wbsEnrichedDtos.length} ligne(s)
-          </Button>
-        </DialogFooter>
+  const cancelButton = (
+    <Button variant="outline" onClick={() => setOpen(false)}>
+      <T k="auto.boqimportdialog.annuler" fallback="Annuler" />
+    </Button>
+  );
+  const submitButton = (
+    <Button onClick={onSubmit} disabled={isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0}>
+      {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+      Importer {wbsEnrichedDtos.length} ligne(s)
+    </Button>
+  );
+
+  /* Mode « contenu d'onglet / page » : même corps, sans overlay modal, afin de
+   * laisser toute la largeur disponible pour vérifier et corriger les lignes. */
+  if (variant === 'inline') {
+    return (
+      <section className="space-y-4" aria-label={title ?? 'Importer BOQ'}>
+        <header className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-base font-semibold">{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</h3>
+            <p className="text-xs text-muted-foreground">
+              Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">{cancelButton}{submitButton}</div>
+        </header>
+        {body}
+        <div className="flex flex-wrap justify-end gap-2 border-t pt-3">{cancelButton}{submitButton}</div>
+      </section>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="w-[97vw] max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader>
+          <DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle>
+          <DialogDescription>Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.</DialogDescription>
+        </DialogHeader>
+        {body}
+        <DialogFooter className="gap-2">{cancelButton}{submitButton}</DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+
