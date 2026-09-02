@@ -165,6 +165,14 @@ export function BoqWorkspace({
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<ProjectWbsPhase[]>([]);
+  /** Périmètre WBS du document (multi-options), persisté avec les préférences. */
+  const [wbsScope, setWbsScope] = useState<WbsScopeValue>(() => readPrefs().wbsScope ?? EMPTY_WBS_SCOPE);
+  useEffect(() => {
+    setWbsScope(readPrefs().wbsScope ?? EMPTY_WBS_SCOPE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextId]);
+  const updateWbsScope = (next: WbsScopeValue) => { setWbsScope(next); writePrefs({ wbsScope: next }); };
+
 
   // Parties prenantes assignables ligne à ligne (organisation / employé / fournisseur).
   const { data: organizations = [] } = useOrganizations();
