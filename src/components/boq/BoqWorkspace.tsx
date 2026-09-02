@@ -202,6 +202,32 @@ export function BoqWorkspace({
   const referentialLocked = mode === 'planning' && !!projectId && !!projectName;
   const effectiveReferential = referentialLocked ? referentialCode : activeReferential;
 
+  /**
+   * Arbre WBS proposé = phases réelles du projet + union des phases des référentiels
+   * sélectionnés (multi-options). Aucune donnée en dur : tout vient des référentiels.
+   */
+  const availablePhases = useMemo<WbsPhase[]>(() => {
+    const codes = referentialLocked
+      ? (referentialCode ? [referentialCode] : [])
+      : Array.from(new Set([...(referentialCode ? [referentialCode] : []), ...enrichReferentials]));
+    const fromReferentials: WbsPhase[] = codes.flatMap((code) =>
+      getPhasesForReferential(code, lang as 'fr' | 'ar' | 'en').map((phase) => ({
+        id: phase.code,
+        label: phase.label,
+        milestones: phase.steps.map((step) => ({
+          id: step.code,
+          label: step.label,
+          tasks: step.tasks.map((task) => ({ id: task.code, label: task.label })),
+        })),
+      })),
+    );
+    const merged: WbsPhase[] = [...projectPhases, ...fromReferentials];
+    const seen = new Set<string>();
+    return merged.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
+  }, [projectPhases, referentialCode, enrichReferentials, referentialLocked, lang]);
+
+
+
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
     () => (defaultStakeholder
