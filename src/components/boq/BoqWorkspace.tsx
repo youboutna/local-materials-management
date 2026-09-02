@@ -21,8 +21,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRightCircle, Calculator, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowRightCircle, Calculator, ChevronDown, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, RefreshCw, Settings2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
@@ -617,6 +618,7 @@ export function BoqWorkspace({
   const pendingCount = dirty ? Math.abs(draftLines.length - baselineLines.length) || 1 : 0;
   const docStatus = dirty ? t('dqe.doc_status.to_save') : (doc.lines.length > 0 ? t('dqe.doc_status.validated') : t('dqe.doc_status.new'));
   const isDocumentEmpty = displayedLines.length === 0;
+  const [showDocumentSettings, setShowDocumentSettings] = useState(false);
   const handleParsedImport = (lines: BoqLineDTO[]) => {
     setDraftLines((prev) => [...prev, ...lines.map((line) => {
       const hasStakeholder = !!(line.metadata as { stakeholder?: unknown } | null)?.stakeholder;
@@ -639,23 +641,21 @@ export function BoqWorkspace({
   return (
     <div className="space-y-4">
       <section className="space-y-0">
-        <div className="grid gap-4 border-b p-4 lg:grid-cols-[minmax(200px,0.7fr)_minmax(180px,0.8fr)_minmax(300px,1.1fr)_minmax(200px,0.8fr)_auto] lg:items-end">
-          <div className="space-y-2">
-            <div className="text-xs font-medium uppercase text-muted-foreground"><T k="auto.boqworkspace.document" fallback="Document" /></div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-lg font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</span>
-            </div>
+        <div className="grid gap-3 border-b p-3 md:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.2fr)_minmax(180px,0.8fr)_auto] md:items-end">
+          <div className="min-w-0 space-y-1">
+            <div className="text-[11px] font-medium uppercase text-muted-foreground"><T k="auto.boqworkspace.document" fallback="Document" /></div>
+            <div className="truncate text-base font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</div>
           </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">{t('referential.label')}</Label>
+          <div className="min-w-0 space-y-1">
+            <Label className="text-[11px] text-muted-foreground">{t('referential.label')}</Label>
             {referentialLocked ? (
               <div
-                className="flex h-10 items-center gap-2 rounded-md border bg-muted/40 px-3 text-sm"
+                className="flex h-9 items-center gap-2 rounded-md border bg-muted/40 px-3 text-sm"
                 title={t('dqe.referential.hint')}
               >
-                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="truncate font-medium">{projectName}</span>
-                {referentialCode ? <span className="text-xs text-muted-foreground">({referentialCode})</span> : null}
+                {referentialCode ? <span className="shrink-0 text-xs text-muted-foreground">({referentialCode})</span> : null}
               </div>
             ) : (
               <MultiSelectCombobox
@@ -673,56 +673,25 @@ export function BoqWorkspace({
                 }))}
                 placeholder={projectName ? `${t('dqe.referential.project')} ${projectName}` : t('dqe.referential.project_default')}
                 searchPlaceholder={t('referential.label')}
+                showBadges={false}
+                size="sm"
               />
             )}
-
-            <p className="text-[11px] text-muted-foreground">
-              {t('dqe.referential.hint')}
-            </p>
           </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.perimetre_du_document" fallback="Périmètre du document" /></Label>
-            <WbsScopeSelector phases={availablePhases} value={wbsScope} onChange={updateWbsScope} disabled={locked} />
-            <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
-            <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={availablePhases} scope={wbsScope} referentialCode={effectiveReferential} locked={wbsLocked} />
-
-            <Select
-              value={defaultStakeholderId || '__none__'}
-              onValueChange={(v) => {
-                const next = v === '__none__' ? '' : v;
-                setDefaultStakeholderId(next);
-                writePrefs({ stakeholderId: next });
-              }}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder={t('dqe.responsible.placeholder')} />
-              </SelectTrigger>
-              <SelectContent className="max-h-64">
-                <SelectItem value="__none__">{t('dqe.responsible.none')}</SelectItem>
-                {stakeholders.map((s) => (
-                  <SelectItem key={`${s.type}-${s.id}`} value={s.id}>
-                    {s.name} · {translateTerm(s.type)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground"><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
+          <div className="min-w-0 space-y-1">
+            <Label className="text-[11px] text-muted-foreground"><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
             <Select value={fiscalCode} onValueChange={(v) => { setFiscalCode(v); writePrefs({ fiscalCode: v }); }}>
-              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
-                   <SelectItem key={p.code} value={p.code}>{getFiscalProfileLabel(p.code, lang)} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%)</SelectItem>
+                  <SelectItem key={p.code} value={p.code}>{getFiscalProfileLabel(p.code, lang)} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%)</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="flex lg:justify-end">
+          <div className="flex md:justify-end">
             <Button
-               onClick={() => saveDraftLines(false)}
+              onClick={() => saveDraftLines(false)}
               disabled={locked || (pendingCount === 0 && !dirty) || finalizing || doc.isPending}
               title={
                 transmittedInfo
@@ -734,11 +703,63 @@ export function BoqWorkspace({
                       : undefined
               }
             >
-              {finalizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileCheck2 className="h-4 w-4 mr-2" />}
+              {finalizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck2 className="mr-2 h-4 w-4" />}
               {t('dqe.action.save')}{pendingCount > 0 ? ` (${pendingCount})` : ''}
             </Button>
           </div>
         </div>
+
+        <Collapsible open={showDocumentSettings} onOpenChange={setShowDocumentSettings}>
+          <div className="flex min-h-10 items-center justify-between gap-2 border-b bg-muted/20 px-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <Settings2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <span className="truncate text-xs font-semibold"><T k="auto.boqworkspace.configuration_document" fallback="Configuration du document" /></span>
+              <span className="truncate text-[11px] text-muted-foreground"><T k="auto.boqworkspace.wbs_fiscal_responsable" fallback="Périmètre WBS, classification et responsable" /></span>
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={showDocumentSettings ? 'Réduire la configuration' : 'Développer la configuration'}>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showDocumentSettings ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="border-b px-3 py-3">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)]">
+              <div className="min-w-0 space-y-1">
+                <Label className="text-[11px] text-muted-foreground"><T k="auto.boqworkspace.perimetre_du_document" fallback="Périmètre du document" /></Label>
+                <WbsScopeSelector phases={availablePhases} value={wbsScope} onChange={updateWbsScope} disabled={locked} />
+              </div>
+              <div className="min-w-0 space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground"><T k="auto.boqworkspace.classification_par_defaut" fallback="Classification par défaut" /></Label>
+                  <WbsSelector value={wbsDefault} onChange={setWbsDefault} phases={availablePhases} scope={wbsScope} referentialCode={effectiveReferential} locked={wbsLocked} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground"><T k="auto.boqworkspace.responsable_par_defaut" fallback="Responsable par défaut" /></Label>
+                  <Select
+                    value={defaultStakeholderId || '__none__'}
+                    onValueChange={(v) => {
+                      const next = v === '__none__' ? '' : v;
+                      setDefaultStakeholderId(next);
+                      writePrefs({ stakeholderId: next });
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={t('dqe.responsible.placeholder')} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      <SelectItem value="__none__">{t('dqe.responsible.none')}</SelectItem>
+                      {stakeholders.map((s) => (
+                        <SelectItem key={`${s.type}-${s.id}`} value={s.id}>
+                          {s.name} · {translateTerm(s.type)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
           <div className="flex flex-wrap items-center gap-2">
