@@ -31,6 +31,7 @@ import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompl
 import { WbsSelector, applyWbsScope, type WbsValue, type WbsScopeValue } from './WbsSelector';
 import { WbsScopeSelector, EMPTY_WBS_SCOPE } from './WbsScopeSelector';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
+import { DocumentContextSummary, type DocumentContextItem } from './DocumentContextSummary';
 
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
@@ -229,7 +230,28 @@ export function BoqWorkspace({
     return merged.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
   }, [projectPhases, referentialCode, enrichReferentials, referentialLocked, lang]);
 
-
+  const documentContextItems = useMemo<DocumentContextItem[]>(() => {
+    const scopedPhaseLabels = wbsScope.phaseIds
+      .map((id) => availablePhases.find((phase) => phase.id === id)?.label)
+      .filter((label): label is string => Boolean(label));
+    const selectedReferentialLabels = enrichReferentials
+      .map((code) => referentialOptions.find((option) => option.value === code)?.label ?? code)
+      .filter(Boolean);
+    const wbsValue = scopedPhaseLabels.length > 0
+      ? `${scopedPhaseLabels.slice(0, 2).join(' · ')}${scopedPhaseLabels.length > 2 ? ` +${scopedPhaseLabels.length - 2}` : ''}`
+      : `${availablePhases.length} ${t('dqe.context.phases', undefined, 'phase(s)')}`;
+    const selectedPhase = availablePhases.find((phase) => phase.id === wbsDefault.phaseId);
+    const selectedMilestone = selectedPhase?.milestones.find((milestone) => milestone.id === wbsDefault.milestoneId);
+    const selectedTask = selectedMilestone?.tasks.find((task) => task.id === wbsDefault.taskId);
+    const classification = [selectedPhase?.label, selectedMilestone?.label, selectedTask?.label].filter(Boolean).join(' › ');
+    return [
+      { label: t('dqe.context.wbs', undefined, 'Périmètre WBS'), value: wbsValue },
+      { label: t('dqe.context.classification', undefined, 'Classification'), value: classification || t('dqe.context.not_set', undefined, 'Non définie') },
+      { label: t('dqe.context.responsible', undefined, 'Responsable'), value: defaultStakeholder?.name ?? t('dqe.context.not_set', undefined, 'Non défini') },
+      { label: t('dqe.context.referentials', undefined, 'Référentiels'), value: selectedReferentialLabels.length > 0 ? selectedReferentialLabels.join(' · ') : t('dqe.context.project_default', undefined, 'Projet courant') },
+      { label: t('dqe.context.fiscal_profile', undefined, 'Profil fiscal'), value: getFiscalProfileLabel(fiscalCode, lang) },
+    ];
+  }, [availablePhases, defaultStakeholder?.name, enrichReferentials, fiscalCode, lang, referentialOptions, t, wbsDefault.phaseId, wbsScope.phaseIds]);
 
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
@@ -566,7 +588,8 @@ export function BoqWorkspace({
   const addEmptyRow = () => {
     const profile = getFiscalProfile(fiscalCode);
     const newRowTax = TaxService.resolve({ designation: null }, profile);
-    setDraftLines((prev) => [...prev, {
+    const clientRowId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+    setDraftLines((prev) => [{
       source, contextId,
       documentId: documentId ?? null,
       designation: '',
@@ -584,10 +607,10 @@ export function BoqWorkspace({
       milestoneId: wbsDefault.milestoneId ?? null,
       taskId: wbsDefault.taskId ?? null,
       sourceType: 'rapide',
-      metadata: defaultLineMetadata,
+      metadata: { ...(defaultLineMetadata ?? {}), clientRowId },
       status: 'draft',
 
-    }]);
+    }, ...prev]);
     setDirty(true);
   };
 
@@ -779,6 +802,7 @@ export function BoqWorkspace({
                 <DialogTitle>{t('dqe.action.takeoff')}</DialogTitle>
                 <DialogDescription><T k="auto.boqworkspace.calculez_les_quantites_puis_ajoutez_les_lignes_o" fallback="Calculez les quantités puis ajoutez les lignes obtenues au document courant." /></DialogDescription>
               </DialogHeader>
+              <DocumentContextSummary items={documentContextItems} />
               <div className="grid grid-cols-6 gap-3">
                 <div className="col-span-3">
                   <Label><T k="auto.boqworkspace.categorie" fallback="Catégorie" /></Label>
@@ -1003,6 +1027,8 @@ export function BoqWorkspace({
             contextId={contextId}
             projectId={projectId}
             defaultReferentialCode={effectiveReferential}
+            fiscalProfileCode={fiscalCode}
+            contextItems={documentContextItems}
             title={importLabel ?? labels.import}
             trigger={
               <Button size="sm" variant="outline" disabled={locked}>
@@ -1100,6 +1126,7 @@ export function BoqWorkspace({
           onChange={handlePatch}
           onRemove={handleRemove}
           pageSize={linePageSize}
+          newRowsAt="start"
         />
       )}
       </div>
