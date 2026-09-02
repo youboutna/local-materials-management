@@ -108,21 +108,37 @@ export function BoqWorkspace({
   // Préférences du document persistées (référentiel enrichi + profil fiscal) :
   // la sélection survit à la navigation, le référentiel projet reste le défaut.
   const prefsKey = `boq-prefs:${contextId}`;
-  const readPrefs = (): { referential?: ReferentialType; fiscalCode?: string; stakeholderId?: string } => {
+  type BoqPrefs = {
+    referential?: ReferentialType;
+    referentials?: ReferentialType[];
+    fiscalCode?: string;
+    stakeholderId?: string;
+    wbsScope?: WbsScopeValue;
+  };
+  const readPrefs = (): BoqPrefs => {
     try { return JSON.parse(localStorage.getItem(prefsKey) ?? '{}'); } catch { return {}; }
   };
-  const writePrefs = (patch: { referential?: ReferentialType; fiscalCode?: string; stakeholderId?: string }) => {
+  const writePrefs = (patch: BoqPrefs) => {
     try { localStorage.setItem(prefsKey, JSON.stringify({ ...readPrefs(), ...patch })); } catch { /* stockage indisponible */ }
   };
 
+  /** Référentiels enrichissant le document (multi-options) — le référentiel projet reste le socle. */
+  const [enrichReferentials, setEnrichReferentials] = useState<ReferentialType[]>(() => {
+    const p = readPrefs();
+    return p.referentials ?? (p.referential ? [p.referential] : []);
+  });
   const [activeReferential, setActiveReferential] = useState<ReferentialType | undefined>(
-    () => readPrefs().referential ?? referentialCode,
+    () => readPrefs().referentials?.[0] ?? readPrefs().referential ?? referentialCode,
   );
   useEffect(() => {
-    setActiveReferential(readPrefs().referential ?? referentialCode);
+    const p = readPrefs();
+    const refs = p.referentials ?? (p.referential ? [p.referential] : []);
+    setEnrichReferentials(refs);
+    setActiveReferential(refs[0] ?? referentialCode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [referentialCode, contextId]);
   const referentialOptions = useMemo(() => getReferentialOptions('fr'), []);
+
 
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
   const [openManual, setOpenManual] = useState(false);
