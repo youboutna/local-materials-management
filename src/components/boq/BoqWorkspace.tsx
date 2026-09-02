@@ -240,9 +240,13 @@ export function BoqWorkspace({
     const wbsValue = scopedPhaseLabels.length > 0
       ? `${scopedPhaseLabels.slice(0, 2).join(' · ')}${scopedPhaseLabels.length > 2 ? ` +${scopedPhaseLabels.length - 2}` : ''}`
       : `${availablePhases.length} ${t('dqe.context.phases', undefined, 'phase(s)')}`;
+    const selectedPhase = availablePhases.find((phase) => phase.id === wbsDefault.phaseId);
+    const selectedMilestone = selectedPhase?.milestones.find((milestone) => milestone.id === wbsDefault.milestoneId);
+    const selectedTask = selectedMilestone?.tasks.find((task) => task.id === wbsDefault.taskId);
+    const classification = [selectedPhase?.label, selectedMilestone?.label, selectedTask?.label].filter(Boolean).join(' › ');
     return [
       { label: t('dqe.context.wbs', undefined, 'Périmètre WBS'), value: wbsValue },
-      { label: t('dqe.context.classification', undefined, 'Classification'), value: wbsDefault.phaseId ?? t('dqe.context.not_set', undefined, 'Non définie') },
+      { label: t('dqe.context.classification', undefined, 'Classification'), value: classification || t('dqe.context.not_set', undefined, 'Non définie') },
       { label: t('dqe.context.responsible', undefined, 'Responsable'), value: defaultStakeholder?.name ?? t('dqe.context.not_set', undefined, 'Non défini') },
       { label: t('dqe.context.referentials', undefined, 'Référentiels'), value: selectedReferentialLabels.length > 0 ? selectedReferentialLabels.join(' · ') : t('dqe.context.project_default', undefined, 'Projet courant') },
       { label: t('dqe.context.fiscal_profile', undefined, 'Profil fiscal'), value: getFiscalProfileLabel(fiscalCode, lang) },
