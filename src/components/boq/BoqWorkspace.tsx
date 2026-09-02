@@ -26,7 +26,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
 import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
-import { WbsSelector, type WbsValue } from './WbsSelector';
+import { WbsSelector, type WbsValue, type WbsScopeValue } from './WbsSelector';
+import { WbsScopeSelector, EMPTY_WBS_SCOPE } from './WbsScopeSelector';
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
 
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
@@ -34,7 +36,8 @@ import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs, isActivePhaseStatus, type ProjectWbsPhase } from '@/application/services/boq/ProjectWbsLoader';
 import { tenderToPlanningService } from '@/application/services/TenderToPlanningService';
 import type { ReferentialType } from '@/config/referentials';
-import { getReferentialOptions } from '@/config/referentials';
+import { getReferentialOptions, getPhasesForReferential } from '@/config/referentials';
+
 import { BOQ_FISCAL_PROFILES, getFiscalProfile, getFiscalProfileLabel } from '@/config/referentials/boq/default-values.referential';
 import { resolveLineTax } from '@/config/referentials/boq/tax-regimes.referential';
 import { TaxService } from '@/application/services/TaxService';
