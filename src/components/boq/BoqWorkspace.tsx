@@ -239,13 +239,13 @@ export function BoqWorkspace({
       .filter(Boolean);
     const wbsValue = scopedPhaseLabels.length > 0
       ? `${scopedPhaseLabels.slice(0, 2).join(' · ')}${scopedPhaseLabels.length > 2 ? ` +${scopedPhaseLabels.length - 2}` : ''}`
-      : `${availablePhases.length} ${t('dqe.context.phases', { defaultValue: 'phase(s)' })}`;
+      : `${availablePhases.length} ${t('dqe.context.phases', undefined, 'phase(s)')}`;
     return [
-      { label: t('dqe.context.wbs', { defaultValue: 'Périmètre WBS' }), value: wbsValue },
-      { label: t('dqe.context.classification', { defaultValue: 'Classification' }), value: wbsDefault.phaseId ?? t('dqe.context.not_set', { defaultValue: 'Non définie' }) },
-      { label: t('dqe.context.responsible', { defaultValue: 'Responsable' }), value: defaultStakeholder?.name ?? t('dqe.context.not_set', { defaultValue: 'Non défini' }) },
-      { label: t('dqe.context.referentials', { defaultValue: 'Référentiels' }), value: selectedReferentialLabels.length > 0 ? selectedReferentialLabels.join(' · ') : t('dqe.context.project_default', { defaultValue: 'Projet courant' }) },
-      { label: t('dqe.context.fiscal_profile', { defaultValue: 'Profil fiscal' }), value: getFiscalProfileLabel(fiscalCode, lang) },
+      { label: t('dqe.context.wbs', undefined, 'Périmètre WBS'), value: wbsValue },
+      { label: t('dqe.context.classification', undefined, 'Classification'), value: wbsDefault.phaseId ?? t('dqe.context.not_set', undefined, 'Non définie') },
+      { label: t('dqe.context.responsible', undefined, 'Responsable'), value: defaultStakeholder?.name ?? t('dqe.context.not_set', undefined, 'Non défini') },
+      { label: t('dqe.context.referentials', undefined, 'Référentiels'), value: selectedReferentialLabels.length > 0 ? selectedReferentialLabels.join(' · ') : t('dqe.context.project_default', undefined, 'Projet courant') },
+      { label: t('dqe.context.fiscal_profile', undefined, 'Profil fiscal'), value: getFiscalProfileLabel(fiscalCode, lang) },
     ];
   }, [availablePhases, defaultStakeholder?.name, enrichReferentials, fiscalCode, lang, referentialOptions, t, wbsDefault.phaseId, wbsScope.phaseIds]);
 
