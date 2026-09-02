@@ -36,11 +36,15 @@ import { ImportMappingWizard } from './ImportMappingWizard';
 import { WbsSelector, type WbsValue } from './WbsSelector';
 import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
+import { DocumentContextSummary } from './DocumentContextSummary';
 
 interface Props {
   source: BoqSource;
   contextId: string;
   phaseId?: string;
+  /** Contexte affiché dans l'aperçu afin de rendre l'enrichissement explicite. */
+  contextItems?: { label: string; value: string }[];
+  fiscalProfileCode?: string;
   /** Optional project referential (SOMELEC / PNDS / SDAU / MR_PUBLIC …) used to
    *  auto-classify each line into Phase → Étape[Jalon] → Tâche. */
   defaultReferentialCode?: ReferentialType;
@@ -80,7 +84,7 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
 }
 
 export function BoqImportDialog(props: Props) {
-  const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true } = props;
+  const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true, contextItems = [], fiscalProfileCode } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
   const [dropzoneReset, setDropzoneReset] = useState(0);
@@ -95,7 +99,7 @@ export function BoqImportDialog(props: Props) {
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
   const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat, reset } =
-    useBoqImport({ source, contextId, phaseId, referentialCode });
+    useBoqImport({ source, contextId, phaseId, referentialCode, fiscalProfileCode });
   const { toast } = useToast();
   const setOpen = (v: boolean) => {
     if (!v) {
@@ -310,6 +314,7 @@ export function BoqImportDialog(props: Props) {
           <DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle>
           <DialogDescription>Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.</DialogDescription>
         </DialogHeader>
+        <DocumentContextSummary items={contextItems} />
 
         {!parseResult && (
           <div className="space-y-3">
