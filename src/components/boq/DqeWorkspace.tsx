@@ -25,6 +25,7 @@ import { resolveInvoiceDocumentType } from '@/config/referentials/invoices/invoi
 import { BoqDocumentList } from './BoqDocumentList';
 import { BoqComparisonTable } from './BoqComparisonTable';
 import { BoqBudgetDashboard } from './BoqBudgetDashboard';
+import { DqeTabs } from './DqeTabs';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { useProjectPhasesHex } from '@/hooks/hexagonal';
 import { useMilestonesHex } from '@/hooks/hexagonal/useMilestonesHex';
