@@ -10,14 +10,14 @@ import { DocumentHeaderTransformer, DocumentHeaderDBRow } from '@/dtos/transform
 import { supabase } from '@/integrations/supabase/client';
 
 export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepository {
-  private table = 'boq_document_headers';
+  private readonly table = 'boq_document_headers' as never;
 
   async save(documentId: string, header: DocumentHeaderDTO, userId?: string): Promise<DocumentHeaderDTO> {
     const dbRow = DocumentHeaderTransformer.toDBRow(documentId, header, userId);
 
     const { data: result, error } = await supabase
       .from(this.table)
-      .upsert(dbRow, { onConflict: 'document_id' })
+      .upsert(dbRow as never, { onConflict: 'document_id' })
       .select()
       .single();
 
