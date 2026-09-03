@@ -1,4 +1,5 @@
 /**
+ * src/components/boq/BoqActionsBar.tsx
  * BoqActionsBar — barre d'actions unique conditionnée par BoqContext.
  * Actions non autorisées MASQUÉES. Signature avec saisie signataire.
  * « Transférer » route vers l'étape suivante du workflow métier :
@@ -45,6 +46,9 @@ import { FacturXTransformer } from '@/application/services/invoice/FacturXTransf
 import { FacturXPdfService } from '@/application/services/invoice/FacturXPdfService';
 import type { ReverseTransitionDef } from '@/config/referentials/documents/document-lifecycle.referential';
 
+// ✅ IMPORT — Hook hexagonal pour la persistance des en-têtes
+import { useBoqDocumentHeaderHex } from '@/hooks/hexagonal/useBoqDocumentHeaderHex';
+
 interface Props {
   ctx: BoqContext;
   lines: BoqLineDTO[];
@@ -70,18 +74,11 @@ interface Props {
   contextSlot?: React.ReactNode;
 }
 
-
-// Un seul libellé de transfert par contexte, résolu depuis le référentiel
-// d'actions DQE (plus de doublons « Transférer / Transporter en devis »).
-
-
 export const BoqActionsBar: React.FC<Props> = ({
   ctx, lines, projectName, recipientEmail, disabled = false,
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
   primarySlot, workflowSlot, badgesSlot, contextSlot,
-
 }) => {
-
 
   const { toast } = useToast();
   const { t } = useI18n();
@@ -184,27 +181,75 @@ export const BoqActionsBar: React.FC<Props> = ({
     };
   }, [isSupplierContext, parties.senderName, ownerOrg]);
 
-  // === En-tête éditable (émetteur / destinataire) ===
-  // Éditable tant que le document n'est pas signé ; les valeurs saisies
-  // alimentent le PDF ET le XML Factur-X.
+  // ================================================================
+  // ✅ NOUVEAU — En-tête éditable persistant via hook hexagonal
+  // ================================================================
+
+  const documentId = lines.find((l) => l.documentId)?.documentId ?? ctx.contextId;
+
+  const {
+    header: persistedHeader,
+    loading: headerLoading,
+    saveHeader,
+    reload: reloadHeader,
+  } = useBoqDocumentHeaderHex(documentId, ctx.routeContext);
+
+  // ================================================================
+  // État local pour l'édition (fallback si pas de persistance)
+  // ================================================================
+
   const [partiesOpen, setPartiesOpen] = useState(false);
   const [partiesOverride, setPartiesOverride] = useState<DocumentPartiesValue | null>(null);
 
-  const effectiveParties: DocumentPartiesValue = React.useMemo(() => ({
-    senderName: partiesOverride?.senderName ?? company?.name ?? parties.senderName,
-    senderAddress: partiesOverride?.senderAddress ?? company?.address,
-    senderPhone: partiesOverride?.senderPhone ?? company?.phone,
-    senderEmail: partiesOverride?.senderEmail ?? company?.email,
-    recipientName: partiesOverride?.recipientName ?? parties.recipientName,
-    recipientEmail: partiesOverride?.recipientEmail ?? recipientEmail,
-    extraRecipients: partiesOverride?.extraRecipients ?? [],
-    title: partiesOverride?.title ?? ctx.title,
-    facturxTypeCode: partiesOverride?.facturxTypeCode ?? '310',
-    reference: partiesOverride?.reference,
-    issueDate: partiesOverride?.issueDate,
-    currency: partiesOverride?.currency,
-    validityDays: partiesOverride?.validityDays,
-  }), [partiesOverride, company, parties.senderName, parties.recipientName, recipientEmail, ctx.title]);
+  // ================================================================
+  // Gestionnaire de sauvegarde avec persistance
+  // ================================================================
+
+  const handlePartiesSave = async (v: DocumentPartiesValue) => {
+    try {
+      await saveHeader(v);
+      toast({
+        title: t('dqe.header.saved') || 'En-tête enregistré',
+        description: t('dqe.header.saved_desc') || 'Les modifications ont été persistées.',
+      });
+    } catch (err) {
+      toast({
+        title: t('dqe.header.save_error') || 'Erreur',
+        description: err instanceof Error ? err.message : undefined,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // ================================================================
+  // En-tête effectif (persisté ou fallback)
+  // ================================================================
+
+  const effectiveParties: DocumentPartiesValue = React.useMemo(() => {
+    const base = persistedHeader ?? partiesOverride;
+    return {
+      senderName: base?.senderName ?? company?.name ?? parties.senderName,
+      senderAddress: base?.senderAddress ?? company?.address,
+      senderPhone: base?.senderPhone ?? company?.phone,
+      senderEmail: base?.senderEmail ?? company?.email,
+      recipientName: base?.recipientName ?? parties.recipientName,
+      recipientEmail: base?.recipientEmail ?? recipientEmail,
+      extraRecipients: base?.extraRecipients ?? [],
+      title: base?.title ?? ctx.title,
+      facturxTypeCode: base?.facturxTypeCode ?? '310',
+      reference: base?.reference,
+      issueDate: base?.issueDate,
+      currency: base?.currency,
+      validityDays: base?.validityDays,
+    };
+  }, [
+    persistedHeader,
+    partiesOverride,
+    company,
+    parties,
+    recipientEmail,
+    ctx.title,
+  ]);
 
   const effectiveCompany = React.useMemo(() => (
     effectiveParties.senderName
@@ -293,8 +338,6 @@ export const BoqActionsBar: React.FC<Props> = ({
     facturxTypeCode: header.facturxTypeCode ?? undefined,
   };
 
-
-
   const handleGenerate = () => {
     if (!requireValidHeader()) return;
     void withGuard('pdf', async () => {
@@ -358,9 +401,6 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   const handleTransfer = () => withGuard('transfer', async () => {
     try {
-      // Contexte projet : « Soumettre pour validation » englobe la demande de
-      // validation (alerte budgétaire / arbitrage A/B/C) — action unique, plus
-      // de bouton « Demander validation » en doublon.
       if (ctx.routeContext === 'project-dqe') {
         window.dispatchEvent(new CustomEvent('boq-request-validation', {
           detail: { projectId: ctx.projectId, contextId: ctx.contextId, lineCount: lines.length },
@@ -433,7 +473,6 @@ export const BoqActionsBar: React.FC<Props> = ({
     }));
   });
 
-
   // === Cycle de vie documentaire (statut, éditabilité, retours arrière) ===
   const documentType = React.useMemo(
     () =>
@@ -457,7 +496,6 @@ export const BoqActionsBar: React.FC<Props> = ({
       }),
     [documentType, lifecycle.status, userRoles],
   );
-  /** « Soumettre pour validation » : visible uniquement en brouillon. */
   const isDraftDocument = lifecycle.editable && !signedInfo;
 
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -527,7 +565,6 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   const iconOf = (k: string) => (busy === k ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null);
 
-
   // Menu « Document » : UNIQUEMENT la production documentaire (PDF/XML/email).
   const docActions = [
     can('generatePdf') && { key: 'generatePdf', label: 'dqe.action.generate_pdf', icon: <FileDown className="h-4 w-4 mr-2" />, onSelect: handleGenerateFacturXPdf },
@@ -564,7 +601,6 @@ export const BoqActionsBar: React.FC<Props> = ({
       onSelect: () => setDecompteOpen(true),
       disabled: !lines.length,
     },
-    // Retours arrière (REOPEN / UNPUBLISH / REVIEW…) issus du référentiel.
     ...reverseActions.map((a) => ({
       key: `reverse-${a.action}`,
       labelText: reverseLabel(a),
@@ -595,9 +631,7 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   return (
     <>
-      {/* Barre unique et compacte : contexte + badges à gauche, actions à droite.
-          Tout tient sur une seule ligne sur desktop, wrap naturel sur mobile. */}
-      {/* Ligne unique : contexte, badges puis actions — défilement horizontal si nécessaire. */}
+      {/* Barre unique et compacte : contexte + badges à gauche, actions à droite. */}
       <div className="flex w-full flex-nowrap items-center gap-x-2 overflow-x-auto pb-1 [&>*]:shrink-0 [&_.badge-nowrap]:whitespace-nowrap">
 
         {/* --- Contexte & badges d'information (jamais de boutons) --- */}
@@ -625,6 +659,7 @@ export const BoqActionsBar: React.FC<Props> = ({
         {/* --- Actions : Parties · Document ▾ · Workflow ▾ · action principale --- */}
         <div className="ml-auto flex flex-nowrap items-center gap-1.5">
 
+          {/* ✅ Bouton Parties — avec indicateur de chargement */}
           <Button
             size="sm"
             variant="outline"
@@ -632,9 +667,9 @@ export const BoqActionsBar: React.FC<Props> = ({
             disabled={disabled || busy !== null}
             title={t('dqe.parties.edit_title')}
           >
-
             <Pencil className="h-4 w-4 mr-2" />
             {t('dqe.actions.parties_menu')}
+            {headerLoading && <Loader2 className="h-3 w-3 ml-1 animate-spin" />}
           </Button>
 
           {docActions.length > 0 && (
@@ -673,7 +708,6 @@ export const BoqActionsBar: React.FC<Props> = ({
                     {(a as { labelText?: string }).labelText ?? t(a.label ?? getDqeActionLabelKey(a.key))}
                   </DropdownMenuItem>
                 ))}
-
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -685,7 +719,6 @@ export const BoqActionsBar: React.FC<Props> = ({
               {t(DQE_TRANSFER_LABEL_KEYS[ctx.routeContext])}
             </Button>
           )}
-
 
           {gateKind && !gate.allowed && canValidateGate && (
             <Button size="sm" onClick={handleApproveInjection} disabled={disabled || busy !== null}
@@ -699,15 +732,13 @@ export const BoqActionsBar: React.FC<Props> = ({
         </div>
       </div>
 
-
-
-
+      {/* ✅ DocumentPartiesDialog — avec persistance */}
       <DocumentPartiesDialog
         open={partiesOpen}
         onOpenChange={setPartiesOpen}
         value={effectiveParties}
-        locked={!!signedInfo}
-        onSave={(v) => setPartiesOverride(v)}
+        locked={!!signedInfo || headerLoading}
+        onSave={handlePartiesSave}
       />
 
       <Dialog open={decompteOpen} onOpenChange={setDecompteOpen}>

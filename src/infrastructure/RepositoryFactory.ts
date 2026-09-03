@@ -14,8 +14,6 @@
 import { getAppConfig } from '@/config/app';
 import { validateProviders } from '@/config/app-validate';
 import { DEV_MODE } from '@/config/constants';
-import { NotificationGatewayAdapter, notificationGatewayAdapter } from '@/infrastructure/adapters/supabase/NotificationGatewayAdapter';
-
 // ================================================================
 // 1. TYPES
 // ================================================================
@@ -28,14 +26,13 @@ export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'local';
 // 2. IMPORTS – SUPABASE ADAPTERS
 // ================================================================
 
-import { SupabasePhaseMaterialAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseMaterialAdapter';
-import type { IPhaseMaterialRepository } from '@/domain/repositories/IPhaseMaterialRepository';
-import { SupabasePhaseEmployeeAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseEmployeeAdapter';
 import type { IPhaseEmployeeRepository } from '@/domain/repositories/IPhaseEmployeeRepository';
+import type { IPhaseMaterialRepository } from '@/domain/repositories/IPhaseMaterialRepository';
 import { SupabaseAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseAlertAdapter';
 import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 import { SupabaseComplianceAdapter } from '@/infrastructure/adapters/supabase/SupabaseComplianceAdapter';
 import { SupabaseContactMessageAdapter } from '@/infrastructure/adapters/supabase/SupabaseContactMessageAdapter';
+import { SupabaseDecompteAdapter } from '@/infrastructure/adapters/supabase/SupabaseDecompteAdapter';
 import { SupabaseDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseDocumentAdapter';
 import { SupabaseEmployeeAdapter } from '@/infrastructure/adapters/supabase/SupabaseEmployeeAdapter';
 import { SupabaseHierarchyAdapter } from '@/infrastructure/adapters/supabase/SupabaseHierarchyAdapter';
@@ -51,10 +48,11 @@ import { SupabaseMonitoringAdapter } from '@/infrastructure/adapters/supabase/Su
 import { SupabaseNotificationAdapter } from '@/infrastructure/adapters/supabase/SupabaseNotificationAdapter';
 import { SupabaseParsedInvoiceAdapter } from '@/infrastructure/adapters/supabase/SupabaseParsedInvoiceAdapter';
 import { SupabasePaymentAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentAdapter';
-import { SupabaseDecompteAdapter } from '@/infrastructure/adapters/supabase/SupabaseDecompteAdapter';
 import { SupabasePaymentBlockAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentBlockAdapter';
 import { SupabasePaymentControlActionAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentControlActionAdapter';
 import { SupabasePhaseAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseAdapter';
+import { SupabasePhaseEmployeeAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseEmployeeAdapter';
+import { SupabasePhaseMaterialAdapter } from '@/infrastructure/adapters/supabase/SupabasePhaseMaterialAdapter';
 import { SupabaseProjectAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectAdapter';
 import { SupabaseProjectBudgetLinkAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectBudgetLinkAdapter';
 import { SupabaseProjectFormAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectFormAdapter';
@@ -70,20 +68,22 @@ import { SupabaseSupplierAdapter } from '@/infrastructure/adapters/supabase/Supa
 import { SupabaseTenderAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderAdapter';
 import { SupabaseTenderDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderDocumentAdapter';
 import { SupabaseTenderSharingAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSharingAdapter';
-import { SupabaseUserAdapter } from '@/infrastructure/adapters/supabase/SupabaseUserAdapter';
-import { SupabaseWorkspaceAdapter } from '@/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter';
 import { SupabaseUserRepositoryAdapter } from '@/infrastructure/adapters/supabase/SupabaseUserRepositoryAdapter';
+import { SupabaseWorkspaceAdapter } from '@/infrastructure/adapters/supabase/SupabaseWorkspaceAdapter';
 
 import { BankGuaranteeAdapter } from '@/infrastructure/adapters/supabase/BankGuaranteeAdapter';
 import { InspectionSchedulingAdapter } from '@/infrastructure/adapters/supabase/InspectionSchedulingAdapter';
 import { LocationRepository } from '@/infrastructure/adapters/supabase/LocationRepository';
 import { PaymentBlockingAdapter } from '@/infrastructure/adapters/supabase/PaymentBlockingAdapter';
 import { PVGeneratorAdapter } from '@/infrastructure/adapters/supabase/PVGeneratorAdapter';
-import { TaskAssignmentAdapter } from '@/infrastructure/adapters/supabase/TaskAssignmentAdapter';
-import { TenderEstimateAdapter } from '@/infrastructure/adapters/supabase/TenderEstimateAdapter';
 import { SupabaseOAuthProviderAdapter } from '@/infrastructure/adapters/supabase/SupabaseOAuthProviderAdapter';
 import { SupabaseRealtimeAdapter } from '@/infrastructure/adapters/supabase/SupabaseRealtimeAdapter';
 import { SupabaseStorageAdapter } from '@/infrastructure/adapters/supabase/SupabaseStorageAdapter';
+import { TaskAssignmentAdapter } from '@/infrastructure/adapters/supabase/TaskAssignmentAdapter';
+import { TenderEstimateAdapter } from '@/infrastructure/adapters/supabase/TenderEstimateAdapter';
+
+import { IBoqDocumentHeaderRepository } from '@/domain/repositories/IBoqDocumentHeaderRepository';
+import { NotificationGatewayAdapter, notificationGatewayAdapter } from '@/infrastructure/adapters/supabase/NotificationGatewayAdapter';
 
 // ================================================================
 // 3. IMPORTS – AUTH ADAPTERS
@@ -98,9 +98,9 @@ import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapt
 // ================================================================
 
 import {
+  LocalAlertAdapter,
   LocalNotificationAdapter,
   LocalOAuthProviderAdapter,
-  LocalAlertAdapter,
   LocalStorageAdapter,
 } from '@/infrastructure/adapters/local';
 
@@ -126,8 +126,10 @@ import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { IBankGuaranteeRepository } from '@/domain/repositories/IBankGuaranteeRepository';
 import { IComplianceRepository } from '@/domain/repositories/IComplianceRepository';
 import { IContactMessageRepository } from '@/domain/repositories/IContactMessageRepository';
+import { IDecompteRepository } from '@/domain/repositories/IDecompteRepository';
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IEmployeeRepository } from '@/domain/repositories/IEmployeeRepository';
+import { IEscalationThresholdRepository } from '@/domain/repositories/IEscalationThresholdRepository';
 import { IHierarchyRepository } from '@/domain/repositories/IHierarchyRepository';
 import { IInspectionExecutionRepository } from '@/domain/repositories/IInspectionExecutionRepository';
 import { IInspectionPaymentValidationRepository } from '@/domain/repositories/IInspectionPaymentValidationRepository';
@@ -148,23 +150,15 @@ import { IPaymentBlockingRepository } from '@/domain/repositories/IPaymentBlocki
 import { IPaymentBlockRepository } from '@/domain/repositories/IPaymentBlockRepository';
 import { IPaymentControlActionRepository } from '@/domain/repositories/IPaymentControlActionRepository';
 import { IPaymentRepository } from '@/domain/repositories/IPaymentRepository';
-import { IDecompteRepository } from '@/domain/repositories/IDecompteRepository';
 import { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import { IProjectBudgetLinkRepository } from '@/domain/repositories/IProjectBudgetLinkRepository';
 import { IProjectFormRepository } from '@/domain/repositories/IProjectFormRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import { IProjectResourceRepository } from '@/domain/repositories/IProjectResourceRepository';
 import { IProjectStakeholderRepository } from '@/domain/repositories/IProjectStakeholderRepository';
 import { IProjectStrategyLinkRepository } from '@/domain/repositories/IProjectStrategyLinkRepository';
 import { IPVGeneratorRepository } from '@/domain/repositories/IPVGeneratorRepository';
 import { IQuantityTakeoffRepository } from '@/domain/repositories/IQuantityTakeoffRepository';
-import { IProjectResourceRepository } from '@/domain/repositories/IProjectResourceRepository';
-import { ITaskDependencyRepository } from '@/domain/repositories/ITaskDependencyRepository';
-import { ISystemSettingsRepository } from '@/domain/repositories/ISystemSettingsRepository';
-import { IEscalationThresholdRepository } from '@/domain/repositories/IEscalationThresholdRepository';
-import { SupabaseProjectResourceAdapter } from './adapters/supabase/SupabaseProjectResourceAdapter';
-import { SupabaseTaskDependencyAdapter } from './adapters/supabase/SupabaseTaskDependencyAdapter';
-import { SupabaseSystemSettingsAdapter } from './adapters/supabase/SupabaseSystemSettingsAdapter';
-import { SupabaseEscalationThresholdAdapter } from './adapters/supabase/SupabaseEscalationThresholdAdapter';
 import { IRealtimeRepository } from '@/domain/repositories/IRealtimeRepository';
 import { IReportDataTransformerRepository } from '@/domain/repositories/IReportDataTransformerRepository';
 import { IReportingRepository } from '@/domain/repositories/IReportingRepository';
@@ -173,7 +167,9 @@ import { IRiskTaskRelationRepository } from '@/domain/repositories/IRiskTaskRela
 import { IStakeholderRepository } from '@/domain/repositories/IStakeholderRepository';
 import { IStorageRepository } from '@/domain/repositories/IStorageRepository';
 import { ISupplierRepository } from '@/domain/repositories/ISupplierRepository';
+import { ISystemSettingsRepository } from '@/domain/repositories/ISystemSettingsRepository';
 import { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssignmentRepository';
+import { ITaskDependencyRepository } from '@/domain/repositories/ITaskDependencyRepository';
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
 import { ITenderEstimateRepository } from '@/domain/repositories/ITenderEstimateRepository';
 import { ITenderRepository } from '@/domain/repositories/ITenderRepository';
@@ -184,6 +180,10 @@ import { ILocationRepository } from '@/domain/repositories/LocationRepository';
 import { StorageProviderToRepositoryAdapter } from '@/infrastructure/adapters/storage/StorageProviderToRepositoryAdapter';
 import { SupabaseOrganizationAdapter } from '@/infrastructure/adapters/supabase/SupabaseOrganizationAdapter';
 import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/adapters/supabase/SupabaseOrganizationHierarchyAdapter';
+import { SupabaseEscalationThresholdAdapter } from './adapters/supabase/SupabaseEscalationThresholdAdapter';
+import { SupabaseProjectResourceAdapter } from './adapters/supabase/SupabaseProjectResourceAdapter';
+import { SupabaseSystemSettingsAdapter } from './adapters/supabase/SupabaseSystemSettingsAdapter';
+import { SupabaseTaskDependencyAdapter } from './adapters/supabase/SupabaseTaskDependencyAdapter';
 
 // ================================================================
 // 8. IMPORTS – DOCUMENT VALIDATION LOGS
@@ -191,7 +191,8 @@ import { SupabaseOrganizationHierarchyAdapter } from '@/infrastructure/adapters/
 
 import type { IDocumentValidationLogRepository } from '@/domain/repositories/IDocumentValidationLogRepository';
 import { SupabaseDocumentValidationLogAdapter } from '@/infrastructure/adapters/supabase/SupabaseDocumentValidationLogAdapter';
-
+import { IBoqDocumentHeaderRepository } from '@/domain/repositories/IBoqDocumentHeaderRepository';
+import { SupabaseBoqDocumentHeaderAdapter } from '@/infrastructure/adapters/supabase/SupabaseBoqDocumentHeaderAdapter';
 // ================================================================
 // 9. RESOLVE FUNCTIONS
 // ================================================================
@@ -277,6 +278,8 @@ interface RepositoryRegistry {
   paymentControlAction?: IPaymentControlActionRepository;
   taskAssignment?: ITaskAssignmentRepository;
   realtime?: IRealtimeRepository;
+  boqDocumentHeader?: IBoqDocumentHeaderRepository;
+
 }
 
 const registry: RepositoryRegistry = {};
@@ -821,6 +824,26 @@ export class RepositoryFactory {
     registry.realtime = new SupabaseRealtimeAdapter();
     return registry.realtime;
   }
+
+  
+// ================================================================
+// BOQ DOCUMENT HEADER
+// ================================================================
+
+static getBoqDocumentHeaderRepository(): IBoqDocumentHeaderRepository {
+  if (registry.boqDocumentHeader) return registry.boqDocumentHeader;
+
+  const dataKind = resolveData();
+  if (dataKind === 'local' || DEV_MODE) {
+    // TODO: Créer LocalBoqDocumentHeaderAdapter si nécessaire
+    // Fallback sur Supabase pour le moment
+    registry.boqDocumentHeader = new SupabaseBoqDocumentHeaderAdapter();
+  } else {
+    registry.boqDocumentHeader = new SupabaseBoqDocumentHeaderAdapter();
+  }
+
+  return registry.boqDocumentHeader;
+}
 
   // ================================================================
   // UTILITAIRES

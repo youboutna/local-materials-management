@@ -1,9 +1,9 @@
 /**
+ * src/hooks/hexagonal/useBoqDocumentList.ts
  * useBoqDocumentList — agrège les lignes BOQ d'un contexte par `document_id`
  * pour la Vue Liste (DQE/Devis/Facture). Aucun accès direct à Supabase :
  * on réutilise le repository hexagonal.
  */
-import type { BoqStatus } from '@/domain/entities/boq/BoqLine';
 import type { BoqDocumentSummary, BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

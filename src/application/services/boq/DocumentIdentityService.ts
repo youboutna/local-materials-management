@@ -1,4 +1,5 @@
 /**
+ * src/application/services/boq/DocumentIdentityService.ts
  * DocumentIdentityService — normalisation de l'identité documentaire (D1 / D2).
  *
  *  • Référence stable : `PREFIX-YYYYMMDD-XXXX` (le suffixe dérive du contexte,

@@ -1,11 +1,12 @@
 /**
+ * src/dtos/entities/StakeholderDTO.ts
  * Stakeholder Data Transfer Objects
  * Centralized and standardized for hexagonal architecture
  * Following clean code principles: camelCase only, no business logic
  */
 
-import { BaseEntityDTO } from '../shared';
 import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
+import { BaseEntityDTO } from '../shared';
 
 /**
  * Stakeholder type enumeration

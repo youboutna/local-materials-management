@@ -1,4 +1,5 @@
 /**
+ * src/dtos/boq/DocumentHeaderDTO.ts
  * DocumentHeaderDTO — en-tête documentaire éditable avant génération PDF,
  * signature ou soumission (Factur-X / EN 16931).
  *

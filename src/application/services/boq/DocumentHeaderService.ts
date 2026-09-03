@@ -1,11 +1,8 @@
 /**
- * DocumentHeaderService — construction et validation de l'en-tête documentaire.
+ * src/application/services/boq/DocumentHeaderService.ts
+ * Service de gestion des en-têtes documentaires BOQ
  *
- * Doctrine : la génération PDF, la signature et la soumission sont BLOQUÉES
- * tant que l'en-tête est incomplet (destinataire, devise, taux de TVA).
- * L'émetteur est déduit du contexte (organisation propriétaire / fournisseur).
- *
- * Pure TS — aucune dépendance React / Supabase.
+ * ✅ Méthodes statiques + instance pour persistance
  */
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { resolveLineTax } from '@/config/referentials/boq/tax-regimes.referential';
@@ -15,6 +12,9 @@ import type {
   DocumentPartyDTO,
 } from '@/dtos/boq/DocumentHeaderDTO';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { IBoqDocumentHeaderRepository } from '@/domain/repositories/IBoqDocumentHeaderRepository';
+import { DocumentHeaderTransformer } from '@/dtos/transforms/DocumentHeaderTransformer';
+import { BoqSource } from '@/domain/entities/boq/BoqLine';
 
 export interface HeaderContextInput {
   reference?: string | null;
@@ -41,6 +41,10 @@ const cleanParty = (p?: Partial<DocumentPartyDTO> | null): DocumentPartyDTO | nu
   };
 };
 
+// ================================================================
+// ✅ PARTIE STATIQUE — Méthodes pures (build, merge, validate)
+// ================================================================
+
 export const DocumentHeaderService = {
   /** En-tête par défaut : émetteur du contexte + valeurs du profil fiscal. */
   build(input: HeaderContextInput): DocumentHeaderDTO {
@@ -59,8 +63,7 @@ export const DocumentHeaderService = {
     };
   },
 
-  /** Fusionne un en-tête existant avec les valeurs du contexte (émetteur auto).
-   *  Les champs nuls/vides de `base` n'écrasent JAMAIS les valeurs par défaut. */
+  /** Fusionne un en-tête existant avec les valeurs du contexte. */
   merge(base: DocumentHeaderDTO | null, input: HeaderContextInput): DocumentHeaderDTO {
     const defaults = this.build(input);
     if (!base) return defaults;
@@ -76,10 +79,8 @@ export const DocumentHeaderService = {
     };
   },
 
-
   /**
    * Validation bloquante avant PDF / signature / soumission.
-   * Un taux de TVA nul est accepté uniquement si le régime porte une exonération.
    */
   validate(header: DocumentHeaderDTO, lines: BoqLineDTO[] = [], fiscalProfileCode?: string | null): DocumentHeaderValidationDTO {
     const issues: DocumentHeaderValidationDTO['issues'] = [];
@@ -132,6 +133,92 @@ export const DocumentHeaderService = {
       .filter(Boolean)
       .join(' · ');
   },
+
+  // ================================================================
+  // ✅ PARTIE INSTANCE — Persistance avec repository injecté
+  // ================================================================
+
+  createInstance(repository: IBoqDocumentHeaderRepository): DocumentHeaderServiceInstance {
+    return new DocumentHeaderServiceInstance(repository);
+  },
 };
 
-export default DocumentHeaderService;
+// ================================================================
+// ✅ CLASS — Service avec persistance
+// ================================================================
+
+export class DocumentHeaderServiceInstance {
+  constructor(private repository: IBoqDocumentHeaderRepository) {}
+
+  async save(documentId: string, header: DocumentHeaderDTO, source: BoqSource, userId?: string): Promise<DocumentHeaderDTO> {
+    // Enrichir les kinds basés sur la source
+    header.sender.kind = header.sender.kind ?? this.inferSenderKind(source);
+    if (header.recipients.length > 0) {
+      header.recipients[0].kind = header.recipients[0].kind ?? this.inferRecipientKind(source);
+    }
+
+    // Valider via la méthode statique
+    const validation = DocumentHeaderService.validate(header);
+    if (!validation.valid) {
+      const errors = validation.issues.map(i => i.fallback).join(' · ');
+      throw new Error(`En-tête invalide: ${errors}`);
+    }
+
+    return this.repository.save(documentId, header, userId);
+  }
+
+  async findByDocumentId(documentId: string): Promise<DocumentHeaderDTO | null> {
+    return this.repository.findByDocumentId(documentId);
+  }
+
+  async findById(id: string): Promise<DocumentHeaderDTO | null> {
+    return this.repository.findById(id);
+  }
+
+  async updateWorkflowStage(documentId: string, stage: string): Promise<void> {
+    await this.repository.updateWorkflowStage(documentId, stage);
+  }
+
+  async updateSignature(documentId: string, signedBy: string, role: string): Promise<void> {
+    await this.repository.updateSignature(documentId, signedBy, new Date().toISOString(), role);
+  }
+
+  async deleteByDocumentId(documentId: string): Promise<void> {
+    await this.repository.deleteByDocumentId(documentId);
+  }
+
+  async getForDocument(documentId: string, defaultValue?: DocumentHeaderDTO): Promise<DocumentHeaderDTO> {
+    const header = await this.repository.findByDocumentId(documentId);
+    if (header) return header;
+    if (defaultValue) return defaultValue;
+    return DocumentHeaderService.build({
+      reference: null,
+      issueDate: new Date().toISOString().slice(0, 10),
+      facturxTypeCode: '310',
+      sender: { name: '' },
+      recipients: [],
+    });
+  }
+
+  private inferSenderKind(source: BoqSource): string {
+    const mapping: Record<BoqSource, string> = {
+      'dqe': 'moe',
+      'tender_estimate': 'moe',
+      'supplier_bid': 'supplier',
+      'invoice': 'supplier',
+      'quantity_takeoff': 'employee',
+    };
+    return mapping[source] ?? 'unknown';
+  }
+
+  private inferRecipientKind(source: BoqSource): string {
+    const mapping: Record<BoqSource, string> = {
+      'dqe': 'hierarchy',
+      'tender_estimate': 'supplier',
+      'supplier_bid': 'moe',
+      'invoice': 'moe',
+      'quantity_takeoff': 'project_manager',
+    };
+    return mapping[source] ?? 'unknown';
+  }
+}

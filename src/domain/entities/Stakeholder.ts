@@ -1,4 +1,5 @@
 /**
+ * src/domain/entities/Stakeholder.ts
  * Domain Entity: Stakeholder
  * Représente une partie prenante dans un projet
  * Peut être un employé interne ou une organisation externe (fournisseur, sous-traitant, etc.)

@@ -61,5 +61,6 @@ export { SupabaseProjectStrategyLinkAdapter } from './SupabaseProjectStrategyLin
 export { LocationRepository } from './LocationRepository';
 export { SupabaseTenderSharingAdapter } from './SupabaseTenderSharingAdapter';
 export { SupabaseWorkspaceAdapter } from './SupabaseWorkspaceAdapter';
+export {SupabaseBoqDocumentHeaderAdapter} from './SupabaseBoqDocumentHeaderAdapter';
 
 // Auth adapters (multi-provider support)
