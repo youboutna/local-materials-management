@@ -1035,6 +1035,7 @@ export function BoqWorkspace({
                 <FileSpreadsheet className="h-4 w-4 mr-1" />{importLabel ?? labels.import}
               </Button>
             }
+            variant="inline"
             commitOnSubmit={false}
             onParsed={handleParsedImport}
           />
