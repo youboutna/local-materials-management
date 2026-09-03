@@ -532,16 +532,45 @@ export function BoqImportDialog(props: Props) {
   );
 
 
+  const heading = title ?? 'Importer BOQ (PDF / Excel / CSV)';
+  const subheading = 'Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.';
+
+  /** Rendu intégré au poste DQE : pleine largeur, retour explicite vers les résultats. */
+  if (variant === 'inline') {
+    return (
+      <>
+        <span onClick={() => setOpen(true)} className="contents">{trigger}</span>
+        {open && (
+          <section className="mt-3 w-full rounded-md border bg-card">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/30 px-3 py-2">
+              <div className="min-w-0">
+                <h3 className="truncate text-sm font-semibold">{heading}</h3>
+                <p className="truncate text-[11px] text-muted-foreground">{subheading}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+                <T k="auto.boqimportdialog.retour_resultats" fallback="Retour aux lignes" />
+              </Button>
+            </header>
+            <div className="max-h-[70vh] space-y-4 overflow-y-auto p-3">{body}</div>
+            <footer className="flex flex-wrap items-center justify-end gap-2 border-t bg-muted/20 px-3 py-2">
+              {cancelButton}{submitButton}
+            </footer>
+          </section>
+        )}
+      </>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="w-[97vw] max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>{title ?? 'Importer BOQ (PDF / Excel / CSV)'}</DialogTitle>
-          <DialogDescription>Importez un fichier, vérifiez la correspondance des colonnes puis validez les lignes.</DialogDescription>
+      <DialogContent className="flex h-[95vh] w-[98vw] max-w-[1600px] flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b px-4 py-3 sm:px-6">
+          <DialogTitle>{heading}</DialogTitle>
+          <DialogDescription>{subheading}</DialogDescription>
         </DialogHeader>
-        {body}
-        <DialogFooter className="gap-2">{cancelButton}{submitButton}</DialogFooter>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-3 sm:px-6">{body}</div>
+        <DialogFooter className="shrink-0 gap-2 border-t bg-muted/20 px-4 py-3 sm:px-6">{cancelButton}{submitButton}</DialogFooter>
       </DialogContent>
     </Dialog>
   );
