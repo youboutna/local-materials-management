@@ -632,7 +632,8 @@ export const BoqActionsBar: React.FC<Props> = ({
   return (
     <>
       {/* Barre unique et compacte : contexte + badges à gauche, actions à droite. */}
-      <div className="flex w-full flex-nowrap items-center gap-x-2 overflow-x-auto pb-1 [&>*]:shrink-0 [&_.badge-nowrap]:whitespace-nowrap">
+      <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-2 pb-1 [&_.badge-nowrap]:whitespace-nowrap">
+        {/* La barre utilise deux rangées naturelles si les actions dépassent la largeur disponible. */
 
         {/* --- Contexte & badges d'information (jamais de boutons) --- */}
         {contextSlot}

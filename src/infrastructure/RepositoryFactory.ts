@@ -191,7 +191,6 @@ import { SupabaseTaskDependencyAdapter } from './adapters/supabase/SupabaseTaskD
 
 import type { IDocumentValidationLogRepository } from '@/domain/repositories/IDocumentValidationLogRepository';
 import { SupabaseDocumentValidationLogAdapter } from '@/infrastructure/adapters/supabase/SupabaseDocumentValidationLogAdapter';
-import { IBoqDocumentHeaderRepository } from '@/domain/repositories/IBoqDocumentHeaderRepository';
 import { SupabaseBoqDocumentHeaderAdapter } from '@/infrastructure/adapters/supabase/SupabaseBoqDocumentHeaderAdapter';
 // ================================================================
 // 9. RESOLVE FUNCTIONS
