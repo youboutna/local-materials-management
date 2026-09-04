@@ -29,7 +29,7 @@ import { useBoqImport } from '@/hooks/hexagonal/useBoqImport';
 import { useBoqImportAssist } from '@/hooks/hexagonal/useBoqImportAssist';
 import { BoqAssistPanel } from '@/components/boq/BoqAssistPanel';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, ChevronDown, Loader2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { BoqLineTable } from './BoqLineTable';
 import { ImportDropzone } from './ImportDropzone';
@@ -91,6 +91,8 @@ export function BoqImportDialog(props: Props) {
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
   const [dropzoneReset, setDropzoneReset] = useState(0);
+  /** Bascule plein écran / fenêtré (le contenu reste redimensionnable). */
+  const [fullscreen, setFullscreen] = useState(true);
   const open = props.open ?? openInternal;
   const [wbs, setWbs] = useState<WbsValue>({ phaseId: phaseId ?? null });
   const [projectReferentialCode, setProjectReferentialCode] = useState<ReferentialType | undefined>(defaultReferentialCode);
@@ -564,10 +566,31 @@ export function BoqImportDialog(props: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="flex h-[95vh] w-[98vw] max-w-[1600px] flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="shrink-0 border-b px-4 py-3 sm:px-6">
-          <DialogTitle>{heading}</DialogTitle>
-          <DialogDescription>{subheading}</DialogDescription>
+      <DialogContent
+        style={fullscreen ? undefined : { resize: 'both', overflow: 'hidden' }}
+        className={
+          fullscreen
+            ? 'flex h-[95vh] w-[98vw] max-w-[1600px] flex-col gap-0 overflow-hidden p-0'
+            : 'flex h-[75vh] max-h-[95vh] w-[95vw] min-w-[320px] max-w-[1600px] flex-col gap-0 overflow-hidden p-0'
+        }
+      >
+        <DialogHeader className="shrink-0 border-b px-4 py-3 pr-14 sm:px-6 sm:pr-16">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <DialogTitle>{heading}</DialogTitle>
+              <DialogDescription>{subheading}</DialogDescription>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              aria-label={fullscreen ? 'Mode fenêtré' : 'Plein écran'}
+              onClick={() => setFullscreen((v) => !v)}
+            >
+              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
         </DialogHeader>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-3 sm:px-6">{body}</div>
         <DialogFooter className="shrink-0 gap-2 border-t bg-muted/20 px-4 py-3 sm:px-6">{cancelButton}{submitButton}</DialogFooter>
