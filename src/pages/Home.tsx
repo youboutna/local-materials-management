@@ -126,23 +126,23 @@ const Home = () => {
 
   return (
     <AppLayout pageTitle="Accueil" showBreadcrumb={false}>
-      <main className="flex-grow py-8">
-        <div className="container mx-auto px-4">
+      <main className="flex-grow py-6 sm:py-8">
+        <div className="container-responsive mx-auto max-w-7xl">
           {/* Hero Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-20"
+            className="text-center mb-12 sm:mb-16 lg:mb-20"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-adrar-100 border border-adrar-200 text-adrar-700 text-sm font-medium mb-6">
               <Building className="h-4 w-4" />
               <T k="auto.home.plateforme_btp_mauritanie" fallback="Plateforme BTP Mauritanie" />
             </div>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-adrar-900 mb-6 bg-gradient-to-br from-adrar-800 to-adrar-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-serif font-bold text-adrar-900 mb-6 bg-gradient-to-br from-adrar-800 to-adrar-600 bg-clip-text text-transparent">
               <T k="auto.home.gestion_de_projets_btp" fallback="Gestion de Projets BTP" />
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-xl md:text-2xl text-muted-foreground mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed">
               Plateforme complète de gestion des projets de construction,
               matériaux et équipes en Mauritanie
             </p>
@@ -179,7 +179,7 @@ const Home = () => {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20"
+            className="grid-responsive mb-12 sm:mb-16 lg:mb-20"
           >
             {stats.map((stat, index) => (
               <motion.div key={index} variants={itemVariants}>
@@ -209,7 +209,7 @@ const Home = () => {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-20"
           >
             {features.map((feature, index) => (
               <motion.div
