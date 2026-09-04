@@ -471,14 +471,40 @@ const MergedNavbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/auth?mode=login">{t("auth.login")}</Link>
-                </Button>
-                <Button size="sm" asChild>
-                  <Link to="/auth?mode=register">{t("auth.register")}</Link>
-                </Button>
-              </div>
+              <>
+                {/* Desktop auth buttons */}
+                <div className="hidden sm:flex items-center space-x-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/auth?mode=login">{t("auth.login")}</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link to="/auth?mode=register">{t("auth.register")}</Link>
+                  </Button>
+                </div>
+
+                {/* Mobile auth dropdown */}
+                <div className="sm:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label={t("auth.login")}>
+                        <User className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem asChild>
+                        <Link to="/auth?mode=login" className="cursor-pointer">
+                          {t("auth.login")}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/auth?mode=register" className="cursor-pointer">
+                          {t("auth.register")}
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </>
             )}
 
             {/* Mobile Menu Button */}
