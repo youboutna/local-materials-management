@@ -9,12 +9,15 @@ import { DocumentHeaderDTO } from '@/dtos/boq/DocumentHeaderDTO';
 import { DocumentHeaderTransformer, DocumentHeaderDBRow } from '@/dtos/transforms/DocumentHeaderTransformer';
 import { BTP_SCHEMA, getSchemaClient } from '@/integrations/supabase/schema-clients';
 
+/** Schéma BTP lu depuis `.env` (fallback `btp`). */
+const BTP_SCHEMA_FROM_ENV = import.meta.env.VITE_BTP_SCHEMA || 'btp';
+
 /** Table hébergée dans le schéma `btp` (absente des types générés `public`). */
 type UntypedTable = { from: (table: string) => any };
-const db = () => getSchemaClient(BTP_SCHEMA) as unknown as UntypedTable;
+const db = () => getSchemaClient(BTP_SCHEMA_FROM_ENV) as unknown as UntypedTable;
 
 export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepository {
-  private readonly table = 'boq_document_headers';
+  private readonly table = `${BTP_SCHEMA_FROM_ENV}.boq_document_headers`;
 
   async save(documentId: string, header: DocumentHeaderDTO, userId?: string): Promise<DocumentHeaderDTO> {
     const dbRow = DocumentHeaderTransformer.toDBRow(documentId, header, userId);
