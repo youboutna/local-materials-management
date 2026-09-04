@@ -105,3 +105,18 @@ CREATE TRIGGER trg_boq_doc_headers_updated_at
 GRANT SELECT, INSERT, UPDATE, DELETE ON btp.boq_document_headers TO authenticated;
 GRANT SELECT ON btp.boq_document_headers TO anon;
 GRANT ALL ON btp.boq_document_headers TO service_role;
+
+-----policies -------
+-- ✅ Alternative avec IF NOT EXISTS (PostgreSQL 9.6+)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'btp' 
+    AND tablename = 'boq_document_headers' 
+    AND policyname = 'boq_doc_headers_select'
+  ) THEN
+    CREATE POLICY "boq_doc_headers_select" ON btp.boq_document_headers
+      FOR SELECT USING (true);
+  END IF;
+END $$;
