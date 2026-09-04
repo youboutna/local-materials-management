@@ -2,7 +2,8 @@
  * src/application/services/boq/DocumentHeaderService.ts
  * Service de gestion des en-têtes documentaires BOQ
  *
- * ✅ Méthodes statiques + instance pour persistance
+ * ✅ Export des méthodes statiques + classe d'instance
+ * ✅ Méthodes build, merge, validate disponibles
  */
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import { resolveLineTax } from '@/config/referentials/boq/tax-regimes.referential';
@@ -42,7 +43,7 @@ const cleanParty = (p?: Partial<DocumentPartyDTO> | null): DocumentPartyDTO | nu
 };
 
 // ================================================================
-// ✅ PARTIE STATIQUE — Méthodes pures (build, merge, validate)
+// ✅ SERVICE STATIQUE — Méthodes pures (build, merge, validate)
 // ================================================================
 
 export const DocumentHeaderService = {
@@ -133,18 +134,10 @@ export const DocumentHeaderService = {
       .filter(Boolean)
       .join(' · ');
   },
-
-  // ================================================================
-  // ✅ PARTIE INSTANCE — Persistance avec repository injecté
-  // ================================================================
-
-  createInstance(repository: IBoqDocumentHeaderRepository): DocumentHeaderServiceInstance {
-    return new DocumentHeaderServiceInstance(repository);
-  },
 };
 
 // ================================================================
-// ✅ CLASS — Service avec persistance
+// ✅ CLASSE D'INSTANCE — Service avec persistance
 // ================================================================
 
 export class DocumentHeaderServiceInstance {
@@ -221,4 +214,12 @@ export class DocumentHeaderServiceInstance {
     };
     return mapping[source] ?? 'unknown';
   }
+}
+
+// ================================================================
+// ✅ FACTORY — Créer une instance avec repository
+// ================================================================
+
+export function createDocumentHeaderService(repository: IBoqDocumentHeaderRepository): DocumentHeaderServiceInstance {
+  return new DocumentHeaderServiceInstance(repository);
 }

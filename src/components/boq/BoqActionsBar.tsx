@@ -189,7 +189,7 @@ export const BoqActionsBar: React.FC<Props> = ({
 
   const {
     header: persistedHeader,
-    loading: headerLoading,
+    isLoading: headerLoading,
     saveHeader,
     reload: reloadHeader,
   } = useBoqDocumentHeaderHex(documentId, ctx.routeContext);
@@ -311,7 +311,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     });
     setPartiesOpen(true);
     return false;
-  }, [headerValidation, t]);
+  }, [headerValidation, t, toast]);
 
   const baseDocCtx = {
     company: effectiveCompany,

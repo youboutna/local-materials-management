@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Building2, Mail, Phone, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
 import { T } from '@/components/i18n/T';
+import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
+import { Building2, Mail, MapPin, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -21,7 +21,7 @@ const Footer = () => {
       { name: t("contact.title"), href: "/contact" },
     ],
     contact: [
-      { icon: Phone, text: "+222 1234 5678" },
+      { icon: Phone, text: "+222 4143 8908" },
       { icon: Mail, text: "contact@hadratech.com" },
       { icon: MapPin, text: "Nouakchott, Mauritanie" },
     ],

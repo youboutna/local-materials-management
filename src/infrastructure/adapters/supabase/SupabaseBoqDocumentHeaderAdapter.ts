@@ -3,32 +3,27 @@
  * Implémentation Supabase du repository des en-têtes documentaires BOQ
  *
  * ⚠️ INFRASTRUCTURE — Seul endroit qui connaît Supabase
+ * ✅ Table : btp.boq_document_headers (schéma btp via btpClient)
  */
 import { IBoqDocumentHeaderRepository } from '@/domain/repositories/IBoqDocumentHeaderRepository';
 import { DocumentHeaderDTO } from '@/dtos/boq/DocumentHeaderDTO';
-import { DocumentHeaderTransformer, DocumentHeaderDBRow } from '@/dtos/transforms/DocumentHeaderTransformer';
-import { BTP_SCHEMA, getSchemaClient } from '@/integrations/supabase/schema-clients';
-
-/** Schéma BTP lu depuis `.env` (fallback `btp`). */
-const BTP_SCHEMA_FROM_ENV = import.meta.env.VITE_BTP_SCHEMA || 'btp';
-
-/** Table hébergée dans le schéma `btp` (absente des types générés `public`). */
-type UntypedTable = { from: (table: string) => any };
-const db = () => getSchemaClient(BTP_SCHEMA_FROM_ENV) as unknown as UntypedTable;
+import { DocumentHeaderDBRow, DocumentHeaderTransformer } from '@/dtos/transforms/DocumentHeaderTransformer';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepository {
-  private readonly table = `${BTP_SCHEMA_FROM_ENV}.boq_document_headers`;
+  private readonly table = 'boq_document_headers';
 
   async save(documentId: string, header: DocumentHeaderDTO, userId?: string): Promise<DocumentHeaderDTO> {
     const dbRow = DocumentHeaderTransformer.toDBRow(documentId, header, userId);
 
-    const { data: result, error } = await db()
+    const { data: result, error } = await btpClient
       .from(this.table)
       .upsert(dbRow, { onConflict: 'document_id' })
       .select()
       .single();
 
     if (error) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] Save error:', error);
       throw new Error(`Failed to save BOQ document header: ${error.message}`);
     }
 
@@ -40,13 +35,14 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async findByDocumentId(documentId: string): Promise<DocumentHeaderDTO | null> {
-    const { data, error } = await db()
+    const { data, error } = await btpClient
       .from(this.table)
       .select('*')
       .eq('document_id', documentId)
       .maybeSingle();
 
     if (error) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] Find error:', error);
       throw new Error(`Failed to find BOQ document header: ${error.message}`);
     }
 
@@ -56,13 +52,14 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async findById(id: string): Promise<DocumentHeaderDTO | null> {
-    const { data, error } = await db()
+    const { data, error } = await btpClient
       .from(this.table)
       .select('*')
       .eq('id', id)
       .maybeSingle();
 
     if (error) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] FindById error:', error);
       throw new Error(`Failed to find BOQ document header: ${error.message}`);
     }
 
@@ -72,13 +69,14 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async updateWorkflowStage(documentId: string, stage: string): Promise<void> {
-    const { data: existing, error: fetchError } = await db()
+    const { data: existing, error: fetchError } = await btpClient
       .from(this.table)
       .select('*')
       .eq('document_id', documentId)
       .maybeSingle();
 
     if (fetchError) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] Fetch for update error:', fetchError);
       throw new Error(`Failed to fetch existing header: ${fetchError.message}`);
     }
 
@@ -92,24 +90,26 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
       addStage: { stage, by: 'system' },
     });
 
-    const { error } = await db()
+    const { error } = await btpClient
       .from(this.table)
       .update(updates)
       .eq('document_id', documentId);
 
     if (error) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] Update workflow error:', error);
       throw new Error(`Failed to update workflow stage: ${error.message}`);
     }
   }
 
   async updateSignature(documentId: string, signedBy: string, signedAt: string, role: string): Promise<void> {
-    const { data: existing, error: fetchError } = await db()
+    const { data: existing, error: fetchError } = await btpClient
       .from(this.table)
       .select('*')
       .eq('document_id', documentId)
       .maybeSingle();
 
     if (fetchError) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] Fetch for signature error:', fetchError);
       throw new Error(`Failed to fetch existing header: ${fetchError.message}`);
     }
 
@@ -125,23 +125,25 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
       addStage: { stage: 'signed', by: signedBy },
     });
 
-    const { error } = await db()
+    const { error } = await btpClient
       .from(this.table)
       .update(updates)
       .eq('document_id', documentId);
 
     if (error) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] Update signature error:', error);
       throw new Error(`Failed to update signature: ${error.message}`);
     }
   }
 
   async deleteByDocumentId(documentId: string): Promise<void> {
-    const { error } = await db()
+    const { error } = await btpClient
       .from(this.table)
       .delete()
       .eq('document_id', documentId);
 
     if (error) {
+      console.error('[SupabaseBoqDocumentHeaderAdapter] Delete error:', error);
       throw new Error(`Failed to delete BOQ document header: ${error.message}`);
     }
   }
