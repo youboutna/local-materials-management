@@ -7,17 +7,21 @@
 import { IBoqDocumentHeaderRepository } from '@/domain/repositories/IBoqDocumentHeaderRepository';
 import { DocumentHeaderDTO } from '@/dtos/boq/DocumentHeaderDTO';
 import { DocumentHeaderTransformer, DocumentHeaderDBRow } from '@/dtos/transforms/DocumentHeaderTransformer';
-import { supabase } from '@/integrations/supabase/client';
+import { BTP_SCHEMA, getSchemaClient } from '@/integrations/supabase/schema-clients';
+
+/** Table hébergée dans le schéma `btp` (absente des types générés `public`). */
+type UntypedTable = { from: (table: string) => any };
+const db = () => getSchemaClient(BTP_SCHEMA) as unknown as UntypedTable;
 
 export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepository {
-  private readonly table = 'boq_document_headers' as never;
+  private readonly table = 'boq_document_headers';
 
   async save(documentId: string, header: DocumentHeaderDTO, userId?: string): Promise<DocumentHeaderDTO> {
     const dbRow = DocumentHeaderTransformer.toDBRow(documentId, header, userId);
 
-    const { data: result, error } = await supabase
+    const { data: result, error } = await db()
       .from(this.table)
-      .upsert(dbRow as never, { onConflict: 'document_id' })
+      .upsert(dbRow, { onConflict: 'document_id' })
       .select()
       .single();
 
@@ -33,7 +37,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async findByDocumentId(documentId: string): Promise<DocumentHeaderDTO | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db()
       .from(this.table)
       .select('*')
       .eq('document_id', documentId)
@@ -49,7 +53,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async findById(id: string): Promise<DocumentHeaderDTO | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db()
       .from(this.table)
       .select('*')
       .eq('id', id)
@@ -65,7 +69,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async updateWorkflowStage(documentId: string, stage: string): Promise<void> {
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existing, error: fetchError } = await db()
       .from(this.table)
       .select('*')
       .eq('document_id', documentId)
@@ -85,7 +89,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
       addStage: { stage, by: 'system' },
     });
 
-    const { error } = await supabase
+    const { error } = await db()
       .from(this.table)
       .update(updates)
       .eq('document_id', documentId);
@@ -96,7 +100,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async updateSignature(documentId: string, signedBy: string, signedAt: string, role: string): Promise<void> {
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existing, error: fetchError } = await db()
       .from(this.table)
       .select('*')
       .eq('document_id', documentId)
@@ -118,7 +122,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
       addStage: { stage: 'signed', by: signedBy },
     });
 
-    const { error } = await supabase
+    const { error } = await db()
       .from(this.table)
       .update(updates)
       .eq('document_id', documentId);
@@ -129,7 +133,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async deleteByDocumentId(documentId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await db()
       .from(this.table)
       .delete()
       .eq('document_id', documentId);
