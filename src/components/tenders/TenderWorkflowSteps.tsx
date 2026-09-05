@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import { WorkflowStepDTO, DocumentUploadDTO, DocumentShareDTO } from '@/dtos/types/workflow-dto';
 import { TenderDocumentCategory } from './PublicProcurementWorkflow';
-import { DEV_MODE } from '@/config/constants';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import { standardWorkflow, WorkflowPhase, WorkflowStage } from '@/dtos/types/workflow';
 import StandardWorkflowDocumentSuggestions from './StandardWorkflowDocumentSuggestions';

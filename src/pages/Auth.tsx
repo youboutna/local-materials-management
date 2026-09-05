@@ -250,7 +250,7 @@ const Auth = () => {
                     <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
                       <div className="flex items-center gap-2 mb-3 text-amber-900 text-sm font-medium">
                         <ShieldCheck className="h-4 w-4" />
-                        DEV_MODE — Connexion locale (aucun appel réseau)
+                        Connexion rapide (DEV) — utilise le provider configuré
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {(Object.keys(DEV_USERS) as Array<keyof typeof DEV_USERS>).map((k) => (
@@ -267,6 +267,9 @@ const Auth = () => {
                           </Button>
                         ))}
                       </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Ces comptes sont fictifs — les appels au provider restent actifs
+                      </p>
                     </div>
                   )}
 

@@ -6,7 +6,7 @@
 
 import { getAuthService } from '@/application/services/AuthService';
 import { getUserService } from '@/application/services/UserService';
-import { DEV_MODE, getActiveDevRole } from '@/config/constants';
+import { DEV_MODE, getActiveDevRole, IS_LOCAL_BYPASS } from '@/config/constants';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,7 +51,7 @@ export const useUserRoles = (userId?: string) => {
     queryKey: ['userRoles', userId, DEV_MODE ? getActiveDevRole().role : null],
     queryFn: async () => {
       if (!userId) return [];
-      if (DEV_MODE) {
+      if (IS_LOCAL_BYPASS) {
         const role = getActiveDevRole().role;
         return [{ id: `${userId}-${role}`, roleName: role, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }] as UserRole[];
       }
@@ -102,7 +102,7 @@ export const useCurrentUserRoles = () => {
 
   const loadCurrentUser = useCallback(async () => {
     if (!user?.id) return;
-    if (DEV_MODE) {
+    if (IS_LOCAL_BYPASS) {
       setCurrentUser({
         id: user.id,
         roleName: getActiveDevRole().role,
@@ -130,7 +130,7 @@ export const useCurrentUserRoles = () => {
     queryKey: ['currentUserRoles', currentUser?.id, user?.role, DEV_MODE ? getActiveDevRole().role : null],
     queryFn: async () => {
       // DEV_MODE: no network — resolve roles from local DEV_USER profile.
-      if (DEV_MODE) {
+      if (IS_LOCAL_BYPASS) {
         const devRole = getActiveDevRole().role;
         return Array.from(new Set([devRole, String(user?.role || '').toLowerCase()].filter(Boolean)));
       }
@@ -162,11 +162,11 @@ export const useCurrentUserRoles = () => {
       }
     },
     enabled: !!currentUser?.id || !!user?.id || !!isAuthenticated,
-    retry: DEV_MODE ? 0 : 2,
+    retry: IS_LOCAL_BYPASS ? 0 : 2,
     retryDelay: 500,
     staleTime: 5 * 60 * 1000,
     placeholderData: () => {
-      if (DEV_MODE) return [getActiveDevRole().role];
+      if (IS_LOCAL_BYPASS) return [getActiveDevRole().role];
       return user?.role ? [String(user.role).toLowerCase()] : [];
     }
   });

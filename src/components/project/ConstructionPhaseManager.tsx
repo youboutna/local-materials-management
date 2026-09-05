@@ -56,7 +56,7 @@ import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 import { toast } from '@/hooks/use-toast';
 
-import { DEV_MODE } from '@/config/constants';
+import { DEV_MODE, IS_LOCAL_BYPASS } from '@/config/constants';
 
 import { ReferentialType } from '@/config/referentials';
 
@@ -201,7 +201,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
     
 
-    if (!user && !DEV_MODE) {
+    if (!user && !IS_LOCAL_BYPASS) {
 
       console.log('Authentication failed - no user and not DEV_MODE');
 
@@ -412,7 +412,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
 
   const updatePhase = async (updatedPhase: PhaseData): Promise<boolean> => {
-    if (!user && !DEV_MODE) {
+    if (!user && !IS_LOCAL_BYPASS) {
       toast({
         title: "Authentification requise",
         description: "Vous devez être connecté pour modifier une phase.",
@@ -519,7 +519,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   const handleViewPhaseDetail = (phaseId: string) => {
 
-    if (!user && !DEV_MODE) {
+    if (!user && !IS_LOCAL_BYPASS) {
 
       toast({
 
@@ -1047,7 +1047,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
               <DialogTrigger asChild>
 
-                <Button disabled={!user && !DEV_MODE}>
+                <Button disabled={!user && !IS_LOCAL_BYPASS}>
 
                   <Plus className="h-4 w-4 mr-2" />
 
@@ -1193,7 +1193,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                 onClick={handleGeneratePhasesFromReferential}
 
-                disabled={!selectedReferential || (!user && !DEV_MODE) || isGenerating}
+                disabled={!selectedReferential || (!user && !IS_LOCAL_BYPASS) || isGenerating}
 
                 variant="default"
 
@@ -1277,7 +1277,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         {/* Authentication warning - same as project forms */}
 
-        {!user && !DEV_MODE && (
+        {!user && !IS_LOCAL_BYPASS && (
 
           <Alert className="mb-4">
 
@@ -1349,7 +1349,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                         className="flex items-center gap-1"
 
-                        disabled={!user && !DEV_MODE}
+                        disabled={!user && !IS_LOCAL_BYPASS}
 
                       >
 
@@ -1367,7 +1367,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                         onClick={() => setEditingPhase((phase as PhaseData))}
 
-                        disabled={!user && !DEV_MODE}
+                        disabled={!user && !IS_LOCAL_BYPASS}
 
                       >
 
@@ -1383,7 +1383,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                         onClick={() => deletePhase(phase.id)}
 
-                        disabled={!user && !DEV_MODE}
+                        disabled={!user && !IS_LOCAL_BYPASS}
 
                       >
 
