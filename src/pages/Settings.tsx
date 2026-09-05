@@ -1,3 +1,5 @@
+/**src/pages/settings.tsx
+ **/
 import AlertsProcessorSettings from "@/components/admin/AlertsProcessorSettings";
 import DatabaseSettings from "@/components/admin/DatabaseSettings";
 import DeploymentSettings from "@/components/admin/DeploymentSettings";
@@ -14,16 +16,10 @@ import SystemSettingsPanel from "@/components/admin/SystemSettingsPanel";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAppConfig } from '@/hooks/useAppConfig';
+import { useAppConfig } from "@/hooks/useAppConfig";
 
 import {
   AlertTriangle,
@@ -34,22 +30,15 @@ import {
   Key,
   Mail,
   Palette,
-
   Settings2,
   Users,
   Wrench,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { T } from '@/components/i18n/T';
-import DevModeSettingsCard from '@/components/dev/DevModeSettingsCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { T } from "@/components/i18n/T";
+import DevModeSettingsCard from "@/components/dev/DevModeSettingsCard";
 
 type Translate = (key: string) => string;
 
@@ -75,8 +64,6 @@ const SETTINGS_TABS: Array<{
   { value: "dev", icon: Wrench, label: () => "Mode dev" },
 ];
 
-
-
 const Settings = () => {
   const { t } = useLanguage();
   const { config, isValid, isDevMode } = useAppConfig();
@@ -84,16 +71,12 @@ const Settings = () => {
   const visibleTabs = SETTINGS_TABS.filter((tab) => !isDevMode || !tab.hideInDev);
   const urlTab = searchParams.get("tab");
   const activeTab =
-    urlTab && visibleTabs.some((s) => s.value === urlTab)
-      ? urlTab
-      : visibleTabs[0]?.value ?? "appearance";
+    urlTab && visibleTabs.some((s) => s.value === urlTab) ? urlTab : (visibleTabs[0]?.value ?? "appearance");
   const setActiveTab = (value: string) => {
     const next = new URLSearchParams(searchParams);
     next.set("tab", value);
     setSearchParams(next, { replace: true });
   };
-
-
 
   return (
     <AppLayout pageTitle={t("settings.title")}>
