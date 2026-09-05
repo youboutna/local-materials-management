@@ -7,7 +7,7 @@
 import { getOAuthProviderService } from '@/application/services/OAuthProviderService';
 import { AuthProvider } from '@/config/app';
 import { AUTH_ERROR_MESSAGES } from '@/config/auth';
-import { DEV_MODE, DEV_USER, getActiveDevRole } from '@/config/constants';
+import { DEV_MODE, DEV_USER, getActiveDevRole, IS_LOCAL_BYPASS } from '@/config/constants';
 import { UserProfile } from '@/domain/entities/UserProfile';
 import { IAuthRepository, LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
 import type { OAuthProvider } from '@/domain/repositories/IOAuthProviderRepository';
@@ -165,7 +165,7 @@ export class UnifiedAuthService {
 
   // ========== Méthodes publiques ==========
   async getCurrentSession(): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
-    if (DEV_MODE) {
+    if (IS_LOCAL_BYPASS) {
       const { user, session } = this.buildDevSession();
       return { user, session };
     }
@@ -184,7 +184,7 @@ export class UnifiedAuthService {
   }
 
   async login(credentials: LoginCredentials): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
-    if (DEV_MODE) {
+    if (IS_LOCAL_BYPASS) {
       const result = await this.authRepository.signIn(credentials);
       if (result.error || !result.session) throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS, result.error);
       const { user, session } = this.buildDevSession();

@@ -7,11 +7,13 @@
  *
  * Selection order:
  *   1. Explicit VITE_AUTH_PROVIDER env ('local' | 'supabase' | 'keycloak')
- *   2. DEV_MODE flag → 'local'
- *   3. Default → 'supabase'
+ *   2. Default → 'supabase'
+ *
+ * NOTE: DEV_MODE only adds quick-login buttons in the UI. It does NOT
+ * change the active auth provider. Use VITE_AUTH_PROVIDER='local' or
+ * VITE_APP_MODE='local-bypass' for a fully offline/local adapter.
  */
 
-import { DEV_MODE } from '@/config/constants';
 import { IAuthRepository } from '@/domain/repositories/IAuthRepository';
 import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapter';
 import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
@@ -25,7 +27,6 @@ function resolveKind(): AuthAdapterKind {
   if (explicit === 'local' || explicit === 'supabase' || explicit === 'keycloak') {
     return explicit;
   }
-  if (DEV_MODE) return 'local';
   return 'supabase';
 }
 

@@ -13,7 +13,7 @@
 
 import { getAppConfig } from '@/config/app';
 import { validateProviders } from '@/config/app-validate';
-import { DEV_MODE } from '@/config/constants';
+import { DEV_MODE, IS_LOCAL_BYPASS } from '@/config/constants';
 // ================================================================
 // 1. TYPES
 // ================================================================
@@ -375,7 +375,7 @@ export class RepositoryFactory {
     if (registry.alert) return registry.alert;
 
     const dataKind = resolveData();
-    if (dataKind === 'local' || DEV_MODE) {
+    if (dataKind === 'local' || IS_LOCAL_BYPASS) {
       registry.alert = new LocalAlertAdapter();
     } else {
       registry.alert = new SupabaseAlertAdapter();
@@ -388,7 +388,7 @@ export class RepositoryFactory {
     if (registry.notifications) return registry.notifications;
 
     const dataKind = resolveData();
-    if (dataKind === 'local' || DEV_MODE) {
+    if (dataKind === 'local' || IS_LOCAL_BYPASS) {
       registry.notifications = new LocalNotificationAdapter();
     } else {
       registry.notifications = new SupabaseNotificationAdapter();
@@ -401,7 +401,7 @@ export class RepositoryFactory {
     if (registry.oauthProvider) return registry.oauthProvider;
 
     const dataKind = resolveData();
-    if (dataKind === 'local' || DEV_MODE) {
+    if (dataKind === 'local' || IS_LOCAL_BYPASS) {
       registry.oauthProvider = new LocalOAuthProviderAdapter();
     } else {
       registry.oauthProvider = new SupabaseOAuthProviderAdapter();
@@ -833,7 +833,7 @@ static getBoqDocumentHeaderRepository(): IBoqDocumentHeaderRepository {
   if (registry.boqDocumentHeader) return registry.boqDocumentHeader;
 
   const dataKind = resolveData();
-  if (dataKind === 'local' || DEV_MODE) {
+  if (dataKind === 'local' || IS_LOCAL_BYPASS) {
     // TODO: Créer LocalBoqDocumentHeaderAdapter si nécessaire
     // Fallback sur Supabase pour le moment
     registry.boqDocumentHeader = new SupabaseBoqDocumentHeaderAdapter();

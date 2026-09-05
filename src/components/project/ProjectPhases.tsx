@@ -2,7 +2,7 @@ import { getPhaseService } from '@/application/services/PhaseService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DEV_MODE } from '@/config/constants';
+import { DEV_MODE, IS_LOCAL_BYPASS } from '@/config/constants';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -188,7 +188,7 @@ const ProjectPhases: React.FC<ProjectPhasesProps> = ({
   return (
     <div className="space-y-6">
       {/* Authentication warning - same as project forms */}
-      {!formMode && !user && !DEV_MODE && (
+      {!formMode && !user && !IS_LOCAL_BYPASS && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
