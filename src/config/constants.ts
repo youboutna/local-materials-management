@@ -1,3 +1,4 @@
+src / config / constants.ts;
 // Configuration flags - can be controlled by environment variables
 // Check if we're in a browser environment
 const isBrowser = typeof window !== "undefined";
@@ -44,14 +45,13 @@ export const DEV_MODE = isDevMode();
 
 /** Mode hors-ligne complet (DEV_USERS, aucun appel réseau). */
 export const IS_LOCAL_BYPASS =
-  ((isBrowser && (window as any).__APP_CONFIG__?.APP_MODE) ||
-    import.meta.env?.VITE_APP_MODE) === 'local-bypass';
+  ((isBrowser && (window as any).__APP_CONFIG__?.APP_MODE) || import.meta.env?.VITE_APP_MODE) === "local-bypass";
 
 /** La déconnexion est masquée uniquement en mode local-bypass. */
 export const ENABLE_LOGOUT = !IS_LOCAL_BYPASS;
 
-export const APP_NAME = import.meta.env?.VITE_APP_NAME || 'HadraTech-GPI';
-export const APP_VERSION = import.meta.env?.VITE_APP_VERSION || '1.0.0';
+export const APP_NAME = import.meta.env?.VITE_APP_NAME || "HadraTech-GPI";
+export const APP_VERSION = import.meta.env?.VITE_APP_VERSION || "1.0.0";
 
 /** Lecture du réglage administrateur courant (null = valeur .env utilisée). */
 export const getDevModeOverride = (): boolean | null => readDevModeOverride();
@@ -69,9 +69,7 @@ export const setDevModeOverride = (enabled: boolean | null): void => {
   window.dispatchEvent(new CustomEvent("dev-mode-changed", { detail: enabled }));
 };
 
-
 export const CLIENT_ETRML = (isBrowser && (window as any).__APP_CONFIG__?.CLIENT_ETRML === "true") || false;
-
 
 // Development-mode user registry (local accounts, overridable via localStorage)
 export interface DevUserProfile {
@@ -117,13 +115,7 @@ const DEFAULT_DEV_USERS: Record<string, DevUserProfile> = {
       phone: "100000002",
       national_id: "DEV-MANAGER-002",
     },
-    permissions: [
-      "projects:read",
-      "projects:create",
-      "projects:update",
-      "tenders:read",
-      "tenders:manage",
-    ],
+    permissions: ["projects:read", "projects:create", "projects:update", "tenders:read", "tenders:manage"],
     teams: ["projects"],
     preferences: { language: "fr", theme: "light" },
   },
@@ -137,12 +129,7 @@ const DEFAULT_DEV_USERS: Record<string, DevUserProfile> = {
       phone: "100000003",
       national_id: "DEV-DIRECTOR-003",
     },
-    permissions: [
-      "projects:read",
-      "projects:approve",
-      "payments:approve",
-      "users:read",
-    ],
+    permissions: ["projects:read", "projects:approve", "payments:approve", "users:read"],
     teams: ["direction"],
     preferences: { language: "fr", theme: "light" },
   },
@@ -176,7 +163,6 @@ const DEFAULT_DEV_USERS: Record<string, DevUserProfile> = {
   },
 };
 
-
 const LOCAL_USERS_STORAGE_KEY = "dev_users_overrides";
 
 function loadPersistedUsers(): Record<string, DevUserProfile> {
@@ -196,24 +182,21 @@ export function persistDevUsers(users: Record<string, DevUserProfile>): void {
 }
 
 /** Live DEV_USERS registry: defaults merged with localStorage overrides. */
-export const DEV_USERS: Record<string, DevUserProfile> = new Proxy(
-  {} as Record<string, DevUserProfile>,
-  {
-    get(_t, prop: string) {
-      const merged = { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
-      return merged[prop];
-    },
-    ownKeys() {
-      return Object.keys({ ...DEFAULT_DEV_USERS, ...loadPersistedUsers() });
-    },
-    getOwnPropertyDescriptor() {
-      return { enumerable: true, configurable: true };
-    },
-    has(_t, prop: string) {
-      return prop in { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
-    },
+export const DEV_USERS: Record<string, DevUserProfile> = new Proxy({} as Record<string, DevUserProfile>, {
+  get(_t, prop: string) {
+    const merged = { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
+    return merged[prop];
   },
-);
+  ownKeys() {
+    return Object.keys({ ...DEFAULT_DEV_USERS, ...loadPersistedUsers() });
+  },
+  getOwnPropertyDescriptor() {
+    return { enumerable: true, configurable: true };
+  },
+  has(_t, prop: string) {
+    return prop in { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
+  },
+});
 
 export function getDevUsersSnapshot(): Record<string, DevUserProfile> {
   return { ...DEFAULT_DEV_USERS, ...loadPersistedUsers() };
