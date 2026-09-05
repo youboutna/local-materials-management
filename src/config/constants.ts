@@ -1,5 +1,4 @@
-/**
-src / config / constants.ts**/
+/**src/config/constants.ts**/
 // Configuration flags - can be controlled by environment variables
 // Check if we're in a browser environment
 const isBrowser = typeof window !== "undefined";
