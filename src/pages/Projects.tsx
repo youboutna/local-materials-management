@@ -41,7 +41,7 @@ const Projects: React.FC = () => {
   const projects = React.useMemo(() => hexProjects ?? [], [hexProjects]);
   
   const [filteredMapLocations, setFilteredMapLocations] = useState<MapLocation[]>([]);
-  const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[]>([]);
+  const [interactiveFilteredProjects, setInteractiveFilteredProjects] = useState<ProjectData[] | null>(null);
 
   // Use the projects filter hook
   const {
@@ -443,9 +443,7 @@ const Projects: React.FC = () => {
             {/* Enhanced Interactive Map */}
             <EnhancedInteractiveMap
               projects={
-                interactiveFilteredProjects.length > 0
-                  ? interactiveFilteredProjects
-                  : projects || []
+                interactiveFilteredProjects ?? projects ?? []
               }
               onProjectSelect={(project) => {
                 navigate(`/projects/${project.id}`);
@@ -455,9 +453,7 @@ const Projects: React.FC = () => {
             {/* Projects List with Pagination */}
             <InteractiveProjectsList
               projects={
-                interactiveFilteredProjects.length > 0
-                  ? interactiveFilteredProjects
-                  : projects || []
+                interactiveFilteredProjects ?? projects ?? []
               }
               onProjectSelect={(project) => {
                 navigate(`/projects/${project.id}`);
