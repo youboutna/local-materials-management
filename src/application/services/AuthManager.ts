@@ -13,7 +13,7 @@ import { AuthUserStatus } from "@/domain/entities/AuthUser";
 import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from "@/dtos/entities/AuthDTO";
 
 // ✅ IMPORT des modules locaux (correction)
-import { isDevMode } from "@/config/constants";
+import { IS_LOCAL_BYPASS } from "@/config/constants";
 import { LocalAuthAdapter } from "@/infrastructure/adapters/local/LocalAuthAdapter";
 import { SupabaseAuthAdapter as RealSupabaseAuthAdapter } from "@/infrastructure/adapters/supabase/SupabaseAuthAdapter";
 import { KeycloakAuthAdapter as RealKeycloakAuthAdapter } from "@/infrastructure/adapters/auth/KeycloakAuthAdapter";
@@ -105,6 +105,7 @@ function wrapDomainAdapter(repo: DomainAuthRepository): IAuthRepository {
 
 export class AuthManager {
   private currentAdapter: IAuthRepository | null = null;
+  private devAdapter: IAuthRepository | null = null;
   private currentConfig: AuthManagerConfig;
 
   constructor(config?: AuthManagerConfig) {
@@ -131,8 +132,9 @@ export class AuthManager {
    * ✅ CORRECTION : utilisation d'imports statiques, plus de require()
    */
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
-    // Mode DEV dynamique (surcharge admin incluse) : DEV_USERS hors-ligne
-    if (isDevMode()) {
+    // Local/offline uniquement en mode explicite (VITE_APP_MODE=local-bypass
+    // ou VITE_AUTH_PROVIDER=local). DEV_MODE ne change PAS le provider.
+    if (IS_LOCAL_BYPASS || (config.provider as string) === "local") {
       return wrapDomainAdapter(new LocalAuthAdapter());
     }
 
@@ -222,6 +224,17 @@ export class AuthManager {
     credentials: LoginCredentials,
   ): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
     return this.getAdapter().signIn(credentials);
+  }
+
+  /**
+   * Connexion rapide DEV : utilise TOUJOURS LocalAuthAdapter (aucun appel réseau).
+   * Réservée aux boutons de test de la page de connexion.
+   */
+  async signInWithDevUser(
+    credentials: LoginCredentials,
+  ): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
+    if (!this.devAdapter) this.devAdapter = wrapDomainAdapter(new LocalAuthAdapter());
+    return this.devAdapter.signIn(credentials);
   }
 
   /**

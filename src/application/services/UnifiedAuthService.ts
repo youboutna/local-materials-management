@@ -184,12 +184,6 @@ export class UnifiedAuthService {
   }
 
   async login(credentials: LoginCredentials): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
-    if (IS_LOCAL_BYPASS) {
-      const result = await this.authRepository.signIn(credentials);
-      if (result.error || !result.session) throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS, result.error);
-      const { user, session } = this.buildDevSession();
-      return { user, session };
-    }
     try {
       const result = await this.authRepository.signIn(credentials);
       if (result.error) {
@@ -208,6 +202,20 @@ export class UnifiedAuthService {
       console.error('UnifiedAuthService.login failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Login failed', error);
     }
+  }
+
+  /**
+   * Connexion rapide DEV (boutons de test) : LocalAuthAdapter, sans appel réseau.
+   */
+  async devLogin(credentials: LoginCredentials): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {
+    const { LocalAuthAdapter } = await import('@/infrastructure/adapters/local/LocalAuthAdapter');
+    const local = new LocalAuthAdapter();
+    const result = await local.signIn(credentials);
+    if (result.error || !result.session) {
+      throw new AppError(ErrorCode.UNAUTHORIZED, AUTH_ERROR_MESSAGES.INVALID_CREDENTIALS, result.error);
+    }
+    const session = this.toUnifiedSession(result.session);
+    return { user: session.user, session };
   }
 
   async loginWithOAuth(oAuthData: OAuthLoginData): Promise<{ user: UnifiedAuthUser | null; session: UnifiedAuthSession | null }> {

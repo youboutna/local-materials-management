@@ -42,6 +42,7 @@ const Auth = () => {
     user, 
     refetch,
     login,
+    devLogin,
     register,
     logout,
     isLoading: authLoading,
@@ -160,7 +161,7 @@ const Auth = () => {
     setEmail(profile.email);
     setPassword(profile.password || '');
     toast.success(`DEV login → ${profile.user_metadata.full_name} (${profile.user_metadata.role})`);
-    await login({ email: profile.email, password: profile.password || 'dev' });
+    await devLogin({ email: profile.email, password: profile.password || 'dev' });
   };
 
   return (

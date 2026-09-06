@@ -38,6 +38,8 @@ export interface HexagonalAuthContextType {
   
   // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
+  /** Connexion rapide DEV (LocalAuthAdapter, aucun appel réseau) */
+  devLogin: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   /** Alias de `logout` (compat présentation) */
   signOut: () => Promise<void>;
@@ -146,6 +148,23 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(false);
     }
   }, [authManager]);
+
+  const devLogin = useCallback(async (credentials: LoginCredentials) => {
+    try {
+      setLoading(true);
+      const { getUnifiedAuthService } = await import('@/application/services/UnifiedAuthService');
+      const { user: devUser } = await getUnifiedAuthService().devLogin(credentials);
+      if (devUser) setUser(devUser as any);
+      toast.success('Connexion DEV réussie');
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error('Erreur de connexion DEV');
+      setError(e);
+      toast.error(e.message || 'Erreur de connexion DEV');
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -415,6 +434,7 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Auth actions
     signOut: logout,
     login,
+    devLogin,
     logout,
     register,
     resetPassword,
