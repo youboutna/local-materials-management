@@ -4,11 +4,22 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import ErrorBoundary from './components/ErrorBoundary';
+import DebugPanel from '@/components/debug/DebugPanel';
 import { isDevMode } from './config/constants';
 import { setAlignmentRepository } from '@/application/services/boq/AlignmentService';
 import { SupabaseAlignmentRepository } from '@/infrastructure/adapters/supabase/SupabaseAlignmentRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { validateAppConfig } from '@/config/app-validate';
+import { isDebugMode, logger } from '@/application/services/LoggerService';
+import { initConsoleFilter } from '@/utils/console-filter';
+import { initGlobalErrorCapture } from '@/utils/error-capture';
+
+// Journalisation : niveau selon le mode, capture globale, filtrage console en production.
+logger.init();
+initGlobalErrorCapture();
+initConsoleFilter();
+logger.info('app', 'Application démarrée', { debugMode: isDebugMode() });
+
 
 // Polyfill Buffer / global attendus par certaines librairies de rendu (PDF, parseurs).
 import { Buffer as BufferPolyfill } from 'buffer';
