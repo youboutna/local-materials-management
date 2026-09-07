@@ -44,5 +44,7 @@ if (isDevMode()) {
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <App />
+    <DebugPanel />
   </ErrorBoundary>
 );
+
