@@ -82,15 +82,17 @@ const similarity = (a: string, b: string): number =>
  */
 export function repairOcrCell(value: unknown): string {
   const raw = String(value ?? '').replace(/\s+/g, ' ').trim();
-  if (process.env.NO_OCR_REPAIR) return raw;
   if (!raw) return '';
 
-  // Une valeur purement numérique n'est jamais réparée (risque de fusion).
-  if (/^[\d\s.,%-]+$/.test(raw)) return raw;
-
+  // Seules les cellules purement textuelles sont réparées : une cellule portant
+  // un chiffre peut être une valeur (ou plusieurs valeurs collées par
+  // l'extraction) et doit rester intacte pour la reconstruction arithmétique.
   const cleaned = raw.replace(/\s+PDF$/i, '').trim() || raw;
+  if (/\d/.test(cleaned) && !/²|³/.test(cleaned)) return cleaned;
+
   const k = key(cleaned);
   if (!k) return cleaned;
+
 
   const exact = VOCAB_INDEX.get(k);
   if (exact) return exact;
