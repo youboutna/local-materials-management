@@ -6,12 +6,14 @@ import autoEn from '@/locales/auto.en.json';
 import enumFr from '@/locales/enums.fr.json';
 import enumAr from '@/locales/enums.ar.json';
 import enumEn from '@/locales/enums.en.json';
+import { logger } from '@/application/services/LoggerService';
 
 /** Libellés UI générés (codemod Phase 6) — codes techniques exclus. */
 const AUTO_UI_LABELS = { fr: autoFr, ar: autoAr, en: autoEn } as const;
 
 /** Libellés des ENUM (`enum.<NomEnum>.<code>`) — le code technique reste inchangé en base. */
 const ENUM_UI_LABELS = { fr: enumFr, ar: enumAr, en: enumEn } as const;
+const REPORTED_MISSING_TRANSLATIONS = new Set<string>();
 
 export type Language = 'fr' | 'ar' | 'en';
 
@@ -5995,8 +5997,15 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
         let result = lookup(language) ?? (language !== 'fr' ? lookup('fr') : null);
         if (result === null) {
-            if (import.meta.env.DEV) {
-                console.warn(`Translation key "${key}" not found for language "${language}"`);
+            const warningKey = `${language}:${key}`;
+            if (import.meta.env.DEV && !REPORTED_MISSING_TRANSLATIONS.has(warningKey)) {
+                REPORTED_MISSING_TRANSLATIONS.add(warningKey);
+                logger.warning(
+                    'component',
+                    'Clé de traduction introuvable',
+                    undefined,
+                    { key, language },
+                );
             }
             result = fallback && fallback.trim() ? fallback : humanize();
         }

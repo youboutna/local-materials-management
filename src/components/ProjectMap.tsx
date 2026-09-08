@@ -1,15 +1,16 @@
 import { useI18n } from '@/hooks/useI18n';
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, Circle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Circle, Tooltip } from "react-leaflet";
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { MapLocation } from "@/domain/entities/Location";
 import { Badge } from "@/components/ui/badge";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 import { Link } from "react-router-dom";
+import { logger } from '@/application/services/LoggerService';
 
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
@@ -27,6 +28,7 @@ interface ProjectMapProps {
   selectable?: boolean;
   onLocationSelect?: (latitude: number, longitude: number) => void;
   interactive?: boolean;
+  onMarkerSelect?: (location: MapLocation) => void;
 }
 
 const getStatusColor = (status?: string) => {
@@ -69,16 +71,15 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
   selectable = false,
   onLocationSelect,
   interactive = true,
+  onMarkerSelect,
 }) => {
-  const [mapLocations, setMapLocations] = useState<MapLocation[]>([]);
   const { t } = useLanguage();
   const { translateStatus } = useI18n();
 
-  useEffect(() => {
-    if (locations) {
-      setMapLocations(locations);
-    } else if (projects) {
-      const projectLocations: MapLocation[] = projects
+  const mapLocations = useMemo<MapLocation[]>(() => {
+    if (locations) return locations;
+    if (projects) {
+      return projects
         .flatMap((project) => {
           const coordinates = getProjectCoordinates(project);
           if (!coordinates) return [];
@@ -94,8 +95,8 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             endDate: project.endDate,
           };
         });
-      setMapLocations(projectLocations);
     }
+    return [];
   }, [projects, locations]);
 
   const uniqueStatuses = Array.from(
@@ -119,21 +120,6 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
       }))
     );
   }, [projects]);
-
-  useEffect(() => {
-    if (zoneOverlays.length > 0) {
-      console.info(
-        `[ProjectMap] rendering ${zoneOverlays.length} intervention zone(s)`,
-        zoneOverlays.map((o) => ({
-          project: o.projectTitle,
-          type: o.zone.type,
-          label: o.zone.label,
-          vertices: o.zone.coordinates.length,
-          radiusMeters: o.zone.radiusMeters,
-        }))
-      );
-    }
-  }, [zoneOverlays]);
 
   const shapeColor = (t: InterventionZoneDTO['type']): string => {
     switch (t) {
@@ -180,7 +166,21 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
             key={location.id}
             position={[location.latitude, location.longitude]}
             icon={createCustomIcon(location.status, location.type)}
+            riseOnHover
+            eventHandlers={{
+              click: () => {
+                logger.info('user', 'Sélection d’un objet cartographique', {
+                  id: location.id,
+                  type: location.type,
+                });
+                onMarkerSelect?.(location);
+              },
+            }}
           >
+            <Tooltip direction="top" offset={[0, -10]} opacity={0.95}>
+              <span className="font-medium">{location.name}</span>
+              {location.region ? <span className="block text-xs">{location.region}</span> : null}
+            </Tooltip>
             <Popup>
               <div className="p-2">
                 <h3 className="font-semibold text-sm">{location.name}</h3>

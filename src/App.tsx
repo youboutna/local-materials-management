@@ -75,7 +75,6 @@ import SupplierSubmissionDashboard from "./components/suppliers/SupplierSubmissi
 import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
 
-import { DEV_MODE } from "./config/constants";
 import EnhancedMaterialForm from "./components/materials/EnhancedMaterialForm";
 import ConsultantDashboard from "./pages/ConsultantPortal/ConsultantDashboard";
 // Force rebuild - updated 2026-01-07
@@ -97,12 +96,6 @@ function ProjectPhasesRedirect() {
 }
 
 function App() {
-  // En mode développement, ajouter automatiquement les rôles requis
-  if (DEV_MODE) {
-    // Rôles requis: admin, director, project_manager
-    console.log('🚀 Mode Développement - Rôles requis activés: admin, director, project_manager');
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
