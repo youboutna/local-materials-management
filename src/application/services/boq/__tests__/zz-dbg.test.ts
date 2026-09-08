@@ -1,20 +1,21 @@
 import { describe, it } from 'vitest';
 import { readFileSync } from 'fs';
-import { rebuildWrappedRows } from '../parsers/wrappedTableLayout';
 class Stub {}
 for (const key of ['DOMMatrix', 'Path2D', 'ImageData'] as const) {
   if (!(key in globalThis)) (globalThis as Record<string, unknown>)[key] = Stub;
 }
 describe('dbg', () => {
-  it('layout', async () => {
+  it('p4', async () => {
     const pdfjs: any = await import('pdfjs-dist');
     const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync('/tmp/dqe2.pdf')) }).promise;
-    for (let p = 1; p <= doc.numPages; p++) {
-      const page = await doc.getPage(p);
-      const items = (await page.getTextContent()).items.filter((i: any) => i?.str?.trim());
-      const rows = rebuildWrappedRows(items);
-      console.log('=== PAGE', p, 'rows', rows.length);
-      rows.forEach((r, i) => console.log(p, i, JSON.stringify(r)));
-    }
+    const page = await doc.getPage(4);
+    const items = (await page.getTextContent()).items.filter((i: any) => i?.str?.trim());
+    const lines: any[] = [];
+    [...items].sort((a: any, b: any) => b.transform[5] - a.transform[5]).forEach((it: any) => {
+      const last = lines[lines.length - 1];
+      if (last && Math.abs(last.y - it.transform[5]) <= 3) last.items.push(it);
+      else lines.push({ y: it.transform[5], items: [it] });
+    });
+    lines.forEach((l, i) => console.log('L', i, 'y=' + l.y.toFixed(1), 'gap=' + (i ? (lines[i-1].y - l.y).toFixed(1) : '-'), JSON.stringify(l.items.map((x: any) => x.str.trim() + '@' + Math.round(x.transform[4]))));
   }, 120000);
 });
