@@ -25,6 +25,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   /** Abandonne complètement la session d’import, y compris le fichier analysé. */
   const reset = useCallback(() => {
     parseRun.current += 1;
+    sourceFile.current = null;
     setParseResult(null);
     setMapping({});
     setDtos([]);
