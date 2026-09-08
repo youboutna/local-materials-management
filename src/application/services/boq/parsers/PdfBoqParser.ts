@@ -127,6 +127,8 @@ export class PdfBoqParser implements IDocumentParser {
     const warnings: string[] = [];
     /** Reconstruction alternative pour les tableaux à cellules repliées. */
     const wrappedAcc: string[][] = [];
+    const pageItems: PdfItem[][] = [];
+
 
     for (let p = 1; p <= doc.numPages; p++) {
       const page = await doc.getPage(p);
