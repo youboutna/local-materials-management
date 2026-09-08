@@ -12,6 +12,8 @@ import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal }
 import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { repairOcrMatrix } from './ocrNormalization';
+
 import { segmentDocumentBlocks } from './documentBlocks';
 import {
   detectSection,
@@ -78,9 +80,12 @@ export class TextTableBoqParser implements IDocumentParser {
   async parse(file: File): Promise<ParseResult> {
     const text = await file.text();
     const isHtml = /<table[\s>]/i.test(text);
-    const matrix = (isHtml ? parseHtmlTable(text) : parseDelimitedText(text)).filter((r) =>
-      r.some((c) => String(c ?? '').trim()),
+    const matrix = repairOcrMatrix(
+      (isHtml ? parseHtmlTable(text) : parseDelimitedText(text)).filter((r) =>
+        r.some((c) => String(c ?? '').trim()),
+      ),
     );
+
     if (!matrix.length) return { rows: [], columns: [], warnings: ['Aucun tableau détecté dans le document.'] };
 
     const warnings: string[] = [];

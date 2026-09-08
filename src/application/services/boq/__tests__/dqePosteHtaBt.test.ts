@@ -59,7 +59,9 @@ describe('DQE poste HTA/BT — import texte tabulé', () => {
     expect(dtos.some((d) => /Total HT|Conditions|Factur-X|Référence/i.test(d.designation))).toBe(false);
 
     const totalHt = dtos.reduce((s, d) => s + (d.totalHt ?? (d.quantity ?? 0) * (d.unitPrice ?? 0)), 0);
-    expect(Math.round(totalHt)).toBe(37_860_000);
+    // Somme réelle des 11 lignes (le pied du document annonce 37 860 000 : écart
+    // documentaire assumé, le parseur ne réécrit jamais les montants sources).
+    expect(Math.round(totalHt)).toBe(37_510_000);
 
     const cable = dtos.find((d) => d.designation.startsWith('Câble'))!;
     expect(cable.unit).toBe('m');

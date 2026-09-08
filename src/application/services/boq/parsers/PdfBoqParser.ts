@@ -11,7 +11,9 @@ import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { repairOcrMatrix } from './ocrNormalization';
 import { segmentDocumentBlocks } from './documentBlocks';
+
 
 import {
   detectSection,
@@ -192,6 +194,12 @@ export class PdfBoqParser implements IDocumentParser {
         bands ? alignItemsToBands(itemRows[index] ?? [], bands) : cells.map((c) => c.text)
       ));
     }
+    // Réparation des mots coupés par les colonnes étroites / l'OCR
+    // (« Fournit ure de matière I » → « Fourniture de matériel », « forfa it »
+    // → « forfait », « Unit é PDF » → « Unité »).
+    if (rowsAcc.length) rowsAcc = repairOcrMatrix(rowsAcc);
+
+
 
     let headerIdx = bandHeaderIdx;
     if (headerIdx < 0) {

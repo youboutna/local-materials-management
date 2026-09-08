@@ -19,8 +19,16 @@ export const SECTION_PHASE_COLUMN = 'Phase section';
 const PHASE_IN_LABEL_RE = /\bphase\s*[:\-–]?\s*(\d+)/i;
 
 const SECTION_RE = /^\s*(?:lot|chapitre|section|partie|phase|tranche)\s*[:\-]?\s*([A-Z]?\d+[A-Za-z]?)\s*[:.\-–]?\s*(.*)$/i;
+/**
+ * Titre de section « numéroté » sans mot-clé : `I Génie Civil & Fondations`,
+ * `IV. Engins & Logistique`, ou `1Génie Civil & Fondations` (numéro collé au
+ * titre par l'extraction PDF). Le titre ne porte aucun chiffre : les vraies
+ * lignes de prestation sont donc préservées.
+ */
+const NUMBERED_TITLE_RE = /^\s*(\d{1,2}|[IVX]{1,4})\s*[.)\-–:]?\s*([A-Za-zÀ-ÿ][^\d]{3,})$/;
 /** Bloc « Ressources Humaines & Expertises » (main d'œuvre / expertises). */
 const LABOUR_SECTION_RE = /^\s*(ressources?\s+humaines?|main\s*d[’']?\s*œuvre|main\s*d[’']?oeuvre|personnel|expertises?)\b/i;
+
 
 export type SectionKind = 'material' | 'labour';
 
@@ -52,7 +60,31 @@ export function detectSection(cells: (string | number | null | undefined)[]): De
   }
 
   const match = first.match(SECTION_RE);
-  if (!match) return null;
+  if (!match) {
+    // Titre de section numéroté sans mot-clé (`I Génie Civil`, `1Génie Civil`).
+    // Aucune cellule voisine ne doit porter de chiffre (sinon c'est une ligne
+    // de prestation valorisée).
+    const hasNumericNeighbour = others.some((c) => /\d/.test(c));
+    if (hasNumericNeighbour) return null;
+    const joined = [first, ...others].join(' ').replace(/\s+/g, ' ').trim();
+    const numbered = joined.match(NUMBERED_TITLE_RE);
+    if (numbered) {
+      const raw = numbered[1].toUpperCase();
+      const lot = /^\d/.test(raw) ? `L${raw}` : raw;
+      const title = numbered[2].trim();
+      return {
+        lot,
+        label: title,
+        kind: LABOUR_SECTION_RE.test(title) ? 'labour' : 'material',
+        phase: null,
+      };
+    }
+    if (LABOUR_SECTION_RE.test(joined)) {
+      return { lot: null, label: joined, kind: 'labour', phase: null };
+    }
+    return null;
+  }
+
   const raw = match[1].toUpperCase();
   const lot = /^\d/.test(raw) ? `L${raw}` : raw;
   const title = (match[2] ?? '').trim();
