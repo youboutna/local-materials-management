@@ -91,7 +91,9 @@ export function BoqImportDialog(props: Props) {
   const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true, contextItems = [], fiscalProfileCode, variant = 'dialog' } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [dropzoneReset, setDropzoneReset] = useState(0);
+
   /** Bascule plein écran / fenêtré (le contenu reste redimensionnable). */
   const [fullscreen, setFullscreen] = useState(true);
   const open = props.open ?? openInternal;
@@ -111,10 +113,18 @@ export function BoqImportDialog(props: Props) {
     if (!v) {
       reset();
       setDropzoneReset((value) => value + 1);
+      setStep(1);
     }
     setOpenInternal(v);
     props.onOpenChange?.(v);
   };
+
+  /** Passage automatique à l'étape « mapping » dès qu'un fichier est analysé. */
+  useEffect(() => {
+    if (parseResult) setStep((s) => (s === 1 ? 2 : s));
+    else setStep(1);
+  }, [parseResult]);
+
 
   const isAltReferential = !!referentialCode && !!projectReferentialCode && referentialCode !== projectReferentialCode;
   const altPhases = useMemo(
@@ -311,12 +321,83 @@ export function BoqImportDialog(props: Props) {
     }
   };
 
+  /** Ctrl+Entrée : import direct depuis n'importe quelle étape du parcours. */
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        void onSubmit();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, wbsEnrichedDtos, issues, edbReport, budgetDecision]);
+
+
+  const totals = useMemo(() => {
+    const ht = wbsEnrichedDtos.reduce((s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)), 0);
+    const vat = wbsEnrichedDtos.reduce((s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)) * (l.vatRate ?? 0), 0);
+    const ras = wbsEnrichedDtos.reduce(
+      (s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)) * ((l as { withholdingRate?: number | null }).withholdingRate ?? 0),
+      0,
+    );
+    return { ht, vat, ras, ttc: ht + vat };
+  }, [wbsEnrichedDtos]);
+  const fmt = (n: number) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Math.round(n));
+
+  const maxStep = parseResult ? 4 : 1;
+  const stepLabels = [
+    'Sélectionnez votre fichier',
+    'Vérifiez la correspondance des colonnes',
+    'Validez et corrigez les lignes',
+    "Confirmez l'import",
+  ];
+  const canNext = step < maxStep;
+  const canPrev = step > 1;
+  const goNext = () => setStep((s) => (Math.min(s + 1, maxStep) as 1 | 2 | 3 | 4));
+  const goPrev = () => setStep((s) => (Math.max(s - 1, 1) as 1 | 2 | 3 | 4));
+
+  const stepper = (
+    <nav aria-label="Étapes de l'import" className="flex flex-wrap items-center gap-2 pb-1">
+      {stepLabels.map((label, i) => {
+        const n = (i + 1) as 1 | 2 | 3 | 4;
+        const active = n === step;
+        const reachable = n <= maxStep;
+        return (
+          <button
+            key={label}
+            type="button"
+            onClick={() => reachable && setStep(n)}
+            disabled={!reachable}
+            aria-current={active ? 'step' : undefined}
+            className={`flex min-h-11 items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors ${
+              active ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground hover:bg-muted'
+            } disabled:opacity-50`}
+          >
+            <span
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
+                active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {n}
+            </span>
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   const body = (
     <>
+      {stepper}
       <DocumentContextSummary items={contextItems} />
 
 
-        {!parseResult && (
+
+        {step === 1 && (
           <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-sm font-medium"><T k="auto.boqimportdialog.format_des_montants_du_fichier" fallback="Format des montants du fichier" /></Label>
@@ -341,7 +422,7 @@ export function BoqImportDialog(props: Props) {
         )}
 
 
-        {parseResult && (
+        {parseResult && step === 2 && (
           <>
             {parseResult.envelope && <DocumentEnvelopePanel envelope={parseResult.envelope} />}
 
@@ -473,10 +554,16 @@ export function BoqImportDialog(props: Props) {
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
               </CollapsibleContent>
             </Collapsible>
+          </>
+        )}
 
-
-
+        {parseResult && step === 3 && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              {wbsEnrichedDtos.length} ligne(s) · {issues.length} à corriger
+            </p>
             {assistResult && (
+
               <BoqAssistPanel result={assistResult} onApply={applyAssist} disabled={isBusy || isCatalogsLoading} />
             )}
 
@@ -520,21 +607,61 @@ export function BoqImportDialog(props: Props) {
           </>
         )}
 
+        {parseResult && step === 4 && (
+          <section className="space-y-3">
+            {parseResult.envelope && <DocumentEnvelopePanel envelope={parseResult.envelope} />}
+            <div className="rounded-md border p-3 text-sm">
+              <h4 className="mb-2 font-medium">Récapitulatif</h4>
+              <dl className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                <div className="flex justify-between gap-2"><dt>Lignes totales</dt><dd className="font-medium">{wbsEnrichedDtos.length}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Lignes en erreur</dt><dd className="font-medium">{issues.length}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Fichier</dt><dd className="truncate font-medium">{parseResult.fileName}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Avertissements</dt><dd className="font-medium">{parseResult.warnings.length}</dd></div>
+              </dl>
+            </div>
+            <div className="rounded-md border p-3 text-sm">
+              <h4 className="mb-2 font-medium">Totaux</h4>
+              <dl className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                <div className="flex justify-between gap-2"><dt>Total HT</dt><dd className="font-medium">{fmt(totals.ht)}</dd></div>
+                <div className="flex justify-between gap-2"><dt>TVA</dt><dd className="font-medium">{fmt(totals.vat)}</dd></div>
+                <div className="flex justify-between gap-2"><dt>RAS</dt><dd className="font-medium">{fmt(totals.ras)}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Total TTC</dt><dd className="font-semibold">{fmt(totals.ttc)}</dd></div>
+              </dl>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Raccourci : Ctrl+Entrée pour importer directement.</p>
+          </section>
+        )}
+
+
+
       {error && <p className="text-sm text-destructive">{error}</p>}
     </>
   );
 
   const cancelButton = (
-    <Button variant="outline" onClick={() => setOpen(false)}>
+    <Button variant="outline" className="min-h-11" onClick={() => setOpen(false)}>
       <T k="auto.boqimportdialog.annuler" fallback="Annuler" />
     </Button>
   );
+  const submitDisabled = isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0;
   const submitButton = (
-    <Button onClick={onSubmit} disabled={isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0}>
-      {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-      Importer {wbsEnrichedDtos.length} ligne(s)
-    </Button>
+    <div className="flex flex-wrap items-center gap-2">
+      <Button variant="outline" className="min-h-11" onClick={goPrev} disabled={!canPrev || isBusy}>
+        Précédent
+      </Button>
+      {canNext ? (
+        <Button className="min-h-11" onClick={goNext} disabled={isBusy}>
+          Suivant
+        </Button>
+      ) : (
+        <Button className="min-h-11" onClick={onSubmit} disabled={submitDisabled}>
+          {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          Importer {wbsEnrichedDtos.length} ligne(s)
+        </Button>
+      )}
+    </div>
   );
+
 
 
   const heading = title ?? 'Importer BOQ (PDF / Excel / CSV)';
