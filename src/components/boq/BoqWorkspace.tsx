@@ -961,10 +961,10 @@ export function BoqWorkspace({
 
                 <div className="col-span-1">
                   <Label><T k="auto.boqworkspace.unite" fallback="Unité" /></Label>
-                  <Select value={form.unit ?? 'u'} onValueChange={(v) => setForm({ ...form, unit: v })}>
+                  <Select value={effectiveUnit} disabled={!!lockedUnit} onValueChange={(v) => setForm({ ...form, unit: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                      {Array.from(new Set([...(lockedUnit ? [lockedUnit] : []), ...UNITS])).map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
