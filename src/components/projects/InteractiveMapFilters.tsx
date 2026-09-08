@@ -131,7 +131,10 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({ projects,
   return (
     <CompactFilterBar
       title={t('auto.interactivemapfilters.filtres_carte_interactive')}
+      urlNamespace="imap."
+      presetsKey="projects.interactive-map"
       filters={filters}
+
       onReset={resetFilters}
       resultCount={undefined}
       advancedActiveCount={advancedActiveCount}
