@@ -17,12 +17,34 @@ export const NUMBER_FORMAT_OPTIONS: { value: NumberFormatMode; label: string; hi
   { value: 'en', label: 'Format anglophone — 1,234.56', hint: 'La virgule sépare les milliers (« 120,000 » = 120000).' },
 ];
 
+/** Espaces (y compris insécables / fines) utilisés comme séparateurs de milliers. */
+const SPACE_RX = /[\s\u00A0\u202F\u2009\u2007]+/g;
+
+/**
+ * Un DQE réel écrit « 3 500,00 » (espace = séparateur de milliers). Après un
+ * découpage PDF/OCR une cellule peut contenir PLUSIEURS montants collés
+ * (« 3 500,00 2 500,00 ») : on ne garde alors que le premier nombre pour ne
+ * jamais fabriquer une valeur fantôme.
+ */
+function firstNumericToken(raw: string): string {
+  const s = raw.replace(SPACE_RX, ' ').trim();
+  // Groupes de milliers séparés par des espaces → un seul nombre.
+  const grouped = s.match(/^-?\d{1,3}(?: \d{3})+(?:[.,]\d+)?/);
+  if (grouped) return grouped[0].replace(/ /g, '');
+  const single = s.match(/^-?\d+(?:[.,]\d+)?/);
+  if (single) return single[0];
+  const anywhere = s.match(/-?\d{1,3}(?: \d{3})+(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?/);
+  return anywhere ? anywhere[0].replace(/ /g, '') : '';
+}
+
 function cleanup(value: unknown): { s: string; negative: boolean } | null {
   if (value == null || value === '') return null;
-  let s = String(value).trim();
-  if (!s) return null;
-  const negative = /^\(.*\)$/.test(s) || /^-/.test(s);
-  s = s.replace(/[^\d.,]/g, '');
+  const original = String(value).trim();
+  if (!original) return null;
+  const negative = /^\(.*\)$/.test(original) || /^-/.test(original);
+  // On isole d'abord le premier nombre (espaces de milliers gérés), puis on
+  // nettoie les devises et symboles résiduels.
+  const s = firstNumericToken(original.replace(/^[(\-]\s*/, '')).replace(/[^\d.,]/g, '');
   if (!s) return null;
   return { s, negative };
 }
