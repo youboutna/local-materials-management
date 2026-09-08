@@ -9,6 +9,8 @@ import { MapLocation } from "@/domain/entities/Location";
 import { Badge } from "@/components/ui/badge";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
+import { Link } from "react-router-dom";
+
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
@@ -213,7 +215,18 @@ const ProjectMap: React.FC<ProjectMapProps> = ({
                     {new Date(location.endDate).toLocaleDateString("fr-FR")}
                   </p>
                 )}
+                <Link
+                  to={
+                    location.type === "material"
+                      ? `/materials/${location.id}`
+                      : `/projects/${location.id}`
+                  }
+                  className="mt-2 inline-flex h-7 items-center rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  <T k="auto.projectmap.voir_les_details" fallback="Voir les détails" />
+                </Link>
               </div>
+
             </Popup>
           </Marker>
         ))}

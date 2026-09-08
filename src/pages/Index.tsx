@@ -36,13 +36,8 @@ const Index = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  console.log("🔍 Index - t function:", typeof t, t);
-  console.log(
-    "🔍 Index - user:",
-    !!user,
-    "isAuthenticated:",
-    isAuthenticated
-  );
+
+
 
   // ✅ On utilise le même utilisateur pour les deux (plus besoin de authUser vs keycloakUser)
   const isUserAuthenticated = !!user || isAuthenticated;

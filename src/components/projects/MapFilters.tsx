@@ -72,7 +72,10 @@ const MapFilters = ({ locations, onFilterChange }: MapFiltersProps) => {
   return (
     <CompactFilterBar
       title={t('auto.mapfilters.filtres_de_la_carte')}
+      urlNamespace="map."
+      presetsKey="projects.map"
       filters={filters}
+
       onReset={() => {
         setStatusFilter('all');
         setRegionFilter('all');

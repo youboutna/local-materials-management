@@ -353,8 +353,18 @@ const Projects: React.FC = () => {
                       return (
                         <div
                           key={location.id}
-                          className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => navigate(`/projects/${location.id}`)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              navigate(`/projects/${location.id}`);
+                            }
+                          }}
+                          className="p-4 border rounded-lg hover:shadow-md hover:border-primary/40 transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
                         >
+
                           <h4 className="font-medium text-lg mb-2">
                             {location.name}
                           </h4>
