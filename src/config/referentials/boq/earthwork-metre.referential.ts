@@ -129,7 +129,9 @@ const normalize = (s: string): string =>
 export function detectEarthworkProfile(designation: string | null | undefined): EarthworkProfile | null {
   const text = normalize(String(designation ?? ''));
   if (!text) return null;
-  const order: EarthworkProfileCode[] = ['TRANCHEE', 'REMBLAI', 'FOUILLE', 'TERRASSEMENT'];
+  // Priorité : la tranchée qualifie mieux qu'un terrassement générique, et
+  // « Terrassement et fouilles » reste un terrassement (pas une fouille isolée).
+  const order: EarthworkProfileCode[] = ['TRANCHEE', 'REMBLAI', 'TERRASSEMENT', 'FOUILLE'];
   for (const code of order) {
     const profile = EARTHWORK_PROFILES.find((p) => p.code === code)!;
     if (profile.keywords.some((k) => text.includes(normalize(k)))) return profile;
