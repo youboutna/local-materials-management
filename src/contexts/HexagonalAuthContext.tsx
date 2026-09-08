@@ -75,7 +75,20 @@ export interface HexagonalAuthContextType {
 // CONTEXTE
 // ============================================================================
 
-const HexagonalAuthContext = createContext<HexagonalAuthContextType | undefined>(undefined);
+/**
+ * Contexte partagé via un singleton global : en développement, le rechargement
+ * à chaud (HMR) peut évaluer ce module plusieurs fois. Deux objets de contexte
+ * distincts feraient échouer `useContext` côté consommateur (« doit être
+ * utilisé à l'intérieur d'un HexagonalAuthProvider ») alors que le provider
+ * est bien monté.
+ */
+type ContextGlobal = typeof globalThis & {
+  __hexAuthContext__?: React.Context<HexagonalAuthContextType | undefined>;
+};
+const contextGlobal = globalThis as ContextGlobal;
+const HexagonalAuthContext =
+  contextGlobal.__hexAuthContext__ ??
+  (contextGlobal.__hexAuthContext__ = createContext<HexagonalAuthContextType | undefined>(undefined));
 
 // ============================================================================
 // PROVIDER
