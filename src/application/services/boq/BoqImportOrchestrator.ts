@@ -23,6 +23,7 @@ import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
 import { TextTableBoqParser } from './parsers/TextTableBoqParser';
 import { detectMetre } from './parsers/metreDetection';
+import { analyzeLineCoherence } from './parsers/lineCoherence';
 
 export interface ImportMapping {
   designation?: string;
@@ -288,6 +289,17 @@ export class BoqImportOrchestrator {
       // puis assorti de recommandations d'ouvrages complémentaires.
       const metre = detectMetre({ designation, unit, quantity });
 
+      // Rapport de cohérence non bloquant : unité technique du libellé vs unité
+      // de quantité, prix vs fourchette de marché, contrôle arithmétique.
+      const coherence = analyzeLineCoherence({
+        designation,
+        unit,
+        quantity,
+        unitPrice,
+        totalHt,
+        vatRate: lineVat ?? (isLabour ? labourVat : effectiveVat),
+      });
+
       const dto: BoqLineDTO = {
         source: ctx.source,
         contextId: ctx.contextId,
@@ -332,6 +344,7 @@ export class BoqImportOrchestrator {
                 metreRecommendations: metre.recommendations,
               }
             : {}),
+          coherence,
         },
 
         phaseId: phaseId || null,
