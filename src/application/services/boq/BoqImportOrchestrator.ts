@@ -14,6 +14,8 @@ import { isEnvelopeNoise } from './parsers/envelopeDetection';
 import { reconcileLinePrice } from './parsers/priceCoherence';
 import { TaxService } from '@/application/services/TaxService';
 import { BoqCalculatorService } from './BoqCalculatorService';
+import { MeterService } from './MeterService';
+
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
 import { SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN, SECTION_PHASE_COLUMN } from './parsers/sectionDetection';
@@ -189,7 +191,23 @@ export class BoqImportOrchestrator {
 
       const computed = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
       // DQE « forfaitaire » (Description / Montant) : quantité implicite = 1.
-      const quantity = computed || (rawTotal != null ? 1 : computed);
+      const baseQuantity = computed || (rawTotal != null ? 1 : computed);
+      // Métré centralisé : le type d'ouvrage détecté + les dimensions (colonnes ou
+      // libellé « L: 8,0 m x l: 5,0 m x H: 3,5 m ») donnent la quantité réelle.
+      // Une quantité source « 1 » n'est qu'un forfait de saisie : le métré prime.
+      const detectedElement = mapping.elementType
+        ? String(get(mapping.elementType) ?? '').trim()
+        : detectElementType(designation);
+      const geoQuantity = MeterService.quantityFor({
+        designation,
+        elementType: detectedElement || null,
+        length: lengthN,
+        width: widthN,
+        height: heightN,
+      }).quantity;
+      const useGeo = geoQuantity > 0 && baseQuantity <= 1 && geoQuantity > baseQuantity;
+      const quantity = useGeo ? geoQuantity : baseQuantity;
+
       // Une ligne DQE réelle porte une valeur VENUE DE LA SOURCE (qté, PU, montant
       // ou dimensions en colonnes). Une quantité seulement déduite des dimensions
       // écrites dans le libellé (« 4x150 mm² ») ne suffit pas : c'est la suite
@@ -259,9 +277,8 @@ export class BoqImportOrchestrator {
       const sectionPhase = String(row.raw[SECTION_PHASE_COLUMN] ?? '').trim() || null;
       const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId || sectionPhase) ?? null;
       // Normalize element type from designation via the boq referential.
-      const elementCode = mapping.elementType
-        ? String(get(mapping.elementType) ?? '').trim()
-        : detectElementType(designation);
+      const elementCode = detectedElement;
+
 
       // Détection RH via le référentiel `labour-profiles` : le mode de
       // facturation vient de l'unité (homme·jour / homme·mois / forfait) et le
@@ -322,6 +339,10 @@ export class BoqImportOrchestrator {
           ...(lotKey ? { lot: lotKey } : {}),
           ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(useGeo
+            ? { metreQuantity: { source: 'geometric', declared: baseQuantity, computed: geoQuantity } }
+            : {}),
+
           ...(regimeRaw ? { fiscalRegime: regimeRaw } : {}),
           ...(lineVat != null ? { vatSource: 'line' } : {}),
           ...(isLabour && labour.billingMode ? { labourBillingMode: labour.billingMode } : {}),

@@ -9,7 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2, AlertTriangle, Calculator } from 'lucide-react';
+import { MeterService } from '@/application/services/boq/MeterService';
+import { MetreDialog } from './MetreDialog';
+
 import DataPagination from '@/components/common/DataPagination';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
@@ -67,8 +70,10 @@ const stakeholderOf = (l: BoqLineDTO) =>
 export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions, newRowsAt = 'end' }: Props) {
 
   const [page, setPage] = useState(0);
+  const [metreIndex, setMetreIndex] = useState<number | null>(null);
   const previousLength = useRef(lines.length);
   const previousPageSize = useRef(pageSize);
+
 
   useEffect(() => {
     const previousPages = pageSize > 0 ? Math.max(1, Math.ceil(previousLength.current / pageSize)) : 1;
@@ -116,14 +121,31 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => {
     const next: Partial<BoqLineDTO> = { ...p };
-    if ('quantity' in p || 'unitPrice' in p || 'fees' in p) {
-      const q = 'quantity' in p ? (p.quantity ?? 0) : (lines[i].quantity ?? 0);
-      const pu = 'unitPrice' in p ? (p.unitPrice ?? 0) : (lines[i].unitPrice ?? 0);
-      const fees = 'fees' in p ? (p.fees ?? 0) : (lines[i].fees ?? 0);
+    const line = lines[i];
+    // Métré centralisé : le type d'ouvrage fixe l'unité et la formule, les
+    // dimensions recalculent la quantité en temps réel (MeterService).
+    const touchesMetre = 'elementType' in p || 'length' in p || 'width' in p || 'height' in p;
+    if (touchesMetre) {
+      const merged = { ...line, ...p } as BoqLineDTO;
+      const metre = MeterService.quantityFor({
+        designation: merged.designation,
+        elementType: merged.elementType,
+        length: merged.length,
+        width: merged.width,
+        height: merged.height,
+      });
+      if (metre.unit) next.unit = metre.unit;
+      if (metre.quantity > 0) next.quantity = Number(metre.quantity.toFixed(3));
+    }
+    if ('quantity' in next || 'unitPrice' in p || 'fees' in p) {
+      const q = 'quantity' in next ? (next.quantity ?? 0) : (line.quantity ?? 0);
+      const pu = 'unitPrice' in p ? (p.unitPrice ?? 0) : (line.unitPrice ?? 0);
+      const fees = 'fees' in p ? (p.fees ?? 0) : (line.fees ?? 0);
       next.totalHt = (Number(q) || 0) * (Number(pu) || 0) + (Number(fees) || 0);
     }
     onChange?.(i, next);
   };
+
 
   const usePaging = pageSize > 0 && lines.length > pageSize;
   const totalPages = usePaging ? Math.max(1, Math.ceil(lines.length / pageSize)) : 1;
@@ -246,12 +268,25 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
               <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
                 <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground">N° {i + 1}{lineFlag(l)}</span>
                 {!editable && <div className="min-w-0 flex-1 break-words text-sm font-medium">{l.designation}</div>}
-                {hasActions && (
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                <div className="flex shrink-0 items-center gap-1">
+                  {editable && (
+                    <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={() => setMetreIndex(i)}>
+                      <Calculator className="h-3.5 w-3.5" /> Calcul métré
+                    </Button>
+                  )}
+                  {hasActions && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
+              {MeterService.detectAnomalies(l).map((a) => (
+                <p key={a.code} className="mb-2 flex items-start gap-1 text-xs text-destructive">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="break-words">{a.message}</span>
+                </p>
+              ))}
               <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {columns.map((c) => (
                   <div key={c.id} className={c.id === 'designation' ? 'min-w-0 sm:col-span-2 lg:col-span-3 2xl:col-span-4' : 'min-w-0'}>
@@ -261,6 +296,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                 ))}
               </div>
             </section>
+
           );
         })}
         {lines.length > 0 && (
@@ -274,6 +310,33 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
           </div>
         )}
       </div>
+      {metreIndex != null && lines[metreIndex] ? (
+        <MetreDialog
+          open={metreIndex != null}
+          onOpenChange={(v) => { if (!v) setMetreIndex(null); }}
+          initial={{
+            designation: lines[metreIndex].designation,
+            elementType: lines[metreIndex].elementType ?? null,
+            unit: lines[metreIndex].unit ?? 'u',
+            length: lines[metreIndex].length ?? null,
+            width: lines[metreIndex].width ?? null,
+            height: lines[metreIndex].height ?? null,
+          }}
+          onApply={(v) => {
+            const i = metreIndex;
+            onChange?.(i, {
+              elementType: v.elementType,
+              unit: v.unit,
+              length: v.length,
+              width: v.width,
+              height: v.height,
+              quantity: Number(v.quantity.toFixed(3)),
+              totalHt: Number(v.quantity.toFixed(3)) * (lines[i].unitPrice ?? 0) + (lines[i].fees ?? 0),
+            });
+            setMetreIndex(null);
+          }}
+        />
+      ) : null}
       {usePaging && (
         <DataPagination
           page={safePage}
@@ -284,6 +347,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
           pageSizeOptions={pageSizeOptions}
         />
       )}
+
     </div>
   );
 }
