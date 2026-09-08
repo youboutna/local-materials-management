@@ -40,6 +40,7 @@ import { T } from '@/components/i18n/T';
 import { DocumentContextSummary } from './DocumentContextSummary';
 import { DocumentEnvelopePanel } from './DocumentEnvelopePanel';
 import { CoherencePanel, FiscalRecapPanel, MetreRecapPanel } from './ImportRecapPanels';
+import { ReconciliationPanel } from './ReconciliationPanel';
 
 interface Props {
   source: BoqSource;
@@ -632,6 +633,11 @@ export function BoqImportDialog(props: Props) {
             <FiscalRecapPanel lines={wbsEnrichedDtos} />
             <MetreRecapPanel lines={wbsEnrichedDtos} />
             <CoherencePanel lines={wbsEnrichedDtos} />
+            <ReconciliationPanel
+              lines={wbsEnrichedDtos}
+              detectedFiscal={parseResult.detectedFiscal ?? null}
+              onFixQuantity={(index, quantity) => updateLine(index, { quantity })}
+            />
             <p className="text-[11px] text-muted-foreground">Raccourci : Ctrl+Entrée pour importer directement.</p>
           </section>
         )}

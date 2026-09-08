@@ -5,7 +5,7 @@
  * a planned project's quantity takeoffs.
  */
 
-import type { BoqSource } from '@/domain/entities/boq/BoqLine';
+import { BoqLine, type BoqSource } from '@/domain/entities/boq/BoqLine';
 import { getDQELineType, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import type { BoqLineDTO } from './BoqLineDTO';
 
@@ -220,6 +220,39 @@ export class BoqLineMapper {
         ...(dto.accountCode ? { accountCode: dto.accountCode } : {}),
       },
     };
+  }
+
+  /**
+   * DTO → entité unifiée `BoqLine`. Point de passage obligatoire du pipeline de
+   * parsing (rowAssembly → normalisation → BoqLine.create) : les totaux HT/TTC
+   * sont calculés par l'entité, jamais recopiés depuis l'UI.
+   */
+  static toEntity(dto: BoqLineDTO): BoqLine {
+    const phaseId = dto.phaseId ?? null;
+    return BoqLine.create({
+      id: dto.id ?? null,
+      source: dto.source,
+      contextId: dto.contextId,
+      designation: dto.designation,
+      elementType: dto.elementType ?? null,
+      unit: dto.unit,
+      length: dto.length ?? null,
+      width: dto.width ?? null,
+      height: dto.height ?? null,
+      quantity: Number(dto.quantity ?? 0),
+      unitPrice: dto.unitPrice ?? null,
+      vatRate: dto.vatRate ?? 0,
+      totalHt: dto.totalHt ?? null,
+      materialId: dto.materialId ?? null,
+      wbs: phaseId
+        ? { phaseId, milestoneId: dto.milestoneId ?? undefined, taskId: dto.taskId ?? undefined }
+        : null,
+      resourceType: dto.resourceType ?? 'material',
+      note: dto.note ?? null,
+      bidRef: dto.bidRef ?? null,
+      submittedBy: dto.submittedBy ?? null,
+      status: dto.status ?? 'draft',
+    });
   }
 
   /** Reproject a tender estimate line onto a newly created project as a quantity takeoff. */
