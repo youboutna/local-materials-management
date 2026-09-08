@@ -94,8 +94,11 @@ export function repairOcrCell(value: unknown): string {
   if (!k) return cleaned;
 
 
+  const wordCount = (v: string) => v.split(' ').filter(Boolean).length;
   const exact = VOCAB_INDEX.get(k);
-  if (exact) return exact;
+  // Même découpage en mots → simple variante de casse/accent : la valeur
+  // d'origine est conservée (ne pas réécrire un en-tête déjà correct).
+  if (exact) return wordCount(cleaned) === wordCount(exact) ? cleaned : exact;
 
   // Les cellules courtes (`m`, `m³`, `Ens.`) ne sont jamais rapprochées par
   // similarité : le risque de confondre deux unités voisines est trop élevé.
