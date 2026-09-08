@@ -40,7 +40,7 @@ export interface DqeEnvelope {
 const EMAIL_RX = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/;
 const PHONE_RX = /\+?\d[\d\s().\-]{6,}\d/;
 const DATE_RX = /(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})/;
-const DOC_REF_RX = /\b((?:DQE|DEV|FAC|EDB|BC)[-\s]?[A-Z0-9-]{4,})/i;
+const DOC_REF_RX = /\b((?:DQE|DEV|DEVIS|FACT?|EDB|BC)[-\s]?\d[A-Z0-9-]{3,})/i;
 
 /** Étiquettes « clé : valeur » de l'enveloppe. */
 const LABELS: { key: keyof DqeEnvelope | 'emitterName' | 'receiverName'; rx: RegExp }[] = [
@@ -141,6 +141,7 @@ export function extractEnvelope(rows: string[][]): { envelope: DqeEnvelope; cons
       party.address = party.address ? `${party.address}, ${value}` : value;
       return true;
     }
+    if (party.name?.toLowerCase().includes(value.toLowerCase())) return true;
     party.name = party.name ? `${party.name} ${value}`.trim() : value;
     return true;
   };
@@ -235,7 +236,8 @@ export function extractEnvelope(rows: string[][]): { envelope: DqeEnvelope; cons
 
       // 4) Bloc d'en-tête initial sans étiquette → coordonnées de l'émetteur.
       if (index < headerLimit) {
-        setParty('emitter', text);
+        if (!NOISE_RX.some((rx) => rx.test(text))) setParty('emitter', text);
+        else if (/^(dqe|devis|facture)$/i.test(text)) envelope.documentType ??= text.toUpperCase();
         rowConsumed = true;
         return;
       }
