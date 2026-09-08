@@ -390,7 +390,7 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ projectId }) => {
                   <UnifiedLocationSelector
                     value={{}}
                     onChange={(loc) => {
-                      console.info('[ProjectDashboard] location search', loc);
+                      logger.debug('component', '[ProjectDashboard] recherche par localisation', loc);
                     }}
                     placeholder={t('dashboard.project.search_by_location')}
                     filter="all"
