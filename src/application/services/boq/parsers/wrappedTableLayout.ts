@@ -3,17 +3,20 @@
  * repliée sur plusieurs lignes visuelles (colonnes très étroites).
  *
  * Bug traité : sur ce type de PDF, le regroupement classique par Y produit des
- * lignes composées de morceaux hétérogènes (« # Désignation fiscal PDF Génie
- * Civil », « é Qté PDF », « 1 500 »…). Aucune ligne DQE n'est alors valorisée.
+ * lignes hétérogènes (« # Désignation fiscal PDF Génie Civil », « é Qté PDF »,
+ * « 1 500 »…) et aucune ligne DQE n'est valorisée. Le numéro de poste et les
+ * montants étant centrés verticalement, les débuts de libellé apparaissent
+ * AVANT la ligne portant les valeurs : seul un regroupement par enregistrement
+ * permet de recomposer la ligne métier.
  *
  * Principe :
- *  1. bandes de colonnes détectées sur toute la page (intervalles X fusionnés) ;
+ *  1. bandes de colonnes = positions de départ (x0) récurrentes des fragments ;
  *  2. lignes visuelles regroupées en ENREGISTREMENTS par les respirations
- *     verticales (gap > 1,8 × interligne médian) ;
- *  3. par bande, les fragments sont recollés dans l'ordre de lecture, en
- *     recollant sans espace les mots coupés par la largeur de colonne
- *     (fragment qui touche le bord droit de la bande) et les nombres coupés
- *     après une virgule décimale.
+ *     verticales (gap > 2,4 × interligne médian) ;
+ *  3. par bande, les fragments sont recollés dans l'ordre de lecture, sans
+ *     espace lorsque le mot est coupé par la largeur de colonne (fragment qui
+ *     touche le bord droit de la bande) ou lorsqu'un nombre est coupé après sa
+ *     virgule décimale.
  *
  * Pur TypeScript — aucune dépendance React / Supabase.
  */
@@ -21,58 +24,59 @@
 export interface LayoutItem { str: string; transform: number[]; width?: number }
 
 interface Band { x0: number; x1: number }
-interface Fragment { text: string; x0: number; x1: number; line: number }
+interface Fragment { text: string; x0: number; x1: number }
 
 const Y_TOL = 3;
-const X_GAP = 18;
+const X_TOL = 6;          // px — tolérance de regroupement des x0 en bandes
+const GLUE_GAP = 1.5;     // px — fragments jointifs d'une même ligne
+const WORD_GAP = 18;      // px — au-delà, deux cellules distinctes
 
 const isNumericish = (s: string) => /^[\d\s.,%()]+$/.test(s) && /\d/.test(s);
 
+interface VisualLine { y: number; items: LayoutItem[] }
+
 /** Regroupe les items d'une page en lignes visuelles (haut → bas). */
-function clusterLines(items: LayoutItem[]): LayoutItem[][] {
-  const sorted = [...items].sort((a, b) => b.transform[5] - a.transform[5]);
-  const lines: LayoutItem[][] = [];
-  let currentY: number | null = null;
-  let bucket: LayoutItem[] = [];
-  for (const it of sorted) {
-    const y = it.transform[5];
-    if (currentY === null || Math.abs(y - currentY) <= Y_TOL) {
-      bucket.push(it);
-      currentY = currentY ?? y;
-    } else {
-      lines.push(bucket);
-      bucket = [it];
-      currentY = y;
-    }
+function clusterLines(items: LayoutItem[]): VisualLine[] {
+  const lines: VisualLine[] = [];
+  for (const it of [...items].sort((a, b) => b.transform[5] - a.transform[5])) {
+    const last = lines[lines.length - 1];
+    if (last && Math.abs(last.y - it.transform[5]) <= Y_TOL) last.items.push(it);
+    else lines.push({ y: it.transform[5], items: [it] });
   }
-  if (bucket.length) lines.push(bucket);
   return lines;
 }
 
-/** Bandes de colonnes : intervalles X fusionnés sur l'ensemble de la page. */
+/**
+ * Bandes de colonnes = positions de départ récurrentes. Les paragraphes pleine
+ * largeur de l'enveloppe documentaire, dont les x0 sont uniques, sont ainsi
+ * ignorés au lieu de fusionner toutes les colonnes en une seule bande.
+ */
 function detectBands(items: LayoutItem[]): Band[] {
-  const intervals = items
-    .map((i) => ({ x0: i.transform[4], x1: i.transform[4] + (i.width ?? 0) }))
-    .sort((a, b) => a.x0 - b.x0);
-  const bands: Band[] = [];
-  for (const iv of intervals) {
-    const last = bands[bands.length - 1];
-    if (last && iv.x0 - last.x1 <= X_GAP) last.x1 = Math.max(last.x1, iv.x1);
-    else bands.push({ ...iv });
+  const starts = [...items].sort((a, b) => a.transform[4] - b.transform[4]);
+  const clusters: { x0: number; x1: number; count: number }[] = [];
+  for (const it of starts) {
+    const x0 = it.transform[4];
+    const x1 = x0 + (it.width ?? 0);
+    const last = clusters[clusters.length - 1];
+    if (last && x0 - last.x0 <= X_TOL) {
+      last.x1 = Math.max(last.x1, x1);
+      last.count += 1;
+    } else {
+      clusters.push({ x0, x1, count: 1 });
+    }
   }
-  return bands;
+  return clusters.filter((c) => c.count >= 3).map(({ x0, x1 }) => ({ x0, x1 }));
 }
 
 /** Découpe les lignes en enregistrements selon les respirations verticales. */
-function groupRecords(lines: LayoutItem[][]): number[][] {
-  const ys = lines.map((l) => Math.max(...l.map((i) => i.transform[5])));
-  const gaps = ys.slice(1).map((y, i) => ys[i] - y).filter((g) => g > 0).sort((a, b) => a - b);
+function groupRecords(lines: VisualLine[]): number[][] {
+  const gaps = lines.slice(1).map((l, i) => lines[i].y - l.y).filter((g) => g > 0).sort((a, b) => a - b);
   const median = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 12;
-  const threshold = median * 1.8;
+  const threshold = median * 2.4;
   const records: number[][] = [];
   let current: number[] = [];
   for (let i = 0; i < lines.length; i++) {
-    if (i > 0 && ys[i - 1] - ys[i] > threshold && current.length) {
+    if (i > 0 && lines[i - 1].y - lines[i].y > threshold && current.length) {
       records.push(current);
       current = [];
     }
@@ -86,8 +90,6 @@ function groupRecords(lines: LayoutItem[][]): number[][] {
 function joinFragments(prev: string, next: string, prevTouchesRightEdge: boolean): string {
   if (!prev) return next;
   if (!next) return prev;
-  const lastChar = prev[prev.length - 1];
-  const firstChar = next[0];
 
   if (isNumericish(prev) && isNumericish(next)) {
     // « 1 500 » + « 000, » → « 1 500 000, » ; « 000, » + « 00 » → « 000,00 »
@@ -96,33 +98,47 @@ function joinFragments(prev: string, next: string, prevTouchesRightEdge: boolean
   }
 
   // Mot coupé par la largeur de colonne : le fragment précédent remplit la
-  // bande jusqu'au bord droit et la suite commence par une minuscule.
-  if (prevTouchesRightEdge && /[A-Za-zÀ-ÿ]$/.test(lastChar) && /^[a-zà-ÿ]/.test(firstChar)) {
+  // bande jusqu'à son bord droit et la suite commence par une minuscule.
+  if (prevTouchesRightEdge && /[A-Za-zÀ-ÿ]$/.test(prev) && /^[a-zà-ÿ]/.test(next)) {
     return `${prev}${next}`;
   }
   return `${prev} ${next}`;
 }
 
+/** Cellules d'une ligne visuelle (fragments jointifs recollés sans espace). */
+function lineCells(line: VisualLine): Fragment[] {
+  const cells: Fragment[] = [];
+  for (const it of [...line.items].sort((a, b) => a.transform[4] - b.transform[4])) {
+    const text = it.str.trim();
+    if (!text) continue;
+    const x0 = it.transform[4];
+    const x1 = x0 + (it.width ?? 0);
+    const last = cells[cells.length - 1];
+    if (last && x0 - last.x1 <= WORD_GAP) {
+      last.text = x0 - last.x1 <= GLUE_GAP ? `${last.text}${text}` : `${last.text} ${text}`;
+      last.x1 = Math.max(last.x1, x1);
+    } else {
+      cells.push({ text, x0, x1 });
+    }
+  }
+  return cells;
+}
+
 /**
- * Reconstruit la matrice d'une page « repliée ». Retourne [] si la page n'a
- * pas assez de structure pour être exploitée.
+ * Reconstruit la matrice d'une page « repliée ». Retourne [] si la page n'a pas
+ * assez de structure tabulaire pour être exploitée.
  */
 export function rebuildWrappedRows(items: LayoutItem[]): string[][] {
   const usable = items.filter((i) => i && i.str && i.str.trim());
   if (usable.length < 5) return [];
-  const lines = clusterLines(usable);
   const bands = detectBands(usable);
   if (bands.length < 3) return [];
+  const lines = clusterLines(usable);
   const records = groupRecords(lines);
 
-  const bandIndexOf = (x0: number, x1: number): number => {
+  const bandIndexOf = (x0: number): number => {
     let best = 0;
-    let bestScore = -Infinity;
-    bands.forEach((band, i) => {
-      const overlap = Math.min(x1, band.x1) - Math.max(x0, band.x0);
-      const score = overlap > 0 ? overlap : -Math.abs((x0 + x1) / 2 - (band.x0 + band.x1) / 2);
-      if (score > bestScore) { bestScore = score; best = i; }
-    });
+    for (let i = 0; i < bands.length; i++) if (x0 + X_TOL >= bands[i].x0) best = i;
     return best;
   };
 
@@ -130,23 +146,7 @@ export function rebuildWrappedRows(items: LayoutItem[]): string[][] {
   for (const record of records) {
     const perBand: Fragment[][] = bands.map(() => []);
     record.forEach((lineIdx) => {
-      const line = [...lines[lineIdx]].sort((a, b) => a.transform[4] - b.transform[4]);
-      // fragments contigus d'une même ligne → une seule cellule par bande
-      const cells: Fragment[] = [];
-      for (const it of line) {
-        const x0 = it.transform[4];
-        const x1 = x0 + (it.width ?? 0);
-        const last = cells[cells.length - 1];
-        if (last && x0 - last.x1 <= X_GAP) {
-          last.text = `${last.text} ${it.str.trim()}`.trim();
-          last.x1 = Math.max(last.x1, x1);
-        } else {
-          cells.push({ text: it.str.trim(), x0, x1, line: lineIdx });
-        }
-      }
-      cells.forEach((cell) => {
-        if (cell.text) perBand[bandIndexOf(cell.x0, cell.x1)].push(cell);
-      });
+      lineCells(lines[lineIdx]).forEach((cell) => perBand[bandIndexOf(cell.x0)].push(cell));
     });
 
     const row = perBand.map((fragments, bandIdx) => {
@@ -156,12 +156,11 @@ export function rebuildWrappedRows(items: LayoutItem[]): string[][] {
         3,
         ...fragments.map((f) => (f.text.length ? (f.x1 - f.x0) / f.text.length : 0)),
       );
-      let acc = '';
-      fragments.forEach((fragment, i) => {
+      let acc = fragments[0].text;
+      for (let i = 1; i < fragments.length; i++) {
         const previous = fragments[i - 1];
-        const touches = !!previous && band.x1 - previous.x1 < charWidth * 1.2;
-        acc = i === 0 ? fragment.text : joinFragments(acc, fragment.text, touches);
-      });
+        acc = joinFragments(acc, fragments[i].text, band.x1 - previous.x1 < charWidth * 1.2);
+      }
       return acc.replace(/,\s+(?=\d)/g, ',').trim();
     });
 
@@ -172,7 +171,5 @@ export function rebuildWrappedRows(items: LayoutItem[]): string[][] {
 
 /** Nombre de lignes réellement valorisées (≥ 3 cellules numériques). */
 export function scoreValuedRows(matrix: string[][]): number {
-  return matrix.filter(
-    (row) => row.filter((c) => isNumericish(String(c ?? '')) && /\d/.test(String(c ?? ''))).length >= 3,
-  ).length;
+  return matrix.filter((row) => row.filter((c) => isNumericish(String(c ?? ''))).length >= 3).length;
 }
