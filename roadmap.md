@@ -7,3 +7,5 @@
 - [x] Stabiliser les icônes Leaflet et éviter leur recréation à chaque rendu
 - [x] Dédupliquer les alertes de traduction et les faire transiter par le journal applicatif
 - [ ] Vérifier les cartes projet sur ordinateur et mobile — bloqué : l’authentification Supabase externe ne peut pas être injectée dans le navigateur de test
+- [x] Fusionner les caractéristiques PDF multilignes dans la désignation DQE avant calcul du métré
+- [x] Supprimer le défilement horizontal des lignes et du mapping DQE à toutes les largeurs
