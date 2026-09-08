@@ -91,7 +91,9 @@ export function BoqImportDialog(props: Props) {
   const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true, contextItems = [], fiscalProfileCode, variant = 'dialog' } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [dropzoneReset, setDropzoneReset] = useState(0);
+
   /** Bascule plein écran / fenêtré (le contenu reste redimensionnable). */
   const [fullscreen, setFullscreen] = useState(true);
   const open = props.open ?? openInternal;
