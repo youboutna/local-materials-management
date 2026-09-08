@@ -3,6 +3,7 @@
  * Pure orchestration hook (no supabase.from() calls in components).
  */
 import type { ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
+import { BoqSourceDocumentService } from '@/application/services/boq/BoqSourceDocumentService';
 import { unifiedBoqParser, type UnifiedParseResult } from '@/application/services/boq/UnifiedBoqParser';
 import type { NumberFormatMode } from '@/application/services/boq/parsers/numberParsing';
 import type { ReferentialType } from '@/config/referentials';
