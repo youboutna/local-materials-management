@@ -12,6 +12,7 @@ import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal }
 import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { segmentDocumentBlocks } from './documentBlocks';
 import {
   detectSection,
   isRepeatedHeaderRow,
@@ -91,8 +92,12 @@ export class TextTableBoqParser implements IDocumentParser {
       if (hits >= 3) break;
     }
     if (bestHits < 2) {
-      warnings.push('En-têtes non détectés — utilisation de la 1ʳᵉ ligne comme colonnes.');
-      headerIdx = 0;
+      const { tableStart, headerRows } = segmentDocumentBlocks(matrix, { headerIdx: -1 });
+      headerIdx = Math.max(0, tableStart - 1);
+      warnings.push('En-têtes non détectés — colonnes déduites du début du tableau.');
+      if (headerRows.length) {
+        warnings.push(`${headerRows.length} ligne(s) d'en-tête documentaire lues comme métadonnées (hors lignes DQE).`);
+      }
     }
 
     const baseColumns = (matrix[headerIdx] ?? []).map((c, i) => c.trim() || `col_${i + 1}`);

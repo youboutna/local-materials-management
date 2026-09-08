@@ -11,6 +11,7 @@ import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { segmentDocumentBlocks } from './documentBlocks';
 
 import {
   detectSection,
@@ -239,6 +240,17 @@ export class PdfBoqParser implements IDocumentParser {
       parties.organization = { ...(parties.organization ?? {}), name: envelope.receiver.name };
     }
     warnings.push(...summarizeEnvelope(envelope));
+
+    // Segmentation en blocs : tout ce qui précède le tableau (émetteur, adresse,
+    // n° DQE, date, projet…) est du CONTEXTE, jamais une ligne DQE.
+    const blocks = segmentDocumentBlocks(rowsAcc, {
+      headerIdx,
+      isSectionRow: (cells) => !!detectSection(cells as (string | null)[]),
+    });
+    blocks.headerRows.forEach((i) => consumed.add(i));
+    if (blocks.headerRows.length) {
+      warnings.push(`${blocks.headerRows.length} ligne(s) d'en-tête documentaire lues comme métadonnées (hors lignes DQE).`);
+    }
 
     // Recomposition des lignes LOGIQUES (wrap de libellé, régime fiscal sur une
     // ligne à part…) avant toute interprétation métier.
