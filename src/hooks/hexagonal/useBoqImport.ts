@@ -67,6 +67,19 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     setBusy(true); setError(null);
     try {
       const persisted = await boqRepository.bulkCreate(lines);
+      // Traçabilité : le fichier source rejoint le Document Hub (catégorie BOQ)
+      // et reste téléchargeable depuis le document DQE.
+      if (sourceFile.current) {
+        await BoqSourceDocumentService.persist({
+          file: sourceFile.current,
+          contextId: ctx.contextId,
+          source: ctx.source,
+          projectId: ctx.source === 'project' ? ctx.contextId : null,
+          phaseId: ctx.phaseId ?? null,
+          tenderId: ctx.source === 'tender' ? ctx.contextId : null,
+          lineCount: persisted.length || lines.length,
+        });
+      }
       return persisted;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
