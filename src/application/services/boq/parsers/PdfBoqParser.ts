@@ -21,8 +21,51 @@ import {
 
 interface PdfItem { str: string; transform: number[]; width?: number }
 
+/** Fragment de texte positionné (une « cellule » avant alignement sur les bandes). */
+interface Cell { text: string; x0: number; x1: number }
+
 const Y_TOLERANCE = 3;    // px — items within this Y delta share a row
 const X_GAP = 20;         // px — horizontal gap threshold that splits columns
+
+const centerOf = (c: { x0: number; x1: number }) => (c.x0 + c.x1) / 2;
+
+/** Regroupe les items d'une ligne en cellules positionnées (x0/x1 conservés). */
+function toCells(row: PdfItem[]): Cell[] {
+  const sorted = [...row].sort((a, b) => a.transform[4] - b.transform[4]);
+  const cells: Cell[] = [];
+  let curr: Cell | null = null;
+  for (const it of sorted) {
+    const x = it.transform[4];
+    const w = it.width ?? 0;
+    if (curr && x - curr.x1 > X_GAP) { cells.push(curr); curr = null; }
+    if (!curr) curr = { text: it.str.trim(), x0: x, x1: x + w };
+    else { curr.text = `${curr.text} ${it.str.trim()}`.trim(); curr.x1 = Math.max(curr.x1, x + w); }
+  }
+  if (curr && curr.text) cells.push(curr);
+  return cells;
+}
+
+/**
+ * Aligne les cellules d'une ligne sur les bandes de colonnes de l'en-tête.
+ * Sans cet alignement, un numéro de séquence collé au libellé (« 1 Câble
+ * U-1000 RO2V ») décale toutes les colonnes suivantes (Qté / PU / Montant
+ * deviennent introuvables) et les retours à la ligne du libellé ne peuvent
+ * plus être rattachés à la colonne Désignation.
+ */
+function alignToBands(cells: Cell[], bands: Cell[]): string[] {
+  const out: string[] = Array.from({ length: bands.length }, () => '');
+  for (const cell of cells) {
+    let best = 0;
+    let bestScore = -Infinity;
+    bands.forEach((band, i) => {
+      const overlap = Math.min(cell.x1, band.x1) - Math.max(cell.x0, band.x0);
+      const score = overlap > 0 ? overlap : -Math.abs(centerOf(cell) - centerOf(band));
+      if (score > bestScore) { bestScore = score; best = i; }
+    });
+    out[best] = out[best] ? `${out[best]} ${cell.text}`.trim() : cell.text;
+  }
+  return out;
+}
 
 export class PdfBoqParser implements IDocumentParser {
   supports(file: File): boolean {
@@ -43,7 +86,8 @@ export class PdfBoqParser implements IDocumentParser {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doc = await (pdfjs as any).getDocument({ data: buf.slice(0) }).promise;
 
-    const rowsAcc: string[][] = [];
+    const cellRows: Cell[][] = [];
+    let rowsAcc: string[][] = [];
     const warnings: string[] = [];
 
     for (let p = 1; p <= doc.numPages; p++) {
@@ -70,29 +114,14 @@ export class PdfBoqParser implements IDocumentParser {
       }
       if (bucket.length) rows.push(bucket);
 
-      // Split each row into columns via X-gap heuristic
       for (const row of rows) {
-        const sorted = row.sort((a, b) => a.transform[4] - b.transform[4]);
-        const cols: string[] = [];
-        let curr = '';
-        let lastEnd = -Infinity;
-        for (const it of sorted) {
-          const x = it.transform[4];
-          const w = it.width ?? 0;
-          if (x - lastEnd > X_GAP && curr) {
-            cols.push(curr.trim());
-            curr = '';
-          }
-          curr += (curr ? ' ' : '') + it.str.trim();
-          lastEnd = x + w;
-        }
-        if (curr.trim()) cols.push(curr.trim());
-        if (cols.length) rowsAcc.push(cols);
+        const cells = toCells(row);
+        if (cells.length) cellRows.push(cells);
       }
     }
 
     // OCR fallback for scanned PDFs
-    if (!rowsAcc.length) {
+    if (!cellRows.length) {
       warnings.push('Aucun texte extractible du PDF — bascule sur OCR.');
       try {
         const ocrRows = await runOcrFallback(doc);
@@ -112,12 +141,25 @@ export class PdfBoqParser implements IDocumentParser {
       /qu?antit[eé]|^qt[eé]?$|^qty$/i,
       /prix.*unit|^p\.?\s*u\.?$|^pu$/i,
       /montant|^total$|prix.*total|^p\.?\s*t\.?$/i,
-      /^n[°o]$|^lot$|chapitre|poste/i,
+      /^n[°o]$|^#$|^lot$|chapitre|poste/i,
     ];
     const looksHeader = (row: string[]) => row.reduce((n, c) => n + (HEADER_HINTS.some((rx) => rx.test(c)) ? 1 : 0), 0);
-    let headerIdx = -1;
-    for (let i = 0; i < Math.min(rowsAcc.length, 15); i++) {
-      if (looksHeader(rowsAcc[i]) >= 2) { headerIdx = i; break; }
+
+    // Alignement sur les bandes de l'en-tête quand un en-tête est identifié.
+    let bandHeaderIdx = -1;
+    if (cellRows.length) {
+      for (let i = 0; i < Math.min(cellRows.length, 25); i++) {
+        if (looksHeader(cellRows[i].map((c) => c.text)) >= 2) { bandHeaderIdx = i; break; }
+      }
+      const bands = bandHeaderIdx >= 0 ? cellRows[bandHeaderIdx] : null;
+      rowsAcc = cellRows.map((cells) => (bands ? alignToBands(cells, bands) : cells.map((c) => c.text)));
+    }
+
+    let headerIdx = bandHeaderIdx;
+    if (headerIdx < 0) {
+      for (let i = 0; i < Math.min(rowsAcc.length, 15); i++) {
+        if (looksHeader(rowsAcc[i]) >= 2) { headerIdx = i; break; }
+      }
     }
     const maxCols = rowsAcc.reduce((m, r) => Math.max(m, r.length), 0);
     const baseColumns: string[] = headerIdx >= 0
@@ -126,6 +168,7 @@ export class PdfBoqParser implements IDocumentParser {
           return label || `col_${i + 1}`;
         })
       : Array.from({ length: maxCols }, (_, i) => `col_${i + 1}`);
+
     const columns = [...baseColumns, SECTION_LOT_COLUMN, SECTION_LABEL_COLUMN, SECTION_KIND_COLUMN];
 
     // Colonnes canoniques du tableau principal (pour réaligner les en-têtes

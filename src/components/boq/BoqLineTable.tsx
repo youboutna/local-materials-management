@@ -2,7 +2,7 @@
  * src/components/boq/BoqLineTable.tsx
  * BoqLineTable — grille unique saisie/import alignée sur les colonnes parseur.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -136,34 +136,159 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
   const hasActions = editable && !!onRemove;
   const colCount = DATA_COLS + (hasActions ? 1 : 0);
 
+  // Colonnes déclarées une seule fois : rendues en tableau sur grand écran et en
+  // cartes empilées sur écran étroit (aucun défilement horizontal).
+  const columns: { id: string; label: ReactNode; align?: 'right'; head?: string; cell: (l: BoqLineDTO, i: number) => ReactNode }[] = [
+    {
+      id: 'designation', label: <T k="auto.boqlinetable.designation" fallback="Désignation" />, head: 'min-w-[240px]',
+      cell: (l, i) => editable ? <Input value={l.designation} onChange={(e) => patch(i, { designation: e.target.value })} className="h-8 w-full" /> : <span className="font-medium">{l.designation}</span>,
+    },
+    {
+      id: 'phase', label: <T k="auto.boqlinetable.phase" fallback="Phase" />, head: 'min-w-[150px]',
+      cell: (l, i) => editable ? <SearchableSelect value={l.phaseId ?? undefined} onChange={(v) => patch(i, { phaseId: v || null, milestoneId: null, taskId: null })} options={phases.map((p) => ({ value: p.id, label: p.label }))} placeholder="—" searchPlaceholder="Rechercher une phase…" clearLabel="—" className="h-8 w-full" /> : (phaseOf(l.phaseId) ? <Badge variant="secondary">{phaseOf(l.phaseId)!.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>),
+    },
+    {
+      id: 'milestone', label: <T k="auto.boqlinetable.jalon" fallback="Jalon" />, head: 'min-w-[150px]',
+      cell: (l, i) => editable ? <SearchableSelect value={l.milestoneId ?? undefined} onChange={(v) => patch(i, { milestoneId: v || null, taskId: null })} options={(phaseOf(l.phaseId)?.milestones ?? []).map((m) => ({ value: m.id, label: m.label }))} placeholder="—" searchPlaceholder="Rechercher un jalon…" clearLabel="—" disabled={!l.phaseId} className="h-8 w-full" /> : (milestoneOf(l.phaseId, l.milestoneId) ? <Badge variant="outline">{milestoneOf(l.phaseId, l.milestoneId)!.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>),
+    },
+    {
+      id: 'task', label: <T k="auto.boqlinetable.tache" fallback="Tâche" />, head: 'min-w-[150px]',
+      cell: (l, i) => editable ? <SearchableSelect value={l.taskId ?? undefined} onChange={(v) => patch(i, { taskId: v || null })} options={(milestoneOf(l.phaseId, l.milestoneId)?.tasks ?? []).map((t) => ({ value: t.id, label: t.label }))} placeholder="—" searchPlaceholder="Rechercher une tâche…" clearLabel="—" disabled={!l.milestoneId} className="h-8 w-full" /> : (taskOf(l.phaseId, l.milestoneId, l.taskId) ? <span className="text-xs">{taskOf(l.phaseId, l.milestoneId, l.taskId)!.label}</span> : <span className="text-xs text-muted-foreground">—</span>),
+    },
+    {
+      id: 'resourceType', label: <T k="auto.boqlinetable.nature" fallback="Nature" />, head: 'min-w-[140px]',
+      cell: (l, i) => editable ? <Select value={l.resourceType ?? 'material'} onValueChange={(v) => patch(i, { resourceType: v as BoqResourceType })}><SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger><SelectContent>{RESOURCE_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select> : <Badge variant={l.resourceType === 'labor' ? 'default' : 'secondary'}>{RESOURCE_TYPES.find((r) => r.value === (l.resourceType ?? 'material'))?.label}</Badge>,
+    },
+    {
+      id: 'elementType', label: <T k="auto.boqlinetable.type_ouvrage" fallback="Type ouvrage" />, head: 'min-w-[140px]',
+      cell: (l, i) => editable ? <Select value={l.elementType ?? 'generic'} onValueChange={(v) => patch(i, { elementType: v === 'generic' ? null : v })}><SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="generic">— saisie —</SelectItem>{ELEMENT_TYPES.map((e) => <SelectItem key={e.code} value={e.code}>{e.label}</SelectItem>)}</SelectContent></Select> : <Badge variant="outline">{l.elementType ?? '—'}</Badge>,
+    },
+    {
+      id: 'stakeholder', label: <T k="auto.boqlinetable.intervenant" fallback="Intervenant" />, head: 'min-w-[160px]',
+      cell: (l, i) => editable ? <Select value={stakeholderOf(l)?.id ?? NONE} onValueChange={(v) => { const opt = stakeholders.find((s) => s.id === v); patch(i, { metadata: { ...(l.metadata ?? {}), stakeholder: v === NONE || !opt ? null : { id: opt.id, name: opt.name, type: opt.type } } }); }}><SelectTrigger className="h-8 w-full"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{STAKEHOLDER_GROUPS.map(({ type, label }) => { const opts = stakeholders.filter((s) => s.type === type); if (!opts.length) return null; return [<SelectItem key={`${type}-h`} value={`__group_${type}`} disabled>{label}</SelectItem>, ...opts.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)]; })}</SelectContent></Select> : <span className="text-xs">{stakeholderOf(l)?.name ?? '—'}</span>,
+    },
+    {
+      id: 'unit', label: <T k="auto.boqlinetable.unite" fallback="Unité" />,
+      cell: (l, i) => editable ? <Select value={l.unit ?? 'u'} onValueChange={(v) => patch(i, { unit: v })}><SelectTrigger className="h-8 w-full min-w-[80px]"><SelectValue /></SelectTrigger><SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select> : <>{l.unit}</>,
+    },
+    { id: 'length', label: 'L', align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.length ?? ''} onChange={(e) => patch(i, { length: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-full min-w-[64px] text-right" /> : <>{l.length ?? '—'}</> },
+    { id: 'width', label: 'l', align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.width ?? ''} onChange={(e) => patch(i, { width: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-full min-w-[64px] text-right" /> : <>{l.width ?? '—'}</> },
+    { id: 'height', label: 'h', align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.height ?? ''} onChange={(e) => patch(i, { height: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-full min-w-[64px] text-right" /> : <>{l.height ?? '—'}</> },
+    { id: 'quantity', label: <T k="auto.boqlinetable.qte" fallback="Qté" />, align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.quantity ?? 0} onChange={(e) => patch(i, { quantity: Number(e.target.value) || 0 })} className="h-8 w-full min-w-[80px] text-right" /> : <>{l.quantity}</> },
+    { id: 'unitPrice', label: 'PU', align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.unitPrice ?? 0} onChange={(e) => patch(i, { unitPrice: Number(e.target.value) || 0 })} className="h-8 w-full min-w-[96px] text-right" /> : <>{l.unitPrice != null ? fmt(l.unitPrice) : '—'}</> },
+    {
+      id: 'regime', label: <T k="auto.boqlinetable.regime_tva" fallback="Régime TVA" />, head: 'min-w-[170px]',
+      cell: (l, i) => editable ? (
+        <Select
+          value={l.taxRegimeCode ?? TaxService.detectTaxRegime(l).code}
+          onValueChange={(v) => {
+            const regime = TAX_REGIMES_OPTIONS.find((r) => r.code === v);
+            patch(i, { taxRegimeCode: v, vatRate: regime?.vatRate ?? 0, rasRate: regime?.withholdingRate ?? 0 });
+          }}
+        >
+          <SelectTrigger className="h-8 w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {TAX_REGIMES_OPTIONS.map((r) => <SelectItem key={r.code} value={r.code}>{r.labels.fr}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      ) : <span className="text-xs text-muted-foreground">{TaxService.detectTaxRegime(l).labels.fr}</span>,
+    },
+    {
+      id: 'account', label: <T k="dqe.line.pcm_account" fallback="Compte PCM" />, head: 'min-w-[200px]',
+      cell: (l, i) => editable ? (
+        <PcmAccountSelect value={l.accountCode ?? taxOf(l).accountCode} onChange={(code) => patch(i, { accountCode: code })} className="w-full" />
+      ) : (
+        <span className="text-xs text-muted-foreground">{taxOf(l).accountCode ? `${taxOf(l).accountCode} · ${taxOf(l).accountLabel ?? ''}` : '—'}</span>
+      ),
+    },
+    {
+      id: 'vat', label: <T k="auto.boqlinetable.tva" fallback="TVA %" />, align: 'right',
+      cell: (l, i) => (
+        <>
+          {editable ? <Input type="number" step={0.01} value={l.vatRate ?? 0} onChange={(e) => patch(i, { vatRate: Number(e.target.value) || 0 })} className="h-8 w-full min-w-[72px] text-right" /> : `${((l.vatRate ?? 0) * 100).toFixed(0)}%`}
+          <div className="text-[10px] text-muted-foreground">{fmt(lineVat(l))}</div>
+        </>
+      ),
+    },
+    {
+      id: 'ras', label: <T k="auto.boqlinetable.ras" fallback="RAS %" />, align: 'right',
+      cell: (l, i) => (
+        <>
+          {editable ? <Input type="number" step={0.01} value={l.rasRate ?? 0} onChange={(e) => patch(i, { rasRate: Number(e.target.value) || 0 })} className="h-8 w-full min-w-[72px] text-right" /> : `${((l.rasRate ?? 0) * 100).toFixed(0)}%`}
+          <div className="text-[10px] text-muted-foreground">{fmt(lineRas(l))}</div>
+        </>
+      ),
+    },
+    { id: 'fees', label: <T k="auto.boqlinetable.frais" fallback="Frais" />, align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.fees ?? 0} onChange={(e) => patch(i, { fees: Number(e.target.value) || 0 })} className="h-8 w-full min-w-[80px] text-right" /> : <>{fmt(l.fees ?? 0)}</> },
+    { id: 'totalHt', label: <T k="auto.boqlinetable.total_ht" fallback="Total HT" />, align: 'right', cell: (l) => <span className="font-medium">{fmt(lineTotal(l))}</span> },
+    { id: 'totalTtc', label: <T k="dqe.line.total_ttc" fallback="Total TTC" />, align: 'right', cell: (l) => <span className="font-semibold">{fmt(lineTtc(l))}</span> },
+  ];
+
+  const lineFlag = (l: BoqLineDTO) => taxOf(l).deductibility.deductible ? null : (
+    <span title={`Non déductible (LFR 2026) : ${taxOf(l).deductibility.issues.map((x) => x.message).join(' • ')}`}>
+      <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+    </span>
+  );
+  const rowKey = (l: BoqLineDTO, i: number) => l.id ?? String((l.metadata as { clientRowId?: string } | null)?.clientRowId ?? `row-${i}`);
+
+  const totalsRows: { label: ReactNode; value: string }[] = [
+    { label: <T k="auto.boqlinetable.total_ht" fallback="Total HT" />, value: fmt(total) },
+    { label: <T k="dqe.line.total_vat" fallback="Total TVA" />, value: fmt(totalVat) },
+    { label: <T k="dqe.line.total_ras" fallback="Total retenues RAS" />, value: `-${fmt(totalRas)}` },
+    { label: <T k="dqe.line.total_ttc" fallback="Total TTC" />, value: fmt(totalTtc) },
+  ];
+
   return (
     <div className="space-y-2">
-      <div className="rounded-md border overflow-x-auto">
+      {/* Écran étroit : cartes empilées, tout le contenu de la ligne reste visible. */}
+      <div className="space-y-3 xl:hidden">
+        {lines.length === 0 && (
+          <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{emptyLabel}</p>
+        )}
+        {pageRows.map((l, idx) => {
+          const i = start + idx;
+          return (
+            <div key={rowKey(l, i)} className="rounded-md border p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">N° {i + 1}{lineFlag(l)}</span>
+                {hasActions && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                {columns.map((c) => (
+                  <div key={c.id} className={c.id === 'designation' ? 'sm:col-span-2 lg:col-span-3 min-w-0' : 'min-w-0'}>
+                    <div className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">{c.label}</div>
+                    <div className="min-w-0 break-words text-sm">{c.cell(l, i)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {lines.length > 0 && (
+          <div className="rounded-md border bg-muted/40 p-3 text-sm">
+            {totalsRows.map((r, i) => (
+              <div key={i} className="flex items-center justify-between gap-2 py-0.5">
+                <span className="font-medium">{r.label}</span>
+                <span className="font-bold">{r.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Grand écran : tableau complet. */}
+      <div className="hidden rounded-md border xl:block xl:overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-12 text-right">N°</TableHead>
-              <TableHead className="min-w-[240px]"><T k="auto.boqlinetable.designation" fallback="Désignation" /></TableHead>
-              <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.phase" fallback="Phase" /></TableHead>
-              <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.jalon" fallback="Jalon" /></TableHead>
-              <TableHead className="min-w-[150px]"><T k="auto.boqlinetable.tache" fallback="Tâche" /></TableHead>
-              <TableHead className="min-w-[140px]"><T k="auto.boqlinetable.nature" fallback="Nature" /></TableHead>
-              <TableHead className="min-w-[140px]"><T k="auto.boqlinetable.type_ouvrage" fallback="Type ouvrage" /></TableHead>
-              <TableHead className="min-w-[160px]"><T k="auto.boqlinetable.intervenant" fallback="Intervenant" /></TableHead>
-              <TableHead><T k="auto.boqlinetable.unite" fallback="Unité" /></TableHead>
-              <TableHead className="text-right">L</TableHead>
-              <TableHead className="text-right">l</TableHead>
-              <TableHead className="text-right">h</TableHead>
-              <TableHead className="text-right"><T k="auto.boqlinetable.qte" fallback="Qté" /></TableHead>
-              <TableHead className="text-right">PU</TableHead>
-              <TableHead className="min-w-[170px]"><T k="auto.boqlinetable.regime_tva" fallback="Régime TVA" /></TableHead>
-              <TableHead className="min-w-[200px]"><T k="dqe.line.pcm_account" fallback="Compte PCM" /></TableHead>
-
-              <TableHead className="text-right"><T k="auto.boqlinetable.tva" fallback="TVA %" /></TableHead>
-              <TableHead className="text-right"><T k="auto.boqlinetable.ras" fallback="RAS %" /></TableHead>
-              <TableHead className="text-right"><T k="auto.boqlinetable.frais" fallback="Frais" /></TableHead>
-              <TableHead className="text-right"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableHead>
-              <TableHead className="text-right"><T k="dqe.line.total_ttc" fallback="Total TTC" /></TableHead>
+              {columns.map((c) => (
+                <TableHead key={c.id} className={[c.head ?? '', c.align === 'right' ? 'text-right' : ''].join(' ').trim()}>{c.label}</TableHead>
+              ))}
               {hasActions && <TableHead className="w-8" />}
             </TableRow>
           </TableHeader>
@@ -175,117 +300,26 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
             )}
             {pageRows.map((l, idx) => {
               const i = start + idx;
-              const phase = phaseOf(l.phaseId);
-              const milestones = phase?.milestones ?? [];
-              const milestone = milestoneOf(l.phaseId, l.milestoneId);
-              const tasks = milestone?.tasks ?? [];
-              const task = taskOf(l.phaseId, l.milestoneId, l.taskId);
               return (
-                <TableRow key={l.id ?? String((l.metadata as { clientRowId?: string } | null)?.clientRowId ?? `row-${i}`)}>
+                <TableRow key={rowKey(l, i)}>
                   <TableCell className="text-right text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      {i + 1}
-                      {taxOf(l).deductibility.deductible ? null : (
-                        <span title={`Non déductible (LFR 2026) : ${taxOf(l).deductibility.issues.map((x) => x.message).join(' • ')}`}>
-                          <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-                        </span>
-                      )}
-
-                    </span>
+                    <span className="inline-flex items-center gap-1">{i + 1}{lineFlag(l)}</span>
                   </TableCell>
-
-                  <TableCell>{editable ? <Input value={l.designation} onChange={(e) => patch(i, { designation: e.target.value })} className="h-8 min-w-[220px]" /> : <span className="font-medium">{l.designation}</span>}</TableCell>
-                  <TableCell>{editable ? <SearchableSelect value={l.phaseId ?? undefined} onChange={(v) => patch(i, { phaseId: v || null, milestoneId: null, taskId: null })} options={phases.map((p) => ({ value: p.id, label: p.label }))} placeholder="—" searchPlaceholder="Rechercher une phase…" clearLabel="—" className="h-8 min-w-[150px]" /> : phase ? <Badge variant="secondary">{phase.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
-                  <TableCell>{editable ? <SearchableSelect value={l.milestoneId ?? undefined} onChange={(v) => patch(i, { milestoneId: v || null, taskId: null })} options={milestones.map((m) => ({ value: m.id, label: m.label }))} placeholder="—" searchPlaceholder="Rechercher un jalon…" clearLabel="—" disabled={!l.phaseId} className="h-8 min-w-[150px]" /> : milestone ? <Badge variant="outline">{milestone.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
-                  <TableCell>{editable ? <SearchableSelect value={l.taskId ?? undefined} onChange={(v) => patch(i, { taskId: v || null })} options={tasks.map((t) => ({ value: t.id, label: t.label }))} placeholder="—" searchPlaceholder="Rechercher une tâche…" clearLabel="—" disabled={!l.milestoneId} className="h-8 min-w-[150px]" /> : task ? <span className="text-xs">{task.label}</span> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
-
-                  <TableCell>{editable ? <Select value={l.resourceType ?? 'material'} onValueChange={(v) => patch(i, { resourceType: v as BoqResourceType })}><SelectTrigger className="h-8 w-[140px]"><SelectValue /></SelectTrigger><SelectContent>{RESOURCE_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select> : <Badge variant={l.resourceType === 'labor' ? 'default' : 'secondary'}>{RESOURCE_TYPES.find((r) => r.value === (l.resourceType ?? 'material'))?.label}</Badge>}</TableCell>
-                  <TableCell>{editable ? <Select value={l.elementType ?? 'generic'} onValueChange={(v) => patch(i, { elementType: v === 'generic' ? null : v })}><SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="generic">— saisie —</SelectItem>{ELEMENT_TYPES.map((e) => <SelectItem key={e.code} value={e.code}>{e.label}</SelectItem>)}</SelectContent></Select> : <Badge variant="outline">{l.elementType ?? '—'}</Badge>}</TableCell>
-                  <TableCell>{editable ? <Select value={stakeholderOf(l)?.id ?? NONE} onValueChange={(v) => { const opt = stakeholders.find((s) => s.id === v); patch(i, { metadata: { ...(l.metadata ?? {}), stakeholder: v === NONE || !opt ? null : { id: opt.id, name: opt.name, type: opt.type } } }); }}><SelectTrigger className="h-8 w-[160px]"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{STAKEHOLDER_GROUPS.map(({ type, label }) => { const opts = stakeholders.filter((s) => s.type === type); if (!opts.length) return null; return [<SelectItem key={`${type}-h`} value={`__group_${type}`} disabled>{label}</SelectItem>, ...opts.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)]; })}</SelectContent></Select> : <span className="text-xs">{stakeholderOf(l)?.name ?? '—'}</span>}</TableCell>
-                  <TableCell>{editable ? <Select value={l.unit ?? 'u'} onValueChange={(v) => patch(i, { unit: v })}><SelectTrigger className="h-8 w-[80px]"><SelectValue /></SelectTrigger><SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select> : l.unit}</TableCell>
-                  <TableCell className="text-right">{editable ? <Input type="number" value={l.length ?? ''} onChange={(e) => patch(i, { length: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-20 text-right" /> : (l.length ?? '—')}</TableCell>
-                  <TableCell className="text-right">{editable ? <Input type="number" value={l.width ?? ''} onChange={(e) => patch(i, { width: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-20 text-right" /> : (l.width ?? '—')}</TableCell>
-                  <TableCell className="text-right">{editable ? <Input type="number" value={l.height ?? ''} onChange={(e) => patch(i, { height: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-20 text-right" /> : (l.height ?? '—')}</TableCell>
-                  <TableCell className="text-right">{editable ? <Input type="number" value={l.quantity ?? 0} onChange={(e) => patch(i, { quantity: Number(e.target.value) || 0 })} className="h-8 w-24 text-right" /> : l.quantity}</TableCell>
-                  <TableCell className="text-right">{editable ? <Input type="number" value={l.unitPrice ?? 0} onChange={(e) => patch(i, { unitPrice: Number(e.target.value) || 0 })} className="h-8 w-28 text-right" /> : (l.unitPrice != null ? fmt(l.unitPrice) : '—')}</TableCell>
-                  <TableCell>
-                    {editable ? (
-                      <Select
-                        value={l.taxRegimeCode ?? TaxService.detectTaxRegime(l).code}
-                        onValueChange={(v) => {
-                          const regime = TAX_REGIMES_OPTIONS.find((r) => r.code === v);
-                          patch(i, { taxRegimeCode: v, vatRate: regime?.vatRate ?? 0, rasRate: regime?.withholdingRate ?? 0 });
-                        }}
-                      >
-                        <SelectTrigger className="h-8 min-w-[160px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {TAX_REGIMES_OPTIONS.map((r) => (
-                            <SelectItem key={r.code} value={r.code}>{r.labels.fr}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">{TaxService.detectTaxRegime(l).labels.fr}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editable ? (
-                      <PcmAccountSelect
-                        value={l.accountCode ?? taxOf(l).accountCode}
-                        onChange={(code) => patch(i, { accountCode: code })}
-                        className="min-w-[190px]"
-                      />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {taxOf(l).accountCode ? `${taxOf(l).accountCode} · ${taxOf(l).accountLabel ?? ''}` : '—'}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {editable ? <Input type="number" step={0.01} value={l.vatRate ?? 0} onChange={(e) => patch(i, { vatRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.vatRate ?? 0) * 100).toFixed(0)}%`}
-                    <div className="text-[10px] text-muted-foreground">{fmt(lineVat(l))}</div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {editable ? <Input type="number" step={0.01} value={l.rasRate ?? 0} onChange={(e) => patch(i, { rasRate: Number(e.target.value) || 0 })} className="h-8 w-20 text-right" /> : `${((l.rasRate ?? 0) * 100).toFixed(0)}%`}
-                    <div className="text-[10px] text-muted-foreground">{fmt(lineRas(l))}</div>
-                  </TableCell>
-
-                  <TableCell className="text-right">{editable ? <Input type="number" value={l.fees ?? 0} onChange={(e) => patch(i, { fees: Number(e.target.value) || 0 })} className="h-8 w-24 text-right" /> : fmt(l.fees ?? 0)}</TableCell>
-                  <TableCell className="text-right font-medium">{fmt(lineTotal(l))}</TableCell>
-                  <TableCell className="text-right font-semibold">{fmt(lineTtc(l))}</TableCell>
+                  {columns.map((c) => (
+                    <TableCell key={c.id} className={c.align === 'right' ? 'text-right' : undefined}>{c.cell(l, i)}</TableCell>
+                  ))}
                   {hasActions && <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne"><Trash2 className="h-4 w-4" /></Button></TableCell>}
                 </TableRow>
               );
             })}
-            {lines.length > 0 && (
-              <>
-                <TableRow>
-                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="auto.boqlinetable.total_ht" fallback="Total HT" /></TableCell>
-                  <TableCell className="text-right font-bold">{fmt(total)}</TableCell>
-                  <TableCell />
-                  {hasActions && <TableCell />}
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_vat" fallback="Total TVA" /></TableCell>
-                  <TableCell className="text-right font-bold">{fmt(totalVat)}</TableCell>
-                  <TableCell />
-                  {hasActions && <TableCell />}
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_ras" fallback="Total retenues RAS" /></TableCell>
-                  <TableCell className="text-right font-bold">-{fmt(totalRas)}</TableCell>
-                  <TableCell />
-                  {hasActions && <TableCell />}
-                </TableRow>
-
-                <TableRow className="bg-muted/40">
-                  <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold"><T k="dqe.line.total_ttc" fallback="Total TTC" /></TableCell>
-                  <TableCell />
-                  <TableCell className="text-right font-bold">{fmt(totalTtc)}</TableCell>
-                  {hasActions && <TableCell />}
-                </TableRow>
-              </>
-            )}
+            {lines.length > 0 && totalsRows.map((r, i) => (
+              <TableRow key={i} className={i === totalsRows.length - 1 ? 'bg-muted/40' : undefined}>
+                <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold">{r.label}</TableCell>
+                <TableCell className="text-right font-bold">{r.value}</TableCell>
+                <TableCell />
+                {hasActions && <TableCell />}
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
@@ -302,3 +336,4 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
     </div>
   );
 }
+
