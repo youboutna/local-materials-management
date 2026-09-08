@@ -311,9 +311,65 @@ export function BoqImportDialog(props: Props) {
     }
   };
 
+  const totals = useMemo(() => {
+    const ht = wbsEnrichedDtos.reduce((s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)), 0);
+    const vat = wbsEnrichedDtos.reduce((s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)) * (l.vatRate ?? 0), 0);
+    const ras = wbsEnrichedDtos.reduce(
+      (s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)) * ((l as { withholdingRate?: number | null }).withholdingRate ?? 0),
+      0,
+    );
+    return { ht, vat, ras, ttc: ht + vat };
+  }, [wbsEnrichedDtos]);
+  const fmt = (n: number) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Math.round(n));
+
+  const maxStep = parseResult ? 4 : 1;
+  const stepLabels = [
+    'Sélectionnez votre fichier',
+    'Vérifiez la correspondance des colonnes',
+    'Validez et corrigez les lignes',
+    "Confirmez l'import",
+  ];
+  const canNext = step < maxStep;
+  const canPrev = step > 1;
+  const goNext = () => setStep((s) => (Math.min(s + 1, maxStep) as 1 | 2 | 3 | 4));
+  const goPrev = () => setStep((s) => (Math.max(s - 1, 1) as 1 | 2 | 3 | 4));
+
+  const stepper = (
+    <nav aria-label="Étapes de l'import" className="flex flex-wrap items-center gap-2 pb-1">
+      {stepLabels.map((label, i) => {
+        const n = (i + 1) as 1 | 2 | 3 | 4;
+        const active = n === step;
+        const reachable = n <= maxStep;
+        return (
+          <button
+            key={label}
+            type="button"
+            onClick={() => reachable && setStep(n)}
+            disabled={!reachable}
+            aria-current={active ? 'step' : undefined}
+            className={`flex min-h-11 items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors ${
+              active ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground hover:bg-muted'
+            } disabled:opacity-50`}
+          >
+            <span
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
+                active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {n}
+            </span>
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   const body = (
     <>
+      {stepper}
       <DocumentContextSummary items={contextItems} />
+
 
 
         {!parseResult && (
