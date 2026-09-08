@@ -34,6 +34,8 @@ export interface LogEntry {
   stack?: string;
   context?: { userId?: string; roles?: string[]; path?: string };
   metadata?: { appVersion?: string; userAgent?: string; url?: string };
+  /** Nombre d'occurrences regroupées pour une même trace rapprochée. */
+  repeatCount?: number;
 }
 
 export interface LoggerConfig {
@@ -61,6 +63,8 @@ export class LoggerService {
   private buffer: LogEntry[] = [];
   private config: LoggerConfig;
   private initialized = false;
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly duplicateWindowMs = 500;
 
   private constructor() {
     this.config = LoggerService.defaultConfig();
@@ -149,8 +153,16 @@ export class LoggerService {
     if (this.buffer.length > this.config.maxBufferSize) {
       this.buffer = this.buffer.slice(-this.config.maxBufferSize);
     }
-    if (this.config.enableLocalStorage) this.persist();
+    if (this.config.enableLocalStorage) this.schedulePersist();
     if (this.config.enableConsole) this.echo(entry);
+  }
+
+  private schedulePersist(): void {
+    if (this.persistTimer) return;
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      this.persist();
+    }, 500);
   }
 
   /** Écho console — uniquement en mode debug, via les références natives. */
