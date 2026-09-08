@@ -35,12 +35,12 @@ export interface ProductFamily {
 
 /** Unités techniques rencontrées dans les libellés (jamais des unités de quantité). */
 export const TECHNICAL_UNITS: Array<{ kind: TechnicalUnitKind; labelFr: string; re: RegExp }> = [
-  { kind: 'section', labelFr: 'section de conducteur', re: /\b\d+(?:[.,]\d+)?\s*mm(?:²|2)(?![0-9A-Za-z])/i },
-  { kind: 'tension', labelFr: 'tension', re: /\b\d+(?:[.,]\d+)?\s*k?V\b/ },
-  { kind: 'effort', labelFr: 'effort nominal', re: /\b\d+(?:[.,]\d+)?\s*daN\b/i },
-  { kind: 'puissance', labelFr: 'puissance', re: /\b\d+(?:[.,]\d+)?\s*(?:kVA|kW|MVA)\b/i },
+  { kind: 'section', labelFr: 'section de conducteur', re: /\d+(?:[.,]\d+)?\s*mm(?:²|2)(?![0-9A-Za-z])/i },
+  { kind: 'tension', labelFr: 'tension', re: /\d+(?:[.,]\d+)?\s*k?V\b/ },
+  { kind: 'effort', labelFr: 'effort nominal', re: /\d+(?:[.,]\d+)?\s*daN\b/i },
+  { kind: 'puissance', labelFr: 'puissance', re: /\d+(?:[.,]\d+)?\s*(?:kVA|kW|MVA)\b/i },
   { kind: 'diametre', labelFr: 'diamètre', re: /\b(?:DN|Ø|diam(?:[eè]tre)?\.?)\s*\d+/i },
-  { kind: 'masse', labelFr: 'masse', re: /\b\d+(?:[.,]\d+)?\s*(?:kg|t)\b/i },
+  { kind: 'masse', labelFr: 'masse', re: /\d+(?:[.,]\d+)?\s*(?:kg|t)\b/i },
 ];
 
 export const PRODUCT_FAMILIES: ProductFamily[] = [
