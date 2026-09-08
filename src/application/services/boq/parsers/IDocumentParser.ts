@@ -32,6 +32,8 @@ export interface ParseResult {
   documentMeta?: import('./documentMetaDetection').DocumentMeta;
   /** Feuille retenue pour les lignes (classeurs multi-feuilles). */
   sheetName?: string;
+  /** Enveloppe documentaire (émetteur, destinataire, référence, normes) — contexte, jamais des lignes. */
+  envelope?: import('./envelopeDetection').DqeEnvelope;
 }
 
 
