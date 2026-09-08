@@ -679,13 +679,14 @@ export function BoqWorkspace({
   const isDocumentEmpty = displayedLines.length === 0;
   const [showDocumentSettings, setShowDocumentSettings] = useState(false);
   const handleParsedImport = (lines: BoqLineDTO[]) => {
-    setDraftLines((prev) => [...prev, ...lines.map((line) => {
-      const hasStakeholder = !!(line.metadata as { stakeholder?: unknown } | null)?.stakeholder;
-      const enriched = BoqLineAutofillService.enrichImported(line, {
-        materials: autofillMaterials,
-        phases: availablePhases as never,
-        fiscalProfileCode: fiscalCode,
-      });
+    // Enrichissement référentiel : unité, métré, catégorie, compte PCM, WBS, fiscalité.
+    const enrichedLines = BoqLineAutofillService.enrichImported(lines, {
+      materials: autofillMaterials,
+      phases: availablePhases as never,
+      fiscalProfileCode: fiscalCode,
+    });
+    setDraftLines((prev) => [...prev, ...enrichedLines.map((enriched) => {
+      const hasStakeholder = !!(enriched.metadata as { stakeholder?: unknown } | null)?.stakeholder;
       return {
         ...enriched,
         source,
