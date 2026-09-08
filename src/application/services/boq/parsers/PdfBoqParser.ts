@@ -11,6 +11,7 @@ import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { segmentDocumentBlocks } from './documentBlocks';
 
 import {
   detectSection,
