@@ -21,6 +21,8 @@ import { parseLocaleNumber, type NumberFormatMode } from './parsers/numberParsin
 import { JsonBoqParser } from './parsers/JsonBoqParser';
 import { PdfBoqParser } from './parsers/PdfBoqParser';
 import { SpreadsheetBoqParser } from './parsers/SpreadsheetBoqParser';
+import { TextTableBoqParser } from './parsers/TextTableBoqParser';
+import { detectMetre } from './parsers/metreDetection';
 
 export interface ImportMapping {
   designation?: string;
@@ -77,7 +79,7 @@ const REGIME_RESOURCE: { rx: RegExp; type: BoqResourceType }[] = [
 export class BoqImportOrchestrator {
   private readonly parsers: IDocumentParser[];
   constructor() {
-    this.parsers = [new SpreadsheetBoqParser(), new PdfBoqParser(), new JsonBoqParser()];
+    this.parsers = [new SpreadsheetBoqParser(), new PdfBoqParser(), new JsonBoqParser(), new TextTableBoqParser()];
   }
 
   async parseFile(file: File): Promise<ParseResult> {
@@ -281,6 +283,11 @@ export class BoqImportOrchestrator {
 
       const sectionLabel = String(row.raw[SECTION_LABEL_COLUMN] ?? '').trim() || null;
 
+      // Métré (scénarios 3 & 8) : une ligne de terrassement facturée au mètre
+      // linéaire porte un volume — recalculé via le référentiel `earthwork-metre`
+      // puis assorti de recommandations d'ouvrages complémentaires.
+      const metre = detectMetre({ designation, unit, quantity });
+
       const dto: BoqLineDTO = {
         source: ctx.source,
         contextId: ctx.contextId,
@@ -309,6 +316,21 @@ export class BoqImportOrchestrator {
           ...(isLabour && labourPayroll != null ? { payrollTaxRate: labourPayroll } : {}),
           ...(partyMeta.supplierName || partyMeta.organizationName
             ? { parties: partyMeta }
+            : {}),
+          ...(metre
+            ? {
+                metre: {
+                  profileCode: metre.profileCode,
+                  profileLabel: metre.profileLabel,
+                  volume: metre.volume,
+                  unit: metre.unit,
+                  width: metre.width,
+                  depth: metre.depth,
+                  formula: metre.formula,
+                  fromDesignation: metre.fromDesignation,
+                },
+                metreRecommendations: metre.recommendations,
+              }
             : {}),
         },
 
