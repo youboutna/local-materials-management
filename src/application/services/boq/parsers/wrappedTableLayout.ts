@@ -23,7 +23,7 @@
 
 export interface LayoutItem { str: string; transform: number[]; width?: number }
 
-interface Band { x0: number; x1: number }
+export interface Band { x0: number; x1: number }
 interface Fragment { text: string; x0: number; x1: number }
 
 const Y_TOL = 3;
@@ -51,7 +51,7 @@ function clusterLines(items: LayoutItem[]): VisualLine[] {
  * largeur de l'enveloppe documentaire, dont les x0 sont uniques, sont ainsi
  * ignorés au lieu de fusionner toutes les colonnes en une seule bande.
  */
-function detectBands(items: LayoutItem[]): Band[] {
+export function detectBands(items: LayoutItem[]): Band[] {
   const starts = [...items].sort((a, b) => a.transform[4] - b.transform[4]);
   const clusters: { x0: number; x1: number; count: number }[] = [];
   for (const it of starts) {
@@ -141,10 +141,12 @@ function lineCells(line: VisualLine): Fragment[] {
  * Reconstruit la matrice d'une page « repliée ». Retourne [] si la page n'a pas
  * assez de structure tabulaire pour être exploitée.
  */
-export function rebuildWrappedRows(items: LayoutItem[]): string[][] {
+export function rebuildWrappedRows(items: LayoutItem[], sharedBands?: Band[]): string[][] {
   const usable = items.filter((i) => i && i.str && i.str.trim());
   if (usable.length < 5) return [];
-  const bands = detectBands(usable);
+  // Les bandes partagées garantissent le MÊME nombre de colonnes sur toutes les
+  // pages : sans cela, une page sans enveloppe décale toutes ses cellules.
+  const bands = sharedBands?.length ? sharedBands : detectBands(usable);
   if (bands.length < 3) return [];
   const lines = clusterLines(usable);
   const records = groupRecords(lines);
