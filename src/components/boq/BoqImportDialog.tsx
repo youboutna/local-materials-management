@@ -372,7 +372,7 @@ export function BoqImportDialog(props: Props) {
 
 
 
-        {!parseResult && (
+        {step === 1 && (
           <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-sm font-medium"><T k="auto.boqimportdialog.format_des_montants_du_fichier" fallback="Format des montants du fichier" /></Label>
@@ -397,7 +397,7 @@ export function BoqImportDialog(props: Props) {
         )}
 
 
-        {parseResult && (
+        {parseResult && step === 2 && (
           <>
             {parseResult.envelope && <DocumentEnvelopePanel envelope={parseResult.envelope} />}
 
