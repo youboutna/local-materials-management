@@ -110,9 +110,7 @@ export class BoqLineAutofillService {
       pool.push({ label: cat.label.fr, origin: 'category', unit: cat.unit ?? null, category: cat.code, resourceType: 'material' });
     }
     for (const profile of LABOUR_PROFILES) {
-      const label = (profile as { label?: string; code?: string }).label ?? (profile as { code?: string }).code ?? '';
-      if (!label) continue;
-      pool.push({ label, origin: 'labour', unit: 'j', resourceType: 'labor' });
+      pool.push({ label: profile.labels.fr, origin: 'labour', unit: 'j', resourceType: 'labor' });
     }
 
     const q = query.trim();
@@ -138,11 +136,9 @@ export class BoqLineAutofillService {
   /** Nature de ressource : RH, équipement ou matériau. */
   static detectResourceType(designation: string): BoqResourceType {
     if (EQUIPMENT_RENTAL_MATCHERS.some((re) => re.test(designation))) return 'equipment';
-    const isLabour = LABOUR_PROFILES.some((p) => {
-      const kw = (p as { keywords?: RegExp }).keywords;
-      const label = (p as { label?: string }).label ?? '';
-      return (kw instanceof RegExp && kw.test(designation)) || (label && norm(designation).includes(norm(label)));
-    });
+    const isLabour = LABOUR_PROFILES.some(
+      (p) => p.matchers.some((re) => re.test(designation)) || norm(designation).includes(norm(p.labels.fr)),
+    );
     return isLabour ? 'labor' : 'material';
   }
 
@@ -163,13 +159,17 @@ export class BoqLineAutofillService {
   /** Compte PCM d'achat le plus proche du libellé / de la nature de ressource. */
   static detectAccountCode(designation: string, resourceType: BoqResourceType): string | null {
     const ranked = PCM_PURCHASE_ACCOUNTS
-      .map((a) => ({ a, score: scoreMatch(String((a as { label?: string }).label ?? ''), designation) }))
+      .map((a) => ({ a, score: scoreMatch(a.labelFr, designation) }))
       .filter((x) => x.score >= 60)
       .sort((x, y) => y.score - x.score);
-    if (ranked.length) return String((ranked[0].a as { code?: string }).code ?? '') || null;
-    const fallbackRe = resourceType === 'labor' ? /personnel|main\s*d/i : resourceType === 'equipment' ? /location|mat[eé]riel/i : /achat|mati[eè]re|fourniture/i;
-    const fallback = PCM_PURCHASE_ACCOUNTS.find((a) => fallbackRe.test(String((a as { label?: string }).label ?? '')));
-    return fallback ? String((fallback as { code?: string }).code ?? '') || null : null;
+    if (ranked.length) return ranked[0].a.code;
+    const fallbackRe = resourceType === 'labor'
+      ? /personnel|main\s*d/i
+      : resourceType === 'equipment'
+        ? /location|mat[eé]riel/i
+        : /achat|mati[eè]re|fourniture|consommable/i;
+    const fallback = PCM_PURCHASE_ACCOUNTS.find((a) => fallbackRe.test(a.labelFr));
+    return fallback?.code ?? null;
   }
 
   /** Rattachement WBS (phase / jalon / tâche) par correspondance de libellés. */
