@@ -16,6 +16,6 @@ describe('dbg', () => {
       if (last && Math.abs(last.y - it.transform[5]) <= 3) last.items.push(it);
       else lines.push({ y: it.transform[5], items: [it] });
     });
-    lines.forEach((l, i) => console.log('L', i, 'y=' + l.y.toFixed(1), 'gap=' + (i ? (lines[i-1].y - l.y).toFixed(1) : '-'), JSON.stringify(l.items.map((x: any) => x.str.trim() + '@' + Math.round(x.transform[4]))));
+    lines.forEach((l, i) => console.log('L', i, 'y=' + l.y.toFixed(1), 'gap=' + (i ? (lines[i-1].y - l.y).toFixed(1) : '-'), JSON.stringify(l.items.map((x: any) => x.str.trim() + '@' + Math.round(x.transform[4])))));
   }, 120000);
 });
