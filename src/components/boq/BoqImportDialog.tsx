@@ -553,7 +553,7 @@ export function BoqImportDialog(props: Props) {
                 <T k="auto.boqimportdialog.retour_resultats" fallback="Retour aux lignes" />
               </Button>
             </header>
-            <div className="max-h-[70vh] space-y-4 overflow-y-auto p-3">{body}</div>
+            <div className="space-y-4 p-3">{body}</div>
             <footer className="flex flex-wrap items-center justify-end gap-2 border-t bg-muted/20 px-3 py-2">
               {cancelButton}{submitButton}
             </footer>
