@@ -8,6 +8,7 @@
  */
 import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from './IDocumentParser';
 import { extractDocumentParties } from './headerDetection';
+import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import {
   detectSection,
@@ -218,6 +219,18 @@ export class PdfBoqParser implements IDocumentParser {
         `En-tête détecté : fournisseur « ${parties.supplier?.name ?? '—'} », organisation « ${parties.organization?.name ?? '—'} ».`,
       );
     }
+
+    // Enveloppe documentaire (émetteur / destinataire / réf. / normes) : lue
+    // comme CONTEXTE, ses lignes sont retirées du corps des lignes DQE.
+    const { envelope, consumedRows: envelopeRows } = extractEnvelope(rowsAcc);
+    envelopeRows.forEach((i) => consumed.add(i));
+    if (envelope.emitter.name && !parties.supplier?.name) {
+      parties.supplier = { ...(parties.supplier ?? {}), name: envelope.emitter.name, address: envelope.emitter.address, phone: envelope.emitter.phone, email: envelope.emitter.email };
+    }
+    if (envelope.receiver.name && !parties.organization?.name) {
+      parties.organization = { ...(parties.organization ?? {}), name: envelope.receiver.name };
+    }
+    warnings.push(...summarizeEnvelope(envelope));
 
     // Les lignes « LOT … » précédant l'en-tête doivent rester visibles pour le
     // contexte : on parcourt donc toutes les lignes et on saute l'en-tête détecté.
