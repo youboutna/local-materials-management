@@ -11,8 +11,10 @@ import { DocumentHeaderDBRow, DocumentHeaderTransformer } from '@/dtos/transform
 import { BTP_SCHEMA, getSchemaClient } from '@/integrations/supabase/schema-clients';
 
 export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepository {
+  // Le préfixe de schéma est porté UNE SEULE FOIS par le client (`getSchemaClient`).
+  // Les noms de table restent donc nus, comme dans tous les autres adaptateurs BTP.
   private readonly client = getSchemaClient(BTP_SCHEMA) as any;
-  private readonly table = `${BTP_SCHEMA}.boq_document_headers`;
+  private readonly table = 'boq_document_headers';
 
   async save(documentId: string, header: DocumentHeaderDTO, userId?: string): Promise<DocumentHeaderDTO> {
     const dbRow = DocumentHeaderTransformer.toDBRow(documentId, header, userId);

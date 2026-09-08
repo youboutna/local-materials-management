@@ -5339,16 +5339,32 @@ const EN_ADDITIONS_FLAT: Record<string, string> = {
 };
 
 /** Expanse des clés à plat (`a.b.c`) en objet imbriqué. */
+/**
+ * Un même préfixe peut être à la fois une feuille (`filters.presets`) et un
+ * nœud (`filters.presets.save`). La valeur feuille est alors conservée sous
+ * `_self` pour ne jamais être écrasée par la branche.
+ */
 const expandFlatKeys = (flat: Record<string, string>): Record<string, unknown> => {
     const out: Record<string, unknown> = {};
     Object.entries(flat).forEach(([path, value]) => {
         const parts = path.split('.');
         let node = out;
         parts.slice(0, -1).forEach((part) => {
-            if (!node[part] || typeof node[part] !== 'object') node[part] = {};
+            const existing = node[part];
+            if (typeof existing === 'string') {
+                node[part] = { _self: existing };
+            } else if (!existing || typeof existing !== 'object') {
+                node[part] = {};
+            }
             node = node[part] as Record<string, unknown>;
         });
-        node[parts[parts.length - 1]] = value;
+        const leaf = parts[parts.length - 1];
+        const current = node[leaf];
+        if (current && typeof current === 'object') {
+            (current as Record<string, unknown>)._self = value;
+        } else {
+            node[leaf] = value;
+        }
     });
     return out;
 };
@@ -5985,7 +6001,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
                     return null;
                 }
             }
-            return typeof value === 'string' ? value : null;
+            if (typeof value === 'string') return value;
+            // Préfixe à la fois feuille et nœud : la valeur feuille vit sous `_self`.
+            const self = value && typeof value === 'object' ? (value as Nested)._self : null;
+            return typeof self === 'string' ? self : null;
         };
 
         /** Repli lisible : jamais de clé technique affichée dans l'UI. */

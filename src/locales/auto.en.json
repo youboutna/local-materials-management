@@ -5032,5 +5032,18 @@
   "filters.shortcut.search": "Search",
   "filters.shortcut.advanced": "Advanced",
   "filters.shortcut.reset": "Reset",
-  "filters.shortcut.first": "First result"
+  "filters.shortcut.first": "First result",
+  "dqe.context.title": "Document configuration",
+  "dqe.context.project": "Project",
+  "dqe.context.doc_number": "Document no.",
+  "dqe.context.lines": "Lines",
+  "dqe.context.phases": "phase(s)",
+  "dqe.context.wbs": "WBS scope",
+  "dqe.context.classification": "Classification",
+  "dqe.context.responsible": "Owner",
+  "dqe.context.referentials": "Referentials",
+  "dqe.context.fiscal_profile": "Tax profile",
+  "dqe.context.recipient": "Recipient",
+  "dqe.context.not_set": "Not set",
+  "dqe.context.project_default": "Current project"
 }
