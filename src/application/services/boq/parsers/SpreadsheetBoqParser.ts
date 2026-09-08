@@ -15,6 +15,7 @@ import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal }
 import { extractDocumentParties, type DocumentParty } from './headerDetection';
 import { extractDocumentMeta, mergeParties, type DocumentMeta } from './documentMetaDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
+import { assembleLogicalRows } from './rowAssembly';
 
 import {
   detectSection,
@@ -122,6 +123,37 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     if (!envelope.receiver.name && parties.organization?.name) envelope.receiver = { ...parties.organization };
     if (meta.typeCode) envelope.facturXType ??= `TypeCode ${meta.typeCode}`;
     warnings.push(...summarizeEnvelope(envelope));
+
+    // Recomposition des lignes logiques (libellé sur 2 lignes, régime fiscal
+    // isolé…) : on raisonne sur la matrice texte puis on reporte dans `matrix`.
+    {
+      const designationIdx = Math.max(0, baseColumns.findIndex((c) => /d[eé]signation|libell|description|intitul/i.test(c)));
+      const numericIdx = baseColumns
+        .map((c, i) => (/qu?antit|^qt|prix|^p\.?\s*u|montant|^total|tva|^unit/i.test(c) ? i : -1))
+        .filter((i) => i >= 0);
+      const work = textMatrix.map((line) => [...line]);
+      const absorbed = assembleLogicalRows(work, {
+        headerIdx,
+        designationIdx,
+        numericIdx,
+        consumed: new Set<number>(),
+        isBoundary: (cells) => !!detectSection(cells) || isRepeatedHeaderRow(cells, baseColumns),
+      });
+      if (absorbed) {
+        for (let i = headerIdx + 1; i < work.length; i++) {
+          const before = textMatrix[i] ?? [];
+          const after = work[i] ?? [];
+          const emptied = after.every((c) => !String(c ?? '').trim());
+          if (emptied && before.some((c) => String(c ?? '').trim())) { matrix[i] = []; continue; }
+          after.forEach((value, idx) => {
+            if (String(value ?? '') !== String(before[idx] ?? '')) {
+              (matrix[i] ??= [])[idx] = value;
+            }
+          });
+        }
+        warnings.push(`${absorbed} ligne(s) de continuation fusionnée(s) avec leur ligne d'origine.`);
+      }
+    }
 
 
     const rows: ParsedBoqRow[] = [];

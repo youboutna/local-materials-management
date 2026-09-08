@@ -35,8 +35,16 @@ export function isSubtotalRow(label: string): boolean {
  * Amount = last numeric value in the row (typically the TOTAL column).
  */
 export function extractFiscalFromRow(cells: unknown[], acc: DetectedFiscal): void {
-  const label = String(cells[0] ?? cells[1] ?? '').trim();
+  // Les pieds de tableau PDF sont alignés à droite : le libellé peut se trouver
+  // dans n'importe quelle colonne. On retient la première cellule textuelle.
+  const label = String(
+    cells.find((c) => {
+      const s = String(c ?? '').trim();
+      return s && /[a-zA-Zà-ÿ]/.test(s);
+    }) ?? '',
+  ).trim();
   if (!label) return;
+
 
   // last numeric cell
   let amount: number | null = null;
