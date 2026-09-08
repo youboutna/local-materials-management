@@ -42,7 +42,13 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({ projects,
   const budgets = useMemo(() => projects.map((p) => p.budget ?? 0), [projects]);
   const minBudget = budgets.length ? Math.min(...budgets) : 0;
   const maxBudget = budgets.length ? Math.max(...budgets) : 0;
-  const effectiveBudget: [number, number] = budgetRange ?? [minBudget, maxBudget];
+  // La valeur de repli doit garder la même référence entre deux rendus.
+  // Sinon `applyFilters` est recréé, son effet rappelle le parent, puis la
+  // carte repart dans une boucle de rendu même si aucun filtre n'a changé.
+  const effectiveBudget = useMemo<[number, number]>(
+    () => budgetRange ?? [minBudget, maxBudget],
+    [budgetRange, minBudget, maxBudget],
+  );
 
   const applyFilters = useCallback(() => {
     const filtered = projects.filter((project) => {

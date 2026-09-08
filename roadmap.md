@@ -2,3 +2,8 @@
 - [x] Garantir pagination et visibilité immédiate d’une ligne ajoutée
 - [x] Réinitialiser parseur et champ fichier à l’annulation d’un import
 - [x] Vérifier le build et les scénarios clés
+- [x] Supprimer la boucle de filtrage de la carte interactive
+- [x] Restaurer le survol et le clic des marqueurs projets
+- [x] Stabiliser les icônes Leaflet et éviter leur recréation à chaque rendu
+- [x] Dédupliquer les alertes de traduction et les faire transiter par le journal applicatif
+- [ ] Vérifier les cartes projet sur ordinateur et mobile — bloqué : l’authentification Supabase externe ne peut pas être injectée dans le navigateur de test

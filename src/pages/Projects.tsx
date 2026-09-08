@@ -332,6 +332,7 @@ const Projects: React.FC = () => {
                     regionFilter !== "all" ? regionFilter : undefined
                   }
                   className="rounded-lg"
+                  onMarkerSelect={(location) => navigate(`/projects/${location.id}`)}
                 />
               </CardContent>
             </Card>

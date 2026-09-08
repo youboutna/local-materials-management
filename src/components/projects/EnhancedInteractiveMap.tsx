@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Navigation, Layers } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
@@ -10,6 +10,7 @@ import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { logger } from '@/application/services/LoggerService';
 // Local type alias for project with coordinates
 type ProjectData = ProjectDTO;
 
@@ -33,6 +34,34 @@ const ProjectIcon = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [45, 45],
 });
+
+const STATUS_COLORS: Record<string, string> = {
+  'en cours': '#3b82f6',
+  'terminé': '#10b981',
+  'en attente': '#f59e0b',
+  'suspendu': '#ef4444',
+};
+
+const PROJECT_ICON_CACHE = new Map<string, L.DivIcon>();
+
+const getStatusColor = (status?: string) => STATUS_COLORS[status?.toLowerCase() ?? ''] ?? '#6b7280';
+
+const getProjectIcon = (status?: string) => {
+  const key = status?.toLowerCase() || 'default';
+  const cached = PROJECT_ICON_CACHE.get(key);
+  if (cached) return cached;
+  const color = getStatusColor(status);
+  const icon = L.divIcon({
+    className: 'custom-project-marker',
+    html: `<div aria-hidden="true" style="width:24px;height:24px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:white"></div></div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+    tooltipAnchor: [0, -12],
+  });
+  PROJECT_ICON_CACHE.set(key, icon);
+  return icon;
+};
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
@@ -80,26 +109,17 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
   ];
 
   // Filter projects that have GPS coordinates
-  const projectsWithCoords = projects.filter((project) => Boolean(getProjectCoordinates(project)));
+  const projectsWithCoords = useMemo(
+    () => projects.flatMap((project) => {
+      const coordinates = getProjectCoordinates(project);
+      return coordinates ? [{ project, coordinates }] : [];
+    }),
+    [projects],
+  );
 
   const handleMapClick = useCallback((latlng: L.LatLng) => {
     setSelectedCoords({ lat: latlng.lat, lng: latlng.lng });
   }, []);
-
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'en cours':
-        return '#3b82f6'; // blue
-      case 'terminé':
-        return '#10b981'; // green
-      case 'en attente':
-        return '#f59e0b'; // yellow
-      case 'suspendu':
-        return '#ef4444'; // red
-      default:
-        return '#6b7280'; // gray
-    }
-  };
 
   const formatBudget = (budget: number) => {
     if (budget >= 1000000) {
@@ -115,37 +135,6 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
-    });
-  };
-
-  // Create custom project icon based on status
-  const createProjectIcon = (status: string) => {
-    const color = getStatusColor(status);
-    return L.divIcon({
-      className: 'custom-project-marker',
-      html: `
-        <div style="
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background-color: ${color};
-          border: 3px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <div style="
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: white;
-          "></div>
-        </div>
-      `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-      popupAnchor: [0, -12]
     });
   };
 
@@ -200,15 +189,23 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
             ))}
 
             {/* Project markers */}
-            {projectsWithCoords.map((project) => (
+            {projectsWithCoords.map(({ project, coordinates }) => (
               <Marker
                 key={`project-${project.id}`}
-                position={[
-                  getProjectCoordinates(project)!.latitude,
-                  getProjectCoordinates(project)!.longitude,
-                ]}
-                icon={createProjectIcon(project.status)}
+                position={[coordinates.latitude, coordinates.longitude]}
+                icon={getProjectIcon(project.status)}
+                riseOnHover
+                eventHandlers={{
+                  click: () => {
+                    logger.info('user', 'Sélection d’un projet sur la carte', { projectId: project.id });
+                    onProjectSelect?.(project);
+                  },
+                }}
               >
+                <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
+                  <span className="font-medium">{project.title}</span>
+                  {project.location ? <span className="block text-xs">{project.location}</span> : null}
+                </Tooltip>
                 <Popup className="project-popup">
                   <div className="p-2 min-w-[280px]">
                     <div className="space-y-3">
@@ -230,7 +227,7 @@ const EnhancedInteractiveMap: React.FC<EnhancedInteractiveMapProps> = ({
                           </span>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Navigation className="h-3 w-3" />
-                            {getProjectCoordinates(project)!.latitude.toFixed(4)}, {getProjectCoordinates(project)!.longitude.toFixed(4)}
+                             {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
                           </div>
                         </div>
                       </div>

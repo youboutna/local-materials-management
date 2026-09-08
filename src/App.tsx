@@ -97,12 +97,6 @@ function ProjectPhasesRedirect() {
 }
 
 function App() {
-  // En mode développement, ajouter automatiquement les rôles requis
-  if (DEV_MODE) {
-    // Rôles requis: admin, director, project_manager
-    console.log('🚀 Mode Développement - Rôles requis activés: admin, director, project_manager');
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
