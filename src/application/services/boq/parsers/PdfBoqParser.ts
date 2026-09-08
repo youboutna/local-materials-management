@@ -213,7 +213,10 @@ export class PdfBoqParser implements IDocumentParser {
         const group: number[] = [];
         for (let len = 0; len < 6 && i + len < cellRows.length; len++) {
           const texts = cellRows[i + len].map((c) => c.text);
-          if (hasValue(texts)) break; // une valeur chiffrée clôt l'en-tête
+          // Une valeur chiffrée ou un titre de section (« Phase L3 : … »)
+          // clôt le bloc d'en-tête : ce ne sont pas des libellés de colonnes.
+          if (hasValue(texts) || detectSection(texts)) break;
+
           group.push(i + len);
           const score = looksHeader(group.flatMap((r) => cellRows[r].map((c) => c.text)));
           if (score > bestScore) { bestScore = score; bestGroup = [...group]; }
