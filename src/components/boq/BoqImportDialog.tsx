@@ -343,7 +343,7 @@ export function BoqImportDialog(props: Props) {
         {parseResult && (
           <>
             {(parseResult.parties?.supplier || parseResult.parties?.organization) && (
-              <section className="rounded-md border p-3 grid grid-cols-1 md:grid-cols-2 gap-3 bg-muted/30">
+              <section className="grid grid-cols-1 gap-3 rounded-md bg-muted/40 p-3 md:grid-cols-2">
                 {([
                   { label: 'Fournisseur (expéditeur)', party: parseResult.parties?.supplier },
                   { label: 'Organisation (destinataire)', party: parseResult.parties?.organization },
@@ -362,8 +362,8 @@ export function BoqImportDialog(props: Props) {
               </section>
             )}
 
-            <Collapsible defaultOpen className="rounded-md border">
-              <div className="flex items-center justify-between gap-2 bg-muted/30 px-3 py-2">
+            <Collapsible defaultOpen>
+              <div className="flex items-center justify-between gap-2 border-b py-2">
                 <div className="text-sm font-medium">Configuration et enrichissement de l'import</div>
                 <CollapsibleTrigger asChild>
                   <Button type="button" variant="ghost" size="sm" className="h-8 gap-1">
@@ -371,7 +371,7 @@ export function BoqImportDialog(props: Props) {
                   </Button>
                 </CollapsibleTrigger>
               </div>
-              <CollapsibleContent className="space-y-4 border-t p-3">
+              <CollapsibleContent className="space-y-4 pt-3">
             <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label className="text-sm font-medium">
@@ -427,7 +427,7 @@ export function BoqImportDialog(props: Props) {
 
 
             {isAltReferential && (projectWbs.length > 0 || projectPhases.length > 0) && (
-              <section className="rounded-md border p-3 space-y-2 bg-muted/30">
+              <section className="space-y-2">
                 <h4 className="text-sm font-medium">Mapping phases : référentiel choisi → phases du projet</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {altPhases.map((altPh) => (
@@ -543,8 +543,8 @@ export function BoqImportDialog(props: Props) {
       <>
         <span onClick={() => setOpen(true)} className="contents">{trigger}</span>
         {open && (
-          <section className="mt-3 w-full rounded-md border bg-card">
-            <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/30 px-3 py-2">
+          <section className="mt-3 w-full">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b py-2">
               <div className="min-w-0">
                 <h3 className="truncate text-sm font-semibold">{heading}</h3>
                 <p className="truncate text-[11px] text-muted-foreground">{subheading}</p>
@@ -553,8 +553,8 @@ export function BoqImportDialog(props: Props) {
                 <T k="auto.boqimportdialog.retour_resultats" fallback="Retour aux lignes" />
               </Button>
             </header>
-            <div className="space-y-4 p-3">{body}</div>
-            <footer className="flex flex-wrap items-center justify-end gap-2 border-t bg-muted/20 px-3 py-2">
+            <div className="space-y-4 py-3">{body}</div>
+            <footer className="flex flex-wrap items-center justify-end gap-2 border-t py-2">
               {cancelButton}{submitButton}
             </footer>
           </section>
