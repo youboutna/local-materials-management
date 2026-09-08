@@ -99,7 +99,7 @@ function groupRecords(lines: VisualLine[]): number[][] {
 }
 
 /** Recolle deux fragments d'une même bande (mot coupé, nombre coupé, mots). */
-function joinFragments(prev: string, next: string, prevTouchesRightEdge: boolean): string {
+function joinFragments(prev: string, next: string): string {
   if (!prev) return next;
   if (!next) return prev;
 
@@ -109,9 +109,15 @@ function joinFragments(prev: string, next: string, prevTouchesRightEdge: boolean
     return `${prev} ${next}`;
   }
 
-  // Mot coupé par la largeur de colonne : le fragment précédent remplit la
-  // bande jusqu'à son bord droit et la suite commence par une minuscule.
-  if (prevTouchesRightEdge && /[A-Za-zÀ-ÿ]$/.test(prev) && /^[a-zà-ÿ]/.test(next)) {
+  // Trait d'union en fin de fragment : « Câble U- » + « 1000 » → « Câble U-1000 ».
+  if (/-$/.test(prev) || /^-/.test(next)) return `${prev}${next}`;
+
+  // Mot coupé par la largeur de colonne : la suite commence par une syllabe
+  // courte en minuscules (« géotechniq » + « ue et sol », « Transformat » +
+  // « eur 100 »). Un mot complet suivant (« dalle » + « support ») garde son
+  // espace : seule une amorce de ≤ 3 lettres signale une coupure de mot.
+  const nextToken = next.split(' ')[0] ?? '';
+  if (/[A-Za-zÀ-ÿ]$/.test(prev) && /^[a-zà-ÿ]{1,3}$/.test(nextToken.replace(/[.,;:]$/, ''))) {
     return `${prev}${next}`;
   }
   return `${prev} ${next}`;
@@ -166,16 +172,8 @@ export function rebuildWrappedRows(items: LayoutItem[], sharedBands?: Band[]): s
 
     const row = perBand.map((fragments, bandIdx) => {
       if (!fragments.length) return '';
-      const band = bands[bandIdx];
-      const charWidth = Math.max(
-        3,
-        ...fragments.map((f) => (f.text.length ? (f.x1 - f.x0) / f.text.length : 0)),
-      );
       let acc = fragments[0].text;
-      for (let i = 1; i < fragments.length; i++) {
-        const previous = fragments[i - 1];
-        acc = joinFragments(acc, fragments[i].text, band.x1 - previous.x1 < charWidth * 0.6);
-      }
+      for (let i = 1; i < fragments.length; i++) acc = joinFragments(acc, fragments[i].text);
       return acc.replace(/,\s+(?=\d)/g, ',').trim();
     });
 
