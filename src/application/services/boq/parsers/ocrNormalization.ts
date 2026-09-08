@@ -89,6 +89,10 @@ export function repairOcrCell(value: unknown): string {
   const exact = VOCAB_INDEX.get(k);
   if (exact) return exact;
 
+  // Les cellules courtes (`m`, `m³`, `Ens.`) ne sont jamais rapprochées par
+  // similarité : le risque de confondre deux unités voisines est trop élevé.
+  if (k.length < 5) return cleaned;
+
   let best: { canonical: string; score: number } | null = null;
   for (const [vk, canonical] of VOCAB_INDEX) {
     // Écart de longueur trop grand → jamais le même terme.
