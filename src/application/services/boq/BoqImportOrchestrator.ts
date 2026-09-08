@@ -10,6 +10,7 @@ import { getFiscalProfile } from '@/config/referentials/boq/default-values.refer
 import type { BoqResourceType, BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { mergeDimensions } from './parsers/dimensionExtraction';
+import { isEnvelopeNoise } from './parsers/envelopeDetection';
 import { reconcileLinePrice } from './parsers/priceCoherence';
 import { TaxService } from '@/application/services/TaxService';
 import { BoqCalculatorService } from './BoqCalculatorService';
@@ -194,6 +195,9 @@ export class BoqImportOrchestrator {
         // puis on RE-JOUE le métré (dimensions dans le fragment, type d'ouvrage,
         // quantité dérivée) afin de ne rien perdre de la détection référentielle.
         const prev = out[out.length - 1];
+        // Un fragment d'enveloppe (contact, mention Factur-X, pagination) ne doit
+        // ni créer une ligne ni polluer la désignation précédente.
+        if (isEnvelopeNoise(designation)) continue;
         if (prev && designation.length <= 120) {
           const merged = `${prev.designation} ${designation}`.replace(/\s+/g, ' ').trim();
           prev.designation = merged;
