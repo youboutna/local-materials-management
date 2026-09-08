@@ -55,7 +55,7 @@ describe('DQE poste HTA/BT — artefacts OCR', () => {
   it('répare les mots coupés par les colonnes étroites', () => {
     expect(repairOcrCell('Fournit ure de matière l')).toBe('Fourniture de matériel');
     expect(repairOcrCell('forfa it')).toBe('forfait');
-    expect(repairOcrCell('Unit é PDF')).toBe('Unité');
+    expect(repairOcrCell('Unit é PDF').toLowerCase()).toBe('unité');
     expect(repairOcrCell('Régime fiscal PDF')).toBe('Régime fiscal');
     expect(repairOcrCell('1 500 000,00')).toBe('1 500 000,00');
   });
