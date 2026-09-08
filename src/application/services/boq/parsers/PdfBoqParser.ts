@@ -197,27 +197,79 @@ export class PdfBoqParser implements IDocumentParser {
     ];
     const looksHeader = (row: string[]) => row.reduce((n, c) => n + (HEADER_HINTS.some((rx) => rx.test(c)) ? 1 : 0), 0);
 
-    // Alignement sur les bandes de l'en-tête quand un en-tête est identifié.
+    // L'en-tête d'un DQE réel est réparti sur PLUSIEURS lignes physiques :
+    //   « Total » / « Régime Unit PU TVA » / « # Désignation fiscal é Qté … »
+    // Retenir une seule de ces lignes ne donne aucune colonne exploitable
+    // (Désignation / Qté / Montant introuvables → 0 ligne importée). On
+    // recherche donc le BLOC d'en-tête et on le fusionne colonne par colonne.
     let bandHeaderIdx = -1;
+    const headerFragmentRows = new Set<number>();
+    let mergedHeader: string[] | null = null;
     if (cellRows.length) {
-      for (let i = 0; i < Math.min(cellRows.length, 25); i++) {
-        if (looksHeader(cellRows[i].map((c) => c.text)) >= 2) { bandHeaderIdx = i; break; }
+      const hasValue = (texts: string[]) => texts.some((t) => /\d{3}/.test(t));
+      let bestScore = 0;
+      let bestGroup: number[] = [];
+      for (let i = 0; i < Math.min(cellRows.length, 40); i++) {
+        const group: number[] = [];
+        for (let len = 0; len < 6 && i + len < cellRows.length; len++) {
+          const texts = cellRows[i + len].map((c) => c.text);
+          // Une valeur chiffrée ou un titre de section (« Phase L3 : … »)
+          // clôt le bloc d'en-tête : ce ne sont pas des libellés de colonnes.
+          if (hasValue(texts) || detectSection(texts)) break;
+
+          group.push(i + len);
+          const score = looksHeader(group.flatMap((r) => cellRows[r].map((c) => c.text)));
+          if (score > bestScore) { bestScore = score; bestGroup = [...group]; }
+        }
       }
-      const bands = bandHeaderIdx >= 0 ? cellRows[bandHeaderIdx] : null;
-      rowsAcc = cellRows.map((cells, index) => (
-        bands ? alignItemsToBands(itemRows[index] ?? [], bands) : cells.map((c) => c.text)
-      ));
+      if (bestScore >= 3 && bestGroup.length) {
+        bandHeaderIdx = bestGroup[0];
+        // Les bandes de colonnes viennent de la ligne la plus large du bloc.
+        const bandsRow = bestGroup.reduce((a, b) => (cellRows[b].length > cellRows[a].length ? b : a), bestGroup[0]);
+        const bands = cellRows[bandsRow];
+        mergedHeader = bestGroup
+          .map((r) => alignItemsToBands(itemRows[r] ?? [], bands))
+          .reduce((acc, row) => row.map((cell, i) => `${acc[i] ?? ''} ${cell}`.trim()), Array.from({ length: bands.length }, () => ''));
+        bestGroup.slice(1).forEach((r) => headerFragmentRows.add(r));
+        rowsAcc = cellRows.map((cells, index) => alignItemsToBands(itemRows[index] ?? [], bands));
+        rowsAcc[bandHeaderIdx] = mergedHeader;
+      } else {
+        rowsAcc = cellRows.map((cells) => cells.map((c) => c.text));
+      }
     }
 
-    // Tableaux à cellules repliées : la reconstruction par enregistrements n'est
-    // retenue que si elle produit strictement plus de lignes valorisées ET que
-    // l'alignement classique n'a produit aucune ligne exploitable — sinon on ne
-    // touche pas au résultat (l'enveloppe et l'en-tête restent intacts).
-    if (!rowsAcc.length && wrappedAcc.length && scoreValuedRows(wrappedAcc) > 0) {
-      rowsAcc = wrappedAcc;
+
+    // Tableaux à cellules repliées (chaque cellule coupée sur plusieurs lignes
+    // physiques). La reconstruction par enregistrements n'est retenue que si
+    // elle produit plus de lignes COMPLÈTES que l'alignement classique : une
+    // ligne complète porte une désignation lisible ET au moins deux montants.
+    // (Le simple compte de « lignes valorisées » ferait gagner les fragments,
+    // qui contiennent des morceaux de nombres.)
+    const completeRows = (rows: string[][]) => rows.filter((row) => {
+      const cells = row.map((c) => String(c ?? '').trim());
+      const hasLabel = cells.some((c) => /[A-Za-zÀ-ÿ]{8,}/.test(c));
+      const amounts = cells.filter((c) => /\d[\d\s\u00A0.,]*\d/.test(c) && /\d{3}/.test(c)).length;
+      return hasLabel && amounts >= 2;
+    }).length;
+    if (wrappedAcc.length && completeRows(wrappedAcc) > completeRows(rowsAcc)) {
+
+
+      // Recollage des repères coupés caractère par caractère par le PDF
+      // (« 1 1 » → « 11 », « I V » → « IV ») : ce sont des numéros de ligne et
+      // de section, jamais des valeurs.
+      rowsAcc = wrappedAcc.map((row) => row.map((cell) => {
+        const s = String(cell ?? '').trim();
+        if (/^\d(\s+\d)+$/.test(s)) return s.replace(/\s+/g, '');
+        if (/^[IVXivx](\s+[IVXivx])+$/.test(s)) return s.replace(/\s+/g, '');
+        return s.replace(/^([IVX]) (?=[IVX]\b)/, '$1');
+      }));
+
       bandHeaderIdx = -1;
+      mergedHeader = null;
+      headerFragmentRows.clear();
       warnings.push('Tableau à cellules repliées détecté — lignes reconstruites par enregistrement.');
     }
+
 
     // Réparation des mots coupés par les colonnes étroites / l'OCR
     // (« Fournit ure de matière I » → « Fourniture de matériel », « forfa it »
@@ -256,6 +308,24 @@ export class PdfBoqParser implements IDocumentParser {
     // En-tête administratif (Expéditeur → fournisseur / Destinataire → organisation).
     const parties = extractDocumentParties(rowsAcc, headerIdx >= 0 ? headerIdx : undefined);
     const consumed = new Set(parties.consumedRows);
+    // Les autres lignes physiques du bloc d'en-tête (et ses répétitions en haut
+    // de chaque page) ne sont pas des lignes DQE.
+    headerFragmentRows.forEach((r) => consumed.add(r));
+    const headerTokens = new Set(
+      (mergedHeader ?? [])
+        .flatMap((label) => label.toLowerCase().split(/\s+/))
+        .map((w) => w.trim())
+        .filter((w) => w.length > 1),
+    );
+    /** Fragment d'en-tête répété en haut d'une page : aucun mot hors en-tête. */
+    const isHeaderFragment = (cells: (string | null)[]): boolean => {
+      if (!headerTokens.size) return false;
+      const filled = cells.map((c) => String(c ?? '').trim()).filter(Boolean);
+      if (!filled.length || filled.some((c) => /\d{3}/.test(c))) return false;
+      const words = filled.flatMap((c) => c.toLowerCase().split(/\s+/)).filter((w) => w.length > 1);
+      return words.length > 0 && words.every((w) => headerTokens.has(w));
+    };
+
     if (parties.supplier?.name || parties.organization?.name) {
       warnings.push(
         `En-tête détecté : fournisseur « ${parties.supplier?.name ?? '—'} », organisation « ${parties.organization?.name ?? '—'} ».`,
@@ -265,7 +335,13 @@ export class PdfBoqParser implements IDocumentParser {
     // Enveloppe documentaire (émetteur / destinataire / réf. / normes) : lue
     // comme CONTEXTE, ses lignes sont retirées du corps des lignes DQE.
     const { envelope, consumedRows: envelopeRows } = extractEnvelope(rowsAcc);
-    envelopeRows.forEach((i) => consumed.add(i));
+    // Un titre de section situé avant la première ligne valorisée (« I Génie
+    // Civil & Fondations ») n'est PAS de l'enveloppe : il porte le lot des
+    // premières lignes DQE.
+    envelopeRows
+      .filter((i) => !detectSection(rowsAcc[i] as (string | null)[]))
+      .forEach((i) => consumed.add(i));
+
     if (envelope.emitter.name && !parties.supplier?.name) {
       parties.supplier = { ...(parties.supplier ?? {}), name: envelope.emitter.name, address: envelope.emitter.address, phone: envelope.emitter.phone, email: envelope.emitter.email };
     }
@@ -302,6 +378,8 @@ export class PdfBoqParser implements IDocumentParser {
         isBoundary: (cells) =>
           !!detectSection(cells) ||
           isRepeatedHeaderRow(cells, baseColumns) ||
+          isHeaderFragment(cells) ||
+
           /r[eé]capitulatif|conditions g[eé]n[eé]rales|validation et signature|total\s+(ht|ttc)/i.test(cells.join(' ')),
       });
       if (absorbed) warnings.push(`${absorbed} ligne(s) de continuation fusionnée(s) avec leur ligne d'origine.`);
@@ -344,7 +422,7 @@ export class PdfBoqParser implements IDocumentParser {
 
       const nextSection = detectSection(cells);
       if (nextSection) { section = nextSection; sectionsFound += 1; remap = null; continue; }
-      if (headerIdx >= 0 && isRepeatedHeaderRow(cells, baseColumns)) { remap = null; continue; }
+      if (headerIdx >= 0 && (isRepeatedHeaderRow(cells, baseColumns) || isHeaderFragment(cells))) { remap = null; continue; }
       const secondary = detectSecondaryHeader(cells, canonical);
       if (secondary) { remap = secondary; continue; }
 
