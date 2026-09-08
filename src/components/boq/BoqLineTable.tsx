@@ -5,7 +5,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -50,7 +49,6 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MRU', maximumFractionDigits: 0 }).format(n);
 const NONE = '__none__';
 const UNITS = DQE_UNIT_CODES;
-const DATA_COLS = 21;
 const TAX_REGIMES_OPTIONS = TaxService.listRegimes();
 const RESOURCE_TYPES: { value: BoqResourceType; label: string }[] = [
   { value: 'material', label: 'Métré / matériau' },
@@ -134,10 +132,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
   const end = usePaging ? start + pageSize : lines.length;
   const pageRows = usePaging ? lines.slice(start, end) : lines;
   const hasActions = editable && !!onRemove;
-  const colCount = DATA_COLS + (hasActions ? 1 : 0);
-
-  // Colonnes déclarées une seule fois : rendues en tableau sur grand écran et en
-  // cartes empilées sur écran étroit (aucun défilement horizontal).
+  // Colonnes déclarées une seule fois et rendues en flux adaptatif à toute largeur.
   const columns: { id: string; label: ReactNode; align?: 'right'; head?: string; cell: (l: BoqLineDTO, i: number) => ReactNode }[] = [
     {
       id: 'designation', label: <T k="auto.boqlinetable.designation" fallback="Désignation" />, head: 'min-w-[240px]',
@@ -240,88 +235,44 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
 
   return (
     <div className="space-y-2">
-      {/* Écran étroit : cartes empilées, tout le contenu de la ligne reste visible. */}
-      <div className="space-y-3 xl:hidden">
+      <div className="min-w-0">
         {lines.length === 0 && (
           <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{emptyLabel}</p>
         )}
         {pageRows.map((l, idx) => {
           const i = start + idx;
           return (
-            <div key={rowKey(l, i)} className="rounded-md border p-3">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">N° {i + 1}{lineFlag(l)}</span>
+            <section key={rowKey(l, i)} className="min-w-0 border-b py-4 first:border-t">
+              <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
+                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground">N° {i + 1}{lineFlag(l)}</span>
+                {!editable && <div className="min-w-0 flex-1 break-words text-sm font-medium">{l.designation}</div>}
                 {hasActions && (
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
-              <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {columns.map((c) => (
-                  <div key={c.id} className={c.id === 'designation' ? 'sm:col-span-2 lg:col-span-3 min-w-0' : 'min-w-0'}>
-                    <div className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">{c.label}</div>
+                  <div key={c.id} className={c.id === 'designation' ? 'min-w-0 sm:col-span-2 lg:col-span-3 2xl:col-span-4' : 'min-w-0'}>
+                    <div className="mb-1 text-[11px] font-medium text-muted-foreground">{c.label}</div>
                     <div className="min-w-0 break-words text-sm">{c.cell(l, i)}</div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           );
         })}
         {lines.length > 0 && (
-          <div className="rounded-md border bg-muted/40 p-3 text-sm">
+          <div className="mt-3 grid grid-cols-1 gap-2 border-y bg-muted/40 p-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
             {totalsRows.map((r, i) => (
-              <div key={i} className="flex items-center justify-between gap-2 py-0.5">
-                <span className="font-medium">{r.label}</span>
-                <span className="font-bold">{r.value}</span>
+              <div key={i} className="min-w-0">
+                <div className="text-xs font-medium text-muted-foreground">{r.label}</div>
+                <div className="break-words font-bold">{r.value}</div>
               </div>
             ))}
           </div>
         )}
-      </div>
-
-      {/* Grand écran : tableau complet. */}
-      <div className="hidden rounded-md border xl:block xl:overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12 text-right">N°</TableHead>
-              {columns.map((c) => (
-                <TableHead key={c.id} className={[c.head ?? '', c.align === 'right' ? 'text-right' : ''].join(' ').trim()}>{c.label}</TableHead>
-              ))}
-              {hasActions && <TableHead className="w-8" />}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {lines.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={colCount} className="text-center text-sm text-muted-foreground py-8">{emptyLabel}</TableCell>
-              </TableRow>
-            )}
-            {pageRows.map((l, idx) => {
-              const i = start + idx;
-              return (
-                <TableRow key={rowKey(l, i)}>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">{i + 1}{lineFlag(l)}</span>
-                  </TableCell>
-                  {columns.map((c) => (
-                    <TableCell key={c.id} className={c.align === 'right' ? 'text-right' : undefined}>{c.cell(l, i)}</TableCell>
-                  ))}
-                  {hasActions && <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne"><Trash2 className="h-4 w-4" /></Button></TableCell>}
-                </TableRow>
-              );
-            })}
-            {lines.length > 0 && totalsRows.map((r, i) => (
-              <TableRow key={i} className={i === totalsRows.length - 1 ? 'bg-muted/40' : undefined}>
-                <TableCell colSpan={DATA_COLS - 2} className="text-right font-semibold">{r.label}</TableCell>
-                <TableCell className="text-right font-bold">{r.value}</TableCell>
-                <TableCell />
-                {hasActions && <TableCell />}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </div>
       {usePaging && (
         <DataPagination

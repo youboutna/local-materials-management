@@ -67,6 +67,28 @@ function alignToBands(cells: Cell[], bands: Cell[]): string[] {
   return out;
 }
 
+/**
+ * Affecte chaque fragment PDF à une colonne AVANT de recomposer son texte.
+ * C'est indispensable lorsque le numéro de ligne touche visuellement la
+ * désignation : une cellule pré-fusionnée « 1 Câble… » ne peut plus être
+ * séparée correctement après coup.
+ */
+function alignItemsToBands(items: PdfItem[], bands: Cell[]): string[] {
+  const out: string[] = Array.from({ length: bands.length }, () => '');
+  if (!bands.length) return out;
+  const centers = bands.map(centerOf);
+  const boundaries = centers.slice(0, -1).map((center, index) => (center + centers[index + 1]) / 2);
+  for (const item of [...items].sort((a, b) => a.transform[4] - b.transform[4])) {
+    const text = item.str.trim();
+    if (!text) continue;
+    const center = item.transform[4] + (item.width ?? 0) / 2;
+    let column = boundaries.findIndex((boundary) => center < boundary);
+    if (column < 0) column = bands.length - 1;
+    out[column] = out[column] ? `${out[column]} ${text}` : text;
+  }
+  return out;
+}
+
 export class PdfBoqParser implements IDocumentParser {
   supports(file: File): boolean {
     return file.name.toLowerCase().endsWith('.pdf');
@@ -87,6 +109,7 @@ export class PdfBoqParser implements IDocumentParser {
     const doc = await (pdfjs as any).getDocument({ data: buf.slice(0) }).promise;
 
     const cellRows: Cell[][] = [];
+    const itemRows: PdfItem[][] = [];
     let rowsAcc: string[][] = [];
     const warnings: string[] = [];
 
@@ -116,7 +139,10 @@ export class PdfBoqParser implements IDocumentParser {
 
       for (const row of rows) {
         const cells = toCells(row);
-        if (cells.length) cellRows.push(cells);
+        if (cells.length) {
+          cellRows.push(cells);
+          itemRows.push(row);
+        }
       }
     }
 
@@ -152,7 +178,9 @@ export class PdfBoqParser implements IDocumentParser {
         if (looksHeader(cellRows[i].map((c) => c.text)) >= 2) { bandHeaderIdx = i; break; }
       }
       const bands = bandHeaderIdx >= 0 ? cellRows[bandHeaderIdx] : null;
-      rowsAcc = cellRows.map((cells) => (bands ? alignToBands(cells, bands) : cells.map((c) => c.text)));
+      rowsAcc = cellRows.map((cells, index) => (
+        bands ? alignItemsToBands(itemRows[index] ?? [], bands) : cells.map((c) => c.text)
+      ));
     }
 
     let headerIdx = bandHeaderIdx;

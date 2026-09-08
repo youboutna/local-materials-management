@@ -9,7 +9,6 @@ import type { ImportMapping } from '@/application/services/boq/BoqImportOrchestr
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Props {
   parseResult: ParseResult;
@@ -56,23 +55,24 @@ export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
         ))}
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {parseResult.columns.map((c) => <TableHead key={c}>{c}</TableHead>)}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {preview.map((r, i) => (
-              <TableRow key={i}>
-                {parseResult.columns.map((c) => (
-                  <TableCell key={c} className="text-xs">{String(r.raw[c] ?? '')}</TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="space-y-2">
+        {preview.map((r, i) => {
+          const populated = parseResult.columns.filter((column) => {
+            const value = r.raw[column];
+            return value !== null && value !== undefined && String(value).trim() !== '';
+          });
+          return (
+            <div key={i} className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 border-b py-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="sm:col-span-2 lg:col-span-3 text-xs font-medium text-muted-foreground">Ligne source {i + 1}</div>
+              {populated.map((column) => (
+                <div key={column} className="min-w-0">
+                  <div className="text-[11px] font-medium text-muted-foreground">{column}</div>
+                  <div className="break-words text-sm">{String(r.raw[column] ?? '')}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
       </div>
       {parseResult.warnings.length > 0 && (
         <p className="text-xs text-warning">{parseResult.warnings.join(' • ')}</p>
