@@ -1,20 +1,17 @@
 import { describe, it } from 'vitest';
 import { readFileSync } from 'fs';
-import { PdfBoqParser } from '../parsers/PdfBoqParser';
-import { BoqImportOrchestrator } from '../BoqImportOrchestrator';
 class Stub {}
 for (const key of ['DOMMatrix', 'Path2D', 'ImageData'] as const) {
   if (!(key in globalThis)) (globalThis as Record<string, unknown>)[key] = Stub;
 }
 describe('dbg', () => {
-  it('parse', async () => {
-    const buf = readFileSync('/tmp/dqe2.pdf');
-    const r = await new PdfBoqParser().parse(new File([new Uint8Array(buf)], 'dqe2.pdf', { type: 'application/pdf' }));
-    console.log('COLUMNS', JSON.stringify(r.columns));
-    console.log('WARN', r.warnings);
-    const m = BoqImportOrchestrator.autoMap(r.columns);
-    const dtos = BoqImportOrchestrator.toDtos(r.rows, m, { source: 'dqe', contextId: 'x' });
-    console.log('DTOS', dtos.length, 'TOTAL', dtos.reduce((s, d) => s + (d.totalHt ?? 0), 0));
-    dtos.forEach(d => console.log('|', d.designation, '|', d.unit, '|', d.quantity, '|', d.unitPrice, '|', d.totalHt));
+  it('raw', async () => {
+    const pdfjs: any = await import('pdfjs-dist');
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync('/tmp/dqe2.pdf')) }).promise;
+    for (const p of [1, 2]) {
+      const items = (await (await doc.getPage(p)).getTextContent()).items;
+      items.filter((i: any) => /g.otechniq|^ue|dalle|support|Transformat|eur 100|appareillag/.test(i.str))
+        .forEach((i: any) => console.log('RAW', p, JSON.stringify(i.str), 'hasEOL=' + i.hasEOL, 'w=' + i.width?.toFixed(1)));
+    }
   }, 120000);
 });
