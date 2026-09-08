@@ -354,6 +354,9 @@ export function BoqWorkspace({
   const isLabourTime = category === 'labour' && LABOUR_TIME_UNITS.has(String(form.unit ?? '').toLowerCase());
   const elDef = getElementType(elementType);
   const useAdvanced = !isLabourTime && elementType !== 'generic' && !!elDef;
+  /** Unité imposée par le référentiel du type d'ouvrage (verrouillée dans l'UI). */
+  const lockedUnit = useAdvanced ? MeterService.unitFor(elementType) : null;
+  const effectiveUnit = lockedUnit ?? form.unit ?? 'u';
 
   /** Ouvertures effectives (référentiel `element-types.deductOpenings`). */
   const effectiveOpenings = useMemo(() => (
@@ -372,7 +375,7 @@ export function BoqWorkspace({
       source, contextId,
       designation: form.designation ?? '',
       elementType,
-      unit: form.unit || 'u',
+      unit: effectiveUnit,
       length: form.length ?? null,
       width: form.width ?? null,
       height: form.height ?? null,
@@ -440,7 +443,7 @@ export function BoqWorkspace({
       documentId: documentId ?? null,
       designation: form.designation!,
       elementType: useAdvanced ? elementType : null,
-      unit: form.unit || 'u',
+      unit: effectiveUnit,
       length: useAdvanced ? (form.length ?? null) : null,
       width: useAdvanced ? (form.width ?? null) : null,
       height: useAdvanced ? (form.height ?? null) : null,
@@ -958,10 +961,10 @@ export function BoqWorkspace({
 
                 <div className="col-span-1">
                   <Label><T k="auto.boqworkspace.unite" fallback="Unité" /></Label>
-                  <Select value={form.unit ?? 'u'} onValueChange={(v) => setForm({ ...form, unit: v })}>
+                  <Select value={effectiveUnit} disabled={!!lockedUnit} onValueChange={(v) => setForm({ ...form, unit: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                      {Array.from(new Set([...(lockedUnit ? [lockedUnit] : []), ...UNITS])).map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
