@@ -116,14 +116,31 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
 
   const patch = (i: number, p: Partial<BoqLineDTO>) => {
     const next: Partial<BoqLineDTO> = { ...p };
-    if ('quantity' in p || 'unitPrice' in p || 'fees' in p) {
-      const q = 'quantity' in p ? (p.quantity ?? 0) : (lines[i].quantity ?? 0);
-      const pu = 'unitPrice' in p ? (p.unitPrice ?? 0) : (lines[i].unitPrice ?? 0);
-      const fees = 'fees' in p ? (p.fees ?? 0) : (lines[i].fees ?? 0);
+    const line = lines[i];
+    // Métré centralisé : le type d'ouvrage fixe l'unité et la formule, les
+    // dimensions recalculent la quantité en temps réel (MeterService).
+    const touchesMetre = 'elementType' in p || 'length' in p || 'width' in p || 'height' in p;
+    if (touchesMetre) {
+      const merged = { ...line, ...p } as BoqLineDTO;
+      const metre = MeterService.quantityFor({
+        designation: merged.designation,
+        elementType: merged.elementType,
+        length: merged.length,
+        width: merged.width,
+        height: merged.height,
+      });
+      if (metre.unit) next.unit = metre.unit;
+      if (metre.quantity > 0) next.quantity = Number(metre.quantity.toFixed(3));
+    }
+    if ('quantity' in next || 'unitPrice' in p || 'fees' in p) {
+      const q = 'quantity' in next ? (next.quantity ?? 0) : (line.quantity ?? 0);
+      const pu = 'unitPrice' in p ? (p.unitPrice ?? 0) : (line.unitPrice ?? 0);
+      const fees = 'fees' in p ? (p.fees ?? 0) : (line.fees ?? 0);
       next.totalHt = (Number(q) || 0) * (Number(pu) || 0) + (Number(fees) || 0);
     }
     onChange?.(i, next);
   };
+
 
   const usePaging = pageSize > 0 && lines.length > pageSize;
   const totalPages = usePaging ? Math.max(1, Math.ceil(lines.length / pageSize)) : 1;
