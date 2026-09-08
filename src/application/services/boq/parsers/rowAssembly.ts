@@ -93,6 +93,11 @@ export function assembleLogicalRows(rows: string[][], ctx: AssemblyContext): num
     // Titre de section / lot : contexte, jamais une continuation.
     if (isBoundary(cells)) { anchor = null; continue; }
 
+    const texts = cells.map((c) => String(c ?? '').trim()).filter(Boolean);
+    // Bugs 2 & 3 — en-tête projet / lot et pied de page (récapitulatif,
+    // conditions, totaux) restent du CONTEXTE : jamais fusionnés dans une ligne.
+    if (texts.length && texts.some((t) => isContextualNoise(t))) { anchor = null; continue; }
+
     const first = String(cells[0] ?? '').trim();
     const designation = String(cells[designationIdx] ?? '').trim();
     // Un chiffre HORS désignation (quantité, PU, montant, TVA, unité chiffrée…)
