@@ -35,7 +35,7 @@ export interface ProductFamily {
 
 /** Unités techniques rencontrées dans les libellés (jamais des unités de quantité). */
 export const TECHNICAL_UNITS: Array<{ kind: TechnicalUnitKind; labelFr: string; re: RegExp }> = [
-  { kind: 'section', labelFr: 'section de conducteur', re: /\b\d+(?:[.,]\d+)?\s*mm(?:²|2)\b/i },
+  { kind: 'section', labelFr: 'section de conducteur', re: /\b\d+(?:[.,]\d+)?\s*mm(?:²|2)(?![0-9A-Za-z])/i },
   { kind: 'tension', labelFr: 'tension', re: /\b\d+(?:[.,]\d+)?\s*k?V\b/ },
   { kind: 'effort', labelFr: 'effort nominal', re: /\b\d+(?:[.,]\d+)?\s*daN\b/i },
   { kind: 'puissance', labelFr: 'puissance', re: /\b\d+(?:[.,]\d+)?\s*(?:kVA|kW|MVA)\b/i },
@@ -96,7 +96,7 @@ export const SPEC_PATTERNS: Array<{ key: string; labelFr: string; re: RegExp; fo
   {
     key: 'section',
     labelFr: 'Section',
-    re: /\b(\d+)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*mm(?:²|2)\b/i,
+    re: /\b(\d+)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*mm(?:²|2)(?![0-9A-Za-z])/i,
     format: (m) => `${m[1]} × ${m[2].replace(',', '.')} mm²`,
   },
   { key: 'norme', labelFr: 'Norme', re: /\b(U-?1000|NF\s*C\s*[\d\-\s]+)\b/i },
@@ -125,6 +125,6 @@ export function isExpectedQuantityUnit(family: ProductFamily, unit?: string | nu
 
 /** Nombre de conducteurs déduit d'une section « 4x150 mm² ». */
 export function extractConductors(designation?: string | null): number | null {
-  const m = /\b(\d+)\s*[x×]\s*\d+(?:[.,]\d+)?\s*mm(?:²|2)\b/i.exec(String(designation ?? ''));
+  const m = /\b(\d+)\s*[x×]\s*\d+(?:[.,]\d+)?\s*mm(?:²|2)(?![0-9A-Za-z])/i.exec(String(designation ?? ''));
   return m ? Number(m[1]) : null;
 }
