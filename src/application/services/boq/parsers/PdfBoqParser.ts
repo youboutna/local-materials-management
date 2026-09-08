@@ -10,6 +10,8 @@ import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from 
 import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
+import { assembleLogicalRows } from './rowAssembly';
+
 import {
   detectSection,
   detectSecondaryHeader,
@@ -77,8 +79,13 @@ function alignToBands(cells: Cell[], bands: Cell[]): string[] {
 function alignItemsToBands(items: PdfItem[], bands: Cell[]): string[] {
   const out: string[] = Array.from({ length: bands.length }, () => '');
   if (!bands.length) return out;
-  const centers = bands.map(centerOf);
-  const boundaries = centers.slice(0, -1).map((center, index) => (center + centers[index + 1]) / 2);
+  // Frontières placées dans l'espace ENTRE deux bandes d'en-tête : les valeurs
+  // numériques étant alignées à droite, un découpage sur les centres ferait
+  // basculer un P.U. dans la colonne Montant (« 200 120 000 »).
+  const boundaries = bands.slice(0, -1).map((band, index) => {
+    const next = bands[index + 1];
+    return next.x0 > band.x1 ? (band.x1 + next.x0) / 2 : (centerOf(band) + centerOf(next)) / 2;
+  });
   for (const item of [...items].sort((a, b) => a.transform[4] - b.transform[4])) {
     const text = item.str.trim();
     if (!text) continue;
@@ -89,6 +96,7 @@ function alignItemsToBands(items: PdfItem[], bands: Cell[]): string[] {
   }
   return out;
 }
+
 
 export class PdfBoqParser implements IDocumentParser {
   supports(file: File): boolean {
@@ -232,6 +240,38 @@ export class PdfBoqParser implements IDocumentParser {
     }
     warnings.push(...summarizeEnvelope(envelope));
 
+    // Recomposition des lignes LOGIQUES (wrap de libellé, régime fiscal sur une
+    // ligne à part…) avant toute interprétation métier.
+    if (headerIdx >= 0) {
+      const designationIdx = Math.max(0, baseColumns.findIndex((c) => /d[eé]signation|libell|description|intitul/i.test(c)));
+      const numericIdx = baseColumns
+        .map((c, i) => (/qu?antit|^qt|prix|^p\.?\s*u|montant|^total|tva|^unit/i.test(c) ? i : -1))
+        .filter((i) => i >= 0);
+      const absorbed = assembleLogicalRows(rowsAcc, {
+        headerIdx,
+        designationIdx,
+        numericIdx,
+        consumed,
+        isBoundary: (cells) => !!detectSection(cells) || isRepeatedHeaderRow(cells, baseColumns),
+      });
+      if (absorbed) warnings.push(`${absorbed} ligne(s) de continuation fusionnée(s) avec leur ligne d'origine.`);
+
+      // Colonnes numériques collées par l'extraction (« 200 120 000 » = P.U.
+      // 200 + Montant 120 000) : on les redistribue grâce à l'égalité
+      // quantité × P.U. = montant.
+      const qtyIdx = baseColumns.findIndex((c) => /qu?antit[eé]|^qt[eé]?$|^qty$/i.test(c));
+      const puIdx = baseColumns.findIndex((c) => /prix.*unit|^p\.?\s*u\.?|^pu\b/i.test(c));
+      const totalIdx = baseColumns.findIndex((c) => /montant|^total/i.test(c));
+      const unitIdx = baseColumns.findIndex((c) => /^unit[eé]?$/i.test(c));
+      if (qtyIdx >= 0 && puIdx >= 0 && totalIdx >= 0) {
+        for (let i = 0; i < rowsAcc.length; i++) {
+          if (i === headerIdx || consumed.has(i)) continue;
+          splitMergedAmounts(rowsAcc[i], { qtyIdx, puIdx, totalIdx, unitIdx });
+        }
+      }
+    }
+
+
     // Les lignes « LOT … » précédant l'en-tête doivent rester visibles pour le
     // contexte : on parcourt donc toutes les lignes et on saute l'en-tête détecté.
     const detectedFiscal: DetectedFiscal = {};
@@ -239,10 +279,14 @@ export class PdfBoqParser implements IDocumentParser {
     let section: DetectedSection | null = null;
     let sectionsFound = 0;
     let remap: Record<number, string> | null = null;
+
     for (let i = 0; i < rowsAcc.length; i++) {
       if (i === headerIdx || consumed.has(i)) continue;
       const cells = rowsAcc[i];
-      const label = String(cells[0] ?? '').trim();
+      // Les pieds de tableau (« Total HT », « TVA (5%) ») sont alignés à droite :
+      // le libellé n'est pas forcément dans la première colonne.
+      const label = String(cells.find((c) => String(c ?? '').trim()) ?? '').trim();
+
 
       const nextSection = detectSection(cells);
       if (nextSection) { section = nextSection; sectionsFound += 1; remap = null; continue; }
@@ -300,3 +344,59 @@ async function runOcrFallback(doc: any): Promise<string[][]> {
   }
   return rowsAcc;
 }
+
+/**
+ * Normalise une ligne d'ouvrage dont l'extraction PDF a collé ou décalé les
+ * valeurs (« km 7 », « 200 120 000 »).
+ *
+ * Principe : on reconstruit unité / quantité / P.U. / montant depuis les jetons
+ * situés après la désignation, en validant la partition par l'arithmétique de la
+ * ligne (quantité × P.U. = montant). Les lignes déjà cohérentes sont laissées
+ * intactes.
+ */
+function splitMergedAmounts(
+  cells: string[],
+  idx: { qtyIdx: number; puIdx: number; totalIdx: number; unitIdx: number },
+): void {
+  const num = (s: string): number | null => {
+    const n = Number(String(s).replace(/[^\d,.-]/g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  };
+  const groupValue = (tokens: string[]): number | null => num(tokens.join(''));
+
+  const designationIdx = 0;
+  const tail = cells
+    .map((c, i) => (i === designationIdx ? '' : String(c ?? '')))
+    .join(' ')
+    .trim();
+  if (!tail) return;
+
+  // Unité = premier jeton alphabétique (ml, m², forfait, unité…).
+  const tokens = tail.split(/\s+/).filter(Boolean);
+  const unitTokens = tokens.filter((t) => /[A-Za-zÀ-ÿ]/.test(t) && !/\d/.test(t));
+  const numTokens = tokens.filter((t) => /^[\d.,]+$/.test(t));
+  if (numTokens.length < 3) return;
+
+  // Recherche d'une partition quantité / P.U. / montant valide.
+  for (let i = 1; i < numTokens.length - 1; i++) {
+    for (let j = i + 1; j < numTokens.length; j++) {
+      const qty = groupValue(numTokens.slice(0, i));
+      const pu = groupValue(numTokens.slice(i, j));
+      const total = groupValue(numTokens.slice(j));
+      if (!qty || !pu || !total) continue;
+      if (Math.abs(qty * pu - total) > Math.max(1, total * 0.005)) continue;
+      const fmt = (parts: string[]) => parts.join(' ');
+      if (idx.unitIdx >= 0) cells[idx.unitIdx] = unitTokens[0] ?? String(cells[idx.unitIdx] ?? '');
+      cells[idx.qtyIdx] = fmt(numTokens.slice(0, i));
+      cells[idx.puIdx] = fmt(numTokens.slice(i, j));
+      cells[idx.totalIdx] = fmt(numTokens.slice(j));
+      for (let k = 0; k < cells.length; k++) {
+        if (k === designationIdx || k === idx.unitIdx || k === idx.qtyIdx || k === idx.puIdx || k === idx.totalIdx) continue;
+        if (/^[\d\s.,]+$/.test(String(cells[k] ?? '').trim())) cells[k] = '';
+      }
+      return;
+    }
+  }
+}
+
+
