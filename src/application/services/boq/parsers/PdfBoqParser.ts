@@ -197,8 +197,8 @@ export class PdfBoqParser implements IDocumentParser {
     // Réparation des mots coupés par les colonnes étroites / l'OCR
     // (« Fournit ure de matière I » → « Fourniture de matériel », « forfa it »
     // → « forfait », « Unit é PDF » → « Unité »).
-    if (rowsAcc.length) {
-      rowsAcc = repairOcrMatrix(rowsAcc);
+    if (rowsAcc.length) rowsAcc = repairOcrMatrix(rowsAcc);
+
 
 
     let headerIdx = bandHeaderIdx;
