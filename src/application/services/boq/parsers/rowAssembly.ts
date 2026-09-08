@@ -22,6 +22,31 @@
  * (enveloppe, en-tête, sections).
  */
 
+/**
+ * Frontières de FIN de tableau : dès qu'une de ces lignes apparaît, plus aucune
+ * absorption n'est possible (récapitulatif, conditions, validation, totaux).
+ * Sans cette garde, le pied de page était fusionné dans la dernière ligne.
+ */
+const FOOTER_RX =
+  /^(r[eé]capitulatif|conditions?\s+g[eé]n[eé]rales?|validation|signature|total\s+ht|total\s+ttc|total\s+g[eé]n[eé]ral|t\.?v\.?a\.?\b|arr[eê]t[eé]\s+le\s+pr[eé]sent|factur-?x|en\s?16931)/i;
+
+/**
+ * Métadonnées d'en-tête (projet, lot, émetteur, référence, date…) : contexte
+ * documentaire, jamais une continuation de ligne DQE.
+ */
+const HEADER_META_RX =
+  /^(projet|lot\s*n?[°o]?\s*\d|[eé]metteur|exp[eé]diteur|destinataire|client|ma[iî]tre\s+d.?ouvrage|r[eé]f[eé]rence|date|devise|validit[eé]|appel\s+d.?offres?|nif|adresse|t[eé]l|email|e-mail)\b/i;
+
+/** « ASSABA LOT 1 », « LOT 2 – NOUAKCHOTT » : code de lot / entête projet. */
+const LOT_CODE_RX = /^[A-ZÀ-Ü][A-ZÀ-Ü\s'’-]{2,}\s*(?:[-–—]?\s*)?LOT\s*\d+/i;
+
+/** Une ligne visuelle qui est du contexte documentaire et non une continuation. */
+export function isContextualNoise(text: string): boolean {
+  const v = String(text ?? '').replace(/\s+/g, ' ').trim();
+  if (!v) return false;
+  return FOOTER_RX.test(v) || HEADER_META_RX.test(v) || LOT_CODE_RX.test(v);
+}
+
 export interface AssemblyContext {
   /** Index de la ligne d'en-tête (jamais fusionnée). */
   headerIdx: number;
