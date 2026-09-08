@@ -2,7 +2,7 @@
  * src/components/boq/BoqLineTable.tsx
  * BoqLineTable — grille unique saisie/import alignée sur les colonnes parseur.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -138,7 +138,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
 
   // Colonnes déclarées une seule fois : rendues en tableau sur grand écran et en
   // cartes empilées sur écran étroit (aucun défilement horizontal).
-  const columns: { id: string; label: React.ReactNode; align?: 'right'; head?: string; cell: (l: BoqLineDTO, i: number) => React.ReactNode }[] = [
+  const columns: { id: string; label: ReactNode; align?: 'right'; head?: string; cell: (l: BoqLineDTO, i: number) => ReactNode }[] = [
     {
       id: 'designation', label: <T k="auto.boqlinetable.designation" fallback="Désignation" />, head: 'min-w-[240px]',
       cell: (l, i) => editable ? <Input value={l.designation} onChange={(e) => patch(i, { designation: e.target.value })} className="h-8 w-full" /> : <span className="font-medium">{l.designation}</span>,
@@ -231,7 +231,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
   );
   const rowKey = (l: BoqLineDTO, i: number) => l.id ?? String((l.metadata as { clientRowId?: string } | null)?.clientRowId ?? `row-${i}`);
 
-  const totalsRows: { label: React.ReactNode; value: string }[] = [
+  const totalsRows: { label: ReactNode; value: string }[] = [
     { label: <T k="auto.boqlinetable.total_ht" fallback="Total HT" />, value: fmt(total) },
     { label: <T k="dqe.line.total_vat" fallback="Total TVA" />, value: fmt(totalVat) },
     { label: <T k="dqe.line.total_ras" fallback="Total retenues RAS" />, value: `-${fmt(totalRas)}` },
