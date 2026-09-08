@@ -28,6 +28,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
 import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
+import { QuickAddLineDialog } from './QuickAddLineDialog';
+import { BoqLineAutofillService, type AutofillMaterial } from '@/application/services/boq/BoqLineAutofillService';
 import { WbsSelector, applyWbsScope, type WbsValue, type WbsScopeValue } from './WbsSelector';
 import { WbsScopeSelector, EMPTY_WBS_SCOPE } from './WbsScopeSelector';
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox';
@@ -570,7 +572,7 @@ export function BoqWorkspace({
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
       const key = e.key.toLowerCase();
-      if (e.shiftKey && key === 'a') { if (!locked) { e.preventDefault(); addEmptyRow(); } return; }
+      if (e.shiftKey && key === 'a') { if (!locked) { e.preventDefault(); setQuickAddOpen(true); } return; }
       if (e.shiftKey && key === 'm') { if (!locked) { e.preventDefault(); setOpenManual(true); } return; }
       if (e.shiftKey && key === 'i') { if (!locked) { e.preventDefault(); setOpenImport(true); } return; }
       if (!e.shiftKey && key === 's') { if (!locked) { e.preventDefault(); void saveDraftLines(false); } return; }
@@ -583,6 +585,39 @@ export function BoqWorkspace({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
+
+  // ---- Ajout assisté d'une ligne (autocomplétion + détection référentielle) --
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  /** Matériaux du projet exposés au moteur de suggestion. */
+  const autofillMaterials = useMemo<AutofillMaterial[]>(
+    () => filteredMaterials.map((m) => {
+      const mm = m as unknown as { id: string; name: string; unit?: string | null; pricePerUnit?: number | null; unitPrice?: number | null; category?: string | null };
+      return { id: mm.id, name: mm.name, unit: mm.unit ?? null, unitPrice: mm.pricePerUnit ?? mm.unitPrice ?? null, category: mm.category ?? null };
+    }),
+    [filteredMaterials],
+  );
+
+  const addAssistedLine = (patch: Partial<BoqLineDTO>) => {
+    const clientRowId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+    setDraftLines((prev) => [{
+      source, contextId,
+      documentId: documentId ?? null,
+      designation: '',
+      unit: 'u',
+      quantity: 0,
+      unitPrice: 0,
+      totalHt: 0,
+      resourceType: 'material',
+      phaseId: wbsDefault.phaseId ?? null,
+      milestoneId: wbsDefault.milestoneId ?? null,
+      taskId: wbsDefault.taskId ?? null,
+      sourceType: 'rapide',
+      ...patch,
+      metadata: { ...(defaultLineMetadata ?? {}), ...(patch.metadata ?? {}), clientRowId },
+      status: 'draft' as const,
+    } as BoqLineDTO, ...prev]);
+    setDirty(true);
+  };
 
   // ---- Ajout inline d'une ligne vide (édition dans le tableau) ---------------
   const addEmptyRow = () => {
@@ -644,18 +679,24 @@ export function BoqWorkspace({
   const isDocumentEmpty = displayedLines.length === 0;
   const [showDocumentSettings, setShowDocumentSettings] = useState(false);
   const handleParsedImport = (lines: BoqLineDTO[]) => {
-    setDraftLines((prev) => [...prev, ...lines.map((line) => {
-      const hasStakeholder = !!(line.metadata as { stakeholder?: unknown } | null)?.stakeholder;
+    // Enrichissement référentiel : unité, métré, catégorie, compte PCM, WBS, fiscalité.
+    const enrichedLines = BoqLineAutofillService.enrichImported(lines, {
+      materials: autofillMaterials,
+      phases: availablePhases as never,
+      fiscalProfileCode: fiscalCode,
+    });
+    setDraftLines((prev) => [...prev, ...enrichedLines.map((enriched) => {
+      const hasStakeholder = !!(enriched.metadata as { stakeholder?: unknown } | null)?.stakeholder;
       return {
-        ...line,
+        ...enriched,
         source,
         contextId,
         documentId: documentId ?? null,
         id: undefined,
         // Responsable par défaut (Zone 3) hérité si la ligne importée n'en porte pas.
         metadata: hasStakeholder || !defaultLineMetadata
-          ? line.metadata ?? null
-          : { ...(line.metadata ?? {}), ...defaultLineMetadata },
+          ? enriched.metadata ?? null
+          : { ...(enriched.metadata ?? {}), ...defaultLineMetadata },
         status: 'draft' as const,
       };
     })]);
@@ -790,7 +831,21 @@ export function BoqWorkspace({
             <span className="text-xs font-semibold text-muted-foreground" aria-live="polite">
               <T k="dqe.lines.results" fallback="Résultats" /> · {displayedLines.length}
             </span>
-            <Button size="sm" onClick={addEmptyRow} disabled={locked}><Plus className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.ajouter_une_ligne" fallback="Ajouter une ligne" /></Button>
+            <QuickAddLineDialog
+              open={quickAddOpen}
+              onOpenChange={setQuickAddOpen}
+              disabled={locked}
+              trigger={<Button size="sm" disabled={locked}><Plus className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.ajouter_une_ligne" fallback="Ajouter une ligne" /></Button>}
+              materials={autofillMaterials}
+              phases={availablePhases}
+              scope={wbsScope}
+              referentialCode={effectiveReferential}
+              fiscalProfileCode={fiscalCode}
+              defaultWbs={wbsDefault}
+              wbsLocked={wbsLocked}
+              onSubmit={addAssistedLine}
+            />
+            <Button size="sm" variant="ghost" onClick={addEmptyRow} disabled={locked}><T k="dqe.lines.add_empty" fallback="Ligne vide" /></Button>
 
 
           <Dialog open={openManual} onOpenChange={setOpenManual}>
