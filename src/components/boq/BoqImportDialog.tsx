@@ -40,6 +40,7 @@ import { T } from '@/components/i18n/T';
 import { DocumentContextSummary } from './DocumentContextSummary';
 import { DocumentEnvelopePanel } from './DocumentEnvelopePanel';
 import { CoherencePanel, FiscalRecapPanel, MetreRecapPanel } from './ImportRecapPanels';
+import { ReconciliationPanel } from './ReconciliationPanel';
 
 interface Props {
   source: BoqSource;
