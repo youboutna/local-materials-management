@@ -321,6 +321,21 @@ export function BoqImportDialog(props: Props) {
     }
   };
 
+  /** Ctrl+Entrée : import direct depuis n'importe quelle étape du parcours. */
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        void onSubmit();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, wbsEnrichedDtos, issues, edbReport, budgetDecision]);
+
+
   const totals = useMemo(() => {
     const ht = wbsEnrichedDtos.reduce((s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)), 0);
     const vat = wbsEnrichedDtos.reduce((s, l) => s + ((l.quantity ?? 0) * (l.unitPrice ?? 0)) * (l.vatRate ?? 0), 0);
