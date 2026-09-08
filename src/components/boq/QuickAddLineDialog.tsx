@@ -145,7 +145,6 @@ export function QuickAddLineDialog({
     () => MeterService.quantityFor({ designation, elementType, length, width, height }),
     [designation, elementType, length, width, height],
   );
-  const metreDims = MeterService.dimensionsFor(elementType);
   useEffect(() => {
     if (metre.unit) setUnit(metre.unit);
     if (!touchedQty.current && metre.quantity > 0) setQuantity(Number(metre.quantity.toFixed(3)));
