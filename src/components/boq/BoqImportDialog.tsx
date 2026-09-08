@@ -113,10 +113,18 @@ export function BoqImportDialog(props: Props) {
     if (!v) {
       reset();
       setDropzoneReset((value) => value + 1);
+      setStep(1);
     }
     setOpenInternal(v);
     props.onOpenChange?.(v);
   };
+
+  /** Passage automatique à l'étape « mapping » dès qu'un fichier est analysé. */
+  useEffect(() => {
+    if (parseResult) setStep((s) => (s === 1 ? 2 : s));
+    else setStep(1);
+  }, [parseResult]);
+
 
   const isAltReferential = !!referentialCode && !!projectReferentialCode && referentialCode !== projectReferentialCode;
   const altPhases = useMemo(
