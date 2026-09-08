@@ -9,7 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2, AlertTriangle, Calculator } from 'lucide-react';
+import { MeterService } from '@/application/services/boq/MeterService';
+import { MetreDialog } from './MetreDialog';
+
 import DataPagination from '@/components/common/DataPagination';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
