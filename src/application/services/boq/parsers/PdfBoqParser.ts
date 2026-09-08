@@ -12,7 +12,7 @@ import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDet
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { assembleLogicalRows } from './rowAssembly';
 import { repairOcrMatrix } from './ocrNormalization';
-import { rebuildWrappedRows, scoreValuedRows } from './wrappedTableLayout';
+import { detectBands, rebuildWrappedRows, scoreValuedRows } from './wrappedTableLayout';
 import { segmentDocumentBlocks } from './documentBlocks';
 
 
@@ -162,7 +162,14 @@ export class PdfBoqParser implements IDocumentParser {
         }
       }
 
-      wrappedAcc.push(...rebuildWrappedRows(items));
+      pageItems.push(items);
+    }
+
+    // Bandes de colonnes calculées sur TOUTES les pages : chaque page produit
+    // ainsi le même nombre de colonnes, alignées entre elles.
+    if (pageItems.length) {
+      const sharedBands = detectBands(pageItems.flat());
+      pageItems.forEach((items) => wrappedAcc.push(...rebuildWrappedRows(items, sharedBands)));
     }
 
     // OCR fallback for scanned PDFs
