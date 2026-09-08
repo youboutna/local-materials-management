@@ -39,9 +39,6 @@ const VOCABULARY: string[] = [
   // Libellés d'en-tête
   'Désignation',
   'Régime fiscal',
-  'Unité',
-  'Quantité',
-  'Total HT',
 ];
 
 const deaccent = (s: string): string => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
