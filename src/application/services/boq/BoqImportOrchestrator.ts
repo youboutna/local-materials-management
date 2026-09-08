@@ -190,13 +190,38 @@ export class BoqImportOrchestrator {
       if (!isValued && HEADER_LIKE_RX.test(designation)) continue;
       if (!isValued) {
         // Retour à la ligne du libellé (« 4x150 mm² » sous « Câble U-1000 RO2V ») :
-        // on complète la désignation précédente au lieu de créer une fausse ligne.
+        // on complète la désignation précédente au lieu de créer une fausse ligne,
+        // puis on RE-JOUE le métré (dimensions dans le fragment, type d'ouvrage,
+        // quantité dérivée) afin de ne rien perdre de la détection référentielle.
         const prev = out[out.length - 1];
         if (prev && designation.length <= 120) {
-          prev.designation = `${prev.designation} ${designation}`.replace(/\s+/g, ' ').trim();
+          const merged = `${prev.designation} ${designation}`.replace(/\s+/g, ' ').trim();
+          prev.designation = merged;
+          const mDims = mergeDimensions(
+            { length: prev.length ?? null, width: prev.width ?? null, height: prev.height ?? null },
+            merged,
+          );
+          prev.length = mDims.length;
+          prev.width = mDims.width;
+          prev.height = mDims.height;
+          if (!prev.elementType || prev.elementType === 'generic') {
+            prev.elementType = detectElementType(merged) || prev.elementType;
+          }
+          // Quantité non fournie explicitement : la recalculer avec les dimensions retrouvées.
+          const reQty = BoqCalculatorService.computeQuantity({
+            unit: prev.unit,
+            length: mDims.length,
+            width: mDims.width,
+            height: mDims.height,
+          });
+          if (reQty && (!prev.quantity || prev.quantity === 1)) {
+            prev.quantity = reQty;
+            if (prev.unitPrice != null) prev.totalHt = reQty * prev.unitPrice;
+          }
         }
         continue;
       }
+
 
       // Contrôle arithmétique : quantité × P.U. = montant, sinon P.U. corrigé.
       const price = reconcileLinePrice({ quantity, unitPrice: pu, totalHt: rawTotal });
