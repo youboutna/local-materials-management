@@ -16,6 +16,7 @@ import { extractDocumentParties, type DocumentParty } from './headerDetection';
 import { extractDocumentMeta, mergeParties, type DocumentMeta } from './documentMetaDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { segmentDocumentBlocks } from './documentBlocks';
 
 import {
   detectSection,

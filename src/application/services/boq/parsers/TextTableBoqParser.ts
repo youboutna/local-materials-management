@@ -12,6 +12,7 @@ import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal }
 import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { segmentDocumentBlocks } from './documentBlocks';
 import {
   detectSection,
   isRepeatedHeaderRow,
