@@ -39,7 +39,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
 import { DocumentContextSummary } from './DocumentContextSummary';
 import { DocumentEnvelopePanel } from './DocumentEnvelopePanel';
-import { FiscalRecapPanel, MetreRecapPanel } from './ImportRecapPanels';
+import { CoherencePanel, FiscalRecapPanel, MetreRecapPanel } from './ImportRecapPanels';
 
 interface Props {
   source: BoqSource;
@@ -631,6 +631,7 @@ export function BoqImportDialog(props: Props) {
             </div>
             <FiscalRecapPanel lines={wbsEnrichedDtos} />
             <MetreRecapPanel lines={wbsEnrichedDtos} />
+            <CoherencePanel lines={wbsEnrichedDtos} />
             <p className="text-[11px] text-muted-foreground">Raccourci : Ctrl+Entrée pour importer directement.</p>
           </section>
         )}

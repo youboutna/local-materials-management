@@ -9,6 +9,7 @@
 import { Badge } from '@/components/ui/badge';
 import { BoqFiscalRecapService } from '@/application/services/boq/BoqFiscalRecapService';
 import type { MetreRecommendation } from '@/application/services/boq/parsers/metreDetection';
+import type { LineCoherence } from '@/application/services/boq/parsers/lineCoherence';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 
 const fmt = (n: number): string => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
@@ -98,6 +99,75 @@ export function MetreRecapPanel({ lines }: { lines: BoqLineDTO[] }) {
                 ))}
               </ul>
             )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+interface LineReport {
+  index: number;
+  designation: string;
+  coherence: LineCoherence;
+}
+
+function readCoherence(lines: BoqLineDTO[]): LineReport[] {
+  return lines.flatMap((line, i) => {
+    const meta = (line.metadata ?? {}) as Record<string, unknown>;
+    const c = meta.coherence as LineCoherence | undefined;
+    if (!c || !c.findings.length) return [];
+    return [{ index: i + 1, designation: line.designation, coherence: c }];
+  });
+}
+
+const SEVERITY_ICON: Record<string, string> = { ok: '✅', info: 'ℹ️', warning: '⚠️' };
+
+/**
+ * CoherencePanel — rapport de validation par ligne : caractéristiques techniques
+ * extraites du libellé, incohérences signalées (unité, prix) et contrôle des
+ * calculs. Purement informatif : l'import n'est jamais bloqué.
+ */
+export function CoherencePanel({ lines }: { lines: BoqLineDTO[] }) {
+  const reports = readCoherence(lines);
+  const flagged = reports.filter((r) => r.coherence.status === 'warning');
+  if (!reports.length) return null;
+  return (
+    <div className="rounded-md border p-3 text-sm">
+      <h4 className="mb-2 flex flex-wrap items-center gap-2 font-medium">
+        Rapport de validation des lignes
+        {flagged.length > 0 ? (
+          <Badge variant="secondary">{flagged.length} à clarifier</Badge>
+        ) : (
+          <Badge variant="outline">Aucune incohérence</Badge>
+        )}
+      </h4>
+      <ul className="space-y-3">
+        {reports.map((r) => (
+          <li key={`${r.index}-${r.designation}`} className="space-y-1">
+            <p className="flex flex-wrap items-baseline gap-2">
+              <span className="text-muted-foreground">#{r.index}</span>
+              <span className="font-medium">{r.designation}</span>
+              {r.coherence.familyLabel && <Badge variant="outline">{r.coherence.familyLabel}</Badge>}
+              <Badge variant={r.coherence.status === 'warning' ? 'secondary' : 'outline'}>
+                {r.coherence.decision === 'accept' ? 'Accepter' : 'Accepter avec commentaire'}
+              </Badge>
+            </p>
+            {r.coherence.specs.length > 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                {r.coherence.specs.map((s) => `${s.label} : ${s.value}`).join(' · ')}
+                {r.coherence.conductors ? ` · Conducteurs : ${r.coherence.conductors}` : ''}
+              </p>
+            )}
+            <ul className="ml-3 space-y-0.5">
+              {r.coherence.findings.map((f) => (
+                <li key={f.code} className="text-xs">
+                  <span className="mr-1">{SEVERITY_ICON[f.severity] ?? '•'}</span>
+                  <span className="font-medium">{f.label} :</span> <span className="text-muted-foreground">{f.message}</span>
+                  {f.suggestion && <span className="block text-[11px] text-muted-foreground">💡 {f.suggestion}</span>}
+                </li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>
