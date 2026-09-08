@@ -53,21 +53,26 @@ export function extractDimensions(text?: string | null): ExtractedDimensions {
   const src = (text ?? '').trim();
   if (!src) return out;
 
-  const t = TRIPLET.exec(src);
-  if (t) {
-    const unit = t[4];
-    out.length = toMeters(t[1], unit);
-    out.width = toMeters(t[2], unit);
-    if (t[3]) out.height = toMeters(t[3], unit);
-  }
-
-  for (const { key, re } of PATTERNS) {
+  // 1. Étiquettes explicites, puis abréviations sensibles à la casse (L / l / H).
+  for (const { key, re } of [...WORD_PATTERNS, ...LETTER_PATTERNS]) {
     if (out[key] != null) continue;
     const m = re.exec(src);
     if (m) out[key] = toMeters(m[1], m[2]);
   }
+
+  // 2. Motif compact « 5 x 2,5 x 0,15 m » pour ce qui reste inconnu.
+  if (out.length == null || out.width == null) {
+    const t = TRIPLET.exec(src);
+    if (t) {
+      const unit = t[4];
+      out.length = out.length ?? toMeters(t[1], unit);
+      out.width = out.width ?? toMeters(t[2], unit);
+      if (t[3] && out.height == null) out.height = toMeters(t[3], unit);
+    }
+  }
   return out;
 }
+
 
 /** Complète des dimensions partielles avec celles trouvées dans le libellé. */
 export function mergeDimensions(
