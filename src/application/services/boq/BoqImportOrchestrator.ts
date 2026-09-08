@@ -275,9 +275,8 @@ export class BoqImportOrchestrator {
       const sectionPhase = String(row.raw[SECTION_PHASE_COLUMN] ?? '').trim() || null;
       const phaseId = ctx.phaseId ?? (explicitPhase || resolved.phaseId || sectionPhase) ?? null;
       // Normalize element type from designation via the boq referential.
-      const elementCode = mapping.elementType
-        ? String(get(mapping.elementType) ?? '').trim()
-        : detectElementType(designation);
+      const elementCode = detectedElement;
+
 
       // Détection RH via le référentiel `labour-profiles` : le mode de
       // facturation vient de l'unité (homme·jour / homme·mois / forfait) et le
