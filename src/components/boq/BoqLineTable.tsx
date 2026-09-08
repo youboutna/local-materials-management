@@ -310,6 +310,33 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
           </div>
         )}
       </div>
+      {metreIndex != null && lines[metreIndex] ? (
+        <MetreDialog
+          open={metreIndex != null}
+          onOpenChange={(v) => { if (!v) setMetreIndex(null); }}
+          initial={{
+            designation: lines[metreIndex].designation,
+            elementType: lines[metreIndex].elementType ?? null,
+            unit: lines[metreIndex].unit ?? 'u',
+            length: lines[metreIndex].length ?? null,
+            width: lines[metreIndex].width ?? null,
+            height: lines[metreIndex].height ?? null,
+          }}
+          onApply={(v) => {
+            const i = metreIndex;
+            onChange?.(i, {
+              elementType: v.elementType,
+              unit: v.unit,
+              length: v.length,
+              width: v.width,
+              height: v.height,
+              quantity: Number(v.quantity.toFixed(3)),
+              totalHt: Number(v.quantity.toFixed(3)) * (lines[i].unitPrice ?? 0) + (lines[i].fees ?? 0),
+            });
+            setMetreIndex(null);
+          }}
+        />
+      ) : null}
       {usePaging && (
         <DataPagination
           page={safePage}
@@ -320,6 +347,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
           pageSizeOptions={pageSizeOptions}
         />
       )}
+
     </div>
   );
 }
