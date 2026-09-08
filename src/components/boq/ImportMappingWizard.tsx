@@ -32,6 +32,9 @@ const FIELDS: { key: keyof ImportMapping; label: string }[] = [
 
 const NONE = '__none__';
 
+/** Colonnes techniques injectées par les parseurs : jamais affichées en aperçu. */
+const INTERNAL_COLUMNS = new Set(['Nature section', 'Lot libellé']);
+
 export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
   const { t } = useLanguage();
   const preview = useMemo(() => parseResult.rows.slice(0, 10), [parseResult]);
@@ -58,6 +61,7 @@ export function ImportMappingWizard({ parseResult, mapping, onChange }: Props) {
       <div className="space-y-2">
         {preview.map((r, i) => {
           const populated = parseResult.columns.filter((column) => {
+            if (INTERNAL_COLUMNS.has(column)) return false;
             const value = r.raw[column];
             return value !== null && value !== undefined && String(value).trim() !== '';
           });
