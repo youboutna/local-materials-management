@@ -87,7 +87,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
       setError(msg);
       throw new Error(msg);
     } finally { setBusy(false); }
-  }, [dtos]);
+  }, [dtos, ctx]);
 
   // Re-classify existing rows when the project referential changes.
   useEffect(() => {
