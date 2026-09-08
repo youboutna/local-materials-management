@@ -85,7 +85,9 @@ const similarity = (a: string, b: string): number =>
  */
 export function repairOcrCell(value: unknown): string {
   const raw = String(value ?? '').replace(/\s+/g, ' ').trim();
+  if (process.env.NO_OCR_REPAIR) return raw;
   if (!raw) return '';
+
   // Une valeur purement numérique n'est jamais réparée (risque de fusion).
   if (/^[\d\s.,%-]+$/.test(raw)) return raw;
 
