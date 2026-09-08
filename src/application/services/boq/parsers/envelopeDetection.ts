@@ -135,8 +135,11 @@ export function extractEnvelope(rows: string[][]): { envelope: DqeEnvelope; cons
     const email = value.match(EMAIL_RX)?.[0];
     const phone = value.match(PHONE_RX)?.[0]?.trim();
     if (email) party.email ??= email;
-    if (phone && !email) party.phone ??= phone;
-    if (email || phone) return true;
+    // Une cellule peut porter les deux (« +222 45 25 67 83 · contact@… ») :
+    // le téléphone est cherché hors de l'adresse e-mail.
+    const phoneOutsideEmail = (email ? value.replace(email, ' ') : value).match(PHONE_RX)?.[0]?.trim();
+    if (phoneOutsideEmail) party.phone ??= phoneOutsideEmail;
+    if (email || phone || phoneOutsideEmail) return true;
     if (/nouakchott|mauritanie|carrefour|avenue|rue\b|bp\b|quartier|ilot/i.test(value)) {
       party.address = party.address ? `${party.address}, ${value}` : value;
       return true;
