@@ -75,6 +75,7 @@ import SupplierSubmissionDashboard from "./components/suppliers/SupplierSubmissi
 import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
 
+import { DEV_MODE } from "./config/constants";
 import EnhancedMaterialForm from "./components/materials/EnhancedMaterialForm";
 import ConsultantDashboard from "./pages/ConsultantPortal/ConsultantDashboard";
 // Force rebuild - updated 2026-01-07

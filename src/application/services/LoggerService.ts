@@ -134,9 +134,25 @@ export class LoggerService {
   ): void {
     if (!this.shouldLog(level)) return;
 
+    const now = Date.now();
+    const previous = this.buffer[this.buffer.length - 1];
+    if (
+      previous &&
+      previous.level === level &&
+      previous.source === source &&
+      previous.message === message &&
+      previous.errorCode === errorCode &&
+      now - new Date(previous.timestamp).getTime() <= this.duplicateWindowMs
+    ) {
+      previous.repeatCount = (previous.repeatCount ?? 1) + 1;
+      previous.timestamp = new Date(now).toISOString();
+      if (this.config.enableLocalStorage) this.schedulePersist();
+      return;
+    }
+
     const entry: LogEntry = {
-      id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      timestamp: new Date().toISOString(),
+      id: `log-${now}-${Math.random().toString(36).slice(2, 7)}`,
+      timestamp: new Date(now).toISOString(),
       level,
       source,
       errorCode,
