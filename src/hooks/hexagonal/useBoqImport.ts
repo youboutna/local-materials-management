@@ -31,6 +31,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   }, []);
 
   const parseFile = useCallback(async (file: File, format: NumberFormatMode = numberFormat) => {
+    sourceFile.current = file;
     const run = ++parseRun.current;
     setBusy(true); setError(null);
     try {
