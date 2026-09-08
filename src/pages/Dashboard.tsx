@@ -101,6 +101,55 @@ const Dashboard: React.FC = () => {
     return baseStats;
   }, [dashboardStats]);
 
+  /** Vision décideur : les 4 indicateurs clés tiennent sur une seule ligne. */
+  const kpiCards = useMemo(
+    () => [
+      {
+        label: t('dashboard.cards.active_projects'),
+        value: stats.activeProjects ?? t('dashboard.kpi.not_evaluable'),
+        unit: t('dashboard.cards.projects_label'),
+        accent: 'border-l-primary',
+      },
+      {
+        label: t('dashboard.cards.total_budget'),
+        value: stats.totalBudget == null ? t('dashboard.kpi.not_evaluable') : formatNumber2(stats.totalBudget),
+        unit: 'MRU',
+        accent: 'border-l-success',
+      },
+      {
+        label: t('dashboard.cards.teams'),
+        value: stats.teamMembers ?? t('dashboard.kpi.not_evaluable'),
+        unit: t('dashboard.cards.members_label'),
+        accent: 'border-l-info',
+      },
+      {
+        label: t('dashboard.cards.materials_title'),
+        value: stats.materials ?? t('dashboard.kpi.not_evaluable'),
+        unit: t('dashboard.cards.types_label'),
+        accent: 'border-l-warning',
+      },
+    ],
+    [stats, t],
+  );
+
+  /** Projets les moins avancés d'abord : ce sont les points d'attention. */
+  const topProjects = useMemo(
+    () => [...projects].sort((a, b) => (a.progress ?? 0) - (b.progress ?? 0)).slice(0, 6),
+    [projects],
+  );
+
+  /** Répartition par statut convertie en barres proportionnelles. */
+  const statusBars = useMemo(() => {
+    const rows = (stats.statusDistribution ?? []) as Array<{ name?: string; status?: string; value?: number; count?: number }>;
+    const entries = rows.map((row) => ({
+      name: row.name ?? row.status ?? '',
+      value: row.value ?? row.count ?? 0,
+    }));
+    const max = Math.max(1, ...entries.map((e) => e.value));
+    return entries.map((e) => ({ ...e, percent: Math.round((e.value / max) * 100) }));
+  }, [stats.statusDistribution]);
+
+
   if (statsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
