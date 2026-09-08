@@ -9,3 +9,5 @@
 - [ ] Vérifier les cartes projet sur ordinateur et mobile — bloqué : l’authentification Supabase externe ne peut pas être injectée dans le navigateur de test
 - [x] Fusionner les caractéristiques PDF multilignes dans la désignation DQE avant calcul du métré
 - [x] Supprimer le défilement horizontal des lignes et du mapping DQE à toutes les largeurs
+- [x] Extraire l’enveloppe documentaire (émetteur, destinataire, référence, date, projet, validité, devise, normes Factur-X) comme contexte et non comme lignes DQE
+- [x] Afficher l’enveloppe dans un panneau de contexte responsive au-dessus de l’aperçu d’import

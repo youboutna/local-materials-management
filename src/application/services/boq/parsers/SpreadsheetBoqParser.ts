@@ -14,6 +14,7 @@ import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from 
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { extractDocumentParties, type DocumentParty } from './headerDetection';
 import { extractDocumentMeta, mergeParties, type DocumentMeta } from './documentMetaDetection';
+import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 
 import {
   detectSection,
@@ -111,6 +112,17 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     const textMatrix: string[][] = matrix.map((line) => (line ?? []).map((c) => (c == null ? '' : String(c))));
     const parties = mergeParties(extractDocumentParties(textMatrix, headerIdx), metaParties);
 
+    // Enveloppe documentaire lue comme contexte (jamais comme lignes DQE).
+    const { envelope } = extractEnvelope(textMatrix);
+    envelope.currency ??= meta.currency;
+    envelope.documentNumber ??= meta.reference;
+    envelope.documentDate ??= meta.issueDate;
+    envelope.projectCode ??= meta.projectReference ?? meta.projectTitle;
+    if (!envelope.emitter.name && parties.supplier?.name) envelope.emitter = { ...parties.supplier };
+    if (!envelope.receiver.name && parties.organization?.name) envelope.receiver = { ...parties.organization };
+    if (meta.typeCode) envelope.facturXType ??= `TypeCode ${meta.typeCode}`;
+    warnings.push(...summarizeEnvelope(envelope));
+
 
     const rows: ParsedBoqRow[] = [];
     const detectedFiscal: DetectedFiscal = {};
@@ -131,6 +143,9 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       if (nextSection && !hasNumeric) { section = nextSection; sectionsFound += 1; continue; }
       if (nextSection) section = nextSection;
       if (isRepeatedHeaderRow(line as (string | number | null)[], baseColumns)) continue;
+      // Bruit d'enveloppe (raison sociale, contacts, mentions Factur-X, pagination).
+      if (isEnvelopeRow(line.map((v) => (v == null ? '' : String(v))))) continue;
+
 
       const raw: Record<string, string | number | null> = {};
       baseColumns.forEach((col, idx) => {
@@ -150,7 +165,7 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       warnings.push(`Projet détecté : ${meta.projectTitle ?? meta.projectReference}.`);
     }
     warnings.push(...summarizeFiscal(detectedFiscal));
-    return { rows, columns, warnings, detectedFiscal, parties, documentMeta: meta, sheetName: target.name };
+    return { rows, columns, warnings, detectedFiscal, parties, documentMeta: meta, sheetName: target.name, envelope };
 
   }
 }
