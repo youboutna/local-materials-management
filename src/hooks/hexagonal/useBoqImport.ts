@@ -75,9 +75,11 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
           file: sourceFile.current,
           contextId: ctx.contextId,
           source: ctx.source,
-          projectId: ctx.source === 'project' ? ctx.contextId : null,
+          // Le contextId porte le projet pour les métrés/DQE, l'appel d'offres
+          // pour les estimations : on ne rattache que ce qui est certain.
+          projectId: ctx.source === 'quantity_takeoff' || ctx.source === 'dqe' ? ctx.contextId : null,
           phaseId: ctx.phaseId ?? null,
-          tenderId: ctx.source === 'tender' ? ctx.contextId : null,
+          tenderId: ctx.source === 'tender_estimate' ? ctx.contextId : null,
           lineCount: persisted.length || lines.length,
         });
       }
