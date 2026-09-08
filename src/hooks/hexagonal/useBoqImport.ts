@@ -19,6 +19,8 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   const [isBusy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const parseRun = useRef(0);
+  /** Fichier analysé : archivé dans le Document Hub après persistance des lignes. */
+  const sourceFile = useRef<File | null>(null);
 
   /** Abandonne complètement la session d’import, y compris le fichier analysé. */
   const reset = useCallback(() => {
