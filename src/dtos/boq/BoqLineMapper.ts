@@ -5,7 +5,7 @@
  * a planned project's quantity takeoffs.
  */
 
-import type { BoqSource } from '@/domain/entities/boq/BoqLine';
+import { BoqLine, type BoqSource } from '@/domain/entities/boq/BoqLine';
 import { getDQELineType, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import type { BoqLineDTO } from './BoqLineDTO';
 
