@@ -70,9 +70,21 @@ function detectBands(items: LayoutItem[]): Band[] {
 
 /** Découpe les lignes en enregistrements selon les respirations verticales. */
 function groupRecords(lines: VisualLine[]): number[][] {
-  const gaps = lines.slice(1).map((l, i) => lines[i].y - l.y).filter((g) => g > 0).sort((a, b) => a - b);
-  const median = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 12;
-  const threshold = median * 2.4;
+  const gaps = lines.slice(1).map((l, i) => lines[i].y - l.y).filter((g) => g > 0);
+  // Interligne de référence = gap le plus FRÉQUENT (hauteur de ligne), et non la
+  // médiane : sur une page mêlant enveloppe (interlignes larges) et tableau
+  // (interlignes serrés), la médiane écrase les respirations entre lignes DQE.
+  const histogram = new Map<number, number>();
+  gaps.forEach((g) => {
+    const bucket = Math.round(g);
+    histogram.set(bucket, (histogram.get(bucket) ?? 0) + 1);
+  });
+  let lineHeight = 12;
+  let bestCount = 0;
+  [...histogram.entries()].sort((a, b) => a[0] - b[0]).forEach(([bucket, count]) => {
+    if (count > bestCount) { bestCount = count; lineHeight = bucket; }
+  });
+  const threshold = lineHeight * 2.4;
   const records: number[][] = [];
   let current: number[] = [];
   for (let i = 0; i < lines.length; i++) {
@@ -115,7 +127,8 @@ function lineCells(line: VisualLine): Fragment[] {
     const x1 = x0 + (it.width ?? 0);
     const last = cells[cells.length - 1];
     if (last && x0 - last.x1 <= WORD_GAP) {
-      last.text = x0 - last.x1 <= GLUE_GAP ? `${last.text}${text}` : `${last.text} ${text}`;
+      const glued = x0 - last.x1 <= GLUE_GAP || /-$/.test(last.text) || /^-/.test(text);
+      last.text = glued ? `${last.text}${text}` : `${last.text} ${text}`;
       last.x1 = Math.max(last.x1, x1);
     } else {
       cells.push({ text, x0, x1 });
@@ -159,7 +172,7 @@ export function rebuildWrappedRows(items: LayoutItem[]): string[][] {
       let acc = fragments[0].text;
       for (let i = 1; i < fragments.length; i++) {
         const previous = fragments[i - 1];
-        acc = joinFragments(acc, fragments[i].text, band.x1 - previous.x1 < charWidth * 1.2);
+        acc = joinFragments(acc, fragments[i].text, band.x1 - previous.x1 < charWidth * 0.6);
       }
       return acc.replace(/,\s+(?=\d)/g, ',').trim();
     });
