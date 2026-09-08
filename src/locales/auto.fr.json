@@ -5029,5 +5029,18 @@
   "filters.shortcut.search": "Recherche",
   "filters.shortcut.advanced": "Avancé",
   "filters.shortcut.reset": "Réinitialiser",
-  "filters.shortcut.first": "Premier résultat"
+  "filters.shortcut.first": "Premier résultat",
+  "dqe.context.title": "Configuration du document",
+  "dqe.context.project": "Projet",
+  "dqe.context.doc_number": "N° document",
+  "dqe.context.lines": "Lignes",
+  "dqe.context.phases": "phase(s)",
+  "dqe.context.wbs": "Périmètre WBS",
+  "dqe.context.classification": "Classification",
+  "dqe.context.responsible": "Responsable",
+  "dqe.context.referentials": "Référentiels",
+  "dqe.context.fiscal_profile": "Profil fiscal",
+  "dqe.context.recipient": "Destinataire",
+  "dqe.context.not_set": "Non défini",
+  "dqe.context.project_default": "Projet courant"
 }

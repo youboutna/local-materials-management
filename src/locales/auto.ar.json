@@ -5031,5 +5031,18 @@
   "filters.shortcut.search": "بحث",
   "filters.shortcut.advanced": "متقدم",
   "filters.shortcut.reset": "إعادة تعيين",
-  "filters.shortcut.first": "أول نتيجة"
+  "filters.shortcut.first": "أول نتيجة",
+  "dqe.context.title": "إعداد المستند",
+  "dqe.context.project": "المشروع",
+  "dqe.context.doc_number": "رقم المستند",
+  "dqe.context.lines": "البنود",
+  "dqe.context.phases": "مرحلة/مراحل",
+  "dqe.context.wbs": "نطاق هيكل الأعمال",
+  "dqe.context.classification": "التصنيف",
+  "dqe.context.responsible": "المسؤول",
+  "dqe.context.referentials": "المراجع",
+  "dqe.context.fiscal_profile": "الملف الجبائي",
+  "dqe.context.recipient": "المستلم",
+  "dqe.context.not_set": "غير محدد",
+  "dqe.context.project_default": "المشروع الحالي"
 }
