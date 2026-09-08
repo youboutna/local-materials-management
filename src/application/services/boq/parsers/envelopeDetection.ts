@@ -107,126 +107,158 @@ export function isEnvelopeRow(cells: string[]): boolean {
   return texts.every((t) => isEnvelopeNoise(t));
 }
 
+type EnvelopeField = (typeof LABELS)[number]['key'];
+
+/** Une ligne réellement tabulaire (au moins deux cellules dont une chiffrée). */
+function isValuedRow(texts: string[]): boolean {
+  return texts.length >= 2 && hasValue(texts);
+}
+
 /**
  * Balaye la matrice texte d'un document et renvoie l'enveloppe détectée ainsi
  * que les index de lignes consommées (à exclure des lignes DQE).
+ *
+ * Gère les mises en page où l'étiquette et sa valeur sont sur DEUX lignes
+ * (« Projet : » puis « PPGASDL ASSABA LOT 1 ») ainsi que le bloc d'en-tête
+ * initial (raison sociale, adresse, contacts) sans étiquette.
  */
 export function extractEnvelope(rows: string[][]): { envelope: DqeEnvelope; consumedRows: number[] } {
   const envelope: DqeEnvelope = { emitter: {}, receiver: {} };
-  const consumedRows: number[] = [];
-  let pending: 'emitter' | 'receiver' | null = null;
+  const consumed = new Set<number>();
+  const matrix = rows.map((row) => (row ?? []).map((c) => clean(String(c ?? ''))).filter(Boolean));
+  const firstValuedRow = matrix.findIndex(isValuedRow);
+  const headerLimit = firstValuedRow < 0 ? matrix.length : firstValuedRow;
 
-  const setParty = (side: 'emitter' | 'receiver', value: string) => {
+  const setParty = (side: 'emitter' | 'receiver', value: string): boolean => {
     const party = envelope[side];
-    if (!value) return;
-    if (EMAIL_RX.test(value) && !party.email) party.email = value.match(EMAIL_RX)![0];
-    else if (PHONE_RX.test(value) && !party.phone) party.phone = value.match(PHONE_RX)![0].trim();
-    else if (!party.name) party.name = value;
-    else if (/nouakchott|carrefour|avenue|rue|bp\b|quartier|ilot/i.test(value) && !party.address) party.address = value;
-    else party.name = `${party.name} ${value}`.trim();
+    if (!value || value === '—') return false;
+    const email = value.match(EMAIL_RX)?.[0];
+    const phone = value.match(PHONE_RX)?.[0]?.trim();
+    if (email) party.email ??= email;
+    if (phone && !email) party.phone ??= phone;
+    if (email || phone) return true;
+    if (/nouakchott|mauritanie|carrefour|avenue|rue\b|bp\b|quartier|ilot/i.test(value)) {
+      party.address = party.address ? `${party.address}, ${value}` : value;
+      return true;
+    }
+    party.name = party.name ? `${party.name} ${value}`.trim() : value;
+    return true;
   };
 
-  rows.forEach((row, index) => {
-    const cells = (row ?? []).map((c) => clean(String(c ?? '')));
-    const texts = cells.filter(Boolean);
-    if (!texts.length) return;
-    let consumed = false;
-
-    for (const text of texts) {
-      const label = LABELS.find(({ rx }) => rx.test(text));
-      if (label) {
-        const value = stripLabel(text, label.rx);
-        const inlineOrNext = value || texts[texts.indexOf(text) + 1] || '';
-        consumed = true;
-        switch (label.key) {
-          case 'emitterName':
-            if (inlineOrNext) setParty('emitter', inlineOrNext);
-            pending = inlineOrNext ? null : 'emitter';
-            break;
-          case 'receiverName':
-            if (inlineOrNext) setParty('receiver', inlineOrNext);
-            pending = inlineOrNext ? null : 'receiver';
-            break;
-          case 'documentNumber': {
-            const ref = inlineOrNext.match(DOC_REF_RX)?.[1] ?? text.match(DOC_REF_RX)?.[1];
-            if (ref && !envelope.documentNumber) envelope.documentNumber = ref.replace(/\s/g, '');
-            break;
-          }
-          case 'documentDate':
-            envelope.documentDate ??= inlineOrNext.match(DATE_RX)?.[1];
-            break;
-          case 'projectCode':
-            if (inlineOrNext && inlineOrNext !== '—') envelope.projectCode ??= inlineOrNext;
-            break;
-          case 'tenderReference':
-            if (inlineOrNext && inlineOrNext !== '—') envelope.tenderReference ??= inlineOrNext;
-            break;
-          case 'validityDays': {
-            const days = inlineOrNext.match(/(\d+)\s*(?:j|jours?)/i)?.[1];
-            if (days) envelope.validityDays ??= Number(days);
-            envelope.validityEndDate ??= inlineOrNext.match(DATE_RX)?.[1];
-            break;
-          }
-          case 'currency': {
-            const cur = inlineOrNext.match(/\b(MRU|MRO|EUR|USD|XOF|MAD)\b/i)?.[1];
-            if (cur) envelope.currency ??= cur.toUpperCase();
-            break;
-          }
-          case 'signatory':
-            if (inlineOrNext) envelope.signatory ??= inlineOrNext;
-            break;
-          case 'traceabilityRef':
-            if (inlineOrNext) envelope.traceabilityRef ??= inlineOrNext;
-            break;
-          default:
-            break;
-        }
-        continue;
+  /** Affecte une valeur au champ d'enveloppe ; false si la valeur est vide/inutilisable. */
+  const assign = (field: EnvelopeField, value: string): boolean => {
+    const v = clean(value);
+    if (!v || v === '—') return false;
+    switch (field) {
+      case 'emitterName': return setParty('emitter', v);
+      case 'receiverName': return setParty('receiver', v);
+      case 'documentNumber': {
+        const ref = v.match(DOC_REF_RX)?.[1];
+        if (!ref) return false;
+        envelope.documentNumber ??= ref.replace(/\s/g, '');
+        return true;
       }
+      case 'documentDate': {
+        const d = v.match(DATE_RX)?.[1];
+        if (!d) return false;
+        envelope.documentDate ??= d;
+        return true;
+      }
+      case 'projectCode': envelope.projectCode ??= v; return true;
+      case 'tenderReference': envelope.tenderReference ??= v; return true;
+      case 'validityDays': {
+        const days = v.match(/(\d+)\s*(?:j\b|jours?)/i)?.[1];
+        const end = v.match(DATE_RX)?.[1];
+        if (!days && !end) return false;
+        if (days) envelope.validityDays ??= Number(days);
+        if (end) envelope.validityEndDate ??= end;
+        return true;
+      }
+      case 'currency': {
+        const cur = v.match(/\b(MRU|MRO|EUR|USD|XOF|MAD)\b/i)?.[1];
+        if (!cur) return false;
+        envelope.currency ??= cur.toUpperCase();
+        return true;
+      }
+      case 'signatory': envelope.signatory ??= v; return true;
+      case 'traceabilityRef': envelope.traceabilityRef ??= v; return true;
+      default: return false;
+    }
+  };
 
-      if (/factur-?x|en\s?16931/i.test(text)) {
+  let pending: EnvelopeField | null = null;
+
+  matrix.forEach((texts, index) => {
+    if (!texts.length) { consumed.add(index); return; }
+    if (isValuedRow(texts)) {
+      // Ligne tabulaire : fin de tout bloc d'enveloppe en cours.
+      pending = null;
+      if (texts.every((t) => isEnvelopeNoise(t))) consumed.add(index);
+      return;
+    }
+
+    let rowConsumed = false;
+    texts.forEach((text, ti) => {
+      // 1) Normes Factur-X / EN 16931 (souvent en pied de page).
+      if (/factur-?x|en\s?16931|typecode/i.test(text)) {
         envelope.standard ??= 'EN 16931';
         const type = text.match(/typecode\s*(\d{3})/i)?.[1];
         if (type) envelope.facturXType ??= `TypeCode ${type}`;
         const ref = text.match(DOC_REF_RX)?.[1];
         if (ref) envelope.documentNumber ??= ref.replace(/\s/g, '');
-        consumed = true;
-        continue;
+        rowConsumed = true;
+        pending = null;
+        return;
       }
       if (/^en\s+attente\s+de\s+signature/i.test(text)) {
         envelope.signatureStatus ??= 'PENDING';
-        consumed = true;
-        continue;
+        rowConsumed = true;
+        return;
       }
-      if (pending) {
-        // Continuation multi-lignes d'un bloc Émetteur / Destinataire.
-        if (isEnvelopeNoise(text) || !hasValue(texts)) {
-          setParty(pending, text);
-          consumed = true;
-          continue;
-        }
-      }
-      if (isEnvelopeNoise(text) && !hasValue(texts)) {
-        if (EMAIL_RX.test(text)) envelope.emitter.email ??= text.match(EMAIL_RX)![0];
-        if (PHONE_RX.test(text)) envelope.emitter.phone ??= text.match(PHONE_RX)![0].trim();
-        if (/^dqe$|^devis$|^facture$/i.test(text)) envelope.documentType ??= text.toUpperCase();
-        consumed = true;
-      }
-    }
 
-    if (isEnvelopeRow(cells)) consumed = true;
-    if (consumed) consumedRows.push(index);
-    if (hasValue(texts)) pending = null;
+      // 2) Étiquette « clé : valeur » (valeur en ligne ou sur la ligne suivante).
+      const label = LABELS.find(({ rx }) => rx.test(text));
+      if (label) {
+        const inline = stripLabel(text, label.rx) || texts[ti + 1] || '';
+        const ok = assign(label.key, inline);
+        pending = ok && label.key !== 'emitterName' && label.key !== 'receiverName' ? null : label.key;
+        rowConsumed = true;
+        return;
+      }
+
+      // 3) Valeur reportée sur la ligne suivant l'étiquette.
+      if (pending && assign(pending, text)) {
+        if (pending !== 'emitterName' && pending !== 'receiverName') pending = null;
+        rowConsumed = true;
+        return;
+      }
+
+      // 4) Bloc d'en-tête initial sans étiquette → coordonnées de l'émetteur.
+      if (index < headerLimit) {
+        setParty('emitter', text);
+        rowConsumed = true;
+        return;
+      }
+
+      // 5) Bruit documentaire résiduel (« DQE », tirets, pagination…).
+      if (isEnvelopeNoise(text)) {
+        if (/^(dqe|devis|facture)$/i.test(text)) envelope.documentType ??= text.toUpperCase();
+        rowConsumed = true;
+      }
+    });
+
+    if (rowConsumed || isEnvelopeRow(texts)) consumed.add(index);
   });
 
   if (!envelope.documentNumber) {
-    for (const row of rows.slice(0, 15)) {
-      const hit = (row ?? []).map((c) => String(c ?? '')).join(' ').match(DOC_REF_RX)?.[1];
+    for (const texts of matrix.slice(0, 15)) {
+      const hit = texts.join(' ').match(DOC_REF_RX)?.[1];
       if (hit) { envelope.documentNumber = hit.replace(/\s/g, ''); break; }
     }
   }
-  return { envelope, consumedRows };
+  return { envelope, consumedRows: [...consumed] };
 }
+
 
 /** Résumé lisible pour les avertissements du parseur. */
 export function summarizeEnvelope(env: DqeEnvelope): string[] {
