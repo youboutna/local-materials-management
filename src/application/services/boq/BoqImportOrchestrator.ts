@@ -61,6 +61,11 @@ const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
   regime: [/r[eé]gime/i, /^nature\s*(fiscale)?$/i],
 };
 
+/** Libellés d'en-tête répétés dans le corps du document — jamais des lignes DQE. */
+const HEADER_LIKE_RX =
+  /^(n[°o]?|d[eé]signation|libell[eé]|description|intitul[eé]|unit[eé]?|qu?antit[eé]|qt[eé]?|p\.?\s*u\.?|prix\s*unitaire|montant|total|observations?)\b/i;
+
+
 /** Régimes fiscaux déclarés en colonne → type de ressource BOQ. */
 const REGIME_RESOURCE: { rx: RegExp; type: BoqResourceType }[] = [
   { rx: /rh|prestation\s*intellect|main\s*d.?œuvre|service/i, type: 'labor' },
@@ -179,7 +184,20 @@ export class BoqImportOrchestrator {
       const quantity = computed || (rawTotal != null ? 1 : computed);
       // Rejet des lignes non valorisées (titres de document, notes) : une ligne
       // DQE exploitable porte au minimum une quantité, un PU ou un montant.
-      if (!designation || (!quantity && rawTotal == null && pu == null)) continue;
+      const isValued = !!quantity || rawTotal != null || pu != null;
+      if (!designation) continue;
+      // Lignes d'en-tête répétées dans le corps du document (« Désignation | Unité | Qté »).
+      if (!isValued && HEADER_LIKE_RX.test(designation)) continue;
+      if (!isValued) {
+        // Retour à la ligne du libellé (« 4x150 mm² » sous « Câble U-1000 RO2V ») :
+        // on complète la désignation précédente au lieu de créer une fausse ligne.
+        const prev = out[out.length - 1];
+        if (prev && designation.length <= 120) {
+          prev.designation = `${prev.designation} ${designation}`.replace(/\s+/g, ' ').trim();
+        }
+        continue;
+      }
+
       // Contrôle arithmétique : quantité × P.U. = montant, sinon P.U. corrigé.
       const price = reconcileLinePrice({ quantity, unitPrice: pu, totalHt: rawTotal });
       const unitPrice = price.unitPrice;
