@@ -6,4 +6,4 @@
 - [x] Restaurer le survol et le clic des marqueurs projets
 - [x] Stabiliser les icônes Leaflet et éviter leur recréation à chaque rendu
 - [x] Dédupliquer les alertes de traduction et les faire transiter par le journal applicatif
-- [ ] Vérifier les cartes projet sur ordinateur et mobile
+- [ ] Vérifier les cartes projet sur ordinateur et mobile — bloqué : l’authentification Supabase externe ne peut pas être injectée dans le navigateur de test
