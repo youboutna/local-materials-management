@@ -12,6 +12,7 @@ import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDet
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { assembleLogicalRows } from './rowAssembly';
 import { repairOcrMatrix } from './ocrNormalization';
+import { rebuildWrappedRows, scoreValuedRows } from './wrappedTableLayout';
 import { segmentDocumentBlocks } from './documentBlocks';
 
 
@@ -124,6 +125,8 @@ export class PdfBoqParser implements IDocumentParser {
     const itemRows: PdfItem[][] = [];
     let rowsAcc: string[][] = [];
     const warnings: string[] = [];
+    /** Reconstruction alternative pour les tableaux à cellules repliées. */
+    const wrappedAcc: string[][] = [];
 
     for (let p = 1; p <= doc.numPages; p++) {
       const page = await doc.getPage(p);
@@ -156,6 +159,8 @@ export class PdfBoqParser implements IDocumentParser {
           itemRows.push(row);
         }
       }
+
+      wrappedAcc.push(...rebuildWrappedRows(items));
     }
 
     // OCR fallback for scanned PDFs
@@ -194,6 +199,16 @@ export class PdfBoqParser implements IDocumentParser {
         bands ? alignItemsToBands(itemRows[index] ?? [], bands) : cells.map((c) => c.text)
       ));
     }
+
+    // Tableaux à cellules repliées (colonnes très étroites) : la reconstruction
+    // par enregistrements est retenue seulement si elle produit STRICTEMENT plus
+    // de lignes valorisées que l'alignement classique — jamais de régression.
+    if (wrappedAcc.length && scoreValuedRows(wrappedAcc) > scoreValuedRows(rowsAcc)) {
+      rowsAcc = wrappedAcc;
+      bandHeaderIdx = -1;
+      warnings.push('Tableau à cellules repliées détecté — lignes reconstruites par enregistrement.');
+    }
+
     // Réparation des mots coupés par les colonnes étroites / l'OCR
     // (« Fournit ure de matière I » → « Fourniture de matériel », « forfa it »
     // → « forfait », « Unit é PDF » → « Unité »).
