@@ -61,6 +61,11 @@ const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
   regime: [/r[eé]gime/i, /^nature\s*(fiscale)?$/i],
 };
 
+/** Libellés d'en-tête répétés dans le corps du document — jamais des lignes DQE. */
+const HEADER_LIKE_RX =
+  /^(n[°o]?|d[eé]signation|libell[eé]|description|intitul[eé]|unit[eé]?|qu?antit[eé]|qt[eé]?|p\.?\s*u\.?|prix\s*unitaire|montant|total|observations?)\b/i;
+
+
 /** Régimes fiscaux déclarés en colonne → type de ressource BOQ. */
 const REGIME_RESOURCE: { rx: RegExp; type: BoqResourceType }[] = [
   { rx: /rh|prestation\s*intellect|main\s*d.?œuvre|service/i, type: 'labor' },
