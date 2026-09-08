@@ -183,9 +183,14 @@ export class BoqImportOrchestrator {
       const computed = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
       // DQE « forfaitaire » (Description / Montant) : quantité implicite = 1.
       const quantity = computed || (rawTotal != null ? 1 : computed);
-      // Rejet des lignes non valorisées (titres de document, notes) : une ligne
-      // DQE exploitable porte au minimum une quantité, un PU ou un montant.
-      const isValued = !!quantity || rawTotal != null || pu != null;
+      // Une ligne DQE réelle porte une valeur VENUE DE LA SOURCE (qté, PU, montant
+      // ou dimensions en colonnes). Une quantité seulement déduite des dimensions
+      // écrites dans le libellé (« 4x150 mm² ») ne suffit pas : c'est la suite
+      // technique de la désignation précédente, pas une nouvelle ligne.
+      const hasSourceValue =
+        rawQty != null || rawTotal != null || pu != null ||
+        length != null || width != null || height != null;
+      const isValued = hasSourceValue;
       if (!designation) continue;
       // Lignes d'en-tête répétées dans le corps du document (« Désignation | Unité | Qté »).
       if (!isValued && HEADER_LIKE_RX.test(designation)) continue;
@@ -218,13 +223,14 @@ export class BoqImportOrchestrator {
             width: mDims.width,
             height: mDims.height,
           });
-          if (reQty && (!prev.quantity || prev.quantity === 1)) {
+          if (reQty && !prev.quantity) {
             prev.quantity = reQty;
             if (prev.unitPrice != null) prev.totalHt = reQty * prev.unitPrice;
           }
         }
         continue;
       }
+
 
 
       // Contrôle arithmétique : quantité × P.U. = montant, sinon P.U. corrigé.
