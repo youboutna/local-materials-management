@@ -11,13 +11,16 @@ import { SupabaseAlignmentRepository } from '@/infrastructure/adapters/supabase/
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { validateAppConfig } from '@/config/app-validate';
 import { isDebugMode, logger } from '@/application/services/LoggerService';
+import { logExporter } from '@/application/services/LogExporterService';
+import { LOGGING_CONFIG } from '@/config/logging.config';
 import { initConsoleFilter } from '@/utils/console-filter';
 import { initGlobalErrorCapture } from '@/utils/error-capture';
 
 // Journalisation : niveau selon le mode, capture globale, filtrage console en production.
-logger.init();
+logger.init(isDebugMode() ? undefined : { minLevel: LOGGING_CONFIG.minLevel });
 initGlobalErrorCapture();
 initConsoleFilter();
+logExporter.start();
 logger.info('app', 'Application démarrée', { debugMode: isDebugMode() });
 
 
