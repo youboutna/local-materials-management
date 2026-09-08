@@ -328,10 +328,14 @@ export class PdfBoqParser implements IDocumentParser {
     let section: DetectedSection | null = null;
     let sectionsFound = 0;
     let remap: Record<number, string> | null = null;
+    /** Le pied de document clôt le tableau : plus aucune ligne DQE ensuite. */
+    const FOOTER_RE = /r[eé]capitulatif\s+financier|conditions\s+g[eé]n[eé]rales|validation\s+et\s+signature/i;
+    let footerReached = false;
 
     for (let i = 0; i < rowsAcc.length; i++) {
       if (i === headerIdx || consumed.has(i)) continue;
       const cells = rowsAcc[i];
+      if (FOOTER_RE.test(cells.join(' '))) footerReached = true;
       // Les pieds de tableau (« Total HT », « TVA (5%) ») sont alignés à droite :
       // le libellé n'est pas forcément dans la première colonne.
       const label = String(cells.find((c) => String(c ?? '').trim()) ?? '').trim();
@@ -348,6 +352,8 @@ export class PdfBoqParser implements IDocumentParser {
         continue;
       }
       if (isSubtotalRow(label)) continue;
+      // Après le pied de document, seules les données fiscales sont exploitées.
+      if (footerReached) { extractFiscalFromRow(cells, detectedFiscal); continue; }
       // Filet de sécurité : bruit d'enveloppe (pied de page, mentions Factur-X…).
       if (isEnvelopeRow(cells)) continue;
       const raw: Record<string, string | number | null> = {};

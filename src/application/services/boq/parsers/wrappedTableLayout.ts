@@ -141,7 +141,12 @@ function lineCells(line: VisualLine): Fragment[] {
     const x1 = x0 + (it.width ?? 0);
     const last = cells[cells.length - 1];
     if (last && x0 - last.x1 <= WORD_GAP) {
-      const glued = x0 - last.x1 <= GLUE_GAP || /-$/.test(last.text) || /^-/.test(text);
+      // Numéros de section (« I » + « V ») et de poste (« 1 » + « 1 ») coupés par
+      // la largeur de colonne : recollés sans espace.
+      const romanSplit = /^[IVX]+$/.test(last.text) && /^[IVX]+$/.test(text);
+      const digitSplit = /^\d{1,2}$/.test(last.text) && /^\d{1,2}$/.test(text);
+      const glued =
+        x0 - last.x1 <= GLUE_GAP || /-$/.test(last.text) || /^-/.test(text) || romanSplit || digitSplit;
       last.text = glued ? `${last.text}${text}` : `${last.text} ${text}`;
       last.x1 = Math.max(last.x1, x1);
     } else {
