@@ -354,6 +354,9 @@ export function BoqWorkspace({
   const isLabourTime = category === 'labour' && LABOUR_TIME_UNITS.has(String(form.unit ?? '').toLowerCase());
   const elDef = getElementType(elementType);
   const useAdvanced = !isLabourTime && elementType !== 'generic' && !!elDef;
+  /** Unité imposée par le référentiel du type d'ouvrage (verrouillée dans l'UI). */
+  const lockedUnit = useAdvanced ? MeterService.unitFor(elementType) : null;
+  const effectiveUnit = lockedUnit ?? form.unit ?? 'u';
 
   /** Ouvertures effectives (référentiel `element-types.deductOpenings`). */
   const effectiveOpenings = useMemo(() => (
