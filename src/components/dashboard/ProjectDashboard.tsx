@@ -72,6 +72,7 @@ import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { MaterialDTO } from '@/dtos/entities/MaterialDTO';
 import { formatNumber2, formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { logger } from '@/application/services/LoggerService';
 
 interface ProjectDashboardProps {
   projectId?: string;
