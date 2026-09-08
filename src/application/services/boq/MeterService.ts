@@ -8,7 +8,9 @@
 import { BoqCalculatorService, type BoqLineTotals } from './BoqCalculatorService';
 import { computeAdvancedMeter, applyAdvancedMeter, type AdvancedMeterResult } from './AdvancedMeterEngine';
 import type { MeterInputDTO } from '@/dtos/boq/MeterInputDTO';
+import { activeDimensions, formulaLabel, unitForElementType } from '@/config/referentials/boq/formulas.referential';
 import type { ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
+
 
 export type MeterMode = 'basic' | 'advanced';
 
