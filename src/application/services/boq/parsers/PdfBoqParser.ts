@@ -12,6 +12,7 @@ import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDet
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { assembleLogicalRows } from './rowAssembly';
 import { repairOcrMatrix } from './ocrNormalization';
+import { detectBands, rebuildWrappedRows, scoreValuedRows } from './wrappedTableLayout';
 import { segmentDocumentBlocks } from './documentBlocks';
 
 
@@ -124,6 +125,10 @@ export class PdfBoqParser implements IDocumentParser {
     const itemRows: PdfItem[][] = [];
     let rowsAcc: string[][] = [];
     const warnings: string[] = [];
+    /** Reconstruction alternative pour les tableaux à cellules repliées. */
+    const wrappedAcc: string[][] = [];
+    const pageItems: PdfItem[][] = [];
+
 
     for (let p = 1; p <= doc.numPages; p++) {
       const page = await doc.getPage(p);
@@ -156,6 +161,15 @@ export class PdfBoqParser implements IDocumentParser {
           itemRows.push(row);
         }
       }
+
+      pageItems.push(items);
+    }
+
+    // Bandes de colonnes calculées sur TOUTES les pages : chaque page produit
+    // ainsi le même nombre de colonnes, alignées entre elles.
+    if (pageItems.length) {
+      const sharedBands = detectBands(pageItems.flat());
+      pageItems.forEach((items) => wrappedAcc.push(...rebuildWrappedRows(items, sharedBands)));
     }
 
     // OCR fallback for scanned PDFs
@@ -194,6 +208,16 @@ export class PdfBoqParser implements IDocumentParser {
         bands ? alignItemsToBands(itemRows[index] ?? [], bands) : cells.map((c) => c.text)
       ));
     }
+
+    // Tableaux à cellules repliées (colonnes très étroites) : la reconstruction
+    // par enregistrements est retenue seulement si elle produit STRICTEMENT plus
+    // de lignes valorisées que l'alignement classique — jamais de régression.
+    if (wrappedAcc.length && scoreValuedRows(wrappedAcc) > scoreValuedRows(rowsAcc)) {
+      rowsAcc = wrappedAcc;
+      bandHeaderIdx = -1;
+      warnings.push('Tableau à cellules repliées détecté — lignes reconstruites par enregistrement.');
+    }
+
     // Réparation des mots coupés par les colonnes étroites / l'OCR
     // (« Fournit ure de matière I » → « Fourniture de matériel », « forfa it »
     // → « forfait », « Unit é PDF » → « Unité »).
@@ -272,7 +296,12 @@ export class PdfBoqParser implements IDocumentParser {
         designationIdx,
         numericIdx,
         consumed,
-        isBoundary: (cells) => !!detectSection(cells) || isRepeatedHeaderRow(cells, baseColumns),
+        // Le pied de page (récapitulatif, conditions, signature) interrompt
+        // l'absorption : ses paragraphes ne doivent jamais rejoindre une ligne DQE.
+        isBoundary: (cells) =>
+          !!detectSection(cells) ||
+          isRepeatedHeaderRow(cells, baseColumns) ||
+          /r[eé]capitulatif|conditions g[eé]n[eé]rales|validation et signature|total\s+(ht|ttc)/i.test(cells.join(' ')),
       });
       if (absorbed) warnings.push(`${absorbed} ligne(s) de continuation fusionnée(s) avec leur ligne d'origine.`);
 
@@ -299,10 +328,14 @@ export class PdfBoqParser implements IDocumentParser {
     let section: DetectedSection | null = null;
     let sectionsFound = 0;
     let remap: Record<number, string> | null = null;
+    /** Le pied de document clôt le tableau : plus aucune ligne DQE ensuite. */
+    const FOOTER_RE = /r[eé]capitulatif\s+financier|conditions\s+g[eé]n[eé]rales|validation\s+et\s+signature/i;
+    let footerReached = false;
 
     for (let i = 0; i < rowsAcc.length; i++) {
       if (i === headerIdx || consumed.has(i)) continue;
       const cells = rowsAcc[i];
+      if (FOOTER_RE.test(cells.join(' '))) footerReached = true;
       // Les pieds de tableau (« Total HT », « TVA (5%) ») sont alignés à droite :
       // le libellé n'est pas forcément dans la première colonne.
       const label = String(cells.find((c) => String(c ?? '').trim()) ?? '').trim();
@@ -319,6 +352,8 @@ export class PdfBoqParser implements IDocumentParser {
         continue;
       }
       if (isSubtotalRow(label)) continue;
+      // Après le pied de document, seules les données fiscales sont exploitées.
+      if (footerReached) { extractFiscalFromRow(cells, detectedFiscal); continue; }
       // Filet de sécurité : bruit d'enveloppe (pied de page, mentions Factur-X…).
       if (isEnvelopeRow(cells)) continue;
       const raw: Record<string, string | number | null> = {};
