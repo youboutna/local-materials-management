@@ -529,10 +529,16 @@ export function BoqImportDialog(props: Props) {
             <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
               </CollapsibleContent>
             </Collapsible>
+          </>
+        )}
 
-
-
+        {parseResult && step === 3 && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              {wbsEnrichedDtos.length} ligne(s) · {issues.length} à corriger
+            </p>
             {assistResult && (
+
               <BoqAssistPanel result={assistResult} onApply={applyAssist} disabled={isBusy || isCatalogsLoading} />
             )}
 
