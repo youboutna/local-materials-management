@@ -296,7 +296,12 @@ export class PdfBoqParser implements IDocumentParser {
         designationIdx,
         numericIdx,
         consumed,
-        isBoundary: (cells) => !!detectSection(cells) || isRepeatedHeaderRow(cells, baseColumns),
+        // Le pied de page (récapitulatif, conditions, signature) interrompt
+        // l'absorption : ses paragraphes ne doivent jamais rejoindre une ligne DQE.
+        isBoundary: (cells) =>
+          !!detectSection(cells) ||
+          isRepeatedHeaderRow(cells, baseColumns) ||
+          /r[eé]capitulatif|conditions g[eé]n[eé]rales|validation et signature|total\s+(ht|ttc)/i.test(cells.join(' ')),
       });
       if (absorbed) warnings.push(`${absorbed} ligne(s) de continuation fusionnée(s) avec leur ligne d'origine.`);
 

@@ -116,8 +116,16 @@ function joinFragments(prev: string, next: string): string {
   // courte en minuscules (« géotechniq » + « ue et sol », « Transformat » +
   // « eur 100 »). Un mot complet suivant (« dalle » + « support ») garde son
   // espace : seule une amorce de ≤ 3 lettres signale une coupure de mot.
-  const nextToken = next.split(' ')[0] ?? '';
-  if (/[A-Za-zÀ-ÿ]$/.test(prev) && /^[a-zà-ÿ]{1,3}$/.test(nextToken.replace(/[.,;:]$/, ''))) {
+  const nextToken = (next.split(' ')[0] ?? '').replace(/[.,;:]$/, '');
+  // Mots courts autonomes du français : ils commencent un nouveau mot, jamais
+  // la fin d'un mot coupé (« … fouilles » + « et nivellement »).
+  const SHORT_WORDS = /^(et|ou|de|du|des|la|le|les|un|une|au|aux|en|par|sur|m|l|h|x|ml|kg|km)$/i;
+  if (
+    /[A-Za-zÀ-ÿ]$/.test(prev) &&
+    /^[a-zà-ÿ]{1,3}$/.test(nextToken) &&
+    !SHORT_WORDS.test(nextToken) &&
+    !/:$/.test(next.split(' ')[0] ?? '')
+  ) {
     return `${prev}${next}`;
   }
   return `${prev} ${next}`;
