@@ -624,16 +624,29 @@ export function BoqImportDialog(props: Props) {
   );
 
   const cancelButton = (
-    <Button variant="outline" onClick={() => setOpen(false)}>
+    <Button variant="outline" className="min-h-11" onClick={() => setOpen(false)}>
       <T k="auto.boqimportdialog.annuler" fallback="Annuler" />
     </Button>
   );
+  const submitDisabled = isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0;
   const submitButton = (
-    <Button onClick={onSubmit} disabled={isBusy || !wbsEnrichedDtos.length || issues.length > 0 || (edbReport?.errors.length ?? 0) > 0}>
-      {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-      Importer {wbsEnrichedDtos.length} ligne(s)
-    </Button>
+    <div className="flex flex-wrap items-center gap-2">
+      <Button variant="outline" className="min-h-11" onClick={goPrev} disabled={!canPrev || isBusy}>
+        Précédent
+      </Button>
+      {canNext ? (
+        <Button className="min-h-11" onClick={goNext} disabled={isBusy}>
+          Suivant
+        </Button>
+      ) : (
+        <Button className="min-h-11" onClick={onSubmit} disabled={submitDisabled}>
+          {isBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          Importer {wbsEnrichedDtos.length} ligne(s)
+        </Button>
+      )}
+    </div>
   );
+
 
 
   const heading = title ?? 'Importer BOQ (PDF / Excel / CSV)';
