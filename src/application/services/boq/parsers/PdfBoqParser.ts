@@ -192,6 +192,12 @@ export class PdfBoqParser implements IDocumentParser {
         bands ? alignItemsToBands(itemRows[index] ?? [], bands) : cells.map((c) => c.text)
       ));
     }
+    // Réparation des mots coupés par les colonnes étroites / l'OCR
+    // (« Fournit ure de matière I » → « Fourniture de matériel », « forfa it »
+    // → « forfait », « Unit é PDF » → « Unité »).
+    if (rowsAcc.length) {
+      rowsAcc = repairOcrMatrix(rowsAcc);
+
 
     let headerIdx = bandHeaderIdx;
     if (headerIdx < 0) {
