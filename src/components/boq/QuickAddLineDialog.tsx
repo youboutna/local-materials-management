@@ -26,6 +26,8 @@ import { WbsSelector, type WbsScopeValue, type WbsValue } from './WbsSelector';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { ReferentialType } from '@/config/referentials';
 import { getUnitOptions } from '@/config/referentials/boq/unit-catalog.referential';
+import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
+import { MeterService } from '@/application/services/boq/MeterService';
 import { TaxService } from '@/application/services/TaxService';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
 import {
@@ -84,6 +86,7 @@ export function QuickAddLineDialog({
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [detections, setDetections] = useState<{ field: string; label: string; value: string }[]>([]);
   const touchedUnit = useRef(false);
+  const touchedQty = useRef(false);
   const touchedPrice = useRef(false);
   const touchedAccount = useRef(false);
 
@@ -99,6 +102,7 @@ export function QuickAddLineDialog({
     setAccountCode(null); setWbs(defaultWbs ?? {}); setNote('');
     setElementType(null); setCategory(null); setDetections([]);
     touchedUnit.current = false; touchedPrice.current = false; touchedAccount.current = false;
+    touchedQty.current = false;
   };
 
   useEffect(() => { if (open) setWbs(defaultWbs ?? {}); /* hérite du contexte document */ }, [open]);
@@ -134,6 +138,19 @@ export function QuickAddLineDialog({
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [designation, length, width, height]);
+
+  // Métré centralisé (MeterService) : le type d'ouvrage fixe l'unité attendue et
+  // la formule ; la quantité se recalcule à chaque frappe sur L / l / h.
+  const metre = useMemo(
+    () => MeterService.quantityFor({ designation, elementType, length, width, height }),
+    [designation, elementType, length, width, height],
+  );
+  const metreDims = MeterService.dimensionsFor(elementType);
+  useEffect(() => {
+    if (metre.unit) setUnit(metre.unit);
+    if (!touchedQty.current && metre.quantity > 0) setQuantity(Number(metre.quantity.toFixed(3)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [metre.unit, metre.quantity]);
 
   const pickSuggestion = (s: AutofillSuggestion) => {
     setDesignation(s.label);
@@ -264,6 +281,19 @@ export function QuickAddLineDialog({
                 <T k="dqe.quickadd.detect" fallback="Détecter" />
               </Button>
             </div>
+            <div className="mb-3 grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label className="text-[11px]"><T k="dqe.quickadd.element_type" fallback="Type d'ouvrage (métré)" /></Label>
+                <Select value={elementType ?? 'generic'} onValueChange={(v) => setElementType(v === 'generic' ? null : v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    <SelectItem value="generic">— forfait / saisie libre —</SelectItem>
+                    {ELEMENT_TYPES.map((e) => <SelectItem key={e.code} value={e.code}>{e.label} ({e.defaultUnit})</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end text-xs text-muted-foreground">{metre.formula}</div>
+            </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
               <div className="space-y-1">
                 <Label className="text-[11px]">L (m)</Label>
@@ -278,12 +308,12 @@ export function QuickAddLineDialog({
                 <Input inputMode="decimal" value={height ?? ''} onChange={(e) => setHeight(num(e.target.value))} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]"><T k="dqe.quickadd.quantity" fallback="Quantité" /></Label>
-                <Input inputMode="decimal" value={quantity ?? ''} onChange={(e) => setQuantity(num(e.target.value))} />
+                <Label className="text-[11px]"><T k="dqe.quickadd.quantity" fallback="Quantité (calculée)" /></Label>
+                <Input inputMode="decimal" value={quantity ?? ''} onChange={(e) => { touchedQty.current = true; setQuantity(num(e.target.value)); }} />
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px]"><T k="dqe.quickadd.unit" fallback="Unité" /></Label>
-                <Select value={unit} onValueChange={(v) => { touchedUnit.current = true; setUnit(v); }}>
+                <Select value={unit} disabled={!!metre.unit} onValueChange={(v) => { touchedUnit.current = true; setUnit(v); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-64">
                     {unitOptions.map((u) => <SelectItem key={u.code} value={u.code}>{u.code}</SelectItem>)}
