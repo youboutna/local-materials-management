@@ -582,6 +582,33 @@ export function BoqImportDialog(props: Props) {
           </>
         )}
 
+        {parseResult && step === 4 && (
+          <section className="space-y-3">
+            {parseResult.envelope && <DocumentEnvelopePanel envelope={parseResult.envelope} />}
+            <div className="rounded-md border p-3 text-sm">
+              <h4 className="mb-2 font-medium">Récapitulatif</h4>
+              <dl className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                <div className="flex justify-between gap-2"><dt>Lignes totales</dt><dd className="font-medium">{wbsEnrichedDtos.length}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Lignes en erreur</dt><dd className="font-medium">{issues.length}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Fichier</dt><dd className="truncate font-medium">{parseResult.fileName}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Avertissements</dt><dd className="font-medium">{parseResult.warnings.length}</dd></div>
+              </dl>
+            </div>
+            <div className="rounded-md border p-3 text-sm">
+              <h4 className="mb-2 font-medium">Totaux</h4>
+              <dl className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                <div className="flex justify-between gap-2"><dt>Total HT</dt><dd className="font-medium">{fmt(totals.ht)}</dd></div>
+                <div className="flex justify-between gap-2"><dt>TVA</dt><dd className="font-medium">{fmt(totals.vat)}</dd></div>
+                <div className="flex justify-between gap-2"><dt>RAS</dt><dd className="font-medium">{fmt(totals.ras)}</dd></div>
+                <div className="flex justify-between gap-2"><dt>Total TTC</dt><dd className="font-semibold">{fmt(totals.ttc)}</dd></div>
+              </dl>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Raccourci : Ctrl+Entrée pour importer directement.</p>
+          </section>
+        )}
+
+
+
       {error && <p className="text-sm text-destructive">{error}</p>}
     </>
   );
