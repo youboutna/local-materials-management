@@ -45,7 +45,14 @@ const VOCABULARY: string[] = [
 ];
 
 const deaccent = (s: string): string => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-const key = (s: string): string => deaccent(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+/** Les exposants deviennent des chiffres : `m²`/`m³` ne doivent pas se réduire à `m`. */
+const key = (s: string): string =>
+  deaccent(s)
+    .replace(/²/g, '2')
+    .replace(/³/g, '3')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
 
 const VOCAB_INDEX = new Map<string, string>(VOCABULARY.map((v) => [key(v), v]));
 
