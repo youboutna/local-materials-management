@@ -14,6 +14,7 @@ import type { IDocumentParser, ParseResult, ParsedBoqRow, DetectedFiscal } from 
 import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal } from './fiscalDetection';
 import { extractDocumentParties, type DocumentParty } from './headerDetection';
 import { extractDocumentMeta, mergeParties, type DocumentMeta } from './documentMetaDetection';
+import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 
 import {
   detectSection,
@@ -110,6 +111,17 @@ export class SpreadsheetBoqParser implements IDocumentParser {
     // car dans les devis Excel l'émetteur figure souvent en pied de page.
     const textMatrix: string[][] = matrix.map((line) => (line ?? []).map((c) => (c == null ? '' : String(c))));
     const parties = mergeParties(extractDocumentParties(textMatrix, headerIdx), metaParties);
+
+    // Enveloppe documentaire lue comme contexte (jamais comme lignes DQE).
+    const { envelope } = extractEnvelope(textMatrix);
+    envelope.currency ??= meta.currency;
+    envelope.documentNumber ??= meta.reference;
+    envelope.documentDate ??= meta.issueDate;
+    envelope.projectCode ??= meta.projectReference ?? meta.projectTitle;
+    if (!envelope.emitter.name && parties.supplier?.name) envelope.emitter = { ...parties.supplier };
+    if (!envelope.receiver.name && parties.organization?.name) envelope.receiver = { ...parties.organization };
+    if (meta.typeCode) envelope.facturXType ??= `TypeCode ${meta.typeCode}`;
+    warnings.push(...summarizeEnvelope(envelope));
 
 
     const rows: ParsedBoqRow[] = [];
