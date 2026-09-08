@@ -115,11 +115,18 @@ export function isSectionTitleRow(cells: string[]): boolean {
   const filled = cells.map((c) => String(c ?? '').trim()).filter(Boolean);
   if (filled.length === 0 || filled.length > 2) return false;
   const first = filled[0];
-  if (!SECTION_NUMBER_RX.test(first) && !/^(lot|section|chapitre|chapter|الفصل|القسم)\b/i.test(first)) {
+  const bareNumbering = /^(?:[IVXLC]+|[A-H]|\d{1,2}(?:[.\-]\d{1,2})*)[.)°]?$/i.test(first);
+  if (
+    !bareNumbering &&
+    !SECTION_NUMBER_RX.test(first) &&
+    !/^(lot|section|chapitre|chapter|الفصل|القسم)\b/i.test(first)
+  ) {
     return false;
   }
-  // Un titre de section ne porte jamais de montant.
-  return !filled.some((c) => STRONG_NUMBER_RX.test(c));
+  // Un titre de section ne porte jamais de montant : la numérotation
+  // elle-même (« 1.1 ») n'est pas un montant.
+  const rest = bareNumbering ? filled.slice(1) : filled;
+  return !rest.some((c) => STRONG_NUMBER_RX.test(c));
 }
 
 /**
