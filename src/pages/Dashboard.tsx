@@ -48,6 +48,13 @@ import { T } from '@/components/i18n/T';
 /** Rôles autorisés sur le tableau de bord de gestion (codes techniques). */
 const REQUIRED_DASHBOARD_ROLES = ['admin', 'director', 'project_manager'] as const;
 
+/** Couleur d'avancement : rouge = retard, orange = attention, vert = conforme. */
+const progressTone = (progress: number): string => {
+  if (progress < 35) return 'bg-destructive';
+  if (progress < 70) return 'bg-warning';
+  return 'bg-success';
+};
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -100,6 +107,55 @@ const Dashboard: React.FC = () => {
     };
     return baseStats;
   }, [dashboardStats]);
+
+  /** Vision décideur : les 4 indicateurs clés tiennent sur une seule ligne. */
+  const kpiCards = useMemo(
+    () => [
+      {
+        label: t('dashboard.cards.active_projects'),
+        value: stats.activeProjects ?? t('dashboard.kpi.not_evaluable'),
+        unit: t('dashboard.cards.projects_label'),
+        accent: 'border-l-primary',
+      },
+      {
+        label: t('dashboard.cards.total_budget'),
+        value: stats.totalBudget == null ? t('dashboard.kpi.not_evaluable') : formatNumber2(stats.totalBudget),
+        unit: 'MRU',
+        accent: 'border-l-success',
+      },
+      {
+        label: t('dashboard.cards.teams'),
+        value: stats.teamMembers ?? t('dashboard.kpi.not_evaluable'),
+        unit: t('dashboard.cards.members_label'),
+        accent: 'border-l-info',
+      },
+      {
+        label: t('dashboard.cards.materials_title'),
+        value: stats.materials ?? t('dashboard.kpi.not_evaluable'),
+        unit: t('dashboard.cards.types_label'),
+        accent: 'border-l-warning',
+      },
+    ],
+    [stats, t],
+  );
+
+  /** Projets les moins avancés d'abord : ce sont les points d'attention. */
+  const topProjects = useMemo(
+    () => [...projects].sort((a, b) => (a.progress ?? 0) - (b.progress ?? 0)).slice(0, 6),
+    [projects],
+  );
+
+  /** Répartition par statut convertie en barres proportionnelles. */
+  const statusBars = useMemo(() => {
+    const rows = (stats.statusDistribution ?? []) as Array<{ name?: string; status?: string; value?: number; count?: number }>;
+    const entries = rows.map((row) => ({
+      name: row.name ?? row.status ?? '',
+      value: row.value ?? row.count ?? 0,
+    }));
+    const max = Math.max(1, ...entries.map((e) => e.value));
+    return entries.map((e) => ({ ...e, percent: Math.round((e.value / max) * 100) }));
+  }, [stats.statusDistribution]);
+
 
   if (statsLoading) {
     return (
@@ -229,213 +285,173 @@ const Dashboard: React.FC = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="mt-6">
+            <TabsContent value="overview" className="mt-4">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-6"
+                transition={{ duration: 0.4 }}
+                className="space-y-4"
               >
-               
-                {/* TBI — Tableau de bord des indicateurs (référentiel indicator-templates) */}
-                <TBIWidget projects={hexProjects as any} />
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card className="border-l-4 border-l-primary">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium">
-                        {t("dashboard.cards.active_projects")}
-                      </CardTitle>
-                      <CardDescription>
-                        {t("dashboard.cards.in_progress_description")}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">
-                          {stats.activeProjects ?? t('dashboard.kpi.not_evaluable')}
-                        </span>
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          {t("dashboard.cards.projects_label")}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-green-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium">
-                        {t("dashboard.cards.total_budget")}
-                      </CardTitle>
-                      <CardDescription>
-                        {t("dashboard.cards.financial_resources")}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">
-                          {stats.totalBudget == null ? t('dashboard.kpi.not_evaluable') : formatNumber2(stats.totalBudget)}
-                        </span>
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          <T k="auto.dashboard.mru" fallback="MRU" />
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-blue-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium">{t('dashboard.cards.teams')}</CardTitle>
-                      <CardDescription>{t('dashboard.cards.staff_assigned')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">{stats.teamMembers ?? t('dashboard.kpi.not_evaluable')}</span>
-                        <span className="ml-2 text-sm text-muted-foreground">{t('dashboard.cards.members_label')}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-orange-500">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium">{t('dashboard.cards.materials_title')}</CardTitle>
-                      <CardDescription>{t('dashboard.cards.available_resources')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline">
-                        <span className="text-3xl font-bold">{stats.materials ?? t('dashboard.kpi.not_evaluable')}</span>
-                        <span className="ml-2 text-sm text-muted-foreground">{t('dashboard.cards.types_label')}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
+                {/* 1. Indicateurs clés — une seule ligne, visibles sans défilement */}
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  {kpiCards.map((kpi) => (
+                    <Card key={kpi.label} className={`border-l-4 ${kpi.accent}`}>
+                      <CardContent className="p-3">
+                        <p className="text-xs text-muted-foreground truncate">{kpi.label}</p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-bold leading-tight">{kpi.value}</span>
+                          <span className="text-xs text-muted-foreground">{kpi.unit}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
 
-                {/* Charts and Project List */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* 2. Zone stratégique — répartition géographique + avancement côte à côte */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
                   <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-xl">
-                        <BarChart3 className="h-5 w-5 mr-2" />
-                        {t('dashboard.cards.project_progress')}
+                    <CardHeader className="p-3 pb-1">
+                      <CardTitle className="flex items-center text-base">
+                        <Users className="h-4 w-4 mr-2" />
+                        {t('dashboard.distribution_by_region')}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-80">
-                      {stats.statusDistribution.length > 0 ? (
-                        <ProjectProgressChart
-                          data={stats.statusDistribution}
-                        />
+                    <CardContent className="p-3 pt-0">
+                      {stats.locationDistribution && stats.locationDistribution.length > 0 ? (
+                        <ProjectDistributionChart data={stats.locationDistribution} />
                       ) : (
-                        <div className="h-full w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
+                        <div className="h-52 w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
                           <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_data')}</span>
                         </div>
                       )}
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between text-xl">
-                        <div className="flex items-center">
-                          <CheckSquare className="h-5 w-5 mr-2" />
-                          {t('dashboard.recent_projects')}
-                        </div>
+                  <Card className="lg:col-span-3">
+                    <CardHeader className="flex-row items-center justify-between p-3 pb-1">
+                      <CardTitle className="flex items-center text-base">
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        {t('dashboard.cards.project_progress')}
+                      </CardTitle>
+                      <Button variant="ghost" size="sm" asChild>
                         <Link to="/projects">
-                          <Button variant="ghost" size="sm" className="-mr-2">
-                            <span className="text-xs mr-1">{t('dashboard.view_all')}</span>
-                            <ArrowRight className="h-3 w-3" />
-                          </Button>
+                          <span className="text-xs mr-1">{t('dashboard.view_all')}</span>
+                          <ArrowRight className="h-3 w-3" />
                         </Link>
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0">
+                      {topProjects.length > 0 ? (
+                        <div className="space-y-2">
+                          {topProjects.map((project) => (
+                            <button
+                              key={project.id}
+                              type="button"
+                              onClick={() => navigate(`/projects/${project.id}`)}
+                              className="w-full text-left rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-center justify-between gap-2 text-sm">
+                                <span className="truncate">{project.title}</span>
+                                <span className="font-medium tabular-nums">{formatNumber2(project.progress ?? 0)}%</span>
+                              </div>
+                              <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
+                                <div
+                                  className={`h-1.5 rounded-full ${progressTone(project.progress ?? 0)}`}
+                                  style={{ width: `${Math.min(100, Math.max(0, project.progress ?? 0))}%` }}
+                                />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="h-52 w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
+                          <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_projects')}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* 3. Répartition par statut — barres proportionnelles */}
+                <Card>
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="flex items-center text-base">
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      {t('dashboard.project_distribution')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-0">
+                    {statusBars.length > 0 ? (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {statusBars.map((bar) => (
+                          <div key={bar.name}>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="truncate">{bar.name}</span>
+                              <span className="font-medium tabular-nums">{bar.value}</span>
+                            </div>
+                            <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
+                              <div className="h-1.5 rounded-full bg-primary" style={{ width: `${bar.percent}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">{t('dashboard.no_data')}</span>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* 4. Détails opérationnels — sous la ligne de flottaison */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                  <Card>
+                    <CardHeader className="p-3 pb-1">
+                      <CardTitle className="flex items-center text-base">
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        {t('dashboard.recent_projects')}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {projects &&
-                          projects.slice(0, 3).map((project) => (
-                            <div
-                              key={project.id}
-                              className="flex items-start p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                            >
-                              <div className="bg-primary/10 p-2 rounded-md mr-3">
-                                <CheckSquare className="h-5 w-5 text-primary" />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium">
-                                  {project.title}
-                                </h4>
-                                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                                  <MapPin className="h-3 w-3 mr-1" />
-                                  <span className="mr-3">
-                                    {project.location}
-                                  </span>
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  <span>
-                                    {new Date(
-                                      project.startDate
-                                    ).toLocaleDateString("fr-FR", {
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
+                    <CardContent className="p-3 pt-0">
+                      <div className="space-y-2">
+                        {projects.slice(0, 5).map((project) => (
+                          <div key={project.id} className="rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors">
+                            <p className="text-sm font-medium truncate">{project.title}</p>
+                            <div className="flex items-center text-xs text-muted-foreground mt-0.5 gap-2">
+                              <MapPin className="h-3 w-3" />
+                              <span className="truncate">{project.location}</span>
+                              <Calendar className="h-3 w-3" />
+                              <span>
+                                {new Date(project.startDate).toLocaleDateString('fr-FR', {
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </span>
                             </div>
-                          ))}
-                        {(!projects || projects.length === 0) && (
-                          <div className="text-center py-4 text-muted-foreground">
-                            {t('dashboard.no_projects')}
                           </div>
+                        ))}
+                        {projects.length === 0 && (
+                          <div className="text-center py-4 text-muted-foreground text-sm">{t('dashboard.no_projects')}</div>
                         )}
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-
-                {/* Map and Distribution */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-xl">
-                        <Users className="h-5 w-5 mr-2" />
-                        {t('dashboard.distribution_by_region')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {stats.locationDistribution && stats.locationDistribution.length > 0 ? (
-                        <ProjectDistributionChart
-                          data={stats.locationDistribution}
-                        />
-                      ) : (
-                        <div className="h-64 w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
-                          <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_data')}</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
 
                   <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-xl">
-                        <MapPin className="h-5 w-5 mr-2" />
+                    <CardHeader className="p-3 pb-1">
+                      <CardTitle className="flex items-center text-base">
+                        <MapPin className="h-4 w-4 mr-2" />
                         {t('dashboard.project_distribution')}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-80">
-                      {projects && projects.length > 0 ? (() => {
-                        const geolocatedCount = projects.filter((project) =>
-                          Boolean(getProjectCoordinates(project)),
-                        ).length;
-                        console.info('[Dashboard] map rendered', geolocatedCount, 'locations for', projects.length, 'projects');
-                        return (
-                          <ProjectMap
-                            projects={projects as unknown as import('@/dtos/entities/ProjectDTO').ProjectDTO[]}
-                            defaultCenter={[20.5279, -10.0309]}
-                            defaultZoom={6}
-                            height="100%"
-                            className="h-full rounded-lg"
-                          />
-                        );
-                      })() : (
+                    <CardContent className="h-72 p-3 pt-0">
+                      {projects.length > 0 ? (
+                        <ProjectMap
+                          projects={projects as unknown as import('@/dtos/entities/ProjectDTO').ProjectDTO[]}
+                          defaultCenter={[20.5279, -10.0309]}
+                          defaultZoom={6}
+                          height="100%"
+                          className="h-full rounded-lg"
+                        />
+                      ) : (
                         <div className="h-full w-full bg-muted/20 flex items-center justify-center rounded-lg border border-dashed">
                           <span className="text-muted-foreground text-sm font-medium">{t('dashboard.no_geolocated_projects')}</span>
                         </div>
@@ -443,8 +459,12 @@ const Dashboard: React.FC = () => {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* TBI — indicateurs détaillés, hors zone de décision immédiate */}
+                <TBIWidget projects={hexProjects as any} />
               </motion.div>
             </TabsContent>
+
 
             <TabsContent value="monitoring" className="mt-6">
               <div className="space-y-6">
