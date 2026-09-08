@@ -97,8 +97,15 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       warnings.push(`Classeur multi-feuilles : postes lus dans « ${target.name} ».`);
     }
     if (bestHits < 2) {
-      warnings.push('En-têtes non détectés — utilisation de la 1ʳᵉ ligne comme colonnes.');
-      headerIdx = 0;
+      // En-têtes de colonnes illisibles : on se recale sur le début réel du
+      // tableau (1ʳᵉ ligne numérotée et valorisée) pour ne pas importer le bloc
+      // d'en-tête documentaire comme lignes DQE.
+      const { tableStart, headerRows } = segmentDocumentBlocks(matrix, { headerIdx: -1 });
+      headerIdx = Math.max(0, tableStart - 1);
+      warnings.push('En-têtes non détectés — colonnes déduites du début du tableau.');
+      if (headerRows.length) {
+        warnings.push(`${headerRows.length} ligne(s) d'en-tête documentaire lues comme métadonnées (hors lignes DQE).`);
+      }
     }
 
     const rawHeader = matrix[headerIdx] ?? [];
