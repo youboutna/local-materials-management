@@ -47,22 +47,26 @@ export interface ImportMapping {
   regime?: string;
 }
 
+/**
+ * Correspondance d'en-têtes FR / EN / AR : un DQE arabe (« البيان », « الكمية »)
+ * ou anglais (« Description », « Qty ») est mappé sans configuration.
+ */
 const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
-  designation: [/design/i, /libell/i, /descrip/i, /d[eé]signation/i, /article/i, /prestation/i],
-  unit: [/^unit/i, /unit[eé]/i, /^u\.?$/i, /^um$/i],
-  quantity: [/quant/i, /qt[eé]/i, /^qty$/i, /^q$/i, /nombre/i],
-  unitPrice: [/prix\s*unit/i, /^pu$/i, /unit\s*price/i, /prix\s*u/i, /p\.?u\.?/i],
-  elementType: [/type/i, /^element$/i, /ouvrage/i, /nature/i],
-  phaseId: [/phase/i],
-  length: [/longueur/i, /^long\.?$/i, /^l\.?$/i, /length/i],
-  width: [/largeur/i, /^larg\.?$/i, /^la\.?$/i, /width/i],
-  height: [/hauteur|[eé]paisseur/i, /^haut\.?$/i, /^h\.?$/i, /height/i],
-  material: [/mat[eé]riau/i, /material/i, /composant/i],
-  category: [/cat[eé]gorie/i, /category/i, /poste/i, /rubrique/i],
-  total: [/^montant/i, /montant/i, /^total/i, /prix\s*total/i, /^p\.?\s*t\.?$/i],
-  lot: [/^lot$/i, /^lot\s/i, /chapitre/i, /^section$/i],
-  vatRate: [/^tva\s*\(?%/i, /taux\s*(de\s*)?tva/i, /^vat/i],
-  regime: [/r[eé]gime/i, /^nature\s*(fiscale)?$/i],
+  designation: [/design/i, /libell/i, /descrip/i, /d[eé]signation/i, /article/i, /prestation/i, /البيان|الوصف|التعيين/],
+  unit: [/^unit/i, /unit[eé]/i, /^u\.?$/i, /^um$/i, /الوحدة/],
+  quantity: [/quant/i, /qt[eé]/i, /^qty$/i, /^q$/i, /nombre/i, /الكمية|العدد/],
+  unitPrice: [/prix\s*unit/i, /^pu$/i, /unit\s*price/i, /prix\s*u/i, /p\.?u\.?/i, /سعر\s*الوحدة|الثمن/],
+  elementType: [/type/i, /^element$/i, /ouvrage/i, /nature/i, /النوع/],
+  phaseId: [/phase/i, /المرحلة/],
+  length: [/longueur/i, /^long\.?$/i, /^l\.?$/i, /length/i, /الطول/],
+  width: [/largeur/i, /^larg\.?$/i, /^la\.?$/i, /width/i, /العرض/],
+  height: [/hauteur|[eé]paisseur/i, /^haut\.?$/i, /^h\.?$/i, /height/i, /الارتفاع|السماكة/],
+  material: [/mat[eé]riau/i, /material/i, /composant/i, /المادة/],
+  category: [/cat[eé]gorie/i, /category/i, /poste/i, /rubrique/i, /الفئة/],
+  total: [/^montant/i, /montant/i, /^total/i, /prix\s*total/i, /^p\.?\s*t\.?$/i, /amount/i, /المجموع|الإجمالي/],
+  lot: [/^lot$/i, /^lot\s/i, /chapitre/i, /^section$/i, /^batch\b/i, /القسم|الفصل/],
+  vatRate: [/^tva\s*\(?%/i, /taux\s*(de\s*)?tva/i, /^vat/i, /الضريبة|القيمة\s*المضافة/],
+  regime: [/r[eé]gime/i, /^nature\s*(fiscale)?$/i, /النظام\s*الضريبي/],
 };
 
 /** Libellés d'en-tête répétés dans le corps du document — jamais des lignes DQE. */
