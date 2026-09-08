@@ -102,6 +102,10 @@ export function isContextualNoise(text: string): boolean {
  */
 export function isStructuralSummaryRow(cells: string[], hasSequence: boolean): boolean {
   if (hasSequence) return false;
+  const filled = cells.filter((c) => String(c ?? '').trim()).length;
+  // Une ligne DQE complète remplit désignation + unité + qté + PU + montant :
+  // un récapitulatif, lui, est creux (libellé + montants) et peu bavard.
+  if (filled > 3) return false;
   const strong = cells.filter((c) => STRONG_NUMBER_RX.test(String(c ?? ''))).length;
   return strong >= 2 && wordCount(cells) <= 4;
 }
