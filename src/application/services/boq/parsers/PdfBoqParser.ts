@@ -346,79 +346,57 @@ async function runOcrFallback(doc: any): Promise<string[][]> {
 }
 
 /**
- * Redistribue les valeurs numériques collées dans une même colonne.
+ * Normalise une ligne d'ouvrage dont l'extraction PDF a collé ou décalé les
+ * valeurs (« km 7 », « 200 120 000 »).
  *
- * L'extraction PDF peut coller le P.U. et le Montant (« 200 120 000 ») ou
- * l'unité et la quantité (« km 7 »). Le découpage est validé par l'arithmétique
- * de la ligne : quantité × P.U. = montant.
+ * Principe : on reconstruit unité / quantité / P.U. / montant depuis les jetons
+ * situés après la désignation, en validant la partition par l'arithmétique de la
+ * ligne (quantité × P.U. = montant). Les lignes déjà cohérentes sont laissées
+ * intactes.
  */
 function splitMergedAmounts(
   cells: string[],
   idx: { qtyIdx: number; puIdx: number; totalIdx: number; unitIdx: number },
 ): void {
   const num = (s: string): number | null => {
-    const n = Number(s.replace(/[^\d,.-]/g, '').replace(/\s/g, '').replace(',', '.'));
+    const n = Number(String(s).replace(/[^\d,.-]/g, '').replace(',', '.'));
     return Number.isFinite(n) ? n : null;
   };
+  const groupValue = (tokens: string[]): number | null => num(tokens.join(''));
 
-  // Unité et quantité collées (« km 7 »).
-  if (idx.unitIdx >= 0) {
-    const unitCell = String(cells[idx.unitIdx] ?? '').trim();
-    const m = /^([A-Za-zÀ-ÿ²³%.]+)\s+([\d\s.,]+)$/.exec(unitCell);
-    if (m && !String(cells[idx.qtyIdx] ?? '').trim()) {
-      cells[idx.unitIdx] = m[1];
-      cells[idx.qtyIdx] = m[2].trim();
-    }
-    // Cas inverse : unité et quantité tombées dans la colonne Quantité.
-    const qtyCell = String(cells[idx.qtyIdx] ?? '').trim();
-    const mq = /^([A-Za-zÀ-ÿ²³%.]+)\s+([\d\s.,]+)$/.exec(qtyCell);
-    if (mq && !String(cells[idx.unitIdx] ?? '').trim()) {
-      cells[idx.unitIdx] = mq[1];
-      cells[idx.qtyIdx] = mq[2].trim();
-    }
-  }
+  const designationIdx = 0;
+  const tail = cells
+    .map((c, i) => (i === designationIdx ? '' : String(c ?? '')))
+    .join(' ')
+    .trim();
+  if (!tail) return;
 
-  // Quantité : colonne dédiée, sinon première cellule purement numérique.
-  let qty = num(String(cells[idx.qtyIdx] ?? ''));
-  if (!qty) {
-    for (let i = 1; i < cells.length; i++) {
-      const cell = String(cells[i] ?? '').trim();
-      if (!cell || !/^[\d\s.,]+$/.test(cell)) continue;
-      qty = num(cell);
-      if (qty) break;
-    }
-  }
-  if (!qty) return;
+  // Unité = premier jeton alphabétique (ml, m², forfait, unité…).
+  const tokens = tail.split(/\s+/).filter(Boolean);
+  const unitTokens = tokens.filter((t) => /[A-Za-zÀ-ÿ]/.test(t) && !/\d/.test(t));
+  const numTokens = tokens.filter((t) => /^[\d.,]+$/.test(t));
+  if (numTokens.length < 3) return;
 
-  // Cellule contenant deux valeurs collées (P.U. + Montant).
-  let target = -1;
-  for (let i = cells.length - 1; i >= 1; i--) {
-    const cell = String(cells[i] ?? '').trim();
-    if (/^[\d\s.,]+$/.test(cell) && cell.split(/\s+/).length >= 2 && num(cell) != null) {
-      target = i;
-      break;
-    }
-  }
-  if (target < 0) return;
-
-  const tokens = String(cells[target]).trim().split(/\s+/);
-  for (let cut = 1; cut < tokens.length; cut++) {
-    const pu = tokens.slice(0, cut).join(' ');
-    const total = tokens.slice(cut).join(' ');
-    const left = num(pu);
-    const right = num(total);
-    if (!left || !right) continue;
-    if (Math.abs(left * qty - right) <= Math.max(1, right * 0.005)) {
-      const before = String(cells[target - 1] ?? '').trim();
-      if (target - 1 > 0 && !before) {
-        cells[target - 1] = pu;
-        cells[target] = total;
-      } else {
-        cells[target] = pu;
-        cells[target + 1] = total;
+  // Recherche d'une partition quantité / P.U. / montant valide.
+  for (let i = 1; i < numTokens.length - 1; i++) {
+    for (let j = i + 1; j < numTokens.length; j++) {
+      const qty = groupValue(numTokens.slice(0, i));
+      const pu = groupValue(numTokens.slice(i, j));
+      const total = groupValue(numTokens.slice(j));
+      if (!qty || !pu || !total) continue;
+      if (Math.abs(qty * pu - total) > Math.max(1, total * 0.005)) continue;
+      const fmt = (parts: string[]) => parts.join(' ');
+      if (idx.unitIdx >= 0) cells[idx.unitIdx] = unitTokens[0] ?? String(cells[idx.unitIdx] ?? '');
+      cells[idx.qtyIdx] = fmt(numTokens.slice(0, i));
+      cells[idx.puIdx] = fmt(numTokens.slice(i, j));
+      cells[idx.totalIdx] = fmt(numTokens.slice(j));
+      for (let k = 0; k < cells.length; k++) {
+        if (k === designationIdx || k === idx.unitIdx || k === idx.qtyIdx || k === idx.puIdx || k === idx.totalIdx) continue;
+        if (/^[\d\s.,]+$/.test(String(cells[k] ?? '').trim())) cells[k] = '';
       }
       return;
     }
   }
 }
+
 
