@@ -255,6 +255,8 @@ export class PdfBoqParser implements IDocumentParser {
         continue;
       }
       if (isSubtotalRow(label)) continue;
+      // Filet de sécurité : bruit d'enveloppe (pied de page, mentions Factur-X…).
+      if (isEnvelopeRow(cells)) continue;
       const raw: Record<string, string | number | null> = {};
       cells.forEach((c, idx) => { raw[remap?.[idx] ?? baseColumns[idx] ?? `col_${idx + 1}`] = c; });
       raw[SECTION_LOT_COLUMN] = section?.lot ?? null;
@@ -265,7 +267,7 @@ export class PdfBoqParser implements IDocumentParser {
     if (headerIdx >= 0) warnings.push(`En-têtes DQE détectés ligne ${headerIdx + 1}.`);
     if (sectionsFound) warnings.push(`${sectionsFound} lot(s) détecté(s) depuis les lignes de section.`);
     warnings.push(...summarizeFiscal(detectedFiscal));
-    return { rows: parsedRows, columns, warnings, detectedFiscal, parties };
+    return { rows: parsedRows, columns, warnings, detectedFiscal, parties, envelope };
   }
 }
 
