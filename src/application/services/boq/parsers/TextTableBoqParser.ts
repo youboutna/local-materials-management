@@ -12,6 +12,8 @@ import { extractFiscalFromRow, isFiscalMetaRow, isSubtotalRow, summarizeFiscal }
 import { extractDocumentParties } from './headerDetection';
 import { extractEnvelope, isEnvelopeRow, summarizeEnvelope } from './envelopeDetection';
 import { assembleLogicalRows } from './rowAssembly';
+import { repairOcrMatrix } from './ocrNormalization';
+
 import { segmentDocumentBlocks } from './documentBlocks';
 import {
   detectSection,
