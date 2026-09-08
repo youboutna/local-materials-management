@@ -179,7 +179,20 @@ export class BoqImportOrchestrator {
       const quantity = computed || (rawTotal != null ? 1 : computed);
       // Rejet des lignes non valorisées (titres de document, notes) : une ligne
       // DQE exploitable porte au minimum une quantité, un PU ou un montant.
-      if (!designation || (!quantity && rawTotal == null && pu == null)) continue;
+      const isValued = !!quantity || rawTotal != null || pu != null;
+      if (!designation) continue;
+      // Lignes d'en-tête répétées dans le corps du document (« Désignation | Unité | Qté »).
+      if (!isValued && HEADER_LIKE_RX.test(designation)) continue;
+      if (!isValued) {
+        // Retour à la ligne du libellé (« 4x150 mm² » sous « Câble U-1000 RO2V ») :
+        // on complète la désignation précédente au lieu de créer une fausse ligne.
+        const prev = out[out.length - 1];
+        if (prev && designation.length <= 120) {
+          prev.designation = `${prev.designation} ${designation}`.replace(/\s+/g, ' ').trim();
+        }
+        continue;
+      }
+
       // Contrôle arithmétique : quantité × P.U. = montant, sinon P.U. corrigé.
       const price = reconcileLinePrice({ quantity, unitPrice: pu, totalHt: rawTotal });
       const unitPrice = price.unitPrice;
