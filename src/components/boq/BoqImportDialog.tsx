@@ -38,6 +38,7 @@ import { WbsSelector, type WbsValue } from './WbsSelector';
 import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
 import { DocumentContextSummary } from './DocumentContextSummary';
+import { DocumentEnvelopePanel } from './DocumentEnvelopePanel';
 
 interface Props {
   source: BoqSource;
@@ -342,7 +343,9 @@ export function BoqImportDialog(props: Props) {
 
         {parseResult && (
           <>
-            {(parseResult.parties?.supplier || parseResult.parties?.organization) && (
+            {parseResult.envelope && <DocumentEnvelopePanel envelope={parseResult.envelope} />}
+
+            {!parseResult.envelope && (parseResult.parties?.supplier || parseResult.parties?.organization) && (
               <section className="grid grid-cols-1 gap-3 rounded-md bg-muted/40 p-3 md:grid-cols-2">
                 {([
                   { label: 'Fournisseur (expéditeur)', party: parseResult.parties?.supplier },
