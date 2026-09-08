@@ -143,6 +143,9 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       if (nextSection && !hasNumeric) { section = nextSection; sectionsFound += 1; continue; }
       if (nextSection) section = nextSection;
       if (isRepeatedHeaderRow(line as (string | number | null)[], baseColumns)) continue;
+      // Bruit d'enveloppe (raison sociale, contacts, mentions Factur-X, pagination).
+      if (isEnvelopeRow(line.map((v) => (v == null ? '' : String(v))))) continue;
+
 
       const raw: Record<string, string | number | null> = {};
       baseColumns.forEach((col, idx) => {
@@ -162,7 +165,7 @@ export class SpreadsheetBoqParser implements IDocumentParser {
       warnings.push(`Projet détecté : ${meta.projectTitle ?? meta.projectReference}.`);
     }
     warnings.push(...summarizeFiscal(detectedFiscal));
-    return { rows, columns, warnings, detectedFiscal, parties, documentMeta: meta, sheetName: target.name };
+    return { rows, columns, warnings, detectedFiscal, parties, documentMeta: meta, sheetName: target.name, envelope };
 
   }
 }
