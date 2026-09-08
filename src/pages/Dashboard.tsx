@@ -48,6 +48,13 @@ import { T } from '@/components/i18n/T';
 /** Rôles autorisés sur le tableau de bord de gestion (codes techniques). */
 const REQUIRED_DASHBOARD_ROLES = ['admin', 'director', 'project_manager'] as const;
 
+/** Couleur d'avancement : rouge = retard, orange = attention, vert = conforme. */
+const progressTone = (progress: number): string => {
+  if (progress < 35) return 'bg-destructive';
+  if (progress < 70) return 'bg-warning';
+  return 'bg-success';
+};
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
