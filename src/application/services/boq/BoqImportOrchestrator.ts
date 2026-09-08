@@ -339,6 +339,10 @@ export class BoqImportOrchestrator {
           ...(lotKey ? { lot: lotKey } : {}),
           ...(sectionLabel ? { sectionLabel } : {}),
           fiscalBlock: isLabour ? 'labour' : 'material',
+          ...(useGeo
+            ? { metreQuantity: { source: 'geometric', declared: baseQuantity, computed: geoQuantity } }
+            : {}),
+
           ...(regimeRaw ? { fiscalRegime: regimeRaw } : {}),
           ...(lineVat != null ? { vatSource: 'line' } : {}),
           ...(isLabour && labour.billingMode ? { labourBillingMode: labour.billingMode } : {}),
