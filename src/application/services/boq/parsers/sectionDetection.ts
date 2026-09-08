@@ -60,7 +60,31 @@ export function detectSection(cells: (string | number | null | undefined)[]): De
   }
 
   const match = first.match(SECTION_RE);
-  if (!match) return null;
+  if (!match) {
+    // Titre de section numéroté sans mot-clé (`I Génie Civil`, `1Génie Civil`).
+    // Aucune cellule voisine ne doit porter de chiffre (sinon c'est une ligne
+    // de prestation valorisée).
+    const hasNumericNeighbour = others.some((c) => /\d/.test(c));
+    if (hasNumericNeighbour) return null;
+    const joined = [first, ...others].join(' ').replace(/\s+/g, ' ').trim();
+    const numbered = joined.match(NUMBERED_TITLE_RE);
+    if (numbered) {
+      const raw = numbered[1].toUpperCase();
+      const lot = /^\d/.test(raw) ? `L${raw}` : raw;
+      const title = numbered[2].trim();
+      return {
+        lot,
+        label: title,
+        kind: LABOUR_SECTION_RE.test(title) ? 'labour' : 'material',
+        phase: null,
+      };
+    }
+    if (LABOUR_SECTION_RE.test(joined)) {
+      return { lot: null, label: joined, kind: 'labour', phase: null };
+    }
+    return null;
+  }
+
   const raw = match[1].toUpperCase();
   const lot = /^\d/.test(raw) ? `L${raw}` : raw;
   const title = (match[2] ?? '').trim();
