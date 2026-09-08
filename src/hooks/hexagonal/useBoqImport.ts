@@ -3,6 +3,7 @@
  * Pure orchestration hook (no supabase.from() calls in components).
  */
 import type { ImportMapping } from '@/application/services/boq/BoqImportOrchestrator';
+import { BoqSourceDocumentService } from '@/application/services/boq/BoqSourceDocumentService';
 import { unifiedBoqParser, type UnifiedParseResult } from '@/application/services/boq/UnifiedBoqParser';
 import type { NumberFormatMode } from '@/application/services/boq/parsers/numberParsing';
 import type { ReferentialType } from '@/config/referentials';
@@ -19,10 +20,13 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   const [isBusy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const parseRun = useRef(0);
+  /** Fichier analysé : archivé dans le Document Hub après persistance des lignes. */
+  const sourceFile = useRef<File | null>(null);
 
   /** Abandonne complètement la session d’import, y compris le fichier analysé. */
   const reset = useCallback(() => {
     parseRun.current += 1;
+    sourceFile.current = null;
     setParseResult(null);
     setMapping({});
     setDtos([]);
@@ -31,6 +35,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   }, []);
 
   const parseFile = useCallback(async (file: File, format: NumberFormatMode = numberFormat) => {
+    sourceFile.current = file;
     const run = ++parseRun.current;
     setBusy(true); setError(null);
     try {
@@ -63,13 +68,28 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     setBusy(true); setError(null);
     try {
       const persisted = await boqRepository.bulkCreate(lines);
+      // Traçabilité : le fichier source rejoint le Document Hub (catégorie BOQ)
+      // et reste téléchargeable depuis le document DQE.
+      if (sourceFile.current) {
+        await BoqSourceDocumentService.persist({
+          file: sourceFile.current,
+          contextId: ctx.contextId,
+          source: ctx.source,
+          // Le contextId porte le projet pour les métrés/DQE, l'appel d'offres
+          // pour les estimations : on ne rattache que ce qui est certain.
+          projectId: ctx.source === 'quantity_takeoff' || ctx.source === 'dqe' ? ctx.contextId : null,
+          phaseId: ctx.phaseId ?? null,
+          tenderId: ctx.source === 'tender_estimate' ? ctx.contextId : null,
+          lineCount: persisted.length || lines.length,
+        });
+      }
       return persisted;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
       throw new Error(msg);
     } finally { setBusy(false); }
-  }, [dtos]);
+  }, [dtos, ctx]);
 
   // Re-classify existing rows when the project referential changes.
   useEffect(() => {

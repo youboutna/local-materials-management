@@ -209,10 +209,11 @@ export class PdfBoqParser implements IDocumentParser {
       ));
     }
 
-    // Tableaux à cellules repliées (colonnes très étroites) : la reconstruction
-    // par enregistrements est retenue seulement si elle produit STRICTEMENT plus
-    // de lignes valorisées que l'alignement classique — jamais de régression.
-    if (wrappedAcc.length && scoreValuedRows(wrappedAcc) > scoreValuedRows(rowsAcc)) {
+    // Tableaux à cellules repliées : la reconstruction par enregistrements n'est
+    // retenue que si elle produit strictement plus de lignes valorisées ET que
+    // l'alignement classique n'a produit aucune ligne exploitable — sinon on ne
+    // touche pas au résultat (l'enveloppe et l'en-tête restent intacts).
+    if (!rowsAcc.length && wrappedAcc.length && scoreValuedRows(wrappedAcc) > 0) {
       rowsAcc = wrappedAcc;
       bandHeaderIdx = -1;
       warnings.push('Tableau à cellules repliées détecté — lignes reconstruites par enregistrement.');
