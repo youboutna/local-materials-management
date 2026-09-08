@@ -213,7 +213,7 @@ export class PdfBoqParser implements IDocumentParser {
     // retenue que si elle produit strictement plus de lignes valorisées ET que
     // l'alignement classique n'a produit aucune ligne exploitable — sinon on ne
     // touche pas au résultat (l'enveloppe et l'en-tête restent intacts).
-    if (wrappedAcc.length && scoreValuedRows(rowsAcc) === 0 && scoreValuedRows(wrappedAcc) > 0) {
+    if (!rowsAcc.length && wrappedAcc.length && scoreValuedRows(wrappedAcc) > 0) {
       rowsAcc = wrappedAcc;
       bandHeaderIdx = -1;
       warnings.push('Tableau à cellules repliées détecté — lignes reconstruites par enregistrement.');
