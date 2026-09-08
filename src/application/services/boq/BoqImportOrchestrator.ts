@@ -189,7 +189,23 @@ export class BoqImportOrchestrator {
 
       const computed = rawQty ?? BoqCalculatorService.computeQuantity({ unit, length: lengthN, width: widthN, height: heightN });
       // DQE « forfaitaire » (Description / Montant) : quantité implicite = 1.
-      const quantity = computed || (rawTotal != null ? 1 : computed);
+      const baseQuantity = computed || (rawTotal != null ? 1 : computed);
+      // Métré centralisé : le type d'ouvrage détecté + les dimensions (colonnes ou
+      // libellé « L: 8,0 m x l: 5,0 m x H: 3,5 m ») donnent la quantité réelle.
+      // Une quantité source « 1 » n'est qu'un forfait de saisie : le métré prime.
+      const detectedElement = mapping.elementType
+        ? String(get(mapping.elementType) ?? '').trim()
+        : detectElementType(designation);
+      const geoQuantity = MeterService.quantityFor({
+        designation,
+        elementType: detectedElement || null,
+        length: lengthN,
+        width: widthN,
+        height: heightN,
+      }).quantity;
+      const useGeo = geoQuantity > 0 && baseQuantity <= 1 && geoQuantity > baseQuantity;
+      const quantity = useGeo ? geoQuantity : baseQuantity;
+
       // Une ligne DQE réelle porte une valeur VENUE DE LA SOURCE (qté, PU, montant
       // ou dimensions en colonnes). Une quantité seulement déduite des dimensions
       // écrites dans le libellé (« 4x150 mm² ») ne suffit pas : c'est la suite
