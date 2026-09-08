@@ -70,8 +70,10 @@ const stakeholderOf = (l: BoqLineDTO) =>
 export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions, newRowsAt = 'end' }: Props) {
 
   const [page, setPage] = useState(0);
+  const [metreIndex, setMetreIndex] = useState<number | null>(null);
   const previousLength = useRef(lines.length);
   const previousPageSize = useRef(pageSize);
+
 
   useEffect(() => {
     const previousPages = pageSize > 0 ? Math.max(1, Math.ceil(previousLength.current / pageSize)) : 1;
