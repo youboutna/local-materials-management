@@ -76,14 +76,14 @@ function groupRecords(lines: VisualLine[]): number[][] {
   // (interlignes serrés), la médiane écrase les respirations entre lignes DQE.
   const histogram = new Map<number, number>();
   gaps.forEach((g) => {
-    const bucket = Math.round(g);
+    const bucket = Math.max(2, Math.round(g / 2) * 2);
     histogram.set(bucket, (histogram.get(bucket) ?? 0) + 1);
   });
-  let lineHeight = 12;
-  let bestCount = 0;
-  [...histogram.entries()].sort((a, b) => a[0] - b[0]).forEach(([bucket, count]) => {
-    if (count > bestCount) { bestCount = count; lineHeight = bucket; }
-  });
+  const buckets = [...histogram.entries()].sort((a, b) => a[0] - b[0]);
+  const maxCount = buckets.reduce((m, [, c]) => Math.max(m, c), 0);
+  // Le plus PETIT interligne significatif fait référence : un pied de page aux
+  // paragraphes espacés ne doit pas dicter la hauteur de ligne du tableau.
+  const lineHeight = buckets.find(([, c]) => c >= maxCount * 0.6)?.[0] ?? 12;
   const threshold = lineHeight * 2.4;
   const records: number[][] = [];
   let current: number[] = [];
