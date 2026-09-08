@@ -14,6 +14,8 @@ import { isEnvelopeNoise } from './parsers/envelopeDetection';
 import { reconcileLinePrice } from './parsers/priceCoherence';
 import { TaxService } from '@/application/services/TaxService';
 import { BoqCalculatorService } from './BoqCalculatorService';
+import { MeterService } from './MeterService';
+
 import { BoqCategoryResolver } from './BoqCategoryResolver';
 import type { IDocumentParser, ParseResult } from './parsers/IDocumentParser';
 import { SECTION_KIND_COLUMN, SECTION_LABEL_COLUMN, SECTION_PHASE_COLUMN } from './parsers/sectionDetection';
