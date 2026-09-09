@@ -75,6 +75,7 @@ interface QuantitativeEstimateExporterProps {
 }
 
 export function QuantitativeEstimateExporter({
+  const { t } = useLanguage();
   estimate,
   estimateItems,
   tender,

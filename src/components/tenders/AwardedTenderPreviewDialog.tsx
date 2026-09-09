@@ -205,6 +205,7 @@ function SummaryCard({ icon, label, value }: { icon?: React.ReactNode; label: st
 }
 
 function CopyBoqToProjectButton({ estimateId, projectId }: { estimateId: string; projectId: string }) {
+  const { t } = useLanguage();
   const { convert, isPending } = useTenderToPlanning();
   const { toast } = useToast();
   return (

@@ -133,7 +133,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     }
   });
 
-  const withGuard = async (label: string, fn: () => <T k="auto.boqactionsbar.promise" fallback="Promise" /><void>) => {
+  const withGuard = async (label: string, fn: () => Promise<void>) => {
     if (!lines.length) {
       toast({ title: t('auto.boqactionsbar.aucune_ligne'), description: t('auto.boqactionsbar.ajoutez_ou_importez_des_lignes'), variant: 'destructive' });
       return;

@@ -202,6 +202,7 @@ function StatChip({ label, value, tone }: { label: string; value: number; tone?:
 }
 
 function StatusBadge({ status }: { status?: string }) {
+  const { t } = useLanguage();
   const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
     submitted: { label: t('auto.submissionsinbox.soumise'), variant: 'default' },
     under_review: { label: t('auto.submissionsinbox.en_revue'), variant: 'secondary' },

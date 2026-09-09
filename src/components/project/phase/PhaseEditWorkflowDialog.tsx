@@ -67,7 +67,7 @@ interface PhaseEditWorkflowDialogProps {
     tasks: number;
     completedTasks: number;
   };
-  onSave: (draft: PhaseEditDraft) => <T k="auto.phaseeditworkflowdialog.promise" fallback="Promise" /><void> | void;
+  onSave: (draft: PhaseEditDraft) => Promise<void> | void;
 }
 
 const PhaseEditWorkflowDialog: React.FC<PhaseEditWorkflowDialogProps> = ({

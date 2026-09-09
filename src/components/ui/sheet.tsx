@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { T } from '@/components/i18n/T';
 
 const Sheet = SheetPrimitive.Root
 
@@ -56,7 +57,6 @@ const SheetContent = React.forwardRef<
   SheetContentProps
 >(({ side = "right", className, children, "aria-describedby": ariaDescribedBy, ...props }, ref) => {
   const autoDescId = React.useId();
-import { T } from '@/components/i18n/T';
   const describedBy = ariaDescribedBy ?? autoDescId;
   return (
     <SheetPortal>

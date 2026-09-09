@@ -414,7 +414,7 @@ interface TimelineViewProps {
     borderColor: string;
     label: string;
   };
-  getTypeIcon: (type: MilestoneType) => <T k="auto.unifiedmilestonemanager.react_componenttype" fallback="React.ComponentType" /><any>;
+  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
   showPhaseHeaders: boolean;
 }
@@ -527,7 +527,7 @@ interface ListViewProps {
     borderColor: string;
     label: string;
   };
-  getTypeIcon: (type: MilestoneType) => <T k="auto.unifiedmilestonemanager.react_componenttype" fallback="React.ComponentType" /><any>;
+  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
 }
 

@@ -77,6 +77,7 @@ interface TenderDocumentManagerProps {
 }
 
 const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: TenderDocumentManagerProps) => {
+  const { t } = useLanguage();
   const { openDocument } = useDocumentViewer();
   const [activeCategory, setActiveCategory] = useState<TenderDocumentCategory>('administrative');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);

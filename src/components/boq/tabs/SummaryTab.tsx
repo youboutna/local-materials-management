@@ -28,6 +28,7 @@ function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: str
 }
 
 export function SummaryTab({ lines, totals, controls }: Props) {
+  const { t } = useLanguage();
   const phases = useMemo(() => {
     const grouped = new Map<string, number>();
     lines.forEach((line) => {
