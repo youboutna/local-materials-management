@@ -134,6 +134,7 @@ const REQUIRED_DOCUMENTS = {
  * Remplace le legacy TenderQuantitativeEstimate.
  */
 const SupplierBidBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
+  const { t } = useLanguage();
   const bid = useBoqDocument({ source: 'supplier_bid', contextId: tenderId });
   return (
     <div className="space-y-3">

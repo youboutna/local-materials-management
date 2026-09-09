@@ -349,6 +349,7 @@ function HierarchyBreadcrumb({ items, onNavigate }: HierarchyBreadcrumbProps) {
 }
 
 export default function StrategicLinkageStep({
+  const { t } = useLanguage();
   projectId,
   initialStrategyLinks = [],
   initialBudgetLinks = [],

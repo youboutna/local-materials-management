@@ -24,6 +24,7 @@ interface LanguageSelectorProps {
 }
 
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className }) => {
+  const { t } = useLanguage();
   const { language, setLanguage } = useLanguage();
 
   return (

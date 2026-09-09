@@ -74,6 +74,7 @@ export const syncLotStatusWithTender = (
 };
 
 const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly, tenderStatus }) => {
+  const { t } = useLanguage();
   const status = syncLotStatusWithTender(lot.status as TenderLotStatus | undefined, tenderStatus);
   const setStatus = useSetTenderLotStatus(tenderId);
   const award = useAwardTenderLot(tenderId);

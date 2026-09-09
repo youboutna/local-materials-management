@@ -1556,6 +1556,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 // Standard Phase Creator Component
 
 const StandardPhaseCreator: React.FC<{
+  const { t } = useLanguage();
   onCreatePhase: (phase: string, stage: string) => void;
 }> = ({ onCreatePhase }) => {
 
@@ -1739,6 +1740,7 @@ const StandardPhaseCreator: React.FC<{
 // Custom Phase Creator Component
 
 const CustomPhaseCreator: React.FC<{
+  const { t } = useLanguage();
 
   onCreatePhase: (phase: CustomPhase) => void;
 
@@ -2353,6 +2355,7 @@ const PhaseEditDialog: React.FC<{
 // Procurement Phase Creator Component
 
 const ProcurementPhaseCreator: React.FC<{
+  const { t } = useLanguage();
 
   onCreatePhase: (phase: ProcurementPhase, stage: ProcurementStage) => void;
 

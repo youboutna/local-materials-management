@@ -101,6 +101,7 @@ const getStatusLabel = (status: PhaseStatus | string) => i18nService.translateSt
 
 // Step Edit Form Component
 const StepEditDialog: React.FC<{
+  const { t } = useLanguage();
   step?: PhaseStepDTO;
   open: boolean;
   onClose: () => void;
@@ -260,6 +261,7 @@ const StepEditDialog: React.FC<{
 
 // Task Edit Form Component
 const TaskEditDialog: React.FC<{
+  const { t } = useLanguage();
   task?: PhaseTaskDTO;
   open: boolean;
   onClose: () => void;
@@ -399,6 +401,7 @@ const TaskEditDialog: React.FC<{
 
 // Step Card Component
 const StepCard: React.FC<{
+  const { t } = useLanguage();
   step: PhaseStepDTO;
   index: number;
   onEdit: () => void;

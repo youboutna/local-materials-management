@@ -72,6 +72,7 @@ interface DevisPDFDocumentProps {
 }
 
 export function DevisPDFDocument({
+  const { t } = useLanguage();
   estimate,
   estimateItems,
   tender,
