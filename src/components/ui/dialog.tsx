@@ -4,6 +4,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { T } from '@/components/i18n/T';
 
 const Dialog = DialogPrimitive.Root
 
@@ -33,7 +34,6 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, "aria-describedby": ariaDescribedBy, ...props }, ref) => {
   const autoDescId = React.useId();
-import { T } from '@/components/i18n/T';
   const describedBy = ariaDescribedBy ?? autoDescId;
   return (
     <DialogPortal>

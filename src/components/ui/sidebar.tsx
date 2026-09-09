@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
+import { T } from '@/components/i18n/T';
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -83,7 +84,6 @@ const SidebarProvider = React.forwardRef<
 
         // This sets the cookie to keep the sidebar state.
         document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
-import { T } from '@/components/i18n/T';
       },
       [setOpenProp, open]
     )
