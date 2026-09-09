@@ -20,6 +20,20 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
     return SupplierTransformer.fromDatabaseRow(data as Record<string, unknown>);
   }
 
+  private mapToEntities(data: SupplierRow[]): Supplier[] {
+    return data.flatMap((row) => {
+      try {
+        return [this.mapToEntity(row)];
+      } catch (error) {
+        console.warn('Skipping invalid supplier row:', {
+          id: row.id,
+          error: error instanceof Error ? error.message : error,
+        });
+        return [];
+      }
+    });
+  }
+
   async findById(id: string): Promise<Supplier | null> {
     const { data, error } = await supabase.from('suppliers').select('*').eq('id', id).single();
     if (error || !data) return null;
@@ -35,7 +49,7 @@ export class SupabaseSupplierAdapter implements ISupplierRepository {
   async findAll(): Promise<Supplier[]> {
     const { data, error } = await supabase.from('suppliers').select('*').order('name');
     if (error || !data) return [];
-    return data.map(d => this.mapToEntity(d));
+    return this.mapToEntities(data);
   }
 
   async save(supplier: Supplier): Promise<void> {
