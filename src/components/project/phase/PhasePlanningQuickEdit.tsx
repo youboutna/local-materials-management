@@ -26,7 +26,7 @@ interface PhasePlanningQuickEditProps {
   isSaving?: boolean;
   disabled?: boolean;
   /** Persiste uniquement les champs de planification */
-  onSave: (partial: Partial<PhaseEditDraft>) => <T k="auto.phaseplanningquickedit.promise" fallback="Promise" /><void> | void;
+  onSave: (partial: Partial<PhaseEditDraft>) => Promise<void> | void;
 }
 
 const PhasePlanningQuickEdit: React.FC<PhasePlanningQuickEditProps> = ({

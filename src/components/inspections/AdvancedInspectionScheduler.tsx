@@ -41,7 +41,7 @@ interface ProjectStep {
 
 interface AdvancedInspectionSchedulerProps {
   projects: Project[];
-  onScheduleInspection: (projectId: string, inspector: string, date: string, additionalData?: any) => <T k="auto.advancedinspectionscheduler.promise" fallback="Promise" /><void>;
+  onScheduleInspection: (projectId: string, inspector: string, date: string, additionalData?: any) => Promise<void>;
   preselectedProjectId?: string;
   preselectedStepId?: string;
   preselectedSteps?: ProjectStep[];

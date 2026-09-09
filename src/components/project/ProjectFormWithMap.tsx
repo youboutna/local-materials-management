@@ -286,7 +286,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
           <TabsTrigger value="location" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <MapPin className="h-4 w-4" />
             <span className="hidden sm:inline font-medium"><T k="auto.projectformwithmap.localisation" fallback="Localisation" /></span>
-            <span className="sm:hidden font-medium"><T k="auto.projectformwithmap.map" fallback="Map" /></span>
+            <span className="sm:hidden font-medium">Map</span>
           </TabsTrigger>
           <TabsTrigger value="details" className="flex flex-col items-center gap-1 p-3 text-xs md:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground rounded-md">
             <FileText className="h-4 w-4" />
