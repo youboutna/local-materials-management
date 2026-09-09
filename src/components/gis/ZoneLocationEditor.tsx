@@ -24,6 +24,7 @@ import type {
   InterventionZoneLatLng,
 } from '@/dtos/entities/InterventionZoneDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ZoneLocationEditorProps {
   open: boolean;
@@ -74,6 +75,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
   onClose,
   onSave,
 }) => {
+  const { t } = useLanguage();
   const [label, setLabel] = useState(zone?.label ?? '');
   const [address, setAddress] = useState(zone?.address ?? '');
   const [coords, setCoords] = useState<InterventionZoneLatLng[]>(
@@ -171,7 +173,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="Nom de la zone"
+              placeholder={t('auto.zonelocationeditor.nom_de_la_zone')}
               className="h-9"
             />
           </div>
@@ -183,7 +185,7 @@ const ZoneLocationEditor: React.FC<ZoneLocationEditorProps> = ({
             <AddressSearchBox
               initialQuery={address}
               onSelect={applyAddress}
-              placeholder="Chercher une nouvelle adresse ou saisir manuellement…"
+              placeholder={t('auto.zonelocationeditor.chercher_une_nouvelle_adresse_ou_saisir_manuelle')}
             />
             {address && (
               <p className="text-[11px] text-muted-foreground mt-1 truncate">

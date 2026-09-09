@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { getMilestoneService } from '@/application/services/MilestoneService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
   projectId,
   onMilestoneClick
 }) => {
+  const { t } = useLanguage();
   const [milestones, setMilestones] = useState<MilestoneSummaryDTO[]>([]);
   const [progress, setProgress] = useState<MilestoneProgressDTO | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -88,41 +90,41 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
     const targetDate = parseISO(milestone.targetDate);
-    
+
     if (milestone.status === 'completed') {
-      return { 
-        icon: CheckCircle, 
-        color: 'text-success', 
+      return {
+        icon: CheckCircle,
+        color: 'text-success',
         bgColor: 'bg-success-soft',
-        label: 'Terminé' 
+        label: t('auto.projectmilestonetimeline.termine')
       };
     }
-    
+
     if (isBefore(targetDate, today)) {
       const daysLate = differenceInDays(today, targetDate);
-      return { 
-        icon: AlertTriangle, 
-        color: 'text-destructive', 
+      return {
+        icon: AlertTriangle,
+        color: 'text-destructive',
         bgColor: 'bg-destructive/10',
-        label: `En retard (${daysLate}j)` 
+        label: `En retard (${daysLate}j)`
       };
     }
 
     const daysUntil = differenceInDays(targetDate, today);
     if (daysUntil <= 7) {
-      return { 
-        icon: Clock, 
-        color: 'text-warning', 
+      return {
+        icon: Clock,
+        color: 'text-warning',
         bgColor: 'bg-warning/10',
-        label: `Dans ${daysUntil}j` 
+        label: `Dans ${daysUntil}j`
       };
     }
 
-    return { 
-      icon: Clock, 
-      color: 'text-primary', 
+    return {
+      icon: Clock,
+      color: 'text-primary',
       bgColor: 'bg-primary/10',
-      label: 'À venir' 
+      label: t('auto.projectmilestonetimeline.a_venir')
     };
   };
 
@@ -205,7 +207,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-medium">{progress.weightedProgress}%</span>
                 {progress.schedulePerformanceIndex !== undefined && (
-                  <Badge 
+                  <Badge
                     variant={progress.schedulePerformanceIndex >= 1 ? 'default' : 'destructive'}
                     className="text-xs flex items-center gap-1"
                   >
@@ -220,7 +222,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
               </div>
             </div>
             <Progress value={progress.weightedProgress} className="h-2" />
-            
+
             {/* Status indicators */}
             <div className="flex flex-wrap gap-4 text-sm">
               {progress.overdueMilestones && progress.overdueMilestones.length > 0 && (
@@ -257,11 +259,11 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                 <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                   {phaseName}
                 </h4>
-                
+
                 <div className="relative">
                   {/* Timeline line */}
                   <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-                  
+
                   <div className="space-y-4">
                     {phaseMilestones.map((milestone) => {
                       const status = getStatusInfo(milestone);
@@ -269,7 +271,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                       const TypeIcon = getTypeIcon(milestone.type);
 
                       return (
-                        <div 
+                        <div
                           key={milestone.id}
                           className={cn(
                             "relative pl-10 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors",
@@ -320,7 +322,7 @@ const ProjectMilestoneTimeline: React.FC<ProjectMilestoneTimelineProps> = ({
                                 </Badge>
                               </div>
                             </div>
-                            
+
                             <Badge className={cn(status.bgColor, status.color, "border-0")}>
                               {status.label}
                             </Badge>

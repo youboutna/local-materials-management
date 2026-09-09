@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { useInspectorsSelector, type Inspector } from '@/hooks/hexagonal'
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InspectorSelectorProps {
   projectId?: string;
@@ -27,6 +28,7 @@ export function InspectorSelector({
   placeholder = "Sélectionner un inspecteur",
   className
 }: InspectorSelectorProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const { data: inspectors = [], isLoading } = useInspectorsSelector(projectId);
@@ -60,7 +62,7 @@ export function InspectorSelector({
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0">
           <Command>
-            <CommandInput placeholder="Rechercher un inspecteur..." />
+            <CommandInput placeholder={t('auto.inspectorselector.rechercher_un_inspecteur')} />
             <CommandList>
               <CommandEmpty>
                 {isLoading ? "Chargement..." : "Aucun inspecteur trouvé"}

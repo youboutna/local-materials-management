@@ -19,6 +19,7 @@ import {
   type WorkflowRequirements
 } from '@/hooks/hexagonal'
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const invoiceSchema = z.object({
   project_id: z.string().min(1, 'Le projet est requis'),
@@ -38,6 +39,7 @@ interface ProgressInvoiceFormProps {
 }
 
 export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFormProps) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<string[]>([]);
   const { toast } = useToast();
@@ -135,7 +137,7 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
             <EnhancedProjectSelector
               value={selectedProjectId}
               onChange={(value) => setValue('project_id', value || '')}
-              placeholder="Sélectionner un projet"
+              placeholder={t('auto.progressinvoiceform.selectionner_un_projet')}
             />
             {errors.project_id && (
               <p className="text-sm text-destructive mt-1">{errors.project_id.message}</p>
@@ -146,17 +148,17 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
             <>
               <div>
                 <Label htmlFor="inspection_id"><T k="auto.progressinvoiceform.inspection_optionnel" fallback="Inspection (optionnel)" /></Label>
-                <Select 
-                  value={selectedInspectionId || ''} 
+                <Select
+                  value={selectedInspectionId || ''}
                   onValueChange={(value) => setValue('inspection_id', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une inspection" />
+                    <SelectValue placeholder={t('auto.progressinvoiceform.selectionner_une_inspection')} />
                   </SelectTrigger>
                   <SelectContent>
                     {inspections.map((inspection) => (
                       <SelectItem key={inspection.id} value={inspection.id}>
-                        {inspection.date && new Date(inspection.date).toLocaleDateString()} - 
+                        {inspection.date && new Date(inspection.date).toLocaleDateString()} -
                         {inspection.progress_at_inspection}% d'avancement
                       </SelectItem>
                     ))}
@@ -243,9 +245,9 @@ export function ProgressInvoiceForm({ supplierId, onSuccess }: ProgressInvoiceFo
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => {
                     // Reset form logic here if needed
                   }}

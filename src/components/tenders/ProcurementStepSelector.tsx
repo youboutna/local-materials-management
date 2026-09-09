@@ -5,16 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Plus } from 'lucide-react';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
-import { 
-  PROCUREMENT_STAGES, 
-  PROCUREMENT_PHASE_LABELS, 
-  ProcurementPhase, 
+import {
+  PROCUREMENT_STAGES,
+  PROCUREMENT_PHASE_LABELS,
+  ProcurementPhase,
   ProcurementStage,
   SUGGESTED_DOCUMENTS,
   getSuggestedDocuments,
   PROCUREMENT_PHASES
 } from './PublicProcurementWorkflow';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProcurementStepSelectorProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface ProcurementStepSelectorProps {
 }
 
 const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps }: ProcurementStepSelectorProps) => {
+  const { t } = useLanguage();
   const [selectedPhase, setSelectedPhase] = useState<ProcurementPhase | null>(null);
   const [selectedStage, setSelectedStage] = useState<{ value: ProcurementStage; label: string } | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -89,7 +91,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
   };
 
   const isStepAlreadyAdded = (phase: ProcurementPhase, stageValue: ProcurementStage) => {
-    return (existingSteps || []).some(step => 
+    return (existingSteps || []).some(step =>
       step.phase === phase && step.stage.value === stageValue
     );
   };
@@ -97,7 +99,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
   // Get suggested documents for the selected stage
   const getStageSuggestedDocuments = () => {
     if (!selectedPhase || !selectedStage) return [];
-    
+
     return getSuggestedDocuments(selectedPhase, selectedStage.value);
   };
 
@@ -110,7 +112,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
         <DialogHeader>
           <DialogTitle><T k="auto.procurementstepselector.selectionner_une_etape_de_marche_public" fallback="Sélectionner une Étape de Marché Public" /></DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
             <T k="auto.procurementstepselector.choisissez_une_etape_du_processus_de_marche_publ" fallback="Choisissez une étape du processus de marché public :" />
@@ -138,7 +140,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
                 type="button"
                 className={`px-3 py-1 rounded text-sm ${selectionMode === 'suggested' ? 'bg-adrar-800 text-white' : 'bg-muted'}`}
                 onClick={() => setSelectionMode('suggested')}
-                title="Ajouter les 5 phases standards de la commande publique"
+                title={t('auto.procurementstepselector.ajouter_les_5_phases_standards_de_la_commande_pu')}
               >
                 <T k="auto.procurementstepselector.workflow_standard_complet" fallback="Workflow standard complet" />
               </button>
@@ -247,7 +249,7 @@ const ProcurementStepSelector = ({ isOpen, onClose, onSelectStep, existingSteps 
               </div>
             </div>
           )}
-          
+
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={onClose}>

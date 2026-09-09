@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { useProjectConsultantHex } from '@/hooks/hexagonal/useProjectConsultantHex';
 import type { ConsultantCandidateDTO, ConsultantCandidateKind } from '@/dtos/entities/ProjectConsultantDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectConsultantDesignationProps {
   projectId?: string;
@@ -41,6 +42,7 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
   projectId,
   className,
 }) => {
+  const { t } = useLanguage();
   const {
     stakeholders,
     candidates,
@@ -150,7 +152,7 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    aria-label="Rechercher une partie prenante"
+                    aria-label={t('auto.projectconsultantdesignation.rechercher_une_partie_prenante')}
                     className="sm:flex-1 justify-between font-normal"
                   >
                     <span className={cn('truncate', !selectedLabel && 'text-muted-foreground')}>
@@ -161,7 +163,7 @@ const ProjectConsultantDesignation: React.FC<ProjectConsultantDesignationProps> 
                 </PopoverTrigger>
                 <PopoverContent className="p-0 w-[min(28rem,90vw)]" align="start">
                   <Command>
-                    <CommandInput placeholder="Saisir un nom…" />
+                    <CommandInput placeholder={t('auto.projectconsultantdesignation.saisir_un_nom')} />
                     <CommandList>
                       <CommandEmpty>
                         {visibleCount === 0

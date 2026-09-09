@@ -100,7 +100,7 @@ interface SharedDocument {
 
 const DOCUMENT_CATEGORIES = {
   administrative: 'administrative',
-  technical: 'technical', 
+  technical: 'technical',
   financial: 'financial'
 } as const;
 
@@ -141,7 +141,7 @@ const SupplierBidBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
         <BoqImportDialog
           source="supplier_bid"
           contextId={tenderId}
-          title="Importer votre chiffrage"
+          title={t('auto.enhancedsuppliertenderportal.importer_votre_chiffrage')}
           trigger={
             <Button variant="outline" size="sm" className="gap-2">
               <Upload className="h-4 w-4" /> <T k="auto.enhancedsuppliertenderportal.importer_chiffrage" fallback="Importer chiffrage" />
@@ -155,7 +155,7 @@ const SupplierBidBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
       ) : (
         <BoqLineTable
           lines={bid.lines}
-          emptyLabel="Aucune ligne de chiffrage. Importez votre offre pour démarrer."
+          emptyLabel={t('auto.enhancedsuppliertenderportal.aucune_ligne_de_chiffrage_importez_votre_offre_p')}
         />
       )}
     </div>
@@ -260,7 +260,7 @@ const EnhancedSupplierTenderPortal = () => {
     queryKey: ['shared-documents', selectedTender?.id],
     queryFn: async () => {
       if (!selectedTender?.id) return [];
-      
+
       const docs = await getDocumentService().getSharedTenderDocuments(selectedTender.id);
       return docs.map((doc) => ({
         id: doc.id,
@@ -280,7 +280,7 @@ const EnhancedSupplierTenderPortal = () => {
     queryKey: ['user-submission', selectedTender?.id],
     queryFn: async () => {
       if (!selectedTender?.id) return null;
-      
+
       const user = await getUser();
       if (!user?.id) return null;
 
@@ -298,23 +298,23 @@ const EnhancedSupplierTenderPortal = () => {
       setSubmissionStep('creating');
       setSubmissionError('');
       setUploadProgress({ current: 0, total: 0 });
-      
+
       if (!selectedTender?.id) throw new Error('Appel d\'offres non sélectionné');
-      
+
       // Validate deadline
       if (selectedTender.deadline_date) {
         const deadline = new Date(selectedTender.deadline_date);
         const now = new Date();
-        
+
         if (isNaN(deadline.getTime())) {
           throw new Error(t('supplier_tender.errors.invalid_deadline'));
         }
-        
+
         if (now > deadline) {
           throw new Error(t('supplier_tender.errors.deadline_passed'));
         }
       }
-      
+
       const user = await getUser();
       if (!user?.id) throw new Error('Utilisateur non connecté');
 
@@ -357,13 +357,13 @@ const EnhancedSupplierTenderPortal = () => {
       queryClient.invalidateQueries({ queryKey: ['user-submission'] });
       setSelectedFiles({});
       setSubmissionData({ notes: '' });
-      
+
       // Reset progress after a delay
       setTimeout(() => {
         setSubmissionStep('idle');
         setUploadProgress({ current: 0, total: 0 });
       }, 3000);
-      
+
       toast({
         title: t('supplier_tender.submit_success'),
         description: t('supplier_tender.submit_success_desc'),
@@ -372,7 +372,7 @@ const EnhancedSupplierTenderPortal = () => {
     onError: (error) => {
       setSubmissionStep('error');
       console.error('Submit bid error:', error);
-      
+
       let message = t('supplier_tender.errors.submit_failed');
       if (
         error instanceof Error &&
@@ -384,9 +384,9 @@ const EnhancedSupplierTenderPortal = () => {
       } else if (error instanceof Error) {
         message = error.message;
       }
-      
+
       setSubmissionError(message);
-      
+
       toast({
         title: t('common.error'),
         description: message,
@@ -432,7 +432,7 @@ const EnhancedSupplierTenderPortal = () => {
     const adminFiles = Object.keys(selectedFiles).filter(key => key.startsWith('administrative')).length;
     const techFiles = Object.keys(selectedFiles).filter(key => key.startsWith('technical')).length;
     const finFiles = Object.keys(selectedFiles).filter(key => key.startsWith('financial')).length;
-    
+
     return adminFiles >= 2 && techFiles >= 2 && finFiles >= 2; // Minimum requirements
   };
 
@@ -681,7 +681,7 @@ const EnhancedSupplierTenderPortal = () => {
                             </p>
                           </div>
                         </div>
-                        
+
                         {/* Display Secret Code for Evaluation Commission */}
                         <SubmissionSecretDisplay submissionId={userSubmission.id} />
                       </>

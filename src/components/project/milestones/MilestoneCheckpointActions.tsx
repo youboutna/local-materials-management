@@ -1,8 +1,9 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * MilestoneCheckpointActions - Actions disponibles sur les checkpoints des jalons
  * Permet de déclencher des inspections et paiements directement depuis les jalons
  * Utilise CheckpointActionContextService pour récupérer le contexte complet
- * 
+ *
  * Logique d'activation:
  * - Les boutons sont actifs tant qu'il n'y a pas d'inspection approuvée avec un seuil de progression atteint
  * - Déclenchement automatique de paiement après approbation d'une inspection
@@ -95,6 +96,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
   onMilestoneComplete,
   onAutoPaymentTriggered
 }) => {
+  const { t } = useLanguage();
   const [selectedMilestone, setSelectedMilestone] = useState<MilestoneSummaryDTO | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [autoPaymentPending, setAutoPaymentPending] = useState(false);
@@ -107,7 +109,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
    */
   const hasApprovedInspectionWithProgress = (): boolean => {
     if (!projectContext?.latestInspection) return false;
-    
+
     const { latestInspection, project } = projectContext;
     return (
       latestInspection.status === 'approved' &&
@@ -136,7 +138,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
     ) {
       // Déclencher automatiquement une demande de paiement
       setAutoPaymentPending(true);
-      
+
       const paymentContext: MilestoneActionContext = {
         milestoneId: '',
         milestoneTitle: `Paiement suite à inspection approuvée (${projectContext.latestInspection.progressAtInspection}%)`,
@@ -148,7 +150,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
         contractorName: projectContext.mainContractor.name,
         contractorContact: projectContext.mainContractor.contact
       };
-      
+
       onAutoPaymentTriggered(paymentContext);
     }
   }, [projectContext?.latestInspection?.status, projectContext?.latestInspection?.progressAtInspection, progressThreshold, autoPaymentPending, onAutoPaymentTriggered]);
@@ -157,35 +159,35 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
     const today = new Date();
     const targetDate = parseISO(milestone.target_date);
     const actionsEnabled = areActionsEnabled();
-    
+
     if (milestone.status === 'completed') {
-      return { 
-        icon: CheckCircle, 
-        color: 'text-success', 
+      return {
+        icon: CheckCircle,
+        color: 'text-success',
         bgColor: 'bg-success/10',
         borderColor: 'border-success',
-        label: 'Terminé',
+        label: t('auto.milestonecheckpointactions.termine'),
         canTrigger: false
       };
     }
 
     // Si inspection approuvée avec seuil atteint, désactiver les actions
     if (!actionsEnabled) {
-      return { 
-        icon: CheckCircle, 
-        color: 'text-success', 
+      return {
+        icon: CheckCircle,
+        color: 'text-success',
         bgColor: 'bg-success/10',
         borderColor: 'border-success',
-        label: 'Inspection validée',
+        label: t('auto.milestonecheckpointactions.inspection_validee'),
         canTrigger: false
       };
     }
-    
+
     if (isBefore(targetDate, today)) {
       const daysLate = differenceInDays(today, targetDate);
-      return { 
-        icon: AlertTriangle, 
-        color: 'text-destructive', 
+      return {
+        icon: AlertTriangle,
+        color: 'text-destructive',
         bgColor: 'bg-destructive/10',
         borderColor: 'border-destructive',
         label: `En retard (${daysLate}j)`,
@@ -195,9 +197,9 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
 
     const daysUntil = differenceInDays(targetDate, today);
     if (daysUntil <= 7) {
-      return { 
-        icon: Clock, 
-        color: 'text-warning', 
+      return {
+        icon: Clock,
+        color: 'text-warning',
         bgColor: 'bg-warning/10',
         borderColor: 'border-warning',
         label: `Dans ${daysUntil}j`,
@@ -206,22 +208,22 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
     }
 
     if (daysUntil <= 14) {
-      return { 
-        icon: Clock, 
-        color: 'text-primary', 
+      return {
+        icon: Clock,
+        color: 'text-primary',
         bgColor: 'bg-primary/10',
         borderColor: 'border-primary',
-        label: 'Prochainement',
+        label: t('auto.milestonecheckpointactions.prochainement'),
         canTrigger: true
       };
     }
 
-    return { 
-      icon: Clock, 
-      color: 'text-muted-foreground', 
+    return {
+      icon: Clock,
+      color: 'text-muted-foreground',
       bgColor: 'bg-muted',
       borderColor: 'border-muted-foreground/30',
-      label: 'À venir',
+      label: t('auto.milestonecheckpointactions.a_venir'),
       canTrigger: true // Actif tant qu'il n'y a pas d'inspection validée
     };
   };
@@ -237,7 +239,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
   };
 
   // Filter checkpoints that are actionable (gate, checkpoint types)
-  const actionableMilestones = milestones.filter(m => 
+  const actionableMilestones = milestones.filter(m =>
     m.type === 'gate' || m.type === 'checkpoint'
   );
 
@@ -440,11 +442,11 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                     {projectContext?.latestInspection && (
                       <div className="col-span-2 flex items-center gap-2">
                         <span className="text-muted-foreground"><T k="auto.milestonecheckpointactions.derniere_inspection" fallback="Dernière inspection:" /></span>
-                        <Badge 
+                        <Badge
                           variant={projectContext.latestInspection.status === 'approved' ? 'default' : 'secondary'}
                           className="text-xs"
                         >
-                          {projectContext.latestInspection.status === 'approved' ? 'Approuvée' : 
+                          {projectContext.latestInspection.status === 'approved' ? 'Approuvée' :
                            projectContext.latestInspection.status === 'rejected' ? 'Rejetée' : 'En attente'}
                         </Badge>
                         <span className="text-muted-foreground">
@@ -453,7 +455,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Auto-payment indicator */}
                   {hasApprovedInspectionWithProgress() && (
                     <div className="mt-2 p-2 bg-success/10 rounded-md flex items-center gap-2 text-xs">
@@ -484,7 +486,7 @@ const MilestoneCheckpointActions: React.FC<MilestoneCheckpointActionsProps> = ({
                 <div className="text-left flex-1">
                   <p className="font-medium"><T k="auto.milestonecheckpointactions.declencher_une_inspection" fallback="Déclencher une inspection" /></p>
                   <p className="text-xs text-muted-foreground">
-                    {hasApprovedInspectionWithProgress() 
+                    {hasApprovedInspectionWithProgress()
                       ? 'Inspection déjà approuvée avec seuil atteint'
                       : (inspectionContext?.inspectionType ? `Type: ${inspectionContext.inspectionType}` : 'Créer une inspection liée à ce jalon')
                     }

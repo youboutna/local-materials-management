@@ -45,6 +45,7 @@ import {
 import { PhaseDTO, PhaseStatus } from "@/dtos/types/phase-dto";
 import { CompletionValidationResult, getCompletionBlockReasons } from "@/utils/completionValidation";
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseEditDialogProps {
   isOpen: boolean;
@@ -67,6 +68,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
   phaseName,
   completionValidation,
 }) => {
+  const { t } = useLanguage();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -81,7 +83,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
             Modifiez les informations de la phase "{phaseName}"
           </p>
         </DialogHeader>
-        
+
         <div className="space-y-6 py-4">
           {/* Section: Informations générales */}
           <div className="space-y-4">
@@ -89,7 +91,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
               <Building className="h-4 w-4" />
               <T k="auto.phaseeditdialog.informations_generales" fallback="Informations générales" />
             </div>
-            
+
             <div className="grid gap-4 pl-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
@@ -100,11 +102,11 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                   onChange={(e) =>
                     setEditForm({ ...editForm, phaseName: e.target.value })
                   }
-                  placeholder="Ex: Fondations et terrassement"
+                  placeholder={t('auto.phaseeditdialog.ex_fondations_et_terrassement')}
                   className="h-10"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.description" fallback="Description" /></Label>
                 <Textarea
@@ -112,7 +114,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                   onChange={(e) =>
                     setEditForm({ ...editForm, description: e.target.value })
                   }
-                  placeholder="Décrivez les objectifs et le contenu de cette phase..."
+                  placeholder={t('auto.phaseeditdialog.decrivez_les_objectifs_et_le_contenu_de_cette_ph')}
                   rows={3}
                   className="resize-none"
                 />
@@ -128,7 +130,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
               <Calendar className="h-4 w-4" />
               <T k="auto.phaseeditdialog.planification" fallback="Planification" />
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.date_de_debut" fallback="Date de début" /></Label>
@@ -184,7 +186,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
               <DollarSign className="h-4 w-4" />
               <T k="auto.phaseeditdialog.budget" fallback="Budget" />
             </div>
-            
+
             <div className="grid grid-cols-1 gap-4 pl-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.cout_estime" fallback="Coût estimé" /></Label>
@@ -218,7 +220,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
               <Target className="h-4 w-4" />
               <T k="auto.phaseeditdialog.etat_et_progression" fallback="État et progression" />
             </div>
-            
+
             {/* Completion Validation Warning */}
             {!completionValidation.canComplete && (
               <Alert className="ml-6 border-warning/30 bg-warning/10">
@@ -236,7 +238,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                 </AlertDescription>
               </Alert>
             )}
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium"><T k="auto.phaseeditdialog.statut" fallback="Statut" /></Label>
@@ -265,7 +267,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                         <T k="auto.phaseeditdialog.en_cours" fallback="En cours" />
                       </div>
                     </SelectItem>
-                    <SelectItem 
+                    <SelectItem
                       value="completed"
                       disabled={!completionValidation.canComplete}
                     >
@@ -275,8 +277,8 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                             <div className="flex items-center gap-2">
                               <div className={cn(
                                 "h-2 w-2 rounded-full",
-                                !completionValidation.canComplete 
-                                  ? "bg-gray-300" 
+                                !completionValidation.canComplete
+                                  ? "bg-gray-300"
                                   : "bg-success"
                               )} />
                               Terminé
@@ -308,7 +310,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
                   Progression: {editForm.progress || 0}%
@@ -326,7 +328,7 @@ const PhaseEditDialog: React.FC<PhaseEditDialogProps> = ({
             </div>
           </div>
         </div>
-        
+
         <DialogFooter className="pt-4 border-t gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <T k="auto.phaseeditdialog.annuler" fallback="Annuler" />

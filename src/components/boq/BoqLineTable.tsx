@@ -22,6 +22,7 @@ import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referenti
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { PcmAccountSelect } from './PcmAccountSelect';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 
@@ -69,6 +70,7 @@ const stakeholderOf = (l: BoqLineDTO) =>
   (l.metadata as { stakeholder?: { id?: string; name?: string; type?: string } } | null)?.stakeholder ?? null;
 
 export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions, newRowsAt = 'end' }: Props) {
+  const { t } = useLanguage();
 
   const [page, setPage] = useState(0);
   const [metreIndex, setMetreIndex] = useState<number | null>(null);
@@ -163,15 +165,15 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
     },
     {
       id: 'phase', label: <T k="auto.boqlinetable.phase" fallback="Phase" />, head: 'min-w-[150px]',
-      cell: (l, i) => editable ? <SearchableSelect value={l.phaseId ?? undefined} onChange={(v) => patch(i, { phaseId: v || null, milestoneId: null, taskId: null })} options={phases.map((p) => ({ value: p.id, label: p.label }))} placeholder="—" searchPlaceholder="Rechercher une phase…" clearLabel="—" className="h-8 w-full" /> : (phaseOf(l.phaseId) ? <Badge variant="secondary">{phaseOf(l.phaseId)!.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>),
+      cell: (l, i) => editable ? <SearchableSelect value={l.phaseId ?? undefined} onChange={(v) => patch(i, { phaseId: v || null, milestoneId: null, taskId: null })} options={phases.map((p) => ({ value: p.id, label: p.label }))} placeholder="—" searchPlaceholder={t('auto.boqlinetable.rechercher_une_phase')} clearLabel="—" className="h-8 w-full" /> : (phaseOf(l.phaseId) ? <Badge variant="secondary">{phaseOf(l.phaseId)!.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>),
     },
     {
       id: 'milestone', label: <T k="auto.boqlinetable.jalon" fallback="Jalon" />, head: 'min-w-[150px]',
-      cell: (l, i) => editable ? <SearchableSelect value={l.milestoneId ?? undefined} onChange={(v) => patch(i, { milestoneId: v || null, taskId: null })} options={(phaseOf(l.phaseId)?.milestones ?? []).map((m) => ({ value: m.id, label: m.label }))} placeholder="—" searchPlaceholder="Rechercher un jalon…" clearLabel="—" disabled={!l.phaseId} className="h-8 w-full" /> : (milestoneOf(l.phaseId, l.milestoneId) ? <Badge variant="outline">{milestoneOf(l.phaseId, l.milestoneId)!.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>),
+      cell: (l, i) => editable ? <SearchableSelect value={l.milestoneId ?? undefined} onChange={(v) => patch(i, { milestoneId: v || null, taskId: null })} options={(phaseOf(l.phaseId)?.milestones ?? []).map((m) => ({ value: m.id, label: m.label }))} placeholder="—" searchPlaceholder={t('auto.boqlinetable.rechercher_un_jalon')} clearLabel="—" disabled={!l.phaseId} className="h-8 w-full" /> : (milestoneOf(l.phaseId, l.milestoneId) ? <Badge variant="outline">{milestoneOf(l.phaseId, l.milestoneId)!.label}</Badge> : <span className="text-xs text-muted-foreground">—</span>),
     },
     {
       id: 'task', label: <T k="auto.boqlinetable.tache" fallback="Tâche" />, head: 'min-w-[150px]',
-      cell: (l, i) => editable ? <SearchableSelect value={l.taskId ?? undefined} onChange={(v) => patch(i, { taskId: v || null })} options={(milestoneOf(l.phaseId, l.milestoneId)?.tasks ?? []).map((t) => ({ value: t.id, label: t.label }))} placeholder="—" searchPlaceholder="Rechercher une tâche…" clearLabel="—" disabled={!l.milestoneId} className="h-8 w-full" /> : (taskOf(l.phaseId, l.milestoneId, l.taskId) ? <span className="text-xs">{taskOf(l.phaseId, l.milestoneId, l.taskId)!.label}</span> : <span className="text-xs text-muted-foreground">—</span>),
+      cell: (l, i) => editable ? <SearchableSelect value={l.taskId ?? undefined} onChange={(v) => patch(i, { taskId: v || null })} options={(milestoneOf(l.phaseId, l.milestoneId)?.tasks ?? []).map((t) => ({ value: t.id, label: t.label }))} placeholder="—" searchPlaceholder={t('auto.boqlinetable.rechercher_une_tache')} clearLabel="—" disabled={!l.milestoneId} className="h-8 w-full" /> : (taskOf(l.phaseId, l.milestoneId, l.taskId) ? <span className="text-xs">{taskOf(l.phaseId, l.milestoneId, l.taskId)!.label}</span> : <span className="text-xs text-muted-foreground">—</span>),
     },
     {
       id: 'resourceType', label: <T k="auto.boqlinetable.nature" fallback="Nature" />, head: 'min-w-[140px]',
@@ -272,11 +274,11 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                 <div className="flex shrink-0 items-center gap-1">
                   {editable && (
                     <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={() => setMetreIndex(i)}>
-                      <Calculator className="h-3.5 w-3.5" /> Calcul métré
+                      <Calculator className="h-3.5 w-3.5" /> <T k="auto.boqlinetable.calcul_metre" fallback="Calcul métré" />
                     </Button>
                   )}
                   {hasActions && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label="Supprimer la ligne">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemove?.(i)} aria-label={t('auto.boqlinetable.supprimer_la_ligne')}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}

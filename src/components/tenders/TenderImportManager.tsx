@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ interface TenderImportManagerProps {
 }
 
 const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => {
+  const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -35,8 +37,8 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
         setImportResult(null);
       } else {
         toast({
-          title: 'Type de fichier invalide',
-          description: 'Veuillez sélectionner un fichier Excel (.xlsx ou .xls).',
+          title: t('auto.tenderimportmanager.type_de_fichier_invalide'),
+          description: t('auto.tenderimportmanager.veuillez_selectionner_un_fichier_excel_xlsx_ou_x'),
           variant: 'destructive',
         });
       }
@@ -69,12 +71,12 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
 
     data.forEach((row, index) => {
       const rowNumber = index + 2; // +2 because Excel starts at 1 and we skip header
-      
+
       if (!row.title || typeof row.title !== 'string') {
         errors.push(`Ligne ${rowNumber}: Titre manquant ou invalide`);
         return;
       }
-      
+
       if (!row.description || typeof row.description !== 'string') {
         errors.push(`Ligne ${rowNumber}: Description manquante ou invalide`);
         return;
@@ -116,26 +118,26 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
   const handleImport = async () => {
     if (!selectedFile) {
       toast({
-        title: 'Aucun fichier sélectionné',
-        description: 'Veuillez sélectionner un fichier Excel à importer.',
+        title: t('auto.tenderimportmanager.aucun_fichier_selectionne'),
+        description: t('auto.tenderimportmanager.veuillez_selectionner_un_fichier_excel_a_importe'),
         variant: 'destructive',
       });
       return;
     }
 
     setImporting(true);
-    
+
     try {
       // Process Excel file
       const rawData = await processExcelFile(selectedFile);
-      
+
       if (rawData.length === 0) {
         throw new Error('Le fichier Excel est vide ou ne contient pas de données valides.');
       }
 
       // Validate data
       const { valid, errors } = validateTenderData(rawData);
-      
+
       let successCount = 0;
       const importErrors: string[] = [...errors];
 
@@ -143,7 +145,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
       if (valid.length > 0) {
         try {
           const { count, error } = await bulkInsertTenders(valid);
-          
+
           if (error) {
             importErrors.push(`Erreur d'insertion en base: ${error}`);
           } else {
@@ -165,14 +167,14 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
 
       if (successCount > 0) {
         toast({
-          title: 'Import réussi',
+          title: t('auto.tenderimportmanager.import_reussi'),
           description: `${successCount} appel(s) d'offres importé(s) avec succès.`,
         });
       }
 
       if (importErrors.length > 0) {
         toast({
-          title: 'Import avec erreurs',
+          title: t('auto.tenderimportmanager.import_avec_erreurs'),
           description: `${importErrors.length} erreur(s) détectée(s). Consultez les détails ci-dessous.`,
           variant: 'destructive',
         });
@@ -193,7 +195,7 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
   const downloadTemplate = () => {
     const templateData = [
       {
-        title: 'Exemple - Construction Pont',
+        title: t('auto.tenderimportmanager.exemple_construction_pont'),
         description: 'Construction d\'un pont sur la rivière X',
         launch_date: '2024-01-15',
         attribution_date: '2024-02-15',
@@ -233,8 +235,8 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
           </div>
 
           <div className="flex justify-between items-center">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={downloadTemplate}
               className="flex items-center gap-2"
             >
@@ -242,8 +244,8 @@ const TenderImportManager = ({ onImportComplete }: TenderImportManagerProps) => 
               <T k="auto.tenderimportmanager.telecharger_le_modele" fallback="Télécharger le modèle" />
             </Button>
 
-            <Button 
-              onClick={handleImport} 
+            <Button
+              onClick={handleImport}
               disabled={!selectedFile || importing}
               className="flex items-center gap-2"
             >

@@ -45,6 +45,8 @@ import { useTendersHex } from '@/hooks/hexagonal/useTendersHex';
 import { FileDown, Loader2, Upload } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ============================================================================
 // TYPES
@@ -124,6 +126,7 @@ export default function ContractFormDialog({
   contract,
   onSaved,
 }: ContractFormDialogProps) {
+  const { t } = useLanguage();
   const { createContract, updateContract, isPending } = useContractMutations();
   const [form, setForm] = useState<FormState>(emptyState);
   const [supplierSearch, setSupplierSearch] = useState('');
@@ -344,7 +347,7 @@ export default function ContractFormDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Rattachement */}
           <div className="space-y-1.5">
-            <Label>Projet</Label>
+            <Label><T k="auto.contractformdialog.projet" fallback="Projet" /></Label>
             <SearchableSelect
               value={form.projectId}
               onChange={(v) => setForm((prev) => ({ ...prev, projectId: v, phaseId: '' }))}
@@ -353,7 +356,7 @@ export default function ContractFormDialog({
                 label: p.title,
                 description: (p as { project_reference?: string | null }).project_reference ?? undefined,
               }))}
-              placeholder="Rechercher un projet…"
+              placeholder={t('auto.contractformdialog.rechercher_un_projet')}
               clearLabel="Aucun projet"
             />
           </div>
@@ -378,7 +381,7 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Appel d'offres attribué</Label>
+            <Label><T k="auto.contractformdialog.appel_d_offres_attribue" fallback="Appel d'offres attribué" /></Label>
             <SearchableSelect
               value={form.tenderId}
               onChange={applyTender}
@@ -387,16 +390,16 @@ export default function ContractFormDialog({
                 label: t.title,
                 description: t.tenderNumber ?? undefined,
               }))}
-              placeholder="Rechercher un appel d'offres…"
+              placeholder={t('auto.contractformdialog.rechercher_un_appel_d_offres')}
               clearLabel="Contrat hors AO"
             />
             <p className="text-xs text-muted-foreground">
-              La sélection pré-remplit l'intitulé, le montant et les dates d'exécution.
+              <T k="auto.contractformdialog.la_selection_pre_remplit_l_intitule_le_montant_e" fallback="La sélection pré-remplit l'intitulé, le montant et les dates d'exécution." />
             </p>
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Attributaire(s)</Label>
+            <Label><T k="auto.contractformdialog.attributaire_s" fallback="Attributaire(s)" /></Label>
             <MultiSelectCombobox
               values={form.supplierIds}
               onChange={(v) => set('supplierIds', v)}
@@ -405,8 +408,8 @@ export default function ContractFormDialog({
                 label: s.name,
                 description: (s as any).type || (s as any).category || undefined,
               }))}
-              placeholder="Sélectionner les titulaires (groupement possible)…"
-              searchPlaceholder="Rechercher un fournisseur…"
+              placeholder={t('auto.contractformdialog.selectionner_les_titulaires_groupement_possible')}
+              searchPlaceholder={t('auto.contractformdialog.rechercher_un_fournisseur')}
             />
           </div>
 
@@ -420,26 +423,26 @@ export default function ContractFormDialog({
                 id="contract-title"
                 value={form.title}
                 onChange={(e) => set('title', e.target.value)}
-                placeholder="Contrat de travaux — Lot 1"
+                placeholder={t('auto.contractformdialog.contrat_de_travaux_lot_1')}
               />
               <Button type="button" variant="outline" onClick={autoTitle}>
-                Auto
+                <T k="auto.contractformdialog.auto" fallback="Auto" />
               </Button>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="contract-number">Numéro</Label>
+            <Label htmlFor="contract-number"><T k="auto.contractformdialog.numero" fallback="Numéro" /></Label>
             <Input
               id="contract-number"
               value={form.contractNumber}
               onChange={(e) => set('contractNumber', e.target.value)}
-              placeholder="CTR-2026-…"
+              placeholder={t('auto.contractformdialog.ctr_2026')}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Type</Label>
+            <Label><T k="auto.contractformdialog.type" fallback="Type" /></Label>
             <Select value={form.contractType} onValueChange={(v) => set('contractType', v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -453,7 +456,7 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Statut</Label>
+            <Label><T k="auto.contractformdialog.statut" fallback="Statut" /></Label>
             <Select value={form.status} onValueChange={(v) => set('status', v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -467,7 +470,7 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Devise</Label>
+            <Label><T k="auto.contractformdialog.devise" fallback="Devise" /></Label>
             <Select value={form.currency} onValueChange={(v) => set('currency', v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -480,7 +483,7 @@ export default function ContractFormDialog({
 
           {/* Fiscalité */}
           <div className="space-y-1.5">
-            <Label htmlFor="contract-amount">Montant HT</Label>
+            <Label htmlFor="contract-amount"><T k="auto.contractformdialog.montant_ht" fallback="Montant HT" /></Label>
             <Input
               id="contract-amount"
               type="number"
@@ -492,7 +495,7 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Régime fiscal</Label>
+            <Label><T k="auto.contractformdialog.regime_fiscal" fallback="Régime fiscal" /></Label>
             <Select
               value={form.taxRegimeCode}
               onValueChange={(code) => {
@@ -520,7 +523,7 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="contract-vat">Taux TVA (%)</Label>
+            <Label htmlFor="contract-vat"><T k="auto.contractformdialog.taux_tva" fallback="Taux TVA (%)" /></Label>
             <Input
               id="contract-vat"
               type="number"
@@ -534,7 +537,7 @@ export default function ContractFormDialog({
 
           <div className="rounded-md border border-border bg-muted/40 p-3 text-sm sm:col-span-2">
             <div className="flex justify-between">
-              <span>Total HT</span>
+              <span><T k="auto.contractformdialog.total_ht" fallback="Total HT" /></span>
               <span>{money(amountHt, form.currency)}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
@@ -542,14 +545,14 @@ export default function ContractFormDialog({
               <span>{money(vatAmount, form.currency)}</span>
             </div>
             <div className="mt-1 flex justify-between font-semibold">
-              <span>Total TTC</span>
+              <span><T k="auto.contractformdialog.total_ttc" fallback="Total TTC" /></span>
               <span>{money(amountTtc, form.currency)}</span>
             </div>
           </div>
 
           {/* Dates */}
           <div className="space-y-1.5">
-            <Label htmlFor="contract-start">Début</Label>
+            <Label htmlFor="contract-start"><T k="auto.contractformdialog.debut" fallback="Début" /></Label>
             <Input
               id="contract-start"
               type="date"
@@ -559,7 +562,7 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="contract-end">Fin</Label>
+            <Label htmlFor="contract-end"><T k="auto.contractformdialog.fin" fallback="Fin" /></Label>
             <Input
               id="contract-end"
               type="date"
@@ -569,7 +572,7 @@ export default function ContractFormDialog({
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="contract-url">Lien du contrat signé (optionnel)</Label>
+            <Label htmlFor="contract-url"><T k="auto.contractformdialog.lien_du_contrat_signe_optionnel" fallback="Lien du contrat signé (optionnel)" /></Label>
             <div className="flex gap-2">
               <Input
                 id="contract-url"
@@ -579,7 +582,7 @@ export default function ContractFormDialog({
               />
               <Button type="button" variant="outline" onClick={() => setUploadOpen((v) => !v)}>
                 <Upload className="mr-2 h-4 w-4" />
-                Importer
+                <T k="auto.contractformdialog.importer" fallback="Importer" />
               </Button>
             </div>
           </div>
@@ -599,16 +602,16 @@ export default function ContractFormDialog({
           )}
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Contenu du contrat</Label>
+            <Label><T k="auto.contractformdialog.contenu_du_contrat" fallback="Contenu du contrat" /></Label>
             <RichTextEditor
               value={form.contentHtml}
               onChange={(html) => set('contentHtml', html)}
-              placeholder="Objet, obligations des parties, modalités de paiement…"
+              placeholder={t('auto.contractformdialog.objet_obligations_des_parties_modalites_de_paiem')}
             />
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="contract-notes">Notes</Label>
+            <Label htmlFor="contract-notes"><T k="auto.contractformdialog.notes" fallback="Notes" /></Label>
             <Textarea
               id="contract-notes"
               rows={3}
@@ -621,11 +624,11 @@ export default function ContractFormDialog({
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
           <Button type="button" variant="outline" onClick={handleGeneratePdf}>
             <FileDown className="mr-2 h-4 w-4" />
-            Générer le contrat
+            <T k="auto.contractformdialog.generer_le_contrat" fallback="Générer le contrat" />
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
+              <T k="auto.contractformdialog.annuler" fallback="Annuler" />
             </Button>
             <Button onClick={handleSubmit} disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

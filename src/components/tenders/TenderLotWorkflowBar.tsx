@@ -16,6 +16,8 @@ import {
 import { Award, Ban, Gavel, Send } from 'lucide-react';
 import type { TenderLotRecord, TenderLotStatus } from '@/dtos/transforms/TenderLotTransformer';
 import { useAwardTenderLot, useLotSubmissions, useSetTenderLotStatus } from '@/hooks/hexagonal/useTenderLotsHex';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const STATUS_META: Record<TenderLotStatus, { label: string; className: string }> = {
   draft: { label: 'Brouillon', className: 'bg-muted text-muted-foreground' },
@@ -43,6 +45,7 @@ export const TenderLotStatusBadge: React.FC<{ status?: TenderLotStatus; tenderSt
   status = 'draft',
   tenderStatus,
 }) => {
+  const { t } = useLanguage();
   const effective = tenderStatus ? syncLotStatusWithTender(status, tenderStatus) : status;
   const meta = STATUS_META[effective] ?? STATUS_META.draft;
   return <Badge className={`text-xs ${meta.className}`}>{meta.label}</Badge>;
@@ -98,7 +101,7 @@ const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly, tender
 
       {status === 'awarded' && lot.awardedTo && (
         <span className="text-sm text-muted-foreground">
-          Attributaire : <span className="font-medium text-foreground">{lot.awardedTo}</span>
+          <T k="auto.tenderlotworkflowbar.attributaire" fallback="Attributaire :" /> <span className="font-medium text-foreground">{lot.awardedTo}</span>
         </span>
       )}
 
@@ -137,7 +140,7 @@ const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly, tender
               {(submissions ?? []).length > 0 ? (
                 <Select value={selectedSubmission} onValueChange={setSelectedSubmission}>
                   <SelectTrigger className="h-9 w-56">
-                    <SelectValue placeholder="Soumission retenue" />
+                    <SelectValue placeholder={t('auto.tenderlotworkflowbar.soumission_retenue')} />
                   </SelectTrigger>
                   <SelectContent>
                     {(submissions ?? []).map((s: any) => (
@@ -151,7 +154,7 @@ const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly, tender
               ) : (
                 <Input
                   className="h-9 w-56"
-                  placeholder="Nom de l'attributaire"
+                  placeholder={t('auto.tenderlotworkflowbar.nom_de_l_attributaire')}
                   value={manualWinner}
                   onChange={(e) => setManualWinner(e.target.value)}
                 />
@@ -163,7 +166,7 @@ const TenderLotWorkflowBar: React.FC<Props> = ({ tenderId, lot, readOnly, tender
                 onClick={handleAward}
               >
                 <Award className="h-3.5 w-3.5" />
-                Attribuer
+                <T k="auto.tenderlotworkflowbar.attribuer" fallback="Attribuer" />
               </Button>
             </>
           )}

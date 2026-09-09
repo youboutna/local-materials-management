@@ -38,6 +38,7 @@ import {
 } from './PhaseEditDraft';
 import { formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type StepId = 'general' | 'planning' | 'resources' | 'stakeholders' | 'documents' | 'payments' | 'validation';
 
@@ -66,7 +67,7 @@ interface PhaseEditWorkflowDialogProps {
     tasks: number;
     completedTasks: number;
   };
-  onSave: (draft: PhaseEditDraft) => Promise<void> | void;
+  onSave: (draft: PhaseEditDraft) => <T k="auto.phaseeditworkflowdialog.promise" fallback="Promise" /><void> | void;
 }
 
 const PhaseEditWorkflowDialog: React.FC<PhaseEditWorkflowDialogProps> = ({
@@ -79,6 +80,7 @@ const PhaseEditWorkflowDialog: React.FC<PhaseEditWorkflowDialogProps> = ({
   summary,
   onSave,
 }) => {
+  const { t } = useLanguage();
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState<PhaseEditDraft>(value);
 
@@ -285,7 +287,7 @@ const PhaseEditWorkflowDialog: React.FC<PhaseEditWorkflowDialogProps> = ({
             size="sm"
             onClick={() => setStepIndex((i) => Math.max(i - 1, 0))}
             disabled={stepIndex === 0}
-            aria-label="Étape précédente"
+            aria-label={t('auto.phaseeditworkflowdialog.etape_precedente')}
           >
             <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
             <T k="auto.phaseeditworkflow.precedent" fallback="Précédent" />
@@ -295,12 +297,12 @@ const PhaseEditWorkflowDialog: React.FC<PhaseEditWorkflowDialogProps> = ({
               <T k="auto.phaseeditworkflow.annuler" fallback="Annuler" />
             </Button>
             {stepIndex < STEPS.length - 1 && (
-              <Button size="sm" variant="outline" onClick={goNext} disabled={!stepValidation.isValid} aria-label="Étape suivante">
+              <Button size="sm" variant="outline" onClick={goNext} disabled={!stepValidation.isValid} aria-label={t('auto.phaseeditworkflowdialog.etape_suivante')}>
                 <T k="auto.phaseeditworkflow.suivant" fallback="Suivant" />
                 <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
               </Button>
             )}
-            <Button size="sm" onClick={handleSave} disabled={isSaving || !globalValidation.isValid} aria-label="Enregistrer la phase">
+            <Button size="sm" onClick={handleSave} disabled={isSaving || !globalValidation.isValid} aria-label={t('auto.phaseeditworkflowdialog.enregistrer_la_phase')}>
               {isSaving ? (
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" aria-hidden="true" />
               ) : (

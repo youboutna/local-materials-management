@@ -18,6 +18,7 @@ import { usePhaseMaterialsHex, useAvailableMaterials } from '@/hooks/hexagonal';
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
 import { getMaterialResourceKind } from '@/utils/resourceKind';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseMaterialsProps {
   phaseId: string;
@@ -46,21 +47,22 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
   emptyLabel,
   allowManual = true,
 }) => {
+  const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
   const [selectedMaterialId, setSelectedMaterialId] = useState('');
   const [quantity, setQuantity] = useState('');
-  
+
   const { toast } = useToast();
 
   // Use hexagonal hooks
-  const { 
-    phaseMaterials: allPhaseMaterials, 
-    isLoading, 
-    addMaterial, 
-    updateQuantity: updateMaterialQuantity, 
-    removeMaterial 
+  const {
+    phaseMaterials: allPhaseMaterials,
+    isLoading,
+    addMaterial,
+    updateQuantity: updateMaterialQuantity,
+    removeMaterial
   } = usePhaseMaterialsHex(phaseId, projectId);
-  
+
   const { data: allAvailableMaterials } = useAvailableMaterials();
 
   const matchesKind = (category?: string | null) =>
@@ -79,20 +81,20 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
   const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMaterialId || !quantity) {
-      toast({ 
-        title: 'Erreur', 
-        description: 'Veuillez sélectionner un matériau et spécifier une quantité',
-        variant: 'destructive' 
+      toast({
+        title: t('auto.phasematerials.erreur'),
+        description: t('auto.phasematerials.veuillez_selectionner_un_materiau_et_specifier_u'),
+        variant: 'destructive'
       });
       return;
     }
-    
+
     const qty = parseFloat(quantity);
     if (qty <= 0) {
-      toast({ 
-        title: 'Erreur', 
-        description: 'La quantité doit être supérieure à 0',
-        variant: 'destructive' 
+      toast({
+        title: t('auto.phasematerials.erreur'),
+        description: t('auto.phasematerials.la_quantite_doit_etre_superieure_a_0'),
+        variant: 'destructive'
       });
       return;
     }
@@ -102,12 +104,12 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
       setIsAdding(false);
       setSelectedMaterialId('');
       setQuantity('');
-      toast({ title: 'Matériau ajouté avec succès' });
+      toast({ title: t('auto.phasematerials.materiau_ajoute_avec_succes') });
     } catch (error) {
-      toast({ 
-        title: 'Erreur', 
+      toast({
+        title: t('auto.phasematerials.erreur'),
         description: 'Impossible d\'ajouter le matériau',
-        variant: 'destructive' 
+        variant: 'destructive'
       });
     }
   };
@@ -119,12 +121,12 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
       if (qty > 0) {
         try {
           await updateMaterialQuantity({ id, newQuantity: qty });
-          toast({ title: 'Quantité mise à jour avec succès' });
+          toast({ title: t('auto.phasematerials.quantite_mise_a_jour_avec_succes') });
         } catch (error) {
-          toast({ 
-            title: 'Erreur', 
-            description: 'Impossible de mettre à jour la quantité',
-            variant: 'destructive' 
+          toast({
+            title: t('auto.phasematerials.erreur'),
+            description: t('auto.phasematerials.impossible_de_mettre_a_jour_la_quantite'),
+            variant: 'destructive'
           });
         }
       }
@@ -134,12 +136,12 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
   const handleRemoveMaterial = async (id: string) => {
     try {
       await removeMaterial(id);
-      toast({ title: 'Matériau retiré avec succès' });
+      toast({ title: t('auto.phasematerials.materiau_retire_avec_succes') });
     } catch (error) {
-      toast({ 
-        title: 'Erreur', 
-        description: 'Impossible de retirer le matériau',
-        variant: 'destructive' 
+      toast({
+        title: t('auto.phasematerials.erreur'),
+        description: t('auto.phasematerials.impossible_de_retirer_le_materiau'),
+        variant: 'destructive'
       });
     }
   };
@@ -148,7 +150,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
     return <div className="animate-pulse"><T k="auto.phasematerials.chargement_des_materiaux" fallback="Chargement des matériaux..." /></div>;
   }
 
-  const totalCost = phaseMaterials?.reduce((sum, pm) => 
+  const totalCost = phaseMaterials?.reduce((sum, pm) =>
     sum + (pm.quantity * (pm.material.price_per_unit || 0)), 0
   ) || 0;
 
@@ -178,7 +180,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
                   <Label htmlFor="material"><T k="auto.phasematerials.materiau" fallback="Matériau" /></Label>
                   <Select value={selectedMaterialId} onValueChange={setSelectedMaterialId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un matériau" />
+                      <SelectValue placeholder={t('auto.phasematerials.selectionnez_un_materiau')} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableMaterials?.map((material) => (
@@ -223,7 +225,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
                 Coût total des matériaux: {totalCost.toLocaleString()} MRU
               </p>
             </div>
-            
+
             {phaseMaterials.map((pm) => (
               <div key={pm.id} className="flex justify-between items-center p-3 border rounded-lg">
                 <div className="flex-1">
@@ -244,7 +246,7 @@ const PhaseMaterials: React.FC<PhaseMaterialsProps> = ({
                     </p>
                   )}
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button
                     size="sm"

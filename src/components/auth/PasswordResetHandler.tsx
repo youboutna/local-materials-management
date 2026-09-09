@@ -10,8 +10,10 @@ import { Eye, EyeOff, Lock } from 'lucide-react';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
 import { useAuth } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const PasswordResetHandler = () => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
@@ -38,12 +40,12 @@ const PasswordResetHandler = () => {
         // If this is a password recovery link from email
         if (accessToken && refreshToken && type === 'recovery') {
           console.log('Setting session with recovery tokens');
-          
+
           const result = await setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
-          
+
           if (result.error) {
             console.error('Error setting session:', result.error);
             setError('Lien de réinitialisation invalide ou expiré.');
@@ -56,7 +58,7 @@ const PasswordResetHandler = () => {
           // Check if user is already authenticated (direct access)
           const { data: { session } } = await getSession();
           console.log('Current session:', session);
-          
+
           if (session && session.user) {
             setIsValidLink(true);
           } else {
@@ -91,7 +93,7 @@ const PasswordResetHandler = () => {
     }
 
     const result = await updatePassword(password, confirmPassword);
-    
+
     if (!result.success && result.error) {
       setError(result.error);
     }
@@ -118,8 +120,8 @@ const PasswordResetHandler = () => {
                 {error || 'Ce lien de réinitialisation de mot de passe est invalide ou a expiré. Veuillez demander un nouveau lien de réinitialisation.'}
               </AlertDescription>
             </Alert>
-            <Button 
-              className="w-full mt-4" 
+            <Button
+              className="w-full mt-4"
               onClick={() => navigate('/auth')}
             >
               <T k="auto.passwordresethandler.retour_a_la_connexion" fallback="Retour à la connexion" />
@@ -157,7 +159,7 @@ const PasswordResetHandler = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder="Entrez votre nouveau mot de passe"
+                  placeholder={t('auto.passwordresethandler.entrez_votre_nouveau_mot_de_passe')}
                 />
                 <Button
                   type="button"
@@ -185,7 +187,7 @@ const PasswordResetHandler = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder="Confirmez votre nouveau mot de passe"
+                  placeholder={t('auto.passwordresethandler.confirmez_votre_nouveau_mot_de_passe')}
                 />
                 <Button
                   type="button"
@@ -203,9 +205,9 @@ const PasswordResetHandler = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={loading}
             >
               {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}

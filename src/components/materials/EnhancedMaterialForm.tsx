@@ -47,7 +47,7 @@ type MauritaniaLocation = Location ;
 
 interface FormRef {
   submit: () => void;
-  getFormData: () => Partial<MaterialFormDataDTO>;
+  getFormData: () => <T k="auto.enhancedmaterialform.partial" fallback="Partial" /><MaterialFormDataDTO>;
 }
 
 // Component-specific types
@@ -287,10 +287,10 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
   const handleMapChange = (mapData: MapData) => {
     console.log('Map data changed:', mapData);
-    
+
     // Convert map coordinates to localisation format
     let localisation: Array<{ lat: number; lng: number }> = [];
-    
+
     if (mapData.polygon && mapData.polygon.length > 0) {
       // If there's a polygon, use it as localisation
       localisation = mapData.polygon.map(point => ({
@@ -311,7 +311,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
       coordinatesLatitude: mapData.center?.lat,
       coordinatesLongitude: mapData.center?.lng,
       localisation: localisation,
-      forme: mapData.shapeType && ['polygon', 'rectangle', 'circle', 'point'].includes(mapData.shapeType) 
+      forme: mapData.shapeType && ['polygon', 'rectangle', 'circle', 'point'].includes(mapData.shapeType)
         ? mapData.shapeType as "polygon" | "rectangle" | "circle" | "point"
         : (mapData.center ? 'point' : undefined)
     }));
@@ -524,7 +524,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
   // Convert form data to map format
   const getMapData = (): MapData => {
     return {
-      center: formData.coordinatesLatitude && formData.coordinatesLongitude 
+      center: formData.coordinatesLatitude && formData.coordinatesLongitude
         ? { lat: formData.coordinatesLatitude, lng: formData.coordinatesLongitude }
         : mapData.center,
       address: formData.adresse || mapData.address,
@@ -638,7 +638,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     required
                   />
                 </div>
-                
+
                 <MaterialCategorySelector
                   selectedCategory={selectedCategory}
                   selectedSubcategory={selectedSubcategory}
@@ -647,7 +647,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   onUnitChange={handleUnitChange}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-sm font-medium text-foreground">
                   {t('materials.description') || 'Description'}
@@ -688,7 +688,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     maxLength={14}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="sku" className="text-sm font-medium">
                     <T k="auto.enhancedmaterialform.sku_stock_keeping_unit" fallback="SKU (Stock Keeping Unit)" />
@@ -701,7 +701,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     maxLength={100}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="ean" className="text-sm font-medium">
                     <T k="auto.enhancedmaterialform.ean_european_article_number" fallback="EAN (European Article Number)" />
@@ -714,7 +714,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     maxLength={13}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="asin" className="text-sm font-medium">
                     <T k="auto.enhancedmaterialform.asin_amazon_standard_identification_number" fallback="ASIN (Amazon Standard Identification Number)" />
@@ -728,7 +728,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   />
                 </div>
               </div>
-              
+
               {/* Multi-language labels */}
               <div className="space-y-4 mt-6">
                 <Label className="text-sm font-medium">
@@ -740,51 +740,51 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     <Input
                       id="label-fr"
                       value={formData.multilangLabels?.fr || ''}
-                      onChange={(e) => handleChange('multilangLabels', { 
-                        ...formData.multilangLabels, 
-                        fr: e.target.value 
+                      onChange={(e) => handleChange('multilangLabels', {
+                        ...formData.multilangLabels,
+                        fr: e.target.value
                       })}
-                      placeholder="Nom en français"
+                      placeholder={t('auto.enhancedmaterialform.nom_en_francais')}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="label-ar" className="text-xs">العربية</Label>
                     <Input
                       id="label-ar"
                       value={formData.multilangLabels?.ar || ''}
-                      onChange={(e) => handleChange('multilangLabels', { 
-                        ...formData.multilangLabels, 
-                        ar: e.target.value 
+                      onChange={(e) => handleChange('multilangLabels', {
+                        ...formData.multilangLabels,
+                        ar: e.target.value
                       })}
                       placeholder="الاسم بالعربية"
                       dir="rtl"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="label-en" className="text-xs"><T k="auto.enhancedmaterialform.english" fallback="English" /></Label>
                     <Input
                       id="label-en"
                       value={formData.multilangLabels?.en || ''}
-                      onChange={(e) => handleChange('multilangLabels', { 
-                        ...formData.multilangLabels, 
-                        en: e.target.value 
+                      onChange={(e) => handleChange('multilangLabels', {
+                        ...formData.multilangLabels,
+                        en: e.target.value
                       })}
-                      placeholder="Name in English"
+                      placeholder={t('auto.enhancedmaterialform.name_in_english')}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="label-es" className="text-xs"><T k="auto.enhancedmaterialform.espanol" fallback="Español" /></Label>
                     <Input
                       id="label-es"
                       value={formData.multilangLabels?.es || ''}
-                      onChange={(e) => handleChange('multilangLabels', { 
-                        ...formData.multilangLabels, 
-                        es: e.target.value 
+                      onChange={(e) => handleChange('multilangLabels', {
+                        ...formData.multilangLabels,
+                        es: e.target.value
                       })}
-                      placeholder="Nombre en español"
+                      placeholder={t('auto.enhancedmaterialform.nombre_en_espanol')}
                     />
                   </div>
                 </div>
@@ -882,7 +882,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
 
               updateLocationState();
             }}
-            placeholder="Rechercher une région, ville ou localité pour le matériau..."
+            placeholder={t('auto.enhancedmaterialform.rechercher_une_region_ville_ou_localite_pour_le_')}
             filter="all"
             showCoordinates={true}
             showGPS={true}
@@ -903,7 +903,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                   console.info('[MaterialGIS] persisted', next.length, 'coverage zones (in-form)');
                 }}
                 showAddressBar={false}
-                title="Zones de couverture / workspace"
+                title={t('auto.enhancedmaterialform.zones_de_couverture_workspace')}
                 hint="Optionnel — tracez la surface couverte par ce matériau (entrepôt, aire logistique). Import GeoJSON supporté."
                 height={420}
               />
@@ -935,7 +935,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     className="border-border focus:border-success"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="availableQuantity" className="text-sm font-medium text-foreground">
                     {t('materials.available_quantity') || 'Quantité disponible'}
@@ -950,7 +950,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     className="border-border focus:border-success"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="minQuantity" className="text-sm font-medium text-foreground">
                     {t('materials.min_quantity') || 'Quantité minimale'}
@@ -965,7 +965,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     className="border-border focus:border-success"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="pricePerUnit" className="text-sm font-medium text-foreground">
                     {t('materials.price_per_unit') || 'Prix unitaire'}
@@ -1008,7 +1008,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     className="border-border focus:border-blue-500"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="endDate" className="text-sm font-medium text-foreground">
                     {t('materials.end_date') || 'Date de fin'}
@@ -1021,7 +1021,7 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
                     className="border-border focus:border-blue-500"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="estimatedDuration" className="text-sm font-medium text-foreground">
                     {t('materials.estimated_duration') || 'Durée estimée (jours)'}
@@ -1175,8 +1175,8 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
       {/* Conditional Submit Button */}
       {showSubmitButton && (
         <div className="flex justify-end gap-4 pt-6">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
             {t('materials.create') || 'Créer le matériau'}

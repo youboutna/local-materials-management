@@ -8,14 +8,14 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import UnifiedLocationSelector from '@/components/location/UnifiedLocationSelector';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from '@/components/ui/dialog';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,15 +24,15 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Building, 
-  Calendar, 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
+import {
+  Building,
+  Calendar,
+  Users,
+  DollarSign,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
   Target,
   FileText,
   Settings,
@@ -55,7 +55,7 @@ import {
 } from 'lucide-react';
 
 // Import hooks and services
-import { 
+import {
   useProjects,
   useProjectOverview,
   useProjectDetail,
@@ -73,10 +73,10 @@ import {
 } from '@/hooks/hexagonal/useProjectManagementHex';
 
 // Import DTOs
-import { 
-  ProjectStatus, 
+import {
+  ProjectStatus,
   PROJECT_STATUS_LABELS,
-  PROJECT_STATUS_CATEGORIES 
+  PROJECT_STATUS_CATEGORIES
 } from '@/dtos/entities/ProjectDTO';
 import { T } from '@/components/i18n/T';
 
@@ -85,14 +85,16 @@ const ProjectDashboard: React.FC<any> = () => <div><T k="auto.projectmanagementp
 import { Skeleton } from '../ui/skeleton';
 
 import { TranslatedSeverity, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * Comprehensive Project Management Page
  * Implements all project-related services with data-driven UI
  */
 const ProjectManagementPage: React.FC = () => {
+  const { t } = useLanguage();
   const { projectId } = useParams<{ projectId?: string }>();
   const navigate = useNavigate();
-  
+
   // State management
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
@@ -111,40 +113,40 @@ const ProjectManagementPage: React.FC = () => {
   const projectsLoading = projectsQuery.isLoading;
   const projectsError = projectsQuery.error;
 
-  const { 
-    data: projectOverview, 
-    isLoading: overviewLoading 
+  const {
+    data: projectOverview,
+    isLoading: overviewLoading
   } = useProjectOverview(projectId || '');
 
-  const { 
-    data: projectDetail, 
-    isLoading: detailLoading 
+  const {
+    data: projectDetail,
+    isLoading: detailLoading
   } = useProjectDetail(projectId || '');
 
-  const { 
-    data: metrics, 
-    isLoading: metricsLoading 
+  const {
+    data: metrics,
+    isLoading: metricsLoading
   } = useProjectMetrics();
 
-  const { 
-    data: workflow, 
-    isLoading: workflowLoading 
+  const {
+    data: workflow,
+    isLoading: workflowLoading
   } = useProjectWorkflow(projectId || '');
 
-  const { 
-    projects: filteredProjects, 
+  const {
+    projects: filteredProjects,
     isLoading: searchLoading,
     filters,
     updateFilters,
-    clearFilters 
+    clearFilters
   } = useProjectSearch();
 
   const statisticsQuery = useProjectStatistics();
   const statistics = (statisticsQuery as any).statistics || (statisticsQuery as any).data || null;
 
-  const { 
-    advanceWorkflow, 
-    blockWorkflow 
+  const {
+    advanceWorkflow,
+    blockWorkflow
   } = useProjectWorkflowManager(projectId || '');
 
   const createProject = useCreateProject();
@@ -182,7 +184,7 @@ const ProjectManagementPage: React.FC = () => {
   // Handle bulk actions
   const handleBulkStatusUpdate = (status: ProjectStatus) => {
     if (selectedProjects.length === 0) return;
-    
+
     bulkUpdateStatus.mutateAsync({
       projectIds: selectedProjects,
       status,
@@ -192,7 +194,7 @@ const ProjectManagementPage: React.FC = () => {
 
   const handleBulkArchive = () => {
     if (selectedProjects.length === 0) return;
-    
+
     bulkArchive.mutateAsync(selectedProjects);
   };
 
@@ -264,9 +266,9 @@ const ProjectManagementPage: React.FC = () => {
             <Plus className="h-4 w-4 mr-2" />
             <T k="auto.projectmanagementpage.new_project" fallback="New Project" />
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowBulkActions(true)}
             disabled={selectedProjects.length === 0}
           >
@@ -287,15 +289,15 @@ const ProjectManagementPage: React.FC = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search projects..."
+                placeholder={t('auto.projectmanagementpage.search_projects')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
-            
+
             <div className="flex gap-2">
-              <Select value={statusFilter[0] || ''} onValueChange={(value) => 
+              <Select value={statusFilter[0] || ''} onValueChange={(value) =>
                 value ? setStatusFilter([value as ProjectStatus]) : setStatusFilter([])
               }>
                 <SelectTrigger className="w-40">
@@ -312,7 +314,7 @@ const ProjectManagementPage: React.FC = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={categoryFilter[0] || ''} onValueChange={(value) => 
+              <Select value={categoryFilter[0] || ''} onValueChange={(value) =>
                 value ? setCategoryFilter([value]) : setCategoryFilter([])
               }>
                 <SelectTrigger className="w-40">
@@ -506,15 +508,15 @@ const ProjectManagementPage: React.FC = () => {
               <CardTitle className="flex items-center justify-between">
                 <span>All Projects ({projects?.length})</span>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
                   >
                     {selectedProjects.length === projects?.length ? 'Deselect All' : 'Select All'}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => setShowCreateDialog(true)}
                   >
@@ -528,8 +530,8 @@ const ProjectManagementPage: React.FC = () => {
           <CardContent>
             <div className="space-y-4">
               {projects?.map((project) => (
-                <div 
-                  key={project.id} 
+                <div
+                  key={project.id}
                   className="p-4 border rounded-lg hover:bg-accent cursor-pointer"
                   onClick={() => navigate(`/projects/${project.id}`)}
                 >
@@ -623,9 +625,9 @@ const ProjectManagementPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Progress 
-                    value={(workflow.completedSteps / workflow.totalSteps) * 100} 
-                    className="w-full" 
+                  <Progress
+                    value={(workflow.completedSteps / workflow.totalSteps) * 100}
+                    className="w-full"
                   />
 
                   <div className="flex gap-2">
@@ -716,7 +718,7 @@ const ProjectManagementPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="title"><T k="auto.projectmanagementpage.project_title" fallback="Project Title" /></Label>
-                <Input id="title" placeholder="Enter project title" />
+                <Input id="title" placeholder={t('auto.projectmanagementpage.enter_project_title')} />
               </div>
               <div className="col-span-2">
                 <Label htmlFor="location"><T k="auto.projectmanagementpage.location" fallback="Location" /></Label>
@@ -725,13 +727,13 @@ const ProjectManagementPage: React.FC = () => {
                   onChange={(loc) => {
                     console.log('Location selected:', loc);
                   }}
-                  placeholder="Rechercher une localisation pour le projet..."
+                  placeholder={t('auto.projectmanagementpage.rechercher_une_localisation_pour_le_projet')}
                   filter="all"
                 />
               </div>
               <div>
                 <Label htmlFor="budget"><T k="auto.projectmanagementpage.budget" fallback="Budget" /></Label>
-                <Input id="budget" type="number" placeholder="Enter budget" />
+                <Input id="budget" type="number" placeholder={t('auto.projectmanagementpage.enter_budget')} />
               </div>
               <div>
                 <Label htmlFor="startDate"><T k="auto.projectmanagementpage.start_date" fallback="Start Date" /></Label>
@@ -744,9 +746,9 @@ const ProjectManagementPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="description"><T k="auto.projectmanagementpage.description" fallback="Description" /></Label>
-              <textarea 
-                id="description" 
-                placeholder="Enter project description"
+              <textarea
+                id="description"
+                placeholder={t('auto.projectmanagementpage.enter_project_description')}
                 className="min-h-[100px] resize-none"
               />
             </div>
@@ -777,15 +779,15 @@ const ProjectManagementPage: React.FC = () => {
                 {selectedProjects.length} projects selected
               </p>
             </div>
-            
+
             <div className="space-y-2">
               <div>
                 <Label htmlFor="bulkStatus"><T k="auto.projectmanagementpage.update_status" fallback="Update Status" /></Label>
-                <Select onValueChange={(value) => 
+                <Select onValueChange={(value) =>
                   value ? handleBulkStatusUpdate(value as ProjectStatus) : undefined
                 }>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t('auto.projectmanagementpage.select_status')} />
                   </SelectTrigger>
                   <SelectContent>
                     {statusOptions.map((option) => (
@@ -796,9 +798,9 @@ const ProjectManagementPage: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex gap-2">
-                <Button 
+                <Button
                   variant="destructive"
                   onClick={handleBulkArchive}
                   disabled={selectedProjects.length === 0}
@@ -808,7 +810,7 @@ const ProjectManagementPage: React.FC = () => {
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowBulkActions(false)}>
                 <T k="auto.projectmanagementpage.cancel" fallback="Cancel" />

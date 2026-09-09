@@ -18,6 +18,7 @@ import { useProjectPhasesAsStepsHex, useInspectorsHex } from '@/hooks/hexagonal/
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface Project {
   id: string;
   title: string;
@@ -40,7 +41,7 @@ interface ProjectStep {
 
 interface AdvancedInspectionSchedulerProps {
   projects: Project[];
-  onScheduleInspection: (projectId: string, inspector: string, date: string, additionalData?: any) => Promise<void>;
+  onScheduleInspection: (projectId: string, inspector: string, date: string, additionalData?: any) => <T k="auto.advancedinspectionscheduler.promise" fallback="Promise" /><void>;
   preselectedProjectId?: string;
   preselectedStepId?: string;
   preselectedSteps?: ProjectStep[];
@@ -63,6 +64,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   preselectedStepId,
   preselectedSteps = []
 }) => {
+  const { t } = useLanguage();
   const [selectedProject, setSelectedProject] = useState<Project | undefined>();
   const [inspectionType, setInspectionType] = useState('');
   const [selectedInspector, setSelectedInspector] = useState('');
@@ -106,11 +108,11 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   useEffect(() => {
     if (selectedProject && inspectors && inspectors.length > 0) {
       // Try to find engineering consultant from the project's engineering_consultant field
-      const projectEngConsultant = inspectors.find(emp => 
+      const projectEngConsultant = inspectors.find(emp =>
         emp.position?.toLowerCase().includes('consultant') ||
         emp.position?.toLowerCase().includes('ingénieur')
       );
-      
+
       if (projectEngConsultant && !selectedInspector && projectEngConsultant.id) {
         setSelectedInspector(projectEngConsultant.id);
       }
@@ -118,26 +120,26 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
   }, [selectedProject, inspectors, selectedInspector]);
 
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = !projectFilter || 
+    const matchesSearch = !projectFilter ||
       project.title.toLowerCase().includes(projectFilter.toLowerCase()) ||
       project.project_reference?.toLowerCase().includes(projectFilter.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || !statusFilter || project.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
   // Filter inspectors based on search
   const filteredInspectors = inspectors?.filter(inspector => {
     if (!inspectorSearch) return true;
-    
+
     const searchLower = inspectorSearch.toLowerCase();
     const matchesName = inspector.full_name?.toLowerCase().includes(searchLower);
     const matchesPhone = inspector.phone?.toLowerCase().includes(searchLower);
     const matchesPosition = inspector.position?.toLowerCase().includes(searchLower);
     const matchesDepartment = inspector.department?.toLowerCase().includes(searchLower);
     const matchesNif = inspector.nif?.toLowerCase()?.includes(searchLower);
-    
+
     return matchesName || matchesPhone || matchesPosition || matchesDepartment || matchesNif;
   }) || [];
 
@@ -166,7 +168,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
       if (notifyContractor && selectedProject.contractor_contact) {
         await NotificationService.createNotification({
           recipientId: selectedProject.contractor_contact,
-          title: 'Inspection Programmée',
+          title: t('auto.advancedinspectionscheduler.inspection_programmee'),
           message: `Une inspection ${INSPECTION_TYPES.find(t => t.value === inspectionType)?.label} a été programmée pour le projet "${selectedProject.title}" le ${new Date(inspectionDate).toLocaleDateString('fr-FR')}.`,
           type: 'info',
           relatedId: selectedProject.id,
@@ -211,7 +213,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
             <div>
               <Label><T k="auto.advancedinspectionscheduler.rechercher" fallback="Rechercher" /></Label>
               <Input
-                placeholder="Nom du projet ou référence..."
+                placeholder={t('auto.advancedinspectionscheduler.nom_du_projet_ou_reference')}
                 value={projectFilter}
                 onChange={(e) => setProjectFilter(e.target.value)}
               />
@@ -220,7 +222,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               <Label><T k="auto.advancedinspectionscheduler.statut" fallback="Statut" /></Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Tous les statuts" />
+                  <SelectValue placeholder={t('auto.advancedinspectionscheduler.tous_les_statuts')} />
                 </SelectTrigger>
                 <SelectContent className="bg-background border z-[100]">
                   <SelectItem value="all"><T k="auto.advancedinspectionscheduler.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
@@ -242,11 +244,11 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProjects.slice(0, 9).map((project) => (
-              <Card 
-                key={project.id} 
+              <Card
+                key={project.id}
                 className={`cursor-pointer transition-all border-2 ${
-                  selectedProject?.id === project.id 
-                    ? 'border-primary bg-primary/5' 
+                  selectedProject?.id === project.id
+                    ? 'border-primary bg-primary/5'
                     : 'border-dashed border-muted hover:border-primary/50'
                 }`}
                 onClick={() => setSelectedProject(project)}
@@ -302,7 +304,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                 <Label>Type d'Inspection *</Label>
                 <Select value={inspectionType} onValueChange={setInspectionType}>
                   <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="Choisir le type..." />
+                    <SelectValue placeholder={t('auto.advancedinspectionscheduler.choisir_le_type')} />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-[100]">
                     {INSPECTION_TYPES.map((type) => (
@@ -318,19 +320,19 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                 <Label>Inspecteur *</Label>
                 <div className="space-y-2">
                   <Input
-                    placeholder="Rechercher par nom, téléphone, poste, NIF..."
+                    placeholder={t('auto.advancedinspectionscheduler.rechercher_par_nom_telephone_poste_nif')}
                     value={inspectorSearch}
                     onChange={(e) => setInspectorSearch(e.target.value)}
                     className="bg-background"
                   />
-                  <Select 
-                    value={selectedInspector} 
+                  <Select
+                    value={selectedInspector}
                     onValueChange={setSelectedInspector}
                     open={isInspectorOpen}
                     onOpenChange={setIsInspectorOpen}
                   >
                     <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Sélectionner un inspecteur..." />
+                      <SelectValue placeholder={t('auto.advancedinspectionscheduler.selectionner_un_inspecteur')} />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-[100] max-h-60">
                       {filteredInspectors.length === 0 ? (
@@ -344,7 +346,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
                           const isInspector = inspector.position?.toLowerCase().includes('inspector');
                           const isSupplier = inspector.type === 'supplier';
                           const isResponsable = inspector.position?.toLowerCase().includes('responsable');
-                          
+
                           return (
                             <SelectItem key={inspector.id || ''} value={inspector.id || ''}>
                               <div className="flex flex-col w-full">
@@ -459,7 +461,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
             <div>
               <Label><T k="auto.advancedinspectionscheduler.exigences_speciales" fallback="Exigences Spéciales" /></Label>
               <Textarea
-                placeholder="Décrivez les exigences ou critères spéciaux pour cette inspection..."
+                placeholder={t('auto.advancedinspectionscheduler.decrivez_les_exigences_ou_criteres_speciaux_pour')}
                 value={requirements}
                 onChange={(e) => setRequirements(e.target.value)}
                 rows={3}
@@ -480,7 +482,7 @@ const AdvancedInspectionScheduler: React.FC<AdvancedInspectionSchedulerProps> = 
               </Label>
             </div>
 
-            <Button 
+            <Button
               onClick={handleScheduleInspection}
               className="w-full"
               size="lg"

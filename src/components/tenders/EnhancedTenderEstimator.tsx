@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +56,7 @@ const buildWorkflowSteps = (): WorkflowStep[] =>
   }));
 
 const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimatorProps) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('workflow');
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>(() => buildWorkflowSteps());
 
@@ -85,14 +87,14 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
   const fmt = (n: number) => `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n)} MRU`;
 
   const updateWorkflowStep = useCallback((stepId: string, updates: Partial<WorkflowStep>) => {
-    setWorkflowSteps(prev => prev.map(step => 
+    setWorkflowSteps(prev => prev.map(step =>
       step.id === stepId ? { ...step, ...updates } : step
     ));
   }, []);
 
   const completeWorkflowStep = (stepId: string) => {
     updateWorkflowStep(stepId, { status: 'completed', progress: 100 });
-    
+
     // Auto-advance to next step
     const currentIndex = workflowSteps.findIndex(s => s.id === stepId);
     if (currentIndex < workflowSteps.length - 1) {
@@ -116,14 +118,14 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
     );
     setActiveTab('devis');
     toast({
-      title: 'Template appliqué',
+      title: t('auto.enhancedtenderestimator.template_applique'),
       description: `${template.items.length} ligne(s) ajoutée(s) au brouillon du devis.`,
     });
   };
 
   const exportEstimate = () => {
     if (!lines.length) {
-      toast({ title: 'Aucune ligne', description: 'Le devis ne contient aucune ligne à exporter.', variant: 'destructive' });
+      toast({ title: t('auto.enhancedtenderestimator.aucune_ligne'), description: t('auto.enhancedtenderestimator.le_devis_ne_contient_aucune_ligne_a_exporter'), variant: 'destructive' });
       return;
     }
     const header = ['Designation', 'Type', 'Unite', 'Quantite', 'PU', 'Total HT'];
@@ -142,23 +144,23 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
     a.download = `devis-${tenderId}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast({ title: 'Export réussi', description: `${lines.length} ligne(s) exportée(s).` });
+    toast({ title: t('auto.enhancedtenderestimator.export_reussi'), description: `${lines.length} ligne(s) exportée(s).` });
   };
 
   const generateReport = async () => {
     try {
       toast({
-        title: 'Génération du rapport',
+        title: t('auto.enhancedtenderestimator.generation_du_rapport'),
         description: 'Le rapport d\'estimation est en cours de génération...',
       });
 
       if (!lines.length) {
-        toast({ title: 'Aucune ligne', description: 'Le devis ne contient aucune ligne.', variant: 'destructive' });
+        toast({ title: t('auto.enhancedtenderestimator.aucune_ligne'), description: t('auto.enhancedtenderestimator.le_devis_ne_contient_aucune_ligne'), variant: 'destructive' });
         return;
       }
       const { BoqPdfRenderer } = await import('@/application/services/boq/BoqPdfRenderer');
       const blob = BoqPdfRenderer.render(lines, {
-        title: 'Devis estimatif',
+        title: t('auto.enhancedtenderestimator.devis_estimatif'),
         docPrefix: 'devis',
         tenderId,
         projectId,
@@ -170,13 +172,13 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
       a.click();
       URL.revokeObjectURL(url);
       toast({
-        title: 'Rapport généré',
+        title: t('auto.enhancedtenderestimator.rapport_genere'),
         description: 'Le rapport d\'estimation a été généré avec succès.',
       });
     } catch (error) {
       toast({
-        title: 'Erreur',
-        description: 'Erreur lors de la génération du rapport.',
+        title: t('auto.enhancedtenderestimator.erreur'),
+        description: t('auto.enhancedtenderestimator.erreur_lors_de_la_generation_du_rapport'),
         variant: 'destructive'
       });
     }

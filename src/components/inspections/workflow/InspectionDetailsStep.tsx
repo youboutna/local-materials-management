@@ -18,6 +18,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InspectionDetailsStepProps {
   projectId: string;
@@ -50,6 +51,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
   initialData,
   onComplete,
 }) => {
+  const { t } = useLanguage();
   const [details, setDetails] = useState<InspectionDetails>({
     scheduled_date: initialData?.scheduled_date || '',
     scheduled_time: initialData?.scheduled_time || '09:00',
@@ -74,7 +76,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
 
       const userId = user?.id || '';
 
-      return service.getAssignableInspectors({ 
+      return service.getAssignableInspectors({
         context: {
           userId,
           projectId,
@@ -119,7 +121,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
     }
   };
 
-  const isValid = mode === 'request' 
+  const isValid = mode === 'request'
     ? !!details.scheduled_date
     : !!details.scheduled_date && !!details.inspector_id;
 
@@ -136,7 +138,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
           {mode === 'request' ? 'Proposez des dates' : 'Planifiez l\'inspection'}
         </h3>
         <p className="text-sm text-muted-foreground mt-1">
-          {mode === 'request' 
+          {mode === 'request'
             ? 'Proposez jusqu\'à 3 dates possibles pour l\'inspection'
             : 'Définissez la date, l\'heure et l\'inspecteur'}
         </p>
@@ -176,8 +178,8 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
 
                   <div className="space-y-2">
                     <Label><T k="auto.inspectiondetailsstep.duree_heures" fallback="Durée (heures)" /></Label>
-                    <Select 
-                      value={details.estimated_duration_hours.toString()} 
+                    <Select
+                      value={details.estimated_duration_hours.toString()}
                       onValueChange={(v) => setDetails(prev => ({ ...prev, estimated_duration_hours: parseInt(v) }))}
                     >
                       <SelectTrigger>
@@ -234,7 +236,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
                   <Label>Inspecteur principal *</Label>
                   <Select value={details.inspector_id || ''} onValueChange={handleInspectorChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un inspecteur..." />
+                      <SelectValue placeholder={t('auto.inspectiondetailsstep.selectionner_un_inspecteur')} />
                     </SelectTrigger>
                     <SelectContent>
                       {inspectors.map(inspector => (
@@ -265,12 +267,12 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
 
                 <div className="space-y-2">
                   <Label><T k="auto.inspectiondetailsstep.inspecteur_suppleant" fallback="Inspecteur suppléant" /></Label>
-                  <Select 
-                    value={details.backup_inspector_id || 'none'} 
+                  <Select
+                    value={details.backup_inspector_id || 'none'}
                     onValueChange={(v) => setDetails(prev => ({ ...prev, backup_inspector_id: v === 'none' ? undefined : v }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Optionnel..." />
+                      <SelectValue placeholder={t('auto.inspectiondetailsstep.optionnel')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none"><T k="auto.inspectiondetailsstep.aucun" fallback="Aucun" /></SelectItem>
@@ -297,8 +299,8 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label><T k="auto.inspectiondetailsstep.priorite" fallback="Priorité" /></Label>
-              <Select 
-                value={details.priority} 
+              <Select
+                value={details.priority}
                 onValueChange={(v) => setDetails(prev => ({ ...prev, priority: v as 'low' | 'medium' | 'high' }))}
               >
                 <SelectTrigger>
@@ -315,7 +317,7 @@ const InspectionDetailsStep: React.FC<InspectionDetailsStepProps> = ({
             <div className="space-y-2">
               <Label><T k="auto.inspectiondetailsstep.exigences_particulieres" fallback="Exigences particulières" /></Label>
               <Textarea
-                placeholder="Décrivez les points particuliers à vérifier, les zones à inspecter..."
+                placeholder={t('auto.inspectiondetailsstep.decrivez_les_points_particuliers_a_verifier_les_')}
                 value={details.requirements || ''}
                 onChange={(e) => setDetails(prev => ({ ...prev, requirements: e.target.value }))}
                 rows={3}

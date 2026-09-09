@@ -139,7 +139,7 @@ const Footer = () => {
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="Votre email"
+                placeholder={t('auto.footer.votre_email')}
                 className="flex-1 px-3 py-2 bg-adrar-700 border border-adrar-600 rounded-lg text-white placeholder-adrar-300 text-sm focus:outline-none focus:border-terracotta-500"
               />
               <button className="px-4 py-2 bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-lg transition-colors text-sm">

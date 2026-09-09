@@ -26,6 +26,7 @@ import { getEmployeeService } from '@/application/services/EmployeeService';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { RiskDTO } from '@/dtos/entities/RiskDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EnhancedRiskAnalysisStepProps {
   formData: ProjectDTO & { risks?: RiskDTO[] };
@@ -135,6 +136,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
   formData,
   onUpdate,
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const riskService = getRiskService();
   const projectId = formData?.id || '';
@@ -202,12 +204,12 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
 
   const handleSubmit = async () => {
     if (!form.title.trim()) {
-      toast({ title: 'Erreur', description: 'Le titre du risque est obligatoire', variant: 'destructive' });
+      toast({ title: t('auto.enhancedriskanalysisstep.erreur'), description: t('auto.enhancedriskanalysisstep.le_titre_du_risque_est_obligatoire'), variant: 'destructive' });
       return;
     }
     if (!projectId) {
       toast({
-        title: 'Projet non enregistré',
+        title: t('auto.enhancedriskanalysisstep.projet_non_enregistre'),
         description: "Enregistrez d'abord le projet pour pouvoir ajouter des risques",
         variant: 'destructive',
       });
@@ -233,7 +235,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
           owner_id: form.owner || undefined,
         });
         propagate(risks.map(r => (r.id === updated.id ? updated : r)));
-        toast({ title: 'Risque mis à jour', description: 'Les modifications ont été enregistrées' });
+        toast({ title: t('auto.enhancedriskanalysisstep.risque_mis_a_jour'), description: t('auto.enhancedriskanalysisstep.les_modifications_ont_ete_enregistrees') });
       } else {
         const created = await riskService.createRisk({
           project_id: projectId,
@@ -252,14 +254,14 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
           owner_id: form.owner || undefined,
         });
         propagate([...risks, created]);
-        toast({ title: 'Risque ajouté', description: 'Le risque a été enregistré' });
+        toast({ title: t('auto.enhancedriskanalysisstep.risque_ajoute'), description: t('auto.enhancedriskanalysisstep.le_risque_a_ete_enregistre') });
       }
       setShowForm(false);
       setForm(emptyForm());
     } catch (error) {
       console.error('Failed to save risk:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.enhancedriskanalysisstep.erreur'),
         description: error instanceof Error ? error.message : "Échec de l'enregistrement du risque",
         variant: 'destructive',
       });
@@ -273,10 +275,10 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
     try {
       await riskService.deleteRisk(deleteId);
       propagate(risks.filter(r => r.id !== deleteId));
-      toast({ title: 'Risque supprimé', description: 'Le risque a été supprimé' });
+      toast({ title: t('auto.enhancedriskanalysisstep.risque_supprime'), description: t('auto.enhancedriskanalysisstep.le_risque_a_ete_supprime') });
     } catch (error) {
       console.error('Failed to delete risk:', error);
-      toast({ title: 'Erreur', description: 'Échec de la suppression du risque', variant: 'destructive' });
+      toast({ title: t('auto.enhancedriskanalysisstep.erreur'), description: t('auto.enhancedriskanalysisstep.echec_de_la_suppression_du_risque'), variant: 'destructive' });
     } finally {
       setDeleteId(null);
     }
@@ -288,7 +290,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
       propagate(risks.map(r => (r.id === updated.id ? updated : r)));
     } catch (error) {
       console.error('Failed to update risk status:', error);
-      toast({ title: 'Erreur', description: 'Échec de la mise à jour du statut', variant: 'destructive' });
+      toast({ title: t('auto.enhancedriskanalysisstep.erreur'), description: t('auto.enhancedriskanalysisstep.echec_de_la_mise_a_jour_du_statut'), variant: 'destructive' });
     }
   };
 
@@ -368,14 +370,14 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                       id="risk-title"
                       value={form.title}
                       onChange={e => setForm({ ...form, title: e.target.value })}
-                      placeholder="Titre du risque"
+                      placeholder={t('auto.enhancedriskanalysisstep.titre_du_risque')}
                     />
                   </div>
                   <div>
                     <Label htmlFor="risk-category"><T k="auto.enhancedriskanalysisstep.categorie" fallback="Catégorie" /></Label>
                     <Select value={form.category} onValueChange={v => setForm({ ...form, category: v as RiskCategoryUI })}>
                       <SelectTrigger id="risk-category">
-                        <SelectValue placeholder="Sélectionner une catégorie" />
+                        <SelectValue placeholder={t('auto.enhancedriskanalysisstep.selectionner_une_categorie')} />
                       </SelectTrigger>
                       <SelectContent>
                         {['technical', 'financial', 'environmental', 'regulatory', 'operational', 'security', 'health_safety', 'quality', 'schedule', 'resource', 'stakeholder'].map(c => (
@@ -392,7 +394,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     id="risk-description"
                     value={form.description}
                     onChange={e => setForm({ ...form, description: e.target.value })}
-                    placeholder="Description détaillée du risque"
+                    placeholder={t('auto.enhancedriskanalysisstep.description_detaillee_du_risque')}
                     className="min-h-[80px]"
                   />
                 </div>
@@ -437,7 +439,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                     <Label htmlFor="risk-owner"><T k="auto.enhancedriskanalysisstep.responsable" fallback="Responsable" /></Label>
                     <Select value={form.owner} onValueChange={v => setForm({ ...form, owner: v })}>
                       <SelectTrigger id="risk-owner">
-                        <SelectValue placeholder="Sélectionner" />
+                        <SelectValue placeholder={t('auto.enhancedriskanalysisstep.selectionner')} />
                       </SelectTrigger>
                       <SelectContent>
                         {employees.map(emp => (
@@ -487,7 +489,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                       id="risk-mitigation"
                       value={form.mitigationPlan}
                       onChange={e => setForm({ ...form, mitigationPlan: e.target.value })}
-                      placeholder="Stratégies pour réduire le risque"
+                      placeholder={t('auto.enhancedriskanalysisstep.strategies_pour_reduire_le_risque')}
                       className="min-h-[80px]"
                     />
                   </div>
@@ -497,7 +499,7 @@ const EnhancedRiskAnalysisStep: React.FC<EnhancedRiskAnalysisStepProps> = ({
                       id="risk-contingency"
                       value={form.contingencyPlan}
                       onChange={e => setForm({ ...form, contingencyPlan: e.target.value })}
-                      placeholder="Actions si le risque se matérialise"
+                      placeholder={t('auto.enhancedriskanalysisstep.actions_si_le_risque_se_materialise')}
                       className="min-h-[80px]"
                     />
                   </div>

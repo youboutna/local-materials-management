@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * WorkflowKanban - Vue Kanban interactive des étapes avec actions intégrées
  * Permet de visualiser et gérer les étapes, inspections et paiements en un seul endroit
@@ -76,6 +77,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
   onViewPayment,
   formatCurrency,
 }) => {
+  const { t } = useLanguage();
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
 
   // helpers to safely access optional legacy fields when step may be unified StepItem
@@ -193,7 +195,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
       const inspectionId = workflowStatus.latestInspection.id;
       actions.push({
         icon: <Eye className="h-4 w-4" />,
-        label: 'Voir PV',
+        label: t('auto.workflowkanban.voir_pv'),
         onClick: () => onViewInspection(inspectionId),
       });
     }
@@ -209,7 +211,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
     } else if (workflowStatus.paymentStatus === 'paid' && onViewPayment) {
       actions.push({
         icon: <Download className="h-4 w-4" />,
-        label: 'Télécharger facture',
+        label: t('auto.workflowkanban.telecharger_facture'),
         onClick: () => onViewPayment(step.id),
       });
     }
@@ -245,7 +247,7 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
             </Badge>
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-0">
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-muted/50 text-xs font-medium text-muted-foreground border-b">
@@ -262,11 +264,11 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
               const workflowStatus = getStepWorkflowStatus(step);
               const actions = getContextualActions(step, workflowStatus);
               const isExpanded = expandedStep === step.id;
-              
+
               return (
                 <div key={step.id} className="group">
                   {/* Main Row */}
-                  <div 
+                  <div
                     className={cn(
                       "grid grid-cols-12 gap-2 px-4 py-3 items-center transition-colors cursor-pointer",
                       step.status === 'completed' && "bg-success-soft/50",
@@ -328,13 +330,13 @@ const WorkflowKanban: React.FC<WorkflowKanbanProps> = ({
                     {/* Payment */}
                     <div className="col-span-2 flex items-center justify-center gap-2">
                       {getPaymentBadge(workflowStatus)}
-                      
+
                       {/* Actions Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <MoreVertical className="h-4 w-4" />

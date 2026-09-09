@@ -24,6 +24,8 @@ import {
   getCashDeductibleCeiling,
 } from '@/config/referentials/fiscal/lfr-2026.referential';
 import { formatCurrency } from '@/utils/phaseDisplayHelpers';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface FiscalComplianceValue {
   supplierNif?: string | null;
@@ -44,6 +46,7 @@ interface Props {
 export const FiscalCompliancePanel: React.FC<Props> = ({
   lines, value, onChange, profile, lang = 'fr', disabled,
 }) => {
+  const { t } = useLanguage();
   const summary = React.useMemo(() => {
     const enriched = lines.map((l) => ({
       ...l,
@@ -70,16 +73,16 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
   return (
     <div className="space-y-3 border-b bg-muted/20 p-4">
       <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-6">
-        <Stat label="Total HT" value={formatCurrency(summary.totalHt)} />
-        <Stat label="TVA" value={formatCurrency(summary.totalVat)} />
-        <Stat label="Total TTC" value={formatCurrency(summary.totalTtc)} />
-        <Stat label="Retenues RAS" value={formatCurrency(summary.totalRas)} />
+        <Stat label={t('auto.fiscalcompliancepanel.total_ht')} value={formatCurrency(summary.totalHt)} />
+        <Stat label={t('auto.fiscalcompliancepanel.tva')} value={formatCurrency(summary.totalVat)} />
+        <Stat label={t('auto.fiscalcompliancepanel.total_ttc')} value={formatCurrency(summary.totalTtc)} />
+        <Stat label={t('auto.fiscalcompliancepanel.retenues_ras')} value={formatCurrency(summary.totalRas)} />
         <Stat
-          label="Taxe transactions élec."
+          label={t('auto.fiscalcompliancepanel.taxe_transactions_elec')}
           value={formatCurrency(summary.electronicTransactionTax)}
           hint={`${(ELECTRONIC_TRANSACTION_TAX.rate * 100).toFixed(1)} % plafonné à ${ELECTRONIC_TRANSACTION_TAX.capAmount} MRU`}
         />
-        <Stat label="Net à payer" value={formatCurrency(summary.netToPay)} strong />
+        <Stat label={t('auto.fiscalcompliancepanel.net_a_payer')} value={formatCurrency(summary.netToPay)} strong />
       </div>
 
       {summary.buckets.length > 1 && (
@@ -94,7 +97,7 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
 
       <div className="grid gap-3 md:grid-cols-4">
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">NIF fournisseur</Label>
+          <Label className="text-xs text-muted-foreground"><T k="auto.fiscalcompliancepanel.nif_fournisseur" fallback="NIF fournisseur" /></Label>
           <Input
             value={value.supplierNif ?? ''}
             disabled={disabled}
@@ -109,7 +112,7 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
           ) : null}
         </div>
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Statut du NIF</Label>
+          <Label className="text-xs text-muted-foreground"><T k="auto.fiscalcompliancepanel.statut_du_nif" fallback="Statut du NIF" /></Label>
           <Select
             value={value.supplierNifStatus ?? 'unknown'}
             disabled={disabled}
@@ -117,14 +120,14 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
           >
             <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Actif (vérifié)</SelectItem>
-              <SelectItem value="inactive">Inactif</SelectItem>
-              <SelectItem value="unknown">Non vérifié</SelectItem>
+              <SelectItem value="active"><T k="auto.fiscalcompliancepanel.actif_verifie" fallback="Actif (vérifié)" /></SelectItem>
+              <SelectItem value="inactive"><T k="auto.fiscalcompliancepanel.inactif" fallback="Inactif" /></SelectItem>
+              <SelectItem value="unknown"><T k="auto.fiscalcompliancepanel.non_verifie" fallback="Non vérifié" /></SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Moyen de paiement</Label>
+          <Label className="text-xs text-muted-foreground"><T k="auto.fiscalcompliancepanel.moyen_de_paiement" fallback="Moyen de paiement" /></Label>
           <Select
             value={value.paymentMethod ?? 'virement'}
             disabled={disabled}
@@ -151,7 +154,7 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
             <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="yes">Oui — rattachée</SelectItem>
-              <SelectItem value="no">Non</SelectItem>
+              <SelectItem value="no"><T k="auto.fiscalcompliancepanel.non" fallback="Non" /></SelectItem>
             </SelectContent>
           </Select>
           <p className="text-[11px] text-muted-foreground">

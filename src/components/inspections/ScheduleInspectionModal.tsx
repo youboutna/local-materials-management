@@ -30,6 +30,7 @@ import { AlertTriangle, Bell, Calendar, CheckCircle2, FileText, User } from 'luc
 import React, { useEffect, useMemo, useState } from 'react';
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Local type for inspection type selection
 type InspectionTypeId = 'technical' | 'safety' | 'quality';
@@ -53,6 +54,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   phaseName,
   onSuccess,
 }) => {
+  const { t } = useLanguage();
   // Form state - use string type for inspection type ID
   const [inspectionType, setInspectionType] = useState<InspectionTypeId | ''>('');
   const [scheduledDate, setScheduledDate] = useState('');
@@ -70,7 +72,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
     two_hours: false,
   });
   const [comments, setComments] = useState('');
-  
+
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null);
@@ -103,7 +105,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   // Check permissions
   const { data: permissions } = useQuery({
     queryKey: ['inspection-permissions', permissionContext],
-    queryFn: () => permissionContext ? { 
+    queryFn: () => permissionContext ? {
       hasPermission: true,
       reason: permissionContext ? undefined : 'Permission refusée',
       canSchedule: true,
@@ -125,7 +127,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   });
 
   // Get selected inspector details
-  const selectedInspector = useMemo(() => 
+  const selectedInspector = useMemo(() =>
     inspectors.find(i => i.id === selectedInspectorId),
     [inspectors, selectedInspectorId]
   );
@@ -134,7 +136,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   const getInspectionTypeConfig = (typeId: InspectionTypeId) => {
     const typeMap: Record<InspectionTypeId, keyof typeof INSPECTION_TYPES> = {
       'technical': 'TECHNICAL',
-      'safety': 'SAFETY', 
+      'safety': 'SAFETY',
       'quality': 'QUALITY'
     };
     return INSPECTION_TYPES[typeMap[typeId]];
@@ -207,8 +209,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
   const handleSubmit = async () => {
     if (!inspectionType || !scheduledDate || !selectedInspectorId) {
       toast({
-        title: 'Erreur',
-        description: 'Veuillez remplir tous les champs obligatoires',
+        title: t('auto.scheduleinspectionmodal.erreur'),
+        description: t('auto.scheduleinspectionmodal.veuillez_remplir_tous_les_champs_obligatoires'),
         variant: 'destructive'
       });
       return;
@@ -216,7 +218,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
     if (!permissions?.canSchedule) {
       toast({
-        title: 'Permission refusée',
+        title: t('auto.scheduleinspectionmodal.permission_refusee'),
         description: permissions?.message || 'Vous n\'avez pas la permission de programmer des inspections',
         variant: 'destructive'
       });
@@ -225,8 +227,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
     if (priority === 'high' && !permissions.canSetHighPriority) {
       toast({
-        title: 'Information',
-        description: 'Priorité haute nécessite approbation du chef de projet. Priorité changée à "moyenne".',
+        title: t('auto.scheduleinspectionmodal.information'),
+        description: t('auto.scheduleinspectionmodal.priorite_haute_necessite_approbation_du_chef_de_'),
         variant: 'default'
       });
       setPriority('medium');
@@ -250,22 +252,22 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
       if (result) {
         toast({
-          title: 'Succès',
-          description: 'Inspection programmée avec succès',
+          title: t('auto.scheduleinspectionmodal.succes'),
+          description: t('auto.scheduleinspectionmodal.inspection_programmee_avec_succes'),
         });
         onOpenChange(false);
         onSuccess?.();
       } else {
         toast({
-          title: 'Erreur',
-          description: 'Erreur lors de la programmation',
+          title: t('auto.scheduleinspectionmodal.erreur'),
+          description: t('auto.scheduleinspectionmodal.erreur_lors_de_la_programmation'),
           variant: 'destructive'
         });
       }
     } catch (error) {
       console.error('Error scheduling inspection:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.scheduleinspectionmodal.erreur'),
         description: 'Erreur lors de la programmation de l\'inspection',
         variant: 'destructive'
       });
@@ -276,8 +278,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
   // Toggle document requirement
   const toggleDocument = (doc: string) => {
-    setRequiredDocuments(prev => 
-      prev.includes(doc) 
+    setRequiredDocuments(prev =>
+      prev.includes(doc)
         ? prev.filter(d => d !== doc)
         : [...prev, doc]
     );
@@ -319,12 +321,12 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Type d'inspection *</Label>
-                <Select 
-                  value={inspectionType} 
+                <Select
+                  value={inspectionType}
                   onValueChange={(v) => setInspectionType(v as InspectionTypeId)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner le type..." />
+                    <SelectValue placeholder={t('auto.scheduleinspectionmodal.selectionner_le_type')} />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.values(INSPECTION_TYPES).map(type => (
@@ -338,8 +340,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
 
               <div className="space-y-2">
                 <Label><T k="auto.scheduleinspectionmodal.priorite" fallback="Priorité" /></Label>
-                <Select 
-                  value={priority} 
+                <Select
+                  value={priority}
                   onValueChange={(v) => setPriority(v as 'high' | 'medium' | 'low')}
                   disabled={!permissions?.canSetHighPriority && priority === 'high'}
                 >
@@ -404,7 +406,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                 <Label>Inspecteur principal *</Label>
                 <Select value={selectedInspectorId} onValueChange={setSelectedInspectorId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un inspecteur..." />
+                    <SelectValue placeholder={t('auto.scheduleinspectionmodal.selectionner_un_inspecteur')} />
                   </SelectTrigger>
                   <SelectContent>
                     {inspectors.map(inspector => (
@@ -430,7 +432,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
                 <Label><T k="auto.scheduleinspectionmodal.inspecteur_suppleant" fallback="Inspecteur suppléant" /></Label>
                 <Select value={backupInspectorId || "none"} onValueChange={(v) => setBackupInspectorId(v === "none" ? "" : v)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Optionnel..." />
+                    <SelectValue placeholder={t('auto.scheduleinspectionmodal.optionnel')} />
                   </SelectTrigger>
                   <SelectContent className="bg-background z-50">
                     <SelectItem value="none"><T k="auto.scheduleinspectionmodal.aucun" fallback="Aucun" /></SelectItem>
@@ -482,7 +484,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
             <div className="space-y-2">
               <Label><T k="auto.scheduleinspectionmodal.criteres_de_validation" fallback="Critères de validation" /></Label>
               <Textarea
-                placeholder="Décrivez les critères de réussite de l'inspection..."
+                placeholder={t('auto.scheduleinspectionmodal.decrivez_les_criteres_de_reussite_de_l_inspectio')}
                 value={validationCriteria}
                 onChange={(e) => setValidationCriteria(e.target.value)}
                 rows={2}
@@ -500,8 +502,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
             </h3>
 
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="notifyContractor" 
+              <Checkbox
+                id="notifyContractor"
                 checked={notifyContractor}
                 onCheckedChange={(checked) => setNotifyContractor(checked as boolean)}
               />
@@ -514,24 +516,24 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
               <Label><T k="auto.scheduleinspectionmodal.rappels_automatiques" fallback="Rappels automatiques" /></Label>
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="reminder7days" 
+                  <Checkbox
+                    id="reminder7days"
                     checked={reminders.seven_days}
                     onCheckedChange={(checked) => setReminders(prev => ({ ...prev, seven_days: checked as boolean }))}
                   />
                   <label htmlFor="reminder7days" className="text-sm">7 jours avant</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="reminder1day" 
+                  <Checkbox
+                    id="reminder1day"
                     checked={reminders.one_day}
                     onCheckedChange={(checked) => setReminders(prev => ({ ...prev, one_day: checked as boolean }))}
                   />
                   <label htmlFor="reminder1day" className="text-sm">1 jour avant</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="reminder2hours" 
+                  <Checkbox
+                    id="reminder2hours"
                     checked={reminders.two_hours}
                     onCheckedChange={(checked) => setReminders(prev => ({ ...prev, two_hours: checked as boolean }))}
                   />
@@ -547,7 +549,7 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
           <div className="space-y-2">
             <Label><T k="auto.scheduleinspectionmodal.commentaires_additionnels" fallback="Commentaires additionnels" /></Label>
             <Textarea
-              placeholder="Informations complémentaires..."
+              placeholder={t('auto.scheduleinspectionmodal.informations_complementaires')}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               rows={3}
@@ -559,8 +561,8 @@ const ScheduleInspectionModal: React.FC<ScheduleInspectionModalProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <T k="auto.scheduleinspectionmodal.annuler" fallback="Annuler" />
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting || !permissions?.canSchedule}
           >
             {isSubmitting ? 'Programmation...' : 'Programmer l\'inspection'}

@@ -47,14 +47,14 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
   const breadcrumbItems: BreadcrumbItem[] = items || (() => {
     const pathSegments = location.pathname.split("/").filter(Boolean);
     const crumbs: BreadcrumbItem[] = [];
-    
+
     let currentPath = "";
     pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`;
-      
+
       // Check if segment is a UUID (skip adding it as label but keep path)
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
-      
+
       if (isUuid) {
         // For UUIDs, we might want to show "Detail" or similar
         crumbs.push({
@@ -71,7 +71,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         });
       }
     });
-    
+
     return crumbs;
   })();
 
@@ -81,7 +81,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
 
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label={t('auto.breadcrumb.breadcrumb')}
       className={cn(
         "flex items-center space-x-1 text-sm text-muted-foreground",
         className

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { KPICard } from "./KPICard";
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseHeaderProps {
   phase: {
@@ -64,6 +65,7 @@ export const PhaseHeader: React.FC<PhaseHeaderProps> = ({
   canRequestPayment = false,
   className,
 }) => {
+  const { t } = useLanguage();
   const phaseName = phase.phase_name || phase.title || phase.name || "Phase";
   const budget = phase.estimated_cost || phase.budget || 0;
   const progress = phase.progress || 0;
@@ -148,31 +150,31 @@ export const PhaseHeader: React.FC<PhaseHeaderProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={cn("text-sm px-3 py-1", statusConfig.className)}
           >
             {statusConfig.icon}
             <span className="ml-1.5">{statusConfig.label}</span>
           </Badge>
-          
+
           {onEdit && (
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Edit className="h-4 w-4 mr-1.5" />
               <T k="auto.phaseheader.modifier" fallback="Modifier" />
             </Button>
           )}
-          
+
           {onScheduleInspection && (
             <Button variant="outline" size="sm" onClick={onScheduleInspection}>
               <ClipboardCheck className="h-4 w-4 mr-1.5" />
               <T k="auto.phaseheader.inspection" fallback="Inspection" />
             </Button>
           )}
-          
+
           {canRequestPayment && onRequestPayment && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={onRequestPayment}
               className="bg-success hover:bg-success/90 text-success-foreground"
             >
@@ -189,7 +191,7 @@ export const PhaseHeader: React.FC<PhaseHeaderProps> = ({
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span>{formatDate(phase.start_date)} → {formatDate(phase.end_date)}</span>
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
           <span>{formatCurrency(budget)}</span>
@@ -201,7 +203,7 @@ export const PhaseHeader: React.FC<PhaseHeaderProps> = ({
         <div className="flex items-center gap-2 text-sm">
           <Layers className="h-4 w-4 text-muted-foreground" />
           <span>
-            {hasSteps 
+            {hasSteps
               ? `${stepsCount} étape${stepsCount > 1 ? "s" : ""}`
               : `${milestonesCount} jalon${milestonesCount > 1 ? "s" : ""} directs`
             }
@@ -217,36 +219,36 @@ export const PhaseHeader: React.FC<PhaseHeaderProps> = ({
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KPICard
-          title="Progression"
+          title={t('auto.phaseheader.progression')}
           value={`${progress}%`}
           icon={<Target className="h-5 w-5" />}
           color={progress >= 100 ? "success" : progress >= 50 ? "info" : "muted"}
           trend={progress >= 75 ? "positive" : undefined}
         />
-        
+
         <KPICard
           title={hasSteps ? "Étapes" : "Jalons"}
-          value={hasSteps 
+          value={hasSteps
             ? `${metrics.completedSteps || 0}/${stepsCount}`
             : `${metrics.completedMilestones || 0}/${milestonesCount}`
           }
           icon={<Layers className="h-5 w-5" />}
           color="primary"
         />
-        
+
         <KPICard
-          title="Inspections"
+          title={t('auto.phaseheader.inspections')}
           value={`${metrics.inspectionsCount || 0}`}
           icon={<ClipboardCheck className="h-5 w-5" />}
           color="info"
         />
-        
+
         <KPICard
-          title="Délai"
-          value={daysRemaining !== null 
-            ? daysRemaining > 0 
-              ? `${daysRemaining} j` 
-              : daysRemaining === 0 
+          title={t('auto.phaseheader.delai')}
+          value={daysRemaining !== null
+            ? daysRemaining > 0
+              ? `${daysRemaining} j`
+              : daysRemaining === 0
                 ? "Aujourd'hui"
                 : `${Math.abs(daysRemaining)} j retard`
             : "N/A"

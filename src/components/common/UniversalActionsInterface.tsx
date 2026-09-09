@@ -9,13 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  Bell, 
-  Users, 
-  Phone, 
-  Mail, 
-  MessageSquare, 
-  Send, 
+import {
+  Bell,
+  Users,
+  Phone,
+  Mail,
+  MessageSquare,
+  Send,
   AlertTriangle,
   Briefcase,
   Target,
@@ -27,6 +27,7 @@ import UserSelector from '@/components/selectors/UserSelector';
 import { EnhancedActionService, UnifiedActionRequest, EnhancedActionServiceStatic } from '@/application/services/enhancedActionService';
 import { T } from '@/components/i18n/T';
 import { useI18n } from '@/hooks/useI18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const actionFormSchema = z.object({
   actionType: z.enum(['task_assignment', 'hierarchy_notification', 'sms', 'call', 'email', 'mail']),
@@ -61,6 +62,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
   triggerButton,
   contextualInfo
 }) => {
+  const { t } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -170,7 +172,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
                     <UserSelector
                       value={field.value || ''}
                       onChange={field.onChange}
-                      placeholder="Sélectionner la personne responsable"
+                      placeholder={t('auto.universalactionsinterface.selectionner_la_personne_responsable')}
                     />
                   </FormControl>
                   <FormMessage />
@@ -204,7 +206,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner le niveau d'escalade" />
+                      <SelectValue placeholder={t('auto.universalactionsinterface.selectionner_le_niveau_d_escalade')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -235,7 +237,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
               </span>
             </div>
             <p className="text-sm text-primary">
-              {actionType === 'sms' 
+              {actionType === 'sms'
                 ? 'Un SMS sera envoyé aux destinataires sélectionnés avec le message spécifié.'
                 : 'Un appel téléphonique sera programmé avec les destinataires sélectionnés.'
               }
@@ -265,7 +267,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
             <T k="auto.universalactionsinterface.creer_une_action" fallback="Créer une Action" />
           </DialogTitle>
           <DialogDescription>
-            Configurer une action pour {getEntityTypeLabel(entityType)} 
+            Configurer une action pour {getEntityTypeLabel(entityType)}
             {contextualInfo?.entityName && ` - ${contextualInfo.entityName}`}
           </DialogDescription>
         </DialogHeader>
@@ -281,7 +283,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner le type d'action" />
+                        <SelectValue placeholder={t('auto.universalactionsinterface.selectionner_le_type_d_action')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -312,7 +314,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner la priorité" />
+                        <SelectValue placeholder={t('auto.universalactionsinterface.selectionner_la_priorite')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -348,7 +350,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
                           field.onChange([...currentRecipients, userId]);
                         }
                       }}
-                      placeholder="Ajouter des destinataires"
+                      placeholder={t('auto.universalactionsinterface.ajouter_des_destinataires')}
                     />
                   </FormControl>
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -381,7 +383,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
                   <FormItem>
                     <FormLabel><T k="auto.universalactionsinterface.titre" fallback="Titre" /></FormLabel>
                     <FormControl>
-                      <Input placeholder="Titre de l'action" {...field} />
+                      <Input placeholder={t('auto.universalactionsinterface.titre_de_l_action')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -395,10 +397,10 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
                   <FormItem>
                     <FormLabel><T k="auto.universalactionsinterface.message" fallback="Message" /></FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Décrivez l'action à effectuer..."
+                      <Textarea
+                        placeholder={t('auto.universalactionsinterface.decrivez_l_action_a_effectuer')}
                         rows={3}
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -410,16 +412,16 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
             {renderActionTypeFields()}
 
             <div className="flex justify-end gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsDialogOpen(false)}
                 disabled={loading}
               >
                 <T k="auto.universalactionsinterface.annuler" fallback="Annuler" />
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={loading}
                 className="gap-2"
               >

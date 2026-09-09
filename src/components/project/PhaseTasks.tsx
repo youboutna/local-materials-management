@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseTasksProps {
   phaseId: string;
@@ -24,6 +25,7 @@ interface PhaseTasksProps {
 }
 
 const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
+  const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<TaskFormData>({
@@ -33,12 +35,12 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     status: 'pending',
     dueDate: '',
   });
-  
-  const { 
-    tasks, 
-    isLoading, 
-    createTask, 
-    updateTask, 
+
+  const {
+    tasks,
+    isLoading,
+    createTask,
+    updateTask,
     deleteTask,
     isCreating: isCreatingTask,
     isUpdating,
@@ -64,11 +66,11 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       console.info('PHASE_TASKS_001: Starting task submission', {
         code: 'PHASE_TASKS_001',
-        message: 'Début de la soumission de tâche',
+        message: t('auto.phasetasks.debut_de_la_soumission_de_tache'),
         phaseId,
         projectId,
         isEditing: !!editingId,
@@ -80,17 +82,17 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
       if (!formData.title.trim()) {
         console.error('PHASE_TASKS_002: Task title validation failed', {
           code: 'PHASE_TASKS_002',
-          message: 'Le titre de la tâche est requis',
+          message: t('auto.phasetasks.le_titre_de_la_tache_est_requis'),
           phaseId,
           projectId,
           stack: new Error().stack
         });
         return;
       }
-      
+
       console.info('PHASE_TASKS_003: Task validation passed', {
         code: 'PHASE_TASKS_003',
-        message: 'Validation de la tâche réussie',
+        message: t('auto.phasetasks.validation_de_la_tache_reussie'),
         taskData: formData,
         stack: new Error().stack
       });
@@ -98,17 +100,17 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
       if (editingId) {
         console.info('PHASE_TASKS_004: Updating existing task', {
           code: 'PHASE_TASKS_004',
-          message: 'Mise à jour de la tâche existante',
+          message: t('auto.phasetasks.mise_a_jour_de_la_tache_existante'),
           taskId: editingId,
           taskData: formData,
           stack: new Error().stack
         });
 
         await updateTask({ id: editingId, data: formData });
-        
+
         console.info('PHASE_TASKS_005: Task updated successfully', {
           code: 'PHASE_TASKS_005',
-          message: 'Tâche mise à jour avec succès',
+          message: t('auto.phasetasks.tache_mise_a_jour_avec_succes'),
           taskId: editingId,
           stack: new Error().stack
         });
@@ -123,21 +125,21 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
         });
 
         await createTask(formData);
-        
+
         console.info('PHASE_TASKS_007: Task created successfully', {
           code: 'PHASE_TASKS_007',
-          message: 'Tâche créée avec succès',
+          message: t('auto.phasetasks.tache_creee_avec_succes'),
           taskTitle: formData.title,
           stack: new Error().stack
         });
       }
-      
+
       setIsCreating(false);
       resetForm();
 
       console.info('PHASE_TASKS_008: Task submission completed', {
         code: 'PHASE_TASKS_008',
-        message: 'Soumission de tâche terminée avec succès',
+        message: t('auto.phasetasks.soumission_de_tache_terminee_avec_succes'),
         phaseId,
         projectId,
         taskTitle: formData.title,
@@ -146,7 +148,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
     } catch (error) {
       console.error('PHASE_TASKS_009: Task submission failed', {
         code: 'PHASE_TASKS_009',
-        message: 'Échec de la soumission de tâche',
+        message: t('auto.phasetasks.echec_de_la_soumission_de_tache'),
         phaseId,
         projectId,
         taskTitle: formData.title,
@@ -244,24 +246,24 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       required
-                      placeholder="Titre de la tâche"
+                      placeholder={t('auto.phasetasks.titre_de_la_tache')}
                     />
                   </div>
                   <div>
                     <TaskAssigneeSelector
                       projectId={projectId}
                       value={Array.isArray(formData.assignedTo) ? formData.assignedTo[0] : formData.assignedTo}
-                      onChange={(id, name, email, type) => 
-                        setFormData({ 
-                          ...formData, 
+                      onChange={(id, name, email, type) =>
+                        setFormData({
+                          ...formData,
                           assignedTo: id,
                           assigneeName: name,
                           assigneeEmail: email,
                           assigneeType: type
                         })
                       }
-                      label="Assigné à"
-                      placeholder="Sélectionner un employé ou partie prenante"
+                      label={t('auto.phasetasks.assigne_a')}
+                      placeholder={t('auto.phasetasks.selectionner_un_employe_ou_partie_prenante')}
                     />
                   </div>
                 </div>
@@ -333,8 +335,8 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     <T k="auto.phasetasks.annuler" fallback="Annuler" />
                   </Button>
                   <Button type="submit" disabled={isCreatingTask || isUpdating}>
-                    {(isCreatingTask || isUpdating) 
-                      ? 'Enregistrement...' 
+                    {(isCreatingTask || isUpdating)
+                      ? 'Enregistrement...'
                       : editingId ? 'Mettre à jour' : 'Créer la tâche'}
                   </Button>
                 </div>
@@ -371,14 +373,14 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2 mb-2">
                   <Badge className={getPriorityColor(task.priority || 'medium')}>
-                    {task.priority === 'high' ? 'Élevée' : 
+                    {task.priority === 'high' ? 'Élevée' :
                      task.priority === 'medium' ? 'Moyenne' : 'Faible'}
                   </Badge>
                   <Badge className={getStatusColor(task.status || 'pending')}>
-                    {task.status === 'completed' ? 'Terminée' : 
+                    {task.status === 'completed' ? 'Terminée' :
                      task.status === 'in_progress' ? 'En cours' : 'En attente'}
                   </Badge>
                   {((task as any).dueDate || (task as any).dueDate) && (
@@ -394,7 +396,7 @@ const PhaseTasks: React.FC<PhaseTasksProps> = ({ phaseId, projectId }) => {
                     Assigné à: {(task as any).assignedTo || (task as any).assignedTo}
                   </p>
                 )}
-                
+
                 {task.notes && (
                   <p className="text-xs text-muted-foreground mt-2">
                     Notes: {task.notes}

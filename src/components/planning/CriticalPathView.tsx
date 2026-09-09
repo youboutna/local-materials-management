@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * CriticalPathView - Displays the critical path with float analysis
  */
@@ -35,6 +36,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
   phaseId,
   compact = false
 }) => {
+  const { t } = useLanguage();
   const [criticalPath, setCriticalPath] = useState<CriticalPathDTO | null>(null);
   const [milestones, setMilestones] = useState<MilestoneDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,11 +76,11 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
   const getStatusInfo = (milestone: MilestoneDTO) => {
     const today = new Date();
     const targetDate = parseISO(milestone.targetDate || '');
-    
+
     if (milestone.status === 'completed') {
-      return { color: 'bg-success', icon: CheckCircle, label: 'Terminé' };
+      return { color: 'bg-success', icon: CheckCircle, label: t('auto.criticalpathview.termine') };
     }
-    
+
     const daysUntil = differenceInDays(targetDate, today);
     if (daysUntil < 0) {
       return { color: 'bg-destructive', icon: AlertTriangle, label: `En retard (${Math.abs(daysUntil)}j)` };
@@ -86,7 +88,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
     if (daysUntil <= 7) {
       return { color: 'bg-warning', icon: Clock, label: `Dans ${daysUntil}j` };
     }
-    return { color: 'bg-primary', icon: Target, label: 'À venir' };
+    return { color: 'bg-primary', icon: Target, label: t('auto.criticalpathview.a_venir') };
   };
 
   if (loading) {
@@ -172,12 +174,12 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
             <Route className="h-4 w-4" />
             <T k="auto.criticalpathview.sequence_critique" fallback="Séquence Critique" />
           </h4>
-          
+
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
             {criticalMilestones.map((milestone, idx) => {
               const status = getStatusInfo(milestone);
               const StatusIcon = status.icon;
-              
+
               return (
                 <React.Fragment key={milestone.id}>
                   <TooltipProvider>
@@ -217,7 +219,7 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  
+
                   {idx < criticalMilestones.length - 1 && (
                     <ArrowRight className="h-5 w-5 text-destructive flex-shrink-0" />
                   )}
@@ -237,11 +239,11 @@ const CriticalPathView: React.FC<CriticalPathViewProps> = ({
                 Marge {"<"} 5 jours
               </Badge>
             </h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {nearCriticalMilestones.map(milestone => {
                 const status = getStatusInfo(milestone);
-                
+
                 return (
                   <div
                     key={milestone.id}

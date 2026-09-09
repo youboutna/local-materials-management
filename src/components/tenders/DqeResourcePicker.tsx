@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { useActiveSuppliersHex } from '@/hooks/hexagonal/useActiveSuppliersHex';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface DqeResourceValue {
   resource_kind?: 'internal_qualification' | 'external_provider' | 'material';
@@ -50,6 +51,7 @@ export function validateDqeResource(v: DqeResourceValue): string | null {
 }
 
 export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact }) => {
+  const { t } = useLanguage();
   const { data: employees = [] } = useActiveEmployeesHex();
   const { data: suppliers = [] } = useActiveSuppliersHex();
 
@@ -84,7 +86,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
             supplier_contract_ref: undefined,
           })}
         >
-          <SelectTrigger><SelectValue placeholder="Sélectionner…" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={t('auto.dqeresourcepicker.selectionner')} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="internal_qualification"><T k="auto.dqeresourcepicker.rh_interne_qualification" fallback="RH interne (qualification)" /></SelectItem>
             <SelectItem value="external_provider"><T k="auto.dqeresourcepicker.prestataire_externe" fallback="Prestataire externe" /></SelectItem>
@@ -100,7 +102,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
             value={value.employee_qualification_id ?? ''}
             onValueChange={(v) => update({ employee_qualification_id: v })}
           >
-            <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('auto.dqeresourcepicker.choisir')} /></SelectTrigger>
             <SelectContent>
               {employees.map((e) => (
                 <SelectItem key={e.id} value={e.id}>
@@ -120,7 +122,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
               value={value.supplier_id ?? ''}
               onValueChange={(v) => update({ supplier_id: v })}
             >
-              <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('auto.dqeresourcepicker.choisir')} /></SelectTrigger>
               <SelectContent>
                 {suppliers.map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -133,7 +135,7 @@ export const DqeResourcePicker: React.FC<Props> = ({ value, onChange, compact })
             <Input
               value={value.supplier_contract_ref ?? ''}
               onChange={(e) => update({ supplier_contract_ref: e.target.value })}
-              placeholder="Convention-cadre, marché…"
+              placeholder={t('auto.dqeresourcepicker.convention_cadre_marche')}
             />
           </div>
         </>

@@ -28,6 +28,7 @@ import {
   getReportProfile,
 } from '@/config/referentials/reports/report-profiles.referential';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectReportGeneratorProps {
   project: any; // ProjectData or ProjectDTO
@@ -47,6 +48,7 @@ interface ReportConfig {
 }
 
 export function ProjectReportGenerator({ project, onClose }: ProjectReportGeneratorProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
@@ -219,7 +221,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
           project.tasks || []
         );
         setPertAnalysis(pertAnalysisResult);
-        
+
       } catch (error) {
         console.error('Error loading report data:', error);
         toast({
@@ -250,7 +252,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
     try {
       setLoading(true);
-      
+
       const pdfDoc = (
         <ProjectPDFDocument
           project={project}
@@ -274,7 +276,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
       const blob = await pdf(pdfDoc).toBlob();
       saveAs(blob, `${reportConfig.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
-      
+
       toast({
         title: "Succès",
         description: "Le rapport PDF a été généré avec succès.",
@@ -312,7 +314,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
 
     try {
       setLoading(true);
-      
+
       const pdfDoc = (
         <ProjectPDFDocument
           project={project}
@@ -371,12 +373,12 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
   const handleSelectAll = () => {
     const allSections = Object.keys(reportConfig.includeSections) as Array<keyof ReportConfig['includeSections']>;
     const allSelected = allSections.every(section => reportConfig.includeSections[section]);
-    
+
     const newSections = {} as ReportConfig['includeSections'];
     allSections.forEach(section => {
       newSections[section] = !allSelected;
     });
-    
+
     setReportConfig(prev => ({
       ...prev,
       includeSections: newSections
@@ -466,7 +468,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
                     }))
                   }
                   className="h-8 px-3 text-xs"
-                  title="Restaurer les sections par défaut du profil sélectionné"
+                  title={t('auto.projectreportgenerator.restaurer_les_sections_par_defaut_du_profil_sele')}
                 >
                   <T k="auto.projectreportgenerator.reinitialiser_au_profil" fallback="Réinitialiser au profil" />
                 </Button>
@@ -609,7 +611,7 @@ export function ProjectReportGenerator({ project, onClose }: ProjectReportGenera
             <Label htmlFor="notes"><T k="auto.projectreportgenerator.notes_additionnelles_optionnel" fallback="Notes additionnelles (optionnel)" /></Label>
             <Textarea
               id="notes"
-              placeholder="Ajoutez des commentaires ou observations..."
+              placeholder={t('auto.projectreportgenerator.ajoutez_des_commentaires_ou_observations')}
               value={reportConfig.notes}
               onChange={(e) => setReportConfig(prev => ({ ...prev, notes: e.target.value }))}
             />

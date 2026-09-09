@@ -60,6 +60,7 @@ import { EnumBadge } from '@/components/i18n/EnumText';
 import { T } from '@/components/i18n/T';
 import { EnumSelect } from '@/components/i18n/EnumSelect';
 import { useI18n } from '@/hooks/useI18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 type Segment = "all" | "team" | "external" | "contractors";
 
 interface StakeholdersTeamStepProps {
@@ -73,6 +74,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   workflowData,
   onStepComplete,
 }) => {
+  const { t } = useLanguage();
   const { t } = useI18n();
   const projectData = workflowData?.projectData || ({} as ProjectDTO);
   const projectId = projectData.id;
@@ -163,8 +165,8 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
     const created: StakeholderDTO = {
       id: Date.now().toString(),
       projectId: projectId!, // ✅ Champ requis ajouté
-      entityType: formData.stakeholderType === StakeholderType.EMPLOYEE 
-        ? StakeholderEntityType.PERSON 
+      entityType: formData.stakeholderType === StakeholderType.EMPLOYEE
+        ? StakeholderEntityType.PERSON
         : StakeholderEntityType.ORGANIZATION, // ✅ Champ requis ajouté
       name: formData.name,
       organization: formData.organization,
@@ -347,7 +349,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
             {newStakeholder?.stakeholderType === StakeholderType.EMPLOYEE && (
               <div className="md:col-span-2">
                 <EmployeeSelector
-                  label="Employé"
+                  label={t('auto.stakeholdersteamstep.employe')}
                   value={newStakeholder.employeeId}
                   onChange={(employeeId) => {
                     const emp = employees.find((e) => e.id === employeeId);
@@ -395,7 +397,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
         </div>
 
         {/* Segmented filter */}
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filtres parties prenantes">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('auto.stakeholdersteamstep.filtres_parties_prenantes')}>
           {segments.map((s) => (
             <button
               key={s.key}
@@ -482,7 +484,7 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={() => removeStakeholder(stakeholder.id)}
-                    aria-label="Retirer"
+                    aria-label={t('auto.stakeholdersteamstep.retirer')}
                   >
                     <X className="h-4 w-4" />
                   </Button>

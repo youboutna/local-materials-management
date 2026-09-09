@@ -14,12 +14,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { 
-  DollarSign, 
-  FileText, 
-  Camera, 
-  MapPin, 
-  CheckCircle2, 
+import {
+  DollarSign,
+  FileText,
+  Camera,
+  MapPin,
+  CheckCircle2,
   AlertTriangle,
   Upload,
   Eye,
@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { usePaymentRequestDocumentsHex, submitPaymentRequestHex, type PaymentDocument as PaymentDocumentHex } from '@/hooks/hexagonal/usePaymentRequestModalHex';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type PaymentDocument = PaymentDocumentHex;
 
@@ -69,6 +70,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
   estimatedBudget = 0,
   onSuccess,
 }) => {
+  const { t } = useLanguage();
   // Form state
   const [amount, setAmount] = useState<number>(0);
   const [progressAtPayment, setProgressAtPayment] = useState<number>(currentProgress);
@@ -82,7 +84,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
   // Check if all required documents are available
   const documentStatus = useMemo(() => {
     const status: Record<string, { available: boolean; document?: PaymentDocument }> = {};
-    
+
     for (const reqDoc of REQUIRED_DOCUMENT_TYPES) {
       const found = availableDocuments.find(d => d.type === reqDoc.type || d.type.includes(reqDoc.type));
       status[reqDoc.type] = {
@@ -99,8 +101,8 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
     .every(d => documentStatus[d.type]?.available);
 
   const toggleDocument = (docId: string) => {
-    setSelectedDocuments(prev => 
-      prev.includes(docId) 
+    setSelectedDocuments(prev =>
+      prev.includes(docId)
         ? prev.filter(id => id !== docId)
         : [...prev, docId]
     );
@@ -180,13 +182,13 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                 {REQUIRED_DOCUMENT_TYPES.map((docType) => {
                   const status = documentStatus[docType.type];
                   const Icon = docType.icon;
-                  
+
                   return (
-                    <div 
+                    <div
                       key={docType.type}
                       className={cn(
                         'flex items-center justify-between p-3 border rounded-lg transition-colors',
-                        status?.available 
+                        status?.available
                           ? 'bg-success-soft border-success/30 dark:bg-success dark:border-success'
                           : docType.required
                             ? 'bg-destructive/10 border-destructive/30 dark:bg-red-950 dark:border-red-800'
@@ -215,7 +217,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         {status?.available ? (
                           <>
@@ -302,7 +304,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
               <div className="space-y-2">
                 <Label>Justificatif / Notes</Label>
                 <Textarea
-                  placeholder="Décrivez la raison de cette demande de paiement..."
+                  placeholder={t('auto.paymentrequestmodal.decrivez_la_raison_de_cette_demande_de_paiement')}
                   value={justification}
                   onChange={(e) => setJustification(e.target.value)}
                   rows={3}
@@ -316,7 +318,7 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <T k="auto.paymentrequestmodal.annuler" fallback="Annuler" />
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={isSubmitting || !allRequiredDocsAvailable || amount <= 0}
           >

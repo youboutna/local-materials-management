@@ -18,6 +18,7 @@ import {
 } from './PhaseEditDraft';
 import { formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhasePlanningQuickEditProps {
   /** Valeurs persistées (source de vérité) */
@@ -25,7 +26,7 @@ interface PhasePlanningQuickEditProps {
   isSaving?: boolean;
   disabled?: boolean;
   /** Persiste uniquement les champs de planification */
-  onSave: (partial: Partial<PhaseEditDraft>) => Promise<void> | void;
+  onSave: (partial: Partial<PhaseEditDraft>) => <T k="auto.phaseplanningquickedit.promise" fallback="Promise" /><void> | void;
 }
 
 const PhasePlanningQuickEdit: React.FC<PhasePlanningQuickEditProps> = ({
@@ -34,6 +35,7 @@ const PhasePlanningQuickEdit: React.FC<PhasePlanningQuickEditProps> = ({
   disabled = false,
   onSave,
 }) => {
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<PhaseEditDraft>(value);
 
@@ -68,7 +70,7 @@ const PhasePlanningQuickEdit: React.FC<PhasePlanningQuickEditProps> = ({
     <Card>
       <CardContent className="space-y-3 py-3">
         <TabSaveBar
-          title="Planification"
+          title={t('auto.phaseplanningquickedit.planification')}
           icon={<Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
           isEditing={isEditing}
           isSaving={isSaving}

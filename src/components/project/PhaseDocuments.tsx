@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,8 +19,9 @@ interface PhaseDocumentsProps {
 }
 
 const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, phaseName }) => {
+  const { t } = useLanguage();
   const [isAdding, setIsAdding] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -29,7 +31,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
   const handleDelete = (id: string) => {
     deleteDocumentMutation.mutate(id, {
       onSuccess: () => {
-        toast({ title: 'Document supprimé avec succès' });
+        toast({ title: t('auto.phasedocuments.document_supprime_avec_succes') });
         queryClient.invalidateQueries({ queryKey: ['documents', 'phase', phaseId] });
       }
     });
@@ -140,7 +142,7 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
                   <Badge className={getDocumentTypeColor((doc as any).document_type || doc.documentType)}>
                     {getDocumentTypeLabel((doc as any).document_type || doc.documentType)}

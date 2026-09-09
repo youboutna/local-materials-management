@@ -8,16 +8,18 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { usePasswordManagement } from '@/hooks/usePasswordManagement';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PasswordResetFormProps {
   onBack: () => void;
 }
 
 const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { loading, requestPasswordReset } = usePasswordManagement();
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -25,7 +27,7 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
     setError('');
 
     const result = await requestPasswordReset(email);
-    
+
     if (result.success) {
       setEmailSent(true);
     } else {
@@ -49,10 +51,10 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
               Vérifiez votre boîte de réception et suivez les instructions dans l'email.
             </AlertDescription>
           </Alert>
-          
-          <Button 
-            variant="outline" 
-            className="w-full" 
+
+          <Button
+            variant="outline"
+            className="w-full"
             onClick={onBack}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -84,23 +86,23 @@ const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="Entrez votre adresse email"
+              placeholder={t('auto.passwordresetform.entrez_votre_adresse_email')}
             />
           </div>
 
           <div className="space-y-2">
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={loading}
             >
               {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
             </Button>
-            
-            <Button 
+
+            <Button
               type="button"
-              variant="outline" 
-              className="w-full" 
+              variant="outline"
+              className="w-full"
               onClick={onBack}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />

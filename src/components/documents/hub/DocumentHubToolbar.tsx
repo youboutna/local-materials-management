@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type SortKey = 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'size_desc' | 'size_asc';
 export type ViewMode = 'grid' | 'table';
@@ -33,6 +34,7 @@ export function DocumentHubToolbar({
   totalCount,
   filteredCount,
 }: Props) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col gap-3 border-b border-border bg-card/40 px-4 py-3 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-1 items-center gap-2">
@@ -41,7 +43,7 @@ export function DocumentHubToolbar({
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Rechercher un document…"
+            placeholder={t('auto.documenthubtoolbar.rechercher_un_document')}
             className="pl-9"
           />
         </div>
@@ -72,10 +74,10 @@ export function DocumentHubToolbar({
           onValueChange={(v) => v && onViewChange(v as ViewMode)}
           className="border border-border rounded-md"
         >
-          <ToggleGroupItem value="grid" aria-label="Vue grille" className="px-2">
+          <ToggleGroupItem value="grid" aria-label={t('auto.documenthubtoolbar.vue_grille')} className="px-2">
             <LayoutGrid className="h-4 w-4" />
           </ToggleGroupItem>
-          <ToggleGroupItem value="table" aria-label="Vue tableau" className="px-2">
+          <ToggleGroupItem value="table" aria-label={t('auto.documenthubtoolbar.vue_tableau')} className="px-2">
             <List className="h-4 w-4" />
           </ToggleGroupItem>
         </ToggleGroup>

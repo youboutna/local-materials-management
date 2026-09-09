@@ -1,12 +1,12 @@
 /**
  * SupplierInspectionExecutionDialog - Dialog d'exécution d'inspection fournisseur
- * 
+ *
  * Architecture Hexagonale - RÈGLES STRICTES :
  * - Zéro accès direct aux tables Supabase dans les composants
  * - Utilisation des services et DTOs
  * - Tous les types proviennent des DTOs
  * - UI Component → Hook → Service → Repository → Adapter → DB
- * 
+ *
  * Respecte PROMPT.md :
  * - ✅ Zéro accès direct aux tables Supabase dans les composants
  * - ✅ Utilisation des services hexagonaux
@@ -43,6 +43,7 @@ import { getEmployeeService } from '@/application/services/EmployeeService';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // ============================================================================
 // PROPS
 // ============================================================================
@@ -66,15 +67,16 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   onInspectionCompleted,
   supplierId
 }) => {
+  const { t } = useLanguage();
   // ============ State ============
   const [progress, setProgress] = useState(
-    inspection?.progressAtInspection || 
-    (inspection as any)?.progress_at_inspection || 
+    inspection?.progressAtInspection ||
+    (inspection as any)?.progress_at_inspection ||
     0
   );
   const [comments, setComments] = useState(
-    (inspection as any)?.inspectorComments || 
-    (inspection as any)?.comments || 
+    (inspection as any)?.inspectorComments ||
+    (inspection as any)?.comments ||
     ''
   );
   const [documents, setDocuments] = useState<File[]>([]);
@@ -83,7 +85,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
   const [paymentRequestType, setPaymentRequestType] = useState<'contractor' | 'inspector'>('contractor');
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDescription, setPaymentDescription] = useState('');
-  
+
   // ============ Hooks ============
   const { toast } = useToast();
   const { createNotification } = useNotifications();
@@ -113,7 +115,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
     if (progress < 0 || progress > 100) {
       toast({
-        title: 'Erreur',
+        title: t('auto.supplierinspectionexecutiondialog.erreur'),
         description: 'Le taux d\'avancement doit être entre 0 et 100%',
         variant: 'destructive'
       });
@@ -176,9 +178,9 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       try {
         const pvResult = await generatePVPDF({
           title: `PV - Inspection ${new Date(inspection.date || inspection.scheduledDate || '').toLocaleDateString('fr-FR')}`,
-          phaseName: (inspection as any).projects?.title || 
-                     inspection.projectId || 
-                     (inspection as any).project_id || 
+          phaseName: (inspection as any).projects?.title ||
+                     inspection.projectId ||
+                     (inspection as any).project_id ||
                      '',
           decompte: { netPayable: 0, payablePercentage: progress },
           autoSave: false,
@@ -278,7 +280,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
       // ✅ Create payment request via SupplierPaymentService (hexagonal)
       if (createPaymentRequest && paymentAmount) {
         const amount = parseFloat(paymentAmount);
-        
+
         if (paymentRequestType === 'contractor') {
           await supplierPaymentService.createPaymentRequest({
             inspectionId: inspection.id,
@@ -299,7 +301,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
         toast({
           title: '✅ Succès',
-          description: 'Inspection complétée et demande de paiement créée',
+          description: t('auto.supplierinspectionexecutiondialog.inspection_completee_et_demande_de_paiement_cree'),
         });
       } else {
         toast({
@@ -310,16 +312,16 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
 
       onInspectionCompleted();
       onOpenChange(false);
-      
+
       // Reset form
       setProgress(0);
       setComments('');
       setDocuments([]);
-      
+
     } catch (error: any) {
       console.error('Error completing inspection:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.supplierinspectionexecutiondialog.erreur'),
         description: error.message || 'Impossible de compléter l\'inspection',
         variant: 'destructive'
       });
@@ -387,7 +389,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
               id="comments"
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              placeholder="Décrivez les travaux réalisés, observations, problèmes rencontrés..."
+              placeholder={t('auto.supplierinspectionexecutiondialog.decrivez_les_travaux_realises_observations_probl')}
               rows={4}
             />
           </div>
@@ -479,7 +481,7 @@ export const SupplierInspectionExecutionDialog: React.FC<SupplierInspectionExecu
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="Montant à demander"
+                    placeholder={t('auto.supplierinspectionexecutiondialog.montant_a_demander')}
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(e.target.value)}
                     required={createPaymentRequest}

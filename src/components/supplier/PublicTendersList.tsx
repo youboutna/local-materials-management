@@ -16,12 +16,14 @@ import { Button } from '@/components/ui/button';
 import { Search, Calendar, MapPin, FileText, ExternalLink } from 'lucide-react';
 import { usePublicOpenTenders } from '@/hooks/hexagonal/usePublicTendersHex';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface PublicTendersListProps {
   onSelect?: (tenderId: string) => void;
 }
 
 export function PublicTendersList({ onSelect }: PublicTendersListProps) {
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
 
   // Accès anonyme autorisé par policy RLS (statut public + deadline valide).
@@ -42,7 +44,7 @@ export function PublicTendersList({ onSelect }: PublicTendersListProps) {
       <CompactFilterBar
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Rechercher un appel d'offres…"
+        searchPlaceholder={t('auto.publictenderslist.rechercher_un_appel_d_offres')}
         onReset={() => setSearch('')}
         trailing={
           <Badge variant="secondary">{filtered.length} AO ouvert{filtered.length > 1 ? 's' : ''}</Badge>

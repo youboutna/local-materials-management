@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { ControlResult } from '@/application/services/boq/BoqControlsService';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props { lines: BoqLineDTO[]; totals: ReturnType<typeof BoqCalculatorService.aggregate>; controls: ControlResult[]; }
 const money = (value: number) => `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(value)} MRU`;
 
 function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardContent className="flex items-center gap-3 p-4">
@@ -46,19 +49,19 @@ export function SummaryTab({ lines, totals, controls }: Props) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi icon={ListChecks} label="Lignes DQE" value={String(lines.length)} />
-        <Kpi icon={CircleDollarSign} label="Total HT" value={money(totals.totalHt)} />
-        <Kpi icon={CircleDollarSign} label="TVA" value={money(totals.totalTva)} />
-        <Kpi icon={CircleDollarSign} label="Total TTC" value={money(totals.totalTtc)} />
+        <Kpi icon={ListChecks} label={t('auto.summarytab.lignes_dqe')} value={String(lines.length)} />
+        <Kpi icon={CircleDollarSign} label={t('auto.summarytab.total_ht')} value={money(totals.totalHt)} />
+        <Kpi icon={CircleDollarSign} label={t('auto.summarytab.tva')} value={money(totals.totalTva)} />
+        <Kpi icon={CircleDollarSign} label={t('auto.summarytab.total_ttc')} value={money(totals.totalTtc)} />
       </div>
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="flex items-center gap-2 text-base"><Layers3 className="h-4 w-4" />Répartition HT par phase</CardTitle>
-            <Button variant="outline" size="sm" onClick={exportCsv}>Exporter CSV</Button>
+            <CardTitle className="flex items-center gap-2 text-base"><Layers3 className="h-4 w-4" /><T k="auto.summarytab.repartition_ht_par_phase" fallback="Répartition HT par phase" /></CardTitle>
+            <Button variant="outline" size="sm" onClick={exportCsv}><T k="auto.summarytab.exporter_csv" fallback="Exporter CSV" /></Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {phases.length === 0 ? <p className="text-sm text-muted-foreground">Aucune ligne à analyser.</p> : phases.map(([phase, amount]) => (
+            {phases.length === 0 ? <p className="text-sm text-muted-foreground"><T k="auto.summarytab.aucune_ligne_a_analyser" fallback="Aucune ligne à analyser." /></p> : phases.map(([phase, amount]) => (
               <div key={phase} className="space-y-1">
                 <div className="flex justify-between gap-2 text-sm"><span className="truncate">{phase}</span><span className="font-medium">{money(amount)}</span></div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.max((amount / maxPhase) * 100, 2)}%` }} /></div>
@@ -67,9 +70,9 @@ export function SummaryTab({ lines, totals, controls }: Props) {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ListChecks className="h-4 w-4" />État des contrôles</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ListChecks className="h-4 w-4" /><T k="auto.summarytab.etat_des_controles" fallback="État des contrôles" /></CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">Conformes</span><Badge variant="secondary">{passed}/{controls.length}</Badge></div>
+            <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground"><T k="auto.summarytab.conformes" fallback="Conformes" /></span><Badge variant="secondary">{passed}/{controls.length}</Badge></div>
             {controls.map((control) => <div key={control.code} className="flex items-start gap-2 text-sm">{control.passed ? <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" /> : <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />}<span>{control.label}</span></div>)}
           </CardContent>
         </Card>

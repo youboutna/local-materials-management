@@ -19,6 +19,7 @@ import { getInsuranceService } from '@/application/services/InsuranceService';
 import { getInsuranceCertificatesService } from '@/application/services/InsuranceCertificatesService';
 import { InsuranceType, type InsuranceCertificateDTO, getInsuranceTypeLabel } from '@/dtos/entities/InsuranceDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectInsuranceFormProps {
   projectId: string;
@@ -30,6 +31,7 @@ interface ProjectInsuranceFormProps {
 const INSURANCE_TYPE_OPTIONS = Object.values(InsuranceType);
 
 export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: ProjectInsuranceFormProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const insuranceService = useMemo(() => getInsuranceService(), []);
   const certificatesService = useMemo(() => getInsuranceCertificatesService(), []);
@@ -54,13 +56,13 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
     event.preventDefault();
 
     if (!projectId) {
-      toast({ title: 'Projet manquant', description: 'Enregistrez le projet avant d\'ajouter une police.', variant: 'destructive' });
+      toast({ title: t('auto.projectinsuranceform.projet_manquant'), description: 'Enregistrez le projet avant d\'ajouter une police.', variant: 'destructive' });
       return;
     }
     if (!form.insuranceCompany || !form.policyNumber || !form.validUntil) {
       toast({
-        title: 'Champs obligatoires',
-        description: 'Assureur, numéro de police et date de fin de validité sont requis.',
+        title: t('auto.projectinsuranceform.champs_obligatoires'),
+        description: t('auto.projectinsuranceform.assureur_numero_de_police_et_date_de_fin_de_vali'),
         variant: 'destructive',
       });
       return;
@@ -89,14 +91,14 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
         result = { ...created, certificateUrl: url, certificate_url: url } as InsuranceCertificateDTO;
       }
 
-      toast({ title: 'Police enregistrée', description: `Police ${form.policyNumber} rattachée au projet.` });
+      toast({ title: t('auto.projectinsuranceform.police_enregistree'), description: `Police ${form.policyNumber} rattachée au projet.` });
       onCreated?.(result);
       setForm(prev => ({ ...prev, insuranceCompany: '', policyNumber: '', coverageAmount: '', validUntil: '', notes: '' }));
       setFile(null);
     } catch (error: any) {
       console.error('[ProjectInsuranceForm] create failed', error);
       toast({
-        title: 'Enregistrement impossible',
+        title: t('auto.projectinsuranceform.enregistrement_impossible'),
         description: error?.message || 'La police d\'assurance n\'a pas pu être enregistrée.',
         variant: 'destructive',
       });
@@ -115,11 +117,11 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="insuranceCompany">Assureur *</Label>
-          <Input id="insuranceCompany" value={form.insuranceCompany} onChange={e => set('insuranceCompany', e.target.value)} placeholder="Compagnie d'assurance" />
+          <Input id="insuranceCompany" value={form.insuranceCompany} onChange={e => set('insuranceCompany', e.target.value)} placeholder={t('auto.projectinsuranceform.compagnie_d_assurance')} />
         </div>
         <div>
           <Label htmlFor="policyNumber">N° de police *</Label>
-          <Input id="policyNumber" value={form.policyNumber} onChange={e => set('policyNumber', e.target.value)} placeholder="POL-2026-0001" />
+          <Input id="policyNumber" value={form.policyNumber} onChange={e => set('policyNumber', e.target.value)} placeholder={t('auto.projectinsuranceform.pol_2026_0001')} />
         </div>
         <div>
           <Label><T k="auto.projectinsuranceform.type_de_garantie" fallback="Type de garantie" /></Label>
@@ -138,7 +140,7 @@ export function ProjectInsuranceForm({ projectId, onCreated, onCancel }: Project
         </div>
         <div>
           <Label htmlFor="contractorName">Titulaire / entrepreneur</Label>
-          <Input id="contractorName" value={form.contractorName} onChange={e => set('contractorName', e.target.value)} placeholder="Nom de l'entreprise" />
+          <Input id="contractorName" value={form.contractorName} onChange={e => set('contractorName', e.target.value)} placeholder={t('auto.projectinsuranceform.nom_de_l_entreprise')} />
         </div>
         <div>
           <Label htmlFor="contractorId"><T k="auto.projectinsuranceform.reference_titulaire" fallback="Référence titulaire" /></Label>

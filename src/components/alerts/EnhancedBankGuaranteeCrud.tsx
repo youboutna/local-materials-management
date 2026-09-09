@@ -63,7 +63,7 @@ const EnhancedBankGuaranteeCrud = () => {
     supportingDocuments: [],
     notes: ''
   });
-  
+
   const { t } = useLanguage();
 
   // Hexagonal hooks
@@ -74,19 +74,19 @@ const EnhancedBankGuaranteeCrud = () => {
   const deleteMutation = useDeleteBankGuarantee();
 
   const guaranteeTypes = [
-    { value: 'performance', label: 'Garantie de Bonne Exécution' },
+    { value: 'performance', label: t('auto.enhancedbankguaranteecrud.garantie_de_bonne_execution') },
     { value: 'advance', label: 'Garantie d\'Avance' },
-    { value: 'retention', label: 'Garantie de Retenue' },
-    { value: 'maintenance', label: 'Garantie de Maintenance' },
-    { value: 'bid', label: 'Garantie de Soumission' }
+    { value: 'retention', label: t('auto.enhancedbankguaranteecrud.garantie_de_retenue') },
+    { value: 'maintenance', label: t('auto.enhancedbankguaranteecrud.garantie_de_maintenance') },
+    { value: 'bid', label: t('auto.enhancedbankguaranteecrud.garantie_de_soumission') }
   ];
 
   const statusOptions = [
-    { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
-    { value: 'expired', label: 'Expirée', color: 'bg-destructive/10 text-destructive' },
-    { value: 'claimed', label: 'Réclamée', color: 'bg-warning/10 text-warning' },
-    { value: 'released', label: 'Libérée', color: 'bg-primary/10 text-primary' },
-    { value: 'suspended', label: 'Suspendue', color: 'bg-muted text-foreground' }
+    { value: 'active', label: t('auto.enhancedbankguaranteecrud.active'), color: 'bg-success-soft text-success' },
+    { value: 'expired', label: t('auto.enhancedbankguaranteecrud.expiree'), color: 'bg-destructive/10 text-destructive' },
+    { value: 'claimed', label: t('auto.enhancedbankguaranteecrud.reclamee'), color: 'bg-warning/10 text-warning' },
+    { value: 'released', label: t('auto.enhancedbankguaranteecrud.liberee'), color: 'bg-primary/10 text-primary' },
+    { value: 'suspended', label: t('auto.enhancedbankguaranteecrud.suspendue'), color: 'bg-muted text-foreground' }
   ];
 
   const resetForm = () => {
@@ -154,7 +154,7 @@ const EnhancedBankGuaranteeCrud = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.projectId || !formData.contractorId || !formData.bankName || !formData.guaranteeAmount) {
       toast({
         title: t('common.error'),
@@ -172,7 +172,7 @@ const EnhancedBankGuaranteeCrud = () => {
         await createMutation.mutateAsync(formData);
         toast({ title: t('common.success'), description: "Garantie bancaire créée avec succès" });
       }
-      
+
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
@@ -208,12 +208,12 @@ const EnhancedBankGuaranteeCrud = () => {
       if (typeFilter !== 'all' && g.guaranteeType !== typeFilter) return false;
       if (!matchesExpiryFilter(g.expiryDate, expiryFilter)) return false;
       if (!q) return true;
-      
+
       // ✅ Récupérer le label du projet pour la recherche
-      const projectLabel = g.projectId 
+      const projectLabel = g.projectId
         ? getEntityLabel(g.projectId, projects, 'project')
         : '';
-      
+
       return [projectLabel, g.bankName, g.guaranteeType, g.contractorName, g.status, g.notes]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q));
@@ -270,11 +270,11 @@ const EnhancedBankGuaranteeCrud = () => {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {isViewMode ? 'Détails de la Garantie' : 
+                {isViewMode ? 'Détails de la Garantie' :
                  isEditing ? 'Modifier la Garantie' : 'Nouvelle Garantie Bancaire'}
               </DialogTitle>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -285,7 +285,7 @@ const EnhancedBankGuaranteeCrud = () => {
                     disabled={isViewMode}
                   />
                 </div>
-                
+
                 <div>
                   <Label>Contracteur *</Label>
                   <SupplierSelector
@@ -305,7 +305,7 @@ const EnhancedBankGuaranteeCrud = () => {
                     disabled={isViewMode}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="bankName">Banque *</Label>
                   <Input
@@ -316,16 +316,16 @@ const EnhancedBankGuaranteeCrud = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="guaranteeType">Type de Garantie *</Label>
-                  <Select 
-                    value={formData.guaranteeType} 
+                  <Select
+                    value={formData.guaranteeType}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, guaranteeType: value as BankGuaranteeType }))}
                     disabled={isViewMode}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner le type" />
+                      <SelectValue placeholder={t('auto.enhancedbankguaranteecrud.selectionner_le_type')} />
                     </SelectTrigger>
                     <SelectContent>
                       {guaranteeTypes.map((type) => (
@@ -336,7 +336,7 @@ const EnhancedBankGuaranteeCrud = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="guaranteeAmount">Montant (MRU) *</Label>
                   <Input
@@ -348,11 +348,11 @@ const EnhancedBankGuaranteeCrud = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="status"><T k="auto.enhancedbankguaranteecrud.statut" fallback="Statut" /></Label>
-                  <Select 
-                    value={formData.status} 
+                  <Select
+                    value={formData.status}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as BankGuaranteeStatus }))}
                     disabled={isViewMode}
                   >
@@ -368,7 +368,7 @@ const EnhancedBankGuaranteeCrud = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="issueDate">Date d'Émission *</Label>
                   <Input
@@ -380,7 +380,7 @@ const EnhancedBankGuaranteeCrud = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="expiryDate">Date d'Expiration *</Label>
                   <Input
@@ -393,7 +393,7 @@ const EnhancedBankGuaranteeCrud = () => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <Label><T k="auto.enhancedbankguaranteecrud.documents_justificatifs" fallback="Documents Justificatifs" /></Label>
                 {!isViewMode && (
@@ -410,7 +410,7 @@ const EnhancedBankGuaranteeCrud = () => {
                   </div>
                 )}
               </div>
-              
+
               <div>
                 <Label htmlFor="notes"><T k="auto.enhancedbankguaranteecrud.notes" fallback="Notes" /></Label>
                 <Textarea
@@ -421,7 +421,7 @@ const EnhancedBankGuaranteeCrud = () => {
                   rows={3}
                 />
               </div>
-              
+
               {!isViewMode && (
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
@@ -436,19 +436,19 @@ const EnhancedBankGuaranteeCrud = () => {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      
+
       <CardContent>
         <ListToolbar
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Rechercher (projet, banque, type, contractant…)"
+          searchPlaceholder={t('auto.enhancedbankguaranteecrud.rechercher_projet_banque_type_contractant')}
           expiryFilter={expiryFilter}
           onExpiryFilterChange={setExpiryFilter}
           resultCount={filteredGuarantees.length}
         >
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-[15rem]">
-              <SelectValue placeholder="Type de garantie" />
+              <SelectValue placeholder={t('auto.enhancedbankguaranteecrud.type_de_garantie')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all"><T k="auto.enhancedbankguaranteecrud.tous_les_types" fallback="Tous les types" /></SelectItem>
@@ -475,10 +475,10 @@ const EnhancedBankGuaranteeCrud = () => {
           <TableBody>
             {filteredGuarantees.map((guarantee) => {
               // ✅ RÉSOLUTION DU LABEL DU PROJET
-              const projectLabel = guarantee.projectId 
+              const projectLabel = guarantee.projectId
                 ? getEntityLabel(guarantee.projectId, projects, 'project')
                 : '—';
-              
+
               return (
                 <TableRow key={guarantee.id}>
                   <TableCell className="font-medium">
@@ -519,7 +519,7 @@ const EnhancedBankGuaranteeCrud = () => {
                     <div className="flex items-center gap-2">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)} aria-label="Consulter">
+                          <Button size="sm" variant="ghost" onClick={() => openViewForm(guarantee)} aria-label={t('auto.enhancedbankguaranteecrud.consulter')}>
                             <Eye className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
@@ -527,7 +527,7 @@ const EnhancedBankGuaranteeCrud = () => {
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)} aria-label="Modifier">
+                          <Button size="sm" variant="ghost" onClick={() => openEditForm(guarantee)} aria-label={t('auto.enhancedbankguaranteecrud.modifier')}>
                             <Edit className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
@@ -541,7 +541,7 @@ const EnhancedBankGuaranteeCrud = () => {
                             onClick={() => handleDelete(guarantee.id)}
                             className="text-destructive hover:text-destructive"
                             disabled={deleteMutation.isPending}
-                            aria-label="Supprimer"
+                            aria-label={t('auto.enhancedbankguaranteecrud.supprimer')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

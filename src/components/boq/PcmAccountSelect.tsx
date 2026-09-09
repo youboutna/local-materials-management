@@ -20,6 +20,8 @@ import {
   resolvePcmCgiAccount,
   type PcmCgiAccount,
 } from '@/config/referentials/fiscal/pcm-cgi.referential';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const MAX_RESULTS = 60;
 
@@ -65,6 +67,7 @@ export const PcmAccountSelect: React.FC<Props> = ({
   statement,
   placeholder = 'Compte PCM…',
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const results = React.useMemo(() => search(query, statement), [query, statement]);
@@ -93,7 +96,7 @@ export const PcmAccountSelect: React.FC<Props> = ({
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un compte (code, fr, عربي)…"
+          placeholder={t('auto.pcmaccountselect.rechercher_un_compte_code_fr')}
           className="h-8 text-xs"
         />
         <div className="mt-2 max-h-72 overflow-y-auto">
@@ -105,7 +108,7 @@ export const PcmAccountSelect: React.FC<Props> = ({
             <span className="text-muted-foreground">— Aucune imputation —</span>
           </button>
           {results.length === 0 && (
-            <div className="px-2 py-3 text-xs text-muted-foreground">Aucun compte trouvé</div>
+            <div className="px-2 py-3 text-xs text-muted-foreground"><T k="auto.pcmaccountselect.aucun_compte_trouve" fallback="Aucun compte trouvé" /></div>
           )}
           {results.map((a) => {
             const vat = getPcmCgiTreatment(a.code, 'TVA');

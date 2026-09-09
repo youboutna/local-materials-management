@@ -13,6 +13,8 @@ import { ProjectMiniMap } from './ProjectMiniMap';
 import { PhaseGanttBars } from './PhaseGanttBars';
 import { ProjectMetricsOrchestrator } from '@/application/services/ProjectMetricsOrchestrator';
 import { i18nService } from '@/application/services/I18nService';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectPDFDocumentProps {
   project: ProjectData;
@@ -96,6 +98,7 @@ export function ProjectPDFDocument({
   organizationCode,
   company,
 }: ProjectPDFDocumentProps) {
+  const { t } = useLanguage();
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
       'en cours': 'En cours',
@@ -113,14 +116,14 @@ export function ProjectPDFDocument({
 
   // Get expenses from project data
   const expenses = project.expenses || [];
-  
+
   // Calculate material costs
   const materialCost = materials?.reduce((sum, material) => {
     const quantity = material.availability || 1;
     const unitCost = material.costPerHour || 0;
     return sum + (quantity * unitCost);
   }, 0);
-  
+
   // Calculate labor costs
   const laborCost = employees.reduce((sum, employee) => {
     // Heures réelles si saisies ; sinon la ressource ne contribue pas au coût
@@ -131,7 +134,7 @@ export function ProjectPDFDocument({
     const hourlyRate = employee.costPerHour || 0;
     return sum + (hoursWorked * hourlyRate);
   }, 0);
-  
+
   // Calculate actual cost from expenses
   const actualCost = expenses.reduce((sum, expense) => {
     if (Array.isArray(expense)) {
@@ -139,7 +142,7 @@ export function ProjectPDFDocument({
     }
     return sum + (expense.amount || 0);
   }, 0);
-  
+
   // Use enriched data if available, otherwise use calculated values
   const financialData = enrichedData?.financialMetrics || {
     totalBudget: project.budget || 0,
@@ -149,10 +152,10 @@ export function ProjectPDFDocument({
   };
 
   // Calculate total variance for PERT analysis safely
-  const totalVariance = pertAnalysis?.variances 
+  const totalVariance = pertAnalysis?.variances
     ? Object.values(pertAnalysis?.variances).reduce((sum: number, variance: number) => sum + (variance || 0), 0)
     : 0;
-  
+
   const totalStandardDeviation = totalVariance!=null ? Math.sqrt(totalVariance):0;
 
   // Safe access to report data properties
@@ -253,7 +256,7 @@ export function ProjectPDFDocument({
           première page limitée à l'en-tête/pied de page. */}
       <View wrap={false} style={{ marginBottom: 12, padding: 10, backgroundColor: '#eff6ff' }}>
         <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#1e40af', marginBottom: 6 }}>
-          Synthèse du projet
+          <T k="auto.projectpdfdocument.synthese_du_projet" fallback="Synthèse du projet" />
         </Text>
         <Text>Avancement : {metrics.formatted.progress}</Text>
         <Text>Budget : {metrics.formatted.budget}</Text>
@@ -263,25 +266,25 @@ export function ProjectPDFDocument({
 
       {/* Aperçu général */}
       {reportConfig.includeSections.overview && (
-        <PDFSection title="Aperçu Général" borderColor="#3b82f6">
+        <PDFSection title={t('auto.projectpdfdocument.apercu_general')} borderColor="#3b82f6">
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Titre" value={project.title} />
-                <PDFText label="Localisation" value={project.location || 'Non défini'} />
-                <PDFText label="Statut" value={getStatusText(project.status)} />
-                <PDFText label="Progression" value={formatPercent2(unifiedProgress)} />
+                <PDFText label={t('auto.projectpdfdocument.titre')} value={project.title} />
+                <PDFText label={t('auto.projectpdfdocument.localisation')} value={project.location || 'Non défini'} />
+                <PDFText label={t('auto.projectpdfdocument.statut')} value={getStatusText(project.status)} />
+                <PDFText label={t('auto.projectpdfdocument.progression')} value={formatPercent2(unifiedProgress)} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
-                <PDFText label="Date de fin prévue" value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
-                <PDFText label="Budget" value={project.budget ? `${formatNumber2(project.budget)} MRU` : 'Non défini'} />
+                <PDFText label={t('auto.projectpdfdocument.date_de_debut')} value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
+                <PDFText label={t('auto.projectpdfdocument.date_de_fin_prevue')} value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
+                <PDFText label={t('auto.projectpdfdocument.budget')} value={project.budget ? `${formatNumber2(project.budget)} MRU` : 'Non défini'} />
               </PDFCol>
             </PDFRow>
             {project.description && (
               <PDFRow>
                 <PDFCol>
-                  <PDFText label="Description" value={project.description} />
+                  <PDFText label={t('auto.projectpdfdocument.description')} value={project.description} />
                 </PDFCol>
               </PDFRow>
             )}
@@ -291,25 +294,25 @@ export function ProjectPDFDocument({
 
       {/* Résumé financier */}
       {reportConfig.includeSections.financial && (
-        <PDFSection title="Résumé Financier" borderColor="#10b981">
+        <PDFSection title={t('auto.projectpdfdocument.resume_financier')} borderColor="#10b981">
           <PDFRow>
             <PDFMetricCard
-              title="Budget Total"
+              title={t('auto.projectpdfdocument.budget_total')}
               value={financialData.totalBudget ? metrics.formatted.budget : 'Non défini'}
               color="#10b981"
             />
             <PDFMetricCard
-              title="Dépenses Total"
+              title={t('auto.projectpdfdocument.depenses_total')}
               value={`${formatNumber2(financialData.spentAmount)} MRU`}
               color="#f59e0b"
             />
             <PDFMetricCard
-              title="Budget Restant"
+              title={t('auto.projectpdfdocument.budget_restant')}
               value={`${formatNumber2(financialData.remainingBudget)} MRU`}
               color="#3b82f6"
             />
             <PDFMetricCard
-              title="Écart Budget"
+              title={t('auto.projectpdfdocument.ecart_budget')}
               value={metrics.formatted.budgetVariance}
               color={metrics.budgetVariance > 0 ? "#ef4444" : "#10b981"}
             />
@@ -317,17 +320,17 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Coût Matériaux" value={`${formatAmount2(materialCost)}`} />
-                <PDFText label="Coût Main-d'œuvre" value={`${formatAmount2(laborCost)}`} />
+                <PDFText label={t('auto.projectpdfdocument.cout_materiaux')} value={`${formatAmount2(materialCost)}`} />
+                <PDFText label={t('auto.projectpdfdocument.cout_main_d_uvre')} value={`${formatAmount2(laborCost)}`} />
               </PDFCol>
               <PDFCol>
-                <PDFText 
-                  label="Pourcentage Matériaux" 
-                  value={financialData.spentAmount > 0 ? formatPercent2((materialCost / financialData.spentAmount) * 100) : formatPercent2(0)} 
+                <PDFText
+                  label={t('auto.projectpdfdocument.pourcentage_materiaux')}
+                  value={financialData.spentAmount > 0 ? formatPercent2((materialCost / financialData.spentAmount) * 100) : formatPercent2(0)}
                 />
-                <PDFText 
-                  label="Pourcentage Main-d'œuvre" 
-                  value={financialData.spentAmount > 0 ? formatPercent2((laborCost / financialData.spentAmount) * 100) : formatPercent2(0)} 
+                <PDFText
+                  label={t('auto.projectpdfdocument.pourcentage_main_d_uvre')}
+                  value={financialData.spentAmount > 0 ? formatPercent2((laborCost / financialData.spentAmount) * 100) : formatPercent2(0)}
                 />
               </PDFCol>
             </PDFRow>
@@ -337,20 +340,20 @@ export function ProjectPDFDocument({
 
       {/* Calendrier */}
       {reportConfig.includeSections.timeline && (
-        <PDFSection title="Calendrier du Projet" borderColor="#8b5cf6">
+        <PDFSection title={t('auto.projectpdfdocument.calendrier_du_projet')} borderColor="#8b5cf6">
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Date de début" value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
-                <PDFText label="Date de fin prévue" value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
-                <PDFText label="Durée totale (référence)" value={metrics.formatted.referenceDuration} />
+                <PDFText label={t('auto.projectpdfdocument.date_de_debut')} value={project.startDate ? format(new Date(project.startDate), 'dd/MM/yyyy') : 'Non défini'} />
+                <PDFText label={t('auto.projectpdfdocument.date_de_fin_prevue')} value={project.endDate ? format(new Date(project.endDate), 'dd/MM/yyyy') : 'Non défini'} />
+                <PDFText label={t('auto.projectpdfdocument.duree_totale_reference')} value={metrics.formatted.referenceDuration} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Progression actuelle" value={formatPercent2(unifiedProgress)} />
-                <PDFText label="Temps écoulé" value={project.startDate ? 
-                  `${Math.ceil((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24))} jours` : 
+                <PDFText label={t('auto.projectpdfdocument.progression_actuelle')} value={formatPercent2(unifiedProgress)} />
+                <PDFText label={t('auto.projectpdfdocument.temps_ecoule')} value={project.startDate ?
+                  `${Math.ceil((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 60 * 60 * 24))} jours` :
                   'Non calculé'} />
-                <PDFText label="Statut planning" value={
+                <PDFText label={t('auto.projectpdfdocument.statut_planning')} value={
                   unifiedProgress >= 90 ? 'Presque terminé' :
                   unifiedProgress >= 50 ? 'En bonne voie' :
                   unifiedProgress >= 25 ? 'En cours' : 'Début de projet'
@@ -363,7 +366,7 @@ export function ProjectPDFDocument({
 
       {/* Écarts (DeviationEngine — référentiel deviation-rules) */}
       {reportConfig.includeSections.kpi && deviations.length > 0 && (
-        <PDFSection title="Écarts & Indicateurs Clés" borderColor="#ef4444">
+        <PDFSection title={t('auto.projectpdfdocument.ecarts_indicateurs_cles')} borderColor="#ef4444">
           <PDFTable
             headers={['Indicateur', 'Valeur', 'Unité', 'Sévérité']}
             data={deviations.map((d) => [
@@ -375,7 +378,7 @@ export function ProjectPDFDocument({
           />
           {healthScore && typeof healthScore === 'object' && (
             <PDFText
-              label="Score de santé global"
+              label={t('auto.projectpdfdocument.score_de_sante_global')}
               value={`${healthScore.overallScore ?? healthScore.score ?? '—'}${healthScore.category ? ` (${i18nService.translateCategory(healthScore.category)})` : ''}`}
             />
           )}
@@ -384,9 +387,9 @@ export function ProjectPDFDocument({
 
 
       {/* Matériaux */}
-   
+
     {reportConfig.includeSections.materials && materials.length > 0 && (
-      <PDFSection title="Matériaux" borderColor="#8b5cf6">
+      <PDFSection title={t('auto.projectpdfdocument.materiaux')} borderColor="#8b5cf6">
         <PDFTable
           headers={['Nom', 'Quantité', 'Unité', 'Coût Unitaire', 'Coût Total']}
           data={materials.map(material => {
@@ -409,7 +412,7 @@ export function ProjectPDFDocument({
 
       {/* Employés */}
       {reportConfig.includeSections.employees && employees.length > 0 && (
-        <PDFSection title="Employés" borderColor="#f59e0b">
+        <PDFSection title={t('auto.projectpdfdocument.employes')} borderColor="#f59e0b">
           <PDFTable
             headers={['Nom', 'Compétences', 'Taux Horaire', 'Heures Estimées', 'Coût Total']}
             data={employees.map(employee => [
@@ -426,7 +429,7 @@ export function ProjectPDFDocument({
 
       {/* Phases */}
       {reportConfig.includeSections.phases && enrichedData?.phases && enrichedData.phases.length > 0 && (
-        <PDFSection title="Phases du Projet" borderColor="#f59e0b">
+        <PDFSection title={t('auto.projectpdfdocument.phases_du_projet')} borderColor="#f59e0b">
           <PDFTable
             headers={['Phase', 'Progression', 'Statut', 'Budget', 'Coût Réel', 'Écart']}
             data={enrichedData.phases.map((p: any) => {
@@ -437,7 +440,7 @@ export function ProjectPDFDocument({
                 'delayed': 'En retard',
                 'not_started': 'Non démarré'
               };
-              
+
               return [
                 p.title || p.name || p.phase_name || '—',
                 `${formatPercent2(p.actualProgress ?? p.progress ?? 0)} (source: brute)`,
@@ -457,7 +460,7 @@ export function ProjectPDFDocument({
 
       {/* Inspections */}
       {reportConfig.includeSections.inspections && safeReportData.inspections.length > 0 && (
-        <PDFSection title="Inspections" borderColor="#dc2626">
+        <PDFSection title={t('auto.projectpdfdocument.inspections')} borderColor="#dc2626">
           <PDFTable
             headers={['Date', 'Type', 'Statut', 'Inspecteur', 'Commentaires']}
             data={safeReportData.inspections.map((i: any) => [
@@ -474,7 +477,7 @@ export function ProjectPDFDocument({
 
       {/* Garanties bancaires */}
       {reportConfig.includeSections.bankGuarantees && safeReportData.bankGuarantees.length > 0 && (
-        <PDFSection title="Garanties Bancaires" borderColor="#059669">
+        <PDFSection title={t('auto.projectpdfdocument.garanties_bancaires')} borderColor="#059669">
           <PDFTable
             headers={['Type', 'Banque', 'Montant', 'Date d\'émission', 'Date d\'expiration', 'Statut']}
             data={safeReportData.bankGuarantees.map((bg: any) => [
@@ -492,7 +495,7 @@ export function ProjectPDFDocument({
 
       {/* Assurances */}
       {reportConfig.includeSections.insurance && safeReportData.insurance.length > 0 && (
-        <PDFSection title="Assurances" borderColor="#7c3aed">
+        <PDFSection title={t('auto.projectpdfdocument.assurances')} borderColor="#7c3aed">
           <PDFTable
             headers={['Compagnie', 'Type de couverture', 'Montant', 'Valide du', 'Valide jusqu\'au', 'Statut']}
             data={safeReportData.insurance.map((ins: any) => [
@@ -510,32 +513,32 @@ export function ProjectPDFDocument({
 
       {/* Analyse des risques */}
       {reportConfig.includeSections.risks && evmMetrics && (
-        <PDFSection title="Analyse des Risques" borderColor="#dc2626">
+        <PDFSection title={t('auto.projectpdfdocument.analyse_des_risques')} borderColor="#dc2626">
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText 
-                  label="Risque de délai" 
-                  value={!hasPlannedValue ? "NON ÉVALUABLE - Projet non démarré (PV = 0)" : evmMetrics.schedulePerformanceIndex < 0.9 ? "ÉLEVÉ - Retards significatifs" : evmMetrics.schedulePerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans les délais"} 
+                <PDFText
+                  label={t('auto.projectpdfdocument.risque_de_delai')}
+                  value={!hasPlannedValue ? "NON ÉVALUABLE - Projet non démarré (PV = 0)" : evmMetrics.schedulePerformanceIndex < 0.9 ? "ÉLEVÉ - Retards significatifs" : evmMetrics.schedulePerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans les délais"}
                 />
-                <PDFText 
-                  label="Risque de coût" 
-                  value={!hasActualCost ? "NON ÉVALUABLE - Aucun coût engagé (AC = 0)" : evmMetrics.costPerformanceIndex < 0.9 ? "ÉLEVÉ - Dépassement budget" : evmMetrics.costPerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans le budget"} 
+                <PDFText
+                  label={t('auto.projectpdfdocument.risque_de_cout')}
+                  value={!hasActualCost ? "NON ÉVALUABLE - Aucun coût engagé (AC = 0)" : evmMetrics.costPerformanceIndex < 0.9 ? "ÉLEVÉ - Dépassement budget" : evmMetrics.costPerformanceIndex < 1.1 ? "MOYEN - Surveillance requise" : "FAIBLE - Dans le budget"}
                 />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Indice SPI" value={formatIndex2(evmMetrics.schedulePerformanceIndex, hasPlannedValue)} />
-                <PDFText label="Indice CPI" value={formatIndex2(evmMetrics.costPerformanceIndex, hasActualCost)} />
+                <PDFText label={t('auto.projectpdfdocument.indice_spi')} value={formatIndex2(evmMetrics.schedulePerformanceIndex, hasPlannedValue)} />
+                <PDFText label={t('auto.projectpdfdocument.indice_cpi')} value={formatIndex2(evmMetrics.costPerformanceIndex, hasActualCost)} />
               </PDFCol>
             </PDFRow>
             <PDFRow>
               <PDFCol>
-                <PDFText 
-                  label="Recommandations" 
-                  value={(hasPlannedValue && evmMetrics.schedulePerformanceIndex < 0.9) || (hasActualCost && evmMetrics.costPerformanceIndex < 0.9) ? 
-                    "Actions correctives urgentes requises. Révision du planning et du budget nécessaire." : 
+                <PDFText
+                  label={t('auto.projectpdfdocument.recommandations')}
+                  value={(hasPlannedValue && evmMetrics.schedulePerformanceIndex < 0.9) || (hasActualCost && evmMetrics.costPerformanceIndex < 0.9) ?
+                    "Actions correctives urgentes requises. Révision du planning et du budget nécessaire." :
                     "Continuer la surveillance régulière des indicateurs de performance."
-                  } 
+                  }
                 />
               </PDFCol>
             </PDFRow>
@@ -545,25 +548,25 @@ export function ProjectPDFDocument({
 
       {/* Indicateurs de Performance (KPI) */}
       {reportConfig.includeSections.kpi && evmMetrics && (
-        <PDFSection title="Indicateurs de Performance (KPI)" borderColor="#3b82f6">
+        <PDFSection title={t('auto.projectpdfdocument.indicateurs_de_performance_kpi')} borderColor="#3b82f6">
           <PDFRow>
             <PDFMetricCard
-              title="Indice SPI"
+              title={t('auto.projectpdfdocument.indice_spi')}
               value={formatIndex2(evmMetrics.schedulePerformanceIndex, hasPlannedValue)}
               color={!hasPlannedValue ? "#6b7280" : evmMetrics.schedulePerformanceIndex >= 1 ? "#10b981" : evmMetrics.schedulePerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
             />
             <PDFMetricCard
-              title="Indice CPI"
+              title={t('auto.projectpdfdocument.indice_cpi')}
               value={formatIndex2(evmMetrics.costPerformanceIndex, hasActualCost)}
               color={!hasActualCost ? "#6b7280" : evmMetrics.costPerformanceIndex >= 1 ? "#10b981" : evmMetrics.costPerformanceIndex >= 0.9 ? "#f59e0b" : "#ef4444"}
             />
             <PDFMetricCard
-              title="Budget engagé"
+              title={t('auto.projectpdfdocument.budget_engage')}
               value={evmMetrics.budgetAtCompletion > 0 ? formatPercent2((evmMetrics.actualCost / evmMetrics.budgetAtCompletion) * 100) : formatPercent2(0)}
               color={evmMetrics.budgetAtCompletion > 0 && evmMetrics.actualCost <= evmMetrics.budgetAtCompletion ? "#10b981" : "#ef4444"}
             />
             <PDFMetricCard
-              title="Progression (TEP pondéré)"
+              title={t('auto.projectpdfdocument.progression_tep_pondere')}
               value={formatPercent2(unifiedProgress)}
               color="#8b5cf6"
             />
@@ -571,19 +574,19 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Performance délai" value={metrics.schedulePerformanceLabel} />
-                <PDFText label="Performance coût" value={metrics.costPerformanceLabel} />
+                <PDFText label={t('auto.projectpdfdocument.performance_delai')} value={metrics.schedulePerformanceLabel} />
+                <PDFText label={t('auto.projectpdfdocument.performance_cout')} value={metrics.costPerformanceLabel} />
               </PDFCol>
               <PDFCol>
                 <PDFText
-                  label="Écart d'avancement"
+                  label={t('auto.projectpdfdocument.ecart_d_avancement')}
                   value={
                     metrics.scheduleGapPercent === null
                       ? 'Non évaluable'
                       : `${metrics.formatted.scheduleGap} (réel ${metrics.formatted.progress} vs planifié ${metrics.formatted.plannedProgress})`
                   }
                 />
-                <PDFText label="Statut global" value={!hasPlannedValue && !hasActualCost ? "Non évaluable" : hasPlannedValue && evmMetrics.schedulePerformanceIndex >= 1 && (!hasActualCost || evmMetrics.costPerformanceIndex >= 1) ? "Très bon" : "En surveillance"} />
+                <PDFText label={t('auto.projectpdfdocument.statut_global')} value={!hasPlannedValue && !hasActualCost ? "Non évaluable" : hasPlannedValue && evmMetrics.schedulePerformanceIndex >= 1 && (!hasActualCost || evmMetrics.costPerformanceIndex >= 1) ? "Très bon" : "En surveillance"} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
@@ -607,41 +610,41 @@ export function ProjectPDFDocument({
           return `${direction} — ${severityLabel[severity] || severity}`;
         };
         const globalJudgment = (() => {
-          if (spi == null || cpi == null) return { label: 'Données insuffisantes', color: '#6b7280' };
-          if (spi >= 1 && cpi >= 1) return { label: 'Excellent — projet sous contrôle', color: '#10b981' };
-          if (spi >= 0.95 && cpi >= 0.95) return { label: 'Satisfaisant — surveillance régulière', color: '#3b82f6' };
-          if (spi >= 0.85 && cpi >= 0.85) return { label: 'Vigilance — actions préventives requises', color: '#f59e0b' };
-          return { label: 'Critique — actions correctives urgentes', color: '#ef4444' };
+          if (spi == null || cpi == null) return { label: t('auto.projectpdfdocument.donnees_insuffisantes'), color: '#6b7280' };
+          if (spi >= 1 && cpi >= 1) return { label: t('auto.projectpdfdocument.excellent_projet_sous_controle'), color: '#10b981' };
+          if (spi >= 0.95 && cpi >= 0.95) return { label: t('auto.projectpdfdocument.satisfaisant_surveillance_reguliere'), color: '#3b82f6' };
+          if (spi >= 0.85 && cpi >= 0.85) return { label: t('auto.projectpdfdocument.vigilance_actions_preventives_requises'), color: '#f59e0b' };
+          return { label: t('auto.projectpdfdocument.critique_actions_correctives_urgentes'), color: '#ef4444' };
         })();
         const score = healthScore && typeof healthScore === 'object'
           ? (healthScore.overallScore ?? healthScore.score ?? null)
           : null;
 
         return (
-          <PDFSection title="Suivi & Évaluation" borderColor="#0ea5e9">
+          <PDFSection title={t('auto.projectpdfdocument.suivi_evaluation')} borderColor="#0ea5e9">
             <PDFRow>
               <PDFMetricCard
-                title="Performance globale"
+                title={t('auto.projectpdfdocument.performance_globale')}
                 value={globalJudgment.label}
                 color={globalJudgment.color}
               />
               {score != null && (
                 <PDFMetricCard
-                  title="Score de santé"
+                  title={t('auto.projectpdfdocument.score_de_sante')}
                   value={`${formatNumber2(score)}/100`}
                   color="#8b5cf6"
                 />
               )}
               {spi != null && (
                 <PDFMetricCard
-                  title="SPI (délai)"
+                  title={t('auto.projectpdfdocument.spi_delai')}
                   value={formatRatio2(spi)}
                   color={spi >= 1 ? '#10b981' : spi >= 0.9 ? '#f59e0b' : '#ef4444'}
                 />
               )}
               {cpi != null && (
                 <PDFMetricCard
-                  title="CPI (coût)"
+                  title={t('auto.projectpdfdocument.cpi_cout')}
                   value={formatRatio2(cpi)}
                   color={cpi >= 1 ? '#10b981' : cpi >= 0.9 ? '#f59e0b' : '#ef4444'}
                 />
@@ -662,7 +665,7 @@ export function ProjectPDFDocument({
               />
             ) : (
               <PDFCard>
-                <PDFText label="Écarts" value="Aucun écart significatif détecté sur la période." />
+                <PDFText label={t('auto.projectpdfdocument.ecarts')} value="Aucun écart significatif détecté sur la période." />
               </PDFCard>
             )}
 
@@ -721,17 +724,17 @@ export function ProjectPDFDocument({
               <PDFRow>
                 <PDFCol>
                   <PDFText
-                    label="Synthèse délai"
+                    label={t('auto.projectpdfdocument.synthese_delai')}
                     value={spi == null ? 'N/A' : spi >= 1 ? 'Avance ou conforme au planning' : spi >= 0.9 ? 'Léger retard à surveiller' : 'Retard significatif — replanifier'}
                   />
                   <PDFText
-                    label="Synthèse coût"
+                    label={t('auto.projectpdfdocument.synthese_cout')}
                     value={cpi == null ? 'N/A' : cpi >= 1 ? 'Sous le budget' : cpi >= 0.9 ? 'Léger dépassement à surveiller' : 'Dépassement budgétaire — arbitrer'}
                   />
                 </PDFCol>
                 <PDFCol>
                   <PDFText
-                    label="Recommandation"
+                    label={t('auto.projectpdfdocument.recommandation')}
                     value={
                       (spi != null && spi < 0.9) || (cpi != null && cpi < 0.9)
                         ? 'Mettre en place un plan de redressement (planning + coût) et un comité de pilotage hebdomadaire.'
@@ -749,7 +752,7 @@ export function ProjectPDFDocument({
 
       {/* Jalons */}
       {reportConfig.includeSections.milestones && (
-        <PDFSection title="Jalons du Projet" borderColor="#10b981">
+        <PDFSection title={t('auto.projectpdfdocument.jalons_du_projet')} borderColor="#10b981">
           {enrichedData?.constructionMilestones && enrichedData.constructionMilestones.length > 0 ? (
             <PDFTable
               headers={['Jalon', 'Date cible', 'Statut', 'Priorité', 'Progression', 'Phase']}
@@ -773,7 +776,7 @@ export function ProjectPDFDocument({
                   'validation': 'Validation',
                   'livraison': 'Livraison'
                 };
-                
+
                 return [
                   milestone.title || milestone.name || '—',
                   milestone.targetDate ? format(new Date(milestone.targetDate), 'dd/MM/yyyy') : 'Non défini',
@@ -803,25 +806,25 @@ export function ProjectPDFDocument({
 
       {/* Analyse EVM */}
       {reportConfig.includeSections.evmAnalysis && evmMetrics && (
-        <PDFSection title="Analyse EVM (Earned Value Management)" borderColor="#1d4ed8">
+        <PDFSection title={t('auto.projectpdfdocument.analyse_evm_earned_value_management')} borderColor="#1d4ed8">
           <PDFRow>
             <PDFMetricCard
-              title="Valeur Planifiée (PV)"
+              title={t('auto.projectpdfdocument.valeur_planifiee_pv')}
               value={`${formatNumber2(evmMetrics.plannedValue)} MRU`}
               color="#3b82f6"
             />
             <PDFMetricCard
-              title="Valeur Acquise (EV)"
+              title={t('auto.projectpdfdocument.valeur_acquise_ev')}
               value={`${formatNumber2(evmMetrics.earnedValue)} MRU`}
               color="#10b981"
             />
             <PDFMetricCard
-              title="Coût Réel (AC)"
+              title={t('auto.projectpdfdocument.cout_reel_ac')}
               value={`${formatNumber2(evmMetrics.actualCost)} MRU`}
               color="#ef4444"
             />
             <PDFMetricCard
-              title="SPI"
+              title={t('auto.projectpdfdocument.spi')}
               value={metrics.formatted.spi}
               color="#8b5cf6"
             />
@@ -829,14 +832,14 @@ export function ProjectPDFDocument({
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Écart de délai (SV)" value={`${formatNumber2(evmMetrics.scheduleVariance)} MRU`} />
-                <PDFText label="Écart de coût (CV)" value={metrics.formatted.costVariance} />
-                <PDFText label="Indice de performance coût (CPI)" value={metrics.formatted.cpi} />
+                <PDFText label={t('auto.projectpdfdocument.ecart_de_delai_sv')} value={`${formatNumber2(evmMetrics.scheduleVariance)} MRU`} />
+                <PDFText label={t('auto.projectpdfdocument.ecart_de_cout_cv')} value={metrics.formatted.costVariance} />
+                <PDFText label={t('auto.projectpdfdocument.indice_de_performance_cout_cpi')} value={metrics.formatted.cpi} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Budget à l'achèvement (BAC)" value={`${formatNumber2(evmMetrics.budgetAtCompletion)} MRU`} />
-                <PDFText label="Estimation à l'achèvement (EAC)" value={`${formatNumber2(evmMetrics.estimateAtCompletion)} MRU`} />
-                <PDFText label="Estimation pour terminer (ETC)" value={`${formatNumber2(evmMetrics.estimateToComplete)} MRU`} />
+                <PDFText label={t('auto.projectpdfdocument.budget_a_l_achevement_bac')} value={`${formatNumber2(evmMetrics.budgetAtCompletion)} MRU`} />
+                <PDFText label={t('auto.projectpdfdocument.estimation_a_l_achevement_eac')} value={`${formatNumber2(evmMetrics.estimateAtCompletion)} MRU`} />
+                <PDFText label={t('auto.projectpdfdocument.estimation_pour_terminer_etc')} value={`${formatNumber2(evmMetrics.estimateToComplete)} MRU`} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
@@ -845,22 +848,22 @@ export function ProjectPDFDocument({
 
       {/* Analyse PERT */}
       {reportConfig.includeSections.pertAnalysis && pertAnalysis && (
-        <PDFSection title="Analyse PERT" borderColor="#0ea5e9">
+        <PDFSection title={t('auto.projectpdfdocument.analyse_pert')} borderColor="#0ea5e9">
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText 
-                  label="Durée totale estimée (PERT)" 
-                  value={metrics.formatted.pertDuration} 
+                <PDFText
+                  label={t('auto.projectpdfdocument.duree_totale_estimee_pert')}
+                  value={metrics.formatted.pertDuration}
                 />
-                <PDFText 
-                  label="Écart-type total" 
-                  value={`${formatNumber2(totalStandardDeviation)} jours`} 
+                <PDFText
+                  label={t('auto.projectpdfdocument.ecart_type_total')}
+                  value={`${formatNumber2(totalStandardDeviation)} jours`}
                 />
               </PDFCol>
               <PDFCol>
                 <PDFText
-                  label="Durée calendaire de référence (unique)"
+                  label={t('auto.projectpdfdocument.duree_calendaire_de_reference_unique')}
                   value={
                     project.startDate && project.endDate
                       ? `${formatNumber2(
@@ -875,7 +878,7 @@ export function ProjectPDFDocument({
                   }
                 />
                 <PDFText
-                  label="Lecture"
+                  label={t('auto.projectpdfdocument.lecture')}
                   value="La durée PERT est une estimation probabiliste ; la durée calendaire reste la référence contractuelle."
                 />
               </PDFCol>
@@ -900,7 +903,7 @@ export function ProjectPDFDocument({
 
       {/* Diagramme de Gantt — vue tabulaire phases sur timeline */}
       {reportConfig.includeSections.ganttChart && enrichedData?.phases && enrichedData.phases.length > 0 && (
-        <PDFSection title="Diagramme de Gantt" borderColor="#0891b2">
+        <PDFSection title={t('auto.projectpdfdocument.diagramme_de_gantt')} borderColor="#0891b2">
           <PhaseGanttBars gantt={metrics.gantt} />
           <PDFTable
             headers={['Phase', 'Début', 'Fin', 'Durée (j)', 'Avancement', 'Statut']}
@@ -924,7 +927,7 @@ export function ProjectPDFDocument({
 
       {/* Blocages de paiements */}
       {reportConfig.includeSections.paymentBlocks && safeReportData.paymentBlocks.length > 0 && (
-        <PDFSection title="Blocages de Paiements" borderColor="#dc2626">
+        <PDFSection title={t('auto.projectpdfdocument.blocages_de_paiements')} borderColor="#dc2626">
           <PDFTable
             headers={['Référence', 'Motif', 'Montant', 'Statut', 'Date']}
             data={safeReportData.paymentBlocks.map((b: any) => [
@@ -941,7 +944,7 @@ export function ProjectPDFDocument({
 
       {/* Fournisseurs */}
       {reportConfig.includeSections.suppliers && safeReportData.suppliers.length > 0 && (
-        <PDFSection title="Fournisseurs" borderColor="#7c3aed">
+        <PDFSection title={t('auto.projectpdfdocument.fournisseurs')} borderColor="#7c3aed">
           <PDFTable
             headers={['Nom', 'Contact', 'Catégorie', 'Statut']}
             data={safeReportData.suppliers.map((s: any) => [
@@ -957,7 +960,7 @@ export function ProjectPDFDocument({
 
       {/* Documents */}
       {reportConfig.includeSections.documents && safeReportData.documents.length > 0 && (
-        <PDFSection title="Documents" borderColor="#0d9488">
+        <PDFSection title={t('auto.projectpdfdocument.documents')} borderColor="#0d9488">
           <PDFTable
             headers={['Titre', 'Type', 'Auteur', 'Date']}
             data={safeReportData.documents.map((d: any) => [
@@ -973,7 +976,7 @@ export function ProjectPDFDocument({
 
       {/* Alertes d'escalade */}
       {reportConfig.includeSections.escalationAlerts && safeReportData.escalationAlerts.length > 0 && (
-        <PDFSection title="Alertes d'Escalade" borderColor="#ea580c">
+        <PDFSection title={t('auto.projectpdfdocument.alertes_d_escalade')} borderColor="#ea580c">
           <PDFTable
             headers={['Sévérité', 'Catégorie', 'Message', 'Date']}
             data={safeReportData.escalationAlerts.map((a: any) => [
@@ -988,7 +991,7 @@ export function ProjectPDFDocument({
       )}
 
       {reportConfig.notes && (
-        <PDFSection title="Notes Additionnelles" borderColor="#6366f1">
+        <PDFSection title={t('auto.projectpdfdocument.notes_additionnelles')} borderColor="#6366f1">
           <PDFCard>
             <PDFText label="" value={reportConfig.notes} />
           </PDFCard>

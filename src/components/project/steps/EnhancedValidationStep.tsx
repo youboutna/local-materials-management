@@ -20,8 +20,9 @@ import { getStorageService } from '@/application/services/StorageService';
 
 import { TranslatedDocumentType, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface EnhancedValidationStepProps {
-  formData: ProjectDTO & { 
+  formData: ProjectDTO & {
     compliance?: ComplianceItemDTO[];
     receptions?: ReceptionDTO[];
     risks?: RiskDTO[];
@@ -52,55 +53,56 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
   onUpdate,
   isEditing = false
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
-  
+
   // State for validation fields
   const [validationFields, setValidationFields] = useState<ValidationField[]>([
     {
       id: 'provisional-reception',
-      name: 'Réception Provisoire',
+      name: t('auto.enhancedvalidationstep.reception_provisoire'),
       status: formData?.receptions?.find(r => r.type === 'provisional')?.status === 'approved' ? 'completed' : 'pending',
-      description: 'Réception provisoire du projet',
+      description: t('auto.enhancedvalidationstep.reception_provisoire_du_projet'),
       required: false,
       lastUpdated: formData?.receptions?.find(r => r.type === 'provisional')?.updatedAt
     },
     {
       id: 'definitive-reception',
-      name: 'Réception Définitive',
+      name: t('auto.enhancedvalidationstep.reception_definitive'),
       status: formData?.receptions?.find(r => r.type === 'definitive')?.status === 'approved' ? 'completed' : 'pending',
-      description: 'Réception définitive et validation finale',
+      description: t('auto.enhancedvalidationstep.reception_definitive_et_validation_finale'),
       required: true,
       lastUpdated: formData?.receptions?.find(r => r.type === 'definitive')?.updatedAt
     },
     {
       id: 'risk-assessment',
-      name: 'Évaluation des Risques',
+      name: t('auto.enhancedvalidationstep.evaluation_des_risques'),
       status: formData?.risks && formData.risks.length > 0 ? 'completed' : 'pending',
-      description: 'Analyse complète des risques du projet',
+      description: t('auto.enhancedvalidationstep.analyse_complete_des_risques_du_projet'),
       required: true,
       lastUpdated: undefined
     },
     {
       id: 'compliance-check',
-      name: 'Vérification Conformité',
+      name: t('auto.enhancedvalidationstep.verification_conformite'),
       status: formData?.compliance && formData.compliance.length > 0 ? 'completed' : 'pending',
-      description: 'Vérification de la conformité réglementaire',
+      description: t('auto.enhancedvalidationstep.verification_de_la_conformite_reglementaire'),
       required: true,
       lastUpdated: undefined
     },
     {
       id: 'technical-validation',
-      name: 'Validation Technique',
+      name: t('auto.enhancedvalidationstep.validation_technique'),
       status: 'pending',
-      description: 'Validation des aspects techniques du projet',
+      description: t('auto.enhancedvalidationstep.validation_des_aspects_techniques_du_projet'),
       required: true,
       lastUpdated: undefined
     },
     {
       id: 'financial-validation',
-      name: 'Validation Financière',
+      name: t('auto.enhancedvalidationstep.validation_financiere'),
       status: 'pending',
-      description: 'Validation des aspects financiers et budgétaires',
+      description: t('auto.enhancedvalidationstep.validation_des_aspects_financiers_et_budgetaires'),
       required: true,
       lastUpdated: undefined
     }
@@ -190,7 +192,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
         ...prev,
         reception: {
           status: 'completed',
-          message: 'Réception créée avec succès'
+          message: t('auto.enhancedvalidationstep.reception_creee_avec_succes')
         }
       }));
 
@@ -200,14 +202,14 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
       });
     } catch (error: unknown) {
       console.error('Failed to create reception:', error);
-      
+
       setSelectedReceptionType('');
       setReceptionDate('');
       setCommitteeMembers([]);
       setChairman('');
       setReceptionNotes('');
       setUploadedFiles([]);
-      
+
       setValidationResults(prev => ({
         ...prev,
         reception: {
@@ -246,8 +248,8 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
       }));
 
       // Update field status
-      setValidationFields(prev => prev.map(field => 
-        field.id === fieldId 
+      setValidationFields(prev => prev.map(field =>
+        field.id === fieldId
           ? { ...field, status: validationResult.isValid ? 'completed' : 'failed', lastUpdated: new Date().toISOString() }
           : field
       ));
@@ -337,7 +339,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 <Label htmlFor="project-status"><T k="auto.enhancedvalidationstep.statut_du_projet" fallback="Statut du Projet" /></Label>
                 <Select value={formData.status || ""} onValueChange={(value) => onUpdate({ status: value } as any)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner le statut" />
+                    <SelectValue placeholder={t('auto.enhancedvalidationstep.selectionner_le_statut')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="draft"><TranslatedStatus code="draft" /></SelectItem>
@@ -353,7 +355,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 <Label htmlFor="closure-notes"><T k="auto.enhancedvalidationstep.notes_de_cloture" fallback="Notes de Clôture" /></Label>
                 <Textarea
                   id="closure-notes"
-                  placeholder="Notes finales, observations, recommandations..."
+                  placeholder={t('auto.enhancedvalidationstep.notes_finales_observations_recommandations')}
                   value={formData.closureNotes || ""}
                   onChange={(e) => onUpdate({ closureNotes: e.target.value })}
                   className="min-h-[100px]"
@@ -363,7 +365,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                 <Label htmlFor="certificate-number"><T k="auto.enhancedvalidationstep.numero_de_certificat" fallback="Numéro de Certificat" /></Label>
                 <Input
                   id="certificate-number"
-                  placeholder="Numéro de certificat de réception"
+                  placeholder={t('auto.enhancedvalidationstep.numero_de_certificat_de_reception')}
                   value={(formData as any).certificateNumber || ""}
                   onChange={(e) => onUpdate({ certificateNumber: e.target.value } as any)}
                 />
@@ -384,13 +386,13 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
               {/* Create New Reception */}
               <div className="border rounded-lg p-4 space-y-4">
                 <h3 className="font-medium"><T k="auto.enhancedvalidationstep.creer_une_nouvelle_reception" fallback="Créer une nouvelle réception" /></h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="reception-type"><T k="auto.enhancedvalidationstep.type_de_reception" fallback="Type de Réception" /></Label>
                     <Select value={selectedReceptionType} onValueChange={(value) => setSelectedReceptionType(value as ReceptionType | '')}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner le type" />
+                        <SelectValue placeholder={t('auto.enhancedvalidationstep.selectionner_le_type')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={ReceptionType.PROVISIONAL}><T k="auto.enhancedvalidationstep.reception_provisoire" fallback="Réception Provisoire" /></SelectItem>
@@ -398,7 +400,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="reception-date"><T k="auto.enhancedvalidationstep.date_de_reception" fallback="Date de Réception" /></Label>
                     <Input
@@ -414,7 +416,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                   <Label htmlFor="chairman"><T k="auto.enhancedvalidationstep.president_du_comite" fallback="Président du Comité" /></Label>
                   <Input
                     id="chairman"
-                    placeholder="Nom du président"
+                    placeholder={t('auto.enhancedvalidationstep.nom_du_president')}
                     value={chairman}
                     onChange={(e) => setChairman(e.target.value)}
                   />
@@ -424,7 +426,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                   <Label htmlFor="committee-members"><T k="auto.enhancedvalidationstep.membres_du_comite" fallback="Membres du Comité" /></Label>
                   <Input
                     id="committee-members"
-                    placeholder="Noms des membres (séparés par des virgules)"
+                    placeholder={t('auto.enhancedvalidationstep.noms_des_membres_separes_par_des_virgules')}
                     value={committeeMembers.join(', ')}
                     onChange={(e) => setCommitteeMembers(e.target.value.split(',').map(m => m.trim()))}
                   />
@@ -434,7 +436,7 @@ const EnhancedValidationStep: React.FC<EnhancedValidationStepProps> = ({
                   <Label htmlFor="reception-notes"><T k="auto.enhancedvalidationstep.notes_de_reception" fallback="Notes de Réception" /></Label>
                   <Textarea
                     id="reception-notes"
-                    placeholder="Notes et observations de la réception..."
+                    placeholder={t('auto.enhancedvalidationstep.notes_et_observations_de_la_reception')}
                     value={receptionNotes}
                     onChange={(e) => setReceptionNotes(e.target.value)}
                     className="min-h-[80px]"

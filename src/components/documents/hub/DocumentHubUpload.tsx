@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DocumentHubContract, UploadInput, formatBytes } from './types';
 import { MimeIcon } from './MimeIcon';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   open: boolean;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -74,11 +76,11 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
         extras,
       };
       await contract.onUpload(input);
-      toast({ title: 'Document ajouté' });
+      toast({ title: t('auto.documenthubupload.document_ajoute') });
       handleClose(false);
     } catch (err: any) {
       toast({
-        title: 'Échec ajout',
+        title: t('auto.documenthubupload.echec_ajout'),
         description: err?.message ?? 'Erreur lors de l\'ajout',
         variant: 'destructive',
       });
@@ -144,7 +146,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
               id="doc-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Titre du document"
+              placeholder={t('auto.documenthubupload.titre_du_document')}
               required
             />
           </div>
@@ -154,7 +156,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
               <Label><T k="auto.documenthubupload.categorie" fallback="Catégorie" /></Label>
               <Select value={category ?? undefined} onValueChange={setCategory}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Catégorie" />
+                  <SelectValue placeholder={t('auto.documenthubupload.categorie')} />
                 </SelectTrigger>
                 <SelectContent>
                   {contract.uploadCategoryOptions.map((opt) => (
@@ -178,7 +180,7 @@ export function DocumentHubUpload({ open, onOpenChange, contract }: Props) {
               id="doc-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description (optionnel)"
+              placeholder={t('auto.documenthubupload.description_optionnel')}
               rows={2}
             />
           </div>

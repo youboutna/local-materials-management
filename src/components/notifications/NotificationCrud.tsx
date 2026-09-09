@@ -15,6 +15,7 @@ import UserSelector from '@/components/selectors/UserSelector';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import { useAllNotificationsHex } from '@/hooks/hexagonal/useAllNotificationsHex';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Notification {
   id: string;
@@ -38,6 +39,7 @@ interface NotificationFormData {
 }
 
 const NotificationCrud: React.FC = () => {
+  const { t } = useLanguage();
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -76,13 +78,13 @@ const NotificationCrud: React.FC = () => {
   });
 
   const notificationTypes = [
-    { value: 'info', label: 'Information', color: 'bg-primary/10 text-primary', icon: Info },
-    { value: 'warning', label: 'Avertissement', color: 'bg-warning/10 text-warning', icon: AlertTriangle },
-    { value: 'error', label: 'Erreur', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
-    { value: 'success', label: 'Succès', color: 'bg-success-soft text-success', icon: CheckCircle },
-    { value: 'project_update', label: 'Mise à jour projet', color: 'bg-purple-100 text-purple-800', icon: Bell },
-    { value: 'compliance_alert', label: 'Alerte conformité', color: 'bg-warning/10 text-warning', icon: AlertTriangle },
-    { value: 'payment_reminder', label: 'Rappel paiement', color: 'bg-indigo-100 text-indigo-800', icon: Bell }
+    { value: 'info', label: t('auto.notificationcrud.information'), color: 'bg-primary/10 text-primary', icon: Info },
+    { value: 'warning', label: t('auto.notificationcrud.avertissement'), color: 'bg-warning/10 text-warning', icon: AlertTriangle },
+    { value: 'error', label: t('auto.notificationcrud.erreur'), color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
+    { value: 'success', label: t('auto.notificationcrud.succes'), color: 'bg-success-soft text-success', icon: CheckCircle },
+    { value: 'project_update', label: t('auto.notificationcrud.mise_a_jour_projet'), color: 'bg-purple-100 text-purple-800', icon: Bell },
+    { value: 'compliance_alert', label: t('auto.notificationcrud.alerte_conformite'), color: 'bg-warning/10 text-warning', icon: AlertTriangle },
+    { value: 'payment_reminder', label: t('auto.notificationcrud.rappel_paiement'), color: 'bg-indigo-100 text-indigo-800', icon: Bell }
   ];
 
   const resetForm = () => {
@@ -131,7 +133,7 @@ const NotificationCrud: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.recipient_id || !formData.title || !formData.message) {
       toast({
         title: "Erreur",
@@ -238,24 +240,24 @@ const NotificationCrud: React.FC = () => {
                 {isViewMode ? 'Détails de la Notification' : isEditing ? 'Modifier la Notification' : 'Nouvelle Notification'}
               </DialogTitle>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <UserSelector
                     value={formData.recipient_id}
                     onChange={(userId) => setFormData(prev => ({ ...prev, recipient_id: userId }))}
-                    label="Destinataire"
+                    label={t('auto.notificationcrud.destinataire')}
                     required={true}
                     disabled={isViewMode}
-                    placeholder="Sélectionner le destinataire"
+                    placeholder={t('auto.notificationcrud.selectionner_le_destinataire')}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="type"><T k="auto.notificationcrud.type_de_notification" fallback="Type de notification" /></Label>
-                  <Select 
-                    value={formData.type} 
+                  <Select
+                    value={formData.type}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                     disabled={isViewMode}
                   >
@@ -284,7 +286,7 @@ const NotificationCrud: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   required
                   disabled={isViewMode}
-                  placeholder="Titre de la notification"
+                  placeholder={t('auto.notificationcrud.titre_de_la_notification')}
                 />
               </div>
 
@@ -297,14 +299,14 @@ const NotificationCrud: React.FC = () => {
                   rows={4}
                   required
                   disabled={isViewMode}
-                  placeholder="Contenu détaillé de la notification..."
+                  placeholder={t('auto.notificationcrud.contenu_detaille_de_la_notification')}
                 />
               </div>
 
               <ProjectSelector
                 value={formData.related_id}
                 onChange={handleProjectChange}
-                label="Projet associé (optionnel)"
+                label={t('auto.notificationcrud.projet_associe_optionnel')}
                 required={false}
                 disabled={isViewMode}
               />
@@ -349,7 +351,7 @@ const NotificationCrud: React.FC = () => {
               {notifications.map((notification) => {
                 const typeConfig = getTypeConfig(notification.type);
                 const TypeIcon = typeConfig.icon;
-                
+
                 return (
                   <TableRow key={notification.id} className={notification.read ? 'opacity-60' : ''}>
                     <TableCell className="font-medium">
@@ -373,7 +375,7 @@ const NotificationCrud: React.FC = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {notification.created_at && 
+                      {notification.created_at &&
                         new Date(notification.created_at).toLocaleDateString('fr-FR')
                       }
                     </TableCell>

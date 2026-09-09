@@ -48,6 +48,7 @@ import type { ReverseTransitionDef } from '@/config/referentials/documents/docum
 
 // ✅ IMPORT — Hook hexagonal pour la persistance des en-têtes
 import { useBoqDocumentHeaderHex } from '@/hooks/hexagonal/useBoqDocumentHeaderHex';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   ctx: BoqContext;
@@ -79,6 +80,7 @@ export const BoqActionsBar: React.FC<Props> = ({
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
   primarySlot, workflowSlot, badgesSlot, contextSlot,
 }) => {
+  const { t } = useLanguage();
 
   const { toast } = useToast();
   const { t } = useI18n();
@@ -114,7 +116,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     try {
       const res = await BoqInjectionGateService.approve(lines, gateActor);
       toast({
-        title: 'Validation enregistrée',
+        title: t('auto.boqactionsbar.validation_enregistree'),
         description: `${res.validated} ligne(s) ${res.kinds
           .map((k) => BOQ_INJECTION_GATE_REFERENTIAL.gates[k].label)
           .join(', ')} — injection autorisée.`,
@@ -124,16 +126,16 @@ export const BoqActionsBar: React.FC<Props> = ({
       }));
     } catch (e) {
       toast({
-        title: 'Validation refusée',
+        title: t('auto.boqactionsbar.validation_refusee'),
         description: e instanceof Error ? e.message : undefined,
         variant: 'destructive',
       });
     }
   });
 
-  const withGuard = async (label: string, fn: () => Promise<void>) => {
+  const withGuard = async (label: string, fn: () => <T k="auto.boqactionsbar.promise" fallback="Promise" /><void>) => {
     if (!lines.length) {
-      toast({ title: 'Aucune ligne', description: 'Ajoutez ou importez des lignes.', variant: 'destructive' });
+      toast({ title: t('auto.boqactionsbar.aucune_ligne'), description: t('auto.boqactionsbar.ajoutez_ou_importez_des_lignes'), variant: 'destructive' });
       return;
     }
     setBusy(label);
@@ -346,7 +348,7 @@ export const BoqActionsBar: React.FC<Props> = ({
     void withGuard('pdf', async () => {
       const { blob, filename } = await DocumentService.generate(lines, baseDocCtx);
       DocumentService.download(blob, filename);
-      toast({ title: 'PDF généré', description: filename });
+      toast({ title: t('auto.boqactionsbar.pdf_genere'), description: filename });
     });
   };
 
@@ -362,13 +364,13 @@ export const BoqActionsBar: React.FC<Props> = ({
     if (!requireValidHeader()) return;
     void withGuard('email', async () => {
       const res = await DocumentService.email(lines, { ...baseDocCtx, recipientEmail: effectiveParties.recipientEmail ?? recipientEmail });
-      if (res.ok) toast({ title: 'Email envoyé' });
-      else toast({ title: 'Envoi échoué', description: res.message, variant: 'destructive' });
+      if (res.ok) toast({ title: t('auto.boqactionsbar.email_envoye') });
+      else toast({ title: t('auto.boqactionsbar.envoi_echoue'), description: res.message, variant: 'destructive' });
     });
   };
 
   const confirmSign = async () => {
-    if (!signer.trim()) { toast({ title: 'Signataire requis', variant: 'destructive' }); return; }
+    if (!signer.trim()) { toast({ title: t('auto.boqactionsbar.signataire_requis'), variant: 'destructive' }); return; }
     if (!requireValidHeader()) return;
     setBusy('sign');
 
@@ -376,9 +378,9 @@ export const BoqActionsBar: React.FC<Props> = ({
       const res = await DocumentService.sign(lines, { ...baseDocCtx, signedBy: signer.trim() });
       if (res.ok) {
         setSignedInfo({ by: signer.trim(), at: new Date().toISOString() });
-        toast({ title: 'Document signé', description: `Par ${signer.trim()}` });
+        toast({ title: t('auto.boqactionsbar.document_signe'), description: `Par ${signer.trim()}` });
         setSignOpen(false);
-      } else toast({ title: 'Signature échouée', description: res.message, variant: 'destructive' });
+      } else toast({ title: t('auto.boqactionsbar.signature_echouee'), description: res.message, variant: 'destructive' });
     } finally { setBusy(null); }
   };
 
@@ -394,11 +396,11 @@ export const BoqActionsBar: React.FC<Props> = ({
         tenderId: ctx.tenderId,
         title: `Décompte ${decomptePct}% — ${ctx.title}`,
       });
-      toast({ title: 'Décompte créé', description: `${res.lines.length} ligne(s) — ${res.totalHt.toLocaleString('fr-FR')} HT` });
+      toast({ title: t('auto.boqactionsbar.decompte_cree'), description: `${res.lines.length} ligne(s) — ${res.totalHt.toLocaleString('fr-FR')} HT` });
       setDecompteOpen(false);
       window.dispatchEvent(new CustomEvent('boq-decompte-created', { detail: { contextId: ctx.contextId, percentage: decomptePct } }));
     } catch (e) {
-      toast({ title: 'Création impossible', description: e instanceof Error ? e.message : undefined, variant: 'destructive' });
+      toast({ title: t('auto.boqactionsbar.creation_impossible'), description: e instanceof Error ? e.message : undefined, variant: 'destructive' });
     } finally { setBusy(null); }
   };
 
@@ -433,7 +435,7 @@ export const BoqActionsBar: React.FC<Props> = ({
       if (ctx.routeContext === 'tender-estimate') onPublish?.();
     } catch (e) {
       toast({
-        title: 'Transfert impossible',
+        title: t('auto.boqactionsbar.transfert_impossible'),
         description: e instanceof Error ? e.message : undefined,
         variant: 'destructive',
       });
@@ -777,7 +779,7 @@ export const BoqActionsBar: React.FC<Props> = ({
           <div className="space-y-3">
             <div className="space-y-1">
               <Label><T k="auto.boqactionsbar.nom_du_signataire" fallback="Nom du signataire" /></Label>
-              <Input value={signer} onChange={(e) => setSigner(e.target.value)} placeholder="Ex. Directeur Technique" />
+              <Input value={signer} onChange={(e) => setSigner(e.target.value)} placeholder={t('auto.boqactionsbar.ex_directeur_technique')} />
             </div>
             <p className="text-xs text-muted-foreground">
               La signature sera intégrée au PDF (bloc de validation) et horodatée. Le document peut être signé avant ou après la génération du PDF.

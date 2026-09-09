@@ -18,6 +18,7 @@ import { getInsuranceCertificatesService } from '@/application/services/Insuranc
 import { useToast } from '@/hooks/use-toast';
 import type { InsuranceCertificateDTO } from '@/dtos/entities/InsuranceDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InsuranceDocumentCellProps {
   certificate: InsuranceCertificateDTO;
@@ -26,6 +27,7 @@ interface InsuranceDocumentCellProps {
 }
 
 export function InsuranceDocumentCell({ certificate, onChanged }: InsuranceDocumentCellProps) {
+  const { t } = useLanguage();
   const { openDocument } = useDocumentViewer();
   const { toast } = useToast();
   const certificatesService = useMemo(() => getInsuranceCertificatesService(), []);
@@ -38,7 +40,7 @@ export function InsuranceDocumentCell({ certificate, onChanged }: InsuranceDocum
       <Button
         size="sm"
         variant="outline"
-        title="Voir la pièce d'assurance"
+        title={t('auto.insurancedocumentcell.voir_la_piece_d_assurance')}
         onClick={() =>
           openDocument(
             {
@@ -57,7 +59,7 @@ export function InsuranceDocumentCell({ certificate, onChanged }: InsuranceDocum
 
   return (
     <>
-      <Button size="sm" variant="outline" title="Joindre la police / attestation" onClick={() => setUploadOpen(true)}>
+      <Button size="sm" variant="outline" title={t('auto.insurancedocumentcell.joindre_la_police_attestation')} onClick={() => setUploadOpen(true)}>
         <FilePlus2 className="h-4 w-4" />
       </Button>
 
@@ -76,7 +78,7 @@ export function InsuranceDocumentCell({ certificate, onChanged }: InsuranceDocum
             onDocumentUploaded={async () => {
               setUploadOpen(false);
               onChanged?.();
-              toast({ title: 'Document joint', description: 'La pièce a été ajoutée à la GED du projet.' });
+              toast({ title: t('auto.insurancedocumentcell.document_joint'), description: t('auto.insurancedocumentcell.la_piece_a_ete_ajoutee_a_la_ged_du_projet') });
               try {
                 if (certificate.id) {
                   await certificatesService.updateCertificate(certificate.id, {

@@ -23,6 +23,7 @@ import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 import { Edit2, Plus, Star, Trash2, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseEmployeesProps {
   phaseId: string;
@@ -51,6 +52,7 @@ const EMPTY_FORM: EmployeeFormState = {
 };
 
 const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
+  const { t } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<EmployeeFormState>(EMPTY_FORM);
@@ -181,7 +183,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       value={formData.employeeRole}
                       onChange={(e) => setFormData({ ...formData, employeeRole: e.target.value })}
                       required
-                      placeholder="Ex : Chef de chantier, Maçon…"
+                      placeholder={t('auto.phaseemployees.ex_chef_de_chantier_macon')}
                     />
                   </div>
                   <div>
@@ -190,7 +192,7 @@ const PhaseEmployees: React.FC<PhaseEmployeesProps> = ({ phaseId }) => {
                       id="employee_contact"
                       value={formData.employeeContact}
                       onChange={(e) => setFormData({ ...formData, employeeContact: e.target.value })}
-                      placeholder="Téléphone ou email"
+                      placeholder={t('auto.phaseemployees.telephone_ou_email')}
                     />
                   </div>
                 </div>

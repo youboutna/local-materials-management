@@ -27,6 +27,7 @@ import { ProjectData } from '@/dtos/entities/ProjectDTO';
 import StatusBadge from "@/components/StatusBadge";
 import { Checkbox } from "../ui/checkbox";
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectsGridPaginatedProps {
   projects: ProjectData[];
@@ -54,6 +55,7 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
   onDeselectAllOnPage,
   isLoading = false,
 }) => {
+  const { t } = useLanguage();
   // UX 3.1 — densité d'affichage des cartes, préférence conservée localement.
   const [density, setDensityState] = React.useState<"compact" | "detailed">(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem("projects.cardDensity") : null;
@@ -241,12 +243,12 @@ const ProjectsGridPaginated: React.FC<ProjectsGridPaginatedProps> = ({
               {/* Barre d'actions flottante au survol */}
               <div className="absolute top-2 right-2 z-20 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                 <Button asChild size="icon" variant="secondary" className="h-7 w-7">
-                  <Link to={`/projects/${project.id}`} aria-label="Voir les détails">
+                  <Link to={`/projects/${project.id}`} aria-label={t('auto.projectsgridpaginated.voir_les_details')}>
                     <Eye className="h-3.5 w-3.5" />
                   </Link>
                 </Button>
                 <Button asChild size="icon" variant="secondary" className="h-7 w-7">
-                  <Link to={`/projects/${project.id}/edit`} aria-label="Modifier le projet">
+                  <Link to={`/projects/${project.id}/edit`} aria-label={t('auto.projectsgridpaginated.modifier_le_projet')}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Link>
                 </Button>

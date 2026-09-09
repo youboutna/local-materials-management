@@ -14,10 +14,10 @@ import 'leaflet/dist/leaflet.css';
 // Import GeoService and Mauritania utilities
 import { GeocodingService } from '@/application/services/GeocodingService';
 import { getGeocodingService } from '@/application/services/GeocodingServiceFactory';
-import { 
-  Region, 
-  City, 
-  getMajorCities, 
+import {
+  Region,
+  City,
+  getMajorCities,
   getRegionsWithCapitals,
   getAllCityCoordinates,
   searchRegions,
@@ -27,6 +27,7 @@ import {
   getCitiesByWilaya
 } from '@/utils/mauritaniaUtils';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({
@@ -65,11 +66,11 @@ interface InteractiveMapGISProps {
 }
 
 // Component to handle map clicks
-const MapClickHandler = ({ 
-  onMapClick, 
-  onShapeClick, 
-  isDrawingShape 
-}: { 
+const MapClickHandler = ({
+  onMapClick,
+  onShapeClick,
+  isDrawingShape
+}: {
   onMapClick: (latlng: L.LatLng) => void;
   onShapeClick: (latlng: L.LatLng) => void;
   isDrawingShape: boolean;
@@ -94,6 +95,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   onChange,
   className = ""
 }) => {
+  const { t } = useLanguage();
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || '');
   const [isDrawingShape, setIsDrawingShape] = useState(false);
@@ -137,10 +139,10 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
   const handleShapeClick = useCallback((latlng: L.LatLng) => {
     const newPoint = { lat: latlng.lat, lng: latlng.lng };
     const currentShape = mapData.shape || [];
-    
-    updateMapData({ 
+
+    updateMapData({
       shape: [...currentShape, newPoint],
-      shapeType: currentShapeType 
+      shapeType: currentShapeType
     });
   }, [mapData?.shape, currentShapeType, updateMapData]);
 
@@ -195,7 +197,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
     const center = mapData?.coordinates || { lat: 18.0735, lng: -15.9582 };
     const radius = 0.01;
     const points: Coordinate[] = [];
-    
+
     for (let i = 0; i < 16; i++) {
       const angle = (i * 2 * Math.PI) / 16;
       points.push({
@@ -277,21 +279,21 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
       <CardContent className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3 bg-muted/50 p-1 rounded-xl border border-border/50">
-            <TabsTrigger 
-              value="location" 
+            <TabsTrigger
+              value="location"
               className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
             >
               <MapPin className="h-4 w-4" />
               <T k="auto.interactivemapgis.localisation" fallback="Localisation" />
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="shape"
               className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
             >
               <Pentagon className="h-4 w-4" />
               <T k="auto.interactivemapgis.forme" fallback="Forme" />
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="summary"
               className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
             >
@@ -308,7 +310,7 @@ const InteractiveMapGIS: React.FC<InteractiveMapGISProps> = ({
               </Label>
               <Input
                 id="address"
-                placeholder="Saisissez l'adresse complète..."
+                placeholder={t('auto.interactivemapgis.saisissez_l_adresse_complete')}
                 value={address}
                 onChange={(e) => handleAddressChange(e.target.value)}
                 className="border-border/50 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"

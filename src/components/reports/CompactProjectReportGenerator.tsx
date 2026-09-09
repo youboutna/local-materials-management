@@ -19,6 +19,7 @@ import { REPORT_PROFILES, type ReportProfile, defaultSectionsFor } from '@/confi
 import { CompactProjectPDFDocument, SingleCompactProjectPDF } from './pdf/CompactProjectPDFDocument';
 import { T } from '@/components/i18n/T';
 import { resolveProjectLocationLabel } from '@/utils/projectLocationLabel';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Local type aliases for report generation
 interface EVMMetrics {
@@ -61,20 +62,21 @@ export function CompactProjectReportGenerator({
   projects,
   onClose,
 }: CompactProjectReportGeneratorProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportTitle, setReportTitle] = useState('Rapport des Projets SOMELEC');
   const [profile, setProfile] = useState<ReportProfile>('summary');
   // Organisation propriétaire réelle du projet (en-tête du rapport)
   const [ownerOrganization, setOwnerOrganization] = useState<OrganizationDTO | null>(null);
-  
 
-  
+
+
   // Data maps for multiple projects
   const [enrichedDataMap, setEnrichedDataMap] = useState<Map<string, ProjectDetailDTO>>(new Map());
   const [evmMetricsMap, setEvmMetricsMap] = useState<Map<string, EVMMetrics>>(new Map());
   const [pertAnalysisMap, setPertAnalysisMap] = useState<Map<string, PertAnalysis>>(new Map());
-  
+
   // Single project data
   const [singleEnrichedData, setSingleEnrichedData] = useState<ProjectDetailDTO | null>(null);
   const [singleEvmMetrics, setSingleEvmMetrics] = useState<EVMMetrics | null>(null);
@@ -151,7 +153,7 @@ export function CompactProjectReportGenerator({
   useEffect(() => {
     const loadData = async () => {
       if (projectList.length === 0) return;
-      
+
       setLoading(true);
       try {
         if (isSingleProject && project) {
@@ -237,7 +239,7 @@ export function CompactProjectReportGenerator({
           const enrichedMap = new Map<string, ProjectDetailDTO>();
           const evmMap = new Map<string, EVMMetrics>();
           const pertMap = new Map<string, PertAnalysis>();
-          
+
           for (const proj of projectList) {
             try {
               const completeReport = await reportingService.generateCompleteProjectReport({ project: proj as any, profile, sections: defaultSectionsFor(profile) });
@@ -302,7 +304,7 @@ export function CompactProjectReportGenerator({
               console.error(`Failed to load data for project ${proj.id}:`, error);
             }
           }
-          
+
           setEnrichedDataMap(enrichedMap);
           setEvmMetricsMap(evmMap);
           setPertAnalysisMap(pertMap);
@@ -336,7 +338,7 @@ export function CompactProjectReportGenerator({
     try {
       if (isSingleProject && singleEnrichedData && singleEvmMetrics && singlePertAnalysis) {
         const blob = await pdf(
-          <SingleCompactProjectPDF 
+          <SingleCompactProjectPDF
             project={project as any}
             enrichedData={singleEnrichedData}
             evmMetrics={singleEvmMetrics as any}
@@ -349,16 +351,16 @@ export function CompactProjectReportGenerator({
             company={companyInfo}
           />
         ).toBlob();
-        
+
         saveAs(blob, `${reportTitle.replace(/\s+/g, '_')}.pdf`);
-        
+
         toast({
           title: "Succès",
           description: "Rapport généré avec succès",
         });
       } else {
         const blob = await pdf(
-          <CompactProjectPDFDocument 
+          <CompactProjectPDFDocument
             projects={projectList as any}
             enrichedDataMap={enrichedDataMap}
             evmMetricsMap={evmMetricsMap as any}
@@ -372,9 +374,9 @@ export function CompactProjectReportGenerator({
           />
         ).toBlob();
 
-        
+
         saveAs(blob, `${reportTitle.replace(/\s+/g, '_')}.pdf`);
-        
+
         toast({
           title: "Succès",
           description: "Rapport généré avec succès",
@@ -408,7 +410,7 @@ export function CompactProjectReportGenerator({
               id="report-title"
               value={reportTitle}
               onChange={(e) => setReportTitle(e.target.value)}
-              placeholder="Entrez le titre du rapport"
+              placeholder={t('auto.compactprojectreportgenerator.entrez_le_titre_du_rapport')}
             />
           </div>
           <div className="min-w-[200px]">
@@ -439,7 +441,7 @@ export function CompactProjectReportGenerator({
             Générer PDF
           </Button>
         </div>
-        
+
         {projectList.length > 0 && (
           <div className="space-y-2">
             <Badge variant="outline">
@@ -457,7 +459,7 @@ export function CompactProjectReportGenerator({
             )}
           </div>
         )}
-        
+
         {onClose && (
           <Button variant="outline" onClick={onClose}>
             <T k="auto.compactprojectreportgenerator.fermer" fallback="Fermer" />

@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface WorkflowStepsManagerProps {
   tenderId: string;
@@ -41,6 +42,7 @@ const PROCUREMENT_STAGES = [
 ];
 
 const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
+  const { t } = useLanguage();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
@@ -81,7 +83,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
       queryClient.invalidateQueries({ queryKey: ['workflow-progress', tenderId] });
 
       toast({
-        title: 'Étape créée',
+        title: t('auto.workflowstepsmanager.etape_creee'),
         description: 'L\'étape du workflow a été créée avec succès.',
       });
 
@@ -99,7 +101,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
     } catch (error) {
       console.error('Error creating workflow step:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.workflowstepsmanager.erreur'),
         description: 'Erreur lors de la création de l\'étape.',
         variant: 'destructive',
       });
@@ -127,7 +129,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
 
   return (
     <div>
-      <Button 
+      <Button
         onClick={() => setIsCreateDialogOpen(true)}
         className="mb-4"
       >
@@ -158,8 +160,8 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
               </div>
               <div>
                 <Label htmlFor="status"><T k="auto.workflowstepsmanager.statut" fallback="Statut" /></Label>
-                <Select 
-                  value={stepData.status} 
+                <Select
+                  value={stepData.status}
                   onValueChange={(value) => setStepData(prev => ({ ...prev, status: value }))}
                 >
                   <SelectTrigger>
@@ -181,7 +183,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                 id="title"
                 value={stepData.title}
                 onChange={(e) => setStepData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Ex: Préparation du dossier technique"
+                placeholder={t('auto.workflowstepsmanager.ex_preparation_du_dossier_technique')}
                 required
               />
             </div>
@@ -192,7 +194,7 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                 id="description"
                 value={stepData.description}
                 onChange={(e) => setStepData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description détaillée de l'étape..."
+                placeholder={t('auto.workflowstepsmanager.description_detaillee_de_l_etape')}
                 rows={3}
               />
             </div>
@@ -200,12 +202,12 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="procurement-phase"><T k="auto.workflowstepsmanager.phase_de_marche" fallback="Phase de marché" /></Label>
-                <Select 
-                  value={stepData.procurement_phase} 
+                <Select
+                  value={stepData.procurement_phase}
                   onValueChange={(value) => setStepData(prev => ({ ...prev, procurement_phase: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une phase" />
+                    <SelectValue placeholder={t('auto.workflowstepsmanager.selectionner_une_phase')} />
                   </SelectTrigger>
                   <SelectContent>
                     {PROCUREMENT_PHASES.map(phase => (
@@ -218,12 +220,12 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
               </div>
               <div>
                 <Label htmlFor="procurement-stage"><T k="auto.workflowstepsmanager.etape_de_procedure" fallback="Étape de procédure" /></Label>
-                <Select 
-                  value={stepData.procurement_stage} 
+                <Select
+                  value={stepData.procurement_stage}
                   onValueChange={(value) => setStepData(prev => ({ ...prev, procurement_stage: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une étape" />
+                    <SelectValue placeholder={t('auto.workflowstepsmanager.selectionner_une_etape')} />
                   </SelectTrigger>
                   <SelectContent>
                     {PROCUREMENT_STAGES.map(stage => (
@@ -243,14 +245,14 @@ const WorkflowStepsManager = ({ tenderId }: WorkflowStepsManagerProps) => {
                   <Input
                     value={newRequiredDoc}
                     onChange={(e) => setNewRequiredDoc(e.target.value)}
-                    placeholder="Nom du document requis"
+                    placeholder={t('auto.workflowstepsmanager.nom_du_document_requis')}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequiredDocument())}
                   />
                   <Button type="button" onClick={addRequiredDocument} size="sm">
                     <T k="auto.workflowstepsmanager.ajouter" fallback="Ajouter" />
                   </Button>
                 </div>
-                
+
                 {stepData.required_documents.length > 0 && (
                   <div className="space-y-1">
                     {stepData.required_documents.map((doc, index) => (

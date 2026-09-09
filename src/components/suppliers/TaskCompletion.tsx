@@ -10,6 +10,7 @@ import { useTaskAssignmentsHex } from '@/hooks/hexagonal';
 
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface Task {
   id: string;
   title: string;
@@ -31,6 +32,7 @@ interface TaskCompletionProps {
 }
 
 const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
+  const { t } = useLanguage();
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const { completeTaskAsync, addNoteAsync } = useTaskAssignmentsHex();
@@ -124,7 +126,7 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
               ) : (
                 <Clock className="h-3 w-3 mr-1" />
               )}
-              {task.status === 'completed' ? 'Terminé' : 
+              {task.status === 'completed' ? 'Terminé' :
                task.status === 'in_progress' ? 'En cours' : 'En attente'}
             </Badge>
           </div>
@@ -157,11 +159,11 @@ const TaskCompletion = ({ task, onTaskCompleted }: TaskCompletionProps) => {
                 id="completion-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Ajoutez des notes sur la completion de cette tâche..."
+                placeholder={t('auto.taskcompletion.ajoutez_des_notes_sur_la_completion_de_cette_tac')}
                 rows={3}
               />
             </div>
-            
+
             <Button
               onClick={handleCompleteTask}
               disabled={loading}

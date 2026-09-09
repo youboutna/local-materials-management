@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**src/components/boq/DqeWorkspace.tsx
  * DqeWorkspace — coquille mutualisée Liste ↔ Détail pour les 4 contextes :
  *   • project-dqe       (Expression de besoin / DQE projet)
@@ -69,6 +70,7 @@ const MODE_BY_ROUTE: Record<BoqRouteContext, BoqWorkspaceMode> = {
 };
 
 export const DqeWorkspace: React.FC<Props> = (props) => {
+  const { t } = useLanguage();
   const ctx = useMemo(() => BoqContextService.resolve({
     routeContext: props.routeContext,
     projectId: props.projectId,
@@ -140,12 +142,12 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
         await invalidate();
         window.dispatchEvent(new CustomEvent('boq-kpi-refresh'));
         toast({
-          title: 'DQE transféré vers le découpage des travaux',
+          title: t('auto.dqeworkspace.dqe_transfere_vers_le_decoupage_des_travaux'),
           description: `${result.phasesCreated} phase(s) créée(s), ${result.phasesReused} réutilisée(s), ${result.milestonesCreated} jalon(s), ${result.tasksCreated} tâche(s), ${result.phaseMaterials} matériau(x), ${result.phaseEmployees} rôle(s), ${result.projectResources} ressource(s) projet.`,
         });
       } catch (error) {
         toast({
-          title: 'Transfert impossible',
+          title: t('auto.dqeworkspace.transfert_impossible'),
           description: error instanceof Error ? error.message : 'Erreur inconnue',
           variant: 'destructive',
         });
@@ -163,14 +165,14 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
         );
         await queryClient.invalidateQueries({ queryKey: ['project-alerts'] });
         toast({
-          title: 'Demande de validation créée',
+          title: t('auto.dqeworkspace.demande_de_validation_creee'),
           description: result.alertId
             ? `Écart budgétaire ${result.discrepancy.toFixed(2)} MRU (${(result.ratio * 100).toFixed(2)} %) — arbitrage A/B/C requis dans l'onglet Contrôle.`
             : 'Aucun écart budgétaire significatif : validation en attente du responsable.',
         });
       } catch (error) {
         toast({
-          title: 'Demande de validation impossible',
+          title: t('auto.dqeworkspace.demande_de_validation_impossible'),
           description: error instanceof Error ? error.message : 'Erreur inconnue',
           variant: 'destructive',
         });

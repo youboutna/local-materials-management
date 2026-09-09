@@ -87,8 +87,8 @@ const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeo
     } catch (error) {
       console.error('Recalcul du métré impossible:', error);
       toast({
-        title: 'Erreur',
-        description: 'Le calcul automatique du métré a échoué.',
+        title: t('auto.quantitytakeoffs.erreur'),
+        description: t('auto.quantitytakeoffs.le_calcul_automatique_du_metre_a_echoue'),
         variant: 'destructive',
       });
     } finally {
@@ -123,7 +123,7 @@ const QuantityTakeoffs = ({ projectId, referentialCode, phaseId }: QuantityTakeo
             variant="outline"
             onClick={handleRecompute}
             disabled={busy}
-            title="Recalculer les quantités depuis les ressources et régénérer les lignes DQE"
+            title={t('auto.quantitytakeoffs.recalculer_les_quantites_depuis_les_ressources_e')}
           >
             <Calculator className={`mr-2 h-4 w-4 ${busy ? 'animate-pulse' : ''}`} />
             <T k="auto.quantitytakeoffs.calcul_metre" fallback="Calcul métré" />

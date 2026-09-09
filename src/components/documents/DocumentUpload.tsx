@@ -5,7 +5,7 @@
  * Document Upload Component
  * Utilise les hooks hexagonaux pour l'upload de documents
  * Hexagonal: Component → Hook Hex → Service → Repository → DB
- * 
+ *
  * Utilise useDocumentsHex pour:
  * - createDocument (upload)
  * - isCreating (état de chargement)
@@ -45,8 +45,8 @@ interface DocumentUploadProps {
   maxSizeMB?: number;
 }
 
-const DocumentUpload: React.FC<DocumentUploadProps> = ({ 
-  embedded = false, 
+const DocumentUpload: React.FC<DocumentUploadProps> = ({
+  embedded = false,
   projectId: propProjectId,
   onSuccess,
   onError,
@@ -67,7 +67,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const { toast } = useToast();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  
+
   // ✅ Hooks hexagonaux
   const { user } = useAuthHex();
   const { projects, isLoading: projectsLoading } = useProjectsHex();
@@ -107,31 +107,31 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     // Validate file size
     if (selectedFile.size > maxSizeMB * 1024 * 1024) {
       toast({
-        title: 'Erreur',
+        title: t('auto.documentupload.erreur'),
         description: `Le fichier est trop volumineux (max ${maxSizeMB}MB)`,
         variant: 'destructive',
       });
       return;
     }
-    
+
     // Validate file type
     const fileExtension = '.' + selectedFile.name.split('.').pop()?.toLowerCase();
-    const isValidType = acceptedTypes.some(type => 
-      type === fileExtension || 
+    const isValidType = acceptedTypes.some(type =>
+      type === fileExtension ||
       (type.startsWith('.') && fileExtension === type) ||
       (type === 'image/*' && selectedFile.type.startsWith('image/')) ||
       (type === 'application/*' && selectedFile.type.startsWith('application/'))
     );
-    
+
     if (!isValidType) {
       toast({
-        title: 'Erreur',
+        title: t('auto.documentupload.erreur'),
         description: `Type de fichier non supporté. Formats acceptés: ${acceptedTypes.join(', ')}`,
         variant: 'destructive',
       });
       return;
     }
-    
+
     setFile(selectedFile);
     // Auto-fill title if empty
     if (!formData.title) {
@@ -168,7 +168,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     const droppedFiles = e.dataTransfer.files;
     if (droppedFiles.length > 0) {
       validateAndSetFile(droppedFiles[0]);
@@ -177,11 +177,11 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       toast({
         title: t('common.error') || 'Erreur',
-        description: 'Vous devez être authentifié',
+        description: t('auto.documentupload.vous_devez_etre_authentifie'),
         variant: 'destructive',
       });
       return;
@@ -190,7 +190,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     if (!file) {
       toast({
         title: t('common.error') || 'Erreur',
-        description: 'Veuillez sélectionner un fichier',
+        description: t('auto.documentupload.veuillez_selectionner_un_fichier'),
         variant: 'destructive',
       });
       return;
@@ -199,7 +199,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     if (!formData.title.trim()) {
       toast({
         title: t('common.error') || 'Erreur',
-        description: 'Le titre est requis',
+        description: t('auto.documentupload.le_titre_est_requis'),
         variant: 'destructive',
       });
       return;
@@ -208,7 +208,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     if (!formData.documentType) {
       toast({
         title: t('common.error') || 'Erreur',
-        description: 'Le type de document est requis',
+        description: t('auto.documentupload.le_type_de_document_est_requis'),
         variant: 'destructive',
       });
       return;
@@ -243,7 +243,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       // Utiliser le mutateAsync du hook
       const result = await createDocument.mutateAsync(createData);
-      
+
       clearInterval(progressInterval);
       setUploadProgress(100);
 
@@ -255,11 +255,11 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       toast({
         title: t('common.success') || 'Succès',
-        description: 'Document uploadé avec succès',
+        description: t('auto.documentupload.document_uploade_avec_succes'),
       });
-      
+
       resetForm();
-      
+
       if (onSuccess) onSuccess(result);
     } catch (error) {
       console.error('Upload error:', error);
@@ -293,13 +293,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {!propProjectId && (
         <div className="space-y-2">
           <Label htmlFor="project_id"><T k="auto.documentupload.projet_optionnel" fallback="Projet (optionnel)" /></Label>
-          <Select 
-            value={formData.projectId} 
+          <Select
+            value={formData.projectId}
             onValueChange={(value) => handleInputChange('projectId', value)}
             disabled={projectsLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionnez un projet" />
+              <SelectValue placeholder={t('auto.documentupload.selectionnez_un_projet')} />
             </SelectTrigger>
             <SelectContent>
               {projects?.map((project) => (
@@ -320,7 +320,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           id="title"
           value={formData.title}
           onChange={(e) => handleInputChange('title', e.target.value)}
-          placeholder="Entrez le titre du document"
+          placeholder={t('auto.documentupload.entrez_le_titre_du_document')}
           required
         />
       </div>
@@ -329,12 +329,12 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         <Label htmlFor="documentType">
           <T k="auto.documentupload.type_de_document" fallback="Type de Document" /> <span className="text-destructive">*</span>
         </Label>
-        <Select 
-          value={formData.documentType} 
+        <Select
+          value={formData.documentType}
           onValueChange={(value) => handleInputChange('documentType', value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Sélectionnez le type" />
+            <SelectValue placeholder={t('auto.documentupload.selectionnez_le_type')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={DocumentType.CONTRACT}><T k="auto.documentupload.contrat" fallback="Contrat" /></SelectItem>
@@ -357,19 +357,19 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           id="description"
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
-          placeholder="Entrez une description du document"
+          placeholder={t('auto.documentupload.entrez_une_description_du_document')}
           rows={3}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="status"><T k="auto.documentupload.statut" fallback="Statut" /></Label>
-        <Select 
-          value={formData.status} 
+        <Select
+          value={formData.status}
           onValueChange={(value) => handleInputChange('status', value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Sélectionnez le statut" />
+            <SelectValue placeholder={t('auto.documentupload.selectionnez_le_statut')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={DocumentStatus.DRAFT}><T k="auto.documentupload.brouillon" fallback="Brouillon" /></SelectItem>
@@ -386,10 +386,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         </Label>
         <div
           className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
-            isDragging 
-              ? 'border-primary bg-primary/5' 
-              : file 
-                ? 'border-success bg-success-soft' 
+            isDragging
+              ? 'border-primary bg-primary/5'
+              : file
+                ? 'border-success bg-success-soft'
                 : 'border-muted-foreground/25 hover:border-primary/50'
           }`}
           onDragEnter={handleDragEnter}
@@ -404,7 +404,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             accept={acceptedTypes.join(',')}
           />
-          
+
           {file ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -470,8 +470,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={isCreating || !file || !formData.title || !formData.documentType}
           className="flex-1"
         >

@@ -10,6 +10,7 @@ import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { ProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { LocationDTO } from "@/dtos/shared";
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LocationStepProps {
   formData: ProjectDTO;
@@ -22,6 +23,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
   onUpdate,
   isEditing = false
 }) => {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardHeader>
@@ -55,7 +57,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
                 latitude: locationData.latitude,
                 longitude: locationData.longitude
               })}
-              placeholder="Rechercher l'emplacement du projet..."
+              placeholder={t('auto.locationstep.rechercher_l_emplacement_du_projet')}
               filter="all"
               showCoordinates={true}
               showGPS={true}
@@ -88,7 +90,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2"><T k="auto.locationstep.zone_geographique" fallback="Zone géographique" /></label>
-              <select 
+              <select
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 value={(formData as any).geographicZone || (formData as any).geographic_zone || ''}
                 onChange={(e) => onUpdate({ geographicZone: e.target.value } as any)}
@@ -104,7 +106,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-2"><T k="auto.locationstep.type_de_terrain" fallback="Type de terrain" /></label>
-              <select 
+              <select
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 value={(formData as any).terrainType || (formData as any).terrain_type || ''}
                 onChange={(e) => onUpdate({ terrainType: e.target.value } as any)}
@@ -122,7 +124,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
 
           <div>
             <label className="block text-sm font-medium mb-2"><T k="auto.locationstep.contraintes_environnementales" fallback="Contraintes environnementales" /></label>
-              <textarea 
+              <textarea
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent min-h-[100px]"
                 placeholder="Décrivez les contraintes environnementales, réglementaires ou géographiques spécifiques au site"
                 value={(formData as unknown as { environmental_constraints?: string }).environmental_constraints || ''}
@@ -132,8 +134,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-3">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="hasUtilities"
                   className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                   checked={(formData as unknown as { has_utilities?: boolean }).has_utilities || false}
@@ -144,8 +146,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
                 </label>
               </div>
               <div className="flex items-center space-x-3">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="requiresPermits"
                   className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                   checked={(formData as unknown as { requires_permits?: boolean }).requires_permits || false}

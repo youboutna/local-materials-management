@@ -13,6 +13,7 @@ import { createDigitalInspection, MANDATORY_INSPECTION_FIELDS } from '@/applicat
 import { toast } from '@/hooks/use-toast';
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DigitalInspectionFormProps {
   projectId: string;
@@ -25,6 +26,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
   inspectorId,
   onSubmitted
 }) => {
+  const { t } = useLanguage();
   const [inspectionType, setInspectionType] = useState<string>('');
   const [location, setLocation] = useState({ latitude: 0, longitude: 0, address: '' });
   const [photos, setPhotos] = useState<string[]>([]);
@@ -45,14 +47,14 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
             address: `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`
           });
           toast({
-            title: 'Localisation capturée',
-            description: 'Position GPS enregistrée avec succès'
+            title: t('auto.digitalinspectionform.localisation_capturee'),
+            description: t('auto.digitalinspectionform.position_gps_enregistree_avec_succes')
           });
         },
         (error) => {
           toast({
-            title: 'Erreur de géolocalisation',
-            description: 'Impossible de capturer la position GPS',
+            title: t('auto.digitalinspectionform.erreur_de_geolocalisation'),
+            description: t('auto.digitalinspectionform.impossible_de_capturer_la_position_gps'),
             variant: 'destructive'
           });
         }
@@ -103,21 +105,21 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
 
     if (location.latitude === 0 || location.longitude === 0) {
       toast({
-        title: 'Localisation requise',
-        description: 'Veuillez capturer la localisation GPS',
+        title: t('auto.digitalinspectionform.localisation_requise'),
+        description: t('auto.digitalinspectionform.veuillez_capturer_la_localisation_gps'),
         variant: 'destructive'
       });
       return;
     }
 
     // Check mandatory fields completion
-    const missingFields = mandatoryFields.filter(field => 
+    const missingFields = mandatoryFields.filter(field =>
       !complianceChecks.some(check => check.standard === field)
     );
 
     if (missingFields.length > 0) {
       toast({
-        title: 'Contrôles obligatoires manquants',
+        title: t('auto.digitalinspectionform.controles_obligatoires_manquants'),
         description: `Veuillez compléter: ${missingFields.join(', ')}`,
         variant: 'destructive'
       });
@@ -141,10 +143,10 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
       };
 
       const result = await createDigitalInspection(inspectionData);
-      
+
       toast({
-        title: 'Inspection soumise',
-        description: 'Inspection numérique créée avec succès'
+        title: t('auto.digitalinspectionform.inspection_soumise'),
+        description: t('auto.digitalinspectionform.inspection_numerique_creee_avec_succes')
       });
 
       if (result.id) {
@@ -153,7 +155,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
     } catch (error) {
       console.error('Error submitting inspection:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.digitalinspectionform.erreur'),
         description: 'Échec de la soumission de l\'inspection',
         variant: 'destructive'
       });
@@ -177,7 +179,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
             <Label htmlFor="inspection-type">Type d'inspection *</Label>
             <Select value={inspectionType} onValueChange={setInspectionType}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner le type" />
+                <SelectValue placeholder={t('auto.digitalinspectionform.selectionner_le_type')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily"><T k="auto.digitalinspectionform.inspection_quotidienne" fallback="Inspection quotidienne" /></SelectItem>
@@ -193,9 +195,9 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
           <div className="space-y-2">
             <Label>Localisation GPS *</Label>
             <div className="flex items-center gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={handleLocationCapture}
                 className="flex items-center gap-2"
               >
@@ -220,7 +222,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                   <T k="auto.digitalinspectionform.ces_controles_sont_obligatoires_pour_ce_type_d_i" fallback="Ces contrôles sont obligatoires pour ce type d'inspection" />
                 </AlertDescription>
               </Alert>
-              
+
               <div className="grid gap-3">
                 {mandatoryFields.map((field) => (
                   <div key={field} className="border rounded-lg p-3">
@@ -254,7 +256,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           checked={check.passed}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             updateComplianceCheck(index, 'passed', checked)
                           }
                         />
@@ -262,7 +264,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                       </div>
                     </div>
                     <Textarea
-                      placeholder="Notes sur le contrôle..."
+                      placeholder={t('auto.digitalinspectionform.notes_sur_le_controle')}
                       value={check.notes}
                       onChange={(e) => updateComplianceCheck(index, 'notes', e.target.value)}
                     />
@@ -280,7 +282,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                 <T k="auto.digitalinspectionform.ajouter_defaut" fallback="Ajouter Défaut" />
               </Button>
             </div>
-            
+
             {defects.map((defect, index) => (
               <Card key={index} className="p-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -314,14 +316,14 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
                     <Textarea
                       value={defect.description}
                       onChange={(e) => updateDefect(index, 'description', e.target.value)}
-                      placeholder="Description détaillée du défaut..."
+                      placeholder={t('auto.digitalinspectionform.description_detaillee_du_defaut')}
                     />
                   </div>
                   <div className="col-span-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         checked={defect.correctionRequired}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           updateDefect(index, 'correctionRequired', checked)
                         }
                       />
@@ -340,7 +342,7 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observations générales, recommandations..."
+              placeholder={t('auto.digitalinspectionform.observations_generales_recommandations')}
               rows={4}
             />
           </div>
@@ -361,8 +363,8 @@ const DigitalInspectionForm: React.FC<DigitalInspectionFormProps> = ({
           </div>
 
           {/* Bouton de soumission */}
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={submitting}
             className="w-full"
           >

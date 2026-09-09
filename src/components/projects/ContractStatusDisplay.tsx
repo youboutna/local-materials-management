@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ interface ContractStatusDisplayProps {
 }
 
 const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }) => {
+  const { t } = useLanguage();
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Non définie';
     try {
@@ -41,28 +43,28 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
     if (launchDate && isBefore(now, launchDate)) {
       return { phase: 'pre_tender', label: 'Pré-appel d\'offres', color: 'bg-gray-500' };
     }
-    
+
     if (launchDate && attributionDate && isAfter(now, launchDate) && isBefore(now, attributionDate)) {
       return { phase: 'tender_active', label: 'Appel d\'offres en cours', color: 'bg-orange-500' };
     }
-    
+
     if (attributionDate && startDate && isAfter(now, attributionDate) && isBefore(now, startDate)) {
-      return { phase: 'contract_preparation', label: 'Préparation du contrat', color: 'bg-blue-500' };
+      return { phase: 'contract_preparation', label: t('auto.contractstatusdisplay.preparation_du_contrat'), color: 'bg-blue-500' };
     }
-    
+
     if (isAfter(now, startDate) && (!endDate || isBefore(now, endDate))) {
-      return { phase: 'contract_execution', label: 'Exécution du contrat', color: 'bg-success' };
+      return { phase: 'contract_execution', label: t('auto.contractstatusdisplay.execution_du_contrat'), color: 'bg-success' };
     }
-    
+
     if (endDate && isAfter(now, endDate)) {
-      return { phase: 'contract_completed', label: 'Contrat terminé', color: 'bg-gray-600' };
+      return { phase: 'contract_completed', label: t('auto.contractstatusdisplay.contrat_termine'), color: 'bg-gray-600' };
     }
-    
-    return { phase: 'unknown', label: 'Phase indéterminée', color: 'bg-gray-400' };
+
+    return { phase: 'unknown', label: t('auto.contractstatusdisplay.phase_indeterminee'), color: 'bg-gray-400' };
   };
 
   const contractPhase = getContractPhase();
-  
+
   const getTenderDuration = () => {
     if (!project.launchDate || !project.attributionDate) return null;
     try {
@@ -94,14 +96,14 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
             <CalendarIcon className="h-4 w-4" />
             <T k="auto.contractstatusdisplay.chronologie_contractuelle" fallback="Chronologie contractuelle" />
           </h4>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.lancement_appel_d_offres" fallback="Lancement appel d'offres" /></span>
                 <span className="text-sm">{formatDate(project.launchDate)}</span>
               </div>
-              
+
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.attribution_du_marche" fallback="Attribution du marché" /></span>
                 <span className="text-sm">{formatDate(project.attributionDate)}</span>
@@ -112,13 +114,13 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.debut_des_travaux" fallback="Début des travaux" /></span>
                 <span className="text-sm">{formatDate(project.startDate)}</span>
               </div>
-              
+
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.fin_prevue" fallback="Fin prévue" /></span>
                 <span className="text-sm">{formatDate(project.endDate)}</span>
@@ -133,26 +135,26 @@ const ContractStatusDisplay: React.FC<ContractStatusDisplayProps> = ({ project }
             <Building className="h-4 w-4" />
             <T k="auto.contractstatusdisplay.details_contractuels" fallback="Détails contractuels" />
           </h4>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.type_de_marche" fallback="Type de marché" /></span>
                 <span className="text-sm">{project.marketType || 'Non spécifié'}</span>
               </div>
-              
+
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.mode_de_selection" fallback="Mode de sélection" /></span>
                 <span className="text-sm">{project.selectionMode || 'Non spécifié'}</span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.source_de_financement" fallback="Source de financement" /></span>
                 <span className="text-sm">{project.financingSource || 'Non spécifiée'}</span>
               </div>
-              
+
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium text-muted-foreground"><T k="auto.contractstatusdisplay.reference" fallback="Référence" /></span>
                 <span className="text-sm font-mono">{project.projectReference || 'Non attribuée'}</span>

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 ﻿import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,11 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
   AlertTriangle,
   Eye,
   Download,
@@ -23,7 +24,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersHex } from '@/hooks/hexagonal'
-import { 
+import {
   useCurrentUserHex,
   useSupplierSubmissionsHex as useSupplierSubmissions,
   useSubmissionDocumentsHex as useSubmissionDocumentsList,
@@ -36,6 +37,7 @@ import { T } from '@/components/i18n/T';
 
 
 const SupplierSubmissionDashboard = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -123,12 +125,12 @@ const SupplierSubmissionDashboard = () => {
     if (!validationResult) return null;
 
     if (!validationResult.is_valid) {
-      return { icon: <XCircle className="h-4 w-4" />, color: 'text-destructive', label: 'Invalide' };
+      return { icon: <XCircle className="h-4 w-4" />, color: 'text-destructive', label: t('auto.suppliersubmissiondashboard.invalide') };
     }
     if (validationResult.warnings?.length > 0) {
-      return { icon: <AlertTriangle className="h-4 w-4" />, color: 'text-warning', label: 'Avertissements' };
+      return { icon: <AlertTriangle className="h-4 w-4" />, color: 'text-warning', label: t('auto.suppliersubmissiondashboard.avertissements') };
     }
-    return { icon: <CheckCircle className="h-4 w-4" />, color: 'text-success', label: 'Valide' };
+    return { icon: <CheckCircle className="h-4 w-4" />, color: 'text-success', label: t('auto.suppliersubmissiondashboard.valide') };
   };
 
   const handleDownloadDocument = async (url: string, fileName: string) => {

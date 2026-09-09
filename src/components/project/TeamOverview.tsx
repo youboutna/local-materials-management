@@ -16,6 +16,7 @@ import { useProjectPhasesForTasks } from '@/hooks/hexagonal/useEnhancedTasksHex'
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface TeamOverviewProps {
   resources?: any[];
   setResources?: (resources: any[]) => void;
@@ -57,12 +58,13 @@ interface ResourceFormData {
   selectedPhases?: string[];
 }
 
-const TeamOverview: React.FC<TeamOverviewProps> = ({ 
-  resources: propResources, 
-  setResources: propSetResources, 
-  projectId, 
-  phases: propPhases 
+const TeamOverview: React.FC<TeamOverviewProps> = ({
+  resources: propResources,
+  setResources: propSetResources,
+  projectId,
+  phases: propPhases
 }) => {
+  const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ResourceFormData>({
@@ -76,7 +78,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
     applyToAllPhases: false,
     selectedPhases: [],
   });
-  
+
 
   // Hexagonal: hook -> service -> adapter -> DB
   const {
@@ -112,7 +114,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       toast({
         title: "Erreur",
@@ -124,7 +126,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
 
     if (!formData.applyToAllPhases && !formData.phaseId) {
       toast({
-        title: "Erreur", 
+        title: "Erreur",
         description: "Vous devez sélectionner une phase ou appliquer à toutes les phases.",
         variant: "destructive",
       });
@@ -240,7 +242,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
             </span>
           </div>
         </div>
-        
+
         <Dialog open={isCreating} onOpenChange={setIsCreating}>
           <DialogTrigger asChild>
             <Button size="sm" onClick={() => resetForm()}>
@@ -254,7 +256,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                 {editingId ? 'Modifier la ressource' : 'Créer une nouvelle ressource'}
               </DialogTitle>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -263,16 +265,16 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                     id="resourceName"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Nom de la ressource"
+                    placeholder={t('auto.teamoverview.nom_de_la_ressource')}
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="resourceType"><T k="auto.teamoverview.type" fallback="Type" /></Label>
                   <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un type" />
+                      <SelectValue placeholder={t('auto.teamoverview.selectionner_un_type')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="human"><T k="auto.teamoverview.ressource_humaine" fallback="Ressource humaine" /></SelectItem>
@@ -360,7 +362,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Notes ou description"
+                  placeholder={t('auto.teamoverview.notes_ou_description')}
                 />
               </div>
 
@@ -377,7 +379,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
                     placeholder="0.00"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="quantity"><T k="auto.teamoverview.quantite" fallback="Quantité" /></Label>
                   <Input

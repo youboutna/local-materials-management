@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * PhaseDetailsPage - Version Phase 4
  * Hiérarchie visuelle : Projet → Phase → Étapes/Jalons → Actions
@@ -67,6 +68,7 @@ interface PhaseUIData {
 }
 
 const PhaseDetailsPage: React.FC = () => {
+  const { t } = useLanguage();
   const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -124,7 +126,7 @@ const PhaseDetailsPage: React.FC = () => {
   } = usePhaseWorkflow(projectId || '', phaseId || '', rawPhase as any);
 
   // Workflow orchestrator for automatic verification and payments
-  const { 
+  const {
     state: workflowState,
     getStatus,
     triggerPayment,
@@ -271,7 +273,7 @@ const PhaseDetailsPage: React.FC = () => {
     <div className="container mx-auto mt-14 py-6 space-y-6">
       {/* Breadcrumb hiérarchique */}
       <PhaseBreadcrumb
-        project={{ id: projectId || '', title: 'Projet' }}
+        project={{ id: projectId || '', title: t('auto.phasedetailspage.projet') }}
         phase={phaseForComponents as any}
       />
 
@@ -448,17 +450,17 @@ const PhaseDetailsPage: React.FC = () => {
         onSave={handleSave}
         isUpdating={isUpdating}
         phaseName={phaseName}
-        completionValidation={{ 
-          canComplete: true, 
-          pendingCheckpoints: [], 
-          completedCheckpoints: [], 
-          totalCheckpoints: 0, 
-          completedCount: 0, 
-          message: '', 
-          progressMet: true, 
-          currentProgress: 100, 
-          requiredProgress: 100, 
-          progressMessage: '' 
+        completionValidation={{
+          canComplete: true,
+          pendingCheckpoints: [],
+          completedCheckpoints: [],
+          totalCheckpoints: 0,
+          completedCount: 0,
+          message: '',
+          progressMet: true,
+          currentProgress: 100,
+          requiredProgress: 100,
+          progressMessage: ''
         }}
       />
 

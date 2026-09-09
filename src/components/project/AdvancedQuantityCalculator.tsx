@@ -28,6 +28,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -273,6 +274,7 @@ interface AdvancedQuantityCalculatorProps {
 }
 
 const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({ projectId, phaseId, onPersisted }) => {
+  const { t } = useLanguage();
   const { t } = useI18n();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
@@ -611,7 +613,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
       setCalculations(prev => [...prev, baseCalc, ...recoLines]);
       if (recoLines.length > 0) {
         toast({
-          title: 'Calcul + recommandations',
+          title: t('auto.advancedquantitycalculator.calcul_recommandations'),
           description: `1 ligne principale + ${recoLines.length} recommandation(s) ajoutée(s).`,
         });
       }
@@ -710,11 +712,11 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
         setPage(0);
 
         toast({
-          title: 'Import réussi',
+          title: t('auto.advancedquantitycalculator.import_reussi'),
           description: `${calcs.length} ligne(s) importée(s) via importeur unifié (${parsed.format.toUpperCase()})${skipped ? ` — ${skipped} en-tête(s) filtré(s)` : ''}.`,
         });
       } else {
-        toast({ title: 'Aucune ligne détectée', description: 'Vérifiez la mise en page du fichier.', variant: 'destructive' });
+        toast({ title: t('auto.advancedquantitycalculator.aucune_ligne_detectee'), description: t('auto.advancedquantitycalculator.verifiez_la_mise_en_page_du_fichier'), variant: 'destructive' });
       }
     } catch (err) {
       const description = err instanceof Error ? err.message : "Impossible d'analyser le fichier";
@@ -796,7 +798,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
 
   const handleSaveEdit = () => {
     if (editIndex === null) return;
-    
+
     const calc = calculations[editIndex];
     const params: CalculationParams = {
       elementType: calc.elementType || form.elementType,
@@ -809,9 +811,9 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
         thickness: form.thickness,
       }
     };
-    
+
     const result = calculateAdvancedQuantities(params);
-    setCalculations(prev => 
+    setCalculations(prev =>
       prev.map((c, i) => i === editIndex ? { ...result, elementType: c.elementType } : c)
     );
     setEditIndex(null);
@@ -1004,7 +1006,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                     <th className=" border border-border px-1 py-1 ">#</th>
                     <th className="border border-border px-1 py-1 uppercase"><T k="auto.advancedquantitycalculator.element" fallback="Élément" /></th>
                     <th className="border border-gray- px-1 py-1 uppercase"><T k="auto.advancedquantitycalculator.dimensions" fallback="Dimensions" /></th>
-        
+
                     <th className="border border-border px-2 py-1 uppercase"><T k="auto.advancedquantitycalculator.detail_des_ressources" fallback="Détail des ressources" /></th>
                     <th className="border border-border px-2 py-1 uppercase"><T k="auto.advancedquantitycalculator.actions" fallback="Actions" /></th>
                     <th className="border border-border px-1 py-1 uppercase"><T k="auto.advancedquantitycalculator.designation_d_origine" fallback="Désignation d'origine" /></th> {/* NEW */}
@@ -1046,7 +1048,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                               className="h-8 text-xs"
                               value={calc.originalLabel ?? ''}
                               onChange={(e) => updateCalcInline(i, { designation: e.target.value })}
-                              placeholder="Désignation"
+                              placeholder={t('auto.advancedquantitycalculator.designation')}
                             />
                             <div className="grid grid-cols-3 gap-1">
                               <div>
@@ -1156,7 +1158,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                                 length: parseFloat(e.target.value) || 0,
                               }))
                             }
-                            placeholder="Longueur"
+                            placeholder={t('auto.advancedquantitycalculator.longueur')}
                           />
                           {typeof editForm.width !== "undefined" && (
                             <Input
@@ -1170,7 +1172,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                                   width: parseFloat(e.target.value) || 0,
                                 }))
                               }
-                              placeholder="Largeur"
+                              placeholder={t('auto.advancedquantitycalculator.largeur')}
                             />
                           )}
                           {typeof editForm.height !== "undefined" && (
@@ -1185,7 +1187,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                                   height: parseFloat(e.target.value) || 0,
                                 }))
                               }
-                              placeholder="Hauteur"
+                              placeholder={t('auto.advancedquantitycalculator.hauteur')}
                             />
                           )}
                           {/* Openings display and add */}
@@ -1301,10 +1303,10 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                             </SelectContent>
                           </Select>
                           <div className="flex gap-1 justify-center">
-                            <Button size="icon" variant="ghost" onClick={() => handleEdit(i)} aria-label="Éditer">
+                            <Button size="icon" variant="ghost" onClick={() => handleEdit(i)} aria-label={t('auto.advancedquantitycalculator.editer')}>
                               <span role="img" aria-label="edit">✏️</span>
                             </Button>
-                            <Button size="icon" variant="ghost" onClick={() => removeCalculation(i)} aria-label="Supprimer">
+                            <Button size="icon" variant="ghost" onClick={() => removeCalculation(i)} aria-label={t('auto.advancedquantitycalculator.supprimer')}>
                               <X className="w-4 h-4" />
                             </Button>
                           </div>
@@ -1312,7 +1314,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
                       )}
                     </td>
                     <td className="border border-border px-2 py-1">{calc?.originalLabel || "—"}</td> {/* NEW */}
-                     
+
                   </tr>
                   );
                 })}

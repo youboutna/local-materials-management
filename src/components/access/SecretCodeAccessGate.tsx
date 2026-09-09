@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * SecretCodeAccessGate
  * Unified gated entry point used by /supplier-access (document download)
@@ -44,7 +45,7 @@ export interface SecretCodeAccessGateProps {
   /** If true, the input is auto-formatted as XXXX-XXXX-XXXX. */
   formatHyphenated?: boolean;
   /** Async validator. Receives normalized (uppercase) code. */
-  onValidate: (normalizedCode: string) => Promise<GateValidationResult>;
+  onValidate: (normalizedCode: string) => <T k="auto.secretcodeaccessgate.promise" fallback="Promise" /><GateValidationResult>;
   /** Renders the post-validation UI. */
   renderUnlocked: (result: GateValidationResult, reset: () => void) => React.ReactNode;
   /** Optional regulatory notice rendered under the form. */
@@ -73,6 +74,7 @@ export const SecretCodeAccessGate: React.FC<SecretCodeAccessGateProps> = ({
   renderUnlocked,
   regulatoryNotice,
 }) => {
+  const { t } = useLanguage();
   const [secretCode, setSecretCode] = useState('');
   const [result, setResult] = useState<GateValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -86,7 +88,7 @@ export const SecretCodeAccessGate: React.FC<SecretCodeAccessGateProps> = ({
     e.preventDefault();
     const normalized = secretCode.trim().toUpperCase();
     if (normalized.replace(/-/g, '').length < 6) {
-      setResult({ isValid: false, message: 'Le code doit contenir au moins 6 caractères.' });
+      setResult({ isValid: false, message: t('auto.secretcodeaccessgate.le_code_doit_contenir_au_moins_6_caracteres') });
       return;
     }
     setIsValidating(true);
@@ -94,7 +96,7 @@ export const SecretCodeAccessGate: React.FC<SecretCodeAccessGateProps> = ({
       const r = await onValidate(normalized);
       setResult(r);
     } catch {
-      setResult({ isValid: false, message: 'Erreur de connexion au serveur.' });
+      setResult({ isValid: false, message: t('auto.secretcodeaccessgate.erreur_de_connexion_au_serveur') });
     } finally {
       setIsValidating(false);
     }

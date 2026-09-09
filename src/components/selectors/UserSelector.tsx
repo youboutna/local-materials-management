@@ -10,6 +10,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface UserSelectorProps {
   value?: string;
   onChange: (userId: string) => void;
@@ -55,6 +56,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   roleFilter,
   showEmployeeDetails = true,
 }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -99,12 +101,12 @@ const UserSelector: React.FC<UserSelectorProps> = ({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
-            placeholder="Rechercher par nom complet, email, téléphone..."
+            placeholder={t('auto.userselector.rechercher_par_nom_complet_email_telephone')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
             disabled={disabled}
-            aria-label="Rechercher un utilisateur"
+            aria-label={t('auto.userselector.rechercher_un_utilisateur')}
           />
         </div>
 

@@ -45,6 +45,7 @@ import SimpleSupplierSelector from "@/components/selectors/SimpleSupplierSelecto
 import { METRE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
 import { i18nService } from '@/application/services/I18nService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseStepResourceDialogProps {
   projectId: string;
@@ -63,6 +64,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
   stepName,
   trigger,
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("material");
   const { toast } = useToast();
@@ -218,7 +220,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
               <Label><T k="auto.phasestepresourcedialog.materiau" fallback="Matériau" /></Label>
               <Select value={matId} onValueChange={setMatId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un matériau" />
+                  <SelectValue placeholder={t('auto.phasestepresourcedialog.selectionner_un_materiau')} />
                 </SelectTrigger>
                 <SelectContent>
                   {materials.map((m: any) => (
@@ -304,7 +306,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
 
           <TabsContent value="employee" className="space-y-3 pt-4">
             <EmployeeSelector
-              label="Employé"
+              label={t('auto.phasestepresourcedialog.employe')}
               value={empId}
               onChange={(id) => setEmpId(id || "")}
             />
@@ -314,7 +316,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
                 <Input
                   value={empRole}
                   onChange={(e) => setEmpRole(e.target.value)}
-                  placeholder="Chef d'équipe, ouvrier…"
+                  placeholder={t('auto.phasestepresourcedialog.chef_d_equipe_ouvrier')}
                 />
               </div>
               <div>
@@ -350,7 +352,7 @@ const PhaseStepResourceDialog: React.FC<PhaseStepResourceDialogProps> = ({
 
           <TabsContent value="service" className="space-y-3 pt-4">
             <SimpleSupplierSelector
-              label="Fournisseur / Consultant"
+              label={t('auto.phasestepresourcedialog.fournisseur_consultant')}
               value={supplierId}
               onChange={(id) => setSupplierId(id || "")}
             />

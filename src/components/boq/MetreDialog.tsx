@@ -20,6 +20,8 @@ import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referenti
 import { getRecommendationItems } from '@/config/referentials/boq/recommendations.referential';
 import { MeterService } from '@/application/services/boq/MeterService';
 import type { MeterOpening } from '@/dtos/boq/MeterInputDTO';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface MetreDialogValue {
   elementType: string | null;
@@ -42,6 +44,7 @@ interface Props {
 const num = (v: string) => (v === '' ? null : Number(v.replace(',', '.')));
 
 export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
+  const { t } = useLanguage();
   const [elementType, setElementType] = useState<string | null>(initial?.elementType ?? null);
   const [length, setLength] = useState<number | null>(initial?.length ?? null);
   const [width, setWidth] = useState<number | null>(initial?.width ?? null);
@@ -86,7 +89,7 @@ export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
       <DialogContent className="max-h-[92vh] w-[min(96vw,680px)] max-w-none overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calculator className="h-4 w-4 text-primary" /> Calcul métré
+            <Calculator className="h-4 w-4 text-primary" /> <T k="auto.metredialog.calcul_metre" fallback="Calcul métré" />
           </DialogTitle>
           <DialogDescription>
             La quantité et l'unité découlent du type d'ouvrage (référentiel), des dimensions saisies et des ouvertures déduites.
@@ -100,7 +103,7 @@ export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label className="text-[11px]">Type d'ouvrage (métré)</Label>
+              <Label className="text-[11px]"><T k="auto.metredialog.type_d_ouvrage_metre" fallback="Type d'ouvrage (métré)" /></Label>
               <Select value={elementType ?? 'generic'} onValueChange={(v) => setElementType(v === 'generic' ? null : v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-64">
@@ -112,7 +115,7 @@ export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-[11px]">Unité (verrouillée)</Label>
+              <Label className="text-[11px]"><T k="auto.metredialog.unite_verrouillee" fallback="Unité (verrouillée)" /></Label>
               <Input value={unit} readOnly className="bg-muted" />
             </div>
           </div>
@@ -120,19 +123,19 @@ export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {dims.length && (
               <div className="space-y-1">
-                <Label className="text-[11px]">Longueur L (m)</Label>
+                <Label className="text-[11px]"><T k="auto.metredialog.longueur_l_m" fallback="Longueur L (m)" /></Label>
                 <Input inputMode="decimal" value={length ?? ''} onChange={(e) => setLength(num(e.target.value))} />
               </div>
             )}
             {dims.width && (
               <div className="space-y-1">
-                <Label className="text-[11px]">Largeur l (m)</Label>
+                <Label className="text-[11px]"><T k="auto.metredialog.largeur_l_m" fallback="Largeur l (m)" /></Label>
                 <Input inputMode="decimal" value={width ?? ''} onChange={(e) => setWidth(num(e.target.value))} />
               </div>
             )}
             {dims.height && (
               <div className="space-y-1">
-                <Label className="text-[11px]">Hauteur h (m)</Label>
+                <Label className="text-[11px]"><T k="auto.metredialog.hauteur_h_m" fallback="Hauteur h (m)" /></Label>
                 <Input inputMode="decimal" value={height ?? ''} onChange={(e) => setHeight(num(e.target.value))} />
               </div>
             )}
@@ -141,23 +144,23 @@ export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
           {/* Ouvertures à déduire (portes, fenêtres, trémies de dalle…) */}
           <div className="rounded-md border p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-muted-foreground">Ouvertures à déduire</span>
+              <span className="text-xs font-semibold text-muted-foreground"><T k="auto.metredialog.ouvertures_a_deduire" fallback="Ouvertures à déduire" /></span>
               <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                Déduire
-                <Switch checked={deduct} onCheckedChange={setDeduct} aria-label="Déduire les ouvertures" />
+                <T k="auto.metredialog.deduire" fallback="Déduire" />
+                <Switch checked={deduct} onCheckedChange={setDeduct} aria-label={t('auto.metredialog.deduire_les_ouvertures')} />
               </label>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1">
-                <Label className="text-[11px]">Nombre</Label>
+                <Label className="text-[11px]"><T k="auto.metredialog.nombre" fallback="Nombre" /></Label>
                 <Input inputMode="numeric" value={openCount ?? ''} onChange={(e) => setOpenCount(num(e.target.value))} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">Largeur (m)</Label>
+                <Label className="text-[11px]"><T k="auto.metredialog.largeur_m" fallback="Largeur (m)" /></Label>
                 <Input inputMode="decimal" value={openWidth ?? ''} onChange={(e) => setOpenWidth(num(e.target.value))} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">Hauteur (m)</Label>
+                <Label className="text-[11px]"><T k="auto.metredialog.hauteur_m" fallback="Hauteur (m)" /></Label>
                 <Input inputMode="decimal" value={openHeight ?? ''} onChange={(e) => setOpenHeight(num(e.target.value))} />
               </div>
             </div>
@@ -187,7 +190,7 @@ export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}><T k="auto.metredialog.annuler" fallback="Annuler" /></Button>
           <Button
             onClick={() => {
               onApply({
@@ -198,7 +201,7 @@ export function MetreDialog({ open, onOpenChange, initial, onApply }: Props) {
               onOpenChange(false);
             }}
           >
-            Appliquer à la ligne
+            <T k="auto.metredialog.appliquer_a_la_ligne" fallback="Appliquer à la ligne" />
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -24,6 +24,7 @@ import {
 } from "@/dtos/entities/ProjectDTO";
 import { ProjectWorkflowData } from "@/dtos/workflows/ProjectWorkflowDTOs";
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProjectInfoStepProps {
   workflowData: ProjectWorkflowData | null;
@@ -44,6 +45,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
   workflowData,
   onStepComplete,
 }) => {
+  const { t } = useLanguage();
   const projectData = workflowData?.projectData || ({} as ProjectDTO);
 
   const handleUpdate = (updates: Partial<ProjectDTO>) => {
@@ -63,8 +65,8 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
 
   return (
     <FormSection
-      title="Informations générales du projet"
-      description="Identité, calendrier et cadre financier de base."
+      title={t('auto.projectinfostep.informations_generales_du_projet')}
+      description={t('auto.projectinfostep.identite_calendrier_et_cadre_financier_de_base')}
       icon={<Building className="h-5 w-5 text-primary" />}
       stage="PLANIFICATION"
     >
@@ -75,7 +77,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             <Label htmlFor="project-ref"><T k="auto.projectinfostep.reference" fallback="Référence" /></Label>
             <Input
               id="project-ref"
-              placeholder="REF-2025-001"
+              placeholder={t('auto.projectinfostep.ref_2025_001')}
               value={projectData.projectReference || ""}
               onChange={(e) =>
                 handleUpdate({ projectReference: e.target.value })
@@ -88,7 +90,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
             </Label>
             <Input
               id="project-title"
-              placeholder="Nom du projet de construction"
+              placeholder={t('auto.projectinfostep.nom_du_projet_de_construction')}
               required
               value={projectData.title || ""}
               onChange={(e) => handleUpdate({ title: e.target.value })}
@@ -103,7 +105,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               }
             >
               <SelectTrigger id="project-status">
-                <SelectValue placeholder="Statut" />
+                <SelectValue placeholder={t('auto.projectinfostep.statut')} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((o) => (
@@ -123,7 +125,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
           </Label>
           <Textarea
             id="project-desc"
-            placeholder="Objectifs, contexte, spécifications techniques…"
+            placeholder={t('auto.projectinfostep.objectifs_contexte_specifications_techniques')}
             className="min-h-[96px]"
             required
             value={projectData.description || ""}
@@ -162,7 +164,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               onValueChange={(value) => handleUpdate({ marketType: value })}
             >
               <SelectTrigger id="project-market">
-                <SelectValue placeholder="Type de marché" />
+                <SelectValue placeholder={t('auto.projectinfostep.type_de_marche')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="public"><T k="auto.projectinfostep.marche_public" fallback="Marché public" /></SelectItem>
@@ -180,7 +182,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               onValueChange={(value) => handleUpdate({ selectionMode: value })}
             >
               <SelectTrigger id="project-selection">
-                <SelectValue placeholder="Mode" />
+                <SelectValue placeholder={t('auto.projectinfostep.mode')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="open"><T k="auto.projectinfostep.appel_d_offres_ouvert" fallback="Appel d'offres ouvert" /></SelectItem>
@@ -210,7 +212,7 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
               }
             >
               <SelectTrigger id="project-financing">
-                <SelectValue placeholder="Source" />
+                <SelectValue placeholder={t('auto.projectinfostep.source')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="budget_state"><T k="auto.projectinfostep.budget_de_l_etat" fallback="Budget de l'État" /></SelectItem>
@@ -226,12 +228,12 @@ const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
           </div>
           <div className="form-group col-span-12 sm:col-span-5">
             <EmployeeSelector
-              label="Chef de projet"
+              label={t('auto.projectinfostep.chef_de_projet')}
               value={projectData.projectManagerId || ""}
               onChange={(employeeId) =>
                 handleUpdate({ projectManagerId: employeeId })
               }
-              placeholder="Sélectionner le chef de projet"
+              placeholder={t('auto.projectinfostep.selectionner_le_chef_de_projet')}
               departmentFilter={["management", "engineering"]}
             />
           </div>

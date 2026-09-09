@@ -28,6 +28,7 @@ const CATEGORIES: { value: TenderCategory; label: string }[] = [
 ];
 
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const UNITS = DQE_UNIT_CODES.filter((code) => code !== 'ens' && code !== 'lot');
 
@@ -51,6 +52,7 @@ function emptyLine(): TenderEstimatorLineInput {
 }
 
 export function TenderEstimatorForm({ tenderId, projectId, onCommitted, seedLines }: Props) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [lines, setLines] = useState<TenderEstimatorLineInput[]>([emptyLine()]);
   const [busy, setBusy] = useState(false);
@@ -76,11 +78,11 @@ export function TenderEstimatorForm({ tenderId, projectId, onCommitted, seedLine
     setBusy(true);
     try {
       const persisted = await TenderEstimatorService.commit(lines, { tenderId, projectId });
-      toast({ title: 'Devis enregistré', description: `${persisted.length} ligne(s) ajoutée(s) au devis.` });
+      toast({ title: t('auto.tenderestimatorform.devis_enregistre'), description: `${persisted.length} ligne(s) ajoutée(s) au devis.` });
       onCommitted?.(persisted.length);
     } catch (e) {
       toast({
-        title: 'Erreur',
+        title: t('auto.tenderestimatorform.erreur'),
         description: e instanceof Error ? e.message : 'Impossible de persister le devis.',
         variant: 'destructive',
       });
@@ -120,7 +122,7 @@ export function TenderEstimatorForm({ tenderId, projectId, onCommitted, seedLine
                       <Input
                         value={l.designation}
                         onChange={(e) => update(idx, { designation: e.target.value })}
-                        placeholder="Désignation"
+                        placeholder={t('auto.tenderestimatorform.designation')}
                       />
                     </TableCell>
                     <TableCell>

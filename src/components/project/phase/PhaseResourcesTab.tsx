@@ -22,6 +22,7 @@ import { formatAmount2, formatNumber2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import type { PhaseResourceBucketDTO } from '@/dtos/entities/PhasePlannedResourcesDTO';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseResourcesTabProps {
   phaseId: string;
@@ -79,6 +80,7 @@ const BucketList: React.FC<{
 );
 
 const PhaseResourcesTab: React.FC<PhaseResourcesTabProps> = ({ phaseId, projectId, onOpenTeam }) => {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<ResourceFilter>('all');
 
   const { resources, isLoading } = usePhaseResourceLinkHex(projectId, phaseId);
@@ -209,7 +211,7 @@ const PhaseResourcesTab: React.FC<PhaseResourcesTabProps> = ({ phaseId, projectI
                 icon={<Package className="h-4 w-4 text-primary" />}
               />
             ) : (
-              <PhaseMaterials phaseId={phaseId} projectId={projectId} kind="material" title="Matériaux" />
+              <PhaseMaterials phaseId={phaseId} projectId={projectId} kind="material" title={t('auto.phaseresourcestab.materiaux')} />
             ))}
 
           {showEquipments &&
@@ -224,7 +226,7 @@ const PhaseResourcesTab: React.FC<PhaseResourcesTabProps> = ({ phaseId, projectI
                 phaseId={phaseId}
                 projectId={projectId}
                 kind="equipment"
-                title="Équipements"
+                title={t('auto.phaseresourcestab.equipements')}
                 addLabel="Ajouter un équipement"
               />
             ))}

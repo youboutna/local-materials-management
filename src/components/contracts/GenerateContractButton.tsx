@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { getContractService } from '@/application/services/ContractService';
 import { useTenderContractsHex } from '@/hooks/hexagonal/useContractsHex';
+import { T } from '@/components/i18n/T';
 
 interface GenerateContractButtonProps {
   projectId?: string | null;
@@ -77,7 +78,7 @@ export default function GenerateContractButton({
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline" className="font-mono text-xs">{existing.contractNumber}</Badge>
         <Button size={size} variant="outline" onClick={() => navigate(`/contracts/${existing.id}`)}>
-          <FileSignature className="mr-1.5 h-4 w-4" /> Ouvrir le contrat
+          <FileSignature className="mr-1.5 h-4 w-4" /> <T k="auto.generatecontractbutton.ouvrir_le_contrat" fallback="Ouvrir le contrat" />
         </Button>
       </div>
     );

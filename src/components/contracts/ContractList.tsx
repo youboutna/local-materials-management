@@ -31,6 +31,8 @@ import { ContractStatusBadge } from './ContractStatusBadge';
 import ContractFormDialog from './ContractFormDialog';
 import { useContractsHex, useProjectContractsHex, useContractMutations } from '@/hooks/hexagonal/useContractsHex';
 import type { ContractRecordDTO } from '@/dtos/entities/ContractRecordDTO';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ContractListProps {
   projectId?: string;
@@ -46,6 +48,7 @@ const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleDateString('fr-FR') : '—';
 
 export default function ContractList({ projectId, title = 'Contrats', readOnly = false }: ContractListProps) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -95,9 +98,9 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Numéro ou intitulé"
+              placeholder={t('auto.contractlist.numero_ou_intitule')}
               className="pl-8"
-              aria-label="Rechercher un contrat"
+              aria-label={t('auto.contractlist.rechercher_un_contrat')}
             />
           </div>
           {!readOnly && (
@@ -108,7 +111,7 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
                 setFormOpen(true);
               }}
             >
-              <Plus className="mr-1.5 h-4 w-4" /> Nouveau contrat
+              <Plus className="mr-1.5 h-4 w-4" /> <T k="auto.contractlist.nouveau_contrat" fallback="Nouveau contrat" />
             </Button>
           )}
         </div>
@@ -129,7 +132,7 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
         )}
 
         {!query.isLoading && rows.length === 0 && (
-          <p className="py-8 text-sm text-muted-foreground">Aucun contrat enregistré.</p>
+          <p className="py-8 text-sm text-muted-foreground"><T k="auto.contractlist.aucun_contrat_enregistre" fallback="Aucun contrat enregistré." /></p>
         )}
 
         {rows.length > 0 && (
@@ -137,12 +140,12 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Numéro</TableHead>
-                  <TableHead>Intitulé</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Montant</TableHead>
-                  <TableHead>Début</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead><T k="auto.contractlist.numero" fallback="Numéro" /></TableHead>
+                  <TableHead><T k="auto.contractlist.intitule" fallback="Intitulé" /></TableHead>
+                  <TableHead><T k="auto.contractlist.statut" fallback="Statut" /></TableHead>
+                  <TableHead className="text-right"><T k="auto.contractlist.montant" fallback="Montant" /></TableHead>
+                  <TableHead><T k="auto.contractlist.debut" fallback="Début" /></TableHead>
+                  <TableHead className="text-right"><T k="auto.contractlist.action" fallback="Action" /></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -164,14 +167,14 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
                           variant="outline"
                           onClick={() => navigate(`/contracts/${contract.id}`)}
                         >
-                          Ouvrir
+                          <T k="auto.contractlist.ouvrir" fallback="Ouvrir" />
                         </Button>
                         {!readOnly && (
                           <>
                             <Button
                               size="icon"
                               variant="ghost"
-                              aria-label="Modifier le contrat"
+                              aria-label={t('auto.contractlist.modifier_le_contrat')}
                               onClick={() => {
                                 setEditing(contract);
                                 setFormOpen(true);
@@ -182,7 +185,7 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
                             <Button
                               size="icon"
                               variant="ghost"
-                              aria-label="Supprimer le contrat"
+                              aria-label={t('auto.contractlist.supprimer_le_contrat')}
                               onClick={() => setToDelete(contract)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -209,15 +212,15 @@ export default function ContractList({ projectId, title = 'Contrats', readOnly =
       <AlertDialog open={!!toDelete} onOpenChange={(open) => !open && setToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce contrat ?</AlertDialogTitle>
+            <AlertDialogTitle><T k="auto.contractlist.supprimer_ce_contrat" fallback="Supprimer ce contrat ?" /></AlertDialogTitle>
             <AlertDialogDescription>
               {toDelete?.contractNumber} — cette action supprime aussi ses lignes contractuelles.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel><T k="auto.contractlist.annuler" fallback="Annuler" /></AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-              Supprimer
+              <T k="auto.contractlist.supprimer" fallback="Supprimer" />
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

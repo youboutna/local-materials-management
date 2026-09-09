@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
   phaseName,
   onGenerated,
 }) => {
+  const { t } = useLanguage();
   const [pvType, setPvType] = useState<PVType>('technical_inspection');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -121,8 +123,8 @@ const InspectionPVGenerator: React.FC<InspectionPVGeneratorProps> = ({
   };
 
   const pvTypeOptions = [
-    { value: 'technical_inspection', label: 'Inspection Technique' },
-    { value: 'safety_inspection', label: 'Inspection Sécurité' },
+    { value: 'technical_inspection', label: t('auto.inspectionpvgenerator.inspection_technique') },
+    { value: 'safety_inspection', label: t('auto.inspectionpvgenerator.inspection_securite') },
   ];
 
   return (

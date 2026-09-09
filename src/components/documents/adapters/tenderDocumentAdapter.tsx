@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * Tender Document Adapter
  * Fuses tender-level documents (btp.tender_documents), lot documents
@@ -46,6 +47,7 @@ function normalizeCategory(cat: string | null | undefined): string | null {
 }
 
 export function useTenderDocumentAdapter(tenderId: string, projectId?: string): DocumentHubContract {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const { data: lots = [] } = useTenderLots(tenderId);
   const { data: lotDocs = [] } = useTenderLotDocuments(tenderId);
@@ -123,19 +125,19 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
     () => [
       {
         key: 'scope',
-        label: 'Portée',
+        label: t('auto.tenderdocumentadapter.portee'),
         options: [
-          { value: 'Global', label: 'Global' },
-          { value: 'Communs', label: 'Communs aux lots' },
-          { value: 'Lot', label: 'Par lot' },
+          { value: 'Global', label: t('auto.tenderdocumentadapter.global') },
+          { value: 'Communs', label: t('auto.tenderdocumentadapter.communs_aux_lots') },
+          { value: 'Lot', label: t('auto.tenderdocumentadapter.par_lot') },
         ],
       },
       {
         key: 'lot',
-        label: 'Lot',
+        label: t('auto.tenderdocumentadapter.lot'),
         options: [
-          { value: 'Global appel d\'offres', label: 'Global' },
-          { value: 'Communs à tous les lots', label: 'Communs' },
+          { value: 'Global appel d\'offres', label: t('auto.tenderdocumentadapter.global') },
+          { value: 'Communs à tous les lots', label: t('auto.tenderdocumentadapter.communs') },
           ...lotOptions.map((l) => ({ value: l.label, label: l.label })),
         ],
       },
@@ -208,9 +210,9 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
     onUpload,
     onDelete,
     uploadCategoryOptions: [
-      { value: 'administrative', label: 'Administratif' },
-      { value: 'technical', label: 'Technique' },
-      { value: 'financial', label: 'Financier' },
+      { value: 'administrative', label: t('auto.tenderdocumentadapter.administratif') },
+      { value: 'technical', label: t('auto.tenderdocumentadapter.technique') },
+      { value: 'financial', label: t('auto.tenderdocumentadapter.financier') },
     ],
     renderExtraUploadFields: ({ extras, setExtra }) => {
       const scope = (extras.scope as string) ?? 'lot';

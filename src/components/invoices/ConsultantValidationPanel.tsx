@@ -15,6 +15,7 @@ import { useConsultantInvoiceValidationHex } from '@/hooks/hexagonal/useConsulta
 import { AlertTriangle, CheckCircle, Eye, FileText, Upload, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProgressInvoice {
   id: string;
@@ -35,7 +36,7 @@ interface ProgressInvoice {
     projectType: string; // ✅ CAMELCASE: Instead of project_type
     fundingSource: string; // ✅ CAMELCASE: Instead of funding_source
   };
-  
+
   // Legacy snake_case for backward compatibility
   invoice_number?: string; // Legacy snake_case for backward compatibility
   invoice_type?: string; // Legacy snake_case for backward compatibility
@@ -51,6 +52,7 @@ interface ProgressInvoice {
 }
 
 export function ConsultantValidationPanel() {
+  const { t } = useLanguage();
   const { invoices, loading, loadPendingInvoices, validateInvoice } = useConsultantInvoiceValidationHex();
   const [selectedInvoice, setSelectedInvoice] = useState<ProgressInvoice | null>(null);
   const [comments, setComments] = useState('');
@@ -58,7 +60,7 @@ export function ConsultantValidationPanel() {
   const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
   const { hasAnyRole, hasRole } = useCurrentUserRoles();
-  
+
   // Initialize services
   const storageService = getStorageService();
 
@@ -73,8 +75,8 @@ export function ConsultantValidationPanel() {
   const handleValidate = async (invoiceId: string, approved: boolean) => {
     if (approved && !serviceFaitFile) {
       toast({
-        title: 'Document requis',
-        description: 'Le document "service fait" signé est obligatoire pour approuver la facture',
+        title: t('auto.consultantvalidationpanel.document_requis'),
+        description: t('auto.consultantvalidationpanel.le_document_service_fait_signe_est_obligatoire_p'),
         variant: 'destructive',
       });
       return;
@@ -122,7 +124,7 @@ export function ConsultantValidationPanel() {
 
       toast({
         title: approved ? 'Facture approuvée' : 'Facture rejetée',
-        description: approved 
+        description: approved
           ? 'La facture a été approuvée et suit le workflow du projet'
           : 'La facture a été rejetée et retournée au fournisseur',
       });
@@ -134,7 +136,7 @@ export function ConsultantValidationPanel() {
     } catch (error: any) {
       console.error('Error validating invoice:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.consultantvalidationpanel.erreur'),
         description: error.message || 'Impossible de valider la facture',
         variant: 'destructive',
       });
@@ -145,12 +147,12 @@ export function ConsultantValidationPanel() {
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { color: string; label: string }> = {
-      supplier_submitted: { color: 'bg-warning/10 text-warning', label: 'Soumis' },
-      consultant_reviewing: { color: 'bg-primary/10 text-primary', label: 'En cours' },
-      consultant_approved: { color: 'bg-success-soft text-success', label: 'Approuvé' },
-      consultant_rejected: { color: 'bg-destructive/10 text-destructive', label: 'Rejeté' },
+      supplier_submitted: { color: 'bg-warning/10 text-warning', label: t('auto.consultantvalidationpanel.soumis') },
+      consultant_reviewing: { color: 'bg-primary/10 text-primary', label: t('auto.consultantvalidationpanel.en_cours') },
+      consultant_approved: { color: 'bg-success-soft text-success', label: t('auto.consultantvalidationpanel.approuve') },
+      consultant_rejected: { color: 'bg-destructive/10 text-destructive', label: t('auto.consultantvalidationpanel.rejete') },
     };
-    
+
     const cfg = config[status] || config.supplier_submitted;
     return <Badge className={cfg.color}>{cfg.label}</Badge>;
   };
@@ -340,7 +342,7 @@ export function ConsultantValidationPanel() {
                             <Textarea
                               value={comments}
                               onChange={(e) => setComments(e.target.value)}
-                              placeholder="Ajoutez vos commentaires sur cette facture..."
+                              placeholder={t('auto.consultantvalidationpanel.ajoutez_vos_commentaires_sur_cette_facture')}
                               rows={3}
                             />
                           </div>

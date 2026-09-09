@@ -23,6 +23,7 @@ import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { WorkspaceDTO } from '@/dtos/entities/WorkspaceDTO';
 import { OperationalStatus } from '@/domain/entities/Workspace';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 interface WorkspaceSelectorProps {
@@ -50,16 +51,17 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
   showDetails = false,
   showLocationSearch = false
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId);
-  
+
 
   const regions = getRegionsWithCapitals();
-  
+
   const handleRegionSelect = (regionCode: string) => {
     const region = getRegionsWithCapitals().find(r => r.code === regionCode);
     if (!region) return undefined;
-    
+
     console.log(`Selected region: ${region.name} (${region.code})`);
     toast({
       title: "Région sélectionnée",
@@ -71,7 +73,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
   const handleWorkspaceChange = (workspaceId: string) => {
     const workspace = workspaces.find(w => w.id === workspaceId);
     onWorkspaceChange(workspaceId);
-    
+
     // Notify parent about workspace change for map focusing and form updates
     if (workspace && onLocationChange) {
       onLocationChange(workspace);
@@ -166,7 +168,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" style={{ width: 'var(--radix-popover-trigger-width)' }}>
             <Command>
-              <CommandInput placeholder="Rechercher un espace de travail..." />
+              <CommandInput placeholder={t('auto.workspaceselector.rechercher_un_espace_de_travail')} />
               <CommandEmpty>
                 {workspaces.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
@@ -215,7 +217,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
             </Command>
           </PopoverContent>
         </Popover>
-        
+
         {workspaces.length === 0 && (
           <p className="text-sm text-destructive mt-2">
             <T k="auto.workspaceselector.aucun_espace_de_travail_configure_veuillez_conta" fallback="Aucun espace de travail configuré. Veuillez contacter l'administrateur." />
@@ -239,7 +241,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({
                 });
               }
             }}
-            placeholder="Rechercher une localisation pour les espaces de travail..."
+            placeholder={t('auto.workspaceselector.rechercher_une_localisation_pour_les_espaces_de_')}
             filter="all"
             className="w-full"
             showCoordinates={false}

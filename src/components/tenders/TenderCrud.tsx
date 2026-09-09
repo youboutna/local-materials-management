@@ -14,9 +14,9 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import WorkflowStepSelector from './WorkflowStepSelector';
 import DocumentShareDialog from './DocumentShareDialog';
-import { 
-  PROCUREMENT_PHASES, 
-  PROCUREMENT_STAGES, 
+import {
+  PROCUREMENT_PHASES,
+  PROCUREMENT_STAGES,
   PROCUREMENT_PHASE_LABELS,
   ProcurementPhase,
   ProcurementStage,
@@ -34,6 +34,7 @@ import {
 import { TenderDTO } from '@/dtos/entities/TenderDTO';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Local type aliases for backward compatibility
 type Tender = TenderDTO & {
@@ -72,6 +73,7 @@ const toInputDateTime = (value?: string | null): string => {
 };
 
 const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
+  const { t } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTender, setEditingTender] = useState<Tender | null>(null);
   const [isProcurementWorkflowSelectorOpen, setIsProcurementWorkflowSelectorOpen] = useState(false);
@@ -142,8 +144,8 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
 
   // Handle document selection for a specific step
   const handleStepDocumentSelection = (phase: ProcurementPhase, stageValue: ProcurementStage, documents: string[]) => {
-    setSelectedProcurementSteps(prev => 
-      prev.map(step => 
+    setSelectedProcurementSteps(prev =>
+      prev.map(step =>
         (step.phase === phase && step.stage.value === stageValue)
           ? { ...step, selected_documents: documents }
           : step
@@ -210,14 +212,14 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       await tenderMutation.mutateAsync({
         formData,
         editingTenderId: editingTender?.id,
         procurementSteps: selectedProcurementSteps
       });
-      
+
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
@@ -284,7 +286,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
               {editingTender ? 'Modifier l\'Appel d\'Offres' : 'Nouvel Appel d\'Offres'}
             </DialogTitle>
           </DialogHeader>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -296,15 +298,15 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                   required
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="project_id"><T k="auto.tendercrud.projet_associe" fallback="Projet associé" /></Label>
-                <Select 
-                  value={formData.project_id} 
+                <Select
+                  value={formData.project_id}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, project_id: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un projet" />
+                    <SelectValue placeholder={t('auto.tendercrud.selectionner_un_projet')} />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((project) => (
@@ -338,7 +340,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, launch_date: e.target.value }))}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="submission_deadline"><T k="auto.tendercrud.date_limite_de_soumission" fallback="Date limite de soumission" /></Label>
                 <Input
@@ -353,12 +355,12 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="selection_mode"><T k="auto.tendercrud.mode_de_selection" fallback="Mode de sélection" /></Label>
-                <Select 
-                  value={formData.selection_mode} 
+                <Select
+                  value={formData.selection_mode}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, selection_mode: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Mode de sélection" />
+                    <SelectValue placeholder={t('auto.tendercrud.mode_de_selection')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="open"><T k="auto.tendercrud.ouvert" fallback="Ouvert" /></SelectItem>
@@ -367,15 +369,15 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <Label htmlFor="market_type"><T k="auto.tendercrud.type_de_marche" fallback="Type de marché" /></Label>
-                <Select 
-                  value={formData.market_type} 
+                <Select
+                  value={formData.market_type}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, market_type: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Type de marché" />
+                    <SelectValue placeholder={t('auto.tendercrud.type_de_marche')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="public"><T k="auto.tendercrud.public" fallback="Public" /></SelectItem>
@@ -384,7 +386,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <Label htmlFor="estimated_value"><T k="auto.tendercrud.valeur_estimee_mru" fallback="Valeur estimée (MRU)" /></Label>
                 <Input
@@ -404,7 +406,7 @@ const TenderCrud = ({ onTenderSelect, selectedTenderId }: TenderCrudProps) => {
                 onClick={() => setIsProcurementWorkflowSelectorOpen(true)}
                 className="w-full"
               >
-                {selectedProcurementSteps.length > 0 
+                {selectedProcurementSteps.length > 0
                   ? `${selectedProcurementSteps.length} étape(s) sélectionnée(s)`
                   : 'Sélectionner les étapes du workflow'
                 }

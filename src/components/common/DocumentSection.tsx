@@ -1,12 +1,12 @@
 /**
  * DocumentSection - Composant d'affichage des documents associés à un projet
- * 
+ *
  * Architecture Hexagonale - RÈGLES STRICTES :
  * - Injection de dépendances via props
  * - Utilisation des services hexagonaux
  * - Types provenant des DTOs
  * - Pas d'appels directs à Supabase
- * 
+ *
  * Respecte PROMPT.md :
  * - ✅ Utilisation de DocumentService via injection
  * - ✅ Types DocumentDTO depuis les DTOs
@@ -28,6 +28,7 @@ import React, { useEffect, useState } from 'react';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -50,6 +51,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
   title = "Documents associés",
   documentService: injectedDocumentService
 }) => {
+  const { t } = useLanguage();
   const { openDocument } = useDocumentViewer();
   // ============================================================================
   // SERVICES HEXAGONAUX (injection)
@@ -86,7 +88,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
    */
   const loadDocuments = async (): Promise<void> => {
     if (!projectId) return;
-    
+
     setLoading(true);
     try {
       // ✅ Appel via le service hexagonal
@@ -95,7 +97,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
     } catch (error) {
       console.error('Error loading documents:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.documentsection.erreur'),
         description: error instanceof Error ? error.message : 'Impossible de charger les documents',
         variant: 'destructive'
       });
@@ -123,7 +125,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
       window.open(document.fileUrl, '_blank');
     } else {
       toast({
-        title: 'Erreur',
+        title: t('auto.documentsection.erreur'),
         description: 'Ce document n\'a pas de fichier associé',
         variant: 'destructive'
       });
@@ -212,7 +214,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
                       size="sm"
                       variant="ghost"
                       onClick={() => handleOpenExternal(document)}
-                      title="Ouvrir dans un nouvel onglet"
+                      title={t('auto.documentsection.ouvrir_dans_un_nouvel_onglet')}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
@@ -222,7 +224,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDownloadDocument(document)}
-                      title="Télécharger"
+                      title={t('auto.documentsection.telecharger')}
                     >
                       <Download className="h-4 w-4" />
                     </Button>
@@ -253,7 +255,7 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
           {loading ? 'Chargement...' : 'Rafraîchir'}
         </Button>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="list">
@@ -265,11 +267,11 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
             </TabsTrigger>
           )}
         </TabsList>
-        
+
         <TabsContent value="list" className="mt-4">
           {renderDocumentList()}
         </TabsContent>
-        
+
         {selectedDocument && (
           <TabsContent value="viewer" className="mt-4">
             <div className="relative">
@@ -281,12 +283,12 @@ const DocumentSection: React.FC<DocumentSectionProps> = ({
               >
                 <T k="auto.documentsection.fermer" fallback="Fermer" />
               </Button>
-              <DocumentViewer 
+              <DocumentViewer
                 document={{
                   ...selectedDocument,
                   description: selectedDocument.description || '',
                   mime_type: selectedDocument.mimeType || undefined
-                } as never} 
+                } as never}
               />
             </div>
           </TabsContent>

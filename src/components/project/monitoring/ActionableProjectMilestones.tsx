@@ -43,6 +43,7 @@ import {
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ActionableProjectMilestonesProps {
   projectId: string;
@@ -65,6 +66,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
   showHeader = true,
   onMilestoneClick
 }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [actionDialog, setActionDialog] = useState<ActionDialogState>({
@@ -113,24 +115,24 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
     const targetDate = parseISO(milestone.targetDate);
-    
+
     if (milestone.status === 'completed') {
-      return { 
-        icon: CheckCircle, 
-        color: 'text-success', 
+      return {
+        icon: CheckCircle,
+        color: 'text-success',
         bgColor: 'bg-success/10',
         borderColor: 'border-success/40',
-        label: 'Terminé',
+        label: t('auto.actionableprojectmilestones.termine'),
         canTrigger: false,
         urgency: 0
       };
     }
-    
+
     if (isBefore(targetDate, today)) {
       const daysLate = differenceInDays(today, targetDate);
-      return { 
-        icon: AlertTriangle, 
-        color: 'text-destructive', 
+      return {
+        icon: AlertTriangle,
+        color: 'text-destructive',
         bgColor: 'bg-destructive/10',
         borderColor: 'border-destructive/40',
         label: `Retard ${daysLate}j`,
@@ -141,9 +143,9 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
 
     const daysUntil = differenceInDays(targetDate, today);
     if (daysUntil <= 7) {
-      return { 
-        icon: Clock, 
-        color: 'text-warning', 
+      return {
+        icon: Clock,
+        color: 'text-warning',
         bgColor: 'bg-warning/10',
         borderColor: 'border-warning/40',
         label: `${daysUntil}j`,
@@ -153,20 +155,20 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
     }
 
     if (daysUntil <= 14) {
-      return { 
-        icon: Clock, 
-        color: 'text-primary', 
+      return {
+        icon: Clock,
+        color: 'text-primary',
         bgColor: 'bg-primary/10',
         borderColor: 'border-primary/40',
-        label: 'Bientôt',
+        label: t('auto.actionableprojectmilestones.bientot'),
         canTrigger: true,
         urgency: 1
       };
     }
 
-    return { 
-      icon: Clock, 
-      color: 'text-muted-foreground', 
+    return {
+      icon: Clock,
+      color: 'text-muted-foreground',
       bgColor: 'bg-muted',
       borderColor: 'border-muted-foreground/20',
       label: format(targetDate, 'dd MMM', { locale: fr }),
@@ -333,10 +335,10 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {progress?.schedule_performance_index !== undefined && (
-                  <Badge 
+                  <Badge
                     variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
                     className={cn(
                       "flex items-center gap-1",
@@ -353,17 +355,17 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                 )}
               </div>
             </div>
-            
+
             {/* Progress bar */}
             <div className="mt-3">
-              <Progress 
-                value={progress?.weighted_progress || (completedCount / Math.max(1, milestones.length)) * 100} 
-                className="h-2" 
+              <Progress
+                value={progress?.weighted_progress || (completedCount / Math.max(1, milestones.length)) * 100}
+                className="h-2"
               />
             </div>
           </CardHeader>
         )}
-        
+
         <CardContent className={cn("p-4", !showHeader && "pt-6")}>
           {actionableMilestones.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -377,7 +379,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                   const status = getStatusInfo(milestone);
                   const TypeIcon = getTypeIcon(milestone.type);
                   const StatusIcon = status.icon;
-                  
+
                   return (
                     <div
                       key={milestone.id}
@@ -396,7 +398,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                           )}>
                             <TypeIcon className={cn("h-4 w-4", status.color)} />
                           </div>
-                          
+
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <h4 className="font-medium text-sm truncate">{milestone.title}</h4>
@@ -404,7 +406,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                                 {getTypeLabel(milestone.type)}
                               </Badge>
                             </div>
-                            
+
                             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                               <StatusIcon className={cn("h-3 w-3", status.color)} />
                               <span className={status.color}>{status.label}</span>
@@ -417,7 +419,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Action buttons */}
                         {status.canTrigger && (
                           <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -429,7 +431,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                                 e.stopPropagation();
                                 handleMilestoneAction(milestone, 'inspection');
                               }}
-                              title="Déclencher inspection"
+                              title={t('auto.actionableprojectmilestones.declencher_inspection')}
                             >
                               <ClipboardCheck className="h-4 w-4" />
                             </Button>
@@ -441,7 +443,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                                 e.stopPropagation();
                                 handleMilestoneAction(milestone, 'payment');
                               }}
-                              title="Déclencher paiement"
+                              title={t('auto.actionableprojectmilestones.declencher_paiement')}
                             >
                               <DollarSign className="h-4 w-4" />
                             </Button>
@@ -453,7 +455,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                                 e.stopPropagation();
                                 handleMilestoneAction(milestone, 'complete');
                               }}
-                              title="Marquer terminé"
+                              title={t('auto.actionableprojectmilestones.marquer_termine')}
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -466,7 +468,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
               </div>
             </ScrollArea>
           )}
-          
+
           {milestones.length > maxItems && (
             <Button
               variant="ghost"
@@ -527,7 +529,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                     <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.creer_une_notification_de_programmation" fallback="Créer une notification de programmation" /></p>
                   </div>
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-3"
@@ -539,7 +541,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                     <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.lancer_une_inspection_deja_programmee" fallback="Lancer une inspection déjà programmée" /></p>
                   </div>
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-3"
@@ -568,7 +570,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                     <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.creer_une_notification_de_programmation" fallback="Créer une notification de programmation" /></p>
                   </div>
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-3"
@@ -580,7 +582,7 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
                     <p className="text-xs text-muted-foreground"><T k="auto.actionableprojectmilestones.executer_un_paiement_programme" fallback="Exécuter un paiement programmé" /></p>
                   </div>
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3 h-auto py-3"
@@ -599,10 +601,10 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
             {actionDialog.action === 'complete' && (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Êtes-vous sûr de vouloir marquer ce jalon comme terminé ? 
+                  Êtes-vous sûr de vouloir marquer ce jalon comme terminé ?
                   Cette action confirmera l'achèvement du point de contrôle.
                 </p>
-                
+
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -625,8 +627,8 @@ const ActionableProjectMilestones: React.FC<ActionableProjectMilestonesProps> = 
 
           {actionDialog.action !== 'complete' && (
             <DialogFooter>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setActionDialog({ open: false, milestone: null, action: null })}
               >
                 <T k="auto.actionableprojectmilestones.fermer" fallback="Fermer" />

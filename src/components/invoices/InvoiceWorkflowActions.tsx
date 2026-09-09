@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * InvoiceWorkflowActions — barre d'actions du cycle documentaire unifié
  * DQE → Devis → Contrat → Décompte(%) → Facture finale.
@@ -100,6 +101,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   onTransformed,
 
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { t, language, translateStatus } = useI18n();
   const [busy, setBusy] = useState<string | null>(null);
@@ -180,7 +182,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
       setPctOpen(false);
     } catch (e) {
       toast({
-        title: 'Transformation impossible',
+        title: t('auto.invoiceworkflowactions.transformation_impossible'),
         description: e instanceof Error ? e.message : undefined,
         variant: 'destructive',
       });
@@ -247,7 +249,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
       onTransformed?.(lines.find((l) => l.documentId)?.documentId ?? '', documentType);
     } catch (e) {
       toast({
-        title: 'Statut non mis à jour',
+        title: t('auto.invoiceworkflowactions.statut_non_mis_a_jour'),
         description: e instanceof Error ? e.message : undefined,
         variant: 'destructive',
       });
@@ -260,10 +262,10 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
     setBusy('facturx');
     try {
       await InvoiceGenerationService.generateAndDownload(generationInput());
-      toast({ title: 'PDF + XML Factur-X générés', description: `TypeCode ${def.facturxTypeCode}` });
+      toast({ title: t('auto.invoiceworkflowactions.pdf_xml_factur_x_generes'), description: `TypeCode ${def.facturxTypeCode}` });
     } catch (e) {
       toast({
-        title: 'Génération impossible',
+        title: t('auto.invoiceworkflowactions.generation_impossible'),
         description: e instanceof Error ? e.message : undefined,
         variant: 'destructive',
       });
@@ -274,7 +276,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
 
   const handleEmail = async () => {
     if (!recipientEmail) {
-      toast({ title: 'Destinataire manquant', description: 'Aucune adresse email associée au document.', variant: 'destructive' });
+      toast({ title: t('auto.invoiceworkflowactions.destinataire_manquant'), description: t('auto.invoiceworkflowactions.aucune_adresse_email_associee_au_document'), variant: 'destructive' });
       return;
     }
     setBusy('email');
@@ -287,7 +289,7 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
       });
     } catch (e) {
       toast({
-        title: 'Envoi impossible',
+        title: t('auto.invoiceworkflowactions.envoi_impossible'),
         description: e instanceof Error ? e.message : undefined,
         variant: 'destructive',
       });

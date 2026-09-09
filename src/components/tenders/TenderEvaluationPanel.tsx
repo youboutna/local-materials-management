@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  FileText, 
-  Calculator, 
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  FileText,
+  Calculator,
   Users,
   Download,
   Eye
@@ -20,6 +20,7 @@ import { useTenderEvaluationHex, TenderSubmission } from '@/hooks/hexagonal/useT
 import { DEFAULT_EVALUATION_CRITERIA } from '@/config/referentials/tender/evaluation-criteria.referential';
 import { TENDER_REQUIRED_ADMINISTRATIVE_DOCUMENTS } from '@/config/referentials/tender/document-categories.referential';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TenderEvaluationPanelProps {
   tenderId: string;
@@ -29,11 +30,12 @@ interface TenderEvaluationPanelProps {
 
 type Submission = TenderSubmission;
 
-const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({ 
-  tenderId, 
-  onEvaluationUpdate, 
-  verifiedSubmissions 
+const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
+  tenderId,
+  onEvaluationUpdate,
+  verifiedSubmissions
 }) => {
+  const { t } = useLanguage();
   const { getUser } = useAuth();
   const [activeTab, setActiveTab] = useState('administrative');
   const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
@@ -120,8 +122,8 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
                 <div
                   key={submission.id}
                   className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                    selectedSubmission === submission.id 
-                      ? 'border-primary bg-primary/5 shadow-md' 
+                    selectedSubmission === submission.id
+                      ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border hover:border-primary/50 hover:shadow-sm'
                   }`}
                   onClick={() => setSelectedSubmission(submission.id)}
@@ -139,12 +141,12 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
                         </span>
                       </Badge>
                     </div>
-                    
+
                     <p className="text-xs text-muted-foreground">{submission.supplier_email}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(submission.submission_date).toLocaleDateString('fr-FR')}
                     </p>
-                    
+
                     <div className="flex items-center justify-between pt-1">
                       <span className="text-xs text-muted-foreground">
                         {submission.submission_documents?.length || 0} docs
@@ -265,7 +267,7 @@ const AdministrativeEvaluation: React.FC<{
                 </div>
               );
             })}
-            
+
             {adminDocuments.length > 0 && (
               <div className="mt-4 pt-4 border-t">
                 <h5 className="font-medium mb-2"><T k="auto.tenderevaluationpanel.documents_soumis" fallback="Documents soumis:" /></h5>
@@ -301,7 +303,7 @@ const AdministrativeEvaluation: React.FC<{
             onChange={(e) => setNotes(e.target.value)}
             className="mt-2"
             rows={4}
-            placeholder="Ajouter des commentaires sur la recevabilité administrative..."
+            placeholder={t('auto.tenderevaluationpanel.ajouter_des_commentaires_sur_la_recevabilite_adm')}
           />
           <Button
             onClick={() => onUpdate(submission.id, 'evaluator_notes', notes)}
@@ -414,7 +416,7 @@ const TechnicalEvaluation: React.FC<{
             onChange={(e) => setNotes(e.target.value)}
             className="mt-2"
             rows={4}
-            placeholder="Évaluation détaillée des aspects techniques..."
+            placeholder={t('auto.tenderevaluationpanel.evaluation_detaillee_des_aspects_techniques')}
           />
           <Button
             onClick={() => onUpdate(submission.id, 'evaluator_notes', notes)}
@@ -454,8 +456,8 @@ const FinancialEvaluation: React.FC<{
             {(submission.submission_documents?.filter(doc => doc.category === 'financial') || []).map((doc, index) => (
               <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
                 <span>{doc.document.title}</span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => window.open(doc.document.file_url, '_blank')}
                 >
@@ -483,7 +485,7 @@ const FinancialEvaluation: React.FC<{
               <input
                 type="text"
                 className="w-full mt-1 px-3 py-2 border rounded"
-                placeholder="Ex: 30 jours"
+                placeholder={t('auto.tenderevaluationpanel.ex_30_jours')}
               />
             </div>
           </div>
@@ -519,7 +521,7 @@ const FinancialEvaluation: React.FC<{
             onChange={(e) => setNotes(e.target.value)}
             className="mt-2"
             rows={4}
-            placeholder="Analyse de l'offre financière..."
+            placeholder={t('auto.tenderevaluationpanel.analyse_de_l_offre_financiere')}
           />
           <Button
             onClick={() => onUpdate(submission.id, 'evaluator_notes', notes)}

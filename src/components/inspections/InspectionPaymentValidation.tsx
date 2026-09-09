@@ -25,6 +25,7 @@ import {
 import React, { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Local interface for stakeholder
 interface Stakeholder {
@@ -70,6 +71,7 @@ const PAYMENT_STATUS_OPTIONS = [
 ];
 
 const InspectionPaymentValidation: React.FC = () => {
+  const { t } = useLanguage();
   const { id: projectId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -89,30 +91,30 @@ const InspectionPaymentValidation: React.FC = () => {
     queryKey: ['inspection', inspectionId],
     queryFn: async (): Promise<InspectionData | null> => {
       if (!inspectionId) return null;
-      
+
       // Create service instance and get inspection
       const inspectionService = getInspectionService();
       const inspectionData = await inspectionService.getInspectionById(inspectionId);
-      
+
       if (!inspectionData) {
         console.warn(`[InspectionPaymentValidation] Inspection not found: ${inspectionId}`);
         return null;
       }
-      
+
       if (String(inspectionData.status) !== 'approved') {
         console.warn(`[InspectionPaymentValidation] Inspection not approved. Status: ${inspectionData.status}`);
         return null;
       }
-      
+
       // Check for pending payment request
       const paymentService = getSupplierPaymentService();
       const paymentRequest = await paymentService.getPendingPaymentRequestByInspectionId({ inspectionId });
-      
+
       if (!paymentRequest) {
         console.warn(`[InspectionPaymentValidation] No pending payment request found for inspection: ${inspectionId}`);
         return null;
       }
-      
+
       return {
         id: inspectionData.id,
         projectId: inspectionData.projectId || '',
@@ -133,13 +135,13 @@ const InspectionPaymentValidation: React.FC = () => {
     queryKey: ['project-summary', projectId],
     queryFn: async (): Promise<ProjectWithStakeholders | null> => {
       if (!projectId) return null;
-      
+
       try {
         const projectRepo = RepositoryFactory.getProjectRepository();
         const projectData = await projectRepo.findById(projectId);
-        
+
         if (!projectData) return null;
-        
+
         return {
           id: projectData.id,
           title: projectData.title,
@@ -179,7 +181,7 @@ const InspectionPaymentValidation: React.FC = () => {
         const engineer = project?.stakeholders?.find(
           (s: Stakeholder) => s.stakeholderType === 'consultant' && s.employeeId
         );
-        
+
         if (engineer?.employeeId) {
           const employeeRepo = RepositoryFactory.getEmployeeRepository();
           const employeeData = await employeeRepo.findById(engineer.employeeId);
@@ -196,10 +198,10 @@ const InspectionPaymentValidation: React.FC = () => {
         };
 
         const notificationService = getNotificationService();
-        
+
         await notificationService.createNotification({
           recipientId: beneficiaryUserId,
-          title: 'Validation de paiement',
+          title: t('auto.inspectionpaymentvalidation.validation_de_paiement'),
           message: `Votre demande de paiement (${paymentTypeLabels[data.payment_type]}) a été ${
             data.payment_status === 'approved' ? 'approuvée' : 'rejetée'
           } pour le projet "${project.title}"`,
@@ -212,13 +214,13 @@ const InspectionPaymentValidation: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['inspection', inspectionId] });
       queryClient.invalidateQueries({ queryKey: ['project-detail', projectId] });
       toast({
-        title: 'Inspection mise à jour',
-        description: 'La validation de paiement a été enregistrée avec succès.',
+        title: t('auto.inspectionpaymentvalidation.inspection_mise_a_jour'),
+        description: t('auto.inspectionpaymentvalidation.la_validation_de_paiement_a_ete_enregistree_avec'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Erreur',
+        title: t('auto.inspectionpaymentvalidation.erreur'),
         description: 'Impossible de mettre à jour l\'inspection.',
         variant: 'destructive',
       });
@@ -228,7 +230,7 @@ const InspectionPaymentValidation: React.FC = () => {
   const handleValidatePayment = () => {
     if (!canValidate) {
       toast({
-        title: 'Accès refusé',
+        title: t('auto.inspectionpaymentvalidation.acces_refuse'),
         description: 'Seul le chef de projet ou l\'ingénieur conseil peut valider les paiements.',
         variant: 'destructive',
       });
@@ -237,15 +239,15 @@ const InspectionPaymentValidation: React.FC = () => {
 
     if (paymentStatus !== 'approved' && !rejectionNotes.trim()) {
       toast({
-        title: 'Notes requises',
-        description: 'Veuillez fournir des notes de rejet.',
+        title: t('auto.inspectionpaymentvalidation.notes_requises'),
+        description: t('auto.inspectionpaymentvalidation.veuillez_fournir_des_notes_de_rejet'),
         variant: 'destructive',
       });
       return;
     }
 
     const newStatus = paymentStatus === 'approved' ? 'approved' : 'requires_changes';
-    const comments = paymentStatus === 'approved' 
+    const comments = paymentStatus === 'approved'
       ? `Paiement approuvé - ${inspection?.comments || ''}`
       : `${PAYMENT_STATUS_OPTIONS.find(o => o.value === paymentStatus)?.label}: ${rejectionNotes}`;
 
@@ -259,11 +261,11 @@ const InspectionPaymentValidation: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; className: string }> = {
-      scheduled: { label: 'Planifiée', className: 'bg-primary/10 text-primary' },
-      in_progress: { label: 'En cours', className: 'bg-warning/10 text-warning' },
-      approved: { label: 'Approuvée', className: 'bg-success-soft text-success' },
-      rejected: { label: 'Rejetée', className: 'bg-destructive/10 text-destructive' },
-      requires_changes: { label: 'Modifications requises', className: 'bg-warning/10 text-warning' },
+      scheduled: { label: t('auto.inspectionpaymentvalidation.planifiee'), className: 'bg-primary/10 text-primary' },
+      in_progress: { label: t('auto.inspectionpaymentvalidation.en_cours'), className: 'bg-warning/10 text-warning' },
+      approved: { label: t('auto.inspectionpaymentvalidation.approuvee'), className: 'bg-success-soft text-success' },
+      rejected: { label: t('auto.inspectionpaymentvalidation.rejetee'), className: 'bg-destructive/10 text-destructive' },
+      requires_changes: { label: t('auto.inspectionpaymentvalidation.modifications_requises'), className: 'bg-warning/10 text-warning' },
     };
 
     const config = statusConfig[status] || { label: status, className: 'bg-muted text-foreground' };
@@ -329,9 +331,9 @@ const InspectionPaymentValidation: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => navigate(`/projects/${projectId}?tab=inspections`)}
             className="mb-4"
           >
@@ -452,7 +454,7 @@ const InspectionPaymentValidation: React.FC = () => {
                     id="rejectionNotes"
                     value={rejectionNotes}
                     onChange={(e) => setRejectionNotes(e.target.value)}
-                    placeholder="Veuillez expliquer la raison du rejet..."
+                    placeholder={t('auto.inspectionpaymentvalidation.veuillez_expliquer_la_raison_du_rejet')}
                     rows={4}
                   />
                 </div>

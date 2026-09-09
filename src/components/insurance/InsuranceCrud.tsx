@@ -20,6 +20,7 @@ import { T } from '@/components/i18n/T';
 // ✅ IMPORT entityLabels
 import { getEntityLabel } from '@/utils/entityLabels';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Local form data interface matching component needs (Rule #2: camelCase)
 interface InsuranceFormData {
@@ -62,6 +63,7 @@ interface LocalInsuranceCertificate {
 }
 
 const InsuranceCrud: React.FC = () => {
+  const { t } = useLanguage();
   const [certificates, setCertificates] = useState<LocalInsuranceCertificate[]>([]);
   const [selectedCertificate, setSelectedCertificate] = useState<LocalInsuranceCertificate | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -87,18 +89,18 @@ const InsuranceCrud: React.FC = () => {
   });
 
   const coverageTypes = [
-    { value: 'responsabilite_civile', label: 'Responsabilité civile' },
-    { value: 'decennale', label: 'Assurance décennale' },
-    { value: 'vehicules', label: 'Assurance véhicules' },
-    { value: 'materiel', label: 'Assurance matériel' },
-    { value: 'tous_risques', label: 'Tous risques chantier' }
+    { value: 'responsabilite_civile', label: t('auto.insurancecrud.responsabilite_civile') },
+    { value: 'decennale', label: t('auto.insurancecrud.assurance_decennale') },
+    { value: 'vehicules', label: t('auto.insurancecrud.assurance_vehicules') },
+    { value: 'materiel', label: t('auto.insurancecrud.assurance_materiel') },
+    { value: 'tous_risques', label: t('auto.insurancecrud.tous_risques_chantier') }
   ];
 
   const statusOptions = [
-    { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
-    { value: 'expired', label: 'Expirée', color: 'bg-destructive/10 text-destructive' },
-    { value: 'expiring_soon', label: 'Expire bientôt', color: 'bg-warning/10 text-warning' },
-    { value: 'missing', label: 'Manquante', color: 'bg-muted text-foreground' }
+    { value: 'active', label: t('auto.insurancecrud.active'), color: 'bg-success-soft text-success' },
+    { value: 'expired', label: t('auto.insurancecrud.expiree'), color: 'bg-destructive/10 text-destructive' },
+    { value: 'expiring_soon', label: t('auto.insurancecrud.expire_bientot'), color: 'bg-warning/10 text-warning' },
+    { value: 'missing', label: t('auto.insurancecrud.manquante'), color: 'bg-muted text-foreground' }
   ];
 
   const resetForm = () => {
@@ -165,10 +167,10 @@ const InsuranceCrud: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const insuranceService = getInsuranceService();
-      
+
       if (isEditing && selectedCertificate) {
         await insuranceService.updateInsuranceCertificate(selectedCertificate.id, {
           status: formData.status as any,
@@ -188,10 +190,10 @@ const InsuranceCrud: React.FC = () => {
           notes: formData.notes
         });
       }
-      
+
       setIsFormOpen(false);
       resetForm();
-      
+
       toast({
         title: isEditing ? "Certificat d'assurance mis à jour" : "Certificat d'assurance créé avec succès",
         description: `Le certificat d'assurance a été ${isEditing ? 'mis à jour' : 'créé'} avec succès`,
@@ -209,11 +211,11 @@ const InsuranceCrud: React.FC = () => {
   const handleDelete = async (certificateId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce certificat d\'assurance ?')) {
       setCertificates(prev => prev.filter(c => c.id !== certificateId));
-      
+
       try {
         const insuranceService = getInsuranceService();
         await insuranceService.deleteInsuranceCertificate(certificateId);
-        
+
         toast({
           title: "Succès",
           description: "Certificat d'assurance supprimé avec succès",
@@ -246,8 +248,8 @@ const InsuranceCrud: React.FC = () => {
   };
 
   const handleSupplierChange = (supplier: { id?: string; name: string; contact: string; leadTime: number }) => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       contractorId: supplier.id || '',
       contractorName: supplier.name || ''
     }));
@@ -270,20 +272,20 @@ const InsuranceCrud: React.FC = () => {
                 {isViewMode ? 'Détails du Certificat' : isEditing ? 'Modifier le Certificat' : 'Nouveau Certificat d\'Assurance'}
               </DialogTitle>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProjectSelector
                   value={formData.projectId}
                   onChange={handleProjectChange}
-                  label="Projet"
+                  label={t('auto.insurancecrud.projet')}
                   required
                   disabled={isViewMode}
                 />
-                
+
                 <div>
                   <SupplierSelector
-                    value={{ 
+                    value={{
                       id: formData.contractorId,
                       name: formData.contractorName,
                       contact: '',
@@ -304,10 +306,10 @@ const InsuranceCrud: React.FC = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, insuranceCompany: e.target.value }))}
                     required
                     disabled={isViewMode}
-                    placeholder="Nom de la compagnie"
+                    placeholder={t('auto.insurancecrud.nom_de_la_compagnie')}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="policyNumber">Numéro de police *</Label>
                   <Input
@@ -316,7 +318,7 @@ const InsuranceCrud: React.FC = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, policyNumber: e.target.value }))}
                     required
                     disabled={isViewMode}
-                    placeholder="Numéro de police d'assurance"
+                    placeholder={t('auto.insurancecrud.numero_de_police_d_assurance')}
                   />
                 </div>
               </div>
@@ -324,8 +326,8 @@ const InsuranceCrud: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="coverageType">Type de couverture *</Label>
-                  <Select 
-                    value={formData.coverageType} 
+                  <Select
+                    value={formData.coverageType}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, coverageType: value }))}
                     disabled={isViewMode}
                   >
@@ -341,7 +343,7 @@ const InsuranceCrud: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="coverageAmount">Montant couvert (MRU) *</Label>
                   <Input
@@ -355,11 +357,11 @@ const InsuranceCrud: React.FC = () => {
                     disabled={isViewMode}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="status"><T k="auto.insurancecrud.statut" fallback="Statut" /></Label>
-                  <Select 
-                    value={formData.status} 
+                  <Select
+                    value={formData.status}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                     disabled={isViewMode}
                   >
@@ -389,7 +391,7 @@ const InsuranceCrud: React.FC = () => {
                     disabled={isViewMode}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="endDate">Date d'expiration *</Label>
                   <Input
@@ -411,7 +413,7 @@ const InsuranceCrud: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   rows={3}
                   disabled={isViewMode}
-                  placeholder="Notes et commentaires..."
+                  placeholder={t('auto.insurancecrud.notes_et_commentaires')}
                 />
               </div>
 
@@ -451,10 +453,10 @@ const InsuranceCrud: React.FC = () => {
             <TableBody>
               {certificates.map((certificate) => {
                 // ✅ RÉSOLUTION DU LABEL DU PROJET
-                const projectLabel = certificate.projectId 
+                const projectLabel = certificate.projectId
                   ? getEntityLabel(certificate.projectId, projects, 'project')
                   : '—';
-                
+
                 return (
                   <TableRow key={certificate.id}>
                     <TableCell className="font-medium">

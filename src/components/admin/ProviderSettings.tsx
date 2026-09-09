@@ -11,8 +11,10 @@ import { useAppConfig } from '@/hooks/useAppConfig';
 import { AlertTriangle, Check, Cloud, Database, HardDrive, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const ProviderSettings = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { config: envConfig, isValid } = useAppConfig();
   const [config, setConfig] = useState(getAppConfig());
@@ -22,57 +24,57 @@ const ProviderSettings = () => {
     database: 'unknown',
     storage: 'unknown'
   });
-  
+
   const authManager = getAuthManager();
 
   const scenarioPresets = [
     {
       id: 'supabase-cloud',
-      label: 'Mode A · Supabase Cloud',
+      label: t('auto.providersettings.mode_a_supabase_cloud'),
       auth: 'supabase',
       data: 'supabase',
       storage: 'supabase',
-      description: 'Managed Supabase SaaS (full)',
+      description: t('auto.providersettings.managed_supabase_saas_full'),
     },
     {
       id: 'supabase-self-hosted',
-      label: 'Mode A · Self-Hosted (SDK)',
+      label: t('auto.providersettings.mode_a_self_hosted_sdk'),
       auth: 'supabase',
       data: 'supabase',
       storage: 'supabase',
-      description: 'Stack Supabase self-hostée (Kong + GoTrue + PostgREST)',
+      description: t('auto.providersettings.stack_supabase_self_hostee_kong_gotrue_postgrest'),
     },
     {
       id: 'local-selfhosted-data',
-      label: 'Mode B · Local Users + Self-Hosted Data',
+      label: t('auto.providersettings.mode_b_local_users_self_hosted_data'),
       auth: 'local',
       data: 'supabase',
       storage: 'supabase',
-      description: 'DEV_USERS locaux + JWT HS256 accepté par la RLS self-hostée',
+      description: t('auto.providersettings.dev_users_locaux_jwt_hs256_accepte_par_la_rls_se'),
     },
     {
       id: 'postgrest-oss',
-      label: 'OSS Légère (GoTrue + PostgREST)',
+      label: t('auto.providersettings.oss_legere_gotrue_postgrest'),
       auth: 'gotrue',
       data: 'postgrest',
       storage: 's3',
-      description: 'GoTrue + PostgREST + MinIO',
+      description: t('auto.providersettings.gotrue_postgrest_minio'),
     },
     {
       id: 'sso-enterprise',
-      label: 'SSO Entreprise (Keycloak)',
+      label: t('auto.providersettings.sso_entreprise_keycloak'),
       auth: 'keycloak',
       data: 'postgrest',
       storage: 's3',
-      description: 'Keycloak + PostgREST + MinIO',
+      description: t('auto.providersettings.keycloak_postgrest_minio'),
     },
     {
       id: 'local-dev',
-      label: 'Mode C · Local Dev (offline)',
+      label: t('auto.providersettings.mode_c_local_dev_offline'),
       auth: 'local',
       data: 'local',
       storage: 'local',
-      description: 'Tout local, aucun réseau',
+      description: t('auto.providersettings.tout_local_aucun_reseau'),
     },
   ];
 
@@ -87,46 +89,46 @@ const ProviderSettings = () => {
   };
 
   const authProviders: { value: AuthProvider; label: string; description: string }[] = [
-    { value: 'supabase', label: 'Supabase Auth', description: 'Managed authentication with social providers' },
-    { value: 'keycloak', label: 'Keycloak', description: 'Enterprise SSO and identity management' },
-    { value: 'auth0', label: 'Auth0', description: 'Universal authentication & authorization platform' },
-    { value: 'custom', label: 'Custom', description: 'Custom authentication implementation' }
+    { value: 'supabase', label: t('auto.providersettings.supabase_auth'), description: t('auto.providersettings.managed_authentication_with_social_providers') },
+    { value: 'keycloak', label: t('auto.providersettings.keycloak'), description: t('auto.providersettings.enterprise_sso_and_identity_management') },
+    { value: 'auth0', label: t('auto.providersettings.auth0'), description: t('auto.providersettings.universal_authentication_authorization_platform') },
+    { value: 'custom', label: t('auto.providersettings.custom'), description: t('auto.providersettings.custom_authentication_implementation') }
   ];
 
   const databaseProviders: { value: DatabaseProvider; label: string; description: string }[] = [
-    { value: 'supabase', label: 'Supabase', description: 'Managed PostgreSQL with real-time features' },
-    { value: 'postgresql', label: 'PostgreSQL', description: 'Direct PostgreSQL connection' },
-    { value: 'mysql', label: 'MySQL', description: 'MySQL database connection' }
+    { value: 'supabase', label: t('auto.providersettings.supabase'), description: t('auto.providersettings.managed_postgresql_with_real_time_features') },
+    { value: 'postgresql', label: t('auto.providersettings.postgresql'), description: t('auto.providersettings.direct_postgresql_connection') },
+    { value: 'mysql', label: t('auto.providersettings.mysql'), description: t('auto.providersettings.mysql_database_connection') }
   ];
 
   const storageProviders: { value: StorageProvider; label: string; description: string }[] = [
-    { value: 'supabase', label: 'Supabase Storage', description: 'Managed object storage with CDN' },
-    { value: 'minio', label: 'MinIO', description: 'Self-hosted S3-compatible storage' },
-    { value: 's3', label: 'Amazon S3', description: 'AWS Simple Storage Service' },
-    { value: 'azure', label: 'Azure Blob', description: 'Microsoft Azure Blob Storage' },
-    { value: 'gcs', label: 'Google Cloud', description: 'Google Cloud Storage' },
-    { value: 'ftp', label: 'FTP/SFTP', description: 'File Transfer Protocol storage' },
-    { value: 'local', label: 'Local Storage', description: 'Local file system storage' }
+    { value: 'supabase', label: t('auto.providersettings.supabase_storage'), description: t('auto.providersettings.managed_object_storage_with_cdn') },
+    { value: 'minio', label: t('auto.providersettings.minio'), description: t('auto.providersettings.self_hosted_s3_compatible_storage') },
+    { value: 's3', label: t('auto.providersettings.amazon_s3'), description: t('auto.providersettings.aws_simple_storage_service') },
+    { value: 'azure', label: t('auto.providersettings.azure_blob'), description: t('auto.providersettings.microsoft_azure_blob_storage') },
+    { value: 'gcs', label: t('auto.providersettings.google_cloud'), description: t('auto.providersettings.google_cloud_storage') },
+    { value: 'ftp', label: t('auto.providersettings.ftp_sftp'), description: t('auto.providersettings.file_transfer_protocol_storage') },
+    { value: 'local', label: t('auto.providersettings.local_storage'), description: t('auto.providersettings.local_file_system_storage') }
   ];
 
   const testConnection = async (provider: string, type: 'auth' | 'database' | 'storage') => {
     setConnectionStatus(prev => ({ ...prev, [type]: 'testing' }));
-    
+
     try {
       if (type === 'auth') {
         // Test auth provider by trying to get current session
         const result = await authManager.getCurrentSession();
-        setConnectionStatus(prev => ({ 
-          ...prev, 
-          [type]: result.error ? 'failed' : 'connected' 
+        setConnectionStatus(prev => ({
+          ...prev,
+          [type]: result.error ? 'failed' : 'connected'
         }));
       } else {
         // For database and storage, simulate for now
         setTimeout(() => {
           const isConnected = Math.random() > 0.3; // 70% success rate for demo
-          setConnectionStatus(prev => ({ 
-            ...prev, 
-            [type]: isConnected ? 'connected' : 'failed' 
+          setConnectionStatus(prev => ({
+            ...prev,
+            [type]: isConnected ? 'connected' : 'failed'
           }));
         }, 2000);
       }
@@ -171,7 +173,7 @@ const ProviderSettings = () => {
     // Switch to new auth provider
     authManager.switchProvider(authConfig).then(() => {
       setIsModified(false);
-      
+
       toast({
         title: "Configuration Saved",
         description: "Provider settings have been updated successfully.",
@@ -190,7 +192,7 @@ const ProviderSettings = () => {
     const defaultConfig = getAppConfig();
     setConfig(defaultConfig);
     setIsModified(false);
-    
+
     toast({
       title: "Reset to Defaults",
       description: "Configuration has been reset to default values.",
@@ -306,12 +308,12 @@ const ProviderSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="auth-provider"><T k="auto.providersettings.provider" fallback="Provider" /></Label>
-              <Select 
-                value={config.auth.provider} 
+              <Select
+                value={config.auth.provider}
                 onValueChange={(value) => handleProviderChange('auth', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select auth provider" />
+                  <SelectValue placeholder={t('auto.providersettings.select_auth_provider')} />
                 </SelectTrigger>
                 <SelectContent>
                   {authProviders.map((provider) => (
@@ -325,7 +327,7 @@ const ProviderSettings = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="auth-url">URL/Endpoint</Label>
               <Input
@@ -360,8 +362,8 @@ const ProviderSettings = () => {
             </div>
           )}
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => testConnection(config.auth.provider, 'auth')}
             disabled={connectionStatus.auth === 'testing'}
           >
@@ -391,12 +393,12 @@ const ProviderSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="db-provider"><T k="auto.providersettings.provider" fallback="Provider" /></Label>
-              <Select 
-                value={config.database.provider} 
+              <Select
+                value={config.database.provider}
                 onValueChange={(value) => handleProviderChange('database', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select database provider" />
+                  <SelectValue placeholder={t('auto.providersettings.select_database_provider')} />
                 </SelectTrigger>
                 <SelectContent>
                   {databaseProviders.map((provider) => (
@@ -410,7 +412,7 @@ const ProviderSettings = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="db-url"><T k="auto.providersettings.connection_url" fallback="Connection URL" /></Label>
               <Input
@@ -423,8 +425,8 @@ const ProviderSettings = () => {
             </div>
           </div>
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => testConnection(config.database.provider, 'database')}
             disabled={connectionStatus.database === 'testing'}
           >
@@ -454,12 +456,12 @@ const ProviderSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="storage-provider"><T k="auto.providersettings.provider" fallback="Provider" /></Label>
-              <Select 
-                value={config.storage.provider} 
+              <Select
+                value={config.storage.provider}
                 onValueChange={(value) => handleProviderChange('storage', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select storage provider" />
+                  <SelectValue placeholder={t('auto.providersettings.select_storage_provider')} />
                 </SelectTrigger>
                 <SelectContent>
                   {storageProviders.map((provider) => (
@@ -473,7 +475,7 @@ const ProviderSettings = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="storage-endpoint"><T k="auto.providersettings.endpoint" fallback="Endpoint" /></Label>
               <Input
@@ -495,7 +497,7 @@ const ProviderSettings = () => {
                 placeholder="your-bucket-name"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="storage-region"><T k="auto.providersettings.region" fallback="Region" /></Label>
               <Input
@@ -507,8 +509,8 @@ const ProviderSettings = () => {
             </div>
           </div>
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => testConnection(config.storage.provider, 'storage')}
             disabled={connectionStatus.storage === 'testing'}
           >
@@ -524,8 +526,8 @@ const ProviderSettings = () => {
             <Button variant="outline" onClick={resetToDefaults}>
               <T k="auto.providersettings.reset_to_defaults" fallback="Reset to Defaults" />
             </Button>
-            
-            <Button 
+
+            <Button
               onClick={saveConfiguration}
               disabled={!isModified}
               className="bg-primary hover:bg-primary/90"

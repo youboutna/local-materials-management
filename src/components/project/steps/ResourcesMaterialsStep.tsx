@@ -6,6 +6,7 @@ import MaterialFormSection from '@/components/MaterialFormSection';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import { ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Extended form data interface for resource step with snake_case fields
 interface ResourcesFormData extends Partial<ProjectDTO> {
@@ -31,6 +32,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
   currentPhaseId,
   currentStepId
 }) => {
+  const { t } = useLanguage();
   return (
     <Card>
       <CardHeader>
@@ -51,7 +53,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
               <T k="auto.resourcesmaterialsstep.documents_associes" fallback="Documents Associés" />
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="materials" className="space-y-6">
             {/* Sélection des matériaux */}
             <div>
@@ -74,9 +76,9 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                 </p>
                 <div className="space-y-2">
                   <label className="flex items-center">
-                    <input 
-                      type="radio" 
-                      name="material_assignment" 
+                    <input
+                      type="radio"
+                      name="material_assignment"
                       value="phase"
                       className="mr-2"
                       defaultChecked
@@ -84,18 +86,18 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
                     <T k="auto.resourcesmaterialsstep.rattacher_aux_phases_du_projet" fallback="Rattacher aux phases du projet" />
                   </label>
                   <label className="flex items-center">
-                    <input 
-                      type="radio" 
-                      name="material_assignment" 
+                    <input
+                      type="radio"
+                      name="material_assignment"
                       value="task"
                       className="mr-2"
                     />
                     <T k="auto.resourcesmaterialsstep.rattacher_aux_taches_specifiques" fallback="Rattacher aux tâches spécifiques" />
                   </label>
                   <label className="flex items-center">
-                    <input 
-                      type="radio" 
-                      name="material_assignment" 
+                    <input
+                      type="radio"
+                      name="material_assignment"
                       value="general"
                       className="mr-2"
                     />
@@ -112,20 +114,20 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2"><T k="auto.resourcesmaterialsstep.budget_materiaux_estime" fallback="Budget matériaux estimé" /></label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Montant en MRU"
+                  placeholder={t('auto.resourcesmaterialsstep.montant_en_mru')}
                   value={projectData?.budget || 0}
                   onChange={(e) => onUpdate?.({ budget: parseFloat(e.target.value) })}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2"><T k="auto.resourcesmaterialsstep.delai_d_approvisionnement_jours" fallback="Délai d'approvisionnement (jours)" /></label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Nombre de jours"
+                  placeholder={t('auto.resourcesmaterialsstep.nombre_de_jours')}
                   value={String(projectData?.team_size || projectData?.teamSize || 0)}
                   onChange={(e) => onUpdate?.({ team_size: parseInt(e.target.value), teamSize: parseInt(e.target.value) })}
                 />
@@ -148,7 +150,7 @@ const ResourcesMaterialsStep: React.FC<ResourcesMaterialsStepProps> = ({
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="documents" className="space-y-4">
             <ProjectDocumentUpload
               projectId={projectData?.id || 'new-project'}

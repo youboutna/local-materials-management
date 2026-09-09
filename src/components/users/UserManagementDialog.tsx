@@ -88,7 +88,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
         };
 
         const result = await createUserMutation.mutateAsync(userData as any);
-        
+
         // Assign role if needed
         if (selectedRole && selectedRole !== 'viewer') {
           await assignRole.mutateAsync({ userId: result.id, roleName: selectedRole });
@@ -151,7 +151,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 
   const handleRoleAssign = async (role: RoleType) => {
     if (!user?.id) return;
-    
+
     try {
       await assignRole.mutateAsync({
         userId: user.id,
@@ -174,7 +174,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 
   const handleRoleRemove = async (role: string) => {
     if (!user?.id) return;
-    
+
     try {
       await removeRole.mutateAsync({
         userId: user.id,
@@ -203,7 +203,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
             {mode === 'create' ? t('users.new') || 'Nouvel utilisateur' : t('users.details_title') || 'Détails de l\'utilisateur'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div>
             <Label htmlFor="full_name">{t('auth.full_name') || 'Nom complet'} *</Label>
@@ -214,7 +214,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               required
             />
           </div>
-          
+
           <div>
             <Label htmlFor="phone">{t('auth.phone') || 'Téléphone'}</Label>
             <Input
@@ -224,7 +224,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               placeholder="+222 XX XX XX XX"
             />
           </div>
-          
+
           <div>
             <Label htmlFor="national_id">{t('auth.national_id') || 'ID National'}</Label>
             <Input
@@ -300,7 +300,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                     type="password"
                     value={formData.new_password}
                     onChange={(e) => setFormData(prev => ({ ...prev, new_password: e.target.value }))}
-                    placeholder="Laisser vide pour conserver le mot de passe actuel"
+                    placeholder={t('auto.usermanagementdialog.laisser_vide_pour_conserver_le_mot_de_passe_actu')}
                     minLength={6}
                     disabled // Disable password editing for now
                   />
@@ -323,7 +323,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                             size="sm"
                             onClick={() => handleRoleRemove(role)}
                             className="h-6 w-6 p-0 hover:bg-destructive/10"
-                            title="Supprimer"
+                            title={t('auto.usermanagementdialog.supprimer')}
                           >
                             ×
                           </Button>
@@ -334,7 +334,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                     )}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>{t('users.table.role') || 'Ajouter un rôle'}</Label>
                   <Select onValueChange={(value) => handleRoleAssign(value as RoleType)}>
@@ -377,7 +377,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
               {formData.is_active ? t('users.active') || 'Actif' : t('users.inactive') || 'Inactif'}
             </span>
           </div>
-          
+
           {/* Admin Password Reset Section */}
           {mode === 'edit' && (
             <div className="space-y-4 pt-4 border-t">
@@ -389,7 +389,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                   type="password"
                   value={formData.new_password || ''}
                   onChange={(e) => setFormData(prev => ({...prev, new_password: e.target.value}))}
-                  placeholder="Laisser vide pour ne pas changer"
+                  placeholder={t('auto.usermanagementdialog.laisser_vide_pour_ne_pas_changer')}
                 />
               </div>
               <div className="space-y-2">
@@ -399,7 +399,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
                   type="password"
                   value={formData.confirmPassword || ''}
                   onChange={(e) => setFormData(prev => ({...prev, confirmPassword: e.target.value}))}
-                  placeholder="Confirmer le nouveau mot de passe"
+                  placeholder={t('auto.usermanagementdialog.confirmer_le_nouveau_mot_de_passe')}
                 />
               </div>
             </div>
@@ -410,8 +410,8 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
           <Button variant="outline" onClick={onClose}>
             {t('users.cancel') || 'Annuler'}
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={loading || (mode === 'create' && (!formData.email || !formData.password || !formData.full_name))}
             className="min-w-[120px]"
           >

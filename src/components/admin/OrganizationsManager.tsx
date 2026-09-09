@@ -11,6 +11,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { Building2, Check, Pencil, Plus, Star, Trash2, X } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const NONE = '__none__';
 
@@ -38,6 +39,7 @@ const ORG_TYPES = [
 ];
 
 const OrganizationsManager: React.FC = () => {
+  const { t } = useLanguage();
   const { data, isLoading, create, update, remove, setDefault, isMutating } = useOrganizations();
   const { toast } = useToast();
   const [form, setForm] = useState<CreateOrganizationDTO>(emptyForm);
@@ -69,21 +71,21 @@ const OrganizationsManager: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.name?.trim()) {
-      toast({ title: 'Nom requis', description: 'Renseignez le nom de l’organisation', variant: 'destructive' });
+      toast({ title: t('auto.organizationsmanager.nom_requis'), description: t('auto.organizationsmanager.renseignez_le_nom_de_l_organisation'), variant: 'destructive' });
       return;
     }
     try {
       if (editingId) {
         await update({ id: editingId, data: form });
-        toast({ title: 'Organisation mise à jour', description: form.name });
+        toast({ title: t('auto.organizationsmanager.organisation_mise_a_jour'), description: form.name });
       } else {
         await create(form);
-        toast({ title: 'Organisation créée', description: form.name });
+        toast({ title: t('auto.organizationsmanager.organisation_creee'), description: form.name });
       }
       resetForm();
     } catch (error) {
       toast({
-        title: 'Erreur',
+        title: t('auto.organizationsmanager.erreur'),
         description: error instanceof Error ? error.message : 'Enregistrement impossible',
         variant: 'destructive',
       });
@@ -112,10 +114,10 @@ const OrganizationsManager: React.FC = () => {
     try {
       await remove(organization.id);
       if (editingId === organization.id) resetForm();
-      toast({ title: 'Organisation supprimée', description: organization.name });
+      toast({ title: t('auto.organizationsmanager.organisation_supprimee'), description: organization.name });
     } catch (error) {
       toast({
-        title: 'Erreur',
+        title: t('auto.organizationsmanager.erreur'),
         description: error instanceof Error ? error.message : 'Suppression impossible',
         variant: 'destructive',
       });
@@ -126,12 +128,12 @@ const OrganizationsManager: React.FC = () => {
     try {
       await setDefault(organization.id);
       toast({
-        title: 'Organisation par défaut',
+        title: t('auto.organizationsmanager.organisation_par_defaut'),
         description: `${organization.name} sera propriétaire des nouveaux projets`,
       });
     } catch (error) {
       toast({
-        title: 'Erreur',
+        title: t('auto.organizationsmanager.erreur'),
         description: error instanceof Error ? error.message : 'Mise à jour impossible',
         variant: 'destructive',
       });
@@ -160,17 +162,17 @@ const OrganizationsManager: React.FC = () => {
                   id="org-name"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex : SOMELEC"
+                  placeholder={t('auto.organizationsmanager.ex_somelec')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="org-nif">NIF</Label>
+                <Label htmlFor="org-nif"><T k="auto.organizationsmanager.nif" fallback="NIF" /></Label>
                 <Input
                   id="org-nif"
                   value={form.nif ?? ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, nif: e.target.value }))}
-                  placeholder="NIF de l'organisation"
+                  placeholder={t('auto.organizationsmanager.nif_de_l_organisation')}
                 />
               </div>
               <div className="space-y-2">
@@ -179,7 +181,7 @@ const OrganizationsManager: React.FC = () => {
                   id="org-code"
                   value={form.code ?? ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, code: e.target.value }))}
-                  placeholder="Ex : SOMELEC_DG"
+                  placeholder={t('auto.organizationsmanager.ex_somelec_dg')}
                 />
               </div>
             </div>
@@ -192,7 +194,7 @@ const OrganizationsManager: React.FC = () => {
                   onValueChange={(value) => setForm((prev) => ({ ...prev, orgType: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Type d’organisation" />
+                    <SelectValue placeholder={t('auto.organizationsmanager.type_d_organisation')} />
                   </SelectTrigger>
                   <SelectContent>
                     {ORG_TYPES.map((type) => (
@@ -212,7 +214,7 @@ const OrganizationsManager: React.FC = () => {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Aucune (racine)" />
+                    <SelectValue placeholder={t('auto.organizationsmanager.aucune_racine')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NONE}><T k="auto.organizationsmanager.aucune_racine" fallback="Aucune (racine)" /></SelectItem>
@@ -345,20 +347,20 @@ const OrganizationsManager: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Définir par défaut"
+                        title={t('auto.organizationsmanager.definir_par_defaut')}
                         disabled={isMutating}
                         onClick={() => handleSetDefault(organization)}
                       >
                         <Star className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" title="Modifier" onClick={() => handleEdit(organization)}>
+                    <Button variant="ghost" size="icon" title={t('auto.organizationsmanager.modifier')} onClick={() => handleEdit(organization)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Supprimer"
+                      title={t('auto.organizationsmanager.supprimer')}
                       disabled={isMutating}
                       onClick={() => handleDelete(organization)}
                     >

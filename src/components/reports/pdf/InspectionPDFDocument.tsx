@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable, PDFMetricCard } from './PDFDocument';
 import { InspectionMetrics } from '@/application/services/InspectionReportingService';
 import { formatPercent2 } from '@/utils/reportNumbers';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InspectionPDFDocumentProps {
   inspection: any;
@@ -28,6 +29,7 @@ export function InspectionPDFDocument({
   recommendations,
   photos
 }: InspectionPDFDocumentProps) {
+  const { t } = useLanguage();
   const getStatusText = (status: string) => {
     const statusMap: { [key: string]: string } = {
       'passed': 'Réussie',
@@ -73,18 +75,18 @@ export function InspectionPDFDocument({
       subtitle={`Inspection ${inspection.id} - ${format(new Date(), 'dd MMMM yyyy', { locale: fr })}`}
     >
       {/* Inspection Overview */}
-      <PDFSection title="Détails de l'Inspection" borderColor="#dc2626">
+      <PDFSection title={t('auto.inspectionpdfdocument.details_de_l_inspection')} borderColor="#dc2626">
         <PDFCard>
           <PDFRow>
             <PDFCol>
-              <PDFText label="ID Inspection" value={inspection.id} />
-              <PDFText label="Type" value={inspection.inspection_type || 'Non spécifié'} />
-              <PDFText label="Date" value={inspection.inspection_date ? format(new Date(inspection.inspection_date), 'dd/MM/yyyy') : 'Non défini'} />
+              <PDFText label={t('auto.inspectionpdfdocument.id_inspection')} value={inspection.id} />
+              <PDFText label={t('auto.inspectionpdfdocument.type')} value={inspection.inspection_type || 'Non spécifié'} />
+              <PDFText label={t('auto.inspectionpdfdocument.date')} value={inspection.inspection_date ? format(new Date(inspection.inspection_date), 'dd/MM/yyyy') : 'Non défini'} />
             </PDFCol>
             <PDFCol>
-              <PDFText label="Statut" value={getStatusText(inspection.status)} />
-              <PDFText label="Progression" value={`${inspection.progress_at_inspection || 0}%`} />
-              <PDFText label="Inspecteur" value={inspection.inspector_name || 'Non assigné'} />
+              <PDFText label={t('auto.inspectionpdfdocument.statut')} value={getStatusText(inspection.status)} />
+              <PDFText label={t('auto.inspectionpdfdocument.progression')} value={`${inspection.progress_at_inspection || 0}%`} />
+              <PDFText label={t('auto.inspectionpdfdocument.inspecteur')} value={inspection.inspector_name || 'Non assigné'} />
             </PDFCol>
           </PDFRow>
         </PDFCard>
@@ -92,25 +94,25 @@ export function InspectionPDFDocument({
 
       {/* Metrics Overview */}
       {reportConfig.includeMetrics && metrics && (
-        <PDFSection title="Métriques de Performance" borderColor="#3b82f6">
+        <PDFSection title={t('auto.inspectionpdfdocument.metriques_de_performance')} borderColor="#3b82f6">
           <PDFRow>
             <PDFMetricCard
-              title="Total Inspections"
+              title={t('auto.inspectionpdfdocument.total_inspections')}
               value={metrics.totalInspections.toString()}
               color="#3b82f6"
             />
             <PDFMetricCard
-              title="Inspections Réussies"
+              title={t('auto.inspectionpdfdocument.inspections_reussies')}
               value={metrics.passedInspections.toString()}
               color="#10b981"
             />
             <PDFMetricCard
-              title="Taux de Conformité"
+              title={t('auto.inspectionpdfdocument.taux_de_conformite')}
               value={formatPercent2(metrics.complianceRate)}
               color="#059669"
             />
             <PDFMetricCard
-              title="Score Moyen"
+              title={t('auto.inspectionpdfdocument.score_moyen')}
               value={formatPercent2(metrics.averageScore)}
               color="#8b5cf6"
             />
@@ -120,15 +122,15 @@ export function InspectionPDFDocument({
 
       {/* Quality Score */}
       {reportConfig.includeQualityScore && (
-        <PDFSection title="Score de Qualité" borderColor="#10b981">
+        <PDFSection title={t('auto.inspectionpdfdocument.score_de_qualite')} borderColor="#10b981">
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Score" value={`${qualityScore.score}%`} />
-                <PDFText label="Évaluation" value={qualityScore.grade} />
+                <PDFText label={t('auto.inspectionpdfdocument.score')} value={`${qualityScore.score}%`} />
+                <PDFText label={t('auto.inspectionpdfdocument.evaluation')} value={qualityScore.grade} />
               </PDFCol>
               <PDFCol>
-                <PDFText label="Interprétation" value={qualityScore.interpretation} />
+                <PDFText label={t('auto.inspectionpdfdocument.interpretation')} value={qualityScore.interpretation} />
               </PDFCol>
             </PDFRow>
           </PDFCard>
@@ -136,22 +138,22 @@ export function InspectionPDFDocument({
       )}
 
       {/* Inspection Results */}
-      <PDFSection title="Résultats de l'Inspection" borderColor="#059669">
+      <PDFSection title={t('auto.inspectionpdfdocument.resultats_de_l_inspection')} borderColor="#059669">
         <PDFCard>
           <PDFRow>
             <PDFCol>
-              <PDFText label="Statut final" value={getStatusText(inspection.status)} />
-              <PDFText label="Progression" value={`${inspection.progress_at_inspection || 0}%`} />
+              <PDFText label={t('auto.inspectionpdfdocument.statut_final')} value={getStatusText(inspection.status)} />
+              <PDFText label={t('auto.inspectionpdfdocument.progression')} value={`${inspection.progress_at_inspection || 0}%`} />
             </PDFCol>
             <PDFCol>
-              <PDFText label="Date d'inspection" value={inspection.inspection_date ? format(new Date(inspection.inspection_date), 'dd/MM/yyyy HH:mm') : 'Non défini'} />
+              <PDFText label={t('auto.inspectionpdfdocument.date_d_inspection')} value={inspection.inspection_date ? format(new Date(inspection.inspection_date), 'dd/MM/yyyy HH:mm') : 'Non défini'} />
             </PDFCol>
           </PDFRow>
-          
+
           {inspection.comments && (
             <PDFRow>
               <PDFCol>
-                <PDFText label="Commentaires de l'inspecteur" value={inspection.comments} />
+                <PDFText label={t('auto.inspectionpdfdocument.commentaires_de_l_inspecteur')} value={inspection.comments} />
               </PDFCol>
             </PDFRow>
           )}
@@ -160,7 +162,7 @@ export function InspectionPDFDocument({
 
       {/* Recommendations */}
       {reportConfig.includeRecommendations && recommendations && recommendations.length > 0 && (
-        <PDFSection title="Recommandations" borderColor="#f59e0b">
+        <PDFSection title={t('auto.inspectionpdfdocument.recommandations')} borderColor="#f59e0b">
           <PDFCard>
             {recommendations.map((rec, index) => (
               <PDFText key={index} label={`${index + 1}.`} value={rec} />
@@ -171,7 +173,7 @@ export function InspectionPDFDocument({
 
       {/* Photos and Documents */}
       {reportConfig.includePhotos && photos && photos.length > 0 && (
-        <PDFSection title="Photos et Documents" borderColor="#8b5cf6">
+        <PDFSection title={t('auto.inspectionpdfdocument.photos_et_documents')} borderColor="#8b5cf6">
           <PDFTable
             headers={['Document', 'Type', 'Date', 'Taille']}
             data={photos.map(photo => [
@@ -187,7 +189,7 @@ export function InspectionPDFDocument({
 
       {/* Additional Notes */}
       {reportConfig.notes && (
-        <PDFSection title="Notes Additionnelles" borderColor="#6366f1">
+        <PDFSection title={t('auto.inspectionpdfdocument.notes_additionnelles')} borderColor="#6366f1">
           <PDFCard>
             <PDFText label="" value={reportConfig.notes} />
           </PDFCard>

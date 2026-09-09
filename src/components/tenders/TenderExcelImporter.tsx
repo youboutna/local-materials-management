@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ interface ProcessedTender {
 }
 
 const TenderExcelImporter: React.FC = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { getUser } = useAuth();
   const { insertTender } = useTenderImport();
@@ -68,7 +70,7 @@ const TenderExcelImporter: React.FC = () => {
 
   const parseDate = (dateStr: string): string | null => {
     if (!dateStr || dateStr.trim() === '') return null;
-    
+
     try {
       // Handle DD/MM/YYYY format
       const parts = dateStr.toString().split('/');
@@ -79,7 +81,7 @@ const TenderExcelImporter: React.FC = () => {
           return parsedDate.toISOString().split('T')[0];
         }
       }
-      
+
       // Try parsing as Excel serial date
       const excelDate = parseFloat(dateStr.toString());
       if (!isNaN(excelDate) && excelDate > 1) {
@@ -88,7 +90,7 @@ const TenderExcelImporter: React.FC = () => {
           return jsDate.toISOString().split('T')[0];
         }
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error parsing date:', dateStr, error);
@@ -102,15 +104,15 @@ const TenderExcelImporter: React.FC = () => {
 
     if (!selectedFile.name.match(/\.(xlsx|xls)$/)) {
       toast({
-        title: 'Format non supporté',
-        description: 'Veuillez sélectionner un fichier Excel (.xlsx ou .xls)',
+        title: t('auto.tenderexcelimporter.format_non_supporte'),
+        description: t('auto.tenderexcelimporter.veuillez_selectionner_un_fichier_excel_xlsx_ou_x'),
         variant: 'destructive',
       });
       return;
     }
 
     setFile(selectedFile);
-    
+
     try {
       const arrayBuffer = await selectedFile.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer);
@@ -141,16 +143,16 @@ const TenderExcelImporter: React.FC = () => {
 
       setPreview(importedData);
       setShowPreview(true);
-      
+
       toast({
-        title: 'Fichier analysé',
+        title: t('auto.tenderexcelimporter.fichier_analyse'),
         description: `${importedData.length} appels d'offres trouvés dans le fichier.`,
       });
     } catch (error) {
       console.error('Error parsing Excel file:', error);
       toast({
-        title: 'Erreur de lecture',
-        description: 'Impossible de lire le fichier Excel. Vérifiez le format.',
+        title: t('auto.tenderexcelimporter.erreur_de_lecture'),
+        description: t('auto.tenderexcelimporter.impossible_de_lire_le_fichier_excel_verifiez_le_'),
         variant: 'destructive',
       });
     }
@@ -161,10 +163,10 @@ const TenderExcelImporter: React.FC = () => {
 
     // Check authentication first
     const user = await getUser();
-    
+
     if (!user) {
       toast({
-        title: 'Authentification requise',
+        title: t('auto.tenderexcelimporter.authentification_requise'),
         description: 'Vous devez être connecté pour importer des appels d\'offres.',
         variant: 'destructive',
       });
@@ -224,7 +226,7 @@ const TenderExcelImporter: React.FC = () => {
 
       if (successCount > 0) {
         toast({
-          title: 'Import terminé',
+          title: t('auto.tenderexcelimporter.import_termine'),
           description: `${successCount} appels d'offres importés avec succès${errorCount > 0 ? `, ${errorCount} erreurs` : ''}.`,
         });
       }
@@ -374,7 +376,7 @@ const TenderExcelImporter: React.FC = () => {
                 <div className="text-sm text-muted-foreground"><T k="auto.tenderexcelimporter.total" fallback="Total" /></div>
               </div>
             </div>
-            
+
             {importResults.errorMessages.length > 0 && (
               <div className="mt-4">
                 <h4 className="font-medium text-sm mb-2"><T k="auto.tenderexcelimporter.details_des_erreurs" fallback="Détails des erreurs:" /></h4>

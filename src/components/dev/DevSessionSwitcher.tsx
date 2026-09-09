@@ -23,8 +23,11 @@ import { DEV_MODE, getActiveDevRole, getDevUsersSnapshot, setActiveDevRole } fro
 import { AuthAdapterFactory } from '@/infrastructure/adapters/auth/AuthAdapterFactory';
 import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
 import { useToast } from '@/hooks/use-toast';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+  const { t } = useLanguage();
   const { login, signOut, isAuthenticated } = useHexagonalAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -40,7 +43,7 @@ const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }
   const switchRole = async (roleKey: string, email: string, password?: string) => {
     if (!password) {
       toast({
-        title: 'Profil DEV incomplet',
+        title: t('auto.devsessionswitcher.profil_dev_incomplet'),
         description: `Aucun mot de passe local pour ${email}`,
         variant: 'destructive',
       });
@@ -52,10 +55,10 @@ const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }
       setActiveRoleState(roleKey as typeof activeRole);
       await login({ email, password });
       await queryClient.invalidateQueries();
-      toast({ title: 'Rôle DEV activé', description: `${roleKey.toUpperCase()} — permissions rechargées` });
+      toast({ title: t('auto.devsessionswitcher.role_dev_active'), description: `${roleKey.toUpperCase()} — permissions rechargées` });
     } catch (error) {
       toast({
-        title: 'Bascule impossible',
+        title: t('auto.devsessionswitcher.bascule_impossible'),
         description: error instanceof Error ? error.message : 'Erreur inconnue',
         variant: 'destructive',
       });
@@ -80,7 +83,7 @@ const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }
         <button
           type="button"
           className="inline-flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-0.5 text-xs font-medium text-black hover:bg-yellow-400"
-          aria-label="Mode développement — changer de rôle"
+          aria-label={t('auto.devsessionswitcher.mode_developpement_changer_de_role')}
         >
           <Wrench className="h-3 w-3" />
           {compact ? 'DEV' : 'DEV MODE'}
@@ -89,7 +92,7 @@ const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-popover">
         <DropdownMenuLabel className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4" /> Tester les permissions
+          <ShieldCheck className="h-4 w-4" /> <T k="auto.devsessionswitcher.tester_les_permissions" fallback="Tester les permissions" />
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {devUsers.map(([roleKey, profile]) => (
@@ -109,7 +112,7 @@ const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }
         <DropdownMenuSeparator />
         <div className="p-2">
           <Button variant="outline" size="sm" className="w-full gap-2" disabled={busy} onClick={goRealSession}>
-            <LogOut className="h-4 w-4" /> Session réelle (API)
+            <LogOut className="h-4 w-4" /> <T k="auto.devsessionswitcher.session_reelle_api" fallback="Session réelle (API)" />
           </Button>
         </div>
       </DropdownMenuContent>

@@ -12,11 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Plus, Edit, Trash2, Calendar, User, AlertCircle, CheckCircle, Clock, Filter, 
+import {
+  Plus, Edit, Trash2, Calendar, User, AlertCircle, CheckCircle, Clock, Filter,
   Target, DollarSign, TrendingUp, Link, ArrowRight, Layers
 } from 'lucide-react';
-import { 
+import {
   useProjectPhasesForTasks,
   useProjectTasks,
   useCreateProjectTask,
@@ -33,6 +33,7 @@ import { getProjectService } from '@/application/services/ProjectService';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // supabase removed - using hexagonal hooks and services
 
 interface Task {
@@ -138,12 +139,13 @@ interface TaskFormData {
   selectedPhases?: string[];
 }
 
-const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({ 
-  projectId, 
-  tasks: propTasks, 
+const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
+  projectId,
+  tasks: propTasks,
   setTasks: propSetTasks,
-  phases: propPhases 
+  phases: propPhases
 }) => {
+  const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<string>('all');
@@ -171,7 +173,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
     applyToAllPhases: false,
     selectedPhases: [],
   });
-  
+
   const queryClient = useQueryClient();
 
   // Use provided tasks or fetch from database using hexagonal hook
@@ -264,39 +266,39 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
   const getAssignmentOptions = () => {
     const selectedPhaseData = phases.find(p => p.id === formData.phaseId);
     const constructionPhase = (selectedPhaseData as any)?.constructionPhase || (selectedPhaseData as any)?.construction_phase;
-    const isConstructionPhase = constructionPhase && 
+    const isConstructionPhase = constructionPhase &&
       ['foundation', 'structure', 'finishing', 'utilities'].includes(constructionPhase);
-    
+
     const options = [
-      { category: 'Employés internes', items: employees.map(emp => ({ 
-        id: emp.id, 
-        name: emp.fullName, 
+      { category: 'Employés internes', items: employees.map(emp => ({
+        id: emp.id,
+        name: emp.fullName,
         subtitle: emp.position,
         type: 'employee'
       })) },
       { category: 'Bureaux d\'études / Consultants', items: suppliers
         .filter(s => s.type === 'consultant' || !s.type)
-        .map(supplier => ({ 
-          id: supplier.id, 
-          name: supplier.name, 
+        .map(supplier => ({
+          id: supplier.id,
+          name: supplier.name,
           subtitle: supplier.contact_person || 'Consultant',
           type: 'consultant'
-        })) 
+        }))
       },
       { category: 'Contractants principaux', items: suppliers
         .filter(s => s.type === 'contractor' || !s.type)
-        .map(supplier => ({ 
-          id: supplier.id, 
-          name: supplier.name, 
+        .map(supplier => ({
+          id: supplier.id,
+          name: supplier.name,
           subtitle: supplier.contact_person || 'Contractant',
           type: 'contractor'
-        })) 
+        }))
       }
     ];
 
     // Default assignment logic based on phase
     const defaultType = isConstructionPhase ? 'contractor' : 'employee';
-    
+
     return { options, defaultType };
   };
 
@@ -361,7 +363,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       toast({
         title: "Erreur",
@@ -373,7 +375,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
 
     if (!formData.applyToAllPhases && !formData.phaseId) {
       toast({
-        title: "Erreur", 
+        title: "Erreur",
         description: "Vous devez sélectionner une phase ou appliquer à toutes les phases.",
         variant: "destructive",
       });
@@ -513,11 +515,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             {filteredTasks.length} tâche(s) • {currentPhases.length} phase(s)
           </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <Select value={selectedPhase} onValueChange={setSelectedPhase}>
             <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Toutes les phases" />
+              <SelectValue placeholder={t('auto.enhancedtaskmanager.toutes_les_phases')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all"><T k="auto.enhancedtaskmanager.toutes_les_phases" fallback="Toutes les phases" /></SelectItem>
@@ -528,10 +530,10 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               ))}
             </SelectContent>
           </Select>
-          
+
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Tous statuts" />
+              <SelectValue placeholder={t('auto.enhancedtaskmanager.tous_statuts')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all"><T k="auto.enhancedtaskmanager.tous_statuts" fallback="Tous statuts" /></SelectItem>
@@ -541,7 +543,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
               <SelectItem value="blocked"><TranslatedStatus code="blocked" /></SelectItem>
             </SelectContent>
           </Select>
-          
+
           <Dialog open={isCreating} onOpenChange={setIsCreating}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => resetForm()}>
@@ -555,7 +557,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   {editingId ? 'Modifier la tâche' : 'Créer une nouvelle tâche'}
                 </DialogTitle>
               </DialogHeader>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -564,11 +566,11 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       id="title"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Nom de la tâche"
+                      placeholder={t('auto.enhancedtaskmanager.nom_de_la_tache')}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="priority"><T k="auto.enhancedtaskmanager.priorite" fallback="Priorité" /></Label>
                     <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
@@ -591,7 +593,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Description de la tâche"
+                    placeholder={t('auto.enhancedtaskmanager.description_de_la_tache')}
                     rows={3}
                   />
                 </div>
@@ -671,7 +673,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                   <Label htmlFor="assignedTo"><T k="auto.enhancedtaskmanager.assigne" fallback="Assigné" /> </Label>
                   <Select value={formData.assignedTo} onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un profil" />
+                      <SelectValue placeholder={t('auto.enhancedtaskmanager.selectionner_un_profil')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
@@ -712,7 +714,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="status"><T k="auto.enhancedtaskmanager.statut" fallback="Statut" /></Label>
                     <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
@@ -759,9 +761,9 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       {task.status || 'Pending'}
                     </Badge>
                   </div>
-                  
+
                   <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                  
+
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Layers className="h-3 w-3" />
@@ -781,7 +783,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                       </span>
                     )}
                   </div>
-                  
+
                   {task.progress !== null && (
                     <div className="mt-3">
                       <div className="flex justify-between text-xs mb-1">
@@ -792,7 +794,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -813,7 +815,7 @@ const EnhancedTaskManager: React.FC<EnhancedTaskManagerProps> = ({
             </CardContent>
           </Card>
         ))}
-        
+
         {filteredTasks.length === 0 && (
           <Card>
             <CardContent className="p-6">

@@ -19,6 +19,7 @@ import { BoqControlsService, type ControlResult } from '@/application/services/b
 import type { ReferentialType } from '@/config/referentials';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { WbsScopeValue } from './WbsSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DqeTabsProps {
   documentId: string;
@@ -44,21 +45,22 @@ export const DqeTabs: React.FC<DqeTabsProps> = ({
   locked = false, referentialCode, phases = [], perimeter, workspace,
   comparison, budget,
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('summary');
   const calculatedTotals = useMemo(() => totals ?? BoqCalculatorService.aggregate(lines), [lines, totals]);
   const evaluatedControls = useMemo(() => controls ?? BoqControlsService.evaluate(lines), [controls, lines]);
   const failedControls = evaluatedControls.filter((control) => !control.passed).length;
-  
+
 
   const tabs = [
-    { id: 'summary', label: 'Résumé', icon: LayoutDashboard },
-    { id: 'lines', label: 'Lignes DQE', icon: FileSpreadsheet, count: lines.length },
-    { id: 'perimeter', label: 'Périmètre', icon: Ruler },
-    { id: 'totals', label: 'Totaux', icon: DollarSign },
-    { id: 'controls', label: 'Contrôles', icon: ShieldCheck, alert: failedControls > 0, count: failedControls },
-    { id: 'documents', label: 'Documents', icon: FolderOpen },
-    { id: 'comparison', label: 'Comparaison', icon: GitCompare, emphasis: Boolean(comparison) },
-    { id: 'budget', label: 'Suivi budget', icon: BarChart3, emphasis: Boolean(budget) },
+    { id: 'summary', label: t('auto.dqetabs.resume'), icon: LayoutDashboard },
+    { id: 'lines', label: t('auto.dqetabs.lignes_dqe'), icon: FileSpreadsheet, count: lines.length },
+    { id: 'perimeter', label: t('auto.dqetabs.perimetre'), icon: Ruler },
+    { id: 'totals', label: t('auto.dqetabs.totaux'), icon: DollarSign },
+    { id: 'controls', label: t('auto.dqetabs.controles'), icon: ShieldCheck, alert: failedControls > 0, count: failedControls },
+    { id: 'documents', label: t('auto.dqetabs.documents'), icon: FolderOpen },
+    { id: 'comparison', label: t('auto.dqetabs.comparaison'), icon: GitCompare, emphasis: Boolean(comparison) },
+    { id: 'budget', label: t('auto.dqetabs.suivi_budget'), icon: BarChart3, emphasis: Boolean(budget) },
   ];
 
   return (
@@ -73,7 +75,7 @@ export const DqeTabs: React.FC<DqeTabsProps> = ({
                   <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
                   {tab.count !== undefined && tab.count > 0 ? <Badge variant="secondary" className="ml-0.5 px-1.5 text-[11px]">{tab.count}</Badge> : null}
-                  {tab.alert ? <AlertCircle className="h-3 w-3 text-destructive" aria-label="Contrôles à corriger" /> : null}
+                  {tab.alert ? <AlertCircle className="h-3 w-3 text-destructive" aria-label={t('auto.dqetabs.controles_a_corriger')} /> : null}
                 </TabsTrigger>
               );
             })}
@@ -88,8 +90,8 @@ export const DqeTabs: React.FC<DqeTabsProps> = ({
         <TabsContent value="totals" className="mt-0"><TotalsTab lines={lines} totals={calculatedTotals} controls={evaluatedControls} /></TabsContent>
         <TabsContent value="controls" className="mt-0"><ControlsTab controls={evaluatedControls} /></TabsContent>
         <TabsContent value="documents" className="mt-0"><DocumentsTab documentId={documentId} /></TabsContent>
-        <TabsContent value="comparison" className="mt-0">{comparison ?? <EmptyTab label="Comparaison indisponible pour ce contexte" />}</TabsContent>
-        <TabsContent value="budget" className="mt-0">{budget ?? <EmptyTab label="Suivi budget indisponible pour ce contexte" />}</TabsContent>
+        <TabsContent value="comparison" className="mt-0">{comparison ?? <EmptyTab label={t('auto.dqetabs.comparaison_indisponible_pour_ce_contexte')} />}</TabsContent>
+        <TabsContent value="budget" className="mt-0">{budget ?? <EmptyTab label={t('auto.dqetabs.suivi_budget_indisponible_pour_ce_contexte')} />}</TabsContent>
       </div>
     </Tabs>
   );

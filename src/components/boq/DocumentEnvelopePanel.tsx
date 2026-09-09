@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, FileText, Building2, Mail, Phone, MapPin, Send } from 'lucide-react';
 import type { DqeEnvelope } from '@/application/services/boq/parsers/envelopeDetection';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   envelope: DqeEnvelope;
@@ -20,27 +22,28 @@ interface Props {
 }
 
 export function DocumentEnvelopePanel({ envelope, className }: Props) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(true);
   const { emitter, receiver } = envelope;
   const refs: { label: string; value?: string | number }[] = [
-    { label: 'N° document', value: envelope.documentNumber },
-    { label: 'Date', value: envelope.documentDate },
-    { label: 'Projet', value: envelope.projectCode },
-    { label: 'Devise', value: envelope.currency },
+    { label: t('auto.documentenvelopepanel.n_document'), value: envelope.documentNumber },
+    { label: t('auto.documentenvelopepanel.date'), value: envelope.documentDate },
+    { label: t('auto.documentenvelopepanel.projet'), value: envelope.projectCode },
+    { label: t('auto.documentenvelopepanel.devise'), value: envelope.currency },
     {
-      label: 'Validité',
+      label: t('auto.documentenvelopepanel.validite'),
       value: envelope.validityDays
         ? `${envelope.validityDays} j${envelope.validityEndDate ? ` (jusqu'au ${envelope.validityEndDate})` : ''}`
         : undefined,
     },
-    { label: 'Appel d’offres', value: envelope.tenderReference },
+    { label: t('auto.documentenvelopepanel.appel_d_offres'), value: envelope.tenderReference },
   ].filter((r) => r.value != null && String(r.value).trim());
 
   const hasContent = refs.length || emitter.name || receiver.name || envelope.standard;
   if (!hasContent) return null;
 
   return (
-    <section className={`rounded-md border bg-muted/20 p-3 ${className ?? ''}`} aria-label="Enveloppe du document">
+    <section className={`rounded-md border bg-muted/20 p-3 ${className ?? ''}`} aria-label={t('auto.documentenvelopepanel.enveloppe_du_document')}>
       <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -58,8 +61,8 @@ export function DocumentEnvelopePanel({ envelope, className }: Props) {
         <CollapsibleContent className="mt-3 space-y-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {([
-              { icon: Building2, title: 'Émetteur', party: emitter },
-              { icon: Send, title: 'Destinataire', party: receiver },
+              { icon: Building2, title: t('auto.documentenvelopepanel.emetteur'), party: emitter },
+              { icon: Send, title: t('auto.documentenvelopepanel.destinataire'), party: receiver },
             ] as const).map(({ icon: Icon, title, party }) => (
               <div key={title} className="min-w-0 space-y-1 rounded-md bg-background/60 p-2">
                 <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase text-muted-foreground">
@@ -105,7 +108,7 @@ export function DocumentEnvelopePanel({ envelope, className }: Props) {
               )}
               {envelope.signatureStatus === 'PENDING' && (
                 <Badge variant="outline" className="whitespace-normal text-[11px] font-normal">
-                  En attente de signature
+                  <T k="auto.documentenvelopepanel.en_attente_de_signature" fallback="En attente de signature" />
                 </Badge>
               )}
             </div>

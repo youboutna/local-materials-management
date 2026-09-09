@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface OrganizationTemplate {
   id: string;
   name: string;
@@ -135,6 +136,7 @@ const categories = [
 ];
 
 const OrganizationalHierarchyManager: React.FC = () => {
+  const { t } = useLanguage();
   const [template, setTemplate] = useState<OrganizationTemplate>(defaultOrganizationTemplate);
   const [newPosition, setNewPosition] = useState({
     title: '',
@@ -182,7 +184,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
       ...prev,
       positions: prev.positions.filter((_, i) => i !== index)
     }));
-    
+
     toast({
       title: "Position supprimée",
       description: "La position a été supprimée de l'organigramme"
@@ -242,7 +244,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
         code: 'DEFAULT_BTP',
         externalRef: 'ORG-DEFAULT-BTP',
         orgType: 'owner',
-        description: 'Organisation propriétaire par défaut des projets',
+        description: t('auto.organizationalhierarchymanager.organisation_proprietaire_par_defaut_des_projets'),
         isDefault: true,
         isActive: true,
       });
@@ -343,7 +345,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                   id="title"
                   value={newPosition.title}
                   onChange={(e) => setNewPosition(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Ex: Chef de projet"
+                  placeholder={t('auto.organizationalhierarchymanager.ex_chef_de_projet')}
                 />
               </div>
               <div>
@@ -352,7 +354,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                   id="department"
                   value={newPosition.department}
                   onChange={(e) => setNewPosition(prev => ({ ...prev, department: e.target.value }))}
-                  placeholder="Ex: Études et Travaux"
+                  placeholder={t('auto.organizationalhierarchymanager.ex_etudes_et_travaux')}
                 />
               </div>
             </div>
@@ -365,7 +367,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                   onValueChange={(value) => setNewPosition(prev => ({ ...prev, category: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une catégorie" />
+                    <SelectValue placeholder={t('auto.organizationalhierarchymanager.selectionner_une_categorie')} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map(cat => (
@@ -400,7 +402,7 @@ const OrganizationalHierarchyManager: React.FC = () => {
                 onValueChange={(value) => setNewPosition(prev => ({ ...prev, parent: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un supérieur" />
+                  <SelectValue placeholder={t('auto.organizationalhierarchymanager.selectionner_un_superieur')} />
                 </SelectTrigger>
                 <SelectContent>
                   {template.positions.map((pos, index) => (

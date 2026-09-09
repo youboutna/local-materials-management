@@ -9,6 +9,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useProjectsSelector, useProjectTenders } from '@/hooks/hexagonal'
 import { cn } from '@/lib/utils';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Local type for project options from selector
 interface ProjectOption {
@@ -53,6 +54,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
   helpText,
   showProjectDetails = true
 }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -66,8 +68,8 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
     showTenderReference && value ? value : undefined
   );
 
-  const selectedProject = useMemo(() => 
-    projects?.find(p => p.id === value), 
+  const selectedProject = useMemo(() =>
+    projects?.find(p => p.id === value),
     [projects, value]
   );
 
@@ -82,19 +84,19 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
     switch (status?.toLowerCase()) {
       case 'completed':
       case 'terminé':
-        return { color: 'bg-success-soft text-success border-success/30', label: 'Terminé' };
+        return { color: 'bg-success-soft text-success border-success/30', label: t('auto.enhancedprojectselector.termine') };
       case 'inprogress':
       case 'en cours':
-        return { color: 'bg-primary/10 text-primary border-primary/30', label: 'En cours' };
+        return { color: 'bg-primary/10 text-primary border-primary/30', label: t('auto.enhancedprojectselector.en_cours') };
       case 'planning':
       case 'planification':
-        return { color: 'bg-warning/10 text-warning border-warning/30', label: 'Planification' };
+        return { color: 'bg-warning/10 text-warning border-warning/30', label: t('auto.enhancedprojectselector.planification') };
       case 'onhold':
       case 'en attente':
-        return { color: 'bg-muted text-foreground border-border', label: 'En attente' };
+        return { color: 'bg-muted text-foreground border-border', label: t('auto.enhancedprojectselector.en_attente') };
       case 'cancelled':
       case 'annulé':
-        return { color: 'bg-destructive/10 text-destructive border-destructive/30', label: 'Annulé' };
+        return { color: 'bg-destructive/10 text-destructive border-destructive/30', label: t('auto.enhancedprojectselector.annule') };
       default:
         return { color: 'bg-muted text-foreground border-border', label: status || 'Non spécifié' };
     }
@@ -152,7 +154,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher par titre, référence..."
+            placeholder={t('auto.enhancedprojectselector.rechercher_par_titre_reference')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -219,8 +221,8 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
                         {!secureMode && (
                           <div className="flex items-center gap-2 mt-1">
                             {project.status && (
-                              <Badge 
-                                variant="outline" 
+                              <Badge
+                                variant="outline"
                                 className={cn("text-xs", statusConfig.color)}
                               >
                                 {statusConfig.label}
@@ -310,17 +312,17 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
             <T k="auto.enhancedprojectselector.reference_d_appel_d_offres" fallback="Référence d'appel d'offres" />
             <span className="text-muted-foreground font-normal ml-1">(optionnel)</span>
           </Label>
-          
+
           <div className="relative">
             <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Saisir la référence d'appel d'offres"
+              placeholder={t('auto.enhancedprojectselector.saisir_la_reference_d_appel_d_offres')}
               value={tenderReference}
               onChange={(e) => onTenderReferenceChange?.(e.target.value)}
               className="pl-10"
             />
           </div>
-          
+
           {/* Suggestions d'appels d'offres */}
           {tendersLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -352,7 +354,7 @@ const EnhancedProjectSelector: React.FC<EnhancedProjectSelectorProps> = ({
               </div>
             </div>
           )}
-          
+
           <p className="text-xs text-muted-foreground">
             Un projet peut être associé à plusieurs appels d'offres. Indiquez la référence de l'appel d'offres concerné par cette demande.
           </p>

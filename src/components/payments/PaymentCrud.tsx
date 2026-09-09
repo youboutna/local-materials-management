@@ -22,12 +22,14 @@ import { fr } from 'date-fns/locale';
 import { toDateInput } from '@/lib/utils';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PaymentCrudProps {
   onCreatePayment?: () => void;
 }
 
 export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { openDocument } = useDocumentViewer();
@@ -76,11 +78,11 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
 
   const handleExport = () => {
     if (filteredData.length === 0) {
-      toast({ title: 'Aucune donnée', description: 'Il n\'y a pas de paiements à exporter.', variant: 'destructive' });
+      toast({ title: t('auto.paymentcrud.aucune_donnee'), description: 'Il n\'y a pas de paiements à exporter.', variant: 'destructive' });
       return;
     }
     exportToCSV(filteredData);
-    toast({ title: 'Export lancé', description: 'Le fichier CSV a été téléchargé.' });
+    toast({ title: t('auto.paymentcrud.export_lance'), description: t('auto.paymentcrud.le_fichier_csv_a_ete_telecharge') });
   };
 
   const handleEdit = (payment: PaymentDTO) => {
@@ -95,17 +97,17 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
       toast({ title: newStatus === 'blocked' ? 'Paiement bloqué' : 'Paiement débloqué' });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Impossible de modifier le statut.', variant: 'destructive' });
+      toast({ title: t('auto.paymentcrud.erreur'), description: t('auto.paymentcrud.impossible_de_modifier_le_statut'), variant: 'destructive' });
     }
   };
 
   const handleApprove = async (payment: PaymentDTO) => {
     try {
       await updatePayment(payment.id, { status: 'approved' });
-      toast({ title: 'Paiement approuvé' });
+      toast({ title: t('auto.paymentcrud.paiement_approuve') });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Impossible d\'approuver.', variant: 'destructive' });
+      toast({ title: t('auto.paymentcrud.erreur'), description: 'Impossible d\'approuver.', variant: 'destructive' });
     }
   };
 
@@ -113,10 +115,10 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
     if (!confirm('Confirmer le rejet ?')) return;
     try {
       await updatePayment(payment.id, { status: 'rejected' });
-      toast({ title: 'Paiement rejeté' });
+      toast({ title: t('auto.paymentcrud.paiement_rejete') });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Impossible de rejeter.', variant: 'destructive' });
+      toast({ title: t('auto.paymentcrud.erreur'), description: t('auto.paymentcrud.impossible_de_rejeter'), variant: 'destructive' });
     }
   };
 
@@ -124,28 +126,28 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
     if (!confirm('Supprimer définitivement ?')) return;
     try {
       await deletePayment(payment.id);
-      toast({ title: 'Paiement supprimé' });
+      toast({ title: t('auto.paymentcrud.paiement_supprime') });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Impossible de supprimer.', variant: 'destructive' });
+      toast({ title: t('auto.paymentcrud.erreur'), description: t('auto.paymentcrud.impossible_de_supprimer'), variant: 'destructive' });
     }
   };
 
   const handleViewDocuments = async (payment: PaymentDTO) => {
     const docIds = payment.documentIds || [];
     if (docIds.length === 0) {
-      toast({ title: 'Aucun document', description: 'Ce paiement n\'a pas de documents joints.' });
+      toast({ title: t('auto.paymentcrud.aucun_document'), description: 'Ce paiement n\'a pas de documents joints.' });
       return;
     }
     try {
       const docs = await getDocumentsByIds(docIds);
       if (docs.length === 0) {
-        toast({ title: 'Aucun document trouvé' });
+        toast({ title: t('auto.paymentcrud.aucun_document_trouve') });
         return;
       }
       openDocument(docs[0], { allowStatusChange: false });
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Impossible de charger les documents.', variant: 'destructive' });
+      toast({ title: t('auto.paymentcrud.erreur'), description: t('auto.paymentcrud.impossible_de_charger_les_documents'), variant: 'destructive' });
     }
   };
 
@@ -181,19 +183,19 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
         className="mb-4"
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher (date, projet, contractant, montant...)"
+        searchPlaceholder={t('auto.paymentcrud.rechercher_date_projet_contractant_montant')}
         filters={[
           {
             key: 'status',
-            label: 'Statut',
-            placeholder: 'Tous',
+            label: t('auto.paymentcrud.statut'),
+            placeholder: t('auto.paymentcrud.tous'),
             value: statusFilter,
             onChange: (v) => setStatusFilter(v || 'all'),
             options: [
-              { value: 'pending', label: 'En attente' },
-              { value: 'approved', label: 'Validés' },
-              { value: 'blocked', label: 'Bloqués' },
-              { value: 'rejected', label: 'Rejetés' },
+              { value: 'pending', label: t('auto.paymentcrud.en_attente') },
+              { value: 'approved', label: t('auto.paymentcrud.valides') },
+              { value: 'blocked', label: t('auto.paymentcrud.bloques') },
+              { value: 'rejected', label: t('auto.paymentcrud.rejetes') },
             ],
           },
         ]}
@@ -201,7 +203,7 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
         trailing={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-1" /> CSV
+              <Download className="h-4 w-4 mr-1" /> <T k="auto.paymentcrud.csv" fallback="CSV" />
             </Button>
             {onCreatePayment && (
               <Button size="sm" onClick={onCreatePayment}>+ Nouveau Paiement</Button>
@@ -274,7 +276,7 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
                   <TableCell>
                     <div className="flex items-center gap-1 flex-wrap">
                       {isEditable && (
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(payment)} title="Modifier">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(payment)} title={t('auto.paymentcrud.modifier')}>
                           <Edit className="h-4 w-4" />
                         </Button>
                       )}
@@ -282,19 +284,19 @@ export const PaymentCrud = ({ onCreatePayment }: PaymentCrudProps) => {
                         {isBlocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                       </Button>
                       {isPending && (
-                        <Button variant="ghost" size="sm" onClick={() => handleApprove(payment)} title="Valider" className="text-success hover:text-success">
+                        <Button variant="ghost" size="sm" onClick={() => handleApprove(payment)} title={t('auto.paymentcrud.valider')} className="text-success hover:text-success">
                           <Check className="h-4 w-4" />
                         </Button>
                       )}
                       {isPending && (
-                        <Button variant="ghost" size="sm" onClick={() => handleReject(payment)} title="Rejeter" className="text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="sm" onClick={() => handleReject(payment)} title={t('auto.paymentcrud.rejeter')} className="text-destructive hover:text-destructive">
                           <X className="h-4 w-4" />
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" onClick={() => handleViewDocuments(payment)} title={hasDocs ? 'Voir les documents' : 'Aucun document'} disabled={!hasDocs}>
                         <FileText className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(payment)} title="Supprimer" className="text-destructive hover:text-destructive">
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(payment)} title={t('auto.paymentcrud.supprimer')} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

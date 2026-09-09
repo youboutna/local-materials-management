@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * src/components/boq/BoqDevisDialog.tsx
  * BoqDevisDialog — génération devis/facture PDF depuis BoqLineDTO[]
@@ -68,6 +69,7 @@ export function BoqDevisDialog({
   defaultNotes, attachCsv, csvContent,
   open: openProp, onOpenChange, hideTrigger,
 }: Props) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp ?? openInternal;
@@ -186,12 +188,12 @@ export function BoqDevisDialog({
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
       toast({ title: `${label} téléchargé` });
     } catch (e) {
-      toast({ title: 'Erreur PDF', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
+      toast({ title: t('auto.boqdevisdialog.erreur_pdf'), description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     } finally { setLoading(false); }
   };
 
   const handleSendEmail = async () => {
-    if (!config.recipientEmail) { toast({ title: 'Email destinataire requis', variant: 'destructive' }); return; }
+    if (!config.recipientEmail) { toast({ title: t('auto.boqdevisdialog.email_destinataire_requis'), variant: 'destructive' }); return; }
     setLoading(true);
     try {
       const { blob, fileName } = await buildPdfBlob();
@@ -219,10 +221,10 @@ export function BoqDevisDialog({
       });
       if (!result.success) throw new Error("L'envoi de l'email a échoué");
 
-      toast({ title: 'Email envoyé', description: config.recipientEmail });
+      toast({ title: t('auto.boqdevisdialog.email_envoye'), description: config.recipientEmail });
       setOpen(false);
     } catch (e) {
-      toast({ title: 'Envoi échoué', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
+      toast({ title: t('auto.boqdevisdialog.envoi_echoue'), description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     } finally { setLoading(false); }
   };
 

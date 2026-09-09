@@ -21,6 +21,7 @@ import React, { useRef, useState } from 'react';
 import { DevisPDFDocument } from './pdf/DevisPDFDocument';
 import { formatNumber2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Mapping functions for type compatibility
 const mapTenderEstimateToEstimateData = (tenderEstimate: TenderEstimateDTO): EstimateData => {
@@ -73,17 +74,18 @@ interface QuantitativeEstimateExporterProps {
   };
 }
 
-export function QuantitativeEstimateExporter({ 
-  estimate, 
-  estimateItems, 
-  tender, 
+export function QuantitativeEstimateExporter({
+  estimate,
+  estimateItems,
+  tender,
   company = {
-    name: 'Votre Entreprise',
+    name: t('auto.quantitativeestimateexporter.votre_entreprise'),
     address: '123 Rue Exemple, Nouakchott, Mauritanie',
     phone: '+222 XX XX XX XX',
     email: 'contact@votreentreprise.mr'
   }
 }: QuantitativeEstimateExporterProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -116,7 +118,7 @@ export function QuantitativeEstimateExporter({
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = signatureCanvasRef.current;
     if (!canvas) return;
-    
+
     setIsDrawing(true);
     const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext('2d');
@@ -128,10 +130,10 @@ export function QuantitativeEstimateExporter({
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
-    
+
     const canvas = signatureCanvasRef.current;
     if (!canvas) return;
-    
+
     const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext('2d');
     if (ctx) {
@@ -143,7 +145,7 @@ export function QuantitativeEstimateExporter({
   const stopDrawing = () => {
     if (!isDrawing) return;
     setIsDrawing(false);
-    
+
     const canvas = signatureCanvasRef.current;
     if (canvas) {
       setSignature(canvas.toDataURL());
@@ -180,11 +182,11 @@ export function QuantitativeEstimateExporter({
     const materialsCost = estimateItems
       .filter(item => item.itemType === 'material')
       .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-    
+
     const laborCost = estimateItems
       .filter(item => item.itemType === 'labor')
       .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
-    
+
     const equipmentCost = estimateItems
       .filter(item => item.itemType === 'equipment')
       .reduce((sum, item) => sum + (item.totalPrice || 0), 0);
@@ -218,7 +220,7 @@ export function QuantitativeEstimateExporter({
     const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
     const validUntilDate = format(new Date(Date.now() + exportConfig.validityPeriod * 24 * 60 * 60 * 1000), 'dd MMMM yyyy', { locale: fr });
     const totals = calculateTotals();
-    
+
     return `
       <div id="estimate-content" style="font-family: 'Arial', sans-serif; max-width: 170mm; margin: 0 auto; padding: 0; background: white; color: #333; line-height: 1.4;">
         ${exportConfig.includeCompanyHeader ? `
@@ -274,8 +276,8 @@ export function QuantitativeEstimateExporter({
                   <tr style="page-break-inside: avoid; ${index % 2 === 0 ? 'background: #fafafa;' : ''}">
                     <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px; vertical-align: top;">${item.description || ''}</td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px; vertical-align: top;">
-                      <span style="background: ${item.itemType === 'material' ? '#e3f2fd' : item.itemType === 'labor' ? '#f3e5f5' : item.itemType === 'equipment' ? '#e8f5e8' : '#fff3e0'}; 
-                                   color: ${item.itemType === 'material' ? '#1976d2' : item.itemType === 'labor' ? '#7b1fa2' : item.itemType === 'equipment' ? '#388e3c' : '#f57c00'}; 
+                      <span style="background: ${item.itemType === 'material' ? '#e3f2fd' : item.itemType === 'labor' ? '#f3e5f5' : item.itemType === 'equipment' ? '#e8f5e8' : '#fff3e0'};
+                                   color: ${item.itemType === 'material' ? '#1976d2' : item.itemType === 'labor' ? '#7b1fa2' : item.itemType === 'equipment' ? '#388e3c' : '#f57c00'};
                                    padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.itemType || 'autre'}</span>
                     </td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 11px; vertical-align: top;">${item.quantity || 0}</td>
@@ -413,7 +415,7 @@ export function QuantitativeEstimateExporter({
   const handleDownload = async () => {
     try {
       const { blob, fileName } = await generatePDF();
-      
+
       // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -423,7 +425,7 @@ export function QuantitativeEstimateExporter({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Devis téléchargé",
         description: "Le devis quantitatif estimatif a été téléchargé avec succès.",
@@ -513,7 +515,7 @@ export function QuantitativeEstimateExporter({
             <T k="auto.quantitativeestimateexporter.export_devis_quantitatif_estimatif" fallback="Export Devis Quantitatif Estimatif" />
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Configuration */}
           <div className="grid md:grid-cols-2 gap-6">
@@ -620,7 +622,7 @@ export function QuantitativeEstimateExporter({
               value={exportConfig.notes}
               onChange={(e) => setExportConfig(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
-              placeholder="Informations complémentaires, conditions particulières..."
+              placeholder={t('auto.quantitativeestimateexporter.informations_complementaires_conditions_particul')}
             />
           </div>
 
@@ -634,7 +636,7 @@ export function QuantitativeEstimateExporter({
                     id="signatoryName"
                     value={exportConfig.signatoryName}
                     onChange={(e) => setExportConfig(prev => ({ ...prev, signatoryName: e.target.value }))}
-                    placeholder="Nom et prénom"
+                    placeholder={t('auto.quantitativeestimateexporter.nom_et_prenom')}
                   />
                 </div>
                 <div>
@@ -643,7 +645,7 @@ export function QuantitativeEstimateExporter({
                     id="signatoryTitle"
                     value={exportConfig.signatoryTitle}
                     onChange={(e) => setExportConfig(prev => ({ ...prev, signatoryTitle: e.target.value }))}
-                    placeholder="Directeur technique, Chef de projet..."
+                    placeholder={t('auto.quantitativeestimateexporter.directeur_technique_chef_de_projet')}
                   />
                 </div>
               </div>

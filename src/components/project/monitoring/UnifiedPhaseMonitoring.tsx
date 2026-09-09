@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * UnifiedPhaseMonitoring - Dashboard unifié fusionnant Suivi + Jalons
  * Navigation vers services /inspection-monitoring et /payment-control
@@ -83,6 +84,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
   projectId,
   phaseName
 }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<'overview' | 'tasks' | 'inspections' | 'payments'>('overview');
@@ -154,24 +156,24 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
     const targetDate = parseISO(milestone.targetDate);
-    
+
     if (milestone.status === 'completed') {
-      return { 
-        icon: CheckCircle, 
-        color: 'text-success', 
+      return {
+        icon: CheckCircle,
+        color: 'text-success',
         bgColor: 'bg-success/10',
         borderColor: 'border-success',
-        label: 'Terminé',
+        label: t('auto.unifiedphasemonitoring.termine'),
         canTrigger: false,
         urgency: 0
       };
     }
-    
+
     if (isBefore(targetDate, today)) {
       const daysLate = differenceInDays(today, targetDate);
-      return { 
-        icon: AlertTriangle, 
-        color: 'text-destructive', 
+      return {
+        icon: AlertTriangle,
+        color: 'text-destructive',
         bgColor: 'bg-destructive/10',
         borderColor: 'border-destructive',
         label: `En retard (${daysLate}j)`,
@@ -182,9 +184,9 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
 
     const daysUntil = differenceInDays(targetDate, today);
     if (daysUntil <= 7) {
-      return { 
-        icon: Clock, 
-        color: 'text-warning', 
+      return {
+        icon: Clock,
+        color: 'text-warning',
         bgColor: 'bg-warning/10',
         borderColor: 'border-warning',
         label: `Dans ${daysUntil}j`,
@@ -194,23 +196,23 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     }
 
     if (daysUntil <= 14) {
-      return { 
-        icon: Clock, 
-        color: 'text-primary', 
+      return {
+        icon: Clock,
+        color: 'text-primary',
         bgColor: 'bg-primary/10',
         borderColor: 'border-primary',
-        label: 'Prochainement',
+        label: t('auto.unifiedphasemonitoring.prochainement'),
         canTrigger: true,
         urgency: 1
       };
     }
 
-    return { 
-      icon: Clock, 
-      color: 'text-muted-foreground', 
+    return {
+      icon: Clock,
+      color: 'text-muted-foreground',
       bgColor: 'bg-muted',
       borderColor: 'border-muted-foreground/30',
-      label: 'À venir',
+      label: t('auto.unifiedphasemonitoring.a_venir'),
       canTrigger: false,
       urgency: 0
     };
@@ -270,7 +272,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
     try {
       const templates = getDefaultPhaseMilestones();
       const startDate = new Date();
-      
+
       for (const template of templates) {
         const targetDate = addDays(startDate, template.relativeOffsetDays);
         await getMilestoneService().createMilestone({
@@ -281,12 +283,12 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           priority: template.priority as any,
         });
       }
-      
+
       toast({
         title: "Jalons créés",
         description: `${templates.length} jalons par défaut ont été créés.`
       });
-      
+
       queryClient.invalidateQueries({ queryKey: ['unified-milestones'] });
     } catch (error) {
       toast({
@@ -321,8 +323,8 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
       <Card className="overflow-hidden border-0 shadow-lg">
         <div className={cn(
           "p-6",
-          (progress as any)?.critical_path_status === 'delayed' 
-            ? "bg-gradient-to-br from-destructive/10 via-destructive/5 to-background" 
+          (progress as any)?.critical_path_status === 'delayed'
+            ? "bg-gradient-to-br from-destructive/10 via-destructive/5 to-background"
             : "bg-gradient-to-br from-primary/10 via-primary/5 to-background"
         )}>
           {/* Title Row */}
@@ -351,7 +353,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
             {/* View Toggle & SPI */}
             <div className="flex items-center gap-3">
               {progress?.schedule_performance_index !== undefined && (
-                <Badge 
+                <Badge
                   variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
                   className={cn(
                     "flex items-center gap-1 px-3 py-1.5",
@@ -366,7 +368,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                   SPI: {progress.schedule_performance_index}
                 </Badge>
               )}
-              
+
               <div className="flex items-center bg-muted/80 rounded-lg p-1">
                 <Button
                   variant={viewMode === 'dashboard' ? 'secondary' : 'ghost'}
@@ -686,7 +688,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
           <CardContent className="pt-6">
             <div className="relative">
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
-              
+
               <div className="space-y-4">
                 {milestones.map((milestone) => {
                   const status = getStatusInfo(milestone);
@@ -694,7 +696,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                   const TypeIcon = getTypeIcon(milestone.type);
 
                   return (
-                    <div 
+                    <div
                       key={milestone.id}
                       className={cn(
                         "relative pl-14 p-4 rounded-xl transition-all cursor-pointer",
@@ -755,7 +757,7 @@ const UnifiedPhaseMonitoring: React.FC<UnifiedPhaseMonitoringProps> = ({
                 const StatusIcon = status.icon;
 
                 return (
-                  <div 
+                  <div
                     key={milestone.id}
                     className="flex items-center justify-between py-3 hover:bg-muted/50 px-2 rounded transition-colors cursor-pointer"
                     onClick={() => status.canTrigger && handleMilestoneAction(milestone, 'inspection')}

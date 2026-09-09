@@ -1,6 +1,6 @@
 /**
  * ProjectFormWithMap - Formulaire de projet avec carte et zones d'intervention
- * 
+ *
  * Architecture Hexagonale :
  * - Utilise les DTOs pour les types
  * - GeoZoneEditor pour les zones d'intervention
@@ -33,6 +33,7 @@ import { getEmployeeService } from '@/application/services/EmployeeService';
 import { SupplierService, getSupplierService} from '@/application/services/SupplierService';
 import { i18nService } from '@/application/services/I18nService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
@@ -99,9 +100,10 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
   onSubmit,
   initialData
 }) => {
+  const { t } = useLanguage();
   // ============ Services hexagonaux (stabilisés avec useMemo) ============
   const employeeService = useMemo(() => getEmployeeService(), []);
-  
+
   const supplierService = useMemo(
     () => getSupplierService(),
     []
@@ -229,14 +231,14 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.description || !formData.location) {
       alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await onSubmit({
         ...formData,
@@ -330,10 +332,10 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   id="projectReference"
                   value={formData.projectReference}
                   onChange={(e) => handleChange('projectReference', e.target.value)}
-                  placeholder="Ex: PRJ-2024-001"
+                  placeholder={t('auto.projectformwithmap.ex_prj_2024_001')}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="description"><T k="auto.projectformwithmap.description" fallback="Description" /></Label>
                 <Textarea
@@ -362,7 +364,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="budget"><T k="auto.projectformwithmap.budget_mru" fallback="Budget (MRU)" /></Label>
                   <Input
@@ -374,7 +376,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="teamSize"><T k="auto.projectformwithmap.taille_de_l_equipe" fallback="Taille de l'équipe" /></Label>
                   <Input
@@ -414,12 +416,12 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="projectManagerId">Chef de projet / Manager</Label>
-                  <Select 
-                    value={formData.projectManagerId || 'no-selection'} 
+                  <Select
+                    value={formData.projectManagerId || 'no-selection'}
                     onValueChange={(value) => handleChange('projectManagerId', value === 'no-selection' ? '' : value)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Sélectionner un manager" />
+                      <SelectValue placeholder={t('auto.projectformwithmap.selectionner_un_manager')} />
                     </SelectTrigger>
                     <SelectContent className="bg-background border z-[100]">
                       <SelectItem value="no-selection"><T k="auto.projectformwithmap.aucun_manager_assigne" fallback="Aucun manager assigné" /></SelectItem>
@@ -432,7 +434,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                               <span className="font-medium">{employee.fullName}</span>
                               {(employee.position || employee.department) && (
                                 <span className="text-sm text-muted-foreground">
-                                  {employee.position && employee.department 
+                                  {employee.position && employee.department
                                     ? `${employee.position} - ${i18nService.translateDepartment(employee.department)}`
                                     : employee.position || employee.department
                                   }
@@ -448,7 +450,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     <T k="auto.projectformwithmap.selectionnez_l_employe_responsable_de_ce_projet" fallback="Sélectionnez l'employé responsable de ce projet" />
                   </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label><T k="auto.projectformwithmap.contractant_principal" fallback="Contractant principal" /></Label>
                   <SupplierSelector
@@ -501,7 +503,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="endDate"><T k="auto.projectformwithmap.date_de_fin" fallback="Date de fin" /></Label>
                   <Input
@@ -570,7 +572,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   <T k="auto.projectformwithmap.autoriser_le_paiement_initial_0_30" fallback="Autoriser le paiement initial (0-30%)" />
                 </Label>
               </div>
-              
+
               {formData.allowsInitialPayment && (
                 <div className="space-y-4 p-4 bg-primary/10 rounded-lg border border-primary/30">
                   <div>
@@ -588,10 +590,10 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                       Ce pourcentage permet un paiement anticipé selon les termes du contrat (maximum 30%)
                     </p>
                   </div>
-                  
+
                   <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
                     <p className="text-sm text-warning">
-                      <strong><T k="auto.projectformwithmap.note" fallback="Note :" /></strong> Le paiement initial ne sera autorisé que si le contrat le permet explicitement. 
+                      <strong><T k="auto.projectformwithmap.note" fallback="Note :" /></strong> Le paiement initial ne sera autorisé que si le contrat le permet explicitement.
                       Cette option facilite le démarrage des projets nécessitant des investissements initiaux importants.
                     </p>
                   </div>
@@ -626,12 +628,12 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
           <GeoZoneEditor
             value={formData.interventionZones || []}
             onChange={handleInterventionZonesChange}
-            title="Zones d'intervention (bénéficiaires)"
+            title={t('auto.projectformwithmap.zones_d_intervention_beneficiaires')}
             hint="Tracez une ou plusieurs zones — polygones, rectangles, cercles ou points. Import GeoJSON supporté."
             height={520}
             defaultCenter={facilitiesMapData.center ? [facilitiesMapData.center.lat, facilitiesMapData.center.lng] : [18.0735, -15.9582]}
           />
-          
+
           {/* Affichage des données de localisation */}
           {(facilitiesMapData.center || facilitiesMapData.warehouseShape?.length) && (
             <Card>
@@ -646,12 +648,12 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                   <div className="bg-success-soft p-3 rounded-md">
                     <p className="text-sm font-medium text-success"><T k="auto.projectformwithmap.position_gps_du_projet" fallback="Position GPS du projet:" /></p>
                     <p className="text-sm text-success font-mono">
-                      Latitude: {facilitiesMapData.center.lat.toFixed(6)}, 
+                      Latitude: {facilitiesMapData.center.lat.toFixed(6)},
                       Longitude: {facilitiesMapData.center.lng.toFixed(6)}
                     </p>
                   </div>
                 )}
-                
+
                 {facilitiesMapData.warehouseShape && facilitiesMapData.warehouseShape.length > 0 && (
                   <div className="bg-primary/10 p-3 rounded-md">
                     <p className="text-sm font-medium text-primary"><T k="auto.projectformwithmap.zone_d_entrepot_tracee" fallback="Zone d'entrepôt tracée:" /></p>
@@ -660,7 +662,7 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
                     </p>
                   </div>
                 )}
-                
+
                 {facilitiesMapData.address && (
                   <div className="bg-muted p-3 rounded-md">
                     <p className="text-sm font-medium text-foreground"><T k="auto.projectformwithmap.adresse" fallback="Adresse:" /></p>
@@ -688,8 +690,8 @@ const ProjectFormWithMap: React.FC<ProjectFormWithMapProps> = ({
           <CheckCircle className="h-4 w-4" />
           <span><T k="auto.projectformwithmap.tous_les_champs_obligatoires_sont_remplis" fallback="Tous les champs obligatoires sont remplis" /></span>
         </div>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="group relative overflow-hidden bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary text-primary-foreground shadow-elegant hover:shadow-glow transition-all duration-300 transform hover:scale-105 w-full sm:w-auto px-8 py-3"
           disabled={isSubmitting}
         >

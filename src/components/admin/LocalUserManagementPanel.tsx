@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { getLocalUserManagementService } from '@/application/services/LocalUserManagementService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const emptyDraft = (): DevUserProfile => ({
 });
 
 export default function LocalUserManagementPanel() {
+  const { t } = useLanguage();
   const svc = useMemo(() => getLocalUserManagementService(), []);
   const { toast } = useToast();
   const [users, setUsers] = useState(svc.getAllUsers());
@@ -47,22 +49,22 @@ export default function LocalUserManagementPanel() {
 
   const handleSwitch = (key: string) => {
     svc.switchActiveUser(key);
-    toast({ title: 'Utilisateur actif changé', description: users[key].email });
+    toast({ title: t('auto.localusermanagementpanel.utilisateur_actif_change'), description: users[key].email });
   };
 
   const handleDelete = (key: string) => {
     try {
       svc.deleteUser(key);
       setUsers(svc.getAllUsers());
-      toast({ title: 'Utilisateur supprimé' });
+      toast({ title: t('auto.localusermanagementpanel.utilisateur_supprime') });
     } catch (e: any) {
-      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+      toast({ title: t('auto.localusermanagementpanel.erreur'), description: e.message, variant: 'destructive' });
     }
   };
 
   const handleSaveDraft = () => {
     if (!draftKey.trim() || !draft.email.trim()) {
-      toast({ title: 'Clé et email requis', variant: 'destructive' });
+      toast({ title: t('auto.localusermanagementpanel.cle_et_email_requis'), variant: 'destructive' });
       return;
     }
     svc.addUser(draftKey.trim(), draft);
@@ -70,7 +72,7 @@ export default function LocalUserManagementPanel() {
     setDialogOpen(false);
     setDraft(emptyDraft());
     setDraftKey('');
-    toast({ title: 'Utilisateur ajouté' });
+    toast({ title: t('auto.localusermanagementpanel.utilisateur_ajoute') });
   };
 
   const handleExport = () => {
@@ -88,9 +90,9 @@ export default function LocalUserManagementPanel() {
     try {
       svc.importUsers(text);
       setUsers(svc.getAllUsers());
-      toast({ title: 'Utilisateurs importés' });
+      toast({ title: t('auto.localusermanagementpanel.utilisateurs_importes') });
     } catch (e: any) {
-      toast({ title: 'Import échoué', description: e.message, variant: 'destructive' });
+      toast({ title: t('auto.localusermanagementpanel.import_echoue'), description: e.message, variant: 'destructive' });
     }
   };
 

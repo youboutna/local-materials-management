@@ -5,6 +5,7 @@ import { getProjectCoordinates } from '@/utils/projectLocationBuckets';
 import { useI18n } from '@/hooks/useI18n';
 import { useLanguage } from '@/contexts/LanguageContext';
 import CompactFilterBar, { CompactFilterField } from '@/components/common/CompactFilterBar';
+import { T } from '@/components/i18n/T';
 
 interface InteractiveMapFiltersProps {
   projects: ProjectData[];
@@ -170,7 +171,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({ projects,
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-              <span>Latitude</span>
+              <span><T k="auto.interactivemapfilters.latitude" fallback="Latitude" /></span>
               <span>
                 {gpsLatRange[0].toFixed(2)}° → {gpsLatRange[1].toFixed(2)}°
               </span>
@@ -186,7 +187,7 @@ const InteractiveMapFilters: React.FC<InteractiveMapFiltersProps> = ({ projects,
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-              <span>Longitude</span>
+              <span><T k="auto.interactivemapfilters.longitude" fallback="Longitude" /></span>
               <span>
                 {gpsLngRange[0].toFixed(2)}° → {gpsLngRange[1].toFixed(2)}°
               </span>

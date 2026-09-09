@@ -12,21 +12,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Plus, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  FileText, 
-  CreditCard, 
-  ClipboardCheck, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Clock, 
-  ChevronDown, 
-  Settings, 
-  User, 
-  Building, 
+import {
+  Plus,
+  Calendar,
+  MapPin,
+  Users,
+  FileText,
+  CreditCard,
+  ClipboardCheck,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  ChevronDown,
+  Settings,
+  User,
+  Building,
   Map,
   Edit,
   Save,
@@ -52,6 +52,7 @@ import { useActiveEmployeesHex } from '@/hooks/hexagonal/useActiveEmployeesHex';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface Phase {
   id: string;
   phase_name: string;
@@ -93,9 +94,10 @@ interface EnhancedWorkflowPhaseManagerProps {
   projectId: string;
 }
 
-const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> = ({ 
-  projectId 
+const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> = ({
+  projectId
 }) => {
+  const { t } = useLanguage();
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
@@ -104,7 +106,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
   const [isDelegationDialogOpen, setIsDelegationDialogOpen] = useState(false);
   const [phaseLocation, setPhaseLocation] = useState<any>(null);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
-  
+
   const { hierarchy, loading: hierarchyLoading } = useProjectHierarchy(projectId);
 
   // Load phases data via hexagonal hooks (no direct Supabase access)
@@ -288,7 +290,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
             <ScrollArea className="h-[70vh]">
               <div className="space-y-3">
                 {phases?.map((phase) => (
-                  <Card 
+                  <Card
                     key={phase.id}
                     className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
                       selectedPhase?.id === phase.id
@@ -296,7 +298,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                         : 'border-border hover:border-border/80'
                     }`}
                   >
-                    <div 
+                    <div
                       className="p-4"
                       onClick={() => setSelectedPhase(phase)}
                     >
@@ -309,7 +311,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <TranslatedStatus code={phase.status} />
                         </Badge>
                       </div>
-                      
+
                       {phase.progress !== undefined && (
                         <div className="space-y-1 mb-3">
                           <div className="flex justify-between text-xs text-muted-foreground">
@@ -319,7 +321,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <Progress value={phase.progress} className="h-2" />
                         </div>
                       )}
-                      
+
                       <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <FileText className="h-3 w-3" />
@@ -338,13 +340,13 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                           <span>{phase.payments_count} paiem.</span>
                         </div>
                       </div>
-                      
+
                       {phase.start_date && (
                         <div className="mt-2 text-xs text-muted-foreground">
                           Début: {new Date(phase.start_date).toLocaleDateString()}
                         </div>
                       )}
-                      
+
                       {phase.description && (
                         <div className="mt-2 text-xs text-muted-foreground line-clamp-2">
                           {phase.description}
@@ -371,7 +373,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                   <Badge className={getStatusColor(selectedPhase.status)}>
                     <TranslatedStatus code={selectedPhase.status} />
                   </Badge>
-                  
+
                   <Dialog open={isDelegationDialogOpen} onOpenChange={setIsDelegationDialogOpen}>
                     <DialogTrigger asChild>
                       <Button size="sm" variant="outline">
@@ -380,7 +382,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                       </Button>
                     </DialogTrigger>
                   </Dialog>
-                  
+
                   <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
                     <DialogTrigger asChild>
                       <Button size="sm" variant="outline">
@@ -443,7 +445,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
@@ -455,7 +457,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
@@ -467,7 +469,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-2">
@@ -480,7 +482,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                       </CardContent>
                     </Card>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
@@ -517,9 +519,9 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                             </div>
                           );
                         })}
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="w-full"
                           onClick={() => setIsDelegationDialogOpen(true)}
                         >
@@ -528,7 +530,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                         </Button>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -555,9 +557,9 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                             <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.aucune_localisation_definie" fallback="Aucune localisation définie" /></p>
                           </div>
                         )}
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="w-full mt-3"
                           onClick={() => setIsLocationDialogOpen(true)}
                         >
@@ -658,7 +660,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Team Delegation Dialog */}
       <Dialog open={isDelegationDialogOpen} onOpenChange={setIsDelegationDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -672,41 +674,41 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                 <EmployeeSelector
                   value={teamDelegation.projectManager}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, projectManager: value }))}
-                  placeholder="Sélectionner un chef de projet"
+                  placeholder={t('auto.enhancedworkflowphasemanager.selectionner_un_chef_de_projet')}
                   positionFilter={['manager', 'chef', 'directeur']}
                 />
               </div>
-              
+
               <div>
                 <Label><T k="auto.enhancedworkflowphasemanager.manager_technique" fallback="Manager technique" /></Label>
                 <EmployeeSelector
                   value={teamDelegation.technicalManager}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, technicalManager: value }))}
-                  placeholder="Sélectionner un manager technique"
+                  placeholder={t('auto.enhancedworkflowphasemanager.selectionner_un_manager_technique')}
                   departmentFilter={['Engineering', 'Technical']}
                 />
               </div>
-              
+
               <div>
                 <Label><T k="auto.enhancedworkflowphasemanager.superviseur" fallback="Superviseur" /></Label>
                 <EmployeeSelector
                   value={teamDelegation.supervisor}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, supervisor: value }))}
-                  placeholder="Sélectionner un superviseur"
+                  placeholder={t('auto.enhancedworkflowphasemanager.selectionner_un_superviseur')}
                   positionFilter={['supervisor', 'chef d\'équipe']}
                 />
               </div>
-              
+
               <div>
                 <Label><T k="auto.enhancedworkflowphasemanager.client" fallback="Client" /></Label>
                 <EmployeeSelector
                   value={teamDelegation.client}
                   onChange={(value) => setTeamDelegation(prev => ({ ...prev, client: value }))}
-                  placeholder="Sélectionner un représentant client"
+                  placeholder={t('auto.enhancedworkflowphasemanager.selectionner_un_representant_client')}
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsDelegationDialogOpen(false)}>
                 <X className="h-4 w-4 mr-2" />
@@ -720,7 +722,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
           </div>
         </DialogContent>
       </Dialog>
-      
+
       {/* Location Dialog */}
       <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
@@ -734,7 +736,7 @@ const EnhancedWorkflowPhaseManager: React.FC<EnhancedWorkflowPhaseManagerProps> 
                 <p className="text-sm text-muted-foreground"><T k="auto.enhancedworkflowphasemanager.carte_interactive_en_developpement" fallback="Carte interactive - En développement" /></p>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsLocationDialogOpen(false)}>
                 <X className="h-4 w-4 mr-2" />

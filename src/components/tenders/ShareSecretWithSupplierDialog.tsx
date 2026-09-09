@@ -21,6 +21,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { Building2, Check, Loader2, Mail, Pencil, Search, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   open: boolean;
@@ -43,6 +44,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
   expiresAt,
   defaultEmail = '',
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
@@ -88,8 +90,8 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
     const targetEmail = email.trim();
     if (!targetEmail) {
       toast({
-        title: 'E-mail requis',
-        description: 'Veuillez saisir une adresse email valide.',
+        title: t('auto.sharesecretwithsupplierdialog.e_mail_requis'),
+        description: t('auto.sharesecretwithsupplierdialog.veuillez_saisir_une_adresse_email_valide'),
         variant: 'destructive',
       });
       return;
@@ -113,7 +115,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
       });
 
       toast({
-        title: 'Code partagé',
+        title: t('auto.sharesecretwithsupplierdialog.code_partage'),
         description: `Envoyé à ${targetEmail}${selected?.name ? ` (${selected.name})` : ''}`,
       });
       onOpenChange(false);
@@ -123,7 +125,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
       setSearch('');
     } catch (error) {
       toast({
-        title: 'Échec du partage',
+        title: t('auto.sharesecretwithsupplierdialog.echec_du_partage'),
         description: error instanceof Error ? error.message : 'Erreur inconnue',
         variant: 'destructive',
       });
@@ -169,7 +171,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
               <Input
                 id="share-supplier-search"
                 className="pl-8"
-                placeholder="Rechercher un fournisseur…"
+                placeholder={t('auto.sharesecretwithsupplierdialog.rechercher_un_fournisseur')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -240,7 +242,7 @@ export const ShareSecretWithSupplierDialog: React.FC<Props> = ({
               rows={3}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Précisions sur le dossier, la date limite…"
+              placeholder={t('auto.sharesecretwithsupplierdialog.precisions_sur_le_dossier_la_date_limite')}
             />
           </div>
 

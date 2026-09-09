@@ -39,8 +39,8 @@ import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { usePagination } from '@/hooks/usePagination';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
-import { 
-  useTaskAssignmentsHex, 
+import {
+  useTaskAssignmentsHex,
   useProjectsHex,
   usePhasesHex,
   useAssigneeDetails,
@@ -161,11 +161,11 @@ const TaskAssignmentsComponent = () => {
     if (assigneeDetails && formData.assigned_to) {
       setFormData(prev => {
         // Check if values actually need to be updated to avoid infinite loop
-        const needsUpdate = 
+        const needsUpdate =
           prev.assignee_type !== assigneeDetails.type ||
           prev.assignee_name !== assigneeDetails.name ||
           prev.assignee_email !== assigneeDetails.email;
-        
+
         if (needsUpdate) {
           return {
             ...prev,
@@ -190,9 +190,9 @@ const TaskAssignmentsComponent = () => {
   const createMutation = useMutation({
     mutationFn: async (taskData: TaskFormData) => {
       const taskService = getTaskAssignmentService();
-      
+
       // Build proper DTO for service
-      return await taskService.createTaskAssignment({ 
+      return await taskService.createTaskAssignment({
         taskData: {
           taskId: crypto.randomUUID(),
           projectId: taskData.project_id || '',
@@ -213,15 +213,15 @@ const TaskAssignmentsComponent = () => {
           estimatedDuration: toNum(taskData.estimated_duration),
           dailyRate: toNum(taskData.daily_rate),
 
-        }, 
-        assignedBy: user?.id 
+        },
+        assignedBy: user?.id
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task_assignments"] });
-      toast({ 
-        title: "✅ Succès", 
-        description: "Tâche créée avec succès et notification envoyée." 
+      toast({
+        title: "✅ Succès",
+        description: "Tâche créée avec succès et notification envoyée."
       });
       resetForm();
     },
@@ -237,7 +237,7 @@ const TaskAssignmentsComponent = () => {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: TaskFormData }) => {
       const taskService = getTaskAssignmentService();
-      
+
       // Mise à jour complète : on ne perd plus titre / projet / assigné
       return await taskService.updateTaskAssignment({
         id,
@@ -478,10 +478,10 @@ const TaskAssignmentsComponent = () => {
               <Input
                 id="search"
                 type="search"
-                placeholder="Titre, description, assigné..."
+                placeholder={t('auto.taskassignments.titre_description_assigne')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label="Rechercher une tâche"
+                aria-label={t('auto.taskassignments.rechercher_une_tache')}
               />
             </div>
             <div>
@@ -593,7 +593,7 @@ const TaskAssignmentsComponent = () => {
                     }
                   >
                     <SelectTrigger id="project">
-                      <SelectValue placeholder="Sélectionner un projet" />
+                      <SelectValue placeholder={t('auto.taskassignments.selectionner_un_projet')} />
                     </SelectTrigger>
                     <SelectContent>
                       {projects?.map((project) => (
@@ -642,7 +642,7 @@ const TaskAssignmentsComponent = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <UserSelector
-                    label="Assigné à"
+                    label={t('auto.taskassignments.assigne_a')}
                     value={formData.assigned_to}
                     onChange={(value) => setFormData((prev) => ({ ...prev, assigned_to: value }))}
                     onSelect={(user) =>
@@ -653,7 +653,7 @@ const TaskAssignmentsComponent = () => {
                         assignee_email: user?.email || prev.assignee_email,
                       }))
                     }
-                    placeholder="Sélectionner"
+                    placeholder={t('auto.taskassignments.selectionner')}
                   />
 
                 </div>

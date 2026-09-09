@@ -9,6 +9,7 @@ import { CalendarIcon, FileText, Building } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TenderProjectFieldsProps {
   formData: {
@@ -28,6 +29,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
   onChange,
   readOnly = false
 }) => {
+  const { t } = useLanguage();
   const formatDateForDisplay = (dateString?: string) => {
     if (!dateString) return '';
     try {
@@ -103,12 +105,12 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                 {formData.marketType || 'Non spécifié'}
               </div>
             ) : (
-              <Select 
-                value={formData.marketType || ''} 
+              <Select
+                value={formData.marketType || ''}
                 onValueChange={(value) => onChange('marketType', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le type de marché" />
+                  <SelectValue placeholder={t('auto.tenderprojectfields.selectionner_le_type_de_marche')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="public"><T k="auto.tenderprojectfields.marche_public" fallback="Marché public" /></SelectItem>
@@ -118,7 +120,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                   <SelectItem value="emergency"><T k="auto.tenderprojectfields.marche_d_urgence" fallback="Marché d'urgence" /></SelectItem>
                   <SelectItem value="Supply"><T k="auto.tenderprojectfields.fournitures" fallback="Fournitures" /></SelectItem>
                   <SelectItem value="construction"><T k="auto.tenderprojectfields.travaux" fallback="Travaux" /></SelectItem>
-                  
+
 
                 </SelectContent>
               </Select>
@@ -132,12 +134,12 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                 {formData.selectionMode || 'Non spécifié'}
               </div>
             ) : (
-              <Select 
-                value={formData.selectionMode || ''} 
+              <Select
+                value={formData.selectionMode || ''}
                 onValueChange={(value) => onChange('selectionMode', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le mode de sélection" />
+                  <SelectValue placeholder={t('auto.tenderprojectfields.selectionner_le_mode_de_selection')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="open_tender"><T k="auto.tenderprojectfields.appel_d_offres_ouvert" fallback="Appel d'offres ouvert" /></SelectItem>
@@ -148,7 +150,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
                   <SelectItem value="direct_award"><T k="auto.tenderprojectfields.attribution_directe" fallback="Attribution directe" /></SelectItem>
                    <SelectItem value="direct_award_supply"> <T k="auto.tenderprojectfields.consultation_simplifiee" fallback="Consultation Simplifiée" /></SelectItem>
 
-                 
+
                 </SelectContent>
               </Select>
             )}
@@ -166,12 +168,12 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
               {formData.financingSource || 'Non spécifiée'}
             </div>
           ) : (
-            <Select 
-              value={formData.financingSource || ''} 
+            <Select
+              value={formData.financingSource || ''}
               onValueChange={(value) => onChange('financingSource', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner la source de financement" />
+                <SelectValue placeholder={t('auto.tenderprojectfields.selectionner_la_source_de_financement')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="state_budget"><T k="auto.tenderprojectfields.budget_de_l_etat" fallback="Budget de l'État" /></SelectItem>
@@ -202,7 +204,7 @@ const TenderProjectFields: React.FC<TenderProjectFieldsProps> = ({
               id="projectReference"
               value={formData.projectReference || ''}
               onChange={(e) => onChange('projectReference', e.target.value)}
-              placeholder="Ex: PRJ-2024-001, CONT-MR-2024-INF-001"
+              placeholder={t('auto.tenderprojectfields.ex_prj_2024_001_cont_mr_2024_inf_001')}
             />
           )}
           <p className="text-xs text-muted-foreground">

@@ -84,17 +84,17 @@ export function SubmissionsInbox({ tenderId, tenderDeadline, projectId, onOpenSu
           )}
         </div>
         <div className="grid grid-cols-4 gap-2 pt-2 text-xs">
-          <StatChip label="Total" value={stats.total} />
-          <StatChip label="Soumises" value={stats.submitted} tone="blue" />
-          <StatChip label="En revue" value={stats.review} tone="amber" />
-          <StatChip label="Approuvées" value={stats.approved} tone="emerald" />
+          <StatChip label={t('auto.submissionsinbox.total')} value={stats.total} />
+          <StatChip label={t('auto.submissionsinbox.soumises')} value={stats.submitted} tone="blue" />
+          <StatChip label={t('auto.submissionsinbox.en_revue')} value={stats.review} tone="amber" />
+          <StatChip label={t('auto.submissionsinbox.approuvees')} value={stats.approved} tone="emerald" />
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <CompactFilterBar
           searchValue={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Rechercher fournisseur ou email…"
+          searchPlaceholder={t('auto.submissionsinbox.rechercher_fournisseur_ou_email')}
           filters={[
             {
               key: 'status',
@@ -203,11 +203,11 @@ function StatChip({ label, value, tone }: { label: string; value: number; tone?:
 
 function StatusBadge({ status }: { status?: string }) {
   const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-    submitted: { label: 'Soumise', variant: 'default' },
-    under_review: { label: 'En revue', variant: 'secondary' },
-    approved: { label: 'Approuvée', variant: 'default' },
-    rejected: { label: 'Rejetée', variant: 'destructive' },
-    draft: { label: 'Brouillon', variant: 'outline' },
+    submitted: { label: t('auto.submissionsinbox.soumise'), variant: 'default' },
+    under_review: { label: t('auto.submissionsinbox.en_revue'), variant: 'secondary' },
+    approved: { label: t('auto.submissionsinbox.approuvee'), variant: 'default' },
+    rejected: { label: t('auto.submissionsinbox.rejetee'), variant: 'destructive' },
+    draft: { label: t('auto.submissionsinbox.brouillon'), variant: 'outline' },
   };
   const cfg = map[status || ''] ?? { label: status || 'Inconnu', variant: 'outline' as const };
   return <Badge variant={cfg.variant}>{cfg.label}</Badge>;

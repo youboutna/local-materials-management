@@ -19,6 +19,7 @@ import { getAwardedTenderToProjectService } from '@/application/services/Awarded
 import type { AwardedProjectHydrationPayload } from '@/dtos/transforms/AwardedTenderTransformer';
 import { useTenderToPlanning } from '@/hooks/hexagonal/useTenderToPlanning';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface AwardedTenderPreviewDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ export interface AwardedTenderPreviewDialogProps {
 }
 
 export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProps) {
+  const { t } = useLanguage();
   const { open, onOpenChange, projectId, tenderId, winningEstimateId, supplierId, supplierName, onApplied } = props;
   const { toast } = useToast();
   const [payload, setPayload] = useState<AwardedProjectHydrationPayload | null>(null);
@@ -51,7 +53,7 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
     if (open && !payload && !previewMutation.isPending) {
       previewMutation.mutate(undefined, {
         onSuccess: (p) => setPayload(p),
-        onError: (e: any) => toast({ title: 'Erreur preview', description: e?.message, variant: 'destructive' }),
+        onError: (e: any) => toast({ title: t('auto.awardedtenderpreviewdialog.erreur_preview'), description: e?.message, variant: 'destructive' }),
       });
     }
     if (!open) setPayload(null);
@@ -69,7 +71,7 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
     },
     onSuccess: (res) => {
       toast({
-        title: 'Projet hydraté',
+        title: t('auto.awardedtenderpreviewdialog.projet_hydrate'),
         description: `${res.createdPhaseIds?.length ?? 0} phases, ${res.createdTaskIds?.length ?? 0} tâches, ${res.createdMilestoneIds?.length ?? 0} jalons créés${res.warnings.length ? ` (${res.warnings.length} avertissements)` : ''}.`,
       });
       onApplied?.({
@@ -79,7 +81,7 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
       });
       onOpenChange(false);
     },
-    onError: (e: any) => toast({ title: 'Erreur application', description: e?.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: t('auto.awardedtenderpreviewdialog.erreur_application'), description: e?.message, variant: 'destructive' }),
   });
 
   const updatePhase = (idx: number, patch: Partial<AwardedProjectHydrationPayload['phases'][number]>) => {
@@ -116,10 +118,10 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
         {payload && (
           <>
             <div className="grid grid-cols-4 gap-2 text-sm">
-              <SummaryCard icon={<Layers className="h-4 w-4" />} label="Phases" value={stats.phases} />
-              <SummaryCard icon={<ListTodo className="h-4 w-4" />} label="Tâches" value={stats.tasks} />
-              <SummaryCard icon={<Target className="h-4 w-4" />} label="Jalons" value={stats.milestones} />
-              <SummaryCard label="Montant" value={`${stats.amount.toLocaleString('fr-FR')} ${payload.currency}`} />
+              <SummaryCard icon={<Layers className="h-4 w-4" />} label={t('auto.awardedtenderpreviewdialog.phases')} value={stats.phases} />
+              <SummaryCard icon={<ListTodo className="h-4 w-4" />} label={t('auto.awardedtenderpreviewdialog.taches')} value={stats.tasks} />
+              <SummaryCard icon={<Target className="h-4 w-4" />} label={t('auto.awardedtenderpreviewdialog.jalons')} value={stats.milestones} />
+              <SummaryCard label={t('auto.awardedtenderpreviewdialog.montant')} value={`${stats.amount.toLocaleString('fr-FR')} ${payload.currency}`} />
             </div>
 
             <ScrollArea className="flex-1 pr-3 border rounded-md">
@@ -138,7 +140,7 @@ export function AwardedTenderPreviewDialog(props: AwardedTenderPreviewDialogProp
                         value={phase.durationDays}
                         onChange={(e) => updatePhase(idx, { durationDays: Number(e.target.value) })}
                         className="w-20 h-8"
-                        title="Durée (jours)"
+                        title={t('auto.awardedtenderpreviewdialog.duree_jours')}
                       />
                       <Badge variant="secondary">{phase.amount.toLocaleString('fr-FR')} {payload.currency}</Badge>
                       <Button size="icon" variant="ghost" onClick={() => removePhase(idx)}>
@@ -214,11 +216,11 @@ function CopyBoqToProjectButton({ estimateId, projectId }: { estimateId: string;
         try {
           const r = await convert({ estimateId, projectId });
           toast({
-            title: 'Lignes DQE copiées',
+            title: t('auto.awardedtenderpreviewdialog.lignes_dqe_copiees'),
             description: `${r.linesCopied} lignes • ${r.distinctPhases.length} phases • ${r.distinctMaterials.length} matériaux • Total HT ${r.totalHt.toLocaleString('fr-FR')} MRU`,
           });
         } catch (e) {
-          toast({ title: 'Copie BOQ échouée', description: e instanceof Error ? e.message : String(e), variant: 'destructive' });
+          toast({ title: t('auto.awardedtenderpreviewdialog.copie_boq_echouee'), description: e instanceof Error ? e.message : String(e), variant: 'destructive' });
         }
       }}
     >

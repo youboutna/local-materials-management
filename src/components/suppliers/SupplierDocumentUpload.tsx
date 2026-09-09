@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/hexagonal/useAuth';
 import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
 import { getDocumentService } from '@/application/services/DocumentService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SupplierDocumentUploadProps {
   supplier: Supplier;
@@ -19,6 +20,7 @@ interface SupplierDocumentUploadProps {
 }
 
 const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadProps) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -44,11 +46,11 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
 
       if (uploadData.file) {
         const uploadResult = await uploadFile(uploadData.file);
-        
+
         if (!uploadResult.success) {
           throw new Error(uploadResult.error || 'Upload failed');
         }
-        
+
         fileUrl = uploadResult.url || null;
         uploadedFileName = uploadResult.fileName || uploadData.file.name;
         fileSize = uploadResult.size || uploadData.file.size;
@@ -83,7 +85,7 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
         status: 'approved'
       });
       setFile(null);
-      
+
       if (onSuccess) {
         onSuccess();
       }
@@ -111,7 +113,7 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !file) {
       toast({
         title: "Erreur",
@@ -133,7 +135,7 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
             id="title"
             value={formData.title}
             onChange={(e) => handleInputChange('title', e.target.value)}
-            placeholder="Ex: Catalogue produits 2024"
+            placeholder={t('auto.supplierdocumentupload.ex_catalogue_produits_2024')}
             required
           />
         </div>
@@ -160,7 +162,7 @@ const SupplierDocumentUpload = ({ supplier, onSuccess }: SupplierDocumentUploadP
           id="description"
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
-          placeholder="Description du document"
+          placeholder={t('auto.supplierdocumentupload.description_du_document')}
           rows={2}
         />
       </div>

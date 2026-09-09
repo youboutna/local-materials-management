@@ -44,17 +44,17 @@ const BankGuaranteeCrud = () => {
   });
 
   const guaranteeTypes = [
-    { value: 'performance', label: 'Garantie de bonne exécution' },
+    { value: 'performance', label: t('auto.bankguaranteecrud.garantie_de_bonne_execution') },
     { value: 'advance_payment', label: 'Garantie d\'avance' },
-    { value: 'bid_bond', label: 'Garantie de soumission' },
-    { value: 'retention', label: 'Garantie de retenue' }
+    { value: 'bid_bond', label: t('auto.bankguaranteecrud.garantie_de_soumission') },
+    { value: 'retention', label: t('auto.bankguaranteecrud.garantie_de_retenue') }
   ];
 
   const statusOptions = [
-    { value: 'active', label: 'Active', color: 'bg-success-soft text-success' },
-    { value: 'expired', label: 'Expirée', color: 'bg-destructive/10 text-destructive' },
-    { value: 'cancelled', label: 'Annulée', color: 'bg-muted text-foreground' },
-    { value: 'pending', label: 'En attente', color: 'bg-warning/10 text-warning' }
+    { value: 'active', label: t('auto.bankguaranteecrud.active'), color: 'bg-success-soft text-success' },
+    { value: 'expired', label: t('auto.bankguaranteecrud.expiree'), color: 'bg-destructive/10 text-destructive' },
+    { value: 'cancelled', label: t('auto.bankguaranteecrud.annulee'), color: 'bg-muted text-foreground' },
+    { value: 'pending', label: t('auto.bankguaranteecrud.en_attente'), color: 'bg-warning/10 text-warning' }
   ];
 
   const resetForm = () => {
@@ -118,7 +118,7 @@ const BankGuaranteeCrud = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.projectId || !formData.contractorId || !formData.bankName) {
       toast({
         title: t('common.error'),
@@ -135,7 +135,7 @@ const BankGuaranteeCrud = () => {
           id: selectedGuarantee.id,
           data: formData
         });
-        
+
         toast({
           title: t('common.success'),
           description: "Garantie bancaire mise à jour avec succès",
@@ -143,13 +143,13 @@ const BankGuaranteeCrud = () => {
       } else {
         // Create new guarantee using hexagonal hook
         await createGuarantee.mutateAsync(formData);
-        
+
         toast({
           title: t('common.success'),
           description: "Garantie bancaire créée avec succès",
         });
       }
-      
+
       setIsFormOpen(false);
       resetForm();
     } catch (error) {
@@ -165,7 +165,7 @@ const BankGuaranteeCrud = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette garantie bancaire ?')) {
       // Delete guarantee using hexagonal hook
       await deleteGuarantee.mutateAsync(guaranteeId);
-      
+
       toast({
         title: t('common.success'),
         description: "Garantie bancaire supprimée avec succès",
@@ -210,20 +210,20 @@ const BankGuaranteeCrud = () => {
                 {isViewMode ? 'Détails de la Garantie' : isEditing ? 'Modifier la Garantie' : 'Nouvelle Garantie Bancaire'}
               </DialogTitle>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProjectSelector
                   value={formData.projectId}
                   onChange={handleProjectChange}
-                  label="Projet"
+                  label={t('auto.bankguaranteecrud.projet')}
                   required
                   disabled={isViewMode}
                 />
-                
+
                 <div>
                   <SupplierSelector
-                    value={{ 
+                    value={{
                       id: formData.contractorId,
                       name: '',
                       contact: '',
@@ -247,7 +247,7 @@ const BankGuaranteeCrud = () => {
                     disabled={isViewMode}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="guarantee_amount">Montant (MRU) *</Label>
                   <Input
@@ -266,8 +266,8 @@ const BankGuaranteeCrud = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="guarantee_type">Type de garantie *</Label>
-                  <Select 
-                    value={formData.guaranteeType} 
+                  <Select
+                    value={formData.guaranteeType}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, guaranteeType: value as BankGuaranteeType }))}
                     disabled={isViewMode}
                   >
@@ -283,7 +283,7 @@ const BankGuaranteeCrud = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="issue_date">Date d'émission *</Label>
                   <Input
@@ -295,7 +295,7 @@ const BankGuaranteeCrud = () => {
                     disabled={isViewMode}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="expiry_date">Date d'expiration *</Label>
                   <Input
@@ -311,8 +311,8 @@ const BankGuaranteeCrud = () => {
 
               <div>
                 <Label htmlFor="status"><T k="auto.bankguaranteecrud.statut" fallback="Statut" /></Label>
-                <Select 
-                  value={formData.status} 
+                <Select
+                  value={formData.status}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as BankGuaranteeStatus }))}
                   disabled={isViewMode}
                 >

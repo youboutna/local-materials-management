@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * DocumentShareDialog - Share documents with suppliers
  * MIGRATED TO HEXAGONAL ARCHITECTURE
@@ -23,6 +24,7 @@ interface DocumentShareDialogProps {
 }
 
 const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: DocumentShareDialogProps) => {
+  const { t } = useLanguage();
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -31,8 +33,8 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
   const shareDocumentsMutation = useShareDocuments(tenderId);
 
   const toggleDocumentSelection = (docId: string) => {
-    setSelectedDocuments(prev => 
-      prev.includes(docId) 
+    setSelectedDocuments(prev =>
+      prev.includes(docId)
         ? prev.filter(id => id !== docId)
         : [...prev, docId]
     );
@@ -40,12 +42,12 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
 
   const handleShare = async () => {
     try {
-      await shareDocumentsMutation.mutateAsync({ 
-        documentIds: selectedDocuments, 
-        phase 
+      await shareDocumentsMutation.mutateAsync({
+        documentIds: selectedDocuments,
+        phase
       });
       toast({
-        title: 'Documents partagés',
+        title: t('auto.documentsharedialog.documents_partages'),
         description: `${selectedDocuments.length} document(s) partagé(s) avec les fournisseurs pour la phase ${phaseTitle}`,
       });
       setSelectedDocuments([]);
@@ -53,8 +55,8 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
     } catch (error) {
       console.error('Share documents error:', error);
       toast({
-        title: 'Erreur',
-        description: 'Échec du partage des documents',
+        title: t('auto.documentsharedialog.erreur'),
+        description: t('auto.documentsharedialog.echec_du_partage_des_documents'),
         variant: 'destructive',
       });
     }
@@ -87,9 +89,9 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
               {documents.map((doc) => {
                 const isSelected = selectedDocuments.includes(doc.id);
                 const isAlreadyShared = doc.is_shared_with_suppliers;
-                
+
                 return (
-                  <Card 
+                  <Card
                     key={doc.id}
                     className={`cursor-pointer transition-all ${
                       isSelected ? 'ring-2 ring-primary' : ''
@@ -117,7 +119,7 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           {isAlreadyShared && (
                             <Badge variant="secondary" className="flex items-center gap-1">
@@ -154,12 +156,12 @@ const DocumentShareDialog = ({ isOpen, onClose, tenderId, phase, phaseTitle }: D
               <span>{selectedDocuments.length} document(s) sélectionné(s)</span>
             )}
           </div>
-          
+
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>
               <T k="auto.documentsharedialog.annuler" fallback="Annuler" />
             </Button>
-            <Button 
+            <Button
               onClick={handleShare}
               disabled={selectedDocuments.length === 0 || shareDocumentsMutation.isPending}
             >

@@ -27,13 +27,14 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
-import { 
-  useTenderSubmission, 
-  useSubmissionDocuments, 
-  useSaveSubmissionEvaluation 
+import {
+  useTenderSubmission,
+  useSubmissionDocuments,
+  useSaveSubmissionEvaluation
 } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
 import type { RegulatoryAnswer } from '@/config/referentials/compliance/regulatory-compliance.referential';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SubmissionEvaluationPanelProps {
   submissionId: string;
@@ -52,8 +53,9 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
   submissionId,
   tenderId
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
-  
+
   const [scores, setScores] = useState<EvaluationScores>({
     administrative_score: 0,
     technical_score: 0,
@@ -116,7 +118,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
 
       toast({
         title: finalSubmit ? "Évaluation soumise" : "Évaluation sauvegardée",
-        description: finalSubmit 
+        description: finalSubmit
           ? "L'évaluation a été soumise avec succès."
           : "Vos modifications ont été sauvegardées.",
       });
@@ -189,8 +191,8 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
             <Card key={category}>
               <CardHeader>
                 <CardTitle className="text-lg capitalize">
-                  Documents {category === 'administrative' ? 'Administratifs' : 
-                            category === 'technical' ? 'Techniques' : 
+                  Documents {category === 'administrative' ? 'Administratifs' :
+                            category === 'technical' ? 'Techniques' :
                             category === 'financial' ? 'Financiers' : category}
                 </CardTitle>
               </CardHeader>
@@ -355,7 +357,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   id="notes"
                   value={scores.notes}
                   onChange={(e) => setScores({ ...scores, notes: e.target.value })}
-                  placeholder="Observations et commentaires détaillés..."
+                  placeholder={t('auto.submissionevaluationpanel.observations_et_commentaires_detailles')}
                   rows={4}
                 />
               </div>
@@ -367,7 +369,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                   id="recommendations"
                   value={scores.recommendations}
                   onChange={(e) => setScores({ ...scores, recommendations: e.target.value })}
-                  placeholder="Recommandations pour la suite du processus..."
+                  placeholder={t('auto.submissionevaluationpanel.recommandations_pour_la_suite_du_processus')}
                   rows={3}
                 />
               </div>
@@ -410,7 +412,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                     <Star className="h-5 w-5 text-warning" />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
                   <span className="font-medium"><T k="auto.submissionevaluationpanel.score_technique_40" fallback="Score Technique (40%)" /></span>
                   <div className="flex items-center gap-2">
@@ -418,7 +420,7 @@ export const SubmissionEvaluationPanel: React.FC<SubmissionEvaluationPanelProps>
                     <Star className="h-5 w-5 text-warning" />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded">
                   <span className="font-medium"><T k="auto.submissionevaluationpanel.score_financier_30" fallback="Score Financier (30%)" /></span>
                   <div className="flex items-center gap-2">

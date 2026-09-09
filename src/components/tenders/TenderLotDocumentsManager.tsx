@@ -40,6 +40,7 @@ import {
 
 import { TENDER_DOCUMENT_CATEGORIES } from '@/config/referentials/tender/document-categories.referential';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CATEGORIES = TENDER_DOCUMENT_CATEGORIES;
 
@@ -67,6 +68,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
   availableLots = [],
   readOnly,
 }) => {
+  const { t } = useLanguage();
   const { openDocument } = useDocumentViewer();
   const { data: allDocs = [], isLoading } = useTenderLotDocuments(tenderId);
   const createDoc = useCreateTenderLotDocument(tenderId);
@@ -280,7 +282,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
                   <Button
                     size="icon"
                     variant="ghost"
-                    title="Consulter"
+                    title={t('auto.tenderlotdocumentsmanager.consulter')}
                     onClick={() => openDocument(doc, { proxy: true })}
                   >
                     <Eye className="h-4 w-4" />
@@ -288,14 +290,14 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
                 )}
                 {!readOnly && (
                   <>
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(doc)} title="Modifier">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(doc)} title={t('auto.tenderlotdocumentsmanager.modifier')}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
                       onClick={() => deleteDoc.mutate(doc.id)}
-                      title="Supprimer"
+                      title={t('auto.tenderlotdocumentsmanager.supprimer')}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -361,7 +363,7 @@ const TenderLotDocumentsManager: React.FC<Props> = ({
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Titre du document"
+                placeholder={t('auto.tenderlotdocumentsmanager.titre_du_document')}
               />
             </div>
 

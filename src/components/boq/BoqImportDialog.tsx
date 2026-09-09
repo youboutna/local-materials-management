@@ -41,6 +41,7 @@ import { DocumentContextSummary } from './DocumentContextSummary';
 import { DocumentEnvelopePanel } from './DocumentEnvelopePanel';
 import { CoherencePanel, FiscalRecapPanel, MetreRecapPanel } from './ImportRecapPanels';
 import { ReconciliationPanel } from './ReconciliationPanel';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   source: BoqSource;
@@ -90,6 +91,7 @@ function validateLines(lines: BoqLineDTO[]): RowIssue[] {
 }
 
 export function BoqImportDialog(props: Props) {
+  const { t } = useLanguage();
   const { source, contextId, phaseId, defaultReferentialCode, projectId, trigger, title, onImported, onParsed, commitOnSubmit = true, contextItems = [], fiscalProfileCode, variant = 'dialog' } = props;
   const { translateTerm } = useI18n();
   const [openInternal, setOpenInternal] = useState(false);
@@ -264,7 +266,7 @@ export function BoqImportDialog(props: Props) {
     if (edbReport && edbReport.errors.length > 0) {
       toast({
         title: `${edbReport.errors.length} erreur(s) de calcul dans l'EDB`,
-        description: 'Corrigez les lignes signalées (unité forfaitaire) avant import.',
+        description: t('auto.boqimportdialog.corrigez_les_lignes_signalees_unite_forfaitaire_'),
         variant: 'destructive',
       });
       return;
@@ -272,15 +274,15 @@ export function BoqImportDialog(props: Props) {
     if (issues.length > 0) {
       toast({
         title: `${issues.length} ligne(s) invalide(s)`,
-        description: 'Corrigez les unités / dimensions avant import.',
+        description: t('auto.boqimportdialog.corrigez_les_unites_dimensions_avant_import'),
         variant: 'destructive',
       });
       return;
     }
     if (isAltReferential && altPhases.some((p) => !phaseMapping[p.code])) {
       toast({
-        title: 'Mapping incomplet',
-        description: 'Associez chaque phase du référentiel choisi à une phase du projet.',
+        title: t('auto.boqimportdialog.mapping_incomplet'),
+        description: t('auto.boqimportdialog.associez_chaque_phase_du_referentiel_choisi_a_un'),
         variant: 'destructive',
       });
       return;
@@ -300,23 +302,23 @@ export function BoqImportDialog(props: Props) {
       setDtos(lines);
       if (commitOnSubmit) {
         const r = await commit(lines);
-        toast({ title: 'Import terminé', description: `${r.length} ligne(s) importée(s).` });
+        toast({ title: t('auto.boqimportdialog.import_termine'), description: `${r.length} ligne(s) importée(s).` });
         window.dispatchEvent(
           new CustomEvent('boq-imported', {
             detail: { source, contextId, count: r.length, budgetDecision, newProjectBudget, keepDiscrepancyAlert },
           }),
         );
-        if (decisionNote) toast({ title: 'Décision budgétaire appliquée', description: decisionNote });
+        if (decisionNote) toast({ title: t('auto.boqimportdialog.decision_budgetaire_appliquee'), description: decisionNote });
         onImported?.(r.length);
       } else {
         onParsed?.(lines);
-        toast({ title: 'Lignes ajoutées au document', description: `${lines.length} ligne(s) à contrôler puis enregistrer.` });
+        toast({ title: t('auto.boqimportdialog.lignes_ajoutees_au_document'), description: `${lines.length} ligne(s) à contrôler puis enregistrer.` });
         onImported?.(lines.length);
       }
       setOpen(false);
     } catch (e) {
       toast({
-        title: 'Import échoué',
+        title: t('auto.boqimportdialog.import_echoue'),
         description: e instanceof Error ? e.message : String(e),
         variant: 'destructive',
       });
@@ -362,7 +364,7 @@ export function BoqImportDialog(props: Props) {
   const goPrev = () => setStep((s) => (Math.max(s - 1, 1) as 1 | 2 | 3 | 4));
 
   const stepper = (
-    <nav aria-label="Étapes de l'import" className="flex flex-wrap items-center gap-2 pb-1">
+    <nav aria-label={t('auto.boqimportdialog.etapes_de_l_import')} className="flex flex-wrap items-center gap-2 pb-1">
       {stepLabels.map((label, i) => {
         const n = (i + 1) as 1 | 2 | 3 | 4;
         const active = n === step;
@@ -431,8 +433,8 @@ export function BoqImportDialog(props: Props) {
             {!parseResult.envelope && (parseResult.parties?.supplier || parseResult.parties?.organization) && (
               <section className="grid grid-cols-1 gap-3 rounded-md bg-muted/40 p-3 md:grid-cols-2">
                 {([
-                  { label: 'Fournisseur (expéditeur)', party: parseResult.parties?.supplier },
-                  { label: 'Organisation (destinataire)', party: parseResult.parties?.organization },
+                  { label: t('auto.boqimportdialog.fournisseur_expediteur'), party: parseResult.parties?.supplier },
+                  { label: t('auto.boqimportdialog.organisation_destinataire'), party: parseResult.parties?.organization },
                 ] as const).map(({ label, party }) => (
                   <div key={label} className="space-y-0.5">
                     <Label className="text-xs font-medium">{label}</Label>
@@ -450,7 +452,7 @@ export function BoqImportDialog(props: Props) {
 
             <Collapsible defaultOpen>
               <div className="flex items-center justify-between gap-2 border-b py-2">
-                <div className="text-sm font-medium">Configuration et enrichissement de l'import</div>
+                <div className="text-sm font-medium"><T k="auto.boqimportdialog.configuration_et_enrichissement_de_l_import" fallback="Configuration et enrichissement de l'import" /></div>
                 <CollapsibleTrigger asChild>
                   <Button type="button" variant="ghost" size="sm" className="h-8 gap-1">
                     <ChevronDown className="h-4 w-4" /> Afficher / réduire
@@ -495,7 +497,7 @@ export function BoqImportDialog(props: Props) {
                   onValueChange={(v) => handleReferentialChange(v === '__none__' ? undefined : (v as ReferentialType))}
                   disabled={isBusy}
                 >
-                  <SelectTrigger><SelectValue placeholder="Utiliser le référentiel projet" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('auto.boqimportdialog.utiliser_le_referentiel_projet')} /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__"><T k="auto.boqimportdialog.aucun_heuristiques_fr_par_defaut" fallback="Aucun (heuristiques FR par défaut)" /></SelectItem>
                     {refOptions.map((o) => (
@@ -525,7 +527,7 @@ export function BoqImportDialog(props: Props) {
                         onValueChange={(v) => setPhaseMapping((m) => ({ ...m, [altPh.code]: v === '__none__' ? '' : v }))}
                         disabled={isBusy}
                       >
-                        <SelectTrigger className="h-8 w-full sm:w-56"><SelectValue placeholder="Choisir phase projet" /></SelectTrigger>
+                        <SelectTrigger className="h-8 w-full sm:w-56"><SelectValue placeholder={t('auto.boqimportdialog.choisir_phase_projet')} /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">— non mappée —</SelectItem>
                           {(projectWbs.length > 0
@@ -598,7 +600,7 @@ export function BoqImportDialog(props: Props) {
               <h4 className="text-sm font-medium mb-2">Aperçu ({wbsEnrichedDtos.length} lignes) — éditable</h4>
               <BoqLineTable
                 lines={wbsEnrichedDtos}
-                emptyLabel="Aucune ligne détectée avec le mapping courant."
+                emptyLabel={t('auto.boqimportdialog.aucune_ligne_detectee_avec_le_mapping_courant')}
                 editable
                 referentialCode={projectWbs.length > 0 ? undefined : referentialCode}
                 phases={projectWbs.length > 0 ? projectWbs : undefined}
@@ -613,21 +615,21 @@ export function BoqImportDialog(props: Props) {
           <section className="space-y-3">
             {parseResult.envelope && <DocumentEnvelopePanel envelope={parseResult.envelope} />}
             <div className="rounded-md border p-3 text-sm">
-              <h4 className="mb-2 font-medium">Récapitulatif</h4>
+              <h4 className="mb-2 font-medium"><T k="auto.boqimportdialog.recapitulatif" fallback="Récapitulatif" /></h4>
               <dl className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-                <div className="flex justify-between gap-2"><dt>Lignes totales</dt><dd className="font-medium">{wbsEnrichedDtos.length}</dd></div>
-                <div className="flex justify-between gap-2"><dt>Lignes en erreur</dt><dd className="font-medium">{issues.length}</dd></div>
-                <div className="flex justify-between gap-2"><dt>Fichier</dt><dd className="truncate font-medium">{parseResult.fileName}</dd></div>
-                <div className="flex justify-between gap-2"><dt>Avertissements</dt><dd className="font-medium">{parseResult.warnings.length}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.lignes_totales" fallback="Lignes totales" /></dt><dd className="font-medium">{wbsEnrichedDtos.length}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.lignes_en_erreur" fallback="Lignes en erreur" /></dt><dd className="font-medium">{issues.length}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.fichier" fallback="Fichier" /></dt><dd className="truncate font-medium">{parseResult.fileName}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.avertissements" fallback="Avertissements" /></dt><dd className="font-medium">{parseResult.warnings.length}</dd></div>
               </dl>
             </div>
             <div className="rounded-md border p-3 text-sm">
-              <h4 className="mb-2 font-medium">Totaux</h4>
+              <h4 className="mb-2 font-medium"><T k="auto.boqimportdialog.totaux" fallback="Totaux" /></h4>
               <dl className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-                <div className="flex justify-between gap-2"><dt>Total HT</dt><dd className="font-medium">{fmt(totals.ht)}</dd></div>
-                <div className="flex justify-between gap-2"><dt>TVA</dt><dd className="font-medium">{fmt(totals.vat)}</dd></div>
-                <div className="flex justify-between gap-2"><dt>RAS</dt><dd className="font-medium">{fmt(totals.ras)}</dd></div>
-                <div className="flex justify-between gap-2"><dt>Total TTC</dt><dd className="font-semibold">{fmt(totals.ttc)}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.total_ht" fallback="Total HT" /></dt><dd className="font-medium">{fmt(totals.ht)}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.tva" fallback="TVA" /></dt><dd className="font-medium">{fmt(totals.vat)}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.ras" fallback="RAS" /></dt><dd className="font-medium">{fmt(totals.ras)}</dd></div>
+                <div className="flex justify-between gap-2"><dt><T k="auto.boqimportdialog.total_ttc" fallback="Total TTC" /></dt><dd className="font-semibold">{fmt(totals.ttc)}</dd></div>
               </dl>
             </div>
             <FiscalRecapPanel lines={wbsEnrichedDtos} />
@@ -657,11 +659,11 @@ export function BoqImportDialog(props: Props) {
   const submitButton = (
     <div className="flex flex-wrap items-center gap-2">
       <Button variant="outline" className="min-h-11" onClick={goPrev} disabled={!canPrev || isBusy}>
-        Précédent
+        <T k="auto.boqimportdialog.precedent" fallback="Précédent" />
       </Button>
       {canNext ? (
         <Button className="min-h-11" onClick={goNext} disabled={isBusy}>
-          Suivant
+          <T k="auto.boqimportdialog.suivant" fallback="Suivant" />
         </Button>
       ) : (
         <Button className="min-h-11" onClick={onSubmit} disabled={submitDisabled}>

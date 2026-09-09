@@ -1,12 +1,12 @@
 /**
  * TaskAssigneeSelector - Sélecteur d'assigné pour les tâches
- * 
+ *
  * Architecture Hexagonale - RÈGLES STRICTES :
  * - Zéro accès direct aux tables Supabase dans les composants
  * - Utilisation des services et DTOs
  * - Tous les types proviennent des DTOs
  * - UI Component → Hook → Service → Repository → Adapter → DB
- * 
+ *
  * Respecte PROMPT.md :
  * - ✅ Zéro accès direct aux tables Supabase dans les composants
  * - ✅ Utilisation de useStakeholdersHex
@@ -29,6 +29,7 @@ import { StakeholderResponseDTO } from '@/dtos/entities/StakeholderDTO';
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // ============================================================================
 // TYPES - ALIAS VERS LES DTOS
 // ============================================================================
@@ -69,6 +70,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
   required = false,
   placeholder = "Sélectionner un assigné",
 }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   // ✅ Utilisation du hook hexagonal
@@ -81,10 +83,10 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
       const { getEmployeeService } = await import('@/application/services/EmployeeService');
       const employeeService = getEmployeeService();
       const allEmployees = await employeeService.getAllEmployees();
-      
+
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
-        return allEmployees.filter(emp => 
+        return allEmployees.filter(emp =>
           emp.fullName?.toLowerCase().includes(term) ||
           emp.position?.toLowerCase().includes(term) ||
           emp.department?.toLowerCase().includes(term)
@@ -176,12 +178,12 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
       )}
-      
+
       <div className="space-y-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher..."
+            placeholder={t('auto.taskassigneeselector.rechercher')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -206,7 +208,7 @@ const TaskAssigneeSelector: React.FC<TaskAssigneeSelectorProps> = ({
                     )}
                     <span>{selectedAssignee.name}</span>
                     <Badge variant="outline" className="text-xs">
-                      {selectedAssignee.type === 'employee' ? 'Employé' : 
+                      {selectedAssignee.type === 'employee' ? 'Employé' :
                        selectedAssignee.type === 'supplier' ? 'Fournisseur' : 'Externe'}
                     </Badge>
                   </div>

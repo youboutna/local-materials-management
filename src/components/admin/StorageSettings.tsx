@@ -10,8 +10,10 @@ import { setStorageConfig, getStorageConfig, StorageConfig, StorageProvider } fr
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { CheckCircle, XCircle, Database, Folder, Server, Cloud } from 'lucide-react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const StorageSettings = () => {
+  const { t } = useLanguage();
   const [config, setConfig] = useState<StorageConfig>(getStorageConfig());
   const [testing, setTesting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<boolean | null>(null);
@@ -19,12 +21,12 @@ const StorageSettings = () => {
   const { validateConnection } = useDocumentStorage();
 
   const storageProviders: { value: StorageProvider; label: string; icon: any }[] = [
-    { value: 'supabase', label: 'Supabase Storage', icon: Database },
-    { value: 'local', label: 'Local Storage', icon: Folder },
-    { value: 'ftp', label: 'FTP Server', icon: Server },
-    { value: 's3', label: 'Amazon S3', icon: Cloud },
-    { value: 'azure', label: 'Azure Blob Storage', icon: Cloud },
-    { value: 'gcs', label: 'Google Cloud Storage', icon: Cloud }
+    { value: 'supabase', label: t('auto.storagesettings.supabase_storage'), icon: Database },
+    { value: 'local', label: t('auto.storagesettings.local_storage'), icon: Folder },
+    { value: 'ftp', label: t('auto.storagesettings.ftp_server'), icon: Server },
+    { value: 's3', label: t('auto.storagesettings.amazon_s3'), icon: Cloud },
+    { value: 'azure', label: t('auto.storagesettings.azure_blob_storage'), icon: Cloud },
+    { value: 'gcs', label: t('auto.storagesettings.google_cloud_storage'), icon: Cloud }
   ];
 
   const handleConfigChange = (field: keyof StorageConfig, value: string) => {
@@ -46,10 +48,10 @@ const StorageSettings = () => {
       setStorageConfig(config);
       const isValid = await validateConnection();
       setConnectionStatus(isValid);
-      
+
       toast({
         title: isValid ? "Connexion réussie" : "Échec de la connexion",
-        description: isValid 
+        description: isValid
           ? "La connexion au fournisseur de stockage fonctionne correctement."
           : "Impossible de se connecter au fournisseur de stockage.",
         variant: isValid ? "default" : "destructive"
@@ -82,7 +84,7 @@ const StorageSettings = () => {
             </div>
           </div>
         );
-      
+
       case 'ftp':
         return (
           <div className="space-y-4">
@@ -137,7 +139,7 @@ const StorageSettings = () => {
             </div>
           </div>
         );
-      
+
       case 'local':
         return (
           <div className="space-y-4">
@@ -152,7 +154,7 @@ const StorageSettings = () => {
             </div>
           </div>
         );
-      
+
       case 's3':
       case 'azure':
       case 'gcs':
@@ -160,13 +162,13 @@ const StorageSettings = () => {
           <div className="space-y-4">
             <div className="p-4 bg-warning/10 border border-warning/30 rounded-md">
               <p className="text-warning">
-                Ce fournisseur de stockage n'est pas encore implémenté. 
+                Ce fournisseur de stockage n'est pas encore implémenté.
                 Veuillez choisir un autre fournisseur.
               </p>
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -185,7 +187,7 @@ const StorageSettings = () => {
           <Label htmlFor="provider"><T k="auto.storagesettings.fournisseur_de_stockage" fallback="Fournisseur de stockage" /></Label>
           <Select value={config.provider} onValueChange={(value) => handleConfigChange('provider', value)}>
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un fournisseur" />
+              <SelectValue placeholder={t('auto.storagesettings.selectionner_un_fournisseur')} />
             </SelectTrigger>
             <SelectContent>
               {storageProviders.map((provider) => {
@@ -209,15 +211,15 @@ const StorageSettings = () => {
           <Button onClick={handleSave}>
             <T k="auto.storagesettings.sauvegarder_la_configuration" fallback="Sauvegarder la configuration" />
           </Button>
-          
-          <Button 
-            variant="outline" 
+
+          <Button
+            variant="outline"
             onClick={handleTestConnection}
             disabled={testing}
           >
             {testing ? 'Test en cours...' : 'Tester la connexion'}
           </Button>
-          
+
           {connectionStatus !== null && (
             <div className="flex items-center">
               {connectionStatus ? (

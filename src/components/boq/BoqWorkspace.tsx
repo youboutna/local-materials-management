@@ -69,6 +69,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { i18nService } from '@/application/services/I18nService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
 const catToResource = (c: ManualCategory): BoqResourceType =>
@@ -107,6 +108,7 @@ export function BoqWorkspace({
   referentialCode, estimateId,
   emptyLabel, importLabel, documentId,
 }: Props) {
+  const { t } = useLanguage();
   const { translateTerm, t, language: lang } = useI18n();
   const doc = useBoqDocument({ source, contextId, projectId, documentId });
   const { toast } = useToast();
@@ -460,7 +462,7 @@ export function BoqWorkspace({
 
   const handleCreate = () => {
     if (!form.designation?.trim()) {
-      toast({ title: 'Désignation requise', variant: 'destructive' });
+      toast({ title: t('auto.boqworkspace.designation_requise'), variant: 'destructive' });
       return;
     }
     const profile = getFiscalProfile(fiscalCode);
@@ -530,7 +532,7 @@ export function BoqWorkspace({
     resetForm();
     setOpenManual(false);
     toast({
-      title: 'Ligne ajoutée au brouillon',
+      title: t('auto.boqworkspace.ligne_ajoutee_au_brouillon'),
       description: recoDrafts.length
         ? `1 ligne + ${recoDrafts.length} recommandation(s). Cliquez « Enregistrer le DQE » pour persister.`
         : 'Cliquez « Enregistrer le DQE » pour persister.',
@@ -548,7 +550,7 @@ export function BoqWorkspace({
     const invalid = candidates.filter((l) => !String(l.designation ?? '').trim() || (!l.quantity && !l.totalHt));
     if (invalid.length) {
       toast({
-        title: 'Lignes incomplètes',
+        title: t('auto.boqworkspace.lignes_incompletes'),
         description: `${invalid.length} ligne(s) sans désignation ou sans quantité/montant. Complétez-les avant d'enregistrer.`,
         variant: 'destructive',
       });
@@ -571,7 +573,7 @@ export function BoqWorkspace({
       return true;
     } catch (e) {
       toast({
-        title: 'Enregistrement échoué',
+        title: t('auto.boqworkspace.enregistrement_echoue'),
         description: String(e instanceof Error ? e.message : e),
         variant: 'destructive',
       });
@@ -598,16 +600,16 @@ export function BoqWorkspace({
   const [aligning, setAligning] = useState(false);
   const handleAlignPlanning = async () => {
     if (!projectId || !estimateId) {
-      toast({ title: 'Contexte incomplet', description: 'projectId + estimateId requis', variant: 'destructive' });
+      toast({ title: t('auto.boqworkspace.contexte_incomplet'), description: 'projectId + estimateId requis', variant: 'destructive' });
       return;
     }
     setAligning(true);
     try {
       const res = await tenderToPlanningService.convert({ estimateId, projectId });
-      toast({ title: 'Aligné à la planification', description: `${res.linesCopied} lignes → ${res.distinctPhases.length} phases` });
+      toast({ title: t('auto.boqworkspace.aligne_a_la_planification'), description: `${res.linesCopied} lignes → ${res.distinctPhases.length} phases` });
       window.dispatchEvent(new CustomEvent('boq-kpi-refresh'));
     } catch (e) {
-      toast({ title: 'Échec alignement', description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
+      toast({ title: t('auto.boqworkspace.echec_alignement'), description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
     } finally { setAligning(false); }
   };
 
@@ -949,7 +951,7 @@ export function BoqWorkspace({
                     <div className={depots.length > 1 ? 'col-span-3' : 'col-span-6'}>
                       <Label>Article {depotId ? '(dépôt filtré)' : '(du dépôt, optionnel)'}</Label>
                       <Select value={materialId || '__none__'} onValueChange={(v) => (v === '__none__' ? setMaterialId('') : onPickMaterial(v))}>
-                        <SelectTrigger><SelectValue placeholder="Sélectionner un article — auto-remplit désignation, unité, PU" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t('auto.boqworkspace.selectionner_un_article_auto_remplit_designation')} /></SelectTrigger>
                         <SelectContent className="max-h-64">
                           <SelectItem value="__none__">— Saisie libre —</SelectItem>
                           {filteredMaterials.slice(0, 200).map((m) => (
@@ -1149,7 +1151,7 @@ export function BoqWorkspace({
             variant="ghost"
             onClick={() => { setDirty(false); void doc.refetch?.(); }}
             disabled={doc.isLoading}
-            title="Recharger les lignes persistées"
+            title={t('auto.boqworkspace.recharger_les_lignes_persistees')}
           >
             <RefreshCw className={`h-4 w-4 mr-1 ${doc.isLoading ? 'animate-spin' : ''}`} />
             <T k="dqe.action.refresh" fallback="Actualiser" />
@@ -1157,7 +1159,7 @@ export function BoqWorkspace({
           <div className="flex items-center gap-2 border-l pl-2 text-xs text-muted-foreground">
             <label htmlFor="dqe-line-page-size" className="whitespace-nowrap"><T k="dqe.lines.show" fallback="Afficher" /></label>
             <Select value={String(linePageSize)} onValueChange={(value) => setLinePageSize(Number(value))}>
-              <SelectTrigger id="dqe-line-page-size" className="h-8 w-[76px]" aria-label="Nombre de lignes affichées"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="dqe-line-page-size" className="h-8 w-[76px]" aria-label={t('auto.boqworkspace.nombre_de_lignes_affichees')}><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}
               </SelectContent>

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { useSuppliersSelector } from '@/hooks/hexagonal'
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SimpleSupplierSelectorProps {
   value?: string;
@@ -23,12 +24,13 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
   disabled = false,
   label
 }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: suppliers, isLoading } = useSuppliersSelector(searchTerm);
 
   const selectedSupplier = suppliers?.find(s => s.id === value);
-  
+
   // 🔧 Debug: Log supplier selection issues
   useEffect(() => {
     if (value && suppliers && suppliers.length > 0) {
@@ -57,11 +59,11 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
   return (
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
-      
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
         <Input
-          placeholder="Rechercher un fournisseur..."
+          placeholder={t('auto.simplesupplierselector.rechercher_un_fournisseur')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -73,8 +75,8 @@ const SimpleSupplierSelector: React.FC<SimpleSupplierSelectorProps> = ({
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
         </div>
       ) : (
-        <Select 
-          value={value || undefined} 
+        <Select
+          value={value || undefined}
           onValueChange={onChange}
           disabled={disabled}
         >

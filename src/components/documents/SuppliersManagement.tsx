@@ -13,16 +13,18 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Plus, Edit, Trash2, Star } from 'lucide-react';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
-import { 
-  useSuppliersHex, 
-  useCreateSupplier, 
-  useUpdateSupplier, 
+import {
+  useSuppliersHex,
+  useCreateSupplier,
+  useUpdateSupplier,
   useDeleteSupplier,
   SupplierMgmtFormData
 } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const SuppliersManagement = () => {
+  const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<SupplierMgmtFormData>({
@@ -76,15 +78,15 @@ const SuppliersManagement = () => {
     }
   };
 
-  const handleEdit = (supplier: { 
-  id: string; 
-  name: string; 
-  email?: string; 
-  phone?: string; 
+  const handleEdit = (supplier: {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
   address?: string;
   category?: string;
-  contacts?: Array<{ name: string }>; 
-  rating?: { overall: number } 
+  contacts?: Array<{ name: string }>;
+  rating?: { overall: number }
 }) => {
     setFormData({
       name: supplier.name || '',
@@ -186,7 +188,7 @@ const SuppliersManagement = () => {
                     onValueChange={(value) => setFormData({ ...formData, category: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une catégorie" />
+                      <SelectValue placeholder={t('auto.suppliersmanagement.selectionner_une_categorie')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="construction"><T k="auto.suppliersmanagement.construction" fallback="Construction" /></SelectItem>
@@ -204,7 +206,7 @@ const SuppliersManagement = () => {
                     onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une note" />
+                      <SelectValue placeholder={t('auto.suppliersmanagement.selectionner_une_note')} />
                     </SelectTrigger>
                     <SelectContent>
                       {[1, 2, 3, 4, 5].map((rating) => (
@@ -216,7 +218,7 @@ const SuppliersManagement = () => {
                   </Select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium"><T k="auto.suppliersmanagement.adresse" fallback="Adresse" /></label>
                 <Textarea

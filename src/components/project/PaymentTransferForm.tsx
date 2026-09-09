@@ -30,12 +30,13 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatAmount2, formatPercent2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PaymentTransferFormProps {
   project: ProjectWithPayments;
-  onSubmit: (data: { 
-    amount: number; 
-    paymentMethod: string; 
+  onSubmit: (data: {
+    amount: number;
+    paymentMethod: string;
     paymentDate: string;
     contractorId?: string;
     contractorName: string;
@@ -86,8 +87,9 @@ const paymentFormSchema = z.object({
 });
 
 export function PaymentTransferForm({ project, onSubmit, isSubmitting }: PaymentTransferFormProps) {
+  const { t } = useLanguage();
   const [validationError, setValidationError] = useState<string | null>(null);
-  
+
   // Use hexagonal hook for payment validation (Rule #5: UI Layer Separation)
   const paymentValidation = usePaymentTransferValidation({
     projectId: project.id,
@@ -95,9 +97,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   });
 
   // Destructure validation results for template usage
-  const { 
-    isInitialPaymentPhase, 
-    maxInitialPayment, 
+  const {
+    isInitialPaymentPhase,
+    maxInitialPayment,
     paymentStatus,
     maxAllowedAmount: maxToleranceAmount
   } = paymentValidation;
@@ -107,7 +109,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
   const paymentProgressPercent = projectBudget > 0 ? Math.min(100, (totalPaid / projectBudget) * 100) : 0;
   const initialPaymentPercentage = (project as { initialPaymentPercentage?: number }).initialPaymentPercentage || 0;
   const progressBasedAmount = (projectBudget * projectProgress) / 100;
-  
+
   const form = useForm<z.infer<typeof paymentFormSchema>>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
@@ -125,29 +127,29 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       receiverName: "",
     },
   });
-  
+
   const selectedPaymentMethod = form.watch("paymentMethod");
-  
+
   const validateAndSubmit = (values: z.infer<typeof paymentFormSchema>) => {
     // Use hexagonal validation (Rule #5: UI Layer Separation)
     if (!paymentValidation.canPay) {
       setValidationError(`Paiement bloqué: ${paymentValidation.blockingReasons.join(', ')}`);
       return;
     }
-    
+
     // Validate amount against allowed limits
     if (values.amount > paymentValidation.maxAllowedAmount) {
       setValidationError(`Le montant demandé (${values.amount.toLocaleString()}) dépasse le paiement autorisé maximum (${paymentValidation.maxAllowedAmount.toLocaleString()})`);
       return;
     }
-    
+
     setValidationError(null);
     onSubmit(values);
   };
-  
+
   // Calculate remaining budget
   const remainingBudget = projectBudget - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
-  
+
   // Use hexagonal hook values (Rule #5: UI Layer Separation)
   const maxToleranceAmountCalc = paymentValidation.maxAllowedAmount;
   const progressBasedRemaining = paymentValidation.allowedAmount - (project.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0);
@@ -183,7 +185,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
       description: "Paiement en liquide"
     }
   ];
-  
+
   return (
     <div className="space-y-6">
       {validationError && (
@@ -193,7 +195,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
           <AlertDescription>{validationError}</AlertDescription>
         </Alert>
       )}
-      
+
       {/* Project Summary Card - Enhanced design */}
       <Card className="border-2 border-dashed border-border bg-gradient-to-br from-gray-50 to-gray-100">
         <CardHeader className="pb-4">
@@ -221,7 +223,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                 <span className="font-semibold text-lg text-primary">{project.progress}%</span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               {isInitialPaymentPhase ? (
                 <div className="flex justify-between items-center p-3 bg-success-soft rounded-lg border border-success/30">
@@ -242,7 +244,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               </div>
             </div>
           </div>
-          
+
           {/* Progress Indicators */}
           <div className="space-y-3">
             <div>
@@ -252,68 +254,68 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               </div>
               <Progress value={paymentProgressPercent} className="h-3" />
             </div>
-            
+
             {!isInitialPaymentPhase && (
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span><T k="auto.paymenttransferform.progression_vs_paiement_attendu" fallback="Progression vs paiement attendu" /></span>
                   <span className="font-medium">{formatPercent2(paymentValidation.allowedAmount > 0 ? Math.min(100, (totalPaid / paymentValidation.allowedAmount) * 100) : 0)}</span>
                 </div>
-                <Progress 
-                  value={paymentValidation.allowedAmount > 0 ? Math.min(100, (totalPaid / paymentValidation.allowedAmount) * 100) : 0} 
-                  className="h-3" 
+                <Progress
+                  value={paymentValidation.allowedAmount > 0 ? Math.min(100, (totalPaid / paymentValidation.allowedAmount) * 100) : 0}
+                  className="h-3"
                 />
               </div>
             )}
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Status Alerts */}
       {isInitialPaymentPhase && (
         <Alert className="bg-success-soft border-success/30">
           <CreditCard className="h-4 w-4 text-success" />
           <AlertTitle className="text-success"><T k="auto.paymenttransferform.paiement_initial_autorise" fallback="Paiement initial autorisé" /></AlertTitle>
           <AlertDescription className="text-success">
-            Ce projet autorise un paiement initial de {initialPaymentPercentage}% du budget total 
+            Ce projet autorise un paiement initial de {initialPaymentPercentage}% du budget total
             ({formatAmount2(maxInitialPayment)}) selon les termes du contrat.
           </AlertDescription>
         </Alert>
       )}
-      
+
       {paymentStatus === "inspection_required" && (
         <Alert variant="destructive" className="bg-warning/10 border-warning/30">
           <AlertTriangle className="h-4 w-4 text-warning" />
           <AlertTitle className="text-warning"><T k="auto.paymenttransferform.inspection_requise" fallback="Inspection requise" /></AlertTitle>
           <AlertDescription className="text-warning">
-            Une inspection approuvée est requise avant de pouvoir effectuer un paiement pour ce projet 
+            Une inspection approuvée est requise avant de pouvoir effectuer un paiement pour ce projet
             avec une progression ≥ 25%.
           </AlertDescription>
         </Alert>
       )}
-      
+
       {paymentStatus === "requires_changes" && (
         <Alert variant="destructive" className="bg-warning/10 border-warning/30">
           <AlertTriangle className="h-4 w-4 text-warning" />
           <AlertTitle className="text-warning"><T k="auto.paymenttransferform.paiement_avec_tolerance_etendue" fallback="Paiement avec tolérance étendue" /></AlertTitle>
           <AlertDescription className="text-warning">
-            L'inspection a révélé des modifications nécessaires. Le paiement peut aller jusqu'à 
+            L'inspection a révélé des modifications nécessaires. Le paiement peut aller jusqu'à
             {formatAmount2(maxToleranceAmount)} (1.5x le montant basé sur la progression).
           </AlertDescription>
         </Alert>
       )}
-      
+
       {paymentStatus === "rejected" && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle><T k="auto.paymenttransferform.paiement_impossible" fallback="Paiement impossible" /></AlertTitle>
           <AlertDescription>
-            L'inspection a été rejetée. Aucun paiement ne peut être effectué jusqu'à ce qu'une 
+            L'inspection a été rejetée. Aucun paiement ne peut être effectué jusqu'à ce qu'une
             nouvelle inspection soit approuvée.
           </AlertDescription>
         </Alert>
       )}
-      
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(validateAndSubmit)} className="space-y-6">
           {/* Contractor Selection */}
@@ -338,7 +340,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               />
             </CardContent>
           </Card>
-          
+
           {/* Payment Details */}
           <Card>
             <CardHeader>
@@ -353,12 +355,12 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     <FormItem>
                       <FormLabel><T k="auto.paymenttransferform.montant_mru" fallback="Montant (MRU)" /></FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          min="1" 
-                          step="1000" 
+                        <Input
+                          type="number"
+                          min="1"
+                          step="1000"
                           max={maxToleranceAmount}
-                          {...field} 
+                          {...field}
                           onChange={e => field.onChange(e.target.valueAsNumber)}
                         />
                       </FormControl>
@@ -366,7 +368,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="paymentDate"
@@ -374,9 +376,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     <FormItem>
                       <FormLabel><T k="auto.paymenttransferform.date_du_paiement" fallback="Date du paiement" /></FormLabel>
                       <FormControl>
-                        <Input 
-                          type="date" 
-                          {...field} 
+                        <Input
+                          type="date"
+                          {...field}
                           disabled={paymentStatus === "rejected"}
                           max={new Date().toISOString().split('T')[0]}
                         />
@@ -411,8 +413,8 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                           <div
                             key={method.value}
                             className={`relative cursor-pointer rounded-lg border-2 p-4 hover:shadow-md transition-all ${
-                              isSelected 
-                                ? `border-${method.color}-500 bg-${method.color}-50` 
+                              isSelected
+                                ? `border-${method.color}-500 bg-${method.color}-50`
                                 : 'border-border hover:border-border'
                             }`}
                             onClick={() => field.onChange(method.value)}
@@ -460,7 +462,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                       <FormItem>
                         <FormLabel><T k="auto.paymenttransferform.nom_de_la_banque" fallback="Nom de la banque" /></FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ex: BMCI, BNM, GBM..." />
+                          <Input {...field} placeholder={t('auto.paymenttransferform.ex_bmci_bnm_gbm')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -473,7 +475,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                       <FormItem>
                         <FormLabel><T k="auto.paymenttransferform.numero_de_compte" fallback="Numéro de compte" /></FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Numéro de compte du bénéficiaire" />
+                          <Input {...field} placeholder={t('auto.paymenttransferform.numero_de_compte_du_beneficiaire')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -501,7 +503,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                       <FormItem>
                         <FormLabel><T k="auto.paymenttransferform.numero_du_cheque" fallback="Numéro du chèque" /></FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Numéro du chèque" />
+                          <Input {...field} placeholder={t('auto.paymenttransferform.numero_du_cheque')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -514,7 +516,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                       <FormItem>
                         <FormLabel><T k="auto.paymenttransferform.nom_du_beneficiaire" fallback="Nom du bénéficiaire" /></FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Nom sur le chèque" />
+                          <Input {...field} placeholder={t('auto.paymenttransferform.nom_sur_le_cheque')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -544,7 +546,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner l'opérateur" />
+                              <SelectValue placeholder={t('auto.paymenttransferform.selectionner_l_operateur')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -593,7 +595,7 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
                     <FormItem>
                       <FormLabel><T k="auto.paymenttransferform.nom_du_beneficiaire" fallback="Nom du bénéficiaire" /></FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Nom de la personne qui reçoit" />
+                        <Input {...field} placeholder={t('auto.paymenttransferform.nom_de_la_personne_qui_recoit')} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -602,9 +604,9 @@ export function PaymentTransferForm({ project, onSubmit, isSubmitting }: Payment
               </CardContent>
             </Card>
           )}
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             className="w-full bg-gradient-to-r from-success to-success hover:from-success hover:to-success text-white py-3 text-lg font-medium shadow-lg hover:shadow-xl transition-all"
             disabled={isSubmitting || paymentStatus === "rejected"}
             size="lg"

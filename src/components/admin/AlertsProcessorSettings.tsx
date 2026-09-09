@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ interface ProcessorResult {
 }
 
 const AlertsProcessorSettings: React.FC = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const notificationService = useNotificationHex();
   const [config, setConfig] = useState<ProcessorConfig>({
@@ -44,7 +46,7 @@ const AlertsProcessorSettings: React.FC = () => {
     intervalMinutes: 30,
     maxRetries: 3,
   });
-  
+
   const [isSaving, setSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<ProcessingLog[]>([]);
@@ -55,7 +57,7 @@ const AlertsProcessorSettings: React.FC = () => {
       const configNotification = notificationService.notifications.find(
         n => n.type === 'system' && n.metadata && (n.metadata as Record<string, unknown>).action === 'processor_config'
       );
-      
+
       if (configNotification) {
         const configData = configNotification.metadata as ProcessorConfig;
         if (configData && configData.enabled !== undefined) {
@@ -73,7 +75,7 @@ const AlertsProcessorSettings: React.FC = () => {
       const logNotifications = notificationService.notifications
         .filter(n => n.type === 'system' && n.metadata && (n.metadata as Record<string, unknown>).action === 'processor_log')
         .slice(0, 10);
-      
+
       const formattedLogs: ProcessingLog[] = logNotifications.map(notification => ({
         id: notification.id,
         created_at: notification.createdAt,
@@ -84,7 +86,7 @@ const AlertsProcessorSettings: React.FC = () => {
           config: config
         }
       }));
-      
+
       setLogs(formattedLogs);
     } catch (error) {
       console.error('Error loading logs:', error);
@@ -101,7 +103,7 @@ const AlertsProcessorSettings: React.FC = () => {
     try {
       await notificationService.createNotification({
         recipientId: 'system',
-        title: 'Configuration processeur mise à jour',
+        title: t('auto.alertsprocessorsettings.configuration_processeur_mise_a_jour'),
         message: `Nouvelle configuration: ${config.enabled ? 'Activé' : 'Désactivé'}, lot: ${config.batchSize}, interval: ${config.intervalMinutes}min`,
         type: 'info',
         metadata: config
@@ -262,8 +264,8 @@ const AlertsProcessorSettings: React.FC = () => {
           <Separator />
 
           <div className="flex gap-4">
-            <Button 
-              onClick={saveConfig} 
+            <Button
+              onClick={saveConfig}
               disabled={isSaving}
               className="flex items-center"
             >
@@ -271,8 +273,8 @@ const AlertsProcessorSettings: React.FC = () => {
               {isSaving ? 'Sauvegarde...' : 'Sauvegarder la configuration'}
             </Button>
 
-            <Button 
-              onClick={runProcessor} 
+            <Button
+              onClick={runProcessor}
               disabled={isRunning || !config.enabled}
               variant="secondary"
               className="flex items-center"
@@ -319,8 +321,8 @@ const AlertsProcessorSettings: React.FC = () => {
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
-                    Lot: {log.summary.config.batchSize} • 
-                    Intervalle: {log.summary.config.intervalMinutes}min • 
+                    Lot: {log.summary.config.batchSize} •
+                    Intervalle: {log.summary.config.intervalMinutes}min •
                     Tentatives: {log.summary.config.maxRetries}
                   </div>
                 </div>

@@ -24,6 +24,7 @@ import { getTakeoffToBoqService } from '@/application/services/TakeoffToBoqServi
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface QuantityTakeoffFormProps {
   projectId: string;
   onSubmitSuccess?: () => void;
@@ -58,6 +59,7 @@ const initialState: FormData = {
 const DEFAULT_VAT = 0.2;
 
 const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffFormProps) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<FormData>(initialState);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -125,7 +127,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
       result.errors.forEach((e: BoqFieldError) => (map[e.field] = e.message));
       setFieldErrors(map);
       toast({
-        title: 'Champs invalides',
+        title: t('auto.quantitytakeoffform.champs_invalides'),
         description: result.message,
         variant: 'destructive',
       });
@@ -153,7 +155,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
       await getTakeoffToBoqService().syncProject(projectId);
 
       toast({
-        title: 'Métré créé',
+        title: t('auto.quantitytakeoffform.metre_cree'),
         description: `Quantité: ${totals.quantity.toFixed(2)} ${formData.unit} — Total HT: ${totals.totalHt.toFixed(2)}`,
       });
 
@@ -164,7 +166,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
       console.error('Error creating quantity takeoff:', error);
       const message =
         error instanceof Error ? error.message : 'Impossible de créer le métré. Veuillez réessayer.';
-      toast({ title: 'Erreur', description: message, variant: 'destructive' });
+      toast({ title: t('auto.quantitytakeoffform.erreur'), description: message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -183,7 +185,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
             <Label htmlFor="material"><T k="auto.quantitytakeoffform.materiau" fallback="Matériau" /></Label>
             <Select value={formData.materialId} onValueChange={(v) => updateFormData('materialId', v)}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un matériau..." />
+                <SelectValue placeholder={t('auto.quantitytakeoffform.selectionner_un_materiau')} />
               </SelectTrigger>
               <SelectContent>
                 {materials?.map((material) => (
@@ -210,7 +212,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
               type="text"
               value={formData.elementType}
               onChange={(e) => updateFormData('elementType', e.target.value)}
-              placeholder="Ex: Mur, Dalle, Poutre..."
+              placeholder={t('auto.quantitytakeoffform.ex_mur_dalle_poutre')}
             />
             {fieldErrors.elementType && (
               <p className="text-xs text-destructive mt-1">{fieldErrors.elementType}</p>
@@ -223,7 +225,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
               <Label><T k="auto.quantitytakeoffform.phase" fallback="Phase" /></Label>
               <Select value={formData.phaseId} onValueChange={(v) => updateFormData('phaseId', v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Phase..." />
+                  <SelectValue placeholder={t('auto.quantitytakeoffform.phase')} />
                 </SelectTrigger>
                 <SelectContent>
                   {projectPhases.map((p) => (
@@ -242,7 +244,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
                 disabled={!phase}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Jalon..." />
+                  <SelectValue placeholder={t('auto.quantitytakeoffform.jalon')} />
                 </SelectTrigger>
                 <SelectContent>
                   {phase?.milestones.map((m) => (
@@ -261,7 +263,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
                 disabled={!milestone}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Tâche..." />
+                  <SelectValue placeholder={t('auto.quantitytakeoffform.tache')} />
                 </SelectTrigger>
                 <SelectContent>
                   {milestone?.tasks.map((t) => (
@@ -337,7 +339,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
               id="note"
               value={formData.note}
               onChange={(e) => updateFormData('note', e.target.value)}
-              placeholder="Notes additionnelles..."
+              placeholder={t('auto.quantitytakeoffform.notes_additionnelles')}
             />
           </div>
 

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -12,24 +13,25 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { T } from '@/components/i18n/T';
 
 export default function KeycloakConfigurationTab() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('development');
   const { toast } = useToast();
   const [isDeploying, setIsDeploying] = useState(false);
-  
+
   const handleDeploy = (environment: string) => {
     setIsDeploying(true);
-    
+
     // Simulate deployment process
     setTimeout(() => {
       setIsDeploying(false);
-      
+
       toast({
-        title: 'Déploiement réussi',
+        title: t('auto.keycloakconfigurationtab.deploiement_reussi'),
         description: `Keycloak a été déployé avec succès en ${environment === 'development' ? 'développement' : 'production'}.`,
       });
     }, 2000);
   };
-  
+
   const dockerComposeContent = `version: '3.8'
 
 services:
@@ -162,9 +164,9 @@ jobs:
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    
+
     toast({
-      title: 'Téléchargement réussi',
+      title: t('auto.keycloakconfigurationtab.telechargement_reussi'),
       description: `Le fichier ${filename} a été téléchargé.`,
     });
   };
@@ -179,7 +181,7 @@ jobs:
           <Cloud className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.production" fallback="Production" />
         </TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="development" className="space-y-6">
         <Alert className="bg-warning/10 border-warning/30">
           <AlertTriangle className="h-4 w-4 text-warning" />
@@ -187,7 +189,7 @@ jobs:
             Configuration pour l'environnement de développement uniquement. Utilisez Docker Compose pour une mise en place rapide.
           </AlertDescription>
         </Alert>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -201,8 +203,8 @@ jobs:
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="docker-compose">docker-compose.yml</Label>
-                <Textarea 
-                  id="docker-compose" 
+                <Textarea
+                  id="docker-compose"
                   value={dockerComposeContent}
                   className="font-mono text-sm h-64"
                   readOnly
@@ -211,14 +213,14 @@ jobs:
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button 
+            <Button
               variant="outline"
               onClick={() => handleDownload(dockerComposeContent, 'docker-compose.yml')}
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.telecharger" fallback="Télécharger" />
             </Button>
-            <Button 
+            <Button
               onClick={() => handleDeploy('development')}
               disabled={isDeploying}
               className="bg-adrar-600 hover:bg-adrar-700"
@@ -227,7 +229,7 @@ jobs:
             </Button>
           </CardFooter>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -240,8 +242,8 @@ jobs:
           <CardContent>
             <div className="space-y-2">
               <Label htmlFor="dockerfile"><T k="auto.keycloakconfigurationtab.dockerfile" fallback="Dockerfile" /></Label>
-              <Textarea 
-                id="dockerfile" 
+              <Textarea
+                id="dockerfile"
                 value={dockerfileContent}
                 className="font-mono text-sm h-48"
                 readOnly
@@ -249,7 +251,7 @@ jobs:
             </div>
           </CardContent>
           <CardFooter>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => handleDownload(dockerfileContent, 'Dockerfile')}
               className="flex items-center gap-2"
@@ -259,7 +261,7 @@ jobs:
           </CardFooter>
         </Card>
       </TabsContent>
-      
+
       <TabsContent value="production" className="space-y-6">
         <Alert className="bg-warning/10 border-warning/30">
           <AlertTriangle className="h-4 w-4 text-warning" />
@@ -267,7 +269,7 @@ jobs:
             Configuration pour l'environnement de production. Utiliser avec précaution sur des serveurs dédiés.
           </AlertDescription>
         </Alert>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -280,8 +282,8 @@ jobs:
           <CardContent>
             <div className="space-y-2">
               <Label htmlFor="shell-script">setup_keycloak_prod.sh</Label>
-              <Textarea 
-                id="shell-script" 
+              <Textarea
+                id="shell-script"
                 value={setupScriptContent}
                 className="font-mono text-sm h-64"
                 readOnly
@@ -289,7 +291,7 @@ jobs:
             </div>
           </CardContent>
           <CardFooter>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => handleDownload(setupScriptContent, 'setup_keycloak_prod.sh')}
               className="flex items-center gap-2"
@@ -298,7 +300,7 @@ jobs:
             </Button>
           </CardFooter>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -311,8 +313,8 @@ jobs:
           <CardContent>
             <div className="space-y-2">
               <Label htmlFor="python-script">deploy_keycloak.py</Label>
-              <Textarea 
-                id="python-script" 
+              <Textarea
+                id="python-script"
                 value={pythonScriptContent}
                 className="font-mono text-sm h-64"
                 readOnly
@@ -320,7 +322,7 @@ jobs:
             </div>
           </CardContent>
           <CardFooter>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => handleDownload(pythonScriptContent, 'deploy_keycloak.py')}
               className="flex items-center gap-2"
@@ -329,7 +331,7 @@ jobs:
             </Button>
           </CardFooter>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -342,8 +344,8 @@ jobs:
           <CardContent>
             <div className="space-y-2">
               <Label htmlFor="github-workflow">github-actions.yml</Label>
-              <Textarea 
-                id="github-workflow" 
+              <Textarea
+                id="github-workflow"
                 value={githubWorkflowContent}
                 className="font-mono text-sm h-48"
                 readOnly
@@ -351,14 +353,14 @@ jobs:
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button 
+            <Button
               variant="outline"
               onClick={() => handleDownload(githubWorkflowContent, '.github/workflows/keycloak-deployment.yml')}
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" /> <T k="auto.keycloakconfigurationtab.telecharger" fallback="Télécharger" />
             </Button>
-            <Button 
+            <Button
               onClick={() => handleDeploy('production')}
               disabled={isDeploying}
               className="bg-adrar-600 hover:bg-adrar-700"

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * InspectionCrud - MIGRATED TO HEXAGONAL ARCHITECTURE
  */
@@ -25,6 +26,7 @@ import {
 import { T } from '@/components/i18n/T';
 
 const InspectionCrud: React.FC = () => {
+  const { t } = useLanguage();
   const [selectedInspection, setSelectedInspection] = useState<InspectionRow | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -52,12 +54,12 @@ const InspectionCrud: React.FC = () => {
   const deleteMutation = useDeleteInspection();
 
   const statusOptions = [
-    { value: 'scheduled', label: 'Programmée', color: 'bg-primary/10 text-primary', icon: Clock },
-    { value: 'in_progress', label: 'En cours', color: 'bg-warning/10 text-warning', icon: Clock },
-    { value: 'completed', label: 'Terminée', color: 'bg-success-soft text-success', icon: CheckCircle },
-    { value: 'approved', label: 'Approuvée', color: 'bg-success-soft text-success', icon: CheckCircle },
-    { value: 'rejected', label: 'Rejetée', color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
-    { value: 'cancelled', label: 'Annulée', color: 'bg-muted text-foreground', icon: AlertTriangle }
+    { value: 'scheduled', label: t('auto.inspectioncrud.programmee'), color: 'bg-primary/10 text-primary', icon: Clock },
+    { value: 'in_progress', label: t('auto.inspectioncrud.en_cours'), color: 'bg-warning/10 text-warning', icon: Clock },
+    { value: 'completed', label: t('auto.inspectioncrud.terminee'), color: 'bg-success-soft text-success', icon: CheckCircle },
+    { value: 'approved', label: t('auto.inspectioncrud.approuvee'), color: 'bg-success-soft text-success', icon: CheckCircle },
+    { value: 'rejected', label: t('auto.inspectioncrud.rejetee'), color: 'bg-destructive/10 text-destructive', icon: AlertTriangle },
+    { value: 'cancelled', label: t('auto.inspectioncrud.annulee'), color: 'bg-muted text-foreground', icon: AlertTriangle }
   ];
 
   const getStatusConfig = (status: string) => {
@@ -86,11 +88,11 @@ const InspectionCrud: React.FC = () => {
   const getProjectId = (inspection: InspectionRow): string => {
     return inspection.projectId || '';
   };
-  
+
   const getProgress = (inspection: InspectionRow): number => {
     return inspection.progressAtInspection ?? 0;
   };
-  
+
   const getPhaseId = (inspection: InspectionRow): string => {
     return inspection.phaseId || '';
   };
@@ -99,7 +101,7 @@ const InspectionCrud: React.FC = () => {
     const projectId = getProjectId(inspection);
     const progress = getProgress(inspection);
     const phaseId = getPhaseId(inspection);
-    
+
     setFormData({
       projectId: projectId,
       inspector: inspection.inspector,
@@ -122,7 +124,7 @@ const InspectionCrud: React.FC = () => {
     const projectId = getProjectId(inspection);
     const progress = getProgress(inspection);
     const phaseId = getPhaseId(inspection);
-    
+
     setFormData({
       projectId: projectId,
       inspector: inspection.inspector,
@@ -143,7 +145,7 @@ const InspectionCrud: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (isEditing && selectedInspection) {
         await updateMutation.mutateAsync({ id: selectedInspection.id, data: formData });
@@ -193,8 +195,8 @@ const InspectionCrud: React.FC = () => {
                 <Label><T k="auto.inspectioncrud.projet" fallback="Projet" /></Label>
                 <ProjectSelector
                   value={formData.projectId || ''}
-                  onChange={(value) => setFormData(prev => ({ 
-                    ...prev, 
+                  onChange={(value) => setFormData(prev => ({
+                    ...prev,
                     projectId: value || ''
                   }))}
                   disabled={isViewMode}
@@ -251,8 +253,8 @@ const InspectionCrud: React.FC = () => {
                   min={0}
                   max={100}
                   value={formData.progressAtInspection || formData.progress_at_inspection || 0}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
                     progressAtInspection: parseInt(e.target.value) || 0,
                     progress_at_inspection: parseInt(e.target.value) || 0
                   }))}
@@ -305,7 +307,7 @@ const InspectionCrud: React.FC = () => {
                 const statusConfig = getStatusConfig(inspection.status);
                 const projectId = getProjectId(inspection);
                 const progress = getProgress(inspection);
-                
+
                 return (
                   <TableRow key={inspection.id}>
                     <TableCell>{projectId}</TableCell>

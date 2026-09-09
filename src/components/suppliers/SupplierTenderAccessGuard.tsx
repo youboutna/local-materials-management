@@ -9,6 +9,7 @@ import { Shield, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SupplierTenderAccessGuardProps {
   onAccessGranted: (tenderId: string, supplierEmail: string) => void;
@@ -21,6 +22,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
   onAccessGranted,
   children
 }) => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const [secretCode, setSecretCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
@@ -64,7 +66,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
   const handleValidateCode = async () => {
     if (!secretCode.trim()) {
       toast({
-        title: 'Code requis',
+        title: t('auto.suppliertenderaccessguard.code_requis'),
         description: 'Veuillez entrer le code secret fourni par l\'administration.',
         variant: 'destructive',
       });
@@ -75,10 +77,10 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
 
     try {
       const validation = await TenderSharingService.validateSecret(secretCode.trim(), '');
-      
+
       if (!validation.isValid) {
         toast({
-          title: 'Code invalide',
+          title: t('auto.suppliertenderaccessguard.code_invalide'),
           description: validation.message || 'Le code secret est invalide, expiré ou a atteint son nombre maximum d\'accès.',
           variant: 'destructive',
         });
@@ -100,13 +102,13 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
 
       setHasAccess(true);
       setGrantedTenderId(validation.tenderId || null);
-      
+
       // Get supplier email from validated secret
       const email = validation.message || '';
       setSupplierEmail(email);
-      
+
       toast({
-        title: 'Accès autorisé',
+        title: t('auto.suppliertenderaccessguard.acces_autorise'),
         description: 'Vous avez accès aux détails de l\'appel d\'offres et pouvez soumettre votre candidature.',
       });
 
@@ -119,7 +121,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
     } catch (error: any) {
       console.error('Validation error:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.suppliertenderaccessguard.erreur'),
         description: error.message || 'Une erreur est survenue lors de la validation du code.',
         variant: 'destructive',
       });
@@ -158,7 +160,7 @@ export const SupplierTenderAccessGuard: React.FC<SupplierTenderAccessGuardProps>
             <Input
               id="secret-code"
               type="text"
-              placeholder="Entrez le code secret (ex: ABC123-DEF456)"
+              placeholder={t('auto.suppliertenderaccessguard.entrez_le_code_secret_ex_abc123_def456')}
               value={secretCode}
               onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
               onKeyPress={handleKeyPress}

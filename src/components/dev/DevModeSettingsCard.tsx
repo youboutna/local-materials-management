@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * DevModeSettingsCard — bloc DEV/API, exclusivement affiché dans /settings.
  * Aucune logique métier locale : tout passe par useDevModeSettingsHex.
@@ -19,8 +20,10 @@ import { Label } from '@/components/ui/label';
 import { TranslatedRole } from '@/components/i18n/TranslatedBadges';
 import { useDevModeSettingsHex } from '@/hooks/hexagonal/useDevModeSettingsHex';
 import { useToast } from '@/hooks/use-toast';
+import { T } from '@/components/i18n/T';
 
 const DevModeSettingsCard: React.FC = () => {
+  const { t } = useLanguage();
   const {
     state,
     isAuthenticated,
@@ -40,7 +43,7 @@ const DevModeSettingsCard: React.FC = () => {
       await setDevModeEnabled(enabled);
     } catch (error) {
       toast({
-        title: 'Modification refusée',
+        title: t('auto.devmodesettingscard.modification_refusee'),
         description: error instanceof Error ? error.message : 'Erreur inconnue',
         variant: 'destructive',
       });
@@ -50,10 +53,10 @@ const DevModeSettingsCard: React.FC = () => {
   const handleLocal = async (roleCode: string) => {
     try {
       await switchToLocal(roleCode);
-      toast({ title: 'Rôle DEV activé', description: `${roleCode} — permissions rechargées` });
+      toast({ title: t('auto.devmodesettingscard.role_dev_active'), description: `${roleCode} — permissions rechargées` });
     } catch (error) {
       toast({
-        title: 'Bascule impossible',
+        title: t('auto.devmodesettingscard.bascule_impossible'),
         description: error instanceof Error ? error.message : 'Erreur inconnue',
         variant: 'destructive',
       });
@@ -66,7 +69,7 @@ const DevModeSettingsCard: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="flex items-center">
             <Shield className="mr-2 h-5 w-5" />
-            Mode développement
+            <T k="auto.devmodesettingscard.mode_developpement" fallback="Mode développement" />
           </CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={state.mode === 'LOCAL' ? 'secondary' : 'default'}>
@@ -89,7 +92,7 @@ const DevModeSettingsCard: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border/60 bg-background/60 p-3">
           <div className="min-w-0">
             <Label htmlFor="dev-mode-toggle" className="font-medium">
-              Activer le mode développement
+              <T k="auto.devmodesettingscard.activer_le_mode_developpement" fallback="Activer le mode développement" />
             </Label>
             <p className="text-xs text-muted-foreground">
               Réglage administrateur persisté en base ({state.devModeSource === 'ADMIN' ? 'override administrateur' : 'valeur de configuration'}).
@@ -134,10 +137,10 @@ const DevModeSettingsCard: React.FC = () => {
 
         <div hidden={!state.devModeEnabled} className="flex flex-wrap items-center gap-3">
           <Button variant="outline" className="gap-2" disabled={isSwitching} onClick={switchToApi}>
-            <LogOut className="h-4 w-4" /> Session réelle (API)
+            <LogOut className="h-4 w-4" /> <T k="auto.devmodesettingscard.session_reelle_api" fallback="Session réelle (API)" />
           </Button>
           <p className="text-sm text-muted-foreground">
-            La bascule API purge le cache local et redirige vers la connexion réelle.
+            <T k="auto.devmodesettingscard.la_bascule_api_purge_le_cache_local_et_redirige_" fallback="La bascule API purge le cache local et redirige vers la connexion réelle." />
           </p>
         </div>
       </CardContent>

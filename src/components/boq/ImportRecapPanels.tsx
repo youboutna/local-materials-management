@@ -11,6 +11,7 @@ import { BoqFiscalRecapService } from '@/application/services/boq/BoqFiscalRecap
 import type { MetreRecommendation } from '@/application/services/boq/parsers/metreDetection';
 import type { LineCoherence } from '@/application/services/boq/parsers/lineCoherence';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { T } from '@/components/i18n/T';
 
 const fmt = (n: number): string => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 
@@ -50,7 +51,7 @@ export function FiscalRecapPanel({ lines }: { lines: BoqLineDTO[] }) {
     <div className="rounded-md border p-3 text-sm">
       <h4 className="mb-2 flex items-center gap-2 font-medium">
         Totaux par taux de TVA
-        {recap.multiRate && <Badge variant="secondary">Multi-taux</Badge>}
+        {recap.multiRate && <Badge variant="secondary"><T k="auto.importrecappanels.multi_taux" fallback="Multi-taux" /></Badge>}
       </h4>
       <ul className="space-y-1">
         {recap.groups.map((g) => (
@@ -139,7 +140,7 @@ export function CoherencePanel({ lines }: { lines: BoqLineDTO[] }) {
         {flagged.length > 0 ? (
           <Badge variant="secondary">{flagged.length} à clarifier</Badge>
         ) : (
-          <Badge variant="outline">Aucune incohérence</Badge>
+          <Badge variant="outline"><T k="auto.importrecappanels.aucune_incoherence" fallback="Aucune incohérence" /></Badge>
         )}
       </h4>
       <ul className="space-y-3">

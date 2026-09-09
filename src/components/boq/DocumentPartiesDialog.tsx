@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/useI18n';
 import { toast } from '@/hooks/use-toast';
 import { useDocumentPartySuggestions, type DocumentPartySuggestion } from '@/hooks/boq/useDocumentPartySuggestions';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface DocumentRecipientValue {
   name: string;
@@ -75,6 +76,7 @@ interface PartyAutocompleteProps {
 const PartyAutocomplete: React.FC<PartyAutocompleteProps> = ({
   label, value, disabled, suggestions, onPick, onType, placeholder, emptyLabel, searchLabel,
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = React.useState(false);
   return (
     <div className="space-y-1">
@@ -188,7 +190,7 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
             <div className="space-y-1 sm:col-span-2">
               <Label htmlFor="doc-title">{t('dqe.header.title') || 'Titre (Title)'}</Label>
               <Input id="doc-title" ref={titleRef} value={draft.title ?? ''} disabled={locked}
-                placeholder="DQE"
+                placeholder={t('auto.documentpartiesdialog.dqe')}
                 aria-invalid={submitted && titleError}
                 className={submitted && titleError ? 'border-destructive' : undefined}
                 onChange={(e) => patch({ title: e.target.value })} />
@@ -228,7 +230,7 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
             </div>
             <div className="space-y-1">
               <Label>{t('dqe.header.currency') || 'Devise'}</Label>
-              <Input value={draft.currency ?? ''} disabled={locked} placeholder="MRU"
+              <Input value={draft.currency ?? ''} disabled={locked} placeholder={t('auto.documentpartiesdialog.mru')}
                 onChange={(e) => patch({ currency: e.target.value.toUpperCase() })} />
             </div>
             <div className="space-y-1">

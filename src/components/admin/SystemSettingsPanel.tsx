@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useConfig } from '@/hooks/useConfig';
 import { IS_LOCAL_BYPASS, APP_NAME, APP_VERSION } from '@/config/constants';
 import { Loader2, RotateCcw, Save, Search } from 'lucide-react';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const asText = (value: unknown): string => {
   if (value === null || value === undefined) return '';
@@ -41,6 +43,7 @@ const parseValue = (raw: string, previous: unknown): unknown => {
 };
 
 export default function SystemSettingsPanel() {
+  const { t } = useLanguage();
   const { entries, isLoading, error, refetch, saveEntry, isSaving } = useConfig();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -62,7 +65,7 @@ export default function SystemSettingsPanel() {
         delete next[key];
         return next;
       });
-      toast({ title: 'Paramètre enregistré', description: key });
+      toast({ title: t('auto.systemsettingspanel.parametre_enregistre'), description: key });
     } catch (err) {
       toast({
         title: "Échec de l'enregistrement",
@@ -77,7 +80,7 @@ export default function SystemSettingsPanel() {
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <CardTitle className="text-base">Paramètres système</CardTitle>
+            <CardTitle className="text-base"><T k="auto.systemsettingspanel.parametres_systeme" fallback="Paramètres système" /></CardTitle>
             <CardDescription>
               Variables d'environnement et réglages persistés. Les valeurs sensibles (clés,
               secrets, mots de passe) ne sont jamais affichées.
@@ -92,7 +95,7 @@ export default function SystemSettingsPanel() {
             </Badge>
             <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isLoading}>
               <RotateCcw className="mr-1.5 h-4 w-4" />
-              Recharger
+              <T k="auto.systemsettingspanel.recharger" fallback="Recharger" />
             </Button>
           </div>
         </div>
@@ -101,9 +104,9 @@ export default function SystemSettingsPanel() {
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Filtrer par clé (ex: VITE_, auth, storage)"
+            placeholder={t('auto.systemsettingspanel.filtrer_par_cle_ex_vite_auth_storage')}
             className="pl-8"
-            aria-label="Filtrer les paramètres"
+            aria-label={t('auto.systemsettingspanel.filtrer_les_parametres')}
           />
         </div>
       </CardHeader>
@@ -122,7 +125,7 @@ export default function SystemSettingsPanel() {
         )}
 
         {!isLoading && filtered.length === 0 && (
-          <p className="py-6 text-sm text-muted-foreground">Aucun paramètre pour ce filtre.</p>
+          <p className="py-6 text-sm text-muted-foreground"><T k="auto.systemsettingspanel.aucun_parametre_pour_ce_filtre" fallback="Aucun paramètre pour ce filtre." /></p>
         )}
 
         <div className="divide-y rounded-md border">
@@ -155,7 +158,7 @@ export default function SystemSettingsPanel() {
                   onClick={() => handleSave(entry.key, entry.value, entry.category)}
                 >
                   <Save className="mr-1.5 h-4 w-4" />
-                  Enregistrer
+                  <T k="auto.systemsettingspanel.enregistrer" fallback="Enregistrer" />
                 </Button>
               </div>
             );

@@ -20,6 +20,7 @@ import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { i18nService } from '@/application/services/I18nService';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface PhaseInspectionsProps {
   phaseId: string;
   projectId: string;
@@ -35,6 +36,7 @@ interface InspectionFormData {
 }
 
 const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
   const [inspectorId, setInspectorId] = useState('');
@@ -46,7 +48,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     comments: '',
     documents: [],
   });
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,7 +85,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
           onSuccess: () => {
             setIsAdding(false);
             resetForm();
-            toast({ title: 'Inspection ajoutée avec succès', description: 'La progression du projet a été mise à jour automatiquement' });
+            toast({ title: t('auto.phaseinspections.inspection_ajoutee_avec_succes'), description: t('auto.phaseinspections.la_progression_du_projet_a_ete_mise_a_jour_autom') });
           },
         }
       );
@@ -96,7 +98,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     mutate: (id: string) => {
       deleteInspectionMutationBase.mutate(id, {
         onSuccess: () => {
-          toast({ title: 'Inspection supprimée avec succès' });
+          toast({ title: t('auto.phaseinspections.inspection_supprimee_avec_succes') });
         },
       });
     },
@@ -116,34 +118,34 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.inspector.trim()) {
       toast({
-        title: 'Erreur de validation',
-        description: 'Veuillez sélectionner un inspecteur',
+        title: t('auto.phaseinspections.erreur_de_validation'),
+        description: t('auto.phaseinspections.veuillez_selectionner_un_inspecteur'),
         variant: 'destructive',
       });
       return;
     }
-    
+
     if (!formData.date) {
       toast({
-        title: 'Erreur de validation',
+        title: t('auto.phaseinspections.erreur_de_validation'),
         description: 'Veuillez sélectionner une date d\'inspection',
         variant: 'destructive',
       });
       return;
     }
-    
+
     if (formData.progressAtInspection && (parseInt(formData.progressAtInspection) < 0 || parseInt(formData.progressAtInspection) > 100)) {
       toast({
-        title: 'Erreur de validation',
-        description: 'La progression doit être entre 0 et 100%',
+        title: t('auto.phaseinspections.erreur_de_validation'),
+        description: t('auto.phaseinspections.la_progression_doit_etre_entre_0_et_100'),
         variant: 'destructive',
       });
       return;
     }
-    
+
     addInspectionMutation.mutate(formData);
   };
 
@@ -163,10 +165,10 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
     return <div className="animate-pulse"><T k="auto.phaseinspections.chargement_des_inspections" fallback="Chargement des inspections..." /></div>;
   }
 
-  const averageProgress = inspections && inspections.length > 0 
+  const averageProgress = inspections && inspections.length > 0
     ? inspections.reduce((sum, inspection) => sum + (inspection.progress_at_inspection || 0), 0) / inspections.length
     : 0;
-    
+
   const totalPages = Math.ceil((inspections?.length || 0) / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedInspections = inspections?.slice(startIndex, startIndex + pageSize) || [];
@@ -180,7 +182,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
             Inspections de la phase ({inspections?.length || 0})
           </CardTitle>
           <div className="flex gap-2">
-            <Button 
+            <Button
               variant="outline"
               onClick={() => navigate('/inspection-monitoring')}
             >
@@ -208,8 +210,8 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                         setInspectorId(id);
                         setFormData({ ...formData, inspector: name });
                       }}
-                      label="Inspecteur *"
-                      placeholder="Sélectionner un inspecteur"
+                      label={t('auto.phaseinspections.inspecteur')}
+                      placeholder={t('auto.phaseinspections.selectionner_un_inspecteur')}
                     />
                   </div>
                   <div>
@@ -261,7 +263,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                     id="comments"
                     value={formData.comments}
                     onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-                    placeholder="Observations, remarques, recommandations..."
+                    placeholder={t('auto.phaseinspections.observations_remarques_recommandations')}
                     rows={4}
                   />
                 </div>
@@ -315,7 +317,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                 </p>
               </div>
             )}
-            
+
             {paginatedInspections.map((inspection) => (
               <div key={inspection.id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
@@ -334,7 +336,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                         size="sm"
                         variant="default"
                         onClick={() => navigate(`/inspections/${inspection.id}`)}
-                        title="Exécuter l'inspection"
+                        title={t('auto.phaseinspections.executer_l_inspection')}
                       >
                         <Play className="h-4 w-4 mr-1" />
                         <T k="auto.phaseinspections.executer" fallback="Exécuter" />
@@ -344,7 +346,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                       size="sm"
                       variant="ghost"
                       onClick={() => navigate(`/inspection-monitoring?id=${inspection.id}`)}
-                      title="Modifier"
+                      title={t('auto.phaseinspections.modifier')}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -352,7 +354,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                       size="sm"
                       variant="ghost"
                       onClick={() => navigate(`/inspections/${inspection.id}`)}
-                      title="Consulter"
+                      title={t('auto.phaseinspections.consulter')}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
@@ -361,13 +363,13 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                       variant="ghost"
                       className="text-destructive hover:text-destructive"
                       onClick={() => deleteInspectionMutation.mutate(inspection.id || '')}
-                      title="Supprimer"
+                      title={t('auto.phaseinspections.supprimer')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
                   <Badge className={getStatusColor(inspection.status || '')}>
                     {getStatusLabel(inspection.status || '')}
@@ -384,7 +386,7 @@ const PhaseInspections: React.FC<PhaseInspectionsProps> = ({ phaseId, projectId 
                 </div>
               </div>
             ))}
-            
+
             {inspections && inspections.length > pageSize && (
               <PaginationControls
                 currentPage={currentPage}

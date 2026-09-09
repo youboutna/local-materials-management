@@ -16,6 +16,7 @@ import { InspectorSelector } from '@/components/selectors/InspectorSelector';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InspectionFormData {
   projectId: string;
@@ -38,6 +39,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
   initialData,
   isLoading = false
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [inspectorId, setInspectorId] = useState('');
   const [formData, setFormData] = useState<InspectionFormData>({
@@ -52,11 +54,11 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.projectId || !formData.inspector || !formData.date) {
       toast({
-        title: 'Erreur',
-        description: 'Veuillez remplir tous les champs obligatoires',
+        title: t('auto.inspectionformwithprojectselector.erreur'),
+        description: t('auto.inspectionformwithprojectselector.veuillez_remplir_tous_les_champs_obligatoires'),
         variant: 'destructive',
       });
       return;
@@ -79,8 +81,8 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
           <EnhancedProjectSelector
             value={formData.projectId}
             onChange={(id) => updateFormData('projectId', id || '')}
-            label="Projet"
-            placeholder="Sélectionner un projet"
+            label={t('auto.inspectionformwithprojectselector.projet')}
+            placeholder={t('auto.inspectionformwithprojectselector.selectionner_un_projet')}
             required={true}
             showTenderReference={true}
             tenderReference={formData.tenderReference}
@@ -96,7 +98,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
                   setInspectorId(id);
                   updateFormData('inspector', name);
                 }}
-                label="Inspecteur *"
+                label={t('auto.inspectionformwithprojectselector.inspecteur')}
               />
             </div>
 
@@ -145,7 +147,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
               <Label htmlFor="status"><T k="auto.inspectionformwithprojectselector.statut" fallback="Statut" /></Label>
               <Select value={formData.status} onValueChange={(value) => updateFormData('status', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le statut" />
+                  <SelectValue placeholder={t('auto.inspectionformwithprojectselector.selectionner_le_statut')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="planifiée"><T k="auto.inspectionformwithprojectselector.planifiee" fallback="Planifiée" /></SelectItem>
@@ -163,7 +165,7 @@ const InspectionFormWithProjectSelector: React.FC<InspectionFormWithProjectSelec
               id="comments"
               value={formData.comments}
               onChange={(e) => updateFormData('comments', e.target.value)}
-              placeholder="Observations et commentaires de l'inspection"
+              placeholder={t('auto.inspectionformwithprojectselector.observations_et_commentaires_de_l_inspection')}
               rows={4}
             />
           </div>

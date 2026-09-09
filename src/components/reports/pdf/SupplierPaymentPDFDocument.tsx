@@ -3,6 +3,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable, PDFMetricCard } from './PDFDocument';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SupplierPaymentPDFDocumentProps {
   supplier: any;
@@ -26,6 +27,7 @@ export function SupplierPaymentPDFDocument({
   dateRange,
   reportConfig
 }: SupplierPaymentPDFDocumentProps) {
+  const { t } = useLanguage();
   const getStatusText = (status: string) => {
     const statusMap: { [key: string]: string } = {
       'paid': 'Payé',
@@ -60,24 +62,24 @@ export function SupplierPaymentPDFDocument({
       subtitle={`Période: ${format(dateRange.startDate, 'dd/MM/yyyy')} - ${format(dateRange.endDate, 'dd/MM/yyyy')}`}
     >
       {/* Supplier Information */}
-      <PDFSection title="Informations Fournisseur" borderColor="#10b981">
+      <PDFSection title={t('auto.supplierpaymentpdfdocument.informations_fournisseur')} borderColor="#10b981">
         <PDFCard>
           <PDFRow>
             <PDFCol>
-              <PDFText label="Nom" value={supplier.name || 'Non défini'} />
-              <PDFText label="Contact" value={supplier.contactPerson || 'Non défini'} />
-              <PDFText label="Email" value={supplier.email || 'Non défini'} />
+              <PDFText label={t('auto.supplierpaymentpdfdocument.nom')} value={supplier.name || 'Non défini'} />
+              <PDFText label={t('auto.supplierpaymentpdfdocument.contact')} value={supplier.contactPerson || 'Non défini'} />
+              <PDFText label={t('auto.supplierpaymentpdfdocument.email')} value={supplier.email || 'Non défini'} />
             </PDFCol>
             <PDFCol>
-              <PDFText label="Téléphone" value={supplier.phone || 'Non défini'} />
-              <PDFText label="Catégorie" value={supplier.category || 'Non défini'} />
-              <PDFText label="Statut" value={supplier.isActive ? 'Actif' : 'Inactif'} />
+              <PDFText label={t('auto.supplierpaymentpdfdocument.telephone')} value={supplier.phone || 'Non défini'} />
+              <PDFText label={t('auto.supplierpaymentpdfdocument.categorie')} value={supplier.category || 'Non défini'} />
+              <PDFText label={t('auto.supplierpaymentpdfdocument.statut')} value={supplier.isActive ? 'Actif' : 'Inactif'} />
             </PDFCol>
           </PDFRow>
           {supplier.address && (
             <PDFRow>
               <PDFCol>
-                <PDFText label="Adresse" value={supplier.address} />
+                <PDFText label={t('auto.supplierpaymentpdfdocument.adresse')} value={supplier.address} />
               </PDFCol>
             </PDFRow>
           )}
@@ -85,26 +87,26 @@ export function SupplierPaymentPDFDocument({
       </PDFSection>
 
       {/* Financial Summary */}
-      <PDFSection title="Résumé Financier" borderColor="#3b82f6">
+      <PDFSection title={t('auto.supplierpaymentpdfdocument.resume_financier')} borderColor="#3b82f6">
         <PDFRow>
           <PDFMetricCard
-            title="Total"
+            title={t('auto.supplierpaymentpdfdocument.total')}
             value={`${formatNumber2(totals.totalAmount)} MRU`}
             color="#1d4ed8"
           />
           <PDFMetricCard
-            title="Payé"
+            title={t('auto.supplierpaymentpdfdocument.paye')}
             value={`${formatNumber2(totals.paidAmount)} MRU`}
             color="#047857"
           />
           <PDFMetricCard
-            title="En Attente"
+            title={t('auto.supplierpaymentpdfdocument.en_attente')}
             value={`${formatNumber2(totals.pendingAmount)} MRU`}
             color="#d97706"
           />
           {totals.overdueAmount > 0 && (
             <PDFMetricCard
-              title="En Retard"
+              title={t('auto.supplierpaymentpdfdocument.en_retard')}
               value={`${formatNumber2(totals.overdueAmount)} MRU`}
               color="#dc2626"
             />
@@ -114,7 +116,7 @@ export function SupplierPaymentPDFDocument({
 
       {/* Payment Details */}
       {reportConfig.includeDetails && (
-        <PDFSection title="Détail des Paiements" borderColor="#8b5cf6">
+        <PDFSection title={t('auto.supplierpaymentpdfdocument.detail_des_paiements')} borderColor="#8b5cf6">
           <PDFTable
             headers={['Date', 'Description', 'Montant', 'Statut']}
             data={payments.map((payment, index) => [
@@ -130,7 +132,7 @@ export function SupplierPaymentPDFDocument({
 
       {/* Additional Notes */}
       {reportConfig.notes && (
-        <PDFSection title="Notes" borderColor="#f59e0b">
+        <PDFSection title={t('auto.supplierpaymentpdfdocument.notes')} borderColor="#f59e0b">
           <PDFCard>
             <PDFText label="" value={reportConfig.notes} />
           </PDFCard>

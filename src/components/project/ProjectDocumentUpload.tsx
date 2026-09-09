@@ -20,6 +20,7 @@ import {
   type DocumentTypeCode as DocumentType,
 } from '@/config/referentials/documents/document-types.referential';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 interface ProjectDocumentUploadProps {
@@ -37,18 +38,19 @@ interface ProjectDocumentUploadProps {
 }
 
 
-const ProjectDocumentUpload = ({ 
-  projectId, 
-  phaseId, 
+const ProjectDocumentUpload = ({
+  projectId,
+  phaseId,
   taskId,
   stepId,
-  inspectionId, 
-  stakeholderId, 
-  context = 'project', 
+  inspectionId,
+  stakeholderId,
+  context = 'project',
   contextLabel,
   defaultDocumentType,
-  onDocumentUploaded 
+  onDocumentUploaded
 }: ProjectDocumentUploadProps) => {
+  const { t } = useLanguage();
   const documentCategories = React.useMemo(() => getDocumentCategoriesForContext(context), [context]);
   const initialCategory = React.useMemo(() => {
     if (defaultDocumentType) {
@@ -66,7 +68,7 @@ const ProjectDocumentUpload = ({
   });
 
   const [file, setFile] = useState<File | null>(null);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { uploadFile, uploading } = useDocumentStorage();
@@ -86,7 +88,7 @@ const ProjectDocumentUpload = ({
       if (uploadData.file) {
         try {
           const uploadResult = await uploadFile(uploadData.file);
-          
+
           if (uploadResult.success) {
             fileUrl = uploadResult.url || null;
             uploadedFileName = uploadResult.fileName || uploadData.file.name;
@@ -174,7 +176,7 @@ const ProjectDocumentUpload = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.documentType) {
       toast({
         title: "Erreur",
@@ -244,7 +246,7 @@ const ProjectDocumentUpload = ({
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Entrez le titre du document"
+                placeholder={t('auto.projectdocumentupload.entrez_le_titre_du_document')}
                 required
               />
             </div>
@@ -253,7 +255,7 @@ const ProjectDocumentUpload = ({
               <Label htmlFor="document_type">Type de Document *</Label>
               <Select value={formData.documentType} onValueChange={(value) => handleInputChange('documentType', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez le type" />
+                  <SelectValue placeholder={t('auto.projectdocumentupload.selectionnez_le_type')} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableTypes.map((type) => (
@@ -272,7 +274,7 @@ const ProjectDocumentUpload = ({
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Entrez une description du document"
+              placeholder={t('auto.projectdocumentupload.entrez_une_description_du_document')}
               rows={3}
             />
           </div>

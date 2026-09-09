@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * PhaseFinancesTab Component
  * Displays financial analysis for a phase
@@ -73,6 +74,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
   loadingResources,
   onCreatePayment,
 }) => {
+  const { t } = useLanguage();
   // ✅ Récupérer les projets pour les labels
   const { projects = [] } = useProjectsHex();
 
@@ -84,7 +86,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
   });
 
   // ✅ RÉSOLUTION DU LABEL DU PROJET
-  const projectLabel = projectId 
+  const projectLabel = projectId
     ? getEntityLabel(projectId, projects, 'project')
     : 'Projet inconnu';
 
@@ -166,8 +168,8 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
             ) : aggregate.resources.totals.lineCount > 0 ? (
               <div className="space-y-3">
                 {([
-                  { key: 'material', label: 'Matériaux', bucket: aggregate.resources.materials, color: 'bg-orange-500' },
-                  { key: 'equipment', label: 'Équipements', bucket: aggregate.resources.equipment, color: 'bg-blue-500' },
+                  { key: 'material', label: t('auto.phasefinancestab.materiaux'), bucket: aggregate.resources.materials, color: 'bg-orange-500' },
+                  { key: 'equipment', label: t('auto.phasefinancestab.equipements'), bucket: aggregate.resources.equipment, color: 'bg-blue-500' },
                   { key: 'labor', label: "Main d'œuvre", bucket: aggregate.resources.labor, color: 'bg-purple-500' },
                 ] as const).map((row) => {
                   const cost = row.bucket.plannedCost + row.bucket.engagedCost;
@@ -225,7 +227,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
         </Card>
       </div>
 
-      
+
       {/* Detailed Cost Analysis */}
       {(phaseCosts && (phaseCosts.paymentsCount > 0 || phaseCosts.expensesCount > 0)) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -268,7 +270,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
               </CardContent>
             </Card>
           )}
-          
+
           {/* Expense Distribution */}
           {Object.keys(phaseCosts.expenseDistribution).length > 0 && (
             <Card>
@@ -303,7 +305,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
           )}
         </div>
       )}
-      
+
       {/* Resource Cost Analysis */}
       {phaseResources && (phaseResources.totalEmployees > 0 || (phaseResources.materialMetrics?.estimatedCost ?? 0) > 0) && (
         <Card>
@@ -337,7 +339,7 @@ const PhaseFinancesTab: React.FC<PhaseFinancesTabProps> = ({
                   </div>
                 </div>
               )}
-              
+
               {/* Materials Analysis */}
               {phaseResources.totalMaterials > 0 && (
                 <div>

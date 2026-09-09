@@ -40,6 +40,7 @@ import {
 import type { MeterOpening } from '@/dtos/boq/MeterInputDTO';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   open: boolean;
@@ -73,6 +74,7 @@ export function QuickAddLineDialog({
   open, onOpenChange, trigger, disabled, materials = [], phases, scope, referentialCode,
   fiscalProfileCode, entityCode, defaultWbs, wbsLocked, onSubmit,
 }: Props) {
+  const { t } = useLanguage();
   const [designation, setDesignation] = useState('');
   const [unit, setUnit] = useState('u');
   const [quantity, setQuantity] = useState<number | null>(null);
@@ -291,7 +293,7 @@ export function QuickAddLineDialog({
                   id="quickadd-designation"
                   autoFocus
                   value={designation}
-                  placeholder="Ex. Dalle béton armé, Ingénieur travaux, Location camion…"
+                  placeholder={t('auto.quickaddlinedialog.ex_dalle_beton_arme_ingenieur_travaux_location_c')}
                   onChange={(e) => { setDesignation(e.target.value); setSuggestOpen(true); }}
                   onFocus={() => setSuggestOpen(true)}
                   onKeyDown={(e) => {
@@ -399,23 +401,23 @@ export function QuickAddLineDialog({
             </div>
             <div className="mt-3 rounded-md border bg-muted/25 p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-[11px] font-semibold text-muted-foreground">Ouvertures à déduire</span>
+                <span className="text-[11px] font-semibold text-muted-foreground"><T k="auto.quickaddlinedialog.ouvertures_a_deduire" fallback="Ouvertures à déduire" /></span>
                 <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  Déduire
+                  <T k="auto.quickaddlinedialog.deduire" fallback="Déduire" />
                   <input type="checkbox" checked={deductOpenings} onChange={(e) => setDeductOpenings(e.target.checked)} />
                 </label>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1">
-                  <Label className="text-[11px]">Nombre</Label>
+                  <Label className="text-[11px]"><T k="auto.quickaddlinedialog.nombre" fallback="Nombre" /></Label>
                   <Input inputMode="numeric" value={openCount ?? ''} onChange={(e) => setOpenCount(num(e.target.value))} />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px]">Largeur (m)</Label>
+                  <Label className="text-[11px]"><T k="auto.quickaddlinedialog.largeur_m" fallback="Largeur (m)" /></Label>
                   <Input inputMode="decimal" value={openWidth ?? ''} onChange={(e) => setOpenWidth(num(e.target.value))} />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px]">Hauteur (m)</Label>
+                  <Label className="text-[11px]"><T k="auto.quickaddlinedialog.hauteur_m" fallback="Hauteur (m)" /></Label>
                   <Input inputMode="decimal" value={openHeight ?? ''} onChange={(e) => setOpenHeight(num(e.target.value))} />
                 </div>
               </div>
@@ -453,7 +455,7 @@ export function QuickAddLineDialog({
 
           <div className="space-y-1">
             <Label className="text-[11px]"><T k="dqe.quickadd.note" fallback="Note" /></Label>
-            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Précision, hypothèse de métré…" />
+            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('auto.quickaddlinedialog.precision_hypothese_de_metre')} />
           </div>
 
           {/* Détections référentielles */}
@@ -491,7 +493,7 @@ export function QuickAddLineDialog({
             <div><div className="text-[11px] text-muted-foreground">HT</div><div className="font-semibold">{money(totalHt)}</div></div>
             <div><div className="text-[11px] text-muted-foreground">TVA {(tax.vatRate * 100).toFixed(0)}%</div><div className="font-semibold">{money(tax.vatAmount)}</div></div>
             <div><div className="text-[11px] text-muted-foreground">RAS {(tax.rasRate * 100).toFixed(0)}%</div><div className="font-semibold">{money(tax.rasAmount)}</div></div>
-            <div><div className="text-[11px] text-muted-foreground">TTC</div><div className="font-semibold">{money(tax.totalTtc)}</div></div>
+            <div><div className="text-[11px] text-muted-foreground"><T k="auto.quickaddlinedialog.ttc" fallback="TTC" /></div><div className="font-semibold">{money(tax.totalTtc)}</div></div>
           </div>
         </div>
 

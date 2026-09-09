@@ -310,7 +310,7 @@ const EmployeeManagement = () => {
                           onValueChange={(value) => setFormData(prev => ({...prev, organization_id: value === NONE ? '' : value}))}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Rattacher à une organisation..." />
+                            <SelectValue placeholder={t('auto.employeemanagement.rattacher_a_une_organisation')} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value={NONE}><T k="auto.employeemanagement.aucune_organisation" fallback="Aucune organisation" /></SelectItem>
@@ -355,7 +355,7 @@ const EmployeeManagement = () => {
                           onValueChange={(value) => setFormData(prev => ({...prev, department: value}))}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un département..." />
+                            <SelectValue placeholder={t('auto.employeemanagement.selectionnez_un_departement')} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="engineering">Ingénierie / Études</SelectItem>
@@ -443,15 +443,15 @@ const EmployeeManagement = () => {
                         <Input
                           value={formData.national_id}
                           onChange={(e) => setFormData(prev => ({...prev, national_id: e.target.value}))}
-                          placeholder="Numéro national d'identité"
+                          placeholder={t('auto.employeemanagement.numero_national_d_identite')}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>NIF fiscal</Label>
+                        <Label><T k="auto.employeemanagement.nif_fiscal" fallback="NIF fiscal" /></Label>
                         <Input
                           value={formData.nif}
                           onChange={(e) => setFormData(prev => ({...prev, nif: e.target.value}))}
-                          placeholder="NIF de l'employé"
+                          placeholder={t('auto.employeemanagement.nif_de_l_employe')}
                         />
                       </div>
                       <div className="space-y-2">
@@ -461,7 +461,7 @@ const EmployeeManagement = () => {
                           onValueChange={(value) => setFormData(prev => ({...prev, manager_id: value === NONE ? '' : value}))}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un responsable..." />
+                            <SelectValue placeholder={t('auto.employeemanagement.selectionner_un_responsable')} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value={NONE}><T k="auto.employeemanagement.aucun" fallback="Aucun" /></SelectItem>
@@ -603,7 +603,7 @@ const EmployeeManagement = () => {
             </div>
             <Select value={orgFilter} onValueChange={setOrgFilter}>
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Filtrer par organisation" />
+                <SelectValue placeholder={t('auto.employeemanagement.filtrer_par_organisation')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all"><T k="auto.employeemanagement.toutes_les_organisations" fallback="Toutes les organisations" /></SelectItem>

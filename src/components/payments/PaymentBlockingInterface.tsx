@@ -136,7 +136,7 @@ const PaymentBlockingInterface = () => {
         values.projectId
       );
       setValidationResult(result);
-      
+
         if (result.canProceed) {
         toast({
           title: t('common.success'),
@@ -275,7 +275,7 @@ const PaymentBlockingInterface = () => {
                     <FormItem>
                       <FormLabel><T k="auto.paymentblockinginterface.nom_entrepreneur" fallback="Nom Entrepreneur" /></FormLabel>
                       <FormControl>
-                        <Input placeholder="Entreprise BTP..." {...field} />
+                        <Input placeholder={t('auto.paymentblockinginterface.entreprise_btp')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -290,9 +290,9 @@ const PaymentBlockingInterface = () => {
                       <FormItem>
                         <FormLabel><T k="auto.paymentblockinginterface.montant_mru" fallback="Montant (MRU)" /></FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="500000" 
+                          <Input
+                            type="number"
+                            placeholder="500000"
                             {...field}
                             onChange={(e) => field.onChange(Number(e.target.value))}
                           />
@@ -308,9 +308,9 @@ const PaymentBlockingInterface = () => {
                       <FormItem>
                         <FormLabel><T k="auto.paymentblockinginterface.progression" fallback="Progression (%)" /></FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="75" 
+                          <Input
+                            type="number"
+                            placeholder="75"
                             {...field}
                             onChange={(e) => field.onChange(Number(e.target.value))}
                           />
@@ -350,18 +350,18 @@ const PaymentBlockingInterface = () => {
                 />
 
                 <div className="flex gap-2">
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={form.handleSubmit(onValidatePayment)}
                     disabled={loading}
                     variant="outline"
                   >
                     {loading ? 'Validation...' : 'Valider Prérequis'}
                   </Button>
-                  
+
                   {validationResult?.canProceed && (
-                    <Button 
-                      type="button" 
+                    <Button
+                      type="button"
                       onClick={form.handleSubmit(onProcessPayment)}
                       disabled={loading}
                     >
@@ -386,7 +386,7 @@ const PaymentBlockingInterface = () => {
                       {validationResult.canProceed ? 'Paiement autorisé' : 'Paiement bloqué'}
                     </h3>
                   </div>
-                  
+
                   {(validationResult.blockingReasons || []).length > 0 && (
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-destructive"><T k="auto.paymentblockinginterface.problemes_bloquants" fallback="Problèmes bloquants:" /></p>
@@ -398,7 +398,7 @@ const PaymentBlockingInterface = () => {
                       ))}
                     </div>
                   )}
-                  
+
                   {(validationResult.warningReasons || []).length > 0 && (
                     <div className="space-y-2 mt-3">
                       <p className="text-sm font-medium text-warning"><T k="auto.paymentblockinginterface.avertissements" fallback="Avertissements:" /></p>
@@ -431,7 +431,7 @@ const PaymentBlockingInterface = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium"><T k="auto.paymentblockinginterface.assurances_expirees" fallback="Assurances Expirées" /></CardTitle>
@@ -444,7 +444,7 @@ const PaymentBlockingInterface = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium"><T k="auto.paymentblockinginterface.projets_en_retard" fallback="Projets en Retard" /></CardTitle>

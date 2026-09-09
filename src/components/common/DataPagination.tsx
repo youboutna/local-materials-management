@@ -7,6 +7,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   /** Page courante (base 0). */
@@ -37,6 +38,7 @@ export const DataPagination: React.FC<Props> = ({
   itemLabel,
   className,
 }) => {
+  const { t } = useLanguage();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const safePage = Math.min(Math.max(0, page), totalPages - 1);
   const from = totalItems === 0 ? 0 : safePage * pageSize + 1;
@@ -75,7 +77,7 @@ export const DataPagination: React.FC<Props> = ({
           className="hidden h-7 w-7 sm:inline-flex"
           disabled={safePage === 0}
           onClick={() => onPageChange(0)}
-          aria-label="Première page"
+          aria-label={t('auto.datapagination.premiere_page')}
         >
           <ChevronsLeft className="h-3.5 w-3.5" />
         </Button>
@@ -85,7 +87,7 @@ export const DataPagination: React.FC<Props> = ({
           className="h-7 w-7"
           disabled={safePage === 0}
           onClick={() => onPageChange(safePage - 1)}
-          aria-label="Page précédente"
+          aria-label={t('auto.datapagination.page_precedente')}
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
@@ -114,7 +116,7 @@ export const DataPagination: React.FC<Props> = ({
           className="h-7 w-7"
           disabled={safePage >= totalPages - 1}
           onClick={() => onPageChange(safePage + 1)}
-          aria-label="Page suivante"
+          aria-label={t('auto.datapagination.page_suivante')}
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
@@ -124,7 +126,7 @@ export const DataPagination: React.FC<Props> = ({
           className="hidden h-7 w-7 sm:inline-flex"
           disabled={safePage >= totalPages - 1}
           onClick={() => onPageChange(totalPages - 1)}
-          aria-label="Dernière page"
+          aria-label={t('auto.datapagination.derniere_page')}
         >
           <ChevronsRight className="h-3.5 w-3.5" />
         </Button>

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 // components/monitoring/SystemHealthOverview.tsx - System health overview component
 
 import React, { useState, useEffect } from 'react';
@@ -6,12 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { 
-  Activity, 
-  Shield, 
-  AlertTriangle, 
-  TrendingUp, 
-  CheckCircle, 
+import {
+  Activity,
+  Shield,
+  AlertTriangle,
+  TrendingUp,
+  CheckCircle,
   XCircle,
   Clock,
   Zap
@@ -26,6 +27,7 @@ import { useMonitoringStatsHex } from '@/hooks/hexagonal/useMonitoringStatsHex';
 
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 const SystemHealthOverview: React.FC = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<LocalPerformanceMetricsDTO | null>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ const SystemHealthOverview: React.FC = () => {
   const loadData = async () => {
     try {
       const performanceMetrics = await getPerformanceMonitoringService().getPerformanceMetrics();
-      
+
       setStats(performanceMetrics);
       // Derive alerts from performance metrics thresholds (no dedicated alerts
       // repository/table exists yet; alerts are computed client-side from stats).
@@ -61,7 +63,7 @@ const SystemHealthOverview: React.FC = () => {
           derivedAlerts.push({
             id: 'response-time',
             severity: (performanceMetrics.responseTime || 0) > 5000 ? 'critical' : 'high',
-            title: 'Temps de réponse dégradé',
+            title: t('auto.systemhealthoverview.temps_de_reponse_degrade'),
             message: `Le temps de réponse moyen est de ${performanceMetrics.responseTime}ms`,
             timestamp: new Date(),
             acknowledged: false,
@@ -269,8 +271,8 @@ const SystemHealthOverview: React.FC = () => {
                       {alert.timestamp.toLocaleString()}
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => handleAcknowledgeAlert(alert.id)}
                   >

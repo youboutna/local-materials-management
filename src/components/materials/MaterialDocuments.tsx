@@ -16,6 +16,7 @@ import { Calendar, Download, FileText, Plus, Tag, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MaterialDocumentMetadata {
   materialId: string;
@@ -39,7 +40,7 @@ interface MaterialDocument {
   documentDate?: string;
   expiryDate?: string;
   supplierName?: string;
-  
+
   // Legacy snake_case for backward compatibility
   material_id?: string;
   document_type?: 'invoice' | 'delivery_note' | 'warranty' | 'certificate' | 'manual' | 'other';
@@ -51,7 +52,7 @@ interface MaterialDocument {
   document_date?: string;
   expiry_date?: string;
   supplier_name?: string;
-  
+
   metadata?: MaterialDocumentMetadata;
   tags?: string[];
   uploaded_by?: string;
@@ -74,6 +75,7 @@ const DOCUMENT_TYPES = [
 ];
 
 const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, readonly = false }) => {
+  const { t } = useLanguage();
   const { openDocument } = useDocumentViewer();
   const [documents, setDocuments] = useState<MaterialDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +83,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { uploadFile, uploading } = useDocumentStorage();
 
-  const documentService = useMemo(() => 
+  const documentService = useMemo(() =>
     getDocumentService(), []);
 
   const [formData, setFormData] = useState({
@@ -93,7 +95,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
     expiryDate: '',
     supplierName: '',
     tags: '',
-    
+
     // Legacy snake_case for backward compatibility
     document_type: 'invoice' as MaterialDocument['document_type'],
     document_number: '',
@@ -112,10 +114,10 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
     try {
       // Get all documents and filter those associated with this material
       const allDocs = await documentService.getAllDocuments();
-      const materialDocs = allDocs.filter(doc => 
+      const materialDocs = allDocs.filter(doc =>
         doc.metadata && (doc.metadata as unknown as MaterialDocumentMetadata).materialId === materialId
       );
-      
+
       // Map to MaterialDocument interface for backward compatibility
       const mappedDocs = materialDocs.map((doc: DocumentDTO) => {
         const metadata = (doc.metadata as unknown) as MaterialDocumentMetadata | undefined;
@@ -133,7 +135,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
           documentDate: metadata?.documentDate,
           expiryDate: metadata?.expiryDate,
           supplierName: metadata?.supplierName,
-          
+
           // Legacy snake_case
           material_id: metadata?.materialId || materialId,
           document_type: doc.documentType as MaterialDocument['document_type'],
@@ -145,7 +147,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
           document_date: metadata?.documentDate,
           expiry_date: metadata?.expiryDate,
           supplier_name: metadata?.supplierName,
-          
+
           metadata: (doc.metadata as unknown) as MaterialDocumentMetadata | undefined,
           tags: doc.tags || [],
           uploaded_by: doc.uploadedBy,
@@ -153,7 +155,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
           updated_at: doc.updatedAt || '',
         };
       });
-      
+
       setDocuments(mappedDocs as any);
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -179,7 +181,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       toast.error('Le titre est requis');
       return;
@@ -194,10 +196,10 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
       // Upload file if selected
       if (selectedFile) {
         const uploadResult = await uploadFile(
-          selectedFile, 
+          selectedFile,
           `material-documents/${materialId}/${Date.now()}_${selectedFile.name}`
         );
-        
+
         if (!uploadResult.success || !uploadResult.url) {
           toast.error('Erreur lors du téléchargement du fichier');
           return;
@@ -277,7 +279,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
       expiryDate: '',
       supplierName: '',
       tags: '',
-      
+
       // Legacy snake_case for backward compatibility
       document_type: 'invoice' as MaterialDocument['document_type'],
       document_number: '',
@@ -352,14 +354,14 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="title">Titre *</Label>
                       <Input
                         id="title"
                         value={formData.title}
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="Titre du document"
+                        placeholder={t('auto.materialdocuments.titre_du_document')}
                         required
                       />
                     </div>
@@ -371,7 +373,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Description du document"
+                      placeholder={t('auto.materialdocuments.description_du_document')}
                       rows={2}
                     />
                   </div>
@@ -386,14 +388,14 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                         placeholder="ex: FAC-2024-001"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="supplier_name"><T k="auto.materialdocuments.fournisseur" fallback="Fournisseur" /></Label>
                       <Input
                         id="supplier_name"
                         value={formData.supplier_name}
                         onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
-                        placeholder="Nom du fournisseur"
+                        placeholder={t('auto.materialdocuments.nom_du_fournisseur')}
                       />
                     </div>
                   </div>
@@ -408,7 +410,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                         onChange={(e) => setFormData(prev => ({ ...prev, document_date: e.target.value }))}
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="expiry_date"><T k="auto.materialdocuments.date_d_expiration" fallback="Date d'expiration" /></Label>
                       <Input

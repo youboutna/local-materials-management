@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { AssistResult, AssistSeverity } from '@/application/services/boq/BoqImportAssistService';
 import { AlertTriangle, CheckCircle2, Info, Sparkles, XCircle } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 const ICONS: Record<AssistSeverity, typeof Info> = {
   error: XCircle,
@@ -37,18 +38,18 @@ export function BoqAssistPanel({ result, onApply, disabled }: Props) {
     <section className="rounded-md border p-3 space-y-2 bg-muted/20">
       <header className="flex flex-wrap items-center gap-2">
         <Sparkles className="h-4 w-4 text-primary" />
-        <h4 className="text-sm font-medium flex-1">Assistance à l’import</h4>
+        <h4 className="text-sm font-medium flex-1"><T k="auto.boqassistpanel.assistance_a_l_import" fallback="Assistance à l’import" /></h4>
         {summary.errors > 0 ? (
           <Badge variant="destructive">{summary.errors} erreur(s)</Badge>
         ) : (
           <Badge variant="secondary" className="gap-1">
-            <CheckCircle2 className="h-3 w-3" /> Aucune erreur bloquante
+            <CheckCircle2 className="h-3 w-3" /> <T k="auto.boqassistpanel.aucune_erreur_bloquante" fallback="Aucune erreur bloquante" />
           </Badge>
         )}
         {summary.warnings > 0 && <Badge variant="outline">{summary.warnings} avertissement(s)</Badge>}
         {onApply && (
           <Button size="sm" variant="outline" onClick={onApply} disabled={disabled}>
-            Appliquer les rattachements
+            <T k="auto.boqassistpanel.appliquer_les_rattachements" fallback="Appliquer les rattachements" />
           </Button>
         )}
       </header>

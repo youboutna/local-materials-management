@@ -19,6 +19,7 @@ import { Download, FileText, Loader2, Mail, PenTool } from 'lucide-react';
 import React, { useState } from 'react';
 import { TenderPDFDocument } from './pdf/TenderPDFDocument';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TenderReportGeneratorProps {
   tender: TenderDTO;
@@ -45,6 +46,7 @@ interface LocalTenderReportConfig {
 }
 
 const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, onClose }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const notifications = useNotifications();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -83,7 +85,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
 
   const generateTenderReportContent = () => {
     const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
-    
+
     return `
       <div id="tender-report-content" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white;">
         <!-- Header -->
@@ -241,7 +243,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
 
       // Generate PDF blob
       const blob = await pdf(pdfDocument).toBlob();
-      
+
       const fileName = `rapport-tender-${(tender.projectReference || tender.title || 'tender').replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       return { blob, fileName };
     } finally {
@@ -252,7 +254,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
   const handleDownload = async () => {
     try {
       const { blob, fileName } = await generatePDF();
-      
+
       // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -262,7 +264,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Rapport téléchargé",
         description: "Le rapport d'appel d'offres a été téléchargé avec succès.",
@@ -359,7 +361,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
               <Label htmlFor="reportType"><T k="auto.tenderreportgenerator.type_de_rapport" fallback="Type de rapport" /></Label>
               <Select
                 value={reportConfig.reportType}
-                onValueChange={(value: 'workflow' | 'evaluation' | 'final') => 
+                onValueChange={(value: 'workflow' | 'evaluation' | 'final') =>
                   setReportConfig(prev => ({ ...prev, reportType: value }))
                 }
               >
@@ -445,7 +447,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
                   id="signatoryName"
                   value={reportConfig.signatoryName}
                   onChange={(e) => setReportConfig(prev => ({ ...prev, signatoryName: e.target.value }))}
-                  placeholder="Nom complet"
+                  placeholder={t('auto.tenderreportgenerator.nom_complet')}
                 />
               </div>
               <div>
@@ -454,7 +456,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
                   id="signatoryTitle"
                   value={reportConfig.signatoryTitle}
                   onChange={(e) => setReportConfig(prev => ({ ...prev, signatoryTitle: e.target.value }))}
-                  placeholder="Directeur, Chef de projet..."
+                  placeholder={t('auto.tenderreportgenerator.directeur_chef_de_projet')}
                 />
               </div>
             </div>
@@ -467,7 +469,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
             id="notes"
             value={reportConfig.notes}
             onChange={(e) => setReportConfig(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Ajoutez des notes ou commentaires pour ce rapport..."
+            placeholder={t('auto.tenderreportgenerator.ajoutez_des_notes_ou_commentaires_pour_ce_rappor')}
             rows={3}
           />
         </div>
@@ -490,9 +492,9 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
             )}
             Télécharger PDF
           </Button>
-          
-          <Button 
-            onClick={handleSendEmail} 
+
+          <Button
+            onClick={handleSendEmail}
             disabled={isGenerating || !reportConfig.recipientEmail}
             variant="outline"
             className="flex-1"
@@ -504,7 +506,7 @@ const TenderReportGenerator: React.FC<TenderReportGeneratorProps> = ({ tender, o
             )}
             Envoyer par Email
           </Button>
-          
+
           {onClose && (
             <Button onClick={onClose} variant="ghost">
               <T k="auto.tenderreportgenerator.fermer" fallback="Fermer" />

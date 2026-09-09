@@ -16,6 +16,7 @@ import {
   type EscalationUnit,
 } from '@/config/referentials/kpi/escalation-thresholds.referential';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type EscalationThreshold = EscalationThresholdRow;
 
@@ -29,6 +30,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
 };
 
 const EscalationThresholdsSettings: React.FC = () => {
+  const { t } = useLanguage();
   const [thresholds, setThresholds] = useState<EscalationThreshold[]>([]);
   const { toast } = useToast();
   const {
@@ -77,14 +79,14 @@ const EscalationThresholdsSettings: React.FC = () => {
       );
 
       toast({
-        title: 'Succès',
+        title: t('auto.escalationthresholdssettings.succes'),
         description: 'Seuils d\'escalade mis à jour avec succès'
       });
     } catch (error) {
       console.error('Error saving thresholds:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder les seuils',
+        title: t('auto.escalationthresholdssettings.erreur'),
+        description: t('auto.escalationthresholdssettings.impossible_de_sauvegarder_les_seuils'),
         variant: 'destructive'
       });
     }
@@ -137,7 +139,7 @@ const EscalationThresholdsSettings: React.FC = () => {
             Configurez les seuils qui déclenchent les alertes et les actions d'escalade automatiques.
             Ces valeurs remplacent les seuils codés en dur dans l'application.
           </p>
-          
+
           <div className="flex items-center justify-between mb-6">
             <div className="text-sm">
               <span className="font-medium"><T k="auto.escalationthresholdssettings.total_des_seuils_configures" fallback="Total des seuils configurés:" /></span>
@@ -216,7 +218,7 @@ const EscalationThresholdsSettings: React.FC = () => {
                                   value={threshold.severityLevel}
                                   onChange={(e) => updateThreshold(threshold.id, 'severityLevel', e.target.value)}
                                   className="border border-input bg-background text-foreground rounded px-2 py-1 text-xs"
-                                  aria-label="Sévérité du seuil"
+                                  aria-label={t('auto.escalationthresholdssettings.severite_du_seuil')}
                                 >
                                   {ESCALATION_SEVERITIES.map((s) => (
                                     <option key={s.value} value={s.value}>{s.label}</option>
@@ -243,7 +245,7 @@ const EscalationThresholdsSettings: React.FC = () => {
                                 value={threshold.description || ''}
                                 onChange={(e) => updateThreshold(threshold.id, 'description', e.target.value || null)}
                                 className="w-48"
-                                placeholder="Description du seuil..."
+                                placeholder={t('auto.escalationthresholdssettings.description_du_seuil')}
                               />
                             </TableCell>
                             <TableCell>

@@ -8,6 +8,7 @@ import { TranslatedDepartment } from '@/components/i18n/TranslatedBadges';
 import { i18nService } from '@/application/services/I18nService';
 import { useEmployeesSelector, type EmployeeOption } from '@/hooks/hexagonal'
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EmployeeSelectorProps {
   value?: string;
@@ -30,6 +31,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
   departmentFilter,
   positionFilter
 }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: employees, isLoading } = useEmployeesSelector({
@@ -70,12 +72,12 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
       )}
-      
+
       <div className="space-y-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un employé..."
+            placeholder={t('auto.employeeselector.rechercher_un_employe')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -140,7 +142,7 @@ const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
             </SelectContent>
           </Select>
         )}
-        
+
         {selectedEmployee && (
           <div className="text-xs text-muted-foreground">
             {selectedEmployee.position && `${selectedEmployee.position} • `}

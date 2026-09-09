@@ -25,12 +25,14 @@ import {
   ProjectPhase
 } from '@/hooks/hexagonal/useEnhancedTasksHex';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EnhancedTaskListProps {
   projectId: string;
 }
 
 const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
+  const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<string>('all');
@@ -78,16 +80,16 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
     try {
       if (editingId) {
         await updateMutation.mutateAsync({ id: editingId, data: formData });
-        toast({ title: 'Tâche mise à jour avec succès' });
+        toast({ title: t('auto.enhancedtasklist.tache_mise_a_jour_avec_succes') });
       } else {
         await createMutation.mutateAsync(formData);
-        toast({ title: 'Tâche créée avec succès' });
+        toast({ title: t('auto.enhancedtasklist.tache_creee_avec_succes') });
       }
       setIsCreating(false);
       setEditingId(null);
       resetForm();
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Une erreur est survenue', variant: 'destructive' });
+      toast({ title: t('auto.enhancedtasklist.erreur'), description: t('auto.enhancedtasklist.une_erreur_est_survenue'), variant: 'destructive' });
     }
   };
 
@@ -109,9 +111,9 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
   const handleDelete = async (id: string) => {
     try {
       await deleteMutation.mutateAsync(id);
-      toast({ title: 'Tâche supprimée avec succès' });
+      toast({ title: t('auto.enhancedtasklist.tache_supprimee_avec_succes') });
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' });
+      toast({ title: t('auto.enhancedtasklist.erreur'), description: t('auto.enhancedtasklist.erreur_lors_de_la_suppression'), variant: 'destructive' });
     }
   };
 
@@ -151,7 +153,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
             <Select value={selectedPhase} onValueChange={setSelectedPhase}>
               <SelectTrigger className="w-48">
                 <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filtrer par phase" />
+                <SelectValue placeholder={t('auto.enhancedtasklist.filtrer_par_phase')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all"><T k="auto.enhancedtasklist.toutes_les_phases" fallback="Toutes les phases" /></SelectItem>
@@ -162,11 +164,11 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                 ))}
               </SelectContent>
             </Select>
-            
+
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="w-48">
                 <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filtrer par statut" />
+                <SelectValue placeholder={t('auto.enhancedtasklist.filtrer_par_statut')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all"><T k="auto.enhancedtasklist.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
@@ -176,7 +178,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                 <SelectItem value="cancelled"><TranslatedStatus code="cancelled" /></SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Dialog open={isCreating} onOpenChange={setIsCreating}>
               <DialogTrigger asChild>
                 <Button onClick={() => { resetForm(); setEditingId(null); }}>
@@ -218,7 +220,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                         onValueChange={(value) => setFormData({ ...formData, phaseId: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une phase" />
+                          <SelectValue placeholder={t('auto.enhancedtasklist.selectionner_une_phase')} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="no_phase"><T k="auto.enhancedtasklist.aucune_phase" fallback="Aucune phase" /></SelectItem>
@@ -236,7 +238,7 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                         id="assigned_to"
                         value={formData.assignedTo}
                         onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                        placeholder="Email ou nom d'utilisateur"
+                        placeholder={t('auto.enhancedtasklist.email_ou_nom_d_utilisateur')}
                       />
                     </div>
                   </div>
@@ -330,23 +332,23 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                       {task.description && (
                         <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
                       )}
-                      
+
                       <div className="flex flex-wrap gap-2 mb-2">
                         <Badge className={getPriorityColor(task.priority || 'medium')}>
                           {task.priority === 'urgent' && <AlertCircle className="h-3 w-3 mr-1" />}
-                          {task.priority === 'high' ? 'Élevée' : 
-                           task.priority === 'medium' ? 'Moyenne' : 
+                          {task.priority === 'high' ? 'Élevée' :
+                           task.priority === 'medium' ? 'Moyenne' :
                            task.priority === 'urgent' ? 'Urgente' : 'Faible'}
                         </Badge>
-                        
+
                         <Badge className={getStatusColor(task.status || 'pending')}>
                           {task.status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
                           {task.status === 'in_progress' && <Clock className="h-3 w-3 mr-1" />}
-                          {task.status === 'completed' ? 'Terminée' : 
-                           task.status === 'in_progress' ? 'En cours' : 
+                          {task.status === 'completed' ? 'Terminée' :
+                           task.status === 'in_progress' ? 'En cours' :
                            task.status === 'cancelled' ? 'Annulée' : 'En attente'}
                         </Badge>
-                        
+
                         {task.dueDate && (
                           <Badge variant="outline" className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
@@ -354,27 +356,27 @@ const EnhancedTaskList: React.FC<EnhancedTaskListProps> = ({ projectId }) => {
                           </Badge>
                         )}
                       </div>
-                      
+
                       {task.assignedTo && (
                         <p className="text-xs text-muted-foreground">
                           Assigné à: {task.assignedTo}
                         </p>
                       )}
-                      
+
                       {task.notes && (
                         <p className="text-xs text-muted-foreground mt-2">
                           <span className="font-medium"><T k="auto.enhancedtasklist.notes" fallback="Notes:" /></span> {task.notes}
                         </p>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="ghost" onClick={() => startEdit(task)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => handleDelete(task.id)}
                         className="text-destructive hover:text-destructive"
                         disabled={deleteMutation.isPending}

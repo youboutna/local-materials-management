@@ -12,6 +12,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bug, Download, RefreshCw, Trash2, X } from 'lucide-react';
 import { isDebugMode, logger, type LogEntry, type LogLevel } from '@/application/services/LoggerService';
 import { cn } from '@/lib/utils';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const LEVEL_BADGE: Record<LogLevel, string> = {
   debug: 'bg-muted text-muted-foreground',
@@ -24,6 +26,7 @@ const LEVEL_BADGE: Record<LogLevel, string> = {
 type FilterKey = 'all' | 'errors' | 'warnings';
 
 export const DebugPanel = () => {
+  const { t } = useLanguage();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [isOpen, setIsOpen] = useState(false);
@@ -60,18 +63,18 @@ export const DebugPanel = () => {
           <CardHeader className="flex flex-row items-center justify-between gap-2 py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Bug className="h-4 w-4" />
-              Journal applicatif
+              <T k="auto.debugpanel.journal_applicatif" fallback="Journal applicatif" />
               <Badge variant="outline">{stats.total}</Badge>
             </CardTitle>
             <div className="flex items-center gap-1">
-              <Button size="icon" variant="ghost" onClick={refresh} title="Rafraîchir">
+              <Button size="icon" variant="ghost" onClick={refresh} title={t('auto.debugpanel.rafraichir')}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => logger.downloadLogs('jsonl')}
-                title="Télécharger (JSONL)"
+                title={t('auto.debugpanel.telecharger_jsonl')}
               >
                 <Download className="h-4 w-4" />
               </Button>
@@ -82,11 +85,11 @@ export const DebugPanel = () => {
                   logger.clear();
                   setLogs([]);
                 }}
-                title="Vider"
+                title={t('auto.debugpanel.vider')}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => setIsOpen(false)} title="Fermer">
+              <Button size="icon" variant="ghost" onClick={() => setIsOpen(false)} title={t('auto.debugpanel.fermer')}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -108,7 +111,7 @@ export const DebugPanel = () => {
 
             <ScrollArea className="h-[320px] rounded-md border">
               {filtered.length === 0 ? (
-                <p className="p-6 text-center text-sm text-muted-foreground">Aucune entrée</p>
+                <p className="p-6 text-center text-sm text-muted-foreground"><T k="auto.debugpanel.aucune_entree" fallback="Aucune entrée" /></p>
               ) : (
                 <ul className="divide-y">
                   {filtered.map((log) => (

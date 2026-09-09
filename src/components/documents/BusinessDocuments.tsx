@@ -11,6 +11,7 @@ import { useUploadBusinessDocument, BusinessDocumentFormData } from '@/hooks/hex
 import { parseInvoiceFromPdf } from '@/utils/btpCalculations';
 import { InvoiceLine } from '@/utils/types';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BusinessDocumentsProps {
   projectId?: string;
@@ -18,6 +19,7 @@ interface BusinessDocumentsProps {
 }
 
 const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, supplierId }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -33,9 +35,9 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
     file: undefined,
   });
   const [parsedInvoice, setParsedInvoice] = useState<InvoiceLine[]>([]);
-  
+
   const uploadMutation = useUploadBusinessDocument();
-  
+
   const handleInputChange = (field: keyof BusinessDocumentFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -43,7 +45,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setFormData(prev => ({ ...prev, file }));
-    
+
     // Auto-analyze PDF invoices
     if (file && file.type === 'application/pdf') {
       analyzePDF(file);
@@ -56,9 +58,9 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
       const fileUrl = URL.createObjectURL(file);
       const result = await parseInvoiceFromPdf(fileUrl);
       URL.revokeObjectURL(fileUrl);
-      
+
       setParsedInvoice(result);
-      
+
       // Auto-fill form with parsed data
       if (result.length > 0) {
         const totalAmount = result.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
@@ -68,7 +70,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
           title: `Facture analysée - ${new Date().toLocaleDateString()}`
         }));
       }
-      
+
       toast({
         title: "Analyse réussie",
         description: `${result.length} lignes de facture détectées`,
@@ -103,12 +105,12 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
         ...formData,
         projectId,
       });
-      
+
       toast({
         title: "Succès",
         description: "Document uploadé avec succès",
       });
-      
+
       // Reset form
       setFormData({
         title: '',
@@ -198,7 +200,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                     id="reference"
                     value={formData.reference || ''}
                     onChange={(e) => handleInputChange('reference', e.target.value)}
-                    placeholder="Numéro de référence"
+                    placeholder={t('auto.businessdocuments.numero_de_reference')}
                   />
                 </div>
               </div>
@@ -212,7 +214,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                     id="title"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="Ex: Devis construction phase 1"
+                    placeholder={t('auto.businessdocuments.ex_devis_construction_phase_1')}
                     required
                   />
                 </div>
@@ -237,7 +239,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                     id="title"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="Ex: Facture matériaux janvier"
+                    placeholder={t('auto.businessdocuments.ex_facture_materiaux_janvier')}
                     required
                   />
                 </div>
@@ -247,7 +249,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                     id="supplier"
                     value={formData.supplier}
                     onChange={(e) => handleInputChange('supplier', e.target.value)}
-                    placeholder="Nom du fournisseur"
+                    placeholder={t('auto.businessdocuments.nom_du_fournisseur')}
                   />
                 </div>
               </div>
@@ -272,7 +274,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                   />
                 </div>
               </div>
-              
+
               {parsedInvoice.length > 0 && (
                 <div className="p-4 border rounded-lg bg-muted/50">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
@@ -304,7 +306,7 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
                 id="description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Description détaillée du document..."
+                placeholder={t('auto.businessdocuments.description_detaillee_du_document')}
                 rows={3}
               />
             </div>
@@ -328,8 +330,8 @@ const BusinessDocuments: React.FC<BusinessDocumentsProps> = ({ projectId, suppli
               </div>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading || analyzing}
               className="w-full"
             >

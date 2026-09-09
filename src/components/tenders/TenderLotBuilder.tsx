@@ -49,6 +49,7 @@ import { useTenderLotDocuments } from '@/hooks/hexagonal/useTenderLotDocumentsHe
 import TenderLotWorkflowBar, { TenderLotStatusBadge } from './TenderLotWorkflowBar';
 import type { TenderLotStatus } from '@/dtos/transforms/TenderLotTransformer';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Phase {
   id: string;
@@ -98,6 +99,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
   readOnly = false,
   tenderStatus
 }) => {
+  const { t } = useLanguage();
   const isPersistMode = !externalLots && !onChange && !!tenderId;
 
   const { data: persistedLots, isLoading: isLoadingLots } = useTenderLots(
@@ -434,7 +436,7 @@ const TenderLotBuilder: React.FC<TenderLotBuilderProps> = ({
                               variant="outline"
                               size="icon"
                               onClick={() => calculateEstimatedFromPhases(lot.id)}
-                              title="Recalculer à partir des phases liées"
+                              title={t('auto.tenderlotbuilder.recalculer_a_partir_des_phases_liees')}
                             >
                               <DollarSign className="h-4 w-4" />
                             </Button>

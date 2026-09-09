@@ -28,9 +28,9 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className })
 
   return (
     <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-      <SelectTrigger className={className ?? 'w-[150px]'} aria-label="Langue de l'interface">
+      <SelectTrigger className={className ?? 'w-[150px]'} aria-label={t('auto.languageselector.langue_de_l_interface')}>
         <Languages className="h-4 w-4 mr-2 shrink-0 opacity-70" aria-hidden="true" />
-        <SelectValue placeholder="Langue" />
+        <SelectValue placeholder={t('auto.languageselector.langue')} />
       </SelectTrigger>
       <SelectContent>
         {LANGUAGE_OPTIONS.map((option) => (

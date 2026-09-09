@@ -31,6 +31,7 @@ import { StepDocumentDTO } from '@/dtos/types/workflow-dto';
 import StepDocumentsSection from './StepDocumentsSection';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TenderWorkflowStepsProps {
   tenderId: string;
@@ -40,6 +41,7 @@ interface TenderWorkflowStepsProps {
 }
 
 const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWithSuppliers }: TenderWorkflowStepsProps) => {
+  const { t } = useLanguage();
   const [isAddStepDialogOpen, setIsAddStepDialogOpen] = useState(false);
   const [isProcurementWorkflowDialogOpen, setIsProcurementWorkflowDialogOpen] = useState(false);
   const [isAddDocumentDialogOpen, setIsAddDocumentDialogOpen] = useState(false);
@@ -208,7 +210,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher une étape..."
+                  placeholder={t('auto.tenderworkflowsteps.rechercher_une_etape')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 w-64"
@@ -249,7 +251,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                          step.status === 'approved' ? 'Approuvée' : step.status}
                       </span>
                     </Badge>
-                    
+
                     <Badge variant="secondary">
                       {step.tasks_completed}/{step.tasks_total} tâches terminées
                     </Badge>
@@ -268,7 +270,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                   <div className="text-sm text-muted-foreground">
                     {step.description}
                   </div>
-                  
+
                   {!readonly && (
                     <div className="flex gap-2">
                       {step.status === 'pending' && (
@@ -289,7 +291,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                           <T k="auto.tenderworkflowsteps.ajouter_document" fallback="Ajouter document" />
                         </Button>
                       )}
-                      
+
                       <Select
                         value={step.status}
                         onValueChange={(value) => updateStatus({ stepId: step.id, status: value })}
@@ -304,7 +306,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                           <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
                         </SelectContent>
                       </Select>
-                      
+
                       {hasShareableDocuments && onShareWithSuppliers && (
                         <Button
                           size="sm"
@@ -339,7 +341,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                           <label className="text-sm font-medium text-muted-foreground"><T k="auto.tenderworkflowsteps.etape" fallback="Étape" /></label>
                           <p className="text-sm">{step.procurement_stage || 'Non spécifiée'}</p>
                         </div>
-                        
+
                         {/* Editable Date Fields */}
                         <div>
                           <Label htmlFor={`due-date-${step.id}`} className="text-sm font-medium text-muted-foreground">
@@ -352,9 +354,9 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                               value={step.due_date ? step.due_date.split('T')[0] : ''}
                               onChange={(e) => {
                                 if (e.target.value) {
-                                  updateDates({ 
-                                    stepId: step.id, 
-                                    dates: { due_date: e.target.value } 
+                                  updateDates({
+                                    stepId: step.id,
+                                    dates: { due_date: e.target.value }
                                   });
                                 }
                               }}
@@ -366,7 +368,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                             </p>
                           )}
                         </div>
-                        
+
                         <div>
                           <Label htmlFor={`submission-date-${step.id}`} className="text-sm font-medium text-muted-foreground">
                             <T k="auto.tenderworkflowsteps.date_de_soumission" fallback="Date de soumission" />
@@ -378,9 +380,9 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                               value={step.submission_date ? step.submission_date.split('T')[0] : ''}
                               onChange={(e) => {
                                 if (e.target.value) {
-                                  updateDates({ 
-                                    stepId: step.id, 
-                                    dates: { submission_date: e.target.value } 
+                                  updateDates({
+                                    stepId: step.id,
+                                    dates: { submission_date: e.target.value }
                                   });
                                 }
                               }}
@@ -392,7 +394,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                             </p>
                           )}
                         </div>
-                        
+
                         <div>
                           <Label htmlFor={`review-deadline-${step.id}`} className="text-sm font-medium text-muted-foreground">
                             <T k="auto.tenderworkflowsteps.date_limite_de_revision" fallback="Date limite de révision" />
@@ -404,9 +406,9 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                               value={step.review_deadline ? step.review_deadline.split('T')[0] : ''}
                               onChange={(e) => {
                                 if (e.target.value) {
-                                  updateDates({ 
-                                    stepId: step.id, 
-                                    dates: { review_deadline: e.target.value } 
+                                  updateDates({
+                                    stepId: step.id,
+                                    dates: { review_deadline: e.target.value }
                                   });
                                 }
                               }}
@@ -418,7 +420,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                             </p>
                           )}
                         </div>
-                        
+
                         <div>
                           <Label htmlFor={`approval-deadline-${step.id}`} className="text-sm font-medium text-muted-foreground">
                             <T k="auto.tenderworkflowsteps.date_limite_d_approbation" fallback="Date limite d'approbation" />
@@ -430,9 +432,9 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                               value={step.approval_deadline ? step.approval_deadline.split('T')[0] : ''}
                               onChange={(e) => {
                                 if (e.target.value) {
-                                  updateDates({ 
-                                    stepId: step.id, 
-                                    dates: { approval_deadline: e.target.value } 
+                                  updateDates({
+                                    stepId: step.id,
+                                    dates: { approval_deadline: e.target.value }
                                   });
                                 }
                               }}
@@ -444,22 +446,22 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                             </p>
                           )}
                         </div>
-                        
+
                         <div>
                           <label className="text-sm font-medium text-muted-foreground"><T k="auto.tenderworkflowsteps.date_de_finalisation" fallback="Date de finalisation" /></label>
                           <p className="text-sm">
                             {step.actual_completion_date ? new Date(step.actual_completion_date).toLocaleDateString() : 'Non finalisée'}
                           </p>
                         </div>
-                        
+
                         <div>
                           <label className="text-sm font-medium text-muted-foreground"><T k="auto.tenderworkflowsteps.progression" fallback="Progression" /></label>
                           <div className="space-y-1">
                             <p className="text-sm">
                               {step.tasks_completed}/{step.tasks_total} tâches terminées
                             </p>
-                            <Progress 
-                              value={(step.tasks_completed / step.tasks_total) * 100} 
+                            <Progress
+                              value={(step.tasks_completed / step.tasks_total) * 100}
                               className="h-2"
                             />
                           </div>
@@ -494,8 +496,8 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                     </TabsContent>
 
                     <TabsContent value="documents" className="space-y-4">
-                      <StepDocumentsSection 
-                        step={step} 
+                      <StepDocumentsSection
+                        step={step}
                         readonly={readonly}
                         onOpenAddDocument={openAddDocumentDialog}
                       />
@@ -546,7 +548,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                 id="title"
                 value={documentFormData.title}
                 onChange={(e) => setDocumentFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Titre du document"
+                placeholder={t('auto.tenderworkflowsteps.titre_du_document')}
                 required
               />
             </div>
@@ -557,7 +559,7 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
                 id="description"
                 value={documentFormData.description}
                 onChange={(e) => setDocumentFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Description du document"
+                placeholder={t('auto.tenderworkflowsteps.description_du_document')}
                 rows={3}
               />
             </div>
@@ -566,8 +568,8 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
               <Label htmlFor="category"><T k="auto.tenderworkflowsteps.categorie" fallback="Catégorie" /></Label>
               <Select
                 value={documentFormData.category}
-                onValueChange={(value) => setDocumentFormData(prev => ({ 
-                  ...prev, 
+                onValueChange={(value) => setDocumentFormData(prev => ({
+                  ...prev,
                   category: value as TenderDocumentCategory,
                   subcategory: 'lettre_soumission'
                 }))}
@@ -603,8 +605,8 @@ const TenderWorkflowSteps = ({ tenderId, projectId, readonly = false, onShareWit
               >
                 <T k="auto.tenderworkflowsteps.annuler" fallback="Annuler" />
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={uploading || !selectedFile || !selectedStep?.can_upload_documents}
               >
                 {uploading ? 'Téléchargement...' : 'Ajouter'}

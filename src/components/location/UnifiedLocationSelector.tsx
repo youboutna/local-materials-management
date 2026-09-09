@@ -26,6 +26,7 @@ import { MapPin, Target, Globe, Navigation, Loader2, Crosshair, CheckCircle, X, 
 // Import Mauritania location data
 import { MAURITANIA_REGIONS, MAURITANIA_CITIES } from '@/utils/mauritania';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Fix default markers in Leaflet
 const DefaultIcon = L.icon({
@@ -112,6 +113,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
   filter = 'all',
   showMap = true,
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'search' | 'coordinates' | 'gps' | 'map'>('search');
   const [address, setAddress] = useState(value.address || '');
   const [latitude, setLatitude] = useState(value.latitude?.toString() || '');
@@ -235,7 +237,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
     // Validate coordinates first
     if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
       toast.error('❌ Coordonnées invalides', {
-        description: 'Veuillez saisir des coordonnées numériques valides.',
+        description: t('auto.unifiedlocationselector.veuillez_saisir_des_coordonnees_numeriques_valid'),
         duration: 3000,
       });
       return;
@@ -243,7 +245,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
 
     if (lat < -90 || lat > 90) {
       toast.error('❌ Latitude invalide', {
-        description: 'La latitude doit être comprise entre -90° et +90°.',
+        description: t('auto.unifiedlocationselector.la_latitude_doit_etre_comprise_entre_90_et_90'),
         duration: 3000,
       });
       return;
@@ -251,7 +253,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
 
     if (lng < -180 || lng > 180) {
       toast.error('❌ Longitude invalide', {
-        description: 'La longitude doit être comprise entre -180° et +180°.',
+        description: t('auto.unifiedlocationselector.la_longitude_doit_etre_comprise_entre_180_et_180'),
         duration: 3000,
       });
       return;
@@ -296,7 +298,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
   const getCurrentLocation = useCallback(async () => {
     if (!navigator.geolocation) {
       toast.error('❌ Géolocalisation non supportée', {
-        description: 'Votre navigateur ne prend pas en charge la géolocalisation.',
+        description: t('auto.unifiedlocationselector.votre_navigateur_ne_prend_pas_en_charge_la_geolo'),
         duration: 5000,
       });
       return;
@@ -320,7 +322,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
 
     setIsGettingLocation(true);
     toast.info('📍 Détection de la position GPS...', {
-      description: 'Veuillez patienter pendant la recherche de votre position.',
+      description: t('auto.unifiedlocationselector.veuillez_patienter_pendant_la_recherche_de_votre'),
       duration: 3000,
     });
 
@@ -507,7 +509,7 @@ const UnifiedLocationSelector: React.FC<UnifiedLocationSelectorProps> = ({
                   <Label htmlFor="manual-address"><T k="auto.unifiedlocationselector.adresse_complete_ou_recherche_globale" fallback="Adresse complète ou recherche globale" /></Label>
                   <Input
                     id="manual-address"
-                    placeholder="Saisir une adresse, ville, ou lieu (recherche mondiale)"
+                    placeholder={t('auto.unifiedlocationselector.saisir_une_adresse_ville_ou_lieu_recherche_mondi')}
                     value={address}
                     onChange={(e) => handleAddressChange(e.target.value)}
                     disabled={isGeocoding}

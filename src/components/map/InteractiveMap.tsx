@@ -14,6 +14,7 @@ import WilayaBoundariesLayer from '@/components/gis/layers/WilayaBoundariesLayer
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
 import { LocationDataService } from '@/application/services/LocationDataService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // City interface for this component
 interface MapCity {
@@ -85,6 +86,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   allowPolygon = false,
   className = "",
 }) => {
+  const { t } = useLanguage();
   const [mapData, setMapData] = useState<MapData>(value);
   const [address, setAddress] = useState(value?.address || "");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -228,7 +230,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
           </Label>
           <Input
             id="map-address"
-            placeholder="Saisissez l'adresse complète..."
+            placeholder={t('auto.interactivemap.saisissez_l_adresse_complete')}
             value={address}
             onChange={(e) => handleAddressChange(e.target.value)}
             className="border-border/50 focus:border-primary focus:ring-1 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"

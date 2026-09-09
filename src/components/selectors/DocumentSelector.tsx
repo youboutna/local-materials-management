@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface Document {
   id: string;
   title: string;
@@ -40,6 +41,7 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
   documentType,
   disabled = false
 }) => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const { data: documents, isLoading } = useQuery({
@@ -90,11 +92,11 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
   return (
     <div className="space-y-2">
       <Label>{label} {required && <span className="text-destructive">*</span>}</Label>
-      
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Rechercher un document..."
+          placeholder={t('auto.documentselector.rechercher_un_document')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -106,8 +108,8 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
         </div>
       ) : (
-        <Select 
-          value={value || ''} 
+        <Select
+          value={value || ''}
           onValueChange={(documentId) => {
             const document = documents?.find(d => d.id === documentId);
             onChange(documentId || undefined, document);

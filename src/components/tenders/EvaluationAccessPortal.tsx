@@ -11,8 +11,10 @@ import { SubmissionSecretService } from '@/application/services/SubmissionSecret
 import { SubmissionEvaluationPanel } from '@/components/tenders/SubmissionEvaluationPanel';
 import { SecretCodeAccessGate, type GateValidationResult } from '@/components/access/SecretCodeAccessGate';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const EvaluationAccessPortal: React.FC = () => {
+  const { t } = useLanguage();
   const handleValidate = async (code: string): Promise<GateValidationResult> => {
     const result = await SubmissionSecretService.validateSecret(code);
     if (result.is_valid && result.submission_id && result.tender_id) {
@@ -42,7 +44,7 @@ export const EvaluationAccessPortal: React.FC = () => {
 
   return (
     <SecretCodeAccessGate
-      title="Accès Évaluation"
+      title={t('auto.evaluationaccessportal.acces_evaluation')}
       subtitle="Portail sécurisé d'évaluation des soumissions"
       formTitle="Code Secret d'Accès"
       formDescription="Entrez le code secret fourni par le soumissionnaire"

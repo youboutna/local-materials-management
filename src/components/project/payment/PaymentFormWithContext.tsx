@@ -26,6 +26,7 @@ import SupplierSelector from '@/components/suppliers/SupplierSelector';
 import { useCreateProjectPayment } from '@/hooks/useProjectPayments';
 import { NotificationService } from '@/application/services/NotificationService';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PaymentFormWithContextProps {
   projectId: string;
@@ -49,9 +50,10 @@ export function PaymentFormWithContext({
   onClose,
   onPaymentCreated
 }: PaymentFormWithContextProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { mutateAsync: createPayment, isPending } = useCreateProjectPayment();
-  
+
   // Fetch full context using the service
   const { data: context, isLoading: contextLoading } = usePaymentActionContext(
     isOpen ? projectId : undefined,
@@ -66,7 +68,7 @@ export function PaymentFormWithContext({
   const [contractorId, setContractorId] = useState<string | undefined>(undefined);
   const [contractorName, setContractorName] = useState('');
   const [contractorContact, setContractorContact] = useState('');
-  
+
   // Method-specific fields
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
@@ -110,7 +112,7 @@ export function PaymentFormWithContext({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!contractorName || !contractorContact) {
       toast({
         title: "Erreur de validation",
@@ -154,7 +156,7 @@ export function PaymentFormWithContext({
           const paymentMethodLabel = paymentMethods.find(m => m.value === paymentMethod)?.label || paymentMethod;
           await NotificationService.createNotification({
             recipientId: contractorId,
-            title: 'Paiement effectué',
+            title: t('auto.paymentformwithcontext.paiement_effectue'),
             message: `Un paiement de ${amount.toLocaleString()} MRU a été effectué par ${paymentMethodLabel} - Projet: ${context?.project.title || projectId}`,
             type: 'success',
             relatedId: projectId,
@@ -173,7 +175,7 @@ export function PaymentFormWithContext({
 
       toast({
         title: "Paiement effectué",
-        description: notifyContractor 
+        description: notifyContractor
           ? `Paiement de ${amount.toLocaleString()} MRU enregistré. Notification envoyée.`
           : `Paiement de ${amount.toLocaleString()} MRU enregistré avec succès.`,
       });
@@ -240,7 +242,7 @@ export function PaymentFormWithContext({
                       <span className="font-bold text-success">{context.maxAllowedAmount.toLocaleString()} MRU</span>
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-xs mb-1">
                       <span>Paiements / Budget</span>
@@ -361,7 +363,7 @@ export function PaymentFormWithContext({
                       id="bankName"
                       value={bankName}
                       onChange={(e) => setBankName(e.target.value)}
-                      placeholder="Ex: BMCI, BNP..."
+                      placeholder={t('auto.paymentformwithcontext.ex_bmci_bnp')}
                     />
                   </div>
                   <div>
@@ -370,7 +372,7 @@ export function PaymentFormWithContext({
                       id="accountNumber"
                       value={accountNumber}
                       onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder="Numéro RIB/IBAN"
+                      placeholder={t('auto.paymentformwithcontext.numero_rib_iban')}
                     />
                   </div>
                 </div>
@@ -405,7 +407,7 @@ export function PaymentFormWithContext({
                       id="mobileOperator"
                       value={mobileOperator}
                       onChange={(e) => setMobileOperator(e.target.value)}
-                      placeholder="Mauritel, Mattel, Bankily..."
+                      placeholder={t('auto.paymentformwithcontext.mauritel_mattel_bankily')}
                     />
                   </div>
                   <div>

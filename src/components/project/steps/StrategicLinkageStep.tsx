@@ -1,7 +1,7 @@
 /**
  * StrategicLinkageStep - UI Component for project-strategy and project-budget linkages
  * Following hexagonal architecture: UI → Hook → Service → Repository → DB
- * 
+ *
  * Features:
  * - Cascading autocomplete for SCAPP strategy elements (Levier → Chantier → Intervention → Objective)
  * - Cascading autocomplete for Budget 2026 elements (Ministry → Program → Action → Line)
@@ -69,6 +69,7 @@ import { toast } from 'sonner';
 
 import { TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface StrategicLinkageStepProps {
   projectId: string;
   initialStrategyLinks?: CreateProjectStrategyLinkDTO[];
@@ -85,7 +86,7 @@ interface StrategicLinkageStepProps {
 
 
 // Type for search functions that can accept optional parent code or limit
-type SearchFunction = 
+type SearchFunction =
   | ((query: string, limit?: number) => AutocompleteSuggestion[])
   | ((query: string, parentCode?: string, limit?: number) => AutocompleteSuggestion[]);
 
@@ -120,6 +121,7 @@ function CascadingAutocomplete({
   selectedSuggestion,
   onClear,
 }: CascadingAutocompleteProps) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
@@ -326,7 +328,7 @@ interface HierarchyBreadcrumbProps {
 
 function HierarchyBreadcrumb({ items, onNavigate }: HierarchyBreadcrumbProps) {
   if (items.length === 0) return null;
-  
+
   return (
     <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3 flex-wrap">
       <FolderTree className="h-4 w-4" />
@@ -360,14 +362,14 @@ export default function StrategicLinkageStep({
 
   // State for strategy links
   const [strategyLinks, setStrategyLinks] = useState<CreateProjectStrategyLinkDTO[]>(initialStrategyLinks);
-  
+
   // State for budget links
   const [budgetLinks, setBudgetLinks] = useState<CreateProjectBudgetLinkDTO[]>(initialBudgetLinks);
 
   // Hooks for persistence
   const { useBatchCreateLinks: useBatchCreateStrategyLinks } = useProjectStrategyLinkHex(projectId);
   const { useBatchCreateLinks: useBatchCreateBudgetLinks } = useProjectBudgetLinkHex(projectId);
-  
+
   const batchCreateStrategyMutation = useBatchCreateStrategyLinks();
   const batchCreateBudgetMutation = useBatchCreateBudgetLinks();
 
@@ -377,7 +379,7 @@ export default function StrategicLinkageStep({
   const [interventionQuery, setInterventionQuery] = useState('');
   const [objectiveQuery, setObjectiveQuery] = useState('');
   const [contributionPct, setContributionPct] = useState<string>('0');
-  
+
   // Selected suggestion objects (for displaying details)
   const [selectedLever, setSelectedLever] = useState<AutocompleteSuggestion | null>(null);
   const [selectedChantier, setSelectedChantier] = useState<AutocompleteSuggestion | null>(null);
@@ -391,7 +393,7 @@ export default function StrategicLinkageStep({
   const [lineQuery, setLineQuery] = useState('');
   const [allocatedCe, setAllocatedCe] = useState<string>('0');
   const [allocatedCp, setAllocatedCp] = useState<string>('0');
-  
+
   // Selected budget suggestion objects
   const [selectedMinistry, setSelectedMinistry] = useState<AutocompleteSuggestion | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<AutocompleteSuggestion | null>(null);
@@ -577,7 +579,7 @@ export default function StrategicLinkageStep({
 
     toast.success('Lien budgétaire ajouté');
   }, [projectId, selectedBudget, allocatedCe, allocatedCp, budgetLinks, onBudgetLinksChange]);
-  
+
   // Cascading selection handlers for strategy
   const handleLeverSelect = useCallback((suggestion: AutocompleteSuggestion) => {
     // Reset all children when lever changes
@@ -590,7 +592,7 @@ export default function StrategicLinkageStep({
     setObjectiveQuery('');
     setSelectedObjective(null);
     setSelectedStrategy({ leverCode: suggestion.id });
-    
+
     // Show toast with children count
     const childrenCount = getChantierCount(suggestion.id);
     if (childrenCount > 0) {
@@ -611,7 +613,7 @@ export default function StrategicLinkageStep({
       leverCode: prev.leverCode || suggestion.parentCode,
       chantierCode: suggestion.id,
     }));
-    
+
     const childrenCount = getInterventionCount(suggestion.id);
     if (childrenCount > 0) {
       toast.info(`${childrenCount} interventions disponibles`);
@@ -629,7 +631,7 @@ export default function StrategicLinkageStep({
       chantierCode: prev.chantierCode || suggestion.parentCode,
       interventionCode: suggestion.id,
     }));
-    
+
     const childrenCount = getObjectiveCount(suggestion.id);
     if (childrenCount > 0) {
       toast.info(`${childrenCount} objectifs disponibles`);
@@ -645,7 +647,7 @@ export default function StrategicLinkageStep({
       objectiveCode: suggestion.id,
     }));
   }, []);
-  
+
   // Cascading selection handlers for budget
   const handleMinistrySelect = useCallback((suggestion: AutocompleteSuggestion) => {
     // Reset all children when ministry changes
@@ -804,11 +806,11 @@ export default function StrategicLinkageStep({
                       {strategyHierarchy.length > 0 && (
                         <HierarchyBreadcrumb items={strategyHierarchy} />
                       )}
-                      
+
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <CascadingAutocomplete
-                          label="Levier"
-                          placeholder="Rechercher un levier..."
+                          label={t('auto.strategiclinkagestep.levier')}
+                          placeholder={t('auto.strategiclinkagestep.rechercher_un_levier')}
                           value={leverQuery}
                           onChange={setLeverQuery}
                           onSelect={handleLeverSelect}
@@ -824,7 +826,7 @@ export default function StrategicLinkageStep({
                           }}
                         />
                         <CascadingAutocomplete
-                          label="Chantier"
+                          label={t('auto.strategiclinkagestep.chantier')}
                           placeholder={selectedLever ? "Filtré par levier sélectionné..." : "Sélectionnez d'abord un levier"}
                           value={chantierQuery}
                           onChange={setChantierQuery}
@@ -842,7 +844,7 @@ export default function StrategicLinkageStep({
                           }}
                         />
                         <CascadingAutocomplete
-                          label="Intervention"
+                          label={t('auto.strategiclinkagestep.intervention')}
                           placeholder={selectedChantier ? "Filtré par chantier sélectionné..." : "Sélectionnez d'abord un chantier"}
                           value={interventionQuery}
                           onChange={setInterventionQuery}
@@ -860,7 +862,7 @@ export default function StrategicLinkageStep({
                           }}
                         />
                         <CascadingAutocomplete
-                          label="Objectif"
+                          label={t('auto.strategiclinkagestep.objectif')}
                           placeholder={selectedIntervention ? "Filtré par intervention sélectionnée..." : "Sélectionnez d'abord une intervention"}
                           value={objectiveQuery}
                           onChange={setObjectiveQuery}
@@ -987,11 +989,11 @@ export default function StrategicLinkageStep({
                       {budgetHierarchy.length > 0 && (
                         <HierarchyBreadcrumb items={budgetHierarchy} />
                       )}
-                      
+
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <CascadingAutocomplete
-                          label="Ministère"
-                          placeholder="Rechercher un ministère..."
+                          label={t('auto.strategiclinkagestep.ministere')}
+                          placeholder={t('auto.strategiclinkagestep.rechercher_un_ministere')}
                           value={ministryQuery}
                           onChange={setMinistryQuery}
                           onSelect={handleMinistrySelect}
@@ -1006,7 +1008,7 @@ export default function StrategicLinkageStep({
                           }}
                         />
                         <CascadingAutocomplete
-                          label="Programme"
+                          label={t('auto.strategiclinkagestep.programme')}
                           placeholder={selectedMinistry ? "Filtré par ministère sélectionné..." : "Sélectionnez d'abord un ministère"}
                           value={programQuery}
                           onChange={setProgramQuery}
@@ -1023,7 +1025,7 @@ export default function StrategicLinkageStep({
                           }}
                         />
                         <CascadingAutocomplete
-                          label="Action"
+                          label={t('auto.strategiclinkagestep.action')}
                           placeholder={selectedProgram ? "Filtré par programme sélectionné..." : "Sélectionnez d'abord un programme"}
                           value={actionQuery}
                           onChange={setActionQuery}
@@ -1040,7 +1042,7 @@ export default function StrategicLinkageStep({
                           }}
                         />
                         <CascadingAutocomplete
-                          label="Ligne budgétaire"
+                          label={t('auto.strategiclinkagestep.ligne_budgetaire')}
                           placeholder={selectedAction ? "Filtré par action sélectionnée..." : "Sélectionnez d'abord une action"}
                           value={lineQuery}
                           onChange={setLineQuery}

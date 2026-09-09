@@ -13,6 +13,11 @@ const fr = load('auto.fr.json');
 const ENDPOINT = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const KEY = process.env.LOVABLE_API_KEY;
 
+if (!KEY) {
+    console.error('LOVABLE_API_KEY is required to translate automatic locale entries.');
+    process.exit(1);
+}
+
 async function translateBatch(entries, lang) {
     const langName = lang === 'ar' ? 'arabe' : 'anglais';
     const res = await fetch(ENDPOINT, {
@@ -41,7 +46,8 @@ async function translateBatch(entries, lang) {
     for (const lang of ['ar', 'en']) {
         const file = `auto.${lang}.json`;
         const current = load(file);
-        const missing = Object.entries(fr).filter(([k]) => !current[k]);
+        // Entries copied from auto.fr.json are fallbacks, not translations.
+        const missing = Object.entries(fr).filter(([k, value]) => !current[k] || current[k] === value);
         console.log(`${lang}: ${missing.length} clés à traduire`);
         for (let i = 0; i < missing.length; i += 60) {
             const batch = missing.slice(i, i + 60);

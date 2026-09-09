@@ -30,6 +30,7 @@ import { InspectionDocumentsPanel } from '@/components/documents/panels';
 
 import { TranslatedCategory, TranslatedRole, TranslatedSeverity, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // Local types for UI-specific fields not in DTOs
 interface LocalMeasurement {
   id: string;
@@ -84,10 +85,11 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
   onComplete,
   onSave,
 }) => {
+  const { t } = useLanguage();
   const [isStarted, setIsStarted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('checklist');
-  
+
   const [executionData, setExecutionData] = useState<{
     observations: InspectionObservation[];
     documents: InspectionDocumentEntity[];
@@ -149,11 +151,11 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
   useEffect(() => {
     if (!executionData.checklist?.length && !isStarted) {
       const defaultChecklist: (ChecklistItem & { label?: string })[] = [
-        { id: '1', title: 'Vérification des plans', label: 'Vérification des plans', required: true, completed: false, category: 'Préparation' },
-        { id: '2', title: 'Contrôle des matériaux', label: 'Contrôle des matériaux', required: true, completed: false, category: 'Matériaux' },
-        { id: '3', title: 'Sécurité du chantier', label: 'Sécurité du chantier', required: true, completed: false, category: 'Sécurité' },
-        { id: '4', title: 'Conformité structurelle', label: 'Conformité structurelle', required: true, completed: false, category: 'Structure' },
-        { id: '5', title: 'Installations électriques', label: 'Installations électriques', required: false, completed: false, category: 'Électricité' },
+        { id: '1', title: t('auto.fieldinspectionexecutor.verification_des_plans'), label: t('auto.fieldinspectionexecutor.verification_des_plans'), required: true, completed: false, category: 'Préparation' },
+        { id: '2', title: t('auto.fieldinspectionexecutor.controle_des_materiaux'), label: t('auto.fieldinspectionexecutor.controle_des_materiaux'), required: true, completed: false, category: 'Matériaux' },
+        { id: '3', title: t('auto.fieldinspectionexecutor.securite_du_chantier'), label: t('auto.fieldinspectionexecutor.securite_du_chantier'), required: true, completed: false, category: 'Sécurité' },
+        { id: '4', title: t('auto.fieldinspectionexecutor.conformite_structurelle'), label: t('auto.fieldinspectionexecutor.conformite_structurelle'), required: true, completed: false, category: 'Structure' },
+        { id: '5', title: t('auto.fieldinspectionexecutor.installations_electriques'), label: t('auto.fieldinspectionexecutor.installations_electriques'), required: false, completed: false, category: 'Électricité' },
       ];
       setExecutionData(prev => ({ ...prev, checklist: defaultChecklist }));
     }
@@ -209,7 +211,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
           notes: executionData.summary || ''
         }
       });
-      
+
       if (result.success) {
         toast.success('Progression sauvegardée');
         onSave?.();
@@ -462,7 +464,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                     <div>
                       <Label><T k="auto.fieldinspectionexecutor.categorie" fallback="Catégorie" /></Label>
                       <Select value={newObservation.category} onValueChange={(v) => setNewObservation({ ...newObservation, category: v })}>
-                        <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t('auto.fieldinspectionexecutor.selectionner')} /></SelectTrigger>
                         <SelectContent>
                           {getCategories().map((cat) => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
                         </SelectContent>
@@ -471,7 +473,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                   </div>
                   <div>
                     <Label><T k="auto.fieldinspectionexecutor.description" fallback="Description" /></Label>
-                    <Textarea value={newObservation.description} onChange={(e) => setNewObservation({ ...newObservation, description: e.target.value })} placeholder="Décrivez l'observation..." rows={2} />
+                    <Textarea value={newObservation.description} onChange={(e) => setNewObservation({ ...newObservation, description: e.target.value })} placeholder={t('auto.fieldinspectionexecutor.decrivez_l_observation')} rows={2} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -489,7 +491,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                       <div>
                         <Label><T k="auto.fieldinspectionexecutor.gravite" fallback="Gravité" /></Label>
                         <Select value={newObservation.severity} onValueChange={(v) => setNewObservation({ ...newObservation, severity: v })}>
-                          <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder={t('auto.fieldinspectionexecutor.selectionner')} /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="low"><TranslatedSeverity code="low" /></SelectItem>
                             <SelectItem value="medium"><TranslatedSeverity code="medium" /></SelectItem>
@@ -503,7 +505,7 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
                   {newObservation.conformity !== 'conforme' && (
                     <div>
                       <Label><T k="auto.fieldinspectionexecutor.action_corrective_proposee" fallback="Action corrective proposée" /></Label>
-                      <Input value={newObservation.correctiveAction || ''} onChange={(e) => setNewObservation({ ...newObservation, correctiveAction: e.target.value })} placeholder="Action à entreprendre..." />
+                      <Input value={newObservation.correctiveAction || ''} onChange={(e) => setNewObservation({ ...newObservation, correctiveAction: e.target.value })} placeholder={t('auto.fieldinspectionexecutor.action_a_entreprendre')} />
                     </div>
                   )}
                   <Button onClick={handleAddObservation} className="w-full"><Plus className="h-4 w-4 mr-2" /><T k="auto.fieldinspectionexecutor.ajouter_observation" fallback="Ajouter observation" /></Button>
@@ -587,9 +589,9 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
               <CardContent className="space-y-4">
                 <div className="grid gap-3 p-4 border rounded-lg bg-muted/30">
                   <div className="grid grid-cols-3 gap-3">
-                    <div><Label><T k="auto.fieldinspectionexecutor.nom" fallback="Nom" /></Label><Input value={newParticipant.name} onChange={(e) => setNewParticipant({ ...newParticipant, name: e.target.value })} placeholder="Nom complet" /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.nom" fallback="Nom" /></Label><Input value={newParticipant.name} onChange={(e) => setNewParticipant({ ...newParticipant, name: e.target.value })} placeholder={t('auto.fieldinspectionexecutor.nom_complet')} /></div>
                     <div><Label><T k="auto.fieldinspectionexecutor.role" fallback="Rôle" /></Label><Input value={newParticipant.role} onChange={(e) => setNewParticipant({ ...newParticipant, role: e.target.value })} placeholder="ex: Ingénieur" /></div>
-                    <div><Label><T k="auto.fieldinspectionexecutor.organisation" fallback="Organisation" /></Label><Input value={newParticipant.organization} onChange={(e) => setNewParticipant({ ...newParticipant, organization: e.target.value })} placeholder="Entreprise" /></div>
+                    <div><Label><T k="auto.fieldinspectionexecutor.organisation" fallback="Organisation" /></Label><Input value={newParticipant.organization} onChange={(e) => setNewParticipant({ ...newParticipant, organization: e.target.value })} placeholder={t('auto.fieldinspectionexecutor.entreprise')} /></div>
                   </div>
                   <Button onClick={handleAddParticipant} className="w-full"><Plus className="h-4 w-4 mr-2" /><T k="auto.fieldinspectionexecutor.ajouter_participant" fallback="Ajouter participant" /></Button>
                 </div>
@@ -635,11 +637,11 @@ const FieldInspectionExecutor: React.FC<FieldInspectionExecutorProps> = ({
             </div>
             <div>
               <Label><T k="auto.fieldinspectionexecutor.resume_des_observations" fallback="Résumé des observations" /></Label>
-              <Textarea value={executionData.summary || ''} onChange={(e) => setExecutionData({ ...executionData, summary: e.target.value })} placeholder="Résumé général de l'inspection..." rows={3} />
+              <Textarea value={executionData.summary || ''} onChange={(e) => setExecutionData({ ...executionData, summary: e.target.value })} placeholder={t('auto.fieldinspectionexecutor.resume_general_de_l_inspection')} rows={3} />
             </div>
             <div>
               <Label><T k="auto.fieldinspectionexecutor.recommandations" fallback="Recommandations" /></Label>
-              <Textarea value={(executionData.recommendations || []).join('\n')} onChange={(e) => setExecutionData({ ...executionData, recommendations: e.target.value.split('\n').filter(Boolean) })} placeholder="Une recommandation par ligne..." rows={3} />
+              <Textarea value={(executionData.recommendations || []).join('\n')} onChange={(e) => setExecutionData({ ...executionData, recommendations: e.target.value.split('\n').filter(Boolean) })} placeholder={t('auto.fieldinspectionexecutor.une_recommandation_par_ligne')} rows={3} />
             </div>
           </CardContent>
         </Card>

@@ -18,9 +18,11 @@ import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/LanguageSelector';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 export const AppearanceSettings: React.FC = () => {
+  const { t } = useLanguage();
   const {
     themes,
     themeId,
@@ -98,7 +100,7 @@ export const AppearanceSettings: React.FC = () => {
               {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
               <span><T k="auto.appearancesettings.mode_sombre" fallback="Mode sombre" /></span>
             </div>
-            <Switch checked={darkMode} onCheckedChange={toggleDarkMode} aria-label="Mode sombre" />
+            <Switch checked={darkMode} onCheckedChange={toggleDarkMode} aria-label={t('auto.appearancesettings.mode_sombre')} />
           </div>
         </CardContent>
       </Card>
@@ -116,7 +118,7 @@ export const AppearanceSettings: React.FC = () => {
             <Label htmlFor="branding-profile"><T k="auto.appearancesettings.profil_d_identite" fallback="Profil d'identité" /></Label>
             <Select value={brandingId} onValueChange={setBrandingId}>
               <SelectTrigger id="branding-profile">
-                <SelectValue placeholder="Choisir un profil" />
+                <SelectValue placeholder={t('auto.appearancesettings.choisir_un_profil')} />
               </SelectTrigger>
               <SelectContent>
                 {brandingProfiles.map((p) => (
@@ -164,7 +166,7 @@ export const AppearanceSettings: React.FC = () => {
               <Switch
                 checked={branding.showSeal}
                 onCheckedChange={(v) => setBrandingOverrides({ showSeal: v })}
-                aria-label="Afficher le sceau"
+                aria-label={t('auto.appearancesettings.afficher_le_sceau')}
               />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
@@ -172,7 +174,7 @@ export const AppearanceSettings: React.FC = () => {
               <Switch
                 checked={branding.showBands}
                 onCheckedChange={(v) => setBrandingOverrides({ showBands: v })}
-                aria-label="Afficher les bandeaux"
+                aria-label={t('auto.appearancesettings.afficher_les_bandeaux')}
               />
             </div>
           </div>

@@ -347,23 +347,23 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           lastSavedAt: new Date().toISOString()
         }
       };
-      
+
       // Submit through the unified workflow system
       updateFormData(finalWorkflowData);
       const result = await saveCurrentStep(
         steps.length,
         finalWorkflowData as ProjectWorkflowData,
       );
-      
+
       if (!result || !result.success) {
         throw new Error((result as any)?.errors?.join(', ') || t('workflow.completion_error'));
       }
-      
+
       toast({
         title: t('project_create.toast.created'),
         description: t('workflow.project_created_complete'),
       });
-      
+
       // Call the onSubmit prop with the complete workflow data — parent (ProjectCreate/Edit)
       // handles SPA navigation via react-router (no full page reload).
       onSubmit(finalWorkflowData as ProjectWorkflowData);
@@ -546,7 +546,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
           <GeoZoneEditor
             value={interventionZones}
             onChange={handleInterventionZonesChange}
-            title="Localisation & zones d'intervention"
+            title={t('auto.projectcreationworkflow.localisation_zones_d_intervention')}
             hint="Tracez une ou plusieurs zones (polygone, rectangle, cercle, point). Import GeoJSON supporté."
             defaultCenter={
               formData?.projectData?.latitude && formData?.projectData?.longitude
@@ -611,7 +611,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
                isEditing={mode === "edit"}
                workflowData={formData}
                onStepComplete={(stepData) => {
-                 updateFormData({ 
+                 updateFormData({
                    relatedData: {
                      ...formData?.relatedData,
                      compliance: stepData.compliance

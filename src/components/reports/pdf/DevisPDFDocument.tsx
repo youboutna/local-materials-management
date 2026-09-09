@@ -5,6 +5,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PDFDocument, PDFSection, PDFCard, PDFRow, PDFCol, PDFText, PDFTable } from './PDFDocument';
 import { EstimateItem, EstimateData, ExportConfig } from '@/dtos/transforms/shared';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const styles = StyleSheet.create({
   grandTotal: {
@@ -75,12 +77,13 @@ export function DevisPDFDocument({
   tender,
   config = {},
   company = {
-    name: 'Votre Entreprise',
+    name: t('auto.devispdfdocument.votre_entreprise'),
     address: '123 Rue Exemple, Nouakchott, Mauritanie',
     phone: '+222 XX XX XX XX',
     email: 'contact@votreentreprise.mr'
   }
 }: DevisPDFDocumentProps) {
+  const { t } = useLanguage();
   const defaultConfig: ExportConfig = {
     title: `Devis Quantitatif Estimatif - ${tender?.title || tender?.projectReference || 'Appel d\'Offres'}`,
     includeCompanyHeader: true,
@@ -104,8 +107,8 @@ export function DevisPDFDocument({
   const finalConfig = { ...defaultConfig, ...config };
 
   const validUntilDate = format(
-    new Date(Date.now() + finalConfig.validityPeriod * 24 * 60 * 60 * 1000), 
-    'dd MMMM yyyy', 
+    new Date(Date.now() + finalConfig.validityPeriod * 24 * 60 * 60 * 1000),
+    'dd MMMM yyyy',
     { locale: fr }
   );
 
@@ -113,11 +116,11 @@ export function DevisPDFDocument({
     const materialsCost = estimateItems
       .filter(item => item.item_type === 'material')
       .reduce((sum, item) => sum + (item.total_price || 0), 0);
-    
+
     const laborCost = estimateItems
       .filter(item => item.item_type === 'labor')
       .reduce((sum, item) => sum + (item.total_price || 0), 0);
-    
+
     const equipmentCost = estimateItems
       .filter(item => item.item_type === 'equipment')
       .reduce((sum, item) => sum + (item.total_price || 0), 0);
@@ -156,21 +159,21 @@ export function DevisPDFDocument({
       company={finalConfig.includeCompanyHeader ? company : undefined}
     >
       {/* Tender Information */}
-      <PDFSection title="Informations Appel d'Offres" borderColor="#2563eb">
+      <PDFSection title={t('auto.devispdfdocument.informations_appel_d_offres')} borderColor="#2563eb">
         <PDFCard>
           <PDFRow>
             <PDFCol>
-              <PDFText label="Titre" value={tender?.title || 'Non défini'} />
-              <PDFText label="Référence" value={tender?.projectReference || 'Non défini'} />
+              <PDFText label={t('auto.devispdfdocument.titre')} value={tender?.title || 'Non défini'} />
+              <PDFText label={t('auto.devispdfdocument.reference')} value={tender?.projectReference || 'Non défini'} />
             </PDFCol>
             <PDFCol>
-              <PDFText label="Type d'estimation" value={estimate.estimate_type || 'Standard'} />
-              <PDFText label="Devise" value={estimate.currency || 'MRU'} />
+              <PDFText label={t('auto.devispdfdocument.type_d_estimation')} value={estimate.estimate_type || 'Standard'} />
+              <PDFText label={t('auto.devispdfdocument.devise')} value={estimate.currency || 'MRU'} />
             </PDFCol>
           </PDFRow>
           {tender?.description && (
             <View style={{ marginTop: 10 }}>
-              <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Description:</Text>
+              <Text style={{ fontWeight: 'bold', marginBottom: 5 }}><T k="auto.devispdfdocument.description" fallback="Description:" /></Text>
               <Text style={{ fontSize: 11, lineHeight: 1.4 }}>{tender.description}</Text>
             </View>
           )}
@@ -179,7 +182,7 @@ export function DevisPDFDocument({
 
       {/* Detailed Items */}
       {finalConfig.includeItemDetails && estimateItems.length > 0 && (
-        <PDFSection title="Détail des Postes" borderColor="#10b981">
+        <PDFSection title={t('auto.devispdfdocument.detail_des_postes')} borderColor="#10b981">
           <PDFTable
             headers={['Description', 'Type', 'Qté', `P.U. (${estimate.currency})`, `Total (${estimate.currency})`]}
             data={estimateItems.map(item => [
@@ -194,15 +197,15 @@ export function DevisPDFDocument({
 
       {/* Price Breakdown */}
       {finalConfig.includePriceBreakdown && (
-        <PDFSection title="Récapitulatif Financier" borderColor="#3b82f6">
+        <PDFSection title={t('auto.devispdfdocument.recapitulatif_financier')} borderColor="#3b82f6">
           <PDFCard>
             <PDFRow>
               <PDFCol>
-                <PDFText label="Matériaux" value={`${formatNumber2(totals.materialsCost)} ${estimate.currency}`} />
-                <PDFText label="Main-d'œuvre" value={`${formatNumber2(totals.laborCost)} ${estimate.currency}`} />
-                <PDFText label="Équipement" value={`${formatNumber2(totals.equipmentCost)} ${estimate.currency}`} />
+                <PDFText label={t('auto.devispdfdocument.materiaux')} value={`${formatNumber2(totals.materialsCost)} ${estimate.currency}`} />
+                <PDFText label={t('auto.devispdfdocument.main_d_uvre')} value={`${formatNumber2(totals.laborCost)} ${estimate.currency}`} />
+                <PDFText label={t('auto.devispdfdocument.equipement')} value={`${formatNumber2(totals.equipmentCost)} ${estimate.currency}`} />
                 {totals.otherCost > 0 && (
-                  <PDFText label="Autres" value={`${formatNumber2(totals.otherCost)} ${estimate.currency}`} />
+                  <PDFText label={t('auto.devispdfdocument.autres')} value={`${formatNumber2(totals.otherCost)} ${estimate.currency}`} />
                 )}
               </PDFCol>
               <PDFCol>
@@ -211,7 +214,7 @@ export function DevisPDFDocument({
                 <PDFText label={`Marge bénéficiaire (${estimate.profit_margin_percentage}%)`} value={`${formatNumber2(totals.profitAmount)} ${estimate.currency}`} />
               </PDFCol>
             </PDFRow>
-            
+
             <View style={styles.grandTotal}>
               <Text style={styles.grandTotalText}>
                 TOTAL GÉNÉRAL TTC: {formatNumber2(totals.finalTotal)} {estimate.currency}
@@ -223,7 +226,7 @@ export function DevisPDFDocument({
 
       {/* Terms and Conditions */}
       {finalConfig.includeTermsConditions && (
-        <PDFSection title="Conditions Générales" borderColor="#f59e0b">
+        <PDFSection title={t('auto.devispdfdocument.conditions_generales')} borderColor="#f59e0b">
           <View style={styles.termsSection}>
             <Text style={styles.termsText}>{finalConfig.termsConditions}</Text>
           </View>
@@ -232,7 +235,7 @@ export function DevisPDFDocument({
 
       {/* Additional Notes */}
       {finalConfig.notes && (
-        <PDFSection title="Notes Complémentaires" borderColor="#ef4444">
+        <PDFSection title={t('auto.devispdfdocument.notes_complementaires')} borderColor="#ef4444">
           <PDFCard>
             <Text style={{ fontSize: 11, lineHeight: 1.4 }}>{finalConfig.notes}</Text>
           </PDFCard>
@@ -241,18 +244,18 @@ export function DevisPDFDocument({
 
       {/* Signature Section */}
       {finalConfig.includeSignature && finalConfig.signatoryName && (
-        <PDFSection title="Validation" borderColor="#6b7280">
+        <PDFSection title={t('auto.devispdfdocument.validation')} borderColor="#6b7280">
           <View style={styles.signatureSection}>
             <View style={styles.signatureRow}>
               <View>
-                <Text style={{ fontSize: 12, color: '#6b7280' }}>Nom du signataire:</Text>
+                <Text style={{ fontSize: 12, color: '#6b7280' }}><T k="auto.devispdfdocument.nom_du_signataire" fallback="Nom du signataire:" /></Text>
                 <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 5 }}>{finalConfig.signatoryName}</Text>
                 {finalConfig.signatoryTitle && (
                   <Text style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{finalConfig.signatoryTitle}</Text>
                 )}
               </View>
               <View style={styles.signatureBox}>
-                <Text style={{ fontSize: 10, color: '#9ca3af' }}>Signature requise</Text>
+                <Text style={{ fontSize: 10, color: '#9ca3af' }}><T k="auto.devispdfdocument.signature_requise" fallback="Signature requise" /></Text>
               </View>
             </View>
             <View style={{ marginTop: 15, alignItems: 'flex-end' }}>

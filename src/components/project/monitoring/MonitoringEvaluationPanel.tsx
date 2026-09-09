@@ -35,6 +35,7 @@ import type { ProjectDetailDTO } from "@/dtos/entities/ProjectDTO";
 
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 export interface MonitoringEvalPhaseInput {
   id: string;
   name: string;
@@ -92,6 +93,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
   phases,
   phaseId,
 }) => {
+  const { t } = useLanguage();
   const safePhases = useMemo<MonitoringEvalPhaseInput[]>(
     () => (Array.isArray(phases) ? phases.filter((p) => p && p.id) : []),
     [phases],
@@ -198,13 +200,13 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
         {/* KPI EVM + jugement */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <KpiTile
-            label="Jugement global"
+            label={t('auto.monitoringevaluationpanel.jugement_global')}
             value={judgement.label}
             tone={judgement.tone}
             icon={<Gauge className="h-4 w-4" />}
           />
           <KpiTile
-            label="Score de santé"
+            label={t('auto.monitoringevaluationpanel.score_de_sante')}
             value={`${formatNumber2(health.overallScore)}/100`}
             tone={
               health.overallScore >= 75
@@ -216,7 +218,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
             icon={<Activity className="h-4 w-4" />}
           />
           <KpiTile
-            label="SPI (planning)"
+            label={t('auto.monitoringevaluationpanel.spi_planning')}
             value={formatIndex2(evm.schedulePerformanceIndex ?? 0, evm.schedulePerformanceIndex !== null)}
             tone={spiForJudgement >= 0.95 ? "text-success" : "text-warning"}
             icon={
@@ -228,7 +230,7 @@ const MonitoringEvaluationPanel: React.FC<Props> = ({
             }
           />
           <KpiTile
-            label="CPI (coût)"
+            label={t('auto.monitoringevaluationpanel.cpi_cout')}
             value={formatIndex2(evm.costPerformanceIndex ?? 0, evm.costPerformanceIndex !== null)}
             tone={cpiForJudgement >= 0.95 ? "text-success" : "text-warning"}
             icon={

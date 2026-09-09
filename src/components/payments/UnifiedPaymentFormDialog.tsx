@@ -53,6 +53,7 @@ import { toDateInput } from '@/lib/utils';
 import { getDocumentService } from '@/application/services/DocumentService';
 import ProjectDocumentUpload from '@/components/project/ProjectDocumentUpload';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface UnifiedPaymentFormDefaults {
   id?: string;
@@ -103,6 +104,7 @@ export function UnifiedPaymentFormDialog({
   onCreated,
   onUpdated,
 }: Props) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const originDef = getPaymentOrigin(origin);
   const { submitPayment, updatePayment, isPending } = useSubmitUnifiedPaymentHex();
@@ -212,7 +214,7 @@ export function UnifiedPaymentFormDialog({
   const handleRemoveDocument = (docId: string) => {
     setUploadedDocs(prev => prev.filter(d => d.id !== docId));
     setDocumentIds(prev => prev.filter(id => id !== docId));
-    toast({ title: 'Document retiré' });
+    toast({ title: t('auto.unifiedpaymentformdialog.document_retire') });
   };
 
   const handleViewDocument = (doc: DocumentDTO) => {
@@ -223,15 +225,15 @@ export function UnifiedPaymentFormDialog({
     setUploadedDocs(prev => [...prev, doc]);
     setDocumentIds(prev => [...prev, doc.id]);
     setIsDocumentUploadOpen(false);
-    toast({ title: 'Document ajouté', description: 'Le document a été joint au paiement.' });
+    toast({ title: t('auto.unifiedpaymentformdialog.document_ajoute'), description: t('auto.unifiedpaymentformdialog.le_document_a_ete_joint_au_paiement') });
   };
 
   // Soumission
   const handleSubmit = async () => {
     if (!canSubmit || !projectId || !contractorId) {
       toast({
-        title: 'Champs obligatoires manquants',
-        description: 'Projet, contractant, contact et montant sont requis.',
+        title: t('auto.unifiedpaymentformdialog.champs_obligatoires_manquants'),
+        description: t('auto.unifiedpaymentformdialog.projet_contractant_contact_et_montant_sont_requi'),
         variant: 'destructive',
       });
       return;
@@ -268,7 +270,7 @@ export function UnifiedPaymentFormDialog({
       if (isEdit && defaults?.id) {
         await updatePayment(defaults.id, baseDto as UpdatePaymentDTO);
         paymentId = defaults.id;
-        toast({ title: 'Paiement mis à jour' });
+        toast({ title: t('auto.unifiedpaymentformdialog.paiement_mis_a_jour') });
         onUpdated?.(paymentId);
       } else {
         const created = await submitPayment({
@@ -277,7 +279,7 @@ export function UnifiedPaymentFormDialog({
         });
         paymentId = created.id;
         toast({
-          title: 'Demande enregistrée',
+          title: t('auto.unifiedpaymentformdialog.demande_enregistree'),
           description: `${requestTypeInfo?.label || 'Demande'} de ${formatAmount2(amount)} enregistrée (${originDef?.shortLabel || 'Manuel'}).`,
         });
         onCreated?.(paymentId);
@@ -348,7 +350,7 @@ export function UnifiedPaymentFormDialog({
                 <ProjectSelector
                   value={projectId}
                   onChange={(id) => { setProjectId(id); setPhaseId(''); setInspectionId(''); }}
-                  label="Projet *"
+                  label={t('auto.unifiedpaymentformdialog.projet')}
                   required
                 />
               )}
@@ -360,9 +362,9 @@ export function UnifiedPaymentFormDialog({
                     value={phaseId}
                     onChange={setPhaseId}
                     options={phases.map((p) => ({ value: p.id, label: p.name }))}
-                    placeholder="Sélectionner une phase"
-                    searchPlaceholder="Filtrer les phases…"
-                    emptyLabel="Aucune phase"
+                    placeholder={t('auto.unifiedpaymentformdialog.selectionner_une_phase')}
+                    searchPlaceholder={t('auto.unifiedpaymentformdialog.filtrer_les_phases')}
+                    emptyLabel={t('auto.unifiedpaymentformdialog.aucune_phase')}
                     clearLabel="Aucune"
                     disabled={!projectId}
                   />
@@ -373,9 +375,9 @@ export function UnifiedPaymentFormDialog({
                     value={inspectionId}
                     onChange={setInspectionId}
                     options={inspections.map((i) => ({ value: i.id, label: i.label }))}
-                    placeholder="Sélectionner une inspection"
-                    searchPlaceholder="Filtrer les inspections…"
-                    emptyLabel="Aucune inspection"
+                    placeholder={t('auto.unifiedpaymentformdialog.selectionner_une_inspection')}
+                    searchPlaceholder={t('auto.unifiedpaymentformdialog.filtrer_les_inspections')}
+                    emptyLabel={t('auto.unifiedpaymentformdialog.aucune_inspection')}
                     clearLabel="Aucune"
                     disabled={!projectId}
                   />
@@ -398,7 +400,7 @@ export function UnifiedPaymentFormDialog({
               )}
 
               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="grid gap-2"><Label>Contact du contractant *</Label><Input value={contractorContact} onChange={(e) => setContractorContact(e.target.value)} placeholder="Auto-rempli" /></div>
+                <div className="grid gap-2"><Label>Contact du contractant *</Label><Input value={contractorContact} onChange={(e) => setContractorContact(e.target.value)} placeholder={t('auto.unifiedpaymentformdialog.auto_rempli')} /></div>
                 <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.nom_de_la_banque" fallback="Nom de la banque" /></Label><Input value={bankName} onChange={(e) => setBankName(e.target.value)} /></div>
                 <div className="grid gap-2"><Label>Numéro de compte / RIB</Label><Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} /></div>
               </div>
@@ -428,7 +430,7 @@ export function UnifiedPaymentFormDialog({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.id_de_transaction" fallback="ID de transaction" /></Label><Input value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="Référence bancaire (optionnel)" /></div>
+                <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.id_de_transaction" fallback="ID de transaction" /></Label><Input value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder={t('auto.unifiedpaymentformdialog.reference_bancaire_optionnel')} /></div>
                 <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.delai_de_livraison_jours" fallback="Délai de livraison (jours)" /></Label><Input type="number" min={0} value={leadTime} onChange={(e) => setLeadTime(Number(e.target.value))} /></div>
               </div>
               <div className="grid gap-2"><Label><T k="auto.unifiedpaymentformdialog.notes_optionnel" fallback="Notes (optionnel)" /></Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} /></div>
@@ -451,8 +453,8 @@ export function UnifiedPaymentFormDialog({
                     <div key={doc.id} className="flex items-center justify-between rounded-md border p-2">
                       <span className="text-sm truncate">{doc.title || doc.fileName}</span>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} title="Voir"><Eye className="h-4 w-4" /></Button>
-                        {isEdit && <Button variant="ghost" size="sm" onClick={() => handleRemoveDocument(doc.id)} title="Retirer" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>}
+                        <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} title={t('auto.unifiedpaymentformdialog.voir')}><Eye className="h-4 w-4" /></Button>
+                        {isEdit && <Button variant="ghost" size="sm" onClick={() => handleRemoveDocument(doc.id)} title={t('auto.unifiedpaymentformdialog.retirer')} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>}
                       </div>
                     </div>
                   ))}
@@ -500,7 +502,7 @@ export function UnifiedPaymentFormDialog({
               defaultDocumentType="contract" // ✅ Explicitement 'contract'
               onDocumentUploaded={() => {
                 setIsDocumentUploadOpen(false);
-                toast({ title: 'Document ajouté', description: 'Le document a été joint au projet.' });
+                toast({ title: t('auto.unifiedpaymentformdialog.document_ajoute'), description: t('auto.unifiedpaymentformdialog.le_document_a_ete_joint_au_projet') });
               }}
             />
           </DialogContent>

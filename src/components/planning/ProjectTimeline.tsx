@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * ProjectTimeline - Unified timeline view combining phases, milestones and tasks
  */
@@ -42,13 +43,14 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
   onMilestoneClick,
   onTaskClick
 }) => {
+  const { t } = useLanguage();
   const [viewMode, setViewMode] = useState<ViewMode>(defaultView);
 
   const viewOptions = [
-    { id: 'gantt', label: 'Gantt', icon: BarChart3, description: 'Timeline interactive' },
-    { id: 'pert', label: 'PERT', icon: GitBranch, description: 'Analyse probabiliste' },
-    { id: 'kanban', label: 'Kanban', icon: LayoutGrid, description: 'Gestion visuelle' },
-    { id: 'critical', label: 'Critique', icon: Route, description: 'Chemin critique' }
+    { id: 'gantt', label: t('auto.projecttimeline.gantt'), icon: BarChart3, description: t('auto.projecttimeline.timeline_interactive') },
+    { id: 'pert', label: t('auto.projecttimeline.pert'), icon: GitBranch, description: t('auto.projecttimeline.analyse_probabiliste') },
+    { id: 'kanban', label: t('auto.projecttimeline.kanban'), icon: LayoutGrid, description: t('auto.projecttimeline.gestion_visuelle') },
+    { id: 'critical', label: t('auto.projecttimeline.critique'), icon: Route, description: t('auto.projecttimeline.chemin_critique') }
   ];
 
   return (

@@ -163,7 +163,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
       <CompactFilterBar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Rechercher par titre ou description..."
+        searchPlaceholder={t('auto.documentslist.rechercher_par_titre_ou_description')}
         filters={[
           {
             key: 'type',
@@ -220,7 +220,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
                   <Eye className="mr-1 h-4 w-4" />
                   <T k="auto.documentslist.voir" fallback="Voir" />
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)} title="Télécharger">
+                <Button size="sm" variant="ghost" onClick={() => handleDownload(doc)} title={t('auto.documentslist.telecharger')}>
                   <Download className="h-4 w-4" />
                 </Button>
               </div>
@@ -235,8 +235,8 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
           <CardContent className="text-center py-8">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {filterType !== 'all' ? 
-                `Aucun document de type "${getDocumentTypeLabel(filterType)}" trouvé` : 
+              {filterType !== 'all' ?
+                `Aucun document de type "${getDocumentTypeLabel(filterType)}" trouvé` :
                 'Aucun document trouvé'
               }
             </p>

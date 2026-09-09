@@ -17,6 +17,7 @@ import { getUnitOptions, METRE_UNIT_CODES } from '@/config/referentials/boq/unit
 
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // Local Material interface for UI usage
 interface LocalMaterial {
   id: string;
@@ -49,6 +50,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   projectBudget,
   onCalculationsChange
 }) => {
+  const { t } = useLanguage();
   const [materials, setMaterials] = useState<LocalMaterial[]>([]);
   const [calculations, setCalculations] = useState<QuantityCalculation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -145,7 +147,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
   const updateCalculation = (index: number, field: keyof QuantityCalculation, value: any) => {
     const updated = [...calculations];
     updated[index] = { ...updated[index], [field]: value };
-    
+
     // Recalculate quantity when dimensions change
     if (['length', 'width', 'height', 'unit'].includes(field)) {
       updated[index].quantity = calculateQuantity(
@@ -155,7 +157,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
         updated[index].unit
       );
     }
-    
+
     setCalculations(updated);
   };
 
@@ -342,7 +344,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                         onValueChange={(value) => updateCalculation(index, 'materialId', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner" />
+                          <SelectValue placeholder={t('auto.metrecalculator.selectionner')} />
                         </SelectTrigger>
                         <SelectContent>
                           {materials.map((material) => (
@@ -419,7 +421,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                         onChange={(e) => updateCalculation(index, 'length', parseFloat(e.target.value) || 0)}
                       />
                     </div>
-                    
+
                     {calc.unit !== 'm' && calc.unit !== 'unité' && (
                       <div className="space-y-2">
                         <Label><T k="auto.metrecalculator.largeur_m" fallback="Largeur (m)" /></Label>
@@ -431,7 +433,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                         />
                       </div>
                     )}
-                    
+
                     {calc.unit === 'm³' && (
                       <div className="space-y-2">
                         <Label><T k="auto.metrecalculator.hauteur_m" fallback="Hauteur (m)" /></Label>
@@ -461,7 +463,7 @@ const MetreCalculator: React.FC<MetreCalculatorProps> = ({
                     <Input
                       value={calc.note || ''}
                       onChange={(e) => updateCalculation(index, 'note', e.target.value)}
-                      placeholder="Ajoutez une note..."
+                      placeholder={t('auto.metrecalculator.ajoutez_une_note')}
                     />
                   </div>
 

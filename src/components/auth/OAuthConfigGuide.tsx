@@ -92,11 +92,11 @@ const OAuthConfigGuide = ({
               <strong>URLs à configurer dans {providerConfig.name} :</strong>
               <br />
               <code className="block mt-2 p-3 bg-muted rounded text-sm font-mono break-all">
-                <span className="text-muted-foreground">Authorized JavaScript origins:</span>
+                <span className="text-muted-foreground"><T k="auto.oauthconfigguide.authorized_javascript_origins" fallback="Authorized JavaScript origins:" /></span>
                 <br />
                 <span className="font-semibold">{currentDomain}</span>
                 <br />
-                <span className="text-muted-foreground">Authorized redirect URIs:</span>
+                <span className="text-muted-foreground"><T k="auto.oauthconfigguide.authorized_redirect_uris" fallback="Authorized redirect URIs:" /></span>
                 <br />
                 {redirectUris.map((uri, index) => (
                   <span key={index}>
@@ -171,7 +171,7 @@ const OAuthConfigGuide = ({
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
-            Copier les URLs
+            <T k="auto.oauthconfigguide.copier_les_urls" fallback="Copier les URLs" />
           </Button>
         </div>
 

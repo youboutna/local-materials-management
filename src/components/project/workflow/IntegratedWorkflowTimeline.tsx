@@ -1,6 +1,6 @@
 /**
  * IntegratedWorkflowTimeline - Jalons positionnés par rapport aux étapes
- * 
+ *
  * Vue unifiée: Étapes et Jalons sur une timeline chronologique
  * Les jalons sont positionnés relativement aux activités de la phase
  */
@@ -44,13 +44,13 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { getMilestoneService, MilestoneService } from '@/application/services/MilestoneService';
-import { 
-  MilestoneSummaryDTO, 
-  MilestoneProgressDTO, 
-  MilestoneType, 
+import {
+  MilestoneSummaryDTO,
+  MilestoneProgressDTO,
+  MilestoneType,
   MilestonePriority,
   MILESTONE_TYPES,
-  MILESTONE_PRIORITIES 
+  MILESTONE_PRIORITIES
 } from '@/dtos/entities/MilestoneDTO';
 import { PhaseStepDTO } from '@/dtos/entities/PhaseDTO';
 import { format, parseISO, isBefore, differenceInDays } from 'date-fns';
@@ -58,6 +58,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface IntegratedWorkflowTimelineProps {
   projectId: string;
@@ -94,10 +95,11 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
   onMilestoneClick,
   onStepClick,
 }) => {
+  const { t } = useLanguage();
   const [milestones, setMilestones] = useState<MilestoneSummaryDTO[]>([]);
   const [progress, setProgress] = useState<MilestoneProgressDTO | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Dialog state for adding milestones
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -211,14 +213,14 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
         phaseId: phaseId,
         projectId: projectId,
       } as any);
-      toast({ title: 'Jalon ajouté avec succès' });
+      toast({ title: t('auto.integratedworkflowtimeline.jalon_ajoute_avec_succes') });
       setIsDialogOpen(false);
       loadMilestones();
     } catch (error) {
       console.error('Error saving milestone:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de créer le jalon',
+        title: t('auto.integratedworkflowtimeline.erreur'),
+        description: t('auto.integratedworkflowtimeline.impossible_de_creer_le_jalon'),
         variant: 'destructive'
       });
     }
@@ -267,26 +269,26 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
 
   const getStatusInfo = (item: TimelineItem) => {
     const today = new Date();
-    
+
     if (item.type === 'milestone') {
       const targetDate = parseISO(item.date);
-      
+
       if (item.status === 'completed') {
-        return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft dark:bg-success/30', label: 'Terminé' };
+        return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft dark:bg-success/30', label: t('auto.integratedworkflowtimeline.termine') };
       }
       if (isBefore(targetDate, today)) {
         const daysLate = differenceInDays(today, targetDate);
         return { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10 dark:bg-red-900/30', label: `En retard (${daysLate}j)` };
       }
-      return { icon: Clock, color: 'text-primary', bg: 'bg-primary/10 dark:bg-blue-900/30', label: 'À venir' };
+      return { icon: Clock, color: 'text-primary', bg: 'bg-primary/10 dark:bg-blue-900/30', label: t('auto.integratedworkflowtimeline.a_venir') };
     }
-    
+
     // Step status
     switch (item.status) {
-      case 'completed': return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft dark:bg-success/30', label: 'Terminée' };
-      case 'in_progress': return { icon: Play, color: 'text-primary', bg: 'bg-primary/10 dark:bg-blue-900/30', label: 'En cours' };
-      case 'delayed': return { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10 dark:bg-red-900/30', label: 'Retard' };
-      default: return { icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted', label: 'Planifiée' };
+      case 'completed': return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft dark:bg-success/30', label: t('auto.integratedworkflowtimeline.terminee') };
+      case 'in_progress': return { icon: Play, color: 'text-primary', bg: 'bg-primary/10 dark:bg-blue-900/30', label: t('auto.integratedworkflowtimeline.en_cours') };
+      case 'delayed': return { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10 dark:bg-red-900/30', label: t('auto.integratedworkflowtimeline.retard') };
+      default: return { icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted', label: t('auto.integratedworkflowtimeline.planifiee') };
     }
   };
 
@@ -319,8 +321,8 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
       <Card className="overflow-hidden">
         <div className={cn(
           "p-4",
-          progress?.criticalPathStatus === 'delayed' 
-            ? "bg-gradient-to-r from-destructive/10 to-transparent" 
+          progress?.criticalPathStatus === 'delayed'
+            ? "bg-gradient-to-r from-destructive/10 to-transparent"
             : "bg-gradient-to-r from-primary/10 to-transparent"
         )}>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -338,7 +340,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
 
             <div className="flex items-center gap-2">
               {progress?.schedulePerformanceIndex !== undefined && (
-                <Badge 
+                <Badge
                   variant={progress.schedulePerformanceIndex >= 1 ? 'default' : 'destructive'}
                   className={cn(
                     "flex items-center gap-1",
@@ -515,7 +517,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Titre du jalon"
+                placeholder={t('auto.integratedworkflowtimeline.titre_du_jalon')}
               />
             </div>
             <div>
@@ -524,10 +526,10 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Description optionnelle"
+                placeholder={t('auto.integratedworkflowtimeline.description_optionnelle')}
               />
             </div>
-            
+
             {/* Type and Priority */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -563,7 +565,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 </Select>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="target_date"><T k="auto.integratedworkflowtimeline.date_cible" fallback="Date cible" /></Label>
@@ -593,7 +595,7 @@ const IntegratedWorkflowTimeline: React.FC<IntegratedWorkflowTimelineProps> = ({
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Notes additionnelles"
+                placeholder={t('auto.integratedworkflowtimeline.notes_additionnelles')}
               />
             </div>
             <div className="flex justify-end gap-2">

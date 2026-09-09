@@ -15,6 +15,7 @@ import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelec
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BankGuaranteeFormData {
   projectId: string;
@@ -43,6 +44,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
   initialData,
   isLoading = false
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [formData, setFormData] = useState<BankGuaranteeFormData>({
     projectId: initialData?.projectId || '',
@@ -62,11 +64,11 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.projectId || !formData.bankName || !formData.guaranteeAmount || !formData.expiryDate) {
       toast({
-        title: 'Erreur',
-        description: 'Veuillez remplir tous les champs obligatoires',
+        title: t('auto.bankguaranteeformwithprojectselector.erreur'),
+        description: t('auto.bankguaranteeformwithprojectselector.veuillez_remplir_tous_les_champs_obligatoires'),
         variant: 'destructive',
       });
       return;
@@ -92,8 +94,8 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
           <EnhancedProjectSelector
             value={formData.projectId}
             onChange={(id) => updateFormData('projectId', id || '')}
-            label="Projet"
-            placeholder="Sélectionner un projet"
+            label={t('auto.bankguaranteeformwithprojectselector.projet')}
+            placeholder={t('auto.bankguaranteeformwithprojectselector.selectionner_un_projet')}
             required={true}
             showTenderReference={true}
             tenderReference={formData.tenderReference}
@@ -107,7 +109,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
                 id="guaranteeNumber"
                 value={formData.guaranteeNumber}
                 onChange={(e) => updateFormData('guaranteeNumber', e.target.value)}
-                placeholder="Ex. GAR-2026-001"
+                placeholder={t('auto.bankguaranteeformwithprojectselector.ex_gar_2026_001')}
               />
             </div>
 
@@ -115,7 +117,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
               <Label htmlFor="currency"><T k="auto.bankguaranteeformwithprojectselector.devise" fallback="Devise" /></Label>
               <Select value={formData.currency} onValueChange={(value) => updateFormData('currency', value)}>
                 <SelectTrigger id="currency">
-                  <SelectValue placeholder="Devise" />
+                  <SelectValue placeholder={t('auto.bankguaranteeformwithprojectselector.devise')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MRU"><T k="auto.bankguaranteeformwithprojectselector.mru" fallback="MRU" /></SelectItem>
@@ -144,7 +146,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
                 id="contractorId"
                 value={formData.contractorId}
                 onChange={(e) => updateFormData('contractorId', e.target.value)}
-                placeholder="Identifiant de l'entrepreneur"
+                placeholder={t('auto.bankguaranteeformwithprojectselector.identifiant_de_l_entrepreneur')}
                 required
               />
             </div>
@@ -155,7 +157,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
                 id="bankName"
                 value={formData.bankName}
                 onChange={(e) => updateFormData('bankName', e.target.value)}
-                placeholder="Nom de la banque"
+                placeholder={t('auto.bankguaranteeformwithprojectselector.nom_de_la_banque')}
                 required
               />
             </div>
@@ -166,7 +168,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
               <Label htmlFor="guaranteeType"><T k="auto.bankguaranteeformwithprojectselector.type_de_garantie" fallback="Type de garantie" /></Label>
               <Select value={formData.guaranteeType} onValueChange={(value) => updateFormData('guaranteeType', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le type" />
+                  <SelectValue placeholder={t('auto.bankguaranteeformwithprojectselector.selectionner_le_type')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="soumission"><T k="auto.bankguaranteeformwithprojectselector.garantie_de_soumission" fallback="Garantie de soumission" /></SelectItem>
@@ -249,7 +251,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
             <Label htmlFor="status"><T k="auto.bankguaranteeformwithprojectselector.statut" fallback="Statut" /></Label>
             <Select value={formData.status} onValueChange={(value) => updateFormData('status', value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner le statut" />
+                <SelectValue placeholder={t('auto.bankguaranteeformwithprojectselector.selectionner_le_statut')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="active"><T k="auto.bankguaranteeformwithprojectselector.active" fallback="Active" /></SelectItem>
@@ -267,7 +269,7 @@ const BankGuaranteeFormWithProjectSelector: React.FC<BankGuaranteeFormWithProjec
               rows={3}
               value={formData.conditions}
               onChange={(e) => updateFormData('conditions', e.target.value)}
-              placeholder="Une condition par ligne"
+              placeholder={t('auto.bankguaranteeformwithprojectselector.une_condition_par_ligne')}
             />
           </div>
 

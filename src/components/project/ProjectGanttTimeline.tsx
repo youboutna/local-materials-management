@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import type { GanttModel } from '@/application/services/ProjectMetricsOrchestrator';
 import { formatPercent2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * ProjectGanttTimeline — composant Gantt UI UNIQUE et réutilisable
@@ -26,6 +27,7 @@ const asciiBar = (progress: number): string => {
 };
 
 export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAsciiBars = true }) => {
+  const { t } = useLanguage();
   if (!gantt || gantt.isEmpty) {
     return (
       <p className={`text-sm text-muted-foreground ${className ?? ''}`}>
@@ -90,7 +92,7 @@ export const ProjectGanttTimeline: React.FC<Props> = ({ gantt, className, showAs
               <div
                 className="absolute top-0 h-3 w-px bg-destructive"
                 style={{ left: `${todayPct}%` }}
-                title="Aujourd'hui"
+                title={t('auto.projectgantttimeline.aujourd_hui')}
               />
             )}
           </div>

@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Search, Send, Upload } from 'lucide-react';
 import React, { useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Document {
   id: string;
@@ -59,6 +60,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
   isOpen,
   onOpenChange
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('share');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDocumentType, setSelectedDocumentType] = useState('');
@@ -79,13 +81,13 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
 
   // Filter documents based on search and filters
   const filteredDocuments = documents?.filter(doc => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesType = !selectedDocumentType || (doc as any).document_type === selectedDocumentType || doc.documentType === selectedDocumentType;
     const matchesProject = !selectedProject || (doc as any).project_id === selectedProject || doc.projectId === selectedProject;
-    
+
     return matchesSearch && matchesType && matchesProject;
   }) || [];
 
@@ -95,7 +97,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       try {
         console.info('ENHANCED_DOCUMENT_SHARING_001: Starting document upload', {
           code: 'ENHANCED_DOCUMENT_SHARING_001',
-          message: 'Début du téléchargement de document',
+          message: t('auto.enhanceddocumentsharing.debut_du_telechargement_de_document'),
           supplierId: supplier.id,
           supplierName: supplier.name,
           fileName: selectedFile?.name,
@@ -105,7 +107,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         if (!user) {
           console.error('ENHANCED_DOCUMENT_SHARING_002: User not authenticated', {
             code: 'ENHANCED_DOCUMENT_SHARING_002',
-            message: 'Utilisateur non authentifié pour le téléchargement',
+            message: t('auto.enhanceddocumentsharing.utilisateur_non_authentifie_pour_le_telechargeme'),
             supplierId: supplier.id,
             stack: new Error().stack
           });
@@ -115,19 +117,19 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         if (!selectedFile) {
           console.error('ENHANCED_DOCUMENT_SHARING_003: No file selected', {
             code: 'ENHANCED_DOCUMENT_SHARING_003',
-            message: 'Aucun fichier sélectionné pour le téléchargement',
+            message: t('auto.enhanceddocumentsharing.aucun_fichier_selectionne_pour_le_telechargement'),
             supplierId: supplier.id,
             stack: new Error().stack
           });
           throw new Error('ENHANCED_DOCUMENT_SHARING_003: Aucun fichier sélectionné');
         }
-        
+
         // Upload file
         const uploadResult = await uploadFile(selectedFile, `documents/${selectedFile.name}`);
         if (!uploadResult.success) {
           console.error('ENHANCED_DOCUMENT_SHARING_004: File upload failed', {
             code: 'ENHANCED_DOCUMENT_SHARING_004',
-            message: 'Échec du téléchargement du fichier',
+            message: t('auto.enhanceddocumentsharing.echec_du_telechargement_du_fichier'),
             supplierId: supplier.id,
             fileName: selectedFile.name,
             technicalError: uploadResult.error,
@@ -138,7 +140,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
 
         console.info('ENHANCED_DOCUMENT_SHARING_005: File uploaded successfully', {
           code: 'ENHANCED_DOCUMENT_SHARING_005',
-          message: 'Fichier téléchargé avec succès',
+          message: t('auto.enhanceddocumentsharing.fichier_telecharge_avec_succes'),
           supplierId: supplier.id,
           fileName: selectedFile.name,
           fileUrl: uploadResult.url,
@@ -163,7 +165,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
 
         console.info('ENHANCED_DOCUMENT_SHARING_006: Document created successfully', {
           code: 'ENHANCED_DOCUMENT_SHARING_006',
-          message: 'Document créé avec succès dans la base de données',
+          message: t('auto.enhanceddocumentsharing.document_cree_avec_succes_dans_la_base_de_donnee'),
           supplierId: supplier.id,
           documentTitle: uploadFormData.title,
           stack: new Error().stack
@@ -171,7 +173,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       } catch (error) {
         console.error('ENHANCED_DOCUMENT_SHARING_007: Upload mutation failed', {
           code: 'ENHANCED_DOCUMENT_SHARING_007',
-          message: 'Échec de la mutation de téléchargement',
+          message: t('auto.enhanceddocumentsharing.echec_de_la_mutation_de_telechargement'),
           supplierId: supplier.id,
           technicalError: error,
           stack: new Error().stack
@@ -185,7 +187,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
         title: "Succès",
         description: "Document téléchargé avec succès"
       });
-      
+
       // Reset form
       setUploadFormData({
         title: '',
@@ -209,7 +211,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
     try {
       console.info('ENHANCED_DOCUMENT_SHARING_008: Starting document share', {
         code: 'ENHANCED_DOCUMENT_SHARING_008',
-        message: 'Début du partage de document',
+        message: t('auto.enhanceddocumentsharing.debut_du_partage_de_document'),
         documentId,
         documentTitle,
         supplierId: supplier.id,
@@ -220,7 +222,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       if (!user) {
         console.error('ENHANCED_DOCUMENT_SHARING_009: User not authenticated for sharing', {
           code: 'ENHANCED_DOCUMENT_SHARING_009',
-          message: 'Utilisateur non authentifié pour le partage',
+          message: t('auto.enhanceddocumentsharing.utilisateur_non_authentifie_pour_le_partage'),
           documentId,
           supplierId: supplier.id,
           stack: new Error().stack
@@ -255,7 +257,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
       await notificationService.createNotification({
         recipientId: supplier.id,
         type: 'info',
-        title: 'Nouveau document partagé',
+        title: t('auto.enhanceddocumentsharing.nouveau_document_partage'),
         message: `Le document "${documentTitle}" a été partagé avec vous.`,
         metadata: {
           document_id: documentId,
@@ -267,14 +269,14 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
 
       console.info('ENHANCED_DOCUMENT_SHARING_011: Document shared successfully', {
         code: 'ENHANCED_DOCUMENT_SHARING_011',
-        message: 'Document partagé avec succès',
+        message: t('auto.enhanceddocumentsharing.document_partage_avec_succes'),
         documentId,
         documentTitle,
         supplierId: supplier.id,
         supplierEmail: supplier.email,
         stack: new Error().stack
       });
-      
+
       toast({
         title: "Succès",
         description: `Document "${documentTitle}" partagé avec ${supplier.name || 'ce fournisseur'}`,
@@ -282,7 +284,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
     } catch (error) {
       console.error('ENHANCED_DOCUMENT_SHARING_012: Document share failed', {
         code: 'ENHANCED_DOCUMENT_SHARING_012',
-        message: 'Échec du partage de document',
+        message: t('auto.enhanceddocumentsharing.echec_du_partage_de_document'),
         documentId,
         documentTitle,
         supplierId: supplier.id,
@@ -330,7 +332,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
             <T k="auto.enhanceddocumentsharing.partagez_consultez_et_retirez_les_documents_acce" fallback="Partagez, consultez et retirez les documents accessibles à ce fournisseur." />
           </DialogDescription>
         </DialogHeader>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
             <TabsTrigger value="share"><T k="auto.enhanceddocumentsharing.partager_des_documents" fallback="Partager des documents" /></TabsTrigger>
@@ -350,19 +352,19 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Titre ou description..."
+                        placeholder={t('auto.enhanceddocumentsharing.titre_ou_description')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium"><T k="auto.enhanceddocumentsharing.type_de_document" fallback="Type de document" /></label>
                     <Select value={selectedDocumentType || "all-types"} onValueChange={(value) => setSelectedDocumentType(value === "all-types" ? "" : value)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Tous les types" />
+                        <SelectValue placeholder={t('auto.enhanceddocumentsharing.tous_les_types')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all-types"><T k="auto.enhanceddocumentsharing.tous_les_types" fallback="Tous les types" /></SelectItem>
@@ -374,13 +376,13 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium"><T k="auto.enhanceddocumentsharing.projet" fallback="Projet" /></label>
                     <ProjectSelector
                       value={selectedProject}
                       onChange={(projectId) => setSelectedProject(projectId || '')}
-                      placeholder="Tous les projets"
+                      placeholder={t('auto.enhanceddocumentsharing.tous_les_projets')}
                       secureMode={true}
                     />
                   </div>
@@ -452,19 +454,19 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                     <Input
                       value={uploadFormData.title}
                       onChange={(e) => setUploadFormData(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="Titre du document"
+                      placeholder={t('auto.enhanceddocumentsharing.titre_du_document')}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium">Type de document *</label>
-                    <Select 
-                      value={uploadFormData.document_type} 
+                    <Select
+                      value={uploadFormData.document_type}
                       onValueChange={(value) => setUploadFormData(prev => ({ ...prev, document_type: value }))}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner le type" />
+                        <SelectValue placeholder={t('auto.enhanceddocumentsharing.selectionner_le_type')} />
                       </SelectTrigger>
                       <SelectContent>
                         {DOCUMENT_TYPES.map((type) => (
@@ -482,7 +484,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                   <ProjectSelector
                     value={uploadFormData.project_id}
                     onChange={(projectId) => setUploadFormData(prev => ({ ...prev, project_id: projectId || '' }))}
-                    placeholder="Associer à un projet"
+                    placeholder={t('auto.enhanceddocumentsharing.associer_a_un_projet')}
                     secureMode={true}
                   />
                 </div>
@@ -492,7 +494,7 @@ export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = (
                   <Textarea
                     value={uploadFormData.description}
                     onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Description du document"
+                    placeholder={t('auto.enhanceddocumentsharing.description_du_document')}
                     rows={3}
                   />
                 </div>

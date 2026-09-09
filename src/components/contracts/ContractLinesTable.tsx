@@ -19,6 +19,8 @@ import { Loader2, Plus, Trash2, ListOrdered, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useContractLinesHex, useContractLineMutations } from '@/hooks/hexagonal/useContractsHex';
 import { computeContractLineTotals } from '@/dtos/entities/ContractLineDTO';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ContractLinesTableProps {
   contractId: string;
@@ -35,6 +37,7 @@ export default function ContractLinesTable({
   sourceEstimateId,
   readOnly = false,
 }: ContractLinesTableProps) {
+  const { t } = useLanguage();
   const { data: lines = [], isLoading, error } = useContractLinesHex(contractId);
   const { addLine, updateLine, deleteLine, importFromEstimate, isPending } =
     useContractLineMutations(contractId);
@@ -82,12 +85,12 @@ export default function ContractLinesTable({
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="flex items-center gap-2 text-base">
           <ListOrdered className="h-4 w-4" />
-          Lignes contractuelles
+          <T k="auto.contractlinestable.lignes_contractuelles" fallback="Lignes contractuelles" />
           <Badge variant="outline">{totals.lineCount}</Badge>
         </CardTitle>
         {!readOnly && sourceEstimateId && (
           <Button size="sm" variant="outline" onClick={handleImport} disabled={isPending}>
-            <Download className="mr-1.5 h-4 w-4" /> Reprendre le DQE attribué
+            <Download className="mr-1.5 h-4 w-4" /> <T k="auto.contractlinestable.reprendre_le_dqe_attribue" fallback="Reprendre le DQE attribué" />
           </Button>
         )}
       </CardHeader>
@@ -116,14 +119,14 @@ export default function ContractLinesTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Désignation</TableHead>
-                  <TableHead>Unité</TableHead>
-                  <TableHead className="text-right">Qté</TableHead>
+                  <TableHead><T k="auto.contractlinestable.code" fallback="Code" /></TableHead>
+                  <TableHead><T k="auto.contractlinestable.designation" fallback="Désignation" /></TableHead>
+                  <TableHead><T k="auto.contractlinestable.unite" fallback="Unité" /></TableHead>
+                  <TableHead className="text-right"><T k="auto.contractlinestable.qte" fallback="Qté" /></TableHead>
                   <TableHead className="text-right">P.U.</TableHead>
-                  <TableHead className="text-right">Montant HT</TableHead>
-                  <TableHead className="text-right">TVA %</TableHead>
-                  {!readOnly && <TableHead className="text-right">Action</TableHead>}
+                  <TableHead className="text-right"><T k="auto.contractlinestable.montant_ht" fallback="Montant HT" /></TableHead>
+                  <TableHead className="text-right"><T k="auto.contractlinestable.tva" fallback="TVA %" /></TableHead>
+                  {!readOnly && <TableHead className="text-right"><T k="auto.contractlinestable.action" fallback="Action" /></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -173,7 +176,7 @@ export default function ContractLinesTable({
                           variant="ghost"
                           disabled={isPending}
                           onClick={() => deleteLine(line.id)}
-                          aria-label="Supprimer la ligne"
+                          aria-label={t('auto.contractlinestable.supprimer_la_ligne')}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -188,15 +191,15 @@ export default function ContractLinesTable({
 
         <div className="grid gap-2 rounded-md border p-3 text-sm sm:grid-cols-3">
           <div>
-            <p className="text-xs text-muted-foreground">Total HT</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.contractlinestable.total_ht" fallback="Total HT" /></p>
             <p className="font-medium tabular-nums">{num(totals.amountHt)} {currency}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">TVA</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.contractlinestable.tva" fallback="TVA" /></p>
             <p className="font-medium tabular-nums">{num(totals.vatAmount)} {currency}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Total TTC</p>
+            <p className="text-xs text-muted-foreground"><T k="auto.contractlinestable.total_ttc" fallback="Total TTC" /></p>
             <p className="font-medium tabular-nums">{num(totals.amountTtc)} {currency}</p>
           </div>
         </div>
@@ -204,40 +207,40 @@ export default function ContractLinesTable({
         {!readOnly && (
           <div className="grid gap-2 sm:grid-cols-7">
             <Input
-              placeholder="Code"
+              placeholder={t('auto.contractlinestable.code')}
               value={draft.lineCode}
               onChange={(e) => setDraft({ ...draft, lineCode: e.target.value })}
-              aria-label="Code de la nouvelle ligne"
+              aria-label={t('auto.contractlinestable.code_de_la_nouvelle_ligne')}
             />
             <Input
               className="sm:col-span-2"
-              placeholder="Désignation *"
+              placeholder={t('auto.contractlinestable.designation')}
               value={draft.designation}
               onChange={(e) => setDraft({ ...draft, designation: e.target.value })}
-              aria-label="Désignation de la nouvelle ligne"
+              aria-label={t('auto.contractlinestable.designation_de_la_nouvelle_ligne')}
             />
             <Input
-              placeholder="Unité"
+              placeholder={t('auto.contractlinestable.unite')}
               value={draft.unit}
               onChange={(e) => setDraft({ ...draft, unit: e.target.value })}
-              aria-label="Unité"
+              aria-label={t('auto.contractlinestable.unite')}
             />
             <Input
               type="number"
-              placeholder="Qté"
+              placeholder={t('auto.contractlinestable.qte')}
               value={draft.quantity}
               onChange={(e) => setDraft({ ...draft, quantity: e.target.value })}
-              aria-label="Quantité"
+              aria-label={t('auto.contractlinestable.quantite')}
             />
             <Input
               type="number"
               placeholder="P.U."
               value={draft.unitPrice}
               onChange={(e) => setDraft({ ...draft, unitPrice: e.target.value })}
-              aria-label="Prix unitaire"
+              aria-label={t('auto.contractlinestable.prix_unitaire')}
             />
             <Button onClick={handleAdd} disabled={isPending}>
-              <Plus className="mr-1.5 h-4 w-4" /> Ajouter
+              <Plus className="mr-1.5 h-4 w-4" /> <T k="auto.contractlinestable.ajouter" fallback="Ajouter" />
             </Button>
           </div>
         )}

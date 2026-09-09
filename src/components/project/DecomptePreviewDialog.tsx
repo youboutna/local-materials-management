@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,10 +11,11 @@ interface Props {
   onOpenChange: (o: boolean) => void;
   decompte: Record<string, any> | null;
   phaseName?: string;
-  onCreate: () => Promise<void> | void;
+  onCreate: () => <T k="auto.decomptepreviewdialog.promise" fallback="Promise" /><void> | void;
 }
 
 export const DecomptePreviewDialog: React.FC<Props> = ({ open, onOpenChange, decompte, phaseName, onCreate }) => {
+  const { t } = useLanguage();
   if (!decompte) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -31,7 +33,7 @@ export const DecomptePreviewDialog: React.FC<Props> = ({ open, onOpenChange, dec
         </Card>
 
         <div className="flex gap-2 mt-4">
-          <Button onClick={() => { if (decompte) generatePVPDF({ title: 'PV de réception', phaseName: phaseName || 'Phase', decompte }); }}><T k="auto.decomptepreviewdialog.generer_pv_pdf" fallback="Générer PV (PDF)" /></Button>
+          <Button onClick={() => { if (decompte) generatePVPDF({ title: t('auto.decomptepreviewdialog.pv_de_reception'), phaseName: phaseName || 'Phase', decompte }); }}><T k="auto.decomptepreviewdialog.generer_pv_pdf" fallback="Générer PV (PDF)" /></Button>
           <Button variant="default" onClick={async () => { await onCreate(); }}><T k="auto.decomptepreviewdialog.enregistrer_decompte" fallback="Enregistrer décompte" /></Button>
         </div>
       </DialogContent>

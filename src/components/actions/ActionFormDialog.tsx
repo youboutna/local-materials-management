@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface ActionFormData {
   actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail' | 'export_receipt' | 'blockchain_verification';
@@ -28,7 +29,7 @@ export interface ActionFormData {
 interface ActionFormDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (formData: ActionFormData) => Promise<void>;
+  onSubmit: (formData: ActionFormData) => <T k="auto.actionformdialog.promise" fallback="Promise" /><void>;
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';
   entityId: string;
   availableEmployees?: Array<{ id: string; full_name: string; email?: string; position?: string; }>;
@@ -68,6 +69,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
   availableRecipients = [],
   defaultValues = {},
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [formData, setFormData] = useState<ActionFormData>({
     actionType: 'task_assignment',
@@ -96,7 +98,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
 
       if (!formData.message.trim()) {
         toast({
-          title: "Erreur", 
+          title: "Erreur",
           description: "Le message est requis",
           variant: "destructive",
         });
@@ -122,12 +124,12 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
       }
 
       await onSubmit(formData);
-      
+
       toast({
         title: "Succès",
         description: `Action "${actionLabels[formData.actionType]}" créée avec succès`,
       });
-      
+
       onClose();
     } catch (error) {
       console.error('Error submitting action:', error);
@@ -144,7 +146,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
   const handleRecipientChange = (recipientId: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      recipientIds: checked 
+      recipientIds: checked
         ? [...prev.recipientIds, recipientId]
         : prev.recipientIds.filter(id => id !== recipientId)
     }));
@@ -166,9 +168,9 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {/* Action Type */}
           <div className="space-y-2">
             <Label htmlFor="actionType"><T k="auto.actionformdialog.type_d_action" fallback="Type d'action" /></Label>
-            <Select 
-              value={formData.actionType} 
-              onValueChange={(value: ActionFormData['actionType']) => 
+            <Select
+              value={formData.actionType}
+              onValueChange={(value: ActionFormData['actionType']) =>
                 setFormData(prev => ({ ...prev, actionType: value }))
               }
             >
@@ -198,7 +200,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Titre de l'action..."
+              placeholder={t('auto.actionformdialog.titre_de_l_action')}
               required
             />
           </div>
@@ -210,7 +212,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
               id="message"
               value={formData.message}
               onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-              placeholder="Décrivez l'action à effectuer..."
+              placeholder={t('auto.actionformdialog.decrivez_l_action_a_effectuer')}
               rows={4}
               required
             />
@@ -219,9 +221,9 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {/* Priority */}
           <div className="space-y-2">
             <Label htmlFor="priority"><T k="auto.actionformdialog.priorite" fallback="Priorité" /></Label>
-            <Select 
-              value={formData.priority} 
-              onValueChange={(value: ActionFormData['priority']) => 
+            <Select
+              value={formData.priority}
+              onValueChange={(value: ActionFormData['priority']) =>
                 setFormData(prev => ({ ...prev, priority: value }))
               }
             >
@@ -249,14 +251,14 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {formData.actionType === 'task_assignment' && (
             <div className="space-y-2">
               <Label htmlFor="assignee"><T k="auto.actionformdialog.assigne_a" fallback="Assigné à" /></Label>
-              <Select 
-                value={formData.assigneeId || ''} 
-                onValueChange={(value) => 
+              <Select
+                value={formData.assigneeId || ''}
+                onValueChange={(value) =>
                   setFormData(prev => ({ ...prev, assigneeId: value }))
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez un employé..." />
+                  <SelectValue placeholder={t('auto.actionformdialog.selectionnez_un_employe')} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableEmployees.map((employee) => (
@@ -273,9 +275,9 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
           {formData.actionType === 'hierarchy_notification' && (
             <div className="space-y-2">
               <Label htmlFor="escalationLevel"><T k="auto.actionformdialog.niveau_d_escalade" fallback="Niveau d'escalade" /></Label>
-              <Select 
-                value={formData.escalationLevel || 'team'} 
-                onValueChange={(value: 'team' | 'supervisor' | 'manager' | 'director') => 
+              <Select
+                value={formData.escalationLevel || 'team'}
+                onValueChange={(value: 'team' | 'supervisor' | 'manager' | 'director') =>
                   setFormData(prev => ({ ...prev, escalationLevel: value }))
                 }
               >
@@ -396,7 +398,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
                   <strong><T k="auto.actionformdialog.assigne_a" fallback="Assigné à :" /></strong> {
                     availableEmployees.find(emp => emp.id === formData.assigneeId)?.full_name || 'Employé sélectionné'
                   }
-                  {availableEmployees.find(emp => emp.id === formData.assigneeId)?.position && 
+                  {availableEmployees.find(emp => emp.id === formData.assigneeId)?.position &&
                     ` (${availableEmployees.find(emp => emp.id === formData.assigneeId)?.position})`
                   }
                 </div>
@@ -417,7 +419,7 @@ export const ActionFormDialog: React.FC<ActionFormDialogProps> = ({
                     className="w-full justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.dueDate 
+                    {formData.dueDate
                       ? format(formData.dueDate, 'PPP', { locale: fr })
                       : "Sélectionnez une date..."
                     }

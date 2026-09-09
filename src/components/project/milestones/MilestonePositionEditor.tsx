@@ -1,7 +1,7 @@
 /**
  * Milestone Position Editor Component
  * Allows repositioning milestones on timeline/phases with weight adjustment
- * 
+ *
  * Supports drag-and-drop and manual date/weight editing
  */
 
@@ -14,9 +14,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
-import { 
-  Flag, 
-  Calendar, 
+import {
+  Flag,
+  Calendar,
   GripVertical,
   Edit,
   Save,
@@ -28,6 +28,7 @@ import {
 import { MilestoneDTO, MILESTONE_TYPES, MILESTONE_PRIORITIES, MilestonePriority, MilestoneType, GeneratedMilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { format, parseISO, addDays, differenceInDays } from 'date-fns';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MilestonePositionEditorProps {
   milestones: (MilestoneDTO | GeneratedMilestoneDTO)[];
@@ -54,6 +55,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
   onMilestoneReorder,
   readOnly = false
 }) => {
+  const { t } = useLanguage();
   const [editingMilestone, setEditingMilestone] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
     targetDate: string;
@@ -62,7 +64,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
     priority: MilestonePriority;
   } | null>(null);
 
-  const sortedMilestones = [...milestones].sort((a, b) => 
+  const sortedMilestones = [...milestones].sort((a, b) =>
     new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime()
   );
 
@@ -91,16 +93,16 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
 
   const moveMilestone = (index: number, direction: 'up' | 'down') => {
     if (!onMilestoneReorder) return;
-    
+
     const newMilestones = [...sortedMilestones];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
+
     if (targetIndex < 0 || targetIndex >= newMilestones.length) return;
-    
+
     // Swap milestones
-    [newMilestones[index], newMilestones[targetIndex]] = 
+    [newMilestones[index], newMilestones[targetIndex]] =
     [newMilestones[targetIndex], newMilestones[index]];
-    
+
     onMilestoneReorder(newMilestones);
   };
 
@@ -155,7 +157,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
               const isRequiresInspection = 'requiresInspection' in milestone && milestone.requiresInspection;
 
               return (
-                <div 
+                <div
                   key={milestoneId}
                   className={`flex items-center gap-3 p-3 rounded-lg border ${
                     isEditing ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
@@ -255,7 +257,7 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
               <DialogHeader>
                 <DialogTitle><T k="auto.milestonepositioneditor.modifier_la_position_du_jalon" fallback="Modifier la position du jalon" /></DialogTitle>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label><T k="auto.milestonepositioneditor.date_cible" fallback="Date cible" /></Label>
@@ -268,12 +270,12 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
 
                 <div>
                   <Label><T k="auto.milestonepositioneditor.phase_associee" fallback="Phase associée" /></Label>
-                  <Select 
-                    value={editForm.phaseId} 
+                  <Select
+                    value={editForm.phaseId}
                     onValueChange={(value) => setEditForm({ ...editForm, phaseId: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une phase" />
+                      <SelectValue placeholder={t('auto.milestonepositioneditor.selectionner_une_phase')} />
                     </SelectTrigger>
                     <SelectContent>
                       {phases.map(phase => (
@@ -287,8 +289,8 @@ export const MilestonePositionEditor: React.FC<MilestonePositionEditorProps> = (
 
                 <div>
                   <Label><T k="auto.milestonepositioneditor.priorite" fallback="Priorité" /></Label>
-                  <Select 
-                    value={editForm.priority} 
+                  <Select
+                    value={editForm.priority}
                     onValueChange={(value) => setEditForm({ ...editForm, priority: value as MilestonePriority })}
                   >
                     <SelectTrigger>

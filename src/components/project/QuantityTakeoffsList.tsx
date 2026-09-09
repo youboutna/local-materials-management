@@ -11,6 +11,7 @@ import { Calculator, DownloadCloud, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QuantityTakeoffsListProps {
   projectId: string;
@@ -19,6 +20,7 @@ interface QuantityTakeoffsListProps {
 interface RowDraft { quantity: number; unit_price: number; dirty: boolean }
 
 const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
+  const { t } = useLanguage();
   const {
     quantityTakeoffs,
     isLoading,
@@ -33,17 +35,17 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
   // Fixed useEffect: Prevent infinite loop by checking if values actually changed
   useEffect(() => {
     if (!quantityTakeoffs) return;
-    
+
     setDrafts((prev) => {
       let hasChanged = false;
       const next = { ...prev };
-      
+
       for (const t of quantityTakeoffs as QuantityTakeoffWithDetails[]) {
         // Only overwrite if draft doesn't exist or is not dirty
         if (!next[t.id] || !next[t.id].dirty) {
           const newQuantity = Number(t.quantity ?? 0);
           const newUnitPrice = Number((t as { unit_price?: number }).unit_price ?? t.material?.price_per_unit ?? 0);
-          
+
           // Check if value truly changed
           if (!next[t.id] || next[t.id].quantity !== newQuantity || next[t.id].unit_price !== newUnitPrice) {
             hasChanged = true;
@@ -55,7 +57,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
           }
         }
       }
-      
+
       // Critical fix: If no actual change occurred, return the previous state reference
       return hasChanged ? next : prev;
     });
@@ -153,7 +155,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                   <Button
                     size="sm"
                     variant="outline"
-                    title="Récupérer PU depuis dépôt matériaux"
+                    title={t('auto.quantitytakeoffslist.recuperer_pu_depuis_depot_materiaux')}
                     disabled={!depotPrice}
                     onClick={() => pullFromDepot(takeoff)}
                   >
@@ -164,7 +166,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                     variant={d.dirty ? 'default' : 'outline'}
                     disabled={!d.dirty || updateMutation.isPending}
                     onClick={() => save(takeoff.id)}
-                    title="Enregistrer"
+                    title={t('auto.quantitytakeoffslist.enregistrer')}
                   >
                     <Save className="h-4 w-4" />
                   </Button>
@@ -173,7 +175,7 @@ const QuantityTakeoffsList = ({ projectId }: QuantityTakeoffsListProps) => {
                     variant="outline"
                     onClick={() => handleDelete(takeoff.id)}
                     disabled={deleteMutation.isPending}
-                    title="Supprimer"
+                    title={t('auto.quantitytakeoffslist.supprimer')}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProjectScaffoldHex } from '@/hooks/hexagonal/useProjectScaffoldHex';
 import { formatAmount2 } from '@/utils/reportNumbers';
 import { Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
+import { T } from '@/components/i18n/T';
 
 interface ProjectScaffoldCardProps {
   projectId: string;
@@ -35,7 +36,7 @@ const ProjectScaffoldCard: React.FC<ProjectScaffoldCardProps> = ({ projectId, on
         <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
           <span className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Compléter le projet depuis les référentiels
+            <T k="auto.projectscaffoldcard.completer_le_projet_depuis_les_referentiels" fallback="Compléter le projet depuis les référentiels" />
           </span>
           <Button onClick={handleRun} disabled={isScaffolding || isLoadingPlan || !plan?.phaseCount}>
             {isScaffolding ? (

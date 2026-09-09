@@ -83,6 +83,7 @@ const SidebarProvider = React.forwardRef<
 
         // This sets the cookie to keep the sidebar state.
         document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+import { T } from '@/components/i18n/T';
       },
       [setOpenProp, open]
     )
@@ -277,7 +278,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only"><T k="auto.sidebar.toggle_sidebar" fallback="Toggle Sidebar" /></span>
     </Button>
   )
 })

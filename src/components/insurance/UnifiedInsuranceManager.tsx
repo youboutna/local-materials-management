@@ -47,6 +47,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ============================================================
 // Validation Schema
@@ -101,17 +102,18 @@ const STATUS_OPTIONS = [
 // Main Component
 // ============================================================
 const UnifiedInsuranceManager = () => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { uploadFile, downloading, deleteFile } = useDocumentStorage();
   const { getUser } = useAuth();
-  
+
   // Services
   const insuranceService = useMemo(() => getInsuranceService(), []);
   const documentService = useMemo(
     () => new DocumentService(RepositoryFactory.getDocumentRepository()),
     [],
   );
-  
+
   // State
   const [alerts, setAlerts] = useState<InsuranceAlertDTO[]>([]);
   const [certificates, setCertificates] = useState<InsuranceCertificateDTO[]>([]);
@@ -188,20 +190,20 @@ const UnifiedInsuranceManager = () => {
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-    const active = certificates.filter(c => 
+    const active = certificates.filter(c =>
       c.status === InsuranceCertificateStatus.ACTIVE
     );
-    const expiring = certificates.filter(c => 
+    const expiring = certificates.filter(c =>
       c.status === InsuranceCertificateStatus.ACTIVE &&
       c.validUntil &&
       new Date(c.validUntil) <= thirtyDaysFromNow &&
       new Date(c.validUntil) >= now
     );
-    const expired = certificates.filter(c => 
+    const expired = certificates.filter(c =>
       c.status === InsuranceCertificateStatus.EXPIRED ||
       (c.validUntil && new Date(c.validUntil) < now)
     );
-    const missing = certificates.filter(c => 
+    const missing = certificates.filter(c =>
       c.status === InsuranceCertificateStatus.MISSING
     );
     const coverageTotal = certificates.reduce((sum, c) => sum + (c.coverageAmount || 0), 0);
@@ -231,13 +233,13 @@ const UnifiedInsuranceManager = () => {
       setCertificates(certs);
 
       toast({
-        title: 'Succès',
+        title: t('auto.unifiedinsurancemanager.succes'),
         description: `${certs.length} certificat(s) chargé(s)`,
       });
     } catch (error) {
       console.error('Error loading insurance data:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.unifiedinsurancemanager.erreur'),
         description: 'Impossible de charger les données d\'assurance',
         variant: 'destructive'
       });
@@ -259,13 +261,13 @@ const UnifiedInsuranceManager = () => {
       await checkAndSendInsuranceAlerts();
       await loadInsuranceData();
       toast({
-        title: 'Succès',
-        description: 'Alertes envoyées avec succès',
+        title: t('auto.unifiedinsurancemanager.succes'),
+        description: t('auto.unifiedinsurancemanager.alertes_envoyees_avec_succes'),
       });
     } catch (error) {
       console.error('Error sending alerts:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.unifiedinsurancemanager.erreur'),
         description: 'Erreur lors de l\'envoi des alertes',
         variant: 'destructive'
       });
@@ -280,7 +282,7 @@ const UnifiedInsuranceManager = () => {
     setUploadingFile(true);
     try {
       const uploadResult = await uploadFile(file, `insurance-certificates/${Date.now()}-${file.name}`);
-      
+
       if (uploadResult.success && uploadResult.url) {
         const documentData = {
           title: `Certificat d'assurance - ${file.name}`,
@@ -296,8 +298,8 @@ const UnifiedInsuranceManager = () => {
         await documentService.createDocument(documentData as any);
 
         toast({
-          title: 'Succès',
-          description: 'Document téléchargé avec succès'
+          title: t('auto.unifiedinsurancemanager.succes'),
+          description: t('auto.unifiedinsurancemanager.document_telecharge_avec_succes')
         });
 
         await loadInsuranceData();
@@ -306,8 +308,8 @@ const UnifiedInsuranceManager = () => {
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
-        title: 'Erreur',
-        description: 'Erreur lors du téléchargement du fichier',
+        title: t('auto.unifiedinsurancemanager.erreur'),
+        description: t('auto.unifiedinsurancemanager.erreur_lors_du_telechargement_du_fichier'),
         variant: 'destructive'
       });
     } finally {
@@ -338,10 +340,10 @@ const UnifiedInsuranceManager = () => {
 
       if (isEditing && selectedCertificate) {
         await insuranceService.updateInsuranceCertificate(selectedCertificate.id!, certificateData);
-        toast({ title: 'Succès', description: 'Certificat mis à jour' });
+        toast({ title: t('auto.unifiedinsurancemanager.succes'), description: t('auto.unifiedinsurancemanager.certificat_mis_a_jour') });
       } else {
         await insuranceService.createInsuranceCertificate(certificateData as any);
-        toast({ title: 'Succès', description: 'Certificat créé' });
+        toast({ title: t('auto.unifiedinsurancemanager.succes'), description: t('auto.unifiedinsurancemanager.certificat_cree') });
       }
 
       setIsDialogOpen(false);
@@ -352,8 +354,8 @@ const UnifiedInsuranceManager = () => {
     } catch (error) {
       console.error('Error saving insurance certificate:', error);
       toast({
-        title: 'Erreur',
-        description: 'Erreur lors de la sauvegarde',
+        title: t('auto.unifiedinsurancemanager.erreur'),
+        description: t('auto.unifiedinsurancemanager.erreur_lors_de_la_sauvegarde'),
         variant: 'destructive'
       });
     }
@@ -364,13 +366,13 @@ const UnifiedInsuranceManager = () => {
 
     try {
       await insuranceService.deleteInsuranceCertificate(certificateId);
-      toast({ title: 'Succès', description: 'Certificat supprimé' });
+      toast({ title: t('auto.unifiedinsurancemanager.succes'), description: t('auto.unifiedinsurancemanager.certificat_supprime') });
       await loadInsuranceData();
     } catch (error) {
       console.error('Error deleting certificate:', error);
       toast({
-        title: 'Erreur',
-        description: 'Erreur lors de la suppression',
+        title: t('auto.unifiedinsurancemanager.erreur'),
+        description: t('auto.unifiedinsurancemanager.erreur_lors_de_la_suppression'),
         variant: 'destructive'
       });
     }
@@ -439,7 +441,7 @@ const UnifiedInsuranceManager = () => {
     try {
       const certificate = certificates.find(c => c.id === certificateId);
       if (!certificate) {
-        toast({ title: 'Erreur', description: 'Certificat introuvable', variant: 'destructive' });
+        toast({ title: t('auto.unifiedinsurancemanager.erreur'), description: t('auto.unifiedinsurancemanager.certificat_introuvable'), variant: 'destructive' });
         return;
       }
 
@@ -477,11 +479,11 @@ const UnifiedInsuranceManager = () => {
         metadata: { certificateData: certificate as unknown as Record<string, unknown> }
       });
 
-      toast({ title: 'Action créée', description: `${actionTitles[actionType]} créée avec succès` });
+      toast({ title: t('auto.unifiedinsurancemanager.action_creee'), description: `${actionTitles[actionType]} créée avec succès` });
     } catch (error) {
       console.error('Error creating insurance action:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.unifiedinsurancemanager.erreur'),
         description: `Impossible de créer l'action: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
         variant: 'destructive'
       });
@@ -633,8 +635,8 @@ const UnifiedInsuranceManager = () => {
             <div className="grid gap-4">
               {paginatedAlerts.map((alert, index) => (
                 <Card key={index} className={`
-                  ${alert.alertLevel === 'expired' ? 'border-destructive/30' : 
-                    alert.alertLevel === 'critical' ? 'border-warning/30' : 
+                  ${alert.alertLevel === 'expired' ? 'border-destructive/30' :
+                    alert.alertLevel === 'critical' ? 'border-warning/30' :
                     'border-warning/30'}
                 `}>
                   <CardHeader>
@@ -649,7 +651,7 @@ const UnifiedInsuranceManager = () => {
                         </CardDescription>
                       </div>
                       <Badge variant={getAlertBadgeVariant(alert.alertLevel || 'warning')}>
-                        {alert.alertLevel === 'expired' ? 'Expirée' : 
+                        {alert.alertLevel === 'expired' ? 'Expirée' :
                          alert.alertLevel === 'critical' ? 'Critique' : 'Attention'}
                       </Badge>
                     </div>
@@ -690,7 +692,7 @@ const UnifiedInsuranceManager = () => {
                   </CardContent>
                 </Card>
               ))}
-              
+
               {alerts.length > 10 && (
                 <PaginationControls
                   currentPage={alertsPage}
@@ -844,7 +846,7 @@ const UnifiedInsuranceManager = () => {
               <ListToolbar
                 search={search}
                 onSearchChange={setSearch}
-                searchPlaceholder="Rechercher (projet, contractant, assureur, police…)"
+                searchPlaceholder={t('auto.unifiedinsurancemanager.rechercher_projet_contractant_assureur_police')}
                 expiryFilter={expiryFilter}
                 onExpiryFilterChange={setExpiryFilter}
                 resultCount={filteredCertificates.length}
@@ -915,7 +917,7 @@ const UnifiedInsuranceManager = () => {
                   ))}
                 </TableBody>
               </Table>
-              
+
               {certificates.length > 10 && (
                 <PaginationControls
                   currentPage={certificatesPage}
@@ -936,13 +938,13 @@ const UnifiedInsuranceManager = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {isViewMode ? 'Détails du Certificat' : 
-               isEditing ? 'Modifier le Certificat' : 
+              {isViewMode ? 'Détails du Certificat' :
+               isEditing ? 'Modifier le Certificat' :
                'Nouveau Certificat d\'Assurance'}
             </DialogTitle>
             <DialogDescription>
-              {isViewMode ? 'Consulter les détails du certificat' : 
-               isEditing ? 'Modifier les informations du certificat' : 
+              {isViewMode ? 'Consulter les détails du certificat' :
+               isEditing ? 'Modifier les informations du certificat' :
                'Ajouter un nouveau certificat d\'assurance'}
             </DialogDescription>
           </DialogHeader>
@@ -1000,7 +1002,7 @@ const UnifiedInsuranceManager = () => {
           )}
 
 
-          
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1059,7 +1061,7 @@ const UnifiedInsuranceManager = () => {
                     <FormItem>
                       <FormLabel><T k="auto.unifiedinsurancemanager.compagnie_d_assurance" fallback="Compagnie d'Assurance" /></FormLabel>
                       <FormControl>
-                        <Input placeholder="Assurances Générales..." {...field} disabled={isViewMode} />
+                        <Input placeholder={t('auto.unifiedinsurancemanager.assurances_generales')} {...field} disabled={isViewMode} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1072,7 +1074,7 @@ const UnifiedInsuranceManager = () => {
                     <FormItem>
                       <FormLabel><T k="auto.unifiedinsurancemanager.numero_de_police" fallback="Numéro de Police" /></FormLabel>
                       <FormControl>
-                        <Input placeholder="POL-789..." {...field} disabled={isViewMode} />
+                        <Input placeholder={t('auto.unifiedinsurancemanager.pol_789')} {...field} disabled={isViewMode} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1090,7 +1092,7 @@ const UnifiedInsuranceManager = () => {
                       <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isViewMode}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner le type" />
+                            <SelectValue placeholder={t('auto.unifiedinsurancemanager.selectionner_le_type')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -1112,9 +1114,9 @@ const UnifiedInsuranceManager = () => {
                     <FormItem>
                       <FormLabel><T k="auto.unifiedinsurancemanager.montant_couverture_mru" fallback="Montant Couverture (MRU)" /></FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="1000000" 
+                        <Input
+                          type="number"
+                          placeholder="1000000"
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
                           disabled={isViewMode}
@@ -1162,7 +1164,7 @@ const UnifiedInsuranceManager = () => {
                   <FormItem>
                     <FormLabel><T k="auto.unifiedinsurancemanager.notes_optionnel" fallback="Notes (optionnel)" /></FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Notes additionnelles..." {...field} disabled={isViewMode} />
+                      <Textarea placeholder={t('auto.unifiedinsurancemanager.notes_additionnelles')} {...field} disabled={isViewMode} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

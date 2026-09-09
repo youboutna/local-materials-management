@@ -12,6 +12,7 @@ import {
 import { DocumentItem, formatBytes } from './types';
 import { MimeIcon } from './MimeIcon';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   items: DocumentItem[];
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function DocumentHubGrid({ items, categoryLabels, onPreview, onDelete }: Props) {
+  const { t } = useLanguage();
   return (
     <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {items.map((item, idx) => {
@@ -76,7 +78,7 @@ export function DocumentHubGrid({ items, categoryLabels, onPreview, onDelete }: 
                     variant="ghost"
                     className="h-7 w-7 p-0"
                     onClick={() => onPreview(item)}
-                    aria-label="Aperçu"
+                    aria-label={t('auto.documenthubgrid.apercu')}
                   >
                     <Eye className="h-3.5 w-3.5" />
                   </Button>
@@ -86,7 +88,7 @@ export function DocumentHubGrid({ items, categoryLabels, onPreview, onDelete }: 
                       variant="ghost"
                       className="h-7 w-7 p-0"
                       asChild
-                      aria-label="Télécharger"
+                      aria-label={t('auto.documenthubgrid.telecharger')}
                     >
                       <a href={item.fileUrl} download={item.fileName ?? undefined} target="_blank" rel="noreferrer">
                         <Download className="h-3.5 w-3.5" />
@@ -96,7 +98,7 @@ export function DocumentHubGrid({ items, categoryLabels, onPreview, onDelete }: 
                   {onDelete && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" aria-label="Plus">
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" aria-label={t('auto.documenthubgrid.plus')}>
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </Button>
                       </DropdownMenuTrigger>

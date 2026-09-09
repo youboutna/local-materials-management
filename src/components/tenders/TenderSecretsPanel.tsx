@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { SecureSharingDialog } from './SecureSharingDialog';
 import ShareSecretWithSupplierDialog from './ShareSecretWithSupplierDialog';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TenderSecretsPanelProps {
   tenderId: string;
@@ -20,6 +21,7 @@ interface TenderSecretsPanelProps {
 }
 
 export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: TenderSecretsPanelProps) {
+  const { t } = useLanguage();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [shareTarget, setShareTarget] = useState<any | null>(null);
   const { data: secrets = [], isLoading } = useTenderSharingSecrets(tenderId);
@@ -30,7 +32,7 @@ export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: Tend
   const copyPortalLink = (code: string) => {
     const url = `${window.location.origin}/supplier-secure-access?code=${encodeURIComponent(code)}`;
     navigator.clipboard.writeText(url);
-    toast({ title: 'Lien copié', description: url });
+    toast({ title: t('auto.tendersecretspanel.lien_copie'), description: url });
   };
 
   return (
@@ -76,10 +78,10 @@ export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: Tend
                       <Button
                         size="sm"
                         variant="ghost"
-                        title="Copier le code"
+                        title={t('auto.tendersecretspanel.copier_le_code')}
                         onClick={() => {
                           navigator.clipboard.writeText(s.secretCode);
-                          toast({ title: 'Code copié' });
+                          toast({ title: t('auto.tendersecretspanel.code_copie') });
                         }}
                       >
                         <Copy className="h-4 w-4" />
@@ -87,7 +89,7 @@ export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: Tend
                       <Button
                         size="sm"
                         variant="ghost"
-                        title="Copier le lien portail"
+                        title={t('auto.tendersecretspanel.copier_le_lien_portail')}
                         onClick={() => copyPortalLink(s.secretCode)}
                       >
                         <LinkIcon className="h-4 w-4" />
@@ -105,7 +107,7 @@ export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: Tend
                         <Button
                           size="sm"
                           variant="outline"
-                          title="Révoquer"
+                          title={t('auto.tendersecretspanel.revoquer')}
                           onClick={() => revoke.mutate(s.id)}
                           disabled={revoke.isPending}
                         >
@@ -115,7 +117,7 @@ export function TenderSecretsPanel({ tenderId, tenderTitle, tenderStatus }: Tend
                       <Button
                         size="sm"
                         variant="outline"
-                        title="Supprimer"
+                        title={t('auto.tendersecretspanel.supprimer')}
                         onClick={() => remove.mutate(s.id)}
                         disabled={remove.isPending}
                       >

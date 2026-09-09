@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * UnifiedMilestoneManager - Composant unifié pour la gestion des jalons
  * Utilisé dans ProjectDetail et PhaseDetail avec une UI cohérente
@@ -65,6 +66,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
   onMilestoneClick,
   showNavigation = true
 }) => {
+  const { t } = useLanguage();
   const [milestones, setMilestones] = useState<MilestoneSummaryDTO[]>([]);
   const [progress, setProgress] = useState<MilestoneProgressDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +78,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
       setLoading(true);
       const service = getMilestoneService();
       const rawMilestones = await service.getProjectMilestonesDTO(projectId);
-      const filtered = phaseId 
+      const filtered = phaseId
         ? rawMilestones.filter((m) => m.phaseId === phaseId)
         : rawMilestones;
       const milestonesData: MilestoneSummaryDTO[] = filtered.map((m) => ({
@@ -112,45 +114,45 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
   const getStatusInfo = (milestone: MilestoneSummaryDTO) => {
     const today = new Date();
     const targetDate = parseISO(milestone.target_date);
-    
+
     if (milestone.status === 'completed') {
-      return { 
-        icon: CheckCircle, 
-        color: 'text-success', 
+      return {
+        icon: CheckCircle,
+        color: 'text-success',
         bgColor: 'bg-success/10',
         borderColor: 'border-success/30',
-        label: 'Terminé' 
+        label: t('auto.unifiedmilestonemanager.termine')
       };
     }
-    
+
     if (isBefore(targetDate, today)) {
       const daysLate = differenceInDays(today, targetDate);
-      return { 
-        icon: AlertTriangle, 
-        color: 'text-destructive', 
+      return {
+        icon: AlertTriangle,
+        color: 'text-destructive',
         bgColor: 'bg-destructive/10',
         borderColor: 'border-destructive/30',
-        label: `En retard (${daysLate}j)` 
+        label: `En retard (${daysLate}j)`
       };
     }
 
     const daysUntil = differenceInDays(targetDate, today);
     if (daysUntil <= 7) {
-      return { 
-        icon: Clock, 
-        color: 'text-warning', 
+      return {
+        icon: Clock,
+        color: 'text-warning',
         bgColor: 'bg-warning/10',
         borderColor: 'border-warning/30',
-        label: `Dans ${daysUntil}j` 
+        label: `Dans ${daysUntil}j`
       };
     }
 
-    return { 
-      icon: Clock, 
-      color: 'text-primary', 
+    return {
+      icon: Clock,
+      color: 'text-primary',
       bgColor: 'bg-primary/10',
       borderColor: 'border-primary/30',
-      label: 'À venir' 
+      label: t('auto.unifiedmilestonemanager.a_venir')
     };
   };
 
@@ -190,7 +192,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
     try {
       const templates = phaseId ? getDefaultPhaseMilestones() : getDefaultProjectMilestones();
       const startDate = new Date();
-      
+
       for (const template of templates) {
         const targetDate = addDays(startDate, template.relativeOffsetDays);
         await getMilestoneService().createMilestone({
@@ -201,12 +203,12 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
           priority: template.priority as any,
         });
       }
-      
+
       toast({
         title: "Jalons créés",
         description: `${templates.length} jalons par défaut ont été créés.`
       });
-      
+
       loadData();
     } catch (error) {
       console.error('Error generating default milestones:', error);
@@ -226,7 +228,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
           <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
           <h3 className="text-lg font-medium mb-2"><T k="auto.unifiedmilestonemanager.aucun_jalon_defini" fallback="Aucun jalon défini" /></h3>
           <p className="text-sm text-muted-foreground mb-4">
-            {phaseId 
+            {phaseId
               ? "Créez des jalons par défaut (démarrage, point d'avancement, achèvement) pour cette phase."
               : "Créez des jalons par défaut (démarrage projet, réception provisoire, réception définitive) pour ce projet."
             }
@@ -246,8 +248,8 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
       <Card className="overflow-hidden">
         <div className={cn(
           "p-4",
-          progress?.critical_path_status === 'delayed' 
-            ? "bg-gradient-to-r from-destructive/10 to-destructive/5" 
+          progress?.critical_path_status === 'delayed'
+            ? "bg-gradient-to-r from-destructive/10 to-destructive/5"
             : "bg-gradient-to-r from-primary/10 to-primary/5"
         )}>
           <div className="flex items-center justify-between">
@@ -274,7 +276,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
             <div className="flex items-center gap-2">
               {/* SPI Badge */}
               {progress?.schedule_performance_index !== undefined && (
-                <Badge 
+                <Badge
                   variant={progress.schedule_performance_index >= 1 ? 'default' : 'destructive'}
                   className={cn(
                     "flex items-center gap-1",
@@ -372,7 +374,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
       {isExpanded && (
         <>
           {viewMode === 'timeline' && (
-            <TimelineView 
+            <TimelineView
               groupedMilestones={groupedMilestones}
               getStatusInfo={getStatusInfo}
               getTypeIcon={getTypeIcon}
@@ -382,7 +384,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
           )}
 
           {viewMode === 'list' && (
-            <ListView 
+            <ListView
               milestones={milestones}
               getStatusInfo={getStatusInfo}
               getTypeIcon={getTypeIcon}
@@ -391,7 +393,7 @@ const UnifiedMilestoneManager: React.FC<UnifiedMilestoneManagerProps> = ({
           )}
 
           {viewMode === 'gantt' && (
-            <GanttView 
+            <GanttView
               milestones={milestones}
               onMilestoneClick={onMilestoneClick}
             />
@@ -412,7 +414,7 @@ interface TimelineViewProps {
     borderColor: string;
     label: string;
   };
-  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
+  getTypeIcon: (type: MilestoneType) => <T k="auto.unifiedmilestonemanager.react_componenttype" fallback="React.ComponentType" /><any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
   showPhaseHeaders: boolean;
 }
@@ -434,11 +436,11 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                 {phaseName}
               </h4>
             )}
-            
+
             <div className="relative">
               {/* Timeline line */}
               <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-              
+
               <div className="space-y-3">
                 {phaseMilestones.map((milestone) => {
                   const status = getStatusInfo(milestone);
@@ -446,7 +448,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                   const TypeIcon = getTypeIcon(milestone.type);
 
                   return (
-                    <div 
+                    <div
                       key={milestone.id}
                       className={cn(
                         "relative pl-10 cursor-pointer hover:bg-muted/50 p-3 rounded-lg transition-all",
@@ -498,7 +500,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                             </Badge>
                           </div>
                         </div>
-                        
+
                         <Badge className={cn(status.bgColor, status.color, "border-0 shrink-0")}>
                           {status.label}
                         </Badge>
@@ -525,7 +527,7 @@ interface ListViewProps {
     borderColor: string;
     label: string;
   };
-  getTypeIcon: (type: MilestoneType) => React.ComponentType<any>;
+  getTypeIcon: (type: MilestoneType) => <T k="auto.unifiedmilestonemanager.react_componenttype" fallback="React.ComponentType" /><any>;
   onMilestoneClick?: (id: string, phaseId?: string) => void;
 }
 
@@ -556,8 +558,8 @@ const ListView: React.FC<ListViewProps> = ({
               const TypeIcon = getTypeIcon(milestone.type);
 
               return (
-                <tr 
-                  key={milestone.id} 
+                <tr
+                  key={milestone.id}
                   className={cn(
                     "border-b hover:bg-muted/50 cursor-pointer transition-colors",
                     milestone.is_critical && "bg-destructive/5"
@@ -624,11 +626,11 @@ const GanttView: React.FC<GanttViewProps> = ({
   const dates = milestones.map(m => parseISO(m.target_date));
   const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
   const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
-  
+
   // Add padding
   minDate.setDate(minDate.getDate() - 7);
   maxDate.setDate(maxDate.getDate() + 7);
-  
+
   const totalDays = Math.max(1, differenceInDays(maxDate, minDate));
 
   const getMilestonePosition = (milestone: MilestoneSummaryDTO) => {
@@ -662,8 +664,8 @@ const GanttView: React.FC<GanttViewProps> = ({
       <CardContent>
         <div className="space-y-2">
           {milestones.map((milestone) => (
-            <div 
-              key={milestone.id} 
+            <div
+              key={milestone.id}
               className="flex items-center gap-3 group cursor-pointer"
               onClick={() => onMilestoneClick?.(milestone.id, milestone.phase_id)}
             >

@@ -24,6 +24,7 @@ import {
   type EvaluationCategory,
 } from '@/config/referentials/tender';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface EvaluationPanelTabsProps {
   submissionId: string;
@@ -39,6 +40,7 @@ export function EvaluationPanelTabs({
   locked = false,
   onSave,
 }: EvaluationPanelTabsProps) {
+  const { t } = useLanguage();
   const [scores, setScores] = useState<Record<string, number>>(initialScores);
   const [activeCategory, setActiveCategory] = useState<EvaluationCategory>('administrative');
 
@@ -69,10 +71,10 @@ export function EvaluationPanelTabs({
             {locked && <Badge variant="secondary" className="gap-1"><Lock className="h-3 w-3" /> <T k="auto.evaluationpaneltabs.verrouillee" fallback="Verrouillée" /></Badge>}
           </CardTitle>
           <div className="flex items-center gap-4">
-            <ScoreBadge label="Global" value={global.global} highlighted />
-            <ScoreBadge label="Admin" value={global.byCategory.administrative} />
-            <ScoreBadge label="Tech" value={global.byCategory.technical} />
-            <ScoreBadge label="Fin" value={global.byCategory.financial} />
+            <ScoreBadge label={t('auto.evaluationpaneltabs.global')} value={global.global} highlighted />
+            <ScoreBadge label={t('auto.evaluationpaneltabs.admin')} value={global.byCategory.administrative} />
+            <ScoreBadge label={t('auto.evaluationpaneltabs.tech')} value={global.byCategory.technical} />
+            <ScoreBadge label={t('auto.evaluationpaneltabs.fin')} value={global.byCategory.financial} />
           </div>
         </div>
         <Progress value={global.global} className="h-2 mt-2" />

@@ -32,6 +32,7 @@ import { NotificationService } from '@/application/services/NotificationService'
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { createInspectionWithContextHex } from '@/hooks/hexagonal/useInspectionFormWithContextHex';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Types d'inspection harmonisés avec AdvancedInspectionScheduler
 const INSPECTION_TYPES = [
@@ -59,8 +60,9 @@ export function InspectionFormWithContext({
   onClose,
   onInspectionCreated
 }: InspectionFormWithContextProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
-  
+
   // Fetch full context using the service
   const { data: context, isLoading: contextLoading } = useInspectionActionContext(
     isOpen ? projectId : undefined,
@@ -86,8 +88,8 @@ export function InspectionFormWithContext({
       setProgress(context.suggestedProgress || context.project.progress);
       // Auto-select inspection type based on context
       if (context.inspectionType) {
-        const mappedType = context.inspectionType === 'technical' ? 'structural' : 
-                          context.inspectionType === 'regulatory' ? 'compliance' : 
+        const mappedType = context.inspectionType === 'technical' ? 'structural' :
+                          context.inspectionType === 'regulatory' ? 'compliance' :
                           context.inspectionType;
         setInspectionType(mappedType);
       }
@@ -113,7 +115,7 @@ export function InspectionFormWithContext({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!inspectorId || !inspectorName) {
       toast({
         title: "Erreur de validation",
@@ -157,7 +159,7 @@ export function InspectionFormWithContext({
         try {
           await NotificationService.createNotification({
             recipientId: inspectorId,
-            title: 'Nouvelle inspection créée',
+            title: t('auto.inspectionformwithcontext.nouvelle_inspection_creee'),
             message: `Inspection ${inspectionTypeLabel} programmée pour le ${format(date, 'dd/MM/yyyy')} - Projet: ${context?.project.title || projectId}`,
             type: 'info',
             relatedId: inspection.id || undefined,
@@ -177,8 +179,8 @@ export function InspectionFormWithContext({
 
       toast({
         title: "Inspection créée",
-        description: notifyHierarchy 
-          ? "L'inspection a été enregistrée et une notification a été envoyée" 
+        description: notifyHierarchy
+          ? "L'inspection a été enregistrée et une notification a été envoyée"
           : "L'inspection a été enregistrée avec succès",
       });
 
@@ -267,7 +269,7 @@ export function InspectionFormWithContext({
                       </div>
                     )}
                   </div>
-                  
+
                   {context.isGateInspection && (
                     <Alert className="mt-2">
                       <AlertTriangle className="h-4 w-4" />
@@ -319,8 +321,8 @@ export function InspectionFormWithContext({
                   setInspectorId(id);
                   setInspectorName(name);
                 }}
-                label="Inspecteur"
-                placeholder="Sélectionner un inspecteur"
+                label={t('auto.inspectionformwithcontext.inspecteur')}
+                placeholder={t('auto.inspectionformwithcontext.selectionner_un_inspecteur')}
               />
 
               {/* Inspection Type */}
@@ -328,7 +330,7 @@ export function InspectionFormWithContext({
                 <Label htmlFor="inspectionType"><T k="auto.inspectionformwithcontext.type_d_inspection" fallback="Type d'inspection" /></Label>
                 <Select value={inspectionType} onValueChange={setInspectionType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un type" />
+                    <SelectValue placeholder={t('auto.inspectionformwithcontext.selectionner_un_type')} />
                   </SelectTrigger>
                   <SelectContent>
                     {INSPECTION_TYPES.map((type) => (
@@ -345,7 +347,7 @@ export function InspectionFormWithContext({
                 <Label htmlFor="status"><T k="auto.inspectionformwithcontext.statut" fallback="Statut" /></Label>
                 <Select value={status} onValueChange={(v: InspectionStatusLocal) => setStatus(v)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un statut" />
+                    <SelectValue placeholder={t('auto.inspectionformwithcontext.selectionner_un_statut')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
@@ -433,7 +435,7 @@ export function InspectionFormWithContext({
                   id="comments"
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
-                  placeholder="Observations et remarques..."
+                  placeholder={t('auto.inspectionformwithcontext.observations_et_remarques')}
                   rows={3}
                 />
               </div>

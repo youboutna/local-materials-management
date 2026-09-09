@@ -1,17 +1,17 @@
 /**
  * AddressSearchBox — Recherche d'adresse avec fallback manuel
- * 
+ *
  * Architecture Hexagonale :
  * - Utilise le hook hexagonal `useAddressSearch` pour les données
  * - Ne touche jamais à Supabase directement
  * - Délègue la recherche au service de géocodage
  * - Gestion des états de chargement et d'erreur
  * - Mode manuel pour saisie directe des coordonnées
- * 
+ *
  * Utilisé par :
  * - GeoZoneEditor (barre de recherche)
  * - ZoneLocationEditor (édition de zone)
- * 
+ *
  * Sources de données :
  * - Base de données locale (Mauritanie)
  * - Nominatim (OpenStreetMap)
@@ -30,6 +30,7 @@ import {
   type AddressSuggestion,
 } from '@/hooks/hexagonal/useAddressSearch';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ============================================================================
 // TYPES
@@ -86,8 +87,8 @@ const isFiniteNum = (n: unknown): n is number =>
  * Valide les coordonnées
  */
 const isValidCoordinates = (lat: number, lng: number): boolean => {
-  return isFiniteNum(lat) && isFiniteNum(lng) && 
-         lat >= -90 && lat <= 90 && 
+  return isFiniteNum(lat) && isFiniteNum(lng) &&
+         lat >= -90 && lat <= 90 &&
          lng >= -180 && lng <= 180;
 };
 
@@ -103,6 +104,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
   className,
   allowManual = true,
 }) => {
+  const { t } = useLanguage();
   // ============ State ============
   const [query, setQuery] = useState(initialQuery);
   const [open, setOpen] = useState(false);
@@ -139,7 +141,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
   }, [initialQuery]);
 
   // ============ Handlers ============
-  
+
   /**
    * Sélectionne une suggestion et notifie le parent
    */
@@ -172,11 +174,11 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
   const commitManual = () => {
     const lat = Number(manualLat);
     const lng = Number(manualLng);
-    
+
     if (!isValidCoordinates(lat, lng)) {
       return;
     }
-    
+
     onSelect({
       label: manualLabel || `Point ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
       address: manualLabel || undefined,
@@ -184,7 +186,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
       lng,
       source: 'manual',
     });
-    
+
     // Réinitialiser le mode manuel
     setManual(false);
     setManualLabel('');
@@ -268,9 +270,9 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
           onKeyDown={handleKey}
           className="pl-10 pr-10"
           autoComplete="off"
-          aria-label="Rechercher une adresse"
+          aria-label={t('auto.addresssearchbox.rechercher_une_adresse')}
         />
-        
+
         {/* Indicateur de chargement ou bouton d'effacement */}
         {isLoading ? (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -279,7 +281,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
             type="button"
             onClick={clearSearch}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Effacer la recherche"
+            aria-label={t('auto.addresssearchbox.effacer_la_recherche')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -292,7 +294,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
           <ul
             className="bg-popover text-popover-foreground border border-border rounded-md shadow-lg max-h-72 overflow-auto"
             role="listbox"
-            aria-label="Suggestions d'adresses"
+            aria-label={t('auto.addresssearchbox.suggestions_d_adresses')}
           >
             {results.map((s, i) => (
               <li
@@ -343,15 +345,15 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
                 )}
                 {allowManual && (
                   <div className="mt-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onMouseDown={(e) => { 
-                        e.preventDefault(); 
-                        openManual(); 
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        openManual();
                       }}
                     >
-                      <Pencil className="h-3.5 w-3.5 mr-1" /> 
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
                       <T k="auto.addresssearchbox.saisir_manuellement" fallback="Saisir manuellement" />
                     </Button>
                   </div>
@@ -367,7 +369,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
         <div className="mt-2 rounded-md border bg-muted/30 p-2 space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs flex items-center gap-1">
-              <Pencil className="h-3 w-3" /> 
+              <Pencil className="h-3 w-3" />
               <T k="auto.addresssearchbox.saisie_manuelle_de_la_position" fallback="Saisie manuelle de la position" />
             </Label>
             <Button
@@ -375,7 +377,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
               variant="ghost"
               className="h-6 px-2"
               onClick={() => setManual(false)}
-              aria-label="Fermer la saisie manuelle"
+              aria-label={t('auto.addresssearchbox.fermer_la_saisie_manuelle')}
             >
               <X className="h-3.5 w-3.5" />
             </Button>
@@ -390,11 +392,11 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
                 id="manual-label"
                 value={manualLabel}
                 onChange={(e) => setManualLabel(e.target.value)}
-                placeholder="Ex. Chantier RN2 PK 45"
+                placeholder={t('auto.addresssearchbox.ex_chantier_rn2_pk_45')}
                 className="h-8"
               />
             </div>
-            
+
             <div>
               <Label className="text-[11px]" htmlFor="manual-lat">
                 <T k="auto.addresssearchbox.latitude" fallback="Latitude" />
@@ -410,7 +412,7 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
                 step="0.0001"
               />
             </div>
-            
+
             <div>
               <Label className="text-[11px]" htmlFor="manual-lng">
                 <T k="auto.addresssearchbox.longitude" fallback="Longitude" />
@@ -426,23 +428,23 @@ const AddressSearchBox: React.FC<AddressSearchBoxProps> = ({
                 step="0.0001"
               />
             </div>
-            
+
             <div className="flex items-end">
               <Button
                 size="sm"
                 className="h-8 w-full"
                 onClick={commitManual}
                 disabled={!hasManualCoords}
-                aria-label="Utiliser cette position"
+                aria-label={t('auto.addresssearchbox.utiliser_cette_position')}
               >
-                <Check className="h-3.5 w-3.5 mr-1" /> 
+                <Check className="h-3.5 w-3.5 mr-1" />
                 <T k="auto.addresssearchbox.utiliser_cette_position" fallback="Utiliser cette position" />
               </Button>
             </div>
           </div>
 
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> 
+            <MapPin className="h-3 w-3" />
             <T k="auto.addresssearchbox.les_coordonnees_manuelles_sont_conservees_telles" fallback="Les coordonnées manuelles sont conservées telles quelles." />
           </p>
         </div>

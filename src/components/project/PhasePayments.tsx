@@ -25,6 +25,7 @@ import { PAYMENT_METHOD_OPTIONS } from '@/config/referentials/payment-origin.ref
 import type { PaymentDTO } from '@/dtos/entities/PaymentDTO';
 import { formatAmount2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhasePaymentsProps {
   phaseId: string;
@@ -35,6 +36,7 @@ interface PhasePaymentsProps {
 }
 
 const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId, phaseName, phaseBudget }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,7 +63,7 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId, phase
   const handleDelete = async (id: string) => {
     try {
       await deletePaymentMutation.mutateAsync(id);
-      toast({ title: 'Paiement supprimé' });
+      toast({ title: t('auto.phasepayments.paiement_supprime') });
     } catch {
       /* toast géré par le hook */
     }
@@ -166,15 +168,15 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId, phase
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => openEdit(payment)} title="Modifier" aria-label="Modifier le paiement">
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(payment)} title={t('auto.phasepayments.modifier')} aria-label={t('auto.phasepayments.modifier_le_paiement')}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => navigate(`/payments/${payment.id}`)}
-                        title="Consulter"
-                        aria-label="Consulter le paiement"
+                        title={t('auto.phasepayments.consulter')}
+                        aria-label={t('auto.phasepayments.consulter_le_paiement')}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -183,8 +185,8 @@ const PhasePayments: React.FC<PhasePaymentsProps> = ({ phaseId, projectId, phase
                         variant="ghost"
                         className="text-destructive hover:text-destructive"
                         onClick={() => handleDelete(payment.id)}
-                        title="Supprimer"
-                        aria-label="Supprimer le paiement"
+                        title={t('auto.phasepayments.supprimer')}
+                        aria-label={t('auto.phasepayments.supprimer_le_paiement')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

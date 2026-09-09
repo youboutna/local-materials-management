@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { WbsScopeSelector, type WbsScopeValue } from './WbsScopeSelector';
+import { T } from '@/components/i18n/T';
 
 interface Props {
   phases: WbsPhase[];
@@ -26,7 +27,7 @@ export function DocumentPerimeter({ phases, value, onChange, disabled }: Props) 
       <div className="flex min-h-10 items-center justify-between gap-2 px-3">
         <div className="flex min-w-0 items-center gap-2">
           <ListFilter className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <span className="truncate text-xs font-semibold">Périmètre du document</span>
+          <span className="truncate text-xs font-semibold"><T k="auto.documentperimeter.perimetre_du_document" fallback="Périmètre du document" /></span>
           <Badge variant="secondary" className="shrink-0 text-[10px]">
             {selectionCount > 0 ? `${selectionCount} sélectionné${selectionCount > 1 ? 's' : ''}` : 'Non restreint'}
           </Badge>

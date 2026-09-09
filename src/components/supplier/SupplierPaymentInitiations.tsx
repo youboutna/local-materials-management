@@ -20,30 +20,32 @@ import {
 } from '@/dtos/entities/PaymentInitiationDTO';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { 
-  DollarSign, 
-  Clock, 
-  FileText, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  DollarSign,
+  Clock,
+  FileText,
+  CheckCircle,
+  AlertTriangle,
   Send,
   Eye,
   Calendar,
   Building
 } from 'lucide-react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SupplierPaymentInitiationsProps {
   supplierId: string;
 }
 
 const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({ supplierId }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [initiations, setInitiations] = useState<PaymentInitiationNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInitiation, setSelectedInitiation] = useState<PaymentInitiationNotification | null>(null);
   const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
-  
+
   // Completion form state
   const [finalAmount, setFinalAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -84,7 +86,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
 
     if (numAmount > maxAmount) {
       toast({
-        title: 'Montant dépassé',
+        title: t('auto.supplierpaymentinitiations.montant_depasse'),
         description: `Le montant ne peut pas dépasser ${maxAmount.toLocaleString()} MRU (+10% de l'estimation)`,
         variant: 'destructive'
       });
@@ -92,7 +94,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
     }
 
     if (!description.trim()) {
-      toast({ title: 'Erreur', description: 'La description est obligatoire', variant: 'destructive' });
+      toast({ title: t('auto.supplierpaymentinitiations.erreur'), description: t('auto.supplierpaymentinitiations.la_description_est_obligatoire'), variant: 'destructive' });
       return;
     }
 
@@ -106,11 +108,11 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
         notes
       } as any);
 
-      toast({ title: 'Demande soumise', description: 'Votre demande de paiement a été créée avec succès' });
+      toast({ title: t('auto.supplierpaymentinitiations.demande_soumise'), description: t('auto.supplierpaymentinitiations.votre_demande_de_paiement_a_ete_creee_avec_succe') });
       setIsCompletionDialogOpen(false);
       fetchInitiations();
     } catch (error: any) {
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      toast({ title: t('auto.supplierpaymentinitiations.erreur'), description: error.message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -129,10 +131,10 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
     return <Badge variant={config.variant} className={config.className}>{STATUS_LABELS[status as keyof typeof STATUS_LABELS] || status}</Badge>;
   };
 
-  const pendingInitiations = initiations.filter(i => 
+  const pendingInitiations = initiations.filter(i =>
     i.status === 'ready_for_supplier'
   );
-  const completedInitiations = initiations.filter(i => 
+  const completedInitiations = initiations.filter(i =>
     i.status !== 'ready_for_supplier'
   );
 
@@ -180,7 +182,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
                   <p className="text-center py-4 text-muted-foreground"><T k="auto.supplierpaymentinitiations.aucune_demande_en_attente" fallback="Aucune demande en attente" /></p>
                 ) : (
                   pendingInitiations.map(initiation => (
-                    <InitiationCard 
+                    <InitiationCard
                       key={initiation.id}
                       initiation={initiation}
                       onComplete={() => openCompletionDialog(initiation)}
@@ -195,7 +197,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
                   <p className="text-center py-4 text-muted-foreground"><T k="auto.supplierpaymentinitiations.aucune_demande_traitee" fallback="Aucune demande traitée" /></p>
                 ) : (
                   completedInitiations.map(initiation => (
-                    <InitiationCard 
+                    <InitiationCard
                       key={initiation.id}
                       initiation={initiation}
                     />
@@ -264,7 +266,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Décrivez les travaux/prestations réalisés..."
+                  placeholder={t('auto.supplierpaymentinitiations.decrivez_les_travaux_prestations_realises')}
                   rows={3}
                 />
               </div>
@@ -274,7 +276,7 @@ const SupplierPaymentInitiations: React.FC<SupplierPaymentInitiationsProps> = ({
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Informations complémentaires..."
+                  placeholder={t('auto.supplierpaymentinitiations.informations_complementaires')}
                   rows={2}
                 />
               </div>
@@ -316,7 +318,7 @@ interface InitiationCardProps {
 }
 
 const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete, showCompleteButton }) => {
-  const isExpiring = initiation.supplierDeadline && 
+  const isExpiring = initiation.supplierDeadline &&
     !isPast(new Date(initiation.supplierDeadline)) &&
     new Date(initiation.supplierDeadline).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
 
@@ -334,7 +336,7 @@ const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete,
                 <span className="text-sm text-muted-foreground">• {initiation.phaseId}</span>
               )}
             </div>
-            
+
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
               <span className="flex items-center gap-1">
                 <DollarSign className="h-3 w-3" />
@@ -355,8 +357,8 @@ const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete,
               {initiation.supplierDeadline && (
                 <span className={`text-xs ${isExpired ? 'text-destructive' : isExpiring ? 'text-warning' : 'text-muted-foreground'}`}>
                   <Clock className="h-3 w-3 inline mr-1" />
-                  {isExpired 
-                    ? 'Délai dépassé' 
+                  {isExpired
+                    ? 'Délai dépassé'
                     : `Expire ${formatDistanceToNow(new Date(initiation.supplierDeadline), { locale: fr, addSuffix: true })}`
                   }
                 </span>
@@ -366,7 +368,7 @@ const InitiationCard: React.FC<InitiationCardProps> = ({ initiation, onComplete,
 
           <div className="flex flex-col items-end gap-2">
             {getStatusBadge(initiation.status)}
-            
+
             {showCompleteButton && !isExpired && (
               <Button size="sm" onClick={onComplete}>
                 <Send className="h-4 w-4 mr-1" />

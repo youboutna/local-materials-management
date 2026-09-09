@@ -31,6 +31,7 @@ import {
 } from '@/config/referentials/compliance/regulatory-compliance.referential';
 import type { ComplianceItemDTO } from '@/dtos/entities/ComplianceDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   projectId?: string | null;
@@ -90,6 +91,7 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({
   hideUpload = false,
   title,
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { user } = useAuth();
   const complianceService = useMemo(() => getComplianceService(), []);
@@ -199,7 +201,7 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({
     } catch (error) {
       console.error('[RegulatoryComplianceChecklist] save failed:', error);
       toast({
-        title: 'Erreur',
+        title: t('auto.regulatorycompliancechecklist.erreur'),
         description: error instanceof Error ? error.message : 'Enregistrement du contrôle impossible.',
         variant: 'destructive',
       });
@@ -292,7 +294,7 @@ const RegulatoryComplianceChecklist: React.FC<Props> = ({
                       onValueChange={(value) => handleAnswer(domain, item, value as RegulatoryAnswer)}
                     >
                       <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Réponse au contrôle" />
+                        <SelectValue placeholder={t('auto.regulatorycompliancechecklist.reponse_au_controle')} />
                       </SelectTrigger>
                       <SelectContent>
                         {(Object.keys(REGULATORY_ANSWER_LABELS) as RegulatoryAnswer[]).map((key) => (

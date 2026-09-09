@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { TenderSharingService } from '@/application/services/TenderSharingService';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
   workflowPhase,
   workflowStage
 }) => {
+  const { t } = useLanguage();
   const [supplierEmail, setSupplierEmail] = useState('');
   const [expirationDays, setExpirationDays] = useState(7);
   const [maxAccess, setMaxAccess] = useState(10);
@@ -86,7 +88,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
         allowedDocumentIds: documentIds.length > 0 ? documentIds : undefined,
         sharedBy: null
       };
-      
+
       return await TenderSharingService.createSharingSecret(dto);
     },
     onSuccess: (data) => {
@@ -98,7 +100,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['tender-secrets'] });
       queryClient.invalidateQueries({ queryKey: ['tender-sharing-access-logs'] });
       toast({
-        title: 'Code de partage créé',
+        title: t('auto.securesharingdialog.code_de_partage_cree'),
         description: `Code: ${data.secretCode}`,
       });
       setSupplierEmail('');
@@ -106,8 +108,8 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
 
     onError: (error) => {
       toast({
-        title: 'Erreur',
-        description: 'Impossible de créer le code de partage',
+        title: t('auto.securesharingdialog.erreur'),
+        description: t('auto.securesharingdialog.impossible_de_creer_le_code_de_partage'),
         variant: 'destructive'
       });
     }
@@ -118,8 +120,8 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
     toast({
-      title: 'Code copié',
-      description: 'Le code a été copié dans le presse-papiers'
+      title: t('auto.securesharingdialog.code_copie'),
+      description: t('auto.securesharingdialog.le_code_a_ete_copie_dans_le_presse_papiers')
     });
   };
 
@@ -131,12 +133,12 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
       );
       queryClient.invalidateQueries({ queryKey: ['tender-sharing-secrets'] });
       toast({
-        title: 'Code désactivé',
-        description: 'Le code de partage a été désactivé'
+        title: t('auto.securesharingdialog.code_desactive'),
+        description: t('auto.securesharingdialog.le_code_de_partage_a_ete_desactive')
       });
     },
     onError: (e: any) =>
-      toast({ title: 'Erreur', description: e?.message ?? 'Désactivation impossible', variant: 'destructive' }),
+      toast({ title: t('auto.securesharingdialog.erreur'), description: e?.message ?? 'Désactivation impossible', variant: 'destructive' }),
   });
 
 
@@ -159,7 +161,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                 </Badge>
                 {isTenderActive && (
                   <Badge className="bg-success text-success-foreground text-xs gap-1">
-                    <Check className="h-3 w-3" /> Partage autorisé
+                    <Check className="h-3 w-3" /> <T k="auto.securesharingdialog.partage_autorise" fallback="Partage autorisé" />
                   </Badge>
                 )}
               </div>
@@ -182,7 +184,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                   La génération de code est disponible dès la publication de l'appel d'offres (ou pour un profil administrateur / gestionnaire / directeur).
                 </div>
               )}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email"><T k="auto.securesharingdialog.email_du_fournisseur_optionnel" fallback="Email du fournisseur (optionnel)" /></Label>
@@ -194,7 +196,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                     onChange={(e) => setSupplierEmail(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="expiration"><T k="auto.securesharingdialog.expiration_jours" fallback="Expiration (jours)" /></Label>
                   <Input
@@ -206,7 +208,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                     onChange={(e) => setExpirationDays(parseInt(e.target.value) || 7)}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="maxAccess"><T k="auto.securesharingdialog.acces_maximum" fallback="Accès maximum" /></Label>
                   <Input
@@ -237,7 +239,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                 </div>
               )}
 
-              <Button 
+              <Button
                 onClick={() => createSecretMutation.mutate()}
                 disabled={createSecretMutation.isPending || !isTenderActive}
                 className={`w-full ${isTenderActive ? 'bg-success text-success-foreground hover:bg-success/90' : ''}`}
@@ -281,7 +283,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                               )}
                             </Button>
                           </div>
-                          
+
                           <div className="flex flex-wrap gap-2 text-xs">
                             {secret.supplierEmail && (
                               <Badge variant="outline">
@@ -304,7 +306,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                             )}
                             {secret.isActive ? (
                               <Badge className="bg-success text-success-foreground px-2.5 py-1 text-sm font-bold gap-1">
-                                <span aria-hidden="true">●</span> ACTIF
+                                <span aria-hidden="true">●</span> <T k="auto.securesharingdialog.actif" fallback="ACTIF" />
                               </Badge>
                             ) : (
 
@@ -312,7 +314,7 @@ export const SecureSharingDialog: React.FC<SecureSharingDialogProps> = ({
                             )}
                           </div>
                         </div>
-                        
+
                         {secret.isActive && (
                           <Button
                             variant="outline"

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * PhaseStakeholdersTab
  * Onglet parties prenantes filtré par "concerns" (rôle) — chaque partie prenante
@@ -101,6 +102,7 @@ const CONCERN_GROUPS: ConcernGroup[] = [
 ];
 
 const PhaseStakeholdersTab: React.FC<PhaseStakeholdersTabProps> = ({ projectId, phaseId }) => {
+  const { t } = useLanguage();
   const { stakeholders, isLoading } = useStakeholdersHex(projectId);
 
   const grouped = useMemo(() => {
@@ -152,9 +154,9 @@ const PhaseStakeholdersTab: React.FC<PhaseStakeholdersTabProps> = ({ projectId, 
 
   const othersGroup: ConcernGroup = {
     key: 'others',
-    label: 'Autres',
+    label: t('auto.phasestakeholderstab.autres'),
     icon: Building2,
-    description: 'Parties prenantes sans rôle métier mappé.',
+    description: t('auto.phasestakeholderstab.parties_prenantes_sans_role_metier_mappe'),
     matches: () => false,
     deepLink: (_s, { projectId }) => `/projects/${projectId}?tab=stakeholders`,
     deepLinkLabel: 'Détails',

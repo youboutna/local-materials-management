@@ -11,6 +11,7 @@ import { MAURITANIA_REGIONS, OperationalStatus } from '@/utils/mauritania';
 import { GeographicUnit } from '@/utils/mauritania';
 import { useWorkspacesHex } from '@/hooks/hexagonal/useWorkspacesHex';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface WorkspaceCreateDialogProps {
   selectedRegion?: string;
@@ -21,6 +22,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
   selectedRegion,
   onWorkspaceCreated
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -96,7 +98,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
               id="name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Ex: Entrepôt Nouakchott"
+              placeholder={t('auto.workspacecreatedialog.ex_entrepot_nouakchott')}
               required
             />
           </div>
@@ -108,7 +110,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
               onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une région" />
+                <SelectValue placeholder={t('auto.workspacecreatedialog.selectionner_une_region')} />
               </SelectTrigger>
               <SelectContent>
                 {MAURITANIA_REGIONS.map(region => (
@@ -126,7 +128,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({
               id="contactManager"
               value={formData.contactManager}
               onChange={(e) => setFormData(prev => ({ ...prev, contactManager: e.target.value }))}
-              placeholder="Nom du responsable"
+              placeholder={t('auto.workspacecreatedialog.nom_du_responsable')}
             />
           </div>
 

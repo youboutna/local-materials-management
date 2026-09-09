@@ -10,24 +10,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
 } from 'recharts';
-import { 
-  MapPin, 
-  TrendingUp, 
-  Users, 
-  Building, 
+import {
+  MapPin,
+  TrendingUp,
+  Users,
+  Building,
   DollarSign,
   Filter,
   Download,
@@ -37,6 +37,7 @@ import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { useLocationHex } from '@/hooks/hexagonal/useLocationHex';
 import { LocationDTO } from '@/dtos/shared';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LocationAnalyticsProps {
   projects: Array<{
@@ -71,6 +72,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
   projects,
   className = ''
 }) => {
+  const { t } = useLanguage();
   const { searchLocations, allRegions, allCities, isLoading } = useLocationHex();
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -210,8 +212,8 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
 
   const filteredProjects = getFilteredProjects();
   const totalBudget = filteredProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
-  const avgProgress = filteredProjects.length > 0 
-    ? filteredProjects.reduce((sum, p) => sum + (p.progress || 0), 0) / filteredProjects.length 
+  const avgProgress = filteredProjects.length > 0
+    ? filteredProjects.reduce((sum, p) => sum + (p.progress || 0), 0) / filteredProjects.length
     : 0;
 
   return (
@@ -264,7 +266,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
                   setSelectedCity('');
                 }
               }}
-              placeholder="Filter by region or city..."
+              placeholder={t('auto.locationanalytics.filter_by_region_or_city')}
               filter="all"
               className="w-full"
               showCoordinates={false}
@@ -451,7 +453,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
                       <div>
                         <p className="text-muted-foreground"><T k="auto.locationanalytics.completion_rate" fallback="Completion Rate" /></p>
                         <p className="font-medium">
-                          {stat.projectCount > 0 
+                          {stat.projectCount > 0
                             ? ((stat.projectCount - stat.activeProjects) / stat.projectCount * 100).toFixed(1)
                             : 0}%
                         </p>

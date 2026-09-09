@@ -61,6 +61,7 @@ import { toast } from 'sonner';
 
 import { TranslatedDocumentType } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 // -----------------------------------------------------------------------------
 // Marqueur Leaflet
 // -----------------------------------------------------------------------------
@@ -138,7 +139,7 @@ function geojsonToZones(root: GJRoot): InterventionZoneDTO[] {
     const label = (f.properties?.label as string) || (f.properties?.name as string) || `Zone ${idx + 1}`;
     const g = f.geometry;
     if (!g) return;
-    
+
     if (g.type === 'Point') {
       const [lng, lat] = g.coordinates as [number, number];
       out.push({ type: 'point', coordinates: [{ lat, lng }], label });
@@ -253,6 +254,7 @@ const FlyTo: React.FC<{ target: [number, number] | null; zoom?: number }> = ({
   target,
   zoom = 12,
 }) => {
+  const { t } = useLanguage();
   const map = useMap();
   useEffect(() => {
     if (target) map.flyTo(target, zoom, { duration: 0.7 });
@@ -581,7 +583,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
               <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <AddressSearchBox
-                    placeholder="Ville, wilaya, rue, adresse…"
+                    placeholder={t('auto.geozoneeditor.ville_wilaya_rue_adresse')}
                     onSelect={(sel) => {
                       setFlyTarget([sel.lat, sel.lng]);
                       setDraftLabel((prev) => prev || sel.label);
@@ -670,7 +672,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                   size="sm"
                   variant={showBoundaries ? 'secondary' : 'outline'}
                   onClick={() => setShowBoundaries((v) => !v)}
-                  title="Afficher / masquer les limites administratives (wilayas)"
+                  title={t('auto.geozoneeditor.afficher_masquer_les_limites_administratives_wil')}
                 >
                   <Map className="h-3.5 w-3.5 mr-1" /> <T k="auto.geozoneeditor.wilayas" fallback="Wilayas" />
                 </Button>
@@ -681,7 +683,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                   <Pencil className="h-3 w-3 mr-1" /> Mode {mode}
                 </Badge>
                 <Input
-                  placeholder="Libellé (optionnel)"
+                  placeholder={t('auto.geozoneeditor.libelle_optionnel')}
                   value={draftLabel}
                   onChange={(e) => setDraftLabel(e.target.value)}
                   className="h-8 w-40"
@@ -941,7 +943,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                       variant="ghost"
                       onClick={() => setEditingIndex(idx)}
                       className="h-7 w-7 p-0"
-                      aria-label="Éditer la localisation"
+                      aria-label={t('auto.geozoneeditor.editer_la_localisation')}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -950,7 +952,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
                       variant="ghost"
                       onClick={() => removeZone(idx)}
                       className="h-7 w-7 p-0"
-                      aria-label="Supprimer la zone"
+                      aria-label={t('auto.geozoneeditor.supprimer_la_zone')}
                     >
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>

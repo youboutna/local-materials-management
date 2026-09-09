@@ -18,6 +18,7 @@ import { MaterialUIDTO } from '@/dtos/transforms';
 
 import { TranslatedCategory, TranslatedUnit } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface MaterialCardProps {
   material: MaterialUIDTO;
   onClick: () => void;
@@ -25,6 +26,7 @@ interface MaterialCardProps {
 }
 
 const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete }) => {
+  const { t } = useLanguage();
   return (
     <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:-translate-y-1 relative">
       {onDelete && (
@@ -35,7 +37,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
               size="icon"
               className="absolute top-2 right-2 z-10 h-8 w-8"
               onClick={(e) => e.stopPropagation()}
-              aria-label="Supprimer le matériau"
+              aria-label={t('auto.materialcard.supprimer_le_materiau')}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -60,7 +62,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
         <div className="space-y-3">
           <div className="relative overflow-hidden rounded-md">
 
-            
+
               {material?.image && material.image.length > 0 ? (
                 <img
                   src={material.image}
@@ -102,7 +104,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onDelete
                 {(material.pricePerUnit || 0).toLocaleString()} MRU/<TranslatedUnit code={material.unit} />
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground"><T k="auto.materialcard.stock" fallback="Stock:" /></span>
               <div className="flex items-center gap-1">

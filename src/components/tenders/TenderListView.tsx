@@ -14,6 +14,7 @@ import { fr } from 'date-fns/locale';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface TenderRow {
   id: string;
   tender_number?: string | null;
@@ -55,6 +56,7 @@ const fmt = (d?: string | null) =>
   d ? format(new Date(d), 'dd MMM yyyy', { locale: fr }) : '—';
 
 export function TenderListView({ tenders, projects, selectedTenderId, onSelect, onEdit, onDelete }: Props) {
+  const { t } = useLanguage();
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<'title' | 'status' | 'deadline'>('deadline');
   const projectById = useMemo(
@@ -86,18 +88,18 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
       <CompactFilterBar
         searchValue={q}
         onSearchChange={setQ}
-        searchPlaceholder="Rechercher (titre, N°, description)…"
+        searchPlaceholder={t('auto.tenderlistview.rechercher_titre_n_description')}
         filters={[
           {
             key: 'sort',
-            label: 'Tri',
-            placeholder: 'Tri',
+            label: t('auto.tenderlistview.tri'),
+            placeholder: t('auto.tenderlistview.tri'),
             value: sort,
             onChange: (v) => setSort(v as typeof sort),
             options: [
-              { value: 'deadline', label: 'Deadline ↓' },
-              { value: 'title', label: 'Titre A→Z' },
-              { value: 'status', label: 'Statut' },
+              { value: 'deadline', label: t('auto.tenderlistview.deadline') },
+              { value: 'title', label: t('auto.tenderlistview.titre_a_z') },
+              { value: 'status', label: t('auto.tenderlistview.statut') },
             ],
           },
         ]}
@@ -140,18 +142,18 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button size="sm" variant="ghost" title="Sélectionner" onClick={() => onSelect(t)}>
+                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.selectionner')} onClick={() => onSelect(t)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" title="Voir détail" asChild>
+                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.voir_detail')} asChild>
                       <Link to={`/tenders/${t.id}`}>
                         <FolderKanban className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button size="sm" variant="ghost" title="Modifier" onClick={() => onEdit(t)}>
+                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.modifier')} onClick={() => onEdit(t)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" title="Supprimer" onClick={() => onDelete(t.id)}>
+                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.supprimer')} onClick={() => onDelete(t.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>

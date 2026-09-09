@@ -21,6 +21,7 @@ import React, { useEffect, useState } from 'react';
 import { InspectionPDFDocument } from './pdf/InspectionPDFDocument';
 import { formatPercent2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InspectionReportGeneratorProps {
   inspection: InspectionDTO;
@@ -44,11 +45,12 @@ interface LocalInspectionReportConfig {
   includeQualityScore: boolean;
 }
 
-const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({ 
-  inspection, 
-  project, 
-  onClose 
+const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
+  inspection,
+  project,
+  onClose
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<InspectionReportData | null>(null);
@@ -104,12 +106,12 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
 
   const generateInspectionReportContent = () => {
     const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
-    
+
     if (!reportData) return '';
-    
+
     const qualityScore = inspectionService.calculateQualityScore([reportData.inspection]);
     const timeline = reportData.inspection ? inspectionService.generateInspectionTimeline([reportData.inspection]) : [];
-    
+
     return `
       <div id="inspection-report-content" style="font-family: 'Arial', sans-serif; max-width: 170mm; margin: 0 auto; padding: 0; background: white; color: #333; line-height: 1.4;">
         ${ReportFormatting.generateSectionHeader(
@@ -122,10 +124,10 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         ${ReportFormatting.generatePaginatedTable(
           [reportData.inspection],
           [
-            { label: 'ID Inspection', render: (item: any) => item.id, width: '25%' },
-            { label: 'Type', render: (item: any) => item.type || item.inspection_type || 'Non spécifié', width: '25%' },
-            { label: 'Date', render: (item: any) => (item.scheduledDate || item.inspection_date) ? format(new Date(item.scheduledDate || item.inspection_date), 'dd/MM/yyyy') : 'Non défini', width: '25%' },
-            { label: 'Statut', render: (item: any) => ReportFormatting.generateStatusBadge(item.status || 'En attente'), width: '25%' }
+            { label: t('auto.inspectionreportgenerator.id_inspection'), render: (item: any) => item.id, width: '25%' },
+            { label: t('auto.inspectionreportgenerator.type'), render: (item: any) => item.type || item.inspection_type || 'Non spécifié', width: '25%' },
+            { label: t('auto.inspectionreportgenerator.date'), render: (item: any) => (item.scheduledDate || item.inspection_date) ? format(new Date(item.scheduledDate || item.inspection_date), 'dd/MM/yyyy') : 'Non défini', width: '25%' },
+            { label: t('auto.inspectionreportgenerator.statut'), render: (item: any) => ReportFormatting.generateStatusBadge(item.status || 'En attente'), width: '25%' }
           ],
           { pageSize: 10, includeHeaders: true },
           'Détails de l\'Inspection'
@@ -185,11 +187,11 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         ${ReportFormatting.generatePaginatedTable(
           timeline,
           [
-            { label: 'Date', render: (item) => item.date, width: '20%' },
-            { label: 'Inspecteur', render: (item) => item.inspector, width: '25%' },
-            { label: 'Statut', render: (item) => ReportFormatting.generateStatusBadge(item.status), width: '20%' },
-            { label: 'Progression', render: (item) => `${item.progress}%`, width: '15%' },
-            { label: 'Notes', render: (item) => item.notes, width: '20%' }
+            { label: t('auto.inspectionreportgenerator.date'), render: (item) => item.date, width: '20%' },
+            { label: t('auto.inspectionreportgenerator.inspecteur'), render: (item) => item.inspector, width: '25%' },
+            { label: t('auto.inspectionreportgenerator.statut'), render: (item) => ReportFormatting.generateStatusBadge(item.status), width: '20%' },
+            { label: t('auto.inspectionreportgenerator.progression'), render: (item) => `${item.progress}%`, width: '15%' },
+            { label: t('auto.inspectionreportgenerator.notes'), render: (item) => item.notes, width: '20%' }
           ],
           { pageSize: 15, includeHeaders: true },
           'Chronologie des Inspections'
@@ -201,20 +203,20 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
           ${ReportFormatting.generateSectionHeader('Résultats de l\'Inspection', undefined, 'linear-gradient(135deg, #059669 0%, #10b981 100%)')}
           <div style="background: #ecfdf5; padding: 20px; border-radius: 8px;">
             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-              ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ? 
+              ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ?
                 '<div style="width: 40px; height: 40px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">✓</div>' :
                 '<div style="width: 40px; height: 40px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">!</div>'
               }
               <div>
                 <h3 style="margin: 0; color: #374151; font-size: 18px;">
-                  ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ? 'Inspection Réussie' : 
+                  ${String(reportData.inspection.status) === 'passed' || String(reportData.inspection.status) === 'approved' ? 'Inspection Réussie' :
                     String(reportData.inspection.status) === 'failed' || String(reportData.inspection.status) === 'requires_changes' ? 'Inspection Échouée - Actions Requises' :
                     'Inspection en Cours'}
                 </h3>
                 <p style="margin: 5px 0 0 0; color: #6b7280;">Progression: ${(reportData.inspection as any).progressAtInspection || (reportData.inspection as any).progress_at_inspection || 0}%</p>
               </div>
             </div>
-            
+
             ${(reportData.inspection as any).comments || (reportData.inspection as any).notes ? `
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
               <h4 style="margin: 0 0 10px 0; color: #1e40af;"><T k="auto.inspectionreportgenerator.notes_de_l_inspecteur" fallback="Notes de l'inspecteur:" /></h4>
@@ -241,10 +243,10 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
         ${ReportFormatting.generatePaginatedTable(
           reportData.photos,
           [
-            { label: 'Document', render: (item: any) => item.name || item.title || item.file_name || '', width: '40%' },
-            { label: 'Type', render: (item: any) => item.type || item.document_type || 'Photo', width: '20%' },
-            { label: 'Date', render: (item: any) => (item.uploadedAt || item.created_at) ? format(new Date(item.uploadedAt || item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
-            { label: 'Taille', render: (item: any) => (item.size || item.file_size) ? `${((item.size || item.file_size) / 1024).toFixed(2)} KB` : 'N/A', width: '20%' }
+            { label: t('auto.inspectionreportgenerator.document'), render: (item: any) => item.name || item.title || item.file_name || '', width: '40%' },
+            { label: t('auto.inspectionreportgenerator.type'), render: (item: any) => item.type || item.document_type || 'Photo', width: '20%' },
+            { label: t('auto.inspectionreportgenerator.date'), render: (item: any) => (item.uploadedAt || item.created_at) ? format(new Date(item.uploadedAt || item.created_at), 'dd/MM/yyyy') : 'N/A', width: '20%' },
+            { label: t('auto.inspectionreportgenerator.taille'), render: (item: any) => (item.size || item.file_size) ? `${((item.size || item.file_size) / 1024).toFixed(2)} KB` : 'N/A', width: '20%' }
           ],
           { pageSize: 10, includeHeaders: true },
           'Photos et Documents'
@@ -288,7 +290,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
 
       // Generate PDF blob
       const blob = await pdf(pdfDocument).toBlob();
-      
+
       const fileName = `rapport-inspection-${inspection.id}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       return { blob, fileName };
     } finally {
@@ -299,7 +301,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
   const handleDownload = async () => {
     try {
       const { blob, fileName } = await generatePDF();
-      
+
       // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -309,7 +311,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Rapport téléchargé",
         description: "Le rapport d'inspection a été téléchargé avec succès.",
@@ -477,7 +479,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             id="notes"
             value={reportConfig.notes}
             onChange={(e) => setReportConfig(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Ajoutez des notes ou commentaires pour ce rapport..."
+            placeholder={t('auto.inspectionreportgenerator.ajoutez_des_notes_ou_commentaires_pour_ce_rappor')}
             rows={3}
           />
         </div>
@@ -529,9 +531,9 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             )}
             Télécharger PDF
           </Button>
-          
-          <Button 
-            onClick={handleSendEmail} 
+
+          <Button
+            onClick={handleSendEmail}
             disabled={loading || !reportConfig.recipientEmail}
             variant="outline"
             className="flex-1"
@@ -543,7 +545,7 @@ const InspectionReportGenerator: React.FC<InspectionReportGeneratorProps> = ({
             )}
             Envoyer par Email
           </Button>
-          
+
           {onClose && (
             <Button onClick={onClose} variant="ghost">
               <T k="auto.inspectionreportgenerator.fermer" fallback="Fermer" />

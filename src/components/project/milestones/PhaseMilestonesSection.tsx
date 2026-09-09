@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PhaseMilestonesSectionProps {
   projectId: string;
@@ -66,6 +67,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   phaseStartDate,
   readonly = false
 }) => {
+  const { t } = useLanguage();
   const [milestones, setMilestones] = useState<MilestoneDTO[]>([]);
   const [progress, setProgress] = useState<MilestoneProgressDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,8 +106,8 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   const handleGenerateFromTemplate = async () => {
     if (!constructionPhase || !phaseStartDate) {
       toast({
-        title: 'Erreur',
-        description: 'Phase de construction ou date de début manquante',
+        title: t('auto.phasemilestonessection.erreur'),
+        description: t('auto.phasemilestonessection.phase_de_construction_ou_date_de_debut_manquante'),
         variant: 'destructive'
       });
       return;
@@ -128,15 +130,15 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
         });
       }
       toast({
-        title: 'Succès',
-        description: 'Jalons générés depuis le référentiel'
+        title: t('auto.phasemilestonessection.succes'),
+        description: t('auto.phasemilestonessection.jalons_generes_depuis_le_referentiel')
       });
       loadData();
     } catch (error) {
       console.error('Error generating milestones:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de générer les jalons',
+        title: t('auto.phasemilestonessection.erreur'),
+        description: t('auto.phasemilestonessection.impossible_de_generer_les_jalons'),
         variant: 'destructive'
       });
     }
@@ -154,7 +156,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
           weight: formData.weight,
           notes: formData.notes
         });
-        toast({ title: 'Jalon modifié' });
+        toast({ title: t('auto.phasemilestonessection.jalon_modifie') });
       } else {
         await milestoneService.createMilestone({
           project_id: projectId,
@@ -167,7 +169,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
           weight: formData.weight,
           notes: formData.notes,
         });
-        toast({ title: 'Jalon ajouté' });
+        toast({ title: t('auto.phasemilestonessection.jalon_ajoute') });
       }
       setIsDialogOpen(false);
       resetForm();
@@ -175,8 +177,8 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     } catch (error) {
       console.error('Error saving milestone:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder le jalon',
+        title: t('auto.phasemilestonessection.erreur'),
+        description: t('auto.phasemilestonessection.impossible_de_sauvegarder_le_jalon'),
         variant: 'destructive'
       });
     }
@@ -193,8 +195,8 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
     } catch (error) {
       console.error('Error toggling milestone:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de modifier le statut',
+        title: t('auto.phasemilestonessection.erreur'),
+        description: t('auto.phasemilestonessection.impossible_de_modifier_le_statut'),
         variant: 'destructive'
       });
     }
@@ -202,16 +204,16 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
 
   const handleDelete = async (milestoneId: string) => {
     if (!confirm('Supprimer ce jalon ?')) return;
-    
+
     try {
       await milestoneService.deleteMilestone(milestoneId);
-      toast({ title: 'Jalon supprimé' });
+      toast({ title: t('auto.phasemilestonessection.jalon_supprime') });
       loadData();
     } catch (error) {
       console.error('Error deleting milestone:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer le jalon',
+        title: t('auto.phasemilestonessection.erreur'),
+        description: t('auto.phasemilestonessection.impossible_de_supprimer_le_jalon'),
         variant: 'destructive'
       });
     }
@@ -247,7 +249,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
   const getStatusInfo = (milestone: MilestoneDTO) => {
     const today = new Date();
     const targetDate = parseISO(milestone.targetDate);
-    
+
     if (milestone.status === 'completed') {
       return { icon: CheckCircle, color: 'text-success', bg: 'bg-success-soft' };
     }
@@ -292,7 +294,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
             </Badge>
           )}
         </CardTitle>
-        
+
         {!readonly && (
           <div className="flex gap-2">
             {hasTemplates && milestones.filter(m => m.isFromTemplate).length === 0 && (
@@ -325,7 +327,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                       id="title"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Titre du jalon"
+                      placeholder={t('auto.phasemilestonessection.titre_du_jalon')}
                     />
                   </div>
                   <div>
@@ -334,10 +336,10 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Description optionnelle"
+                      placeholder={t('auto.phasemilestonessection.description_optionnelle')}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="type"><T k="auto.phasemilestonessection.type" fallback="Type" /></Label>
@@ -372,7 +374,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                       </Select>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="target_date"><T k="auto.phasemilestonessection.date_cible" fallback="Date cible" /></Label>
@@ -402,7 +404,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                       id="notes"
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Notes additionnelles"
+                      placeholder={t('auto.phasemilestonessection.notes_additionnelles')}
                     />
                   </div>
                   <div className="flex justify-end gap-2">
@@ -450,7 +452,7 @@ const PhaseMilestonesSection: React.FC<PhaseMilestonesSectionProps> = ({
                   <div className={cn("p-1.5 rounded-full", status.bg)}>
                     <StatusIcon className={cn("h-4 w-4", status.color)} />
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>

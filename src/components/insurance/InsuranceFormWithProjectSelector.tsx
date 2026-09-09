@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import EnhancedProjectSelector from '@/components/selectors/EnhancedProjectSelector';
 import { useToast } from '@/hooks/use-toast';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface InsuranceFormData {
   projectId: string;
@@ -41,6 +42,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
   initialData,
   isLoading = false
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [formData, setFormData] = useState<InsuranceFormData>({
     projectId: initialData?.projectId || '',
@@ -59,11 +61,11 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.projectId || !formData.contractorName || !formData.insuranceCompany || !formData.policyNumber) {
       toast({
-        title: 'Erreur',
-        description: 'Veuillez remplir tous les champs obligatoires',
+        title: t('auto.insuranceformwithprojectselector.erreur'),
+        description: t('auto.insuranceformwithprojectselector.veuillez_remplir_tous_les_champs_obligatoires'),
         variant: 'destructive',
       });
       return;
@@ -89,8 +91,8 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
           <EnhancedProjectSelector
             value={formData.projectId}
             onChange={(id) => updateFormData('projectId', id || '')}
-            label="Projet"
-            placeholder="Sélectionner un projet"
+            label={t('auto.insuranceformwithprojectselector.projet')}
+            placeholder={t('auto.insuranceformwithprojectselector.selectionner_un_projet')}
             required={true}
             showTenderReference={true}
             tenderReference={formData.tenderReference}
@@ -104,7 +106,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
                 id="contractorName"
                 value={formData.contractorName}
                 onChange={(e) => updateFormData('contractorName', e.target.value)}
-                placeholder="Nom de l'entreprise"
+                placeholder={t('auto.insuranceformwithprojectselector.nom_de_l_entreprise')}
                 required
               />
             </div>
@@ -115,7 +117,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
                 id="contractorId"
                 value={formData.contractorId}
                 onChange={(e) => updateFormData('contractorId', e.target.value)}
-                placeholder="Identifiant de l'entrepreneur"
+                placeholder={t('auto.insuranceformwithprojectselector.identifiant_de_l_entrepreneur')}
               />
             </div>
           </div>
@@ -127,7 +129,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
                 id="insuranceCompany"
                 value={formData.insuranceCompany}
                 onChange={(e) => updateFormData('insuranceCompany', e.target.value)}
-                placeholder="Nom de la compagnie"
+                placeholder={t('auto.insuranceformwithprojectselector.nom_de_la_compagnie')}
                 required
               />
             </div>
@@ -138,7 +140,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
                 id="policyNumber"
                 value={formData.policyNumber}
                 onChange={(e) => updateFormData('policyNumber', e.target.value)}
-                placeholder="Numéro de police d'assurance"
+                placeholder={t('auto.insuranceformwithprojectselector.numero_de_police_d_assurance')}
                 required
               />
             </div>
@@ -149,7 +151,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
               <Label htmlFor="coverageType"><T k="auto.insuranceformwithprojectselector.type_de_couverture" fallback="Type de couverture" /></Label>
               <Select value={formData.coverageType} onValueChange={(value) => updateFormData('coverageType', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le type" />
+                  <SelectValue placeholder={t('auto.insuranceformwithprojectselector.selectionner_le_type')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="responsabilite_civile"><T k="auto.insuranceformwithprojectselector.responsabilite_civile" fallback="Responsabilité civile" /></SelectItem>
@@ -233,7 +235,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
               id="certificateUrl"
               value={formData.certificateUrl}
               onChange={(e) => updateFormData('certificateUrl', e.target.value)}
-              placeholder="Lien vers le document PDF"
+              placeholder={t('auto.insuranceformwithprojectselector.lien_vers_le_document_pdf')}
             />
           </div>
 
@@ -243,7 +245,7 @@ const InsuranceFormWithProjectSelector: React.FC<InsuranceFormWithProjectSelecto
               id="notes"
               value={formData.notes}
               onChange={(e) => updateFormData('notes', e.target.value)}
-              placeholder="Notes additionnelles"
+              placeholder={t('auto.insuranceformwithprojectselector.notes_additionnelles')}
               rows={3}
             />
           </div>

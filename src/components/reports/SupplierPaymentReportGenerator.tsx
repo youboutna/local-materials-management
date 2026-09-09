@@ -18,6 +18,7 @@ import React, { useState } from 'react';
 import { SupplierPaymentPDFDocument } from './pdf/SupplierPaymentPDFDocument';
 import { formatNumber2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SupplierPaymentReportGeneratorProps {
   supplier: SupplierDTO;
@@ -38,12 +39,13 @@ interface PaymentReportConfig {
   includeBankInfo: boolean;
 }
 
-const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorProps> = ({ 
-  supplier, 
-  payments, 
-  dateRange, 
-  onClose 
+const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorProps> = ({
+  supplier,
+  payments,
+  dateRange,
+  onClose
 }) => {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [reportConfig, setReportConfig] = useState<PaymentReportConfig>({
@@ -84,7 +86,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
   const generatePaymentReportContent = () => {
     const currentDate = format(new Date(), 'dd MMMM yyyy', { locale: fr });
     const { totalAmount, paidAmount, pendingAmount, overdueAmount } = calculateTotals();
-    
+
     return `
       <div id="payment-report-content" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white;">
         <!-- Header -->
@@ -204,7 +206,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
 
       // Generate PDF blob
       const blob = await pdf(pdfDocument).toBlob();
-      
+
       const fileName = `rapport-paiements-${supplier.name?.replace(/[^a-zA-Z0-9]/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       return { blob, fileName };
     } finally {
@@ -215,7 +217,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
   const handleDownload = async () => {
     try {
       const { blob, fileName } = await generatePDF();
-      
+
       // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -225,7 +227,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Rapport téléchargé",
         description: "Le rapport de paiements a été téléchargé avec succès.",
@@ -323,7 +325,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
               <Label htmlFor="reportType"><T k="auto.supplierpaymentreportgenerator.type_de_rapport" fallback="Type de rapport" /></Label>
               <Select
                 value={reportConfig.reportType}
-                onValueChange={(value: 'summary' | 'detailed' | 'outstanding') => 
+                onValueChange={(value: 'summary' | 'detailed' | 'outstanding') =>
                   setReportConfig(prev => ({ ...prev, reportType: value }))
                 }
               >
@@ -387,7 +389,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
             id="notes"
             value={reportConfig.notes}
             onChange={(e) => setReportConfig(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Ajoutez des notes ou commentaires pour ce rapport..."
+            placeholder={t('auto.supplierpaymentreportgenerator.ajoutez_des_notes_ou_commentaires_pour_ce_rappor')}
             rows={3}
           />
         </div>
@@ -422,9 +424,9 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
             )}
             Télécharger PDF
           </Button>
-          
-          <Button 
-            onClick={handleSendEmail} 
+
+          <Button
+            onClick={handleSendEmail}
             disabled={loading || !reportConfig.recipientEmail}
             variant="outline"
             className="flex-1"
@@ -436,7 +438,7 @@ const SupplierPaymentReportGenerator: React.FC<SupplierPaymentReportGeneratorPro
             )}
             Envoyer par Email
           </Button>
-          
+
           {onClose && (
             <Button onClick={onClose} variant="ghost">
               <T k="auto.supplierpaymentreportgenerator.fermer" fallback="Fermer" />

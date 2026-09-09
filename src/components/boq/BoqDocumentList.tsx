@@ -28,6 +28,7 @@ import React, { useMemo, useState } from 'react';
 
 import { T } from '@/components/i18n/T';
 import { useI18n } from '@/hooks/useI18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   source: BoqSource;
@@ -53,6 +54,7 @@ type SortKey = 'reference' | 'title' | 'lineCount' | 'totalHt' | 'totalTtc' | 's
 const PAGE_SIZES = [20, 50, 100];
 
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
+  const { t } = useLanguage();
   const { t, translateStatus, locale } = useI18n();
   const { toast } = useToast();
   const { documents, rawLines, isLoading, invalidate } = useBoqDocumentList({ source, contextId, projectId });
@@ -183,7 +185,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
       // 3. Échec : on restaure la ligne dans l'interface.
       setRemovedIds((prev) => prev.filter((id) => !ids.includes(id)));
       toast({
-        title: 'Suppression échouée',
+        title: t('auto.boqdocumentlist.suppression_echouee'),
         description: String(e instanceof Error ? e.message : e),
         variant: 'destructive',
       });
@@ -239,7 +241,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
       <CompactFilterBar
         searchValue={search}
         onSearchChange={(v) => { setSearch(v); setPage(0); }}
-        searchPlaceholder="Rechercher référence ou titre…"
+        searchPlaceholder={t('auto.boqdocumentlist.rechercher_reference_ou_titre')}
         filters={[
           {
             key: 'status',
@@ -258,22 +260,22 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         advancedContent={
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Créé après le</span>
+              <span className="text-xs font-medium text-muted-foreground"><T k="auto.boqdocumentlist.cree_apres_le" fallback="Créé après le" /></span>
               <Input
                 type="date"
                 value={fromDate}
                 onChange={(e) => { setFromDate(e.target.value); setPage(0); }}
-                aria-label="Créé après le"
+                aria-label={t('auto.boqdocumentlist.cree_apres_le')}
                 className="h-8"
               />
             </div>
             <div className="space-y-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Créé avant le</span>
+              <span className="text-xs font-medium text-muted-foreground"><T k="auto.boqdocumentlist.cree_avant_le" fallback="Créé avant le" /></span>
               <Input
                 type="date"
                 value={toDate}
                 onChange={(e) => { setToDate(e.target.value); setPage(0); }}
-                aria-label="Créé avant le"
+                aria-label={t('auto.boqdocumentlist.cree_avant_le')}
                 className="h-8"
               />
             </div>
@@ -283,7 +285,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
         onReset={() => { setSearch(''); setStatusFilter('all'); setFromDate(''); setToDate(''); setPage(0); }}
         trailing={
           <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0}>
-            <Download className="h-4 w-4 mr-1" /> CSV
+            <Download className="h-4 w-4 mr-1" /> <T k="auto.boqdocumentlist.csv" fallback="CSV" />
           </Button>
         }
       />

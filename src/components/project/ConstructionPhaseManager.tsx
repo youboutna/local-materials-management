@@ -108,7 +108,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   const { user, loading: authLoading } = useAuth();
 
-  
+
 
   // Use hexagonal hook for construction phase management
 
@@ -160,7 +160,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
 
 
-  
+
 
   const [isAddingPhase, setIsAddingPhase] = useState(false);
 
@@ -181,7 +181,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
   const [isGenerating, setIsGenerating] = useState(false);
 
-  
+
 
   const milestoneService = useMemo(() => getMilestoneService(), []);
 
@@ -199,7 +199,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
     console.log('Action:', actionName);
 
-    
+
 
     if (!user && !IS_LOCAL_BYPASS) {
 
@@ -241,7 +241,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
       // Get stage data from referential dynamically
       const stageData = phaseData?.steps.find(s => s.code === selectedStage);
 
-      
+
 
       const newPhase: PhaseData = {
 
@@ -281,7 +281,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
       };
 
-      
+
 
       // Create the phase using the hexagonal hook
       await constructionPhaseHook.createConstructionPhase(newPhase as unknown as PhaseDTO);
@@ -377,9 +377,9 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         estimatedDuration: 30,
 
-        status: (customPhaseData.status === 'planned' ? 'not_started' : 
-                customPhaseData.status === 'active' ? 'in_progress' : 
-                customPhaseData.status === 'paused' ? 'delayed' : 
+        status: (customPhaseData.status === 'planned' ? 'not_started' :
+                customPhaseData.status === 'active' ? 'in_progress' :
+                customPhaseData.status === 'paused' ? 'delayed' :
                 customPhaseData.status) as 'not_started' | 'in_progress' | 'completed' | 'delayed',
 
         budget: customPhaseData.budget || Math.floor((projectBudget || 0) * 0.1),
@@ -593,7 +593,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
       setIsGenerating(true);
 
-      
+
 
       try {
 
@@ -601,7 +601,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         const summary = await referentialService.getPhasesForReferential(selectedReferential!);
 
-        
+
 
         if (summary.length === 0) {
 
@@ -625,7 +625,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         const referentialPhases = summary;
 
-        
+
 
         // Generate phases with their steps, tasks and milestones
 
@@ -637,7 +637,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         let totalMilestones = 0;
 
-        
+
 
         for (const refPhase of referentialPhases) {
 
@@ -647,7 +647,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
           if (phaseExists) continue;
 
-          
+
 
           // Calculate total duration for this phase based on steps/tasks
 
@@ -655,7 +655,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
           const stepsInfo: string[] = [];
 
-          
+
 
           for (const step of refPhase.steps || []) {
 
@@ -663,7 +663,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
             const taskLabels: string[] = [];
 
-            
+
 
             for (const task of step.tasks || []) {
 
@@ -673,23 +673,23 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
             }
 
-            
+
 
             if (stepDuration === 0) stepDuration = 14;
 
             phaseDuration += stepDuration;
 
-            
+
 
             stepsInfo.push(`**${step.label}**\n${taskLabels.join('\n')}`);
 
           }
 
-          
+
 
           if (phaseDuration === 0) phaseDuration = 30;
 
-          
+
 
           // Calculate dates based on cumulative duration
 
@@ -701,11 +701,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
           endDate.setDate(endDate.getDate() + phaseDuration);
 
-          
+
 
           const phaseId = `ref-${Date.now()}-${phaseIndex}`;
 
-          
+
 
           // Generate milestones for this phase if enabled
 
@@ -717,17 +717,17 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
           }
 
-          
+
 
           // Build description with steps and milestones info
 
-          let description = refPhase.description 
+          let description = refPhase.description
 
             ? `${refPhase.description}\n\n${stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : ''}`
 
             : stepsInfo.length > 0 ? 'Étapes:\n' + stepsInfo.join('\n\n') : '';
 
-          
+
 
           if (phaseMilestones.length > 0) {
 
@@ -747,7 +747,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
           }
 
-          
+
 
           // Create custom phase with stages from referential steps
 
@@ -839,7 +839,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
           };
 
-          
+
 
           newPhases.push(newPhase);
 
@@ -878,17 +878,17 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
           await constructionPhaseHook.createConstructionPhase(phaseDTO);
         }
 
-        
+
 
         // Count total steps and tasks
 
         const totalSteps = newPhases.reduce((sum, p) => sum + (p.customPhase?.customStages?.length || 0), 0);
 
-        const totalTasks = newPhases.reduce((sum, p) => 
+        const totalTasks = newPhases.reduce((sum, p) =>
 
           sum + (p.customPhase?.customStages?.reduce((s, stage) => s + ((stage as any).tasks?.length || 0), 0) || 0), 0);
 
-        
+
 
         toast({
 
@@ -1065,7 +1065,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                 </DialogHeader>
 
-                
+
 
                 <Tabs value={phaseType} onValueChange={(value) => setPhaseType(value as 'standard' | 'custom' | 'procurement')}>
 
@@ -1079,7 +1079,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                   </TabsList>
 
-                  
+
 
                   <TabsContent value="standard" className="space-y-4">
 
@@ -1087,11 +1087,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                   </TabsContent>
 
-                  
+
 
                   <TabsContent value="procurement" className="space-y-4">
 
-                    <ProcurementPhaseCreator 
+                    <ProcurementPhaseCreator
 
                       onCreatePhase={createProcurementPhase}
 
@@ -1101,11 +1101,11 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                   </TabsContent>
 
-                  
+
 
                   <TabsContent value="custom" className="space-y-4">
 
-                    <CustomPhaseCreator 
+                    <CustomPhaseCreator
 
                       onCreatePhase={createCustomPhase}
 
@@ -1125,7 +1125,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
           </div>
 
-          
+
 
           {/* Referential selector with milestone generation option */}
 
@@ -1163,13 +1163,13 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
               </div>
 
-              
+
 
               <div className="flex items-center gap-2">
 
-                <Checkbox 
+                <Checkbox
 
-                  id="generateMilestones" 
+                  id="generateMilestones"
 
                   checked={generateMilestones}
 
@@ -1187,9 +1187,9 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
               </div>
 
-              
 
-              <Button 
+
+              <Button
 
                 onClick={handleGeneratePhasesFromReferential}
 
@@ -1209,7 +1209,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
             </div>
 
-            
+
 
             {/* Generation preview */}
 
@@ -1271,7 +1271,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
       </CardHeader>
 
-      
+
 
       <CardContent>
 
@@ -1299,7 +1299,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         )}
 
-        
+
 
         {allPhases.length === 0 ? (
 
@@ -1397,7 +1397,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                 </CardHeader>
 
-                
+
 
                 <CardContent>
 
@@ -1417,7 +1417,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     </div>
 
-                    
+
 
                     <div className="flex items-center gap-2">
 
@@ -1433,7 +1433,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     </div>
 
-                    
+
 
                     <div className="flex items-center gap-2">
 
@@ -1448,7 +1448,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     </div>
 
-                    
+
 
                     <div className="flex items-center gap-2">
 
@@ -1463,7 +1463,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     </div>
 
-                    
+
 
                     <div className="flex items-center gap-2">
 
@@ -1481,10 +1481,10 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                   </div>
 
-                  
 
 
-                  
+
+
 
                   {/* Progress bar */}
 
@@ -1499,7 +1499,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
                     <div className="w-full bg-gray-200 rounded-full h-2">
 
-                      <div 
+                      <div
 
                         className="bg-primary h-2 rounded-full transition-all duration-300"
 
@@ -1521,7 +1521,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 
         )}
 
-        
+
 
         {/* Phase editing dialog */}
 
@@ -1599,7 +1599,7 @@ const StandardPhaseCreator: React.FC<{
       try {
         const phases = await referentialService.getPhasesForReferential('SOMELEC_INFRA');
         const selectedPhaseData = phases.find(p => p.code === selectedPhase);
-        
+
         if (selectedPhaseData) {
           const stageOptions = selectedPhaseData.steps.map(step => ({
             value: step.code,
@@ -1654,7 +1654,7 @@ const StandardPhaseCreator: React.FC<{
 
           <SelectTrigger>
 
-            <SelectValue placeholder="Sélectionner une phase" />
+            <SelectValue placeholder={t('auto.constructionphasemanager.selectionner_une_phase')} />
 
           </SelectTrigger>
 
@@ -1688,7 +1688,7 @@ const StandardPhaseCreator: React.FC<{
 
             <SelectTrigger>
 
-              <SelectValue placeholder="Sélectionner une étape" />
+              <SelectValue placeholder={t('auto.constructionphasemanager.selectionner_une_etape')} />
 
             </SelectTrigger>
 
@@ -1714,9 +1714,9 @@ const StandardPhaseCreator: React.FC<{
 
 
 
-      <Button 
+      <Button
 
-        onClick={handleCreate} 
+        onClick={handleCreate}
 
         disabled={!selectedPhase || !selectedStage}
 
@@ -1898,7 +1898,7 @@ const CustomPhaseCreator: React.FC<{
 
             onChange={(e) => setCustomPhase({ ...customPhase, name: e.target.value })}
 
-            placeholder="Ex: Phase spécialisée"
+            placeholder={t('auto.constructionphasemanager.ex_phase_specialisee')}
 
           />
 
@@ -1936,7 +1936,7 @@ const CustomPhaseCreator: React.FC<{
 
           onChange={(e) => setCustomPhase({ ...customPhase, description: e.target.value })}
 
-          placeholder="Description de la phase personnalisée"
+          placeholder={t('auto.constructionphasemanager.description_de_la_phase_personnalisee')}
 
         />
 
@@ -2016,7 +2016,7 @@ const CustomPhaseCreator: React.FC<{
 
             onChange={(e) => setNewStageName(e.target.value)}
 
-            placeholder="Nom de l'étape"
+            placeholder={t('auto.constructionphasemanager.nom_de_l_etape')}
 
             onKeyPress={(e) => e.key === 'Enter' && addCustomStage()}
 
@@ -2030,7 +2030,7 @@ const CustomPhaseCreator: React.FC<{
 
         </div>
 
-        
+
 
         {customPhase.customStages.length > 0 && (
 
@@ -2070,9 +2070,9 @@ const CustomPhaseCreator: React.FC<{
 
 
 
-      <Button 
+      <Button
 
-        onClick={handleCreate} 
+        onClick={handleCreate}
 
         disabled={!customPhase.name.trim()}
 
@@ -2098,7 +2098,7 @@ const PhaseEditDialog: React.FC<{
 
   phase: PhaseData;
 
-  onSave: (phase: PhaseData) => Promise<boolean> | void;
+  onSave: (phase: PhaseData) => <T k="auto.constructionphasemanager.promise" fallback="Promise" /><boolean> | void;
 
   onClose: () => void;
 
@@ -2159,7 +2159,7 @@ const PhaseEditDialog: React.FC<{
 
 
 
-        
+
 
         <div className="space-y-4">
 
@@ -2177,7 +2177,7 @@ const PhaseEditDialog: React.FC<{
 
           </div>
 
-          
+
 
           <div>
 
@@ -2193,7 +2193,7 @@ const PhaseEditDialog: React.FC<{
 
           </div>
 
-          
+
 
           <div className="grid grid-cols-2 gap-4">
 
@@ -2231,7 +2231,7 @@ const PhaseEditDialog: React.FC<{
 
           </div>
 
-          
+
 
           <div>
 
@@ -2249,15 +2249,15 @@ const PhaseEditDialog: React.FC<{
 
           </div>
 
-          
+
 
           <div>
 
             <Label><T k="auto.constructionphasemanager.statut" fallback="Statut" /></Label>
 
-            <Select 
+            <Select
 
-              value={editedPhase.status} 
+              value={editedPhase.status}
 
               onValueChange={(value: any) => setEditedPhase({ ...editedPhase, status: value })}
 
@@ -2285,7 +2285,7 @@ const PhaseEditDialog: React.FC<{
 
           </div>
 
-          
+
 
           <div>
 
@@ -2307,7 +2307,7 @@ const PhaseEditDialog: React.FC<{
 
           </div>
 
-          
+
 
           {(saveError || localError) && (
             <Alert variant="destructive">
@@ -2366,7 +2366,7 @@ const ProcurementPhaseCreator: React.FC<{
 
 
 
-  const availableStages = selectedPhase ? 
+  const availableStages = selectedPhase ?
     referentialService.getPhasesForReferential('MR_PUBLIC_PROCUREMENT' as any)
       .then(phases => phases.find(p => p.code === selectedPhase)?.steps.map(s => ({
         value: s.code,
@@ -2452,7 +2452,7 @@ const ProcurementPhaseCreator: React.FC<{
 
           <SelectTrigger>
 
-            <SelectValue placeholder="Sélectionner une phase" />
+            <SelectValue placeholder={t('auto.constructionphasemanager.selectionner_une_phase')} />
 
           </SelectTrigger>
 
@@ -2486,7 +2486,7 @@ const ProcurementPhaseCreator: React.FC<{
 
             <SelectTrigger>
 
-              <SelectValue placeholder="Sélectionner une étape" />
+              <SelectValue placeholder={t('auto.constructionphasemanager.selectionner_une_etape')} />
 
             </SelectTrigger>
 
@@ -2512,9 +2512,9 @@ const ProcurementPhaseCreator: React.FC<{
 
 
 
-      <Button 
+      <Button
 
-        onClick={handleCreate} 
+        onClick={handleCreate}
 
         disabled={!selectedPhase || !selectedStage}
 

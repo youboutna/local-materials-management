@@ -26,6 +26,7 @@ import {
   type EvaluationCategory,
   type EvaluationCriterion,
 } from '@/config/referentials/tender/evaluation-criteria.referential';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface EvaluationQuestionnaireResult {
   scores: Record<string, number>;
@@ -59,6 +60,7 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
   regulatoryAnswers,
   onRegulatoryChange,
 }) => {
+  const { t } = useLanguage();
   const { t } = useI18n();
   const result = useMemo(() => computeGlobalScore(value, weights, criteria), [value, weights, criteria]);
 
@@ -86,7 +88,7 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
         {showRegulatoryChecklist && (
           <RegulatoryComplianceChecklist
             scope="tender_submission"
-            title="Recevabilité réglementaire du soumissionnaire"
+            title={t('auto.evaluationquestionnaire.recevabilite_reglementaire_du_soumissionnaire')}
             value={regulatoryAnswers ?? {}}
             onValueChange={(next) => onRegulatoryChange?.(next)}
             hideUpload

@@ -17,16 +17,18 @@ import { format } from 'date-fns';
 import { TranslatedPriority } from '@/components/i18n/TranslatedBadges';
 import { TranslatedSeverity } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface ProjectCreateByDTOProps {
   onSave: (project: ProjectData) => void;
   onCancel: () => void;
 }
 
 export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [currentTab, setCurrentTab] = useState('basic');
-  
+
   const [projectData, setProjectData] = useState<Partial<ProjectData>>({
     title: '',
     description: '',
@@ -45,7 +47,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
   const [phases, setPhases] = useState<Partial<EnhancedPhaseDTO>[]>([
     {
-      name: 'Études préliminaires',
+      name: t('auto.projectcreatebydto.etudes_preliminaires'),
       plannedProgress: 0,
       actualProgress: 0,
       budget: 0,
@@ -62,8 +64,8 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
   const [milestones, setMilestones] = useState<Partial<ConstructionMilestoneDTO>[]>([
     {
-      title: 'Validation des études',
-      description: 'Validation des études de faisabilité',
+      title: t('auto.projectcreatebydto.validation_des_etudes'),
+      description: t('auto.projectcreatebydto.validation_des_etudes_de_faisabilite'),
       targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       status: 'pending',
       stage: 'conception',
@@ -97,7 +99,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
   };
 
   const updatePhase = (index: number, field: keyof EnhancedPhaseDTO, value: string | number | Date | undefined) => {
-    setPhases(prev => prev.map((phase, i) => 
+    setPhases(prev => prev.map((phase, i) =>
       i === index ? { ...phase, [field]: value } : phase
     ));
   };
@@ -124,7 +126,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
   };
 
   const updateMilestone = (index: number, field: keyof ConstructionMilestoneDTO, value: string | number | Date | undefined) => {
-    setMilestones(prev => prev.map((milestone, i) => 
+    setMilestones(prev => prev.map((milestone, i) =>
       i === index ? { ...milestone, [field]: value } : milestone
     ));
   };
@@ -137,42 +139,42 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
   const validateProject = (): string[] => {
     const errors: string[] = [];
-    
+
     if (!projectData.title?.trim()) {
       errors.push('Le titre du projet est obligatoire');
     }
-    
+
     if (!projectData.description?.trim()) {
       errors.push('La description du projet est obligatoire');
     }
-    
+
     if (!projectData.location?.trim()) {
       errors.push('La localisation du projet est obligatoire');
     }
-    
+
     if (!projectData.budget || projectData.budget <= 0) {
       errors.push('Le budget doit être supérieur à 0');
     }
-    
+
     if (phases.some(phase => !phase.name?.trim())) {
       errors.push('Toutes les phases doivent avoir un nom');
     }
-    
+
     if (milestones.some(milestone => !milestone.title?.trim())) {
       errors.push('Tous les jalons doivent avoir un titre');
     }
-    
+
     return errors;
   };
 
   const handleSave = async () => {
     try {
       setLoading(true);
-      
+
       const errors = validateProject();
       if (errors.length > 0) {
         toast({
-          title: 'Erreurs de validation',
+          title: t('auto.projectcreatebydto.erreurs_de_validation'),
           description: errors.join(', '),
           variant: 'destructive'
         });
@@ -210,16 +212,16 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
       // par ProjectWorkflowService côté caller (onSave).
 
       toast({
-        title: 'Projet créé',
-        description: 'Le projet a été créé avec succès'
+        title: t('auto.projectcreatebydto.projet_cree'),
+        description: t('auto.projectcreatebydto.le_projet_a_ete_cree_avec_succes')
       });
 
       onSave(fullProjectData);
     } catch (error) {
       console.error('Error saving project:', error);
       toast({
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder le projet',
+        title: t('auto.projectcreatebydto.erreur'),
+        description: t('auto.projectcreatebydto.impossible_de_sauvegarder_le_projet'),
         variant: 'destructive'
       });
     } finally {
@@ -263,7 +265,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                   id="title"
                   value={projectData.title || ''}
                   onChange={(e) => handleBasicInfoChange('title', e.target.value)}
-                  placeholder="Entrez le titre du projet"
+                  placeholder={t('auto.projectcreatebydto.entrez_le_titre_du_projet')}
                 />
               </div>
 
@@ -273,7 +275,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                   id="description"
                   value={projectData.description || ''}
                   onChange={(e) => handleBasicInfoChange('description', e.target.value)}
-                  placeholder="Décrivez le projet"
+                  placeholder={t('auto.projectcreatebydto.decrivez_le_projet')}
                   rows={3}
                 />
               </div>
@@ -285,7 +287,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     id="location"
                     value={projectData.location || ''}
                     onChange={(e) => handleBasicInfoChange('location', e.target.value)}
-                    placeholder="Ville, Région"
+                    placeholder={t('auto.projectcreatebydto.ville_region')}
                   />
                 </div>
 
@@ -341,7 +343,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     id="financingSource"
                     value={projectData.financingSource || ''}
                     onChange={(e) => handleBasicInfoChange('financingSource', e.target.value)}
-                    placeholder="Budget national, privé..."
+                    placeholder={t('auto.projectcreatebydto.budget_national_prive')}
                   />
                 </div>
 
@@ -349,7 +351,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                   <Label htmlFor="marketType"><T k="auto.projectcreatebydto.type_de_marche" fallback="Type de marché" /></Label>
                   <Select value={projectData.marketType || ''} onValueChange={(value) => handleBasicInfoChange('marketType', value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner" />
+                      <SelectValue placeholder={t('auto.projectcreatebydto.selectionner')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="public"><T k="auto.projectcreatebydto.public" fallback="Public" /></SelectItem>
@@ -395,7 +397,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     <Input
                       value={phase.name || ''}
                       onChange={(e) => updatePhase(index, 'name', e.target.value)}
-                      placeholder="Nom de la phase"
+                      placeholder={t('auto.projectcreatebydto.nom_de_la_phase')}
                     />
                   </div>
 
@@ -432,8 +434,8 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
                     <div>
                       <Label><T k="auto.projectcreatebydto.niveau_de_risque" fallback="Niveau de risque" /></Label>
-                      <Select 
-                        value={phase.riskLevel || 'low'} 
+                      <Select
+                        value={phase.riskLevel || 'low'}
                         onValueChange={(value) => updatePhase(index, 'riskLevel', value)}
                       >
                         <SelectTrigger>
@@ -485,7 +487,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     <Input
                       value={milestone.title || ''}
                       onChange={(e) => updateMilestone(index, 'title', e.target.value)}
-                      placeholder="Titre du jalon"
+                      placeholder={t('auto.projectcreatebydto.titre_du_jalon')}
                     />
                   </div>
 
@@ -494,7 +496,7 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
                     <Textarea
                       value={milestone.description || ''}
                       onChange={(e) => updateMilestone(index, 'description', e.target.value)}
-                      placeholder="Description du jalon"
+                      placeholder={t('auto.projectcreatebydto.description_du_jalon')}
                       rows={2}
                     />
                   </div>
@@ -511,8 +513,8 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
                     <div>
                       <Label><T k="auto.projectcreatebydto.priorite" fallback="Priorité" /></Label>
-                      <Select 
-                        value={milestone.priority || 'medium'} 
+                      <Select
+                        value={milestone.priority || 'medium'}
                         onValueChange={(value) => updateMilestone(index, 'priority', value)}
                       >
                         <SelectTrigger>
@@ -529,8 +531,8 @@ export function ProjectCreateByDTO({ onSave, onCancel }: ProjectCreateByDTOProps
 
                     <div>
                       <Label><T k="auto.projectcreatebydto.etape" fallback="Étape" /></Label>
-                      <Select 
-                        value={milestone.stage || 'conception'} 
+                      <Select
+                        value={milestone.stage || 'conception'}
                         onValueChange={(value) => updateMilestone(index, 'stage', value)}
                       >
                         <SelectTrigger>

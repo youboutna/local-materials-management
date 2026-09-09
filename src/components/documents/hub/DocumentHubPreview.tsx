@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { DocumentItem, DocumentHubContract, formatBytes, getPreviewKind } from './types';
 import { MimeIcon } from './MimeIcon';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   item: DocumentItem | null;
@@ -28,6 +29,7 @@ interface Props {
  * underlying storage URL is never exposed in the DOM (iframe src / anchor href).
  */
 export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props) {
+  const { t } = useLanguage();
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
   const [loadingBlob, setLoadingBlob] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
               </div>
               {proxy && (
                 <span
-                  title="Accès sécurisé via passerelle — l'URL de stockage n'est pas exposée"
+                  title={t('auto.documenthubpreview.acces_securise_via_passerelle_l_url_de_stockage_')}
                   className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
                 >
                   <ShieldCheck className="h-3 w-3" /> <T k="auto.documenthubpreview.proxy" fallback="Proxy" />

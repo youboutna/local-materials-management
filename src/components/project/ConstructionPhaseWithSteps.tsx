@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * Construction Phase Component with Steps from Referential
  * Uses hexagonal architecture with proper service delegation
@@ -22,11 +23,12 @@ interface ConstructionPhaseWithStepsProps {
   onPhaseUpdate?: (phase: any) => void;
 }
 
-export function ConstructionPhaseWithSteps({ 
-  projectId, 
-  referentialCode, 
-  onPhaseUpdate 
+export function ConstructionPhaseWithSteps({
+  projectId,
+  referentialCode,
+  onPhaseUpdate
 }: ConstructionPhaseWithStepsProps) {
+  const { t } = useLanguage();
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -46,7 +48,7 @@ export function ConstructionPhaseWithSteps({
     try {
       toast({ title: "Succès", description: `Phases créées depuis le référentiel ${refCode}` });
     } catch (error) {
-      toast({ title: "Erreur", description: 'Échec de création des phases', variant: 'destructive' });
+      toast({ title: "Erreur", description: t('auto.constructionphasewithsteps.echec_de_creation_des_phases'), variant: 'destructive' });
     }
   };
 
@@ -55,7 +57,7 @@ export function ConstructionPhaseWithSteps({
     try {
       toast({ title: "Succès", description: `Progression mise à jour à ${progress}%` });
     } catch (error) {
-      toast({ title: "Erreur", description: 'Échec de mise à jour', variant: 'destructive' });
+      toast({ title: "Erreur", description: t('auto.constructionphasewithsteps.echec_de_mise_a_jour'), variant: 'destructive' });
     }
   };
 
@@ -102,7 +104,7 @@ export function ConstructionPhaseWithSteps({
         </div>
         <div className="space-x-2">
           {referentialCode && (
-            <Button 
+            <Button
               onClick={() => handleCreatePhasesFromReferential(referentialCode)}
               variant="outline"
             >
@@ -114,8 +116,8 @@ export function ConstructionPhaseWithSteps({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {phases.map((phase) => (
-          <Card 
-            key={phase.id} 
+          <Card
+            key={phase.id}
             className={`cursor-pointer transition-all ${
               selectedPhaseId === phase.id ? 'ring-2 ring-primary' : ''
             }`}

@@ -17,13 +17,13 @@ import {
   getInspectionStatus,
   getInspectionStatusLabel,
 } from '@/config/referentials/inspections/inspection-statuses.referential';
-import { 
-  Calendar, 
-  Bell, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
-  Send, 
+import {
+  Calendar,
+  Bell,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Send,
   Eye,
   Users,
   UserCheck,
@@ -43,7 +43,7 @@ import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
-import { 
+import {
   useInspectionMonitoringHex,
   type MonitoringInspection
 } from '@/hooks/hexagonal'
@@ -52,20 +52,22 @@ import { T } from '@/components/i18n/T';
 // ✅ IMPORT entityLabels
 import { getEntityLabel } from '@/utils/entityLabels';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const RoleBasedInspectionMonitoring = () => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   // Get dynamic user roles
   const { hasAnyRole, userRoles } = useCurrentUserRoles();
   const userRole = userRoles[0] || 'viewer';
-  
+
   // ✅ Récupérer les projets pour les labels
   const { projects = [] } = useProjectsHex();
-  
+
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -100,7 +102,7 @@ const RoleBasedInspectionMonitoring = () => {
   const sendAlertToHierarchy = async (inspectionId: string, message: string) => {
     sendNotification({
       recipientId: user?.id ?? '',
-      title: 'Inspection en retard',
+      title: t('auto.rolebasedinspectionmonitoring.inspection_en_retard'),
       message,
       type: 'warning',
       relatedId: inspectionId,
@@ -175,14 +177,14 @@ const RoleBasedInspectionMonitoring = () => {
 
   const handleSaveEdit = async () => {
     if (!editingInspection) return;
-    
+
     try {
       console.log('Edit inspection:', { id: editingInspection.id, data: editFormData });
       toast({
         title: "Succès",
         description: "Inspection mise à jour",
       });
-      
+
       setIsEditDialogOpen(false);
       setEditingInspection(null);
     } catch (error) {
@@ -192,7 +194,7 @@ const RoleBasedInspectionMonitoring = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette inspection ?')) return;
-    
+
     try {
       console.log('Delete inspection:', id);
       toast({
@@ -238,11 +240,11 @@ const RoleBasedInspectionMonitoring = () => {
   };
 
   // ✅ RÉSOLUTION DES LABELS POUR L'AFFICHAGE
-  const projectLabel = projectId 
+  const projectLabel = projectId
     ? getEntityLabel(projectId, projects, 'project')
     : '';
 
-  const phaseLabel = phaseId 
+  const phaseLabel = phaseId
     ? getEntityLabel(phaseId, projects, 'phase')
     : '';
 
@@ -279,47 +281,47 @@ const RoleBasedInspectionMonitoring = () => {
             {phaseId && projectId && ' / '}
             {projectId && <strong>projet {projectLabel || projectId.slice(0, 8)}…</strong>}
           </span>
-          <Button variant="ghost" size="sm" onClick={clearScope} aria-label="Effacer le filtre">
+          <Button variant="ghost" size="sm" onClick={clearScope} aria-label={t('auto.rolebasedinspectionmonitoring.effacer_le_filtre')}>
             <T k="auto.rolebasedinspectionmonitoring.effacer" fallback="Effacer" />
           </Button>
         </div>
       )}
 
       {/* Overdue Inspections */}
-      {inspections.filter(i => 
-        new Date(i.date) < new Date() && 
+      {inspections.filter(i =>
+        new Date(i.date) < new Date() &&
         !['completed', 'approved'].includes(i.status)
       ).length > 0 && (
         <div className="border-l-4 border-red-500 pl-4">
           <h4 className="font-semibold text-destructive mb-2"> <T k="auto.rolebasedinspectionmonitoring.inspections_en_retard" fallback="Inspections en retard" /></h4>
           <div className="space-y-2">
             {inspections
-              .filter(i => 
-                new Date(i.date) < new Date() && 
+              .filter(i =>
+                new Date(i.date) < new Date() &&
                 !['completed', 'approved'].includes(i.status)
               )
               .map(inspection => {
                 // ✅ RÉSOLUTION DU LABEL DU PROJET
                 const inspectionProjectLabel = getEntityLabel(inspection.project_id, projects, 'project');
-                
+
                 return (
                   <div key={inspection.id} className="flex items-center justify-between bg-destructive/10 p-3 rounded">
                     <div>
                       <p className="font-medium">{inspectionProjectLabel}</p>
                       <p className="text-sm text-muted-foreground">
-                        Inspecteur: {inspection.inspector} • 
-                        Date prévue: {new Date(inspection.date).toLocaleDateString('fr-FR')} • 
+                        Inspecteur: {inspection.inspector} •
+                        Date prévue: {new Date(inspection.date).toLocaleDateString('fr-FR')} •
                         Retard: {Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
                       </p>
                     </div>
                     <div className="flex gap-2">
                       {getStatusBadge(inspection.status)}
                       {isProjectManager && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="destructive"
                           onClick={() => sendAlertToHierarchy(
-                            inspection.id, 
+                            inspection.id,
                             `URGENT: Inspection en retard de ${Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s) pour le projet "${inspectionProjectLabel}" (Inspecteur: ${inspection.inspector})`
                           )}
                         >
@@ -352,18 +354,18 @@ const RoleBasedInspectionMonitoring = () => {
                 <Input
                   id="search"
                   type="search"
-                  placeholder="Rechercher par inspecteur, commentaires ou ID..."
+                  placeholder={t('auto.rolebasedinspectionmonitoring.rechercher_par_inspecteur_commentaires_ou_id')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
-                  aria-label="Rechercher des inspections"
+                  aria-label={t('auto.rolebasedinspectionmonitoring.rechercher_des_inspections')}
                 />
               </div>
             </div>
             <div className="w-48">
               <Label htmlFor="status"><T k="auto.rolebasedinspectionmonitoring.statut" fallback="Statut" /></Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger id="status" aria-label="Filtrer par statut">
+                <SelectTrigger id="status" aria-label={t('auto.rolebasedinspectionmonitoring.filtrer_par_statut')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -402,7 +404,7 @@ const RoleBasedInspectionMonitoring = () => {
               {paginatedInspections.map((inspection) => {
                 // ✅ RÉSOLUTION DU LABEL DU PROJET POUR LE LIEN
                 const inspectionProjectLabel = getEntityLabel(inspection.project_id, projects, 'project');
-                
+
                 return (
                   <TableRow key={inspection.id}>
                     <TableCell className="font-mono text-sm">
@@ -431,7 +433,7 @@ const RoleBasedInspectionMonitoring = () => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${inspection.progress_at_inspection || 0}%` }}
                           ></div>
@@ -447,7 +449,7 @@ const RoleBasedInspectionMonitoring = () => {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" aria-label="Actions sur l'inspection">
+                          <Button variant="ghost" size="sm" aria-label={t('auto.rolebasedinspectionmonitoring.actions_sur_l_inspection')}>
                             <Settings className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -464,7 +466,7 @@ const RoleBasedInspectionMonitoring = () => {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {isAdmin && (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleDelete(inspection.id)}
                               className="text-destructive"
                             >
@@ -560,7 +562,7 @@ const RoleBasedInspectionMonitoring = () => {
                 value={editFormData.comments}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, comments: e.target.value }))}
                 rows={4}
-                placeholder="Ajouter des commentaires sur l'inspection..."
+                placeholder={t('auto.rolebasedinspectionmonitoring.ajouter_des_commentaires_sur_l_inspection')}
               />
             </div>
             <div className="flex justify-end gap-2">

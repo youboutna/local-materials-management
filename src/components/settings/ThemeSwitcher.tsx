@@ -16,6 +16,7 @@ import { Check, Moon, Palette, Sun } from 'lucide-react';
 import { useUiTheme } from '@/contexts/UiThemeContext';
 import { cn } from '@/lib/utils';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ThemeSwitcherProps {
   className?: string;
@@ -24,6 +25,7 @@ interface ThemeSwitcherProps {
 }
 
 const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ className, showLabel = false }) => {
+  const { t } = useLanguage();
   const { theme, themes, themeId, setThemeId, darkMode, toggleDarkMode } = useUiTheme();
 
   return (
@@ -33,7 +35,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ className, showLabel = fa
           variant="ghost"
           size={showLabel ? 'sm' : 'icon'}
           className={cn('gap-2', className)}
-          aria-label="Changer de thème"
+          aria-label={t('auto.themeswitcher.changer_de_theme')}
         >
           <Palette className="h-4 w-4" />
           {showLabel && <span className="text-xs">{theme.label}</span>}

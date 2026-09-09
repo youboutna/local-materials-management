@@ -15,7 +15,7 @@ import * as z from 'zod';
 import { Shield, AlertTriangle, CheckCircle, Calendar, FileText, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InsuranceService, getInsuranceService} from '@/application/services/InsuranceService';
-import { 
+import {
   InsuranceType,
   InsuranceStatus,
   CreateInsuranceRequestDTO,
@@ -25,6 +25,7 @@ import {
   InsuranceCertificateDTO
 } from '@/dtos/entities/InsuranceDTO';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const insuranceFormSchema = z.object({
   projectId: z.string().min(1, 'ID projet requis'),
@@ -41,6 +42,7 @@ const insuranceFormSchema = z.object({
 });
 
 const InsuranceCertificateManager = () => {
+  const { t } = useLanguage();
   const [alerts, setAlerts] = useState<InsuranceAlertDTO[]>([]);
   const [certificates, setCertificates] = useState<InsuranceCertificateDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,12 +104,12 @@ const InsuranceCertificateManager = () => {
         insuranceType: values.coverageType,
         status: 'active'
       } as any);
-      
+
       toast({
         title: "Succès",
         description: "Certificat d'assurance créé avec succès"
       });
-      
+
       form.reset();
       setIsDialogOpen(false);
       loadInsuranceData();
@@ -211,7 +213,7 @@ const InsuranceCertificateManager = () => {
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name="contractorName"
@@ -219,7 +221,7 @@ const InsuranceCertificateManager = () => {
                       <FormItem>
                         <FormLabel><T k="auto.insurancecertificatemanager.nom_entrepreneur" fallback="Nom Entrepreneur" /></FormLabel>
                         <FormControl>
-                          <Input placeholder="Entreprise BTP..." {...field} />
+                          <Input placeholder={t('auto.insurancecertificatemanager.entreprise_btp')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -234,7 +236,7 @@ const InsuranceCertificateManager = () => {
                         <FormItem>
                           <FormLabel><T k="auto.insurancecertificatemanager.compagnie_d_assurance" fallback="Compagnie d'Assurance" /></FormLabel>
                           <FormControl>
-                            <Input placeholder="Assurances Générales..." {...field} />
+                            <Input placeholder={t('auto.insurancecertificatemanager.assurances_generales')} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -247,7 +249,7 @@ const InsuranceCertificateManager = () => {
                         <FormItem>
                           <FormLabel><T k="auto.insurancecertificatemanager.numero_de_police" fallback="Numéro de Police" /></FormLabel>
                           <FormControl>
-                            <Input placeholder="POL-789..." {...field} />
+                            <Input placeholder={t('auto.insurancecertificatemanager.pol_789')} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -265,7 +267,7 @@ const InsuranceCertificateManager = () => {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Sélectionner le type" />
+                                <SelectValue placeholder={t('auto.insurancecertificatemanager.selectionner_le_type')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -287,9 +289,9 @@ const InsuranceCertificateManager = () => {
                         <FormItem>
                           <FormLabel><T k="auto.insurancecertificatemanager.montant_couverture_mru" fallback="Montant Couverture (MRU)" /></FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="1000000" 
+                            <Input
+                              type="number"
+                              placeholder="1000000"
                               {...field}
                               onChange={(e) => field.onChange(Number(e.target.value))}
                             />
@@ -350,7 +352,7 @@ const InsuranceCertificateManager = () => {
                       <FormItem>
                         <FormLabel><T k="auto.insurancecertificatemanager.notes_optionnel" fallback="Notes (optionnel)" /></FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Notes additionnelles..." {...field} />
+                          <Textarea placeholder={t('auto.insurancecertificatemanager.notes_additionnelles')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -411,7 +413,7 @@ const InsuranceCertificateManager = () => {
                         </CardDescription>
                       </div>
                       <Badge variant={getAlertBadgeVariant(alert.alertLevel || 'warning')}>
-                        {alert.alertLevel === 'expired' ? 'Expirée' : 
+                        {alert.alertLevel === 'expired' ? 'Expirée' :
                          alert.alertLevel === 'critical' ? 'Critique' : 'Attention'}
                       </Badge>
                     </div>

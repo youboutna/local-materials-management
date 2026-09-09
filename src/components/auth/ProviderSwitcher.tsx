@@ -15,6 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { AUTH_PROVIDERS, AUTH_ERROR_MESSAGES, AUTH_SUCCESS_MESSAGES } from '@/config/auth';
 import { AuthProvider } from '@/config/app';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProviderSwitcherProps {
   className?: string;
@@ -23,19 +24,20 @@ interface ProviderSwitcherProps {
   compact?: boolean;
 }
 
-export function ProviderSwitcher({ 
-  className, 
-  showCurrentProvider = true, 
-  showStatus = true, 
-  compact = false 
+export function ProviderSwitcher({
+  className,
+  showCurrentProvider = true,
+  showStatus = true,
+  compact = false
 }: ProviderSwitcherProps) {
-  const { 
-    currentProvider, 
-    supportedProviders, 
-    switchProvider, 
-    loading 
+  const { t } = useLanguage();
+  const {
+    currentProvider,
+    supportedProviders,
+    switchProvider,
+    loading
   } = useAuth();
-  
+
   const [isSwitching, setIsSwitching] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>(currentProvider || 'supabase');
   const [providerStatus, setProviderStatus] = useState<Record<string, 'available' | 'unavailable' | 'error' | 'testing'>>({
@@ -47,16 +49,16 @@ export function ProviderSwitcher({
 
   const handleSwitchProvider = async (provider: string) => {
     if (provider === currentProvider) return;
-    
+
     setIsSwitching(true);
     setProviderStatus(prev => ({ ...prev, [provider]: 'testing' }));
-    
+
     try {
       await switchProvider({ provider: provider as AuthProvider });
-      
+
       setProviderStatus(prev => ({ ...prev, [provider]: 'available' }));
       setSelectedProvider(provider);
-      
+
       toast({
         title: AUTH_SUCCESS_MESSAGES.PROVIDER_SWITCHED.replace('{provider}', provider),
         description: `Successfully switched to ${provider} authentication.`,
@@ -64,13 +66,13 @@ export function ProviderSwitcher({
     } catch (error) {
       console.error('❌ Provider switch failed:', error);
       setProviderStatus(prev => ({ ...prev, [provider]: 'error' }));
-      
+
       toast({
         title: AUTH_ERROR_MESSAGES.PROVIDER_SWITCH_FAILED,
         description: `Failed to switch to ${provider}. Please try again.`,
         variant: "destructive"
       });
-      
+
       // Reset to current provider
       setSelectedProvider(currentProvider);
     } finally {
@@ -80,7 +82,7 @@ export function ProviderSwitcher({
 
   const testProvider = async (provider: string) => {
     setProviderStatus(prev => ({ ...prev, [provider]: 'testing' }));
-    
+
     // Simulate provider test
     setTimeout(() => {
       const isAvailable = ['supabase', 'keycloak', 'auth0', 'custom'].includes(provider);
@@ -133,7 +135,7 @@ export function ProviderSwitcher({
             <span className="text-sm font-medium"><T k="auto.providerswitcher.provider" fallback="Provider:" /></span>
             <Select value={selectedProvider} onValueChange={handleSwitchProvider} disabled={isSwitching}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder="Select provider" />
+                <SelectValue placeholder={t('auto.providerswitcher.select_provider')} />
               </SelectTrigger>
               <SelectContent>
                 {supportedProviders.map((provider) => (
@@ -179,7 +181,7 @@ export function ProviderSwitcher({
         <div className="flex items-center gap-4">
           <Select value={selectedProvider} onValueChange={handleSwitchProvider} disabled={isSwitching}>
             <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Select authentication provider" />
+              <SelectValue placeholder={t('auto.providerswitcher.select_authentication_provider')} />
             </SelectTrigger>
             <SelectContent>
                 {supportedProviders.map((provider) => (

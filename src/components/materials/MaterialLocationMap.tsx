@@ -5,6 +5,7 @@ import ProjectMap from '@/components/ProjectMap';
 import { MapLocation } from '@/domain/entities/Location';
 import UnifiedLocationSelector from '../location/UnifiedLocationSelector';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MaterialLocationMapProps {
   material: {
@@ -32,6 +33,7 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
   className = "",
   onLocationUpdate
 }) => {
+  const { t } = useLanguage();
   // Create map location from material data
   const mapLocations: MapLocation[] = [];
 
@@ -73,7 +75,7 @@ const MaterialLocationMap: React.FC<MaterialLocationMapProps> = ({
               cityCode: loc.cityCode,
             });
           }}
-          placeholder="Rechercher une localisation pour ce matériau..."
+          placeholder={t('auto.materiallocationmap.rechercher_une_localisation_pour_ce_materiau')}
           filter="all"
           className="w-full"
         />

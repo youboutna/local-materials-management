@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { BoqReconciliationService } from '@/application/services/boq/BoqReconciliationService';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { DetectedFiscal } from '@/application/services/boq/parsers/IDocumentParser';
+import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   lines: BoqLineDTO[];
@@ -21,11 +23,12 @@ const fmt = (n: number | null) =>
   n == null ? '—' : `${n.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} MRU`;
 
 export function ReconciliationPanel({ lines, detectedFiscal, onFixQuantity }: Props) {
+  const { t } = useLanguage();
   const report = BoqReconciliationService.reconcile(lines, detectedFiscal ?? null);
   const ok = report.balanced && report.anomalies.length === 0;
 
   return (
-    <section className="rounded-md border p-3 text-sm" aria-label="Contrôle de réconciliation">
+    <section className="rounded-md border p-3 text-sm" aria-label={t('auto.reconciliationpanel.controle_de_reconciliation')}>
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h4 className="flex items-center gap-2 font-medium">
           {ok ? (
@@ -46,11 +49,11 @@ export function ReconciliationPanel({ lines, detectedFiscal, onFixQuantity }: Pr
           <dd className="font-medium">{fmt(report.computedHt)}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt>Total HT du document</dt>
+          <dt><T k="auto.reconciliationpanel.total_ht_du_document" fallback="Total HT du document" /></dt>
           <dd className="font-medium">{fmt(report.declaredHt)}</dd>
         </div>
         <div className="flex justify-between gap-2">
-          <dt>Écart</dt>
+          <dt><T k="auto.reconciliationpanel.ecart" fallback="Écart" /></dt>
           <dd className={report.balanced ? 'font-medium' : 'font-semibold text-destructive'}>
             {fmt(report.deltaHt)}
             {report.deltaRatio != null && ` (${(report.deltaRatio * 100).toFixed(2)} %)`}

@@ -57,11 +57,11 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   const { projects = [] } = useProjectsHex();
 
   // ✅ RÉSOLUTION DES LABELS
-  const projectLabel = projectId 
+  const projectLabel = projectId
     ? getEntityLabel(projectId, projects, 'project')
     : 'Projet inconnu';
-  
-  const contractorLabel = contractorId 
+
+  const contractorLabel = contractorId
     ? getEntityLabel(contractorId, projects, 'supplier')
     : 'Contractant inconnu';
 
@@ -88,33 +88,33 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
   });
 
   const actionTypes = [
-    { value: 'task_assignment' as ActionType, label: 'Assignation de tâche', icon: Briefcase },
-    { value: 'hierarchy_notification' as ActionType, label: 'Notification hiérarchique', icon: Users },
-    { value: 'sms' as ActionType, label: 'SMS', icon: MessageSquare },
-    { value: 'call' as ActionType, label: 'Appel téléphonique', icon: Phone },
-    { value: 'email' as ActionType, label: 'Email', icon: Mail },
-    { value: 'mail' as ActionType, label: 'Courrier postal', icon: Send }
+    { value: 'task_assignment' as ActionType, label: t('auto.paymentcontrolactions.assignation_de_tache'), icon: Briefcase },
+    { value: 'hierarchy_notification' as ActionType, label: t('auto.paymentcontrolactions.notification_hierarchique'), icon: Users },
+    { value: 'sms' as ActionType, label: t('auto.paymentcontrolactions.sms'), icon: MessageSquare },
+    { value: 'call' as ActionType, label: t('auto.paymentcontrolactions.appel_telephonique'), icon: Phone },
+    { value: 'email' as ActionType, label: t('auto.paymentcontrolactions.email'), icon: Mail },
+    { value: 'mail' as ActionType, label: t('auto.paymentcontrolactions.courrier_postal'), icon: Send }
   ];
 
   const priorityLevels = [
-    { value: 'low', label: 'Faible', color: 'bg-success-soft text-success' },
-    { value: 'medium', label: 'Moyen', color: 'bg-primary/10 text-primary' },
-    { value: 'high', label: 'Élevé', color: 'bg-warning/10 text-warning' },
-    { value: 'urgent', label: 'Urgent', color: 'bg-destructive/10 text-destructive' }
+    { value: 'low', label: t('auto.paymentcontrolactions.faible'), color: 'bg-success-soft text-success' },
+    { value: 'medium', label: t('auto.paymentcontrolactions.moyen'), color: 'bg-primary/10 text-primary' },
+    { value: 'high', label: t('auto.paymentcontrolactions.eleve'), color: 'bg-warning/10 text-warning' },
+    { value: 'urgent', label: t('auto.paymentcontrolactions.urgent'), color: 'bg-destructive/10 text-destructive' }
   ];
 
   const escalationLevels = [
-    { value: 'team', label: 'Équipe (Collègues)' },
-    { value: 'supervisor', label: 'Superviseur' },
-    { value: 'manager', label: 'Manager' },
-    { value: 'director', label: 'Directeur' }
+    { value: 'team', label: t('auto.paymentcontrolactions.equipe_collegues') },
+    { value: 'supervisor', label: t('auto.paymentcontrolactions.superviseur') },
+    { value: 'manager', label: t('auto.paymentcontrolactions.manager') },
+    { value: 'director', label: t('auto.paymentcontrolactions.directeur') }
   ];
 
   const notificationChannels = [
-    { value: 'email', label: 'Email' },
-    { value: 'sms', label: 'SMS' },
-    { value: 'push', label: 'Notification push' },
-    { value: 'system', label: 'Notification système' }
+    { value: 'email', label: t('auto.paymentcontrolactions.email') },
+    { value: 'sms', label: t('auto.paymentcontrolactions.sms') },
+    { value: 'push', label: t('auto.paymentcontrolactions.notification_push') },
+    { value: 'system', label: t('auto.paymentcontrolactions.notification_systeme') }
   ];
 
   const getActionIcon = (actionType: string) => {
@@ -174,7 +174,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
 
   const renderActionTypeFields = () => {
     const actionType = form.watch('actionType');
-    
+
     switch (actionType) {
       case 'task_assignment':
         return (
@@ -188,7 +188,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                   <UserSelector
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Sélectionner un utilisateur"
+                    placeholder={t('auto.paymentcontrolactions.selectionner_un_utilisateur')}
                   />
                 </FormControl>
                 <FormMessage />
@@ -196,7 +196,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
             )}
           />
         );
-      
+
       case 'hierarchy_notification':
         return (
           <FormField
@@ -208,7 +208,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un niveau" />
+                      <SelectValue placeholder={t('auto.paymentcontrolactions.selectionner_un_niveau')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -224,7 +224,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
             )}
           />
         );
-      
+
       default:
         return null;
     }
@@ -239,7 +239,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
         </CardTitle>
         <CardDescription>
           {/* ✅ AFFICHAGE DES LABELS AU LIEU DES IDS */}
-          Actions disponibles pour le paiement de {amount.toLocaleString()} MRU — 
+          Actions disponibles pour le paiement de {amount.toLocaleString()} MRU —
           Projet: {projectLabel} — Contractant: {contractorLabel}
           <span className="block text-xs text-muted-foreground mt-1">
             <a href={`/payments/${paymentId}`} className="text-primary hover:underline">
@@ -301,7 +301,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                             <FormItem>
                               <FormLabel><T k="auto.paymentcontrolactions.titre" fallback="Titre" /></FormLabel>
                               <FormControl>
-                                <Input placeholder="Titre de l'action" {...field} />
+                                <Input placeholder={t('auto.paymentcontrolactions.titre_de_l_action')} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -345,10 +345,10 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                           <FormItem>
                             <FormLabel><T k="auto.paymentcontrolactions.message" fallback="Message" /></FormLabel>
                             <FormControl>
-                              <Textarea 
-                                placeholder="Description détaillée de l'action" 
+                              <Textarea
+                                placeholder={t('auto.paymentcontrolactions.description_detaillee_de_l_action')}
                                 rows={4}
-                                {...field} 
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />
@@ -366,7 +366,7 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                               <UserSelector
                                 value={field.value?.[0] || ''}
                                 onChange={(val) => field.onChange([val])}
-                                placeholder="Sélectionner un destinataire"
+                                placeholder={t('auto.paymentcontrolactions.selectionner_un_destinataire')}
                               />
                             </FormControl>
                             <FormMessage />
@@ -444,9 +444,9 @@ const PaymentControlActions: React.FC<PaymentControlActionsProps> = ({
                       />
 
                       <div className="flex justify-end gap-2 pt-4">
-                        <Button 
-                          type="button" 
-                          variant="outline" 
+                        <Button
+                          type="button"
+                          variant="outline"
                           onClick={() => setIsDialogOpen(false)}
                         >
                           <T k="auto.paymentcontrolactions.annuler" fallback="Annuler" />

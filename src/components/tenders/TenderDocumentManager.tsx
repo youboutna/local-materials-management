@@ -34,12 +34,14 @@ import { T } from '@/components/i18n/T';
 // ✅ IMPORT entityLabels
 import { getEntityLabel } from '@/utils/entityLabels';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * TenderEstimateBoq — remplace le legacy TenderQuantitativeEstimate.
  * Utilise le noyau BOQ composable (source = 'tender_estimate') via hooks hex.
  */
 const TenderEstimateBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
+  const { t } = useLanguage();
   const boq = useBoqDocument({ source: 'tender_estimate', contextId: tenderId });
   return (
     <div className="space-y-3">
@@ -47,7 +49,7 @@ const TenderEstimateBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
         <BoqImportDialog
           source="tender_estimate"
           contextId={tenderId}
-          title="Importer un DQE prévisionnel"
+          title={t('auto.tenderdocumentmanager.importer_un_dqe_previsionnel')}
           trigger={
             <Button variant="outline" size="sm" className="gap-2">
               <Upload className="h-4 w-4" /> <T k="auto.tenderdocumentmanager.importer_dqe" fallback="Importer DQE" />
@@ -61,7 +63,7 @@ const TenderEstimateBoq: React.FC<{ tenderId: string }> = ({ tenderId }) => {
       ) : (
         <BoqLineTable
           lines={boq.lines}
-          emptyLabel="Aucune ligne d'estimation. Importez un DQE pour démarrer."
+          emptyLabel={t('auto.tenderdocumentmanager.aucune_ligne_d_estimation_importez_un_dqe_pour_d')}
         />
       )}
     </div>
@@ -93,10 +95,10 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   const { hasRole } = useCurrentUserRoles();
   const { uploadFile, uploading } = useDocumentStorage();
   const { data: tenderLots = [] } = useTenderLots(tenderId);
-  
+
   // ✅ Récupérer les projets pour les labels
   const { projects = [] } = useProjectsHex();
-  
+
   const lotOptions: LotOption[] = (tenderLots as any[]).map((l) => ({
     id: l.id,
     number: l.number ?? 1,
@@ -278,7 +280,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
          queryClient.invalidateQueries({ queryKey: ['estimate-items', data.estimateId] });
        }
        toast({
-        title: 'Document ajouté',
+        title: t('auto.tenderdocumentmanager.document_ajoute'),
         description: data?.addedCount && data.addedCount > 0
           ? `DQE analysé: ${data.addedCount} articles ajoutés au devis.`
           : 'Le document a été téléchargé avec succès.',
@@ -296,8 +298,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     onError: (error) => {
       console.error('Upload error:', error);
       toast({
-        title: 'Erreur',
-        description: 'Erreur lors du téléchargement du document.',
+        title: t('auto.tenderdocumentmanager.erreur'),
+        description: t('auto.tenderdocumentmanager.erreur_lors_du_telechargement_du_document'),
         variant: 'destructive',
       });
     },
@@ -317,8 +319,8 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
     e.preventDefault();
     if (!selectedFile) {
       toast({
-        title: 'Erreur',
-        description: 'Veuillez sélectionner un fichier.',
+        title: t('auto.tenderdocumentmanager.erreur'),
+        description: t('auto.tenderdocumentmanager.veuillez_selectionner_un_fichier'),
         variant: 'destructive',
       });
       return;
@@ -326,17 +328,17 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
 
     if (!uploadFormData.title.trim()) {
       toast({
-        title: 'Erreur',
-        description: 'Veuillez saisir un titre pour le document.',
+        title: t('auto.tenderdocumentmanager.erreur'),
+        description: t('auto.tenderdocumentmanager.veuillez_saisir_un_titre_pour_le_document'),
         variant: 'destructive',
       });
       return;
     }
 
     console.log('Starting upload mutation with:', { file: selectedFile, documentData: uploadFormData });
-    uploadMutation.mutate({ 
-      file: selectedFile, 
-      documentData: uploadFormData 
+    uploadMutation.mutate({
+      file: selectedFile,
+      documentData: uploadFormData
     });
   };
 
@@ -363,12 +365,12 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
   };
 
    const handleSubcategoryChange = (value: TenderDocumentSubcategory) => {
-     setUploadFormData(prev => ({ 
-       ...prev, 
+     setUploadFormData(prev => ({
+       ...prev,
        subcategory: value,
       category: (value as string) === 'devis_quantitatif_estimatif' ? 'financial' : prev.category,
      }));
-     
+
      // Show quantitative estimate component for "devis_quantitatif_estimatif"
      if ((value as string) === 'devis_quantitatif_estimatif') {
        setShowQuantitativeEstimate(true);
@@ -378,7 +380,7 @@ const TenderDocumentManager = ({ tenderId, projectId, readonly = false }: Tender
    };
 
   // ✅ RÉSOLUTION DU LABEL DU PROJET POUR LE BADGE
-  const projectLabel = projectId 
+  const projectLabel = projectId
     ? getEntityLabel(projectId, projects, 'project')
     : '';
 

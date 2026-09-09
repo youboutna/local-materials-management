@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
   onRetry,
   showContactSupport = false
 }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const getErrorConfig = () => {
@@ -31,7 +33,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
           description: description || 'La page que vous recherchez n\'existe pas ou a été déplacée.',
           actions: [
             { label: 'Retour à l\'accueil', icon: Home, action: () => navigate('/'), variant: 'default' as const },
-            { label: 'Page précédente', action: () => window.history.back(), variant: 'outline' as const }
+            { label: t('auto.errorpage.page_precedente'), action: () => window.history.back(), variant: 'outline' as const }
           ]
         };
 
@@ -52,7 +54,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
           title: title || 'Erreur serveur',
           description: description || 'Une erreur interne s\'est produite. Notre équipe technique a été notifiée.',
           actions: [
-            { label: 'Réessayer', icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
+            { label: t('auto.errorpage.reessayer'), icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
             { label: 'Retour à l\'accueil', icon: Home, action: () => navigate('/'), variant: 'outline' as const }
           ]
         };
@@ -63,7 +65,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
           title: title || 'Service temporairement indisponible',
           description: description || 'Le service est en maintenance. Veuillez réessayer dans quelques minutes.',
           actions: [
-            { label: 'Réessayer', icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
+            { label: t('auto.errorpage.reessayer'), icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
             { label: 'Retour à l\'accueil', icon: Home, action: () => navigate('/'), variant: 'outline' as const }
           ]
         };
@@ -74,7 +76,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
           title: title || 'Problème de connexion',
           description: description || 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.',
           actions: [
-            { label: 'Réessayer', icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
+            { label: t('auto.errorpage.reessayer'), icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
             { label: 'Retour à l\'accueil', icon: Home, action: () => navigate('/'), variant: 'outline' as const }
           ]
         };
@@ -85,7 +87,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
           title: title || 'Une erreur s\'est produite',
           description: description || 'Une erreur inattendue s\'est produite.',
           actions: [
-            { label: 'Réessayer', icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
+            { label: t('auto.errorpage.reessayer'), icon: RefreshCw, action: onRetry || (() => window.location.reload()), variant: 'default' as const },
             { label: 'Retour à l\'accueil', icon: Home, action: () => navigate('/'), variant: 'outline' as const }
           ]
         };

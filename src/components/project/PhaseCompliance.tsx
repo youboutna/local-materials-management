@@ -33,6 +33,7 @@ import { ComplianceItemDTO, ComplianceType, ComplianceStatus, CompliancePriority
 
 import { TranslatedCategory, TranslatedPriority, TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { useLanguage } from '@/contexts/LanguageContext';
 interface PhaseComplianceProps {
   phaseId: string;
   projectId: string;
@@ -42,14 +43,15 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
   phaseId,
   projectId,
 }) => {
-  const { 
-    complianceItems, 
-    loading, 
-    createComplianceItem, 
+  const { t } = useLanguage();
+  const {
+    complianceItems,
+    loading,
+    createComplianceItem,
     updateComplianceItem,
-    refetch 
+    refetch
   } = useComplianceHex(phaseId);
-  
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ComplianceItemDTO | null>(null);
 
@@ -249,7 +251,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  placeholder="Titre de l'élément de conformité"
+                  placeholder={t('auto.phasecompliance.titre_de_l_element_de_conformite')}
                 />
               </div>
               <div>
@@ -260,7 +262,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Description détaillée"
+                  placeholder={t('auto.phasecompliance.description_detaillee')}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -308,7 +310,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                       responsiblePerson: e.target.value,
                     })
                   }
-                  placeholder="Personne responsable"
+                  placeholder={t('auto.phasecompliance.personne_responsable')}
                 />
               </div>
               <div>
@@ -319,7 +321,7 @@ const PhaseCompliance: React.FC<PhaseComplianceProps> = ({
                   onChange={(e) =>
                     setFormData({ ...formData, notes: e.target.value })
                   }
-                  placeholder="Notes additionnelles"
+                  placeholder={t('auto.phasecompliance.notes_additionnelles')}
                 />
               </div>
               <div className="flex justify-end gap-2">

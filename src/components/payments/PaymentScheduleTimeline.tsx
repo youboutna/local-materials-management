@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 /**
  * PaymentScheduleTimeline - Visual payment schedule with penalty alerts
  * MIGRATED TO HEXAGONAL ARCHITECTURE
@@ -54,6 +55,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
   onPaymentClick,
   onInitiatePayment
 }) => {
+  const { t } = useLanguage();
   const { payments: rawPayments, isLoading } = usePaymentsHex();
 
   // Transform payments to PaymentMilestone format
@@ -68,7 +70,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
     currentProgress: 0,
     phaseName: undefined
   }));
-  
+
   const totalAmount = projectBudget || payments.reduce((sum, p) => sum + p.amount, 0);
   const paidAmount = payments.filter(p => p.status === 'paid' || p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
   const overdueAmount = payments.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0);
@@ -78,16 +80,16 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
     switch (payment.status) {
       case 'paid':
       case 'completed':
-        return { icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10', label: 'Payé' };
+        return { icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10', label: t('auto.paymentscheduletimeline.paye') };
       case 'approved':
-        return { icon: Clock, color: 'text-primary', bgColor: 'bg-blue-500/10', label: 'Approuvé' };
+        return { icon: Clock, color: 'text-primary', bgColor: 'bg-blue-500/10', label: t('auto.paymentscheduletimeline.approuve') };
       case 'overdue':
-        return { icon: AlertTriangle, color: 'text-destructive', bgColor: 'bg-destructive/10', label: 'En retard' };
+        return { icon: AlertTriangle, color: 'text-destructive', bgColor: 'bg-destructive/10', label: t('auto.paymentscheduletimeline.en_retard') };
       case 'blocked':
-        return { icon: Bell, color: 'text-warning', bgColor: 'bg-amber-500/10', label: 'Bloqué' };
+        return { icon: Bell, color: 'text-warning', bgColor: 'bg-amber-500/10', label: t('auto.paymentscheduletimeline.bloque') };
       case 'pending':
       default:
-        return { icon: Clock, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'En attente' };
+        return { icon: Clock, color: 'text-muted-foreground', bgColor: 'bg-muted', label: t('auto.paymentscheduletimeline.en_attente') };
     }
   };
 
@@ -144,7 +146,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
 
           <div className={cn(
             "rounded-lg p-4 border",
-            overdueAmount > 0 
+            overdueAmount > 0
               ? "bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20"
               : "bg-muted/30 border-muted"
           )}>
@@ -162,7 +164,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
 
           <div className={cn(
             "rounded-lg p-4 border",
-            totalPenalties > 0 
+            totalPenalties > 0
               ? "bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20"
               : "bg-muted/30 border-muted"
           )}>
@@ -250,9 +252,9 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
                             Actuel: {payment.currentProgress}%
                           </span>
                         </div>
-                        <Progress 
-                          value={payment.currentProgress} 
-                          className="h-1.5" 
+                        <Progress
+                          value={payment.currentProgress}
+                          className="h-1.5"
                         />
                       </div>
 
@@ -261,7 +263,7 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
                         <div className="mt-2 flex items-center gap-2 text-xs text-destructive">
                           <AlertTriangle className="h-3.5 w-3.5" />
                           <span>
-                            Pénalité accumulée: {(payment.penaltyAccrued / 1000).toFixed(0)}K MRU 
+                            Pénalité accumulée: {(payment.penaltyAccrued / 1000).toFixed(0)}K MRU
                             ({(payment.penaltyRate! * 100).toFixed(2)}%/jour)
                           </span>
                         </div>
@@ -271,13 +273,13 @@ const PaymentScheduleTimeline: React.FC<PaymentScheduleTimelineProps> = ({
                     <div className="flex flex-col items-end gap-2">
                       {/* Days indicator */}
                       {payment.status === 'pending' && (
-                        <Badge 
+                        <Badge
                           variant={daysUntil <= 7 ? 'destructive' : daysUntil <= 14 ? 'secondary' : 'outline'}
                           className="text-xs"
                         >
-                          {daysUntil < 0 
+                          {daysUntil < 0
                             ? `${Math.abs(daysUntil)}j de retard`
-                            : daysUntil === 0 
+                            : daysUntil === 0
                               ? "Aujourd'hui"
                               : `Dans ${daysUntil}j`
                           }

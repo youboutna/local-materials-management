@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ interface LocalInspectionFormData {
 }
 
 const EnhancedInspectionCrud = () => {
+  const { t } = useLanguage();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
@@ -53,12 +55,12 @@ const EnhancedInspectionCrud = () => {
   } = useEnhancedInspectionCrudHex();
 
   const statusOptions = [
-    { value: 'scheduled', label: 'Programmée', color: 'bg-primary/10 text-primary', icon: Clock },
-    { value: 'in_progress', label: 'En cours', color: 'bg-warning/10 text-warning', icon: AlertCircle },
-    { value: 'completed', label: 'Terminée', color: 'bg-success-soft text-success', icon: CheckCircle },
-    { value: 'approved', label: 'Approuvée', color: 'bg-success-soft text-success', icon: CheckCircle },
-    { value: 'rejected', label: 'Rejetée', color: 'bg-destructive/10 text-destructive', icon: AlertCircle },
-    { value: 'cancelled', label: 'Annulée', color: 'bg-muted text-foreground', icon: AlertCircle }
+    { value: 'scheduled', label: t('auto.enhancedinspectioncrud.programmee'), color: 'bg-primary/10 text-primary', icon: Clock },
+    { value: 'in_progress', label: t('auto.enhancedinspectioncrud.en_cours'), color: 'bg-warning/10 text-warning', icon: AlertCircle },
+    { value: 'completed', label: t('auto.enhancedinspectioncrud.terminee'), color: 'bg-success-soft text-success', icon: CheckCircle },
+    { value: 'approved', label: t('auto.enhancedinspectioncrud.approuvee'), color: 'bg-success-soft text-success', icon: CheckCircle },
+    { value: 'rejected', label: t('auto.enhancedinspectioncrud.rejetee'), color: 'bg-destructive/10 text-destructive', icon: AlertCircle },
+    { value: 'cancelled', label: t('auto.enhancedinspectioncrud.annulee'), color: 'bg-muted text-foreground', icon: AlertCircle }
   ];
 
   const getStatusConfig = (status: string) => {
@@ -86,7 +88,7 @@ const EnhancedInspectionCrud = () => {
     const date = inspection.scheduledDate ? new Date(inspection.scheduledDate).toISOString().split('T')[0] : '';
     const progress = inspection.progress ?? 0;
     const phaseId = inspection.phaseId || '';
-    
+
     setFormData({
       projectId: projectId,
       inspector: inspection.inspector || '',
@@ -107,7 +109,7 @@ const EnhancedInspectionCrud = () => {
     const date = inspection.date ? new Date(inspection.date).toISOString().split('T')[0] : '';
     const progress = inspection.progress ?? 0;
     const phaseId = inspection.phaseId || '';
-    
+
     setFormData({
       projectId: projectId,
       inspector: inspection.inspector || '',
@@ -125,7 +127,7 @@ const EnhancedInspectionCrud = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const inspectionData = {
         projectId: formData.projectId,
@@ -313,7 +315,7 @@ const EnhancedInspectionCrud = () => {
                 const statusConfig = getStatusConfig(inspection.status);
                 const projectId = inspection.projectId || '';
                 const progress = inspection.progress ?? 0;
-                
+
                 return (
                   <TableRow key={inspection.id}>
                     <TableCell>{projectId}</TableCell>

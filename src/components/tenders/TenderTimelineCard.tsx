@@ -1,3 +1,4 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   evaluationDate,
   attributionDate
 }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const events: TimelineEvent[] = [];
   const now = new Date();
@@ -36,7 +38,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   if (launchDate) {
     events.push({
       date: launchDate,
-      label: 'Lancement',
+      label: t('auto.tendertimelinecard.lancement'),
       type: 'launch',
       status: isPast(new Date(launchDate)) ? 'completed' : 'upcoming'
     });
@@ -46,7 +48,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
     const deadline = new Date(deadlineDate);
     events.push({
       date: deadlineDate,
-      label: 'Date limite de soumission',
+      label: t('auto.tendertimelinecard.date_limite_de_soumission'),
       type: 'deadline',
       status: isPast(deadline) ? 'completed' : isFuture(deadline) ? 'active' : 'upcoming'
     });
@@ -55,7 +57,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   if (evaluationDate) {
     events.push({
       date: evaluationDate,
-      label: 'Évaluation',
+      label: t('auto.tendertimelinecard.evaluation'),
       type: 'evaluation',
       status: isPast(new Date(evaluationDate)) ? 'completed' : 'upcoming'
     });
@@ -64,7 +66,7 @@ export const TenderTimelineCard: React.FC<TenderTimelineCardProps> = ({
   if (attributionDate) {
     events.push({
       date: attributionDate,
-      label: 'Attribution',
+      label: t('auto.tendertimelinecard.attribution'),
       type: 'attribution',
       status: isPast(new Date(attributionDate)) ? 'completed' : 'upcoming'
     });

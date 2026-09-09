@@ -30,9 +30,9 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const { data: materials = [], isLoading } = useMaterialsSelector({ 
-    searchTerm, 
-    category: selectedCategory 
+  const { data: materials = [], isLoading } = useMaterialsSelector({
+    searchTerm,
+    category: selectedCategory
   });
 
   const categories = [...new Set(materials.map(m => m.category).filter(Boolean))];
@@ -60,10 +60,10 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
       });
       return;
     }
-    
+
     const materialToAdd = availableMaterials[0];
     onChange([...selectedMaterials, { materialId: materialToAdd.id, quantity: 1 }]);
-    
+
     toast({ title: "Matériau ajouté", description: `${materialToAdd.name} ajouté.` });
   };
 
@@ -123,11 +123,11 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label>{t('materials.category') || "Catégorie"}</Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger><SelectValue placeholder="Toutes" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('auto.materialselector.toutes')} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all"><T k="auto.materialselector.toutes_les_categories" fallback="Toutes les catégories" /></SelectItem>
                   {categories.map(cat => (
@@ -167,7 +167,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
               {selectedMaterials.map((selected, index) => {
                 const material = getMaterialDetails(selected.materialId);
                 const itemCost = material ? Number(material.price_per_unit || 0) * selected.quantity : 0;
-                
+
                 return (
                   <Card key={index} className="border">
                     <CardContent className="p-4">
@@ -175,7 +175,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                         <div className="md:col-span-2 space-y-2">
                           <Label><T k="auto.materialselector.materiau" fallback="Matériau" /></Label>
                           <Select value={selected.materialId} onValueChange={(v) => updateMaterialId(index, v)}>
-                            <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder={t('auto.materialselector.selectionner')} /></SelectTrigger>
                             <SelectContent className="max-h-60">
                               {materials.filter(m => m.id && m.name).map(m => (
                                 <SelectItem key={m.id} value={m.id}>
@@ -235,7 +235,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                   </Card>
                 );
               })}
-              
+
               <Card className="border-2 border-primary/20 bg-primary/5">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center">
@@ -255,7 +255,7 @@ const MaterialSelector = ({ selectedMaterials, onChange, projectBudget }: Materi
                   {projectBudget && (
                     <div className="mt-3">
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all ${totalCost > projectBudget ? 'bg-destructive' : 'bg-primary'}`}
                           style={{ width: `${Math.min((totalCost / projectBudget) * 100, 100)}%` }}
                         />
