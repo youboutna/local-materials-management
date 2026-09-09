@@ -75,7 +75,6 @@ interface QuantitativeEstimateExporterProps {
 }
 
 export function QuantitativeEstimateExporter({
-  const { t } = useLanguage();
   estimate,
   estimateItems,
   tender,
@@ -86,6 +85,7 @@ export function QuantitativeEstimateExporter({
     email: 'contact@votreentreprise.mr'
   }
 }: QuantitativeEstimateExporterProps) {
+  const { t } = useLanguage();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);

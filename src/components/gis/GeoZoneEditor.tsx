@@ -296,7 +296,6 @@ type DraftMode = 'idle' | 'polygon' | 'rectangle' | 'circle' | 'point';
 // Composant Principal
 // -----------------------------------------------------------------------------
 const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
-  const { t } = useLanguage();
   value,
   onChange,
   defaultCenter = [18.0735, -15.9582], // Nouakchott
@@ -309,6 +308,7 @@ const GeoZoneEditor: React.FC<GeoZoneEditorProps> = ({
   fallbackLabel,
   fallbackAddress,
 }) => {
+  const { t } = useLanguage();
   // ============ State ============
   // ⚠️ `defaultCenter` est souvent un littéral `[lat, lng]` recréé à chaque
   // render du parent : on dépend de ses composantes primitives pour éviter de

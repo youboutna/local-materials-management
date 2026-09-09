@@ -1556,9 +1556,9 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
 // Standard Phase Creator Component
 
 const StandardPhaseCreator: React.FC<{
-  const { t } = useLanguage();
   onCreatePhase: (phase: string, stage: string) => void;
 }> = ({ onCreatePhase }) => {
+  const { t } = useLanguage();
 
   const [selectedPhase, setSelectedPhase] = useState<string>('');
   const [selectedStage, setSelectedStage] = useState<string>('');

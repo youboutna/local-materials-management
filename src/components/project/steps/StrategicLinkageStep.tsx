@@ -349,7 +349,6 @@ function HierarchyBreadcrumb({ items, onNavigate }: HierarchyBreadcrumbProps) {
 }
 
 export default function StrategicLinkageStep({
-  const { t } = useLanguage();
   projectId,
   initialStrategyLinks = [],
   initialBudgetLinks = [],
@@ -360,6 +359,7 @@ export default function StrategicLinkageStep({
   phaseBudgets = [],
   currency = 'MRU',
 }: StrategicLinkageStepProps) {
+  const { t } = useLanguage();
 
   // State for strategy links
   const [strategyLinks, setStrategyLinks] = useState<CreateProjectStrategyLinkDTO[]>(initialStrategyLinks);

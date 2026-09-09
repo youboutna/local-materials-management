@@ -72,7 +72,6 @@ interface DevisPDFDocumentProps {
 }
 
 export function DevisPDFDocument({
-  const { t } = useLanguage();
   estimate,
   estimateItems,
   tender,
@@ -84,6 +83,7 @@ export function DevisPDFDocument({
     email: 'contact@votreentreprise.mr'
   }
 }: DevisPDFDocumentProps) {
+  const { t } = useLanguage();
   const { t } = useLanguage();
   const defaultConfig: ExportConfig = {
     title: `Devis Quantitatif Estimatif - ${tender?.title || tender?.projectReference || 'Appel d\'Offres'}`,

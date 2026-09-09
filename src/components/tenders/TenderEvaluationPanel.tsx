@@ -227,10 +227,10 @@ const TenderEvaluationPanel: React.FC<TenderEvaluationPanelProps> = ({
 
 // Administrative Evaluation Component
 const AdministrativeEvaluation: React.FC<{
-  const { t } = useLanguage();
   submission: Submission;
   onUpdate: (id: string, field: string, value: any) => void;
 }> = ({ submission, onUpdate }) => {
+  const { t } = useLanguage();
   const [notes, setNotes] = useState(submission.evaluator_notes || '');
 
   console.log("submission.submission_documents");

@@ -101,13 +101,13 @@ const getStatusLabel = (status: PhaseStatus | string) => i18nService.translateSt
 
 // Step Edit Form Component
 const StepEditDialog: React.FC<{
-  const { t } = useLanguage();
   step?: PhaseStepDTO;
   open: boolean;
   onClose: () => void;
   onSave: (data: Partial<PhaseStepDTO>) => void;
   isNew?: boolean;
 }> = ({ step, open, onClose, onSave, isNew }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<Partial<PhaseStepDTO>>({
     name: step?.name || '',
     description: step?.description || '',
