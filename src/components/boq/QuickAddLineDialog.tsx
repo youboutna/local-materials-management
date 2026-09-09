@@ -169,8 +169,10 @@ export function QuickAddLineDialog({
 
   const recommendations = useMemo(() => (elementType ? getRecommendationItems(elementType) : []), [elementType]);
 
+  // Compte comptable + profil fiscal recalculés quand la catégorie, la nature,
+  // le type d'ouvrage ou le rattachement WBS (phase) change — sauf saisie manuelle.
   useEffect(() => {
-    if (!designation.trim() || accountCode) return;
+    if (!designation.trim() || touchedAccount.current) return;
     const autoTax = TaxService.resolve(
       {
         designation,
@@ -182,8 +184,10 @@ export function QuickAddLineDialog({
       },
       getFiscalProfile(fiscalProfileCode),
     );
-    if (autoTax.accountCode && !touchedAccount.current) setAccountCode(autoTax.accountCode);
-  }, [accountCode, category, designation, elementType, fiscalProfileCode, quantity, resourceType, unitPrice]);
+    if (autoTax.accountCode) setAccountCode(autoTax.accountCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, designation, elementType, resourceType, fiscalProfileCode, wbs.phaseId]);
+
 
   const pickSuggestion = (s: AutofillSuggestion) => {
     setDesignation(s.label);
