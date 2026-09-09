@@ -19,7 +19,7 @@ export interface BoqLineDTO {
   /** Ouvertures à déduire du métré (portes, fenêtres…) — traçabilité du calcul. */
   openings?: MeterOpening[];
   /** Indique si les ouvertures ont été déduites de la quantité calculée. */
-  deductOpenings?: boolean | null;
+  deductOpenings?: boolean;
   quantity: number;
   unitPrice?: number | null;
   vatRate?: number | null;
