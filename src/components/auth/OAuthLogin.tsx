@@ -123,7 +123,7 @@ const OAuthLogin: React.FC<OAuthLoginProps> = ({
         <CardDescription>{description}</CardDescription>
         {currentProvider && (
           <Badge variant="outline" className="mt-2">
-            {t("auto.oauthlogin.provider_actif") || "Fournisseur actif"} : {currentProvider}
+            {t("auto.oauthlogin.provider_actif") || "Fournisseur actif"} : {/**currentProvider**/}
           </Badge>
         )}
       </CardHeader>

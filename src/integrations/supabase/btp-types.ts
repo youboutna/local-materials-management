@@ -193,6 +193,8 @@ export type BtpDatabase = {
           project_id: string | null
           quantity: number
           ras_rate: number | null
+          supplier_nif: string | null
+          supplier_nif_status: string | null
           recipient_id: string | null
           resource_id: string | null
           resource_kind: string | null
@@ -239,6 +241,8 @@ export type BtpDatabase = {
           project_id?: string | null
           quantity?: number
           ras_rate?: number | null
+          supplier_nif?: string | null
+          supplier_nif_status?: string | null
           recipient_id?: string | null
           resource_id?: string | null
           resource_kind?: string | null
@@ -285,6 +289,8 @@ export type BtpDatabase = {
           project_id?: string | null
           quantity?: number
           ras_rate?: number | null
+          supplier_nif?: string | null
+          supplier_nif_status?: string | null
           recipient_id?: string | null
           resource_id?: string | null
           resource_kind?: string | null
@@ -826,6 +832,7 @@ export type BtpDatabase = {
           id: string
           is_active: boolean | null
           manager_id: string | null
+          nif: string | null
           phone: string | null
           position: string | null
           salary: number | null
@@ -845,6 +852,7 @@ export type BtpDatabase = {
           id?: string
           is_active?: boolean | null
           manager_id?: string | null
+          nif?: string | null
           phone?: string | null
           position?: string | null
           salary?: number | null
@@ -864,6 +872,7 @@ export type BtpDatabase = {
           id?: string
           is_active?: boolean | null
           manager_id?: string | null
+          nif?: string | null
           phone?: string | null
           position?: string | null
           salary?: number | null
@@ -1604,6 +1613,7 @@ export type BtpDatabase = {
           name: string
           org_type: string | null
           phone: string | null
+          nif: string | null
           updated_at: string
           website: string | null
         }
@@ -1620,6 +1630,7 @@ export type BtpDatabase = {
           name: string
           org_type?: string | null
           phone?: string | null
+          nif?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -1636,6 +1647,7 @@ export type BtpDatabase = {
           name?: string
           org_type?: string | null
           phone?: string | null
+          nif?: string | null
           updated_at?: string
           website?: string | null
         }

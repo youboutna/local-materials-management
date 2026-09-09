@@ -2,26 +2,26 @@
  * src/components/boq/BoqLineTable.tsx
  * BoqLineTable — grille unique saisie/import alignée sur les colonnes parseur.
  */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
+import { MeterService } from '@/application/services/boq/MeterService';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Trash2, AlertTriangle, Calculator } from 'lucide-react';
-import { MeterService } from '@/application/services/boq/MeterService';
+import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import { AlertTriangle, Calculator, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MetreDialog } from './MetreDialog';
 
+import { TaxService } from '@/application/services/TaxService';
 import DataPagination from '@/components/common/DataPagination';
-import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
+import { T } from '@/components/i18n/T';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { getPhasesForReferential, type ReferentialType } from '@/config/referentials';
 import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referential';
 import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
-import { T } from '@/components/i18n/T';
-import { TaxService } from '@/application/services/TaxService';
+import { WBS_REFERENTIAL, type WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import { PcmAccountSelect } from './PcmAccountSelect';
-import { SearchableSelect } from '@/components/ui/searchable-select';
 
 
 
@@ -29,6 +29,7 @@ export interface StakeholderOption {
   id: string;
   name: string;
   type: 'organization' | 'employee' | 'supplier';
+  nif?: string | null;
 }
 
 interface Props {
@@ -351,4 +352,3 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
     </div>
   );
 }
-

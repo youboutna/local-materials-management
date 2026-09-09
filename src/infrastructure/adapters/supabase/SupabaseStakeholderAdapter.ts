@@ -137,9 +137,9 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
     };
 
     const [employees, suppliers, organizations] = await Promise.all([
-      safeFetch('employees', 'id, full_name, email, phone, position', employeeIds),
-      safeFetch('suppliers', 'id, name, email, phone', supplierIds),
-      safeFetch('organizations', 'id, name', organizationIds),
+      safeFetch('employees', 'id, full_name, email, phone, position, nif', employeeIds),
+      safeFetch('suppliers', 'id, name, email, phone, nif', supplierIds),
+      safeFetch('organizations', 'id, name, nif', organizationIds),
     ]);
 
     const byId = (list: Record<string, any>[]) => new Map(list.map((r) => [String(r.id), r]));
@@ -162,6 +162,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
         phone: employee?.phone || supplier?.phone || row.external_phone || null,
         position: employee?.position || null,
         organizationName: organization?.name || supplier?.name || null,
+        nif: employee?.nif || supplier?.nif || organization?.nif || null,
       });
     });
   }
@@ -238,6 +239,7 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
       phone?: string | null;
       position?: string | null;
       organizationName?: string | null;
+      nif?: string | null;
     },
   ): Stakeholder {
     const stakeholderType = (data.stakeholder_entity_type === 'employee' ? 'employee' : 'supplier') as any;
@@ -257,9 +259,10 @@ export class SupabaseStakeholderAdapter implements IStakeholderRepository {
         email: identity?.email || data.external_email || '',
         phone: identity?.phone || data.external_phone || undefined,
         position: identity?.position || undefined,
+        nif: identity?.nif ?? null,
       },
       identity?.organizationName && organizationId
-        ? { id: String(organizationId), name: identity.organizationName, type: stakeholderType }
+        ? { id: String(organizationId), name: identity.organizationName, type: stakeholderType, nif: identity.nif ?? undefined }
         : null,
       [],
       'read',

@@ -18,6 +18,7 @@ export class OrganizationTransformer {
       address: row.address as string | undefined,
       phone: row.phone as string | undefined,
       email: row.email as string | undefined,
+      nif: (row.nif as string | null) ?? undefined,
       website: row.website as string | undefined,
       logoUrl: row.logo_url as string | undefined,
       parentId: (row.parent_id as string | null) ?? undefined,
@@ -39,6 +40,7 @@ export class OrganizationTransformer {
     if (data.address !== undefined) row.address = data.address;
     if (data.phone !== undefined) row.phone = data.phone;
     if (data.email !== undefined) row.email = data.email;
+    if (data.nif !== undefined) row.nif = data.nif || null;
     if (data.website !== undefined) row.website = data.website;
     if (data.logoUrl !== undefined) row.logo_url = data.logoUrl;
     if (data.parentId !== undefined) row.parent_id = data.parentId || null;

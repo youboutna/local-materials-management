@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 export interface ActiveSupplier {
   id: string;
   name: string;
+  nif?: string | null;
   contact_person?: string;
   type?: string;
 }
@@ -24,6 +25,7 @@ export function useActiveSuppliersHex() {
       return result.suppliers.map(supplier => ({
         id: supplier.id,
         name: supplier.name,
+        nif: supplier.nif ?? null,
         contact_person: undefined,
         type: supplier.category || undefined
       }));

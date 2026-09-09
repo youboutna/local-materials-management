@@ -86,6 +86,12 @@ export class OrganizationService {
 
   private validate(data: Partial<CreateOrganizationDTO>): void {
     if ('name' in data && !data.name?.trim()) throw new Error('Organization name is required');
+    if (data.nif !== undefined && data.nif !== null) {
+      const nif = data.nif.trim();
+      if (nif.length > 0 && (nif.length < 8 || nif.length > 20)) {
+        throw new Error('Le NIF doit contenir entre 8 et 20 caractères');
+      }
+    }
   }
 }
 

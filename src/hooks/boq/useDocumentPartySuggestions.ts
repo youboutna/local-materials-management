@@ -9,8 +9,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { getOrganizationService } from '@/application/services/OrganizationService';
 import { getSupplierService } from '@/application/services/SupplierService';
+import { getEmployeeService } from '@/application/services/EmployeeService';
 
-export type DocumentPartyKind = 'organization' | 'supplier';
+export type DocumentPartyKind = 'organization' | 'supplier' | 'employee';
 
 export interface DocumentPartySuggestion {
   id: string;
@@ -19,6 +20,7 @@ export interface DocumentPartySuggestion {
   address?: string;
   phone?: string;
   email?: string;
+  taxId?: string;
 }
 
 const asRecord = (v: unknown): Record<string, unknown> => (v ?? {}) as Record<string, unknown>;
@@ -28,9 +30,10 @@ export function useDocumentPartySuggestions() {
   const query = useQuery<DocumentPartySuggestion[]>({
     queryKey: ['document-party-suggestions'],
     queryFn: async () => {
-      const [orgs, suppliers] = await Promise.all([
+      const [orgs, suppliers, employees] = await Promise.all([
         getOrganizationService().list().catch(() => []),
         getSupplierService().getAllSuppliers().catch(() => []),
+        getEmployeeService().findAll().catch(() => []),
       ]);
 
       const orgItems: DocumentPartySuggestion[] = (orgs ?? [])
@@ -42,6 +45,7 @@ export function useDocumentPartySuggestions() {
           address: o.address ?? undefined,
           phone: o.phone ?? undefined,
           email: o.email ?? undefined,
+          taxId: o.nif ?? undefined,
         }))
         .filter((o) => !!o.name);
 
@@ -54,11 +58,24 @@ export function useDocumentPartySuggestions() {
           address: str(r.address),
           phone: str(r.phone) ?? str(r.contactPhone),
           email: str(r.email) ?? str(r.contactEmail),
+          taxId: str(r.nif),
         };
       }).filter((s) => !!s.name);
 
+      const employeeItems: DocumentPartySuggestion[] = (employees ?? [])
+        .filter((e) => e && e.isActive !== false)
+        .map((e) => ({
+          id: `emp:${e.id}`,
+          name: e.fullName ?? `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim(),
+          kind: 'employee' as const,
+          phone: e.phone ?? undefined,
+          email: e.email ?? undefined,
+          taxId: e.nif ?? undefined,
+        }))
+        .filter((e) => !!e.name);
+
       const seen = new Set<string>();
-      return [...orgItems, ...supplierItems].filter((p) => {
+      return [...orgItems, ...supplierItems, ...employeeItems].filter((p) => {
         const key = `${p.kind}|${p.name.toLowerCase()}`;
         if (seen.has(key)) return false;
         seen.add(key);

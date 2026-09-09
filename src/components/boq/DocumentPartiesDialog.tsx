@@ -35,8 +35,10 @@ export interface DocumentPartiesValue {
   senderAddress?: string;
   senderPhone?: string;
   senderEmail?: string;
+  senderTaxId?: string;
   recipientName?: string;
   recipientEmail?: string;
+  recipientTaxId?: string;
   /** Destinataires additionnels (copies / co-signataires). */
   extraRecipients?: DocumentRecipientValue[];
   /** Référence documentaire affichée sur le PDF (Réf. DQE / N° facture). */
@@ -251,6 +253,7 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
               senderAddress: s.address ?? draft.senderAddress,
               senderPhone: s.phone ?? draft.senderPhone,
               senderEmail: s.email ?? draft.senderEmail,
+              senderTaxId: s.taxId ?? draft.senderTaxId,
             })}
           />
 
@@ -284,6 +287,7 @@ export const DocumentPartiesDialog: React.FC<Props> = ({ open, onOpenChange, val
             onPick={(s) => patch({
               recipientName: s.name,
               recipientEmail: s.email ?? draft.recipientEmail,
+              recipientTaxId: s.taxId ?? draft.recipientTaxId,
             })}
           />
 

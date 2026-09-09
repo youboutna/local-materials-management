@@ -22,6 +22,7 @@ const emptyForm: CreateOrganizationDTO = {
   address: '',
   phone: '',
   email: '',
+  nif: '',
   parentId: undefined,
   isDefault: false,
   isActive: true,
@@ -99,6 +100,7 @@ const OrganizationsManager: React.FC = () => {
       address: organization.address ?? '',
       phone: organization.phone ?? '',
       email: organization.email ?? '',
+      nif: organization.nif ?? '',
       externalRef: organization.externalRef,
       parentId: organization.parentId,
       isDefault: organization.isDefault ?? false,
@@ -159,6 +161,16 @@ const OrganizationsManager: React.FC = () => {
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="Ex : SOMELEC"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="org-nif">NIF</Label>
+                <Input
+                  id="org-nif"
+                  value={form.nif ?? ''}
+                  onChange={(e) => setForm((prev) => ({ ...prev, nif: e.target.value }))}
+                  placeholder="NIF de l'organisation"
                 />
               </div>
               <div className="space-y-2">

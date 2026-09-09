@@ -40,6 +40,8 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
       return Boolean(metadata?.transfer?.transferredAt || metadata?.signature?.signedAt) ||
         ['validated', 'invoiced', 'paid', 'archived'].includes(line.status ?? 'draft');
     });
+    const totalRas = group.reduce((s, l) => s + (l.totalHt ?? 0) * (l.rasRate ?? 0), 0);
+    const totalTtc = totalHt + totalVat - totalRas;
     list.push({
       documentId,
       // Référence courte sans préfixe technique : le contexte d'écran ajoute DQE/DEVIS/FACTURE.
@@ -48,7 +50,7 @@ function aggregate(lines: BoqLineDTO[]): BoqDocumentSummary[] {
       status,
       totalHt,
       totalVat,
-      totalTtc: totalHt + totalVat,
+      totalTtc,
       lineCount: group.length,
       createdAt,
       updatedAt,

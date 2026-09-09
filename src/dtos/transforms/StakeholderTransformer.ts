@@ -30,6 +30,7 @@ export class StakeholderTransformer {
       name: entity.contact?.name || entity.name || '',
       email: entity.contact?.email || entity.email || undefined,
       phone: entity.contact?.phone || entity.phone || undefined,
+      nif: entity.nif ?? entity.organization?.nif ?? undefined,
       stakeholderType: (entity.type || 'external') as any,
       entityType: 'person' as any,
       projectId: entity.projectId,
@@ -70,13 +71,15 @@ export class StakeholderTransformer {
       name: dto.contact?.name || dto.name || '',
       email: dto.contact?.email || dto.email || '',
       phone: dto.contact?.phone || dto.phone || undefined,
-      position: dto.contact?.position || dto.position || undefined
+      position: dto.contact?.position || dto.position || undefined,
+      nif: dto.contact?.nif ?? dto.nif ?? null
     };
 
     const organization: StakeholderOrganization | null = dto.organizationId ? {
       id: dto.organizationId,
       name: dto.organization || '',
       type: (dto.type || 'external') as StakeholderType,
+      nif: dto.nif ?? undefined,
     } : null;
 
     return new Stakeholder(
@@ -114,6 +117,12 @@ export class StakeholderTransformer {
     if (dto.employeeId !== undefined) (partial as any)._employeeId = dto.employeeId;
     if (dto.isPrimary !== undefined) (partial as any)._isPrimary = dto.isPrimary;
     if (dto.contact !== undefined) (partial as any)._contact = dto.contact;
+    if (dto.nif !== undefined) {
+      (partial as any)._contact = {
+        ...((partial as any)._contact ?? {}),
+        nif: dto.nif,
+      };
+    }
     if (dto.responsibilities !== undefined) (partial as any)._responsibilities = dto.responsibilities;
     if (dto.accessLevel !== undefined) (partial as any)._accessLevel = dto.accessLevel;
     if (dto.startDate !== undefined) (partial as any)._startDate = dto.startDate;
@@ -132,13 +141,15 @@ export class StakeholderTransformer {
       name: row.contact_name || row.contactName || row.contact?.name || row.name || '',
       email: row.contact_email || row.contactEmail || row.contact?.email || row.email || '',
       phone: row.contact_phone || row.contactPhone || row.contact?.phone || row.phone || undefined,
-      position: row.contact_position || row.contactPosition || row.contact?.position || row.position || undefined
+      position: row.contact_position || row.contactPosition || row.contact?.position || row.position || undefined,
+      nif: row.contact_nif || row.contactNif || row.nif || undefined
     };
 
     const organization: StakeholderOrganization | null = row.organization_id || row.organizationId ? {
       id: row.organization_id || row.organizationId,
       name: row.organization_name || row.organizationName || row.organization || '',
       type: (row.organization_type || row.organizationType || '') as StakeholderType,
+      nif: row.organization_nif || row.organizationNif || row.nif || undefined,
     } : null;
 
     return new Stakeholder(

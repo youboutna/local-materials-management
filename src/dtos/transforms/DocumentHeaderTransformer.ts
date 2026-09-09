@@ -6,8 +6,17 @@
  *
  * ⚠️ TRANSFORMER — Conversion uniquement, PAS de logique métier
  */
-import { DocumentHeaderDTO, DocumentPartyDTO } from '@/dtos/boq/DocumentHeaderDTO';
 import { DocumentPartiesValue } from '@/components/boq/DocumentPartiesDialog';
+import { DocumentHeaderDTO, DocumentPartyDTO } from '@/dtos/boq/DocumentHeaderDTO';
+
+function parseJsonArray<T>(value: string | unknown[] | null, fieldName: string): T[] {
+  if (value === null) return [];
+  const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Invalid ${fieldName}: expected a JSON array`);
+  }
+  return parsed as T[];
+}
 
 export interface DocumentHeaderDBRow {
   id: string;
@@ -35,7 +44,7 @@ export interface DocumentHeaderDBRow {
   recipient_phone: string | null;
   recipient_email: string | null;
 
-  extra_recipients: string | null;
+  extra_recipients: string | DocumentPartyDTO[] | null;
 
   workflow_stage: string;
   validation_status: string | null;
@@ -47,7 +56,7 @@ export interface DocumentHeaderDBRow {
   source_document_type: string | null;
   next_document_id: string | null;
   next_document_type: string | null;
-  stages_history: string | null;
+  stages_history: string | unknown[] | null;
   workflow_instance_id: string | null;
   metadata: string | null;
   deleted_at: string | null;
@@ -144,12 +153,7 @@ export class DocumentHeaderTransformer {
     }
 
     if (row.extra_recipients) {
-      try {
-        const extra = JSON.parse(row.extra_recipients) as DocumentPartyDTO[];
-        recipients.push(...extra);
-      } catch {
-        /* ignore */
-      }
+      recipients.push(...parseJsonArray<DocumentPartyDTO>(row.extra_recipients, 'extra_recipients'));
     }
 
     return {
@@ -176,7 +180,7 @@ export class DocumentHeaderTransformer {
         id: null,
         name: value.senderName ?? '',
         kind: null,
-        taxId: null,
+        taxId: value.senderTaxId ?? null,
         address: value.senderAddress ?? null,
         phone: value.senderPhone ?? null,
         email: value.senderEmail ?? null,
@@ -186,7 +190,7 @@ export class DocumentHeaderTransformer {
           id: null,
           name: value.recipientName ?? '',
           kind: null,
-          taxId: null,
+          taxId: value.recipientTaxId ?? null,
           address: null,
           phone: null,
           email: value.recipientEmail ?? null,
@@ -216,8 +220,10 @@ export class DocumentHeaderTransformer {
       senderAddress: header.sender?.address ?? undefined,
       senderPhone: header.sender?.phone ?? undefined,
       senderEmail: header.sender?.email ?? undefined,
+      senderTaxId: header.sender?.taxId ?? undefined,
       recipientName: primaryRecipient?.name ?? '',
       recipientEmail: primaryRecipient?.email ?? undefined,
+      recipientTaxId: primaryRecipient?.taxId ?? undefined,
       extraRecipients: extraRecipients.map(r => ({
         name: r.name,
         email: r.email ?? undefined,
@@ -253,7 +259,10 @@ export class DocumentHeaderTransformer {
     if (updates.addStage) {
       let history: Array<{ stage: string; at: string; by: string; comment?: string }> = [];
       if (row.stages_history) {
-        try { history = JSON.parse(row.stages_history); } catch { /* ignore */ }
+        history = parseJsonArray<{ stage: string; at: string; by: string; comment?: string }>(
+          row.stages_history,
+          'stages_history'
+        );
       }
       history.push({
         stage: updates.addStage.stage,

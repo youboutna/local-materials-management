@@ -115,6 +115,8 @@ export interface EmployeeDTO extends BaseEntityDTO {
   phone?: string;
   isActive?: boolean;
   nationalId?: string;
+  /** NIF de l'employé lorsqu'une facture lui est adressée directement. */
+  nif?: string | null;
   userId?: string | null;
 
   // NOUVEAU - Référence externe pour l'import
@@ -278,6 +280,7 @@ export interface CreateEmployeeDTO {
   lastName: string;
   fullName?: string;
   nationalId?: string;
+  nif?: string | null;
   userId?: string | null;
   organizationId?: string | null;
   managerId?: string | null;
@@ -350,6 +353,7 @@ export interface UpdateEmployeeDTO {
   lastName?: string;
   fullName?: string;
   nationalId?: string;
+  nif?: string | null;
   userId?: string | null;
   organizationId?: string | null;
   managerId?: string | null;

@@ -16,6 +16,7 @@ export function OrganizationForm({ initialValue, onSubmit }: OrganizationFormPro
       <input value={value.code || ''} onChange={(event) => update('code', event.target.value)} placeholder="Code" />
       <input value={value.externalRef || ''} onChange={(event) => update('externalRef', event.target.value)} placeholder="Référence externe" />
       <input value={value.orgType || ''} onChange={(event) => update('orgType', event.target.value)} placeholder="Type d'organisation" />
+      <input value={value.nif || ''} onChange={(event) => update('nif', event.target.value)} placeholder="NIF" />
       <button type="submit"><T k="auto.organizationform.enregistrer" fallback="Enregistrer" /></button>
     </form>
   );

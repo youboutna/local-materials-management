@@ -33,6 +33,10 @@ import {
   type DigitalServiceCriterionCode,
 } from '@/config/referentials/fiscal/lfr-2026.referential';
 import {
+  BOQ_FISCAL_PROFILES,
+  getFiscalProfileLabel,
+} from '@/config/referentials/boq/default-values.referential';
+import {
   SupplierNifValidationService,
   type DeductibilityInput,
   type DeductibilityResult,
@@ -114,6 +118,41 @@ export class TaxService {
     return group ? PCM_ACCOUNT_TAXES.filter((a) => a.taxGroup === group) : PCM_ACCOUNT_TAXES;
   }
 
+  static listAvailableProfiles(
+    line?: Partial<TaxableLine> | null,
+    activeProfileCode?: string | null,
+    profile?: FiscalProfileHints | null,
+    lang: 'fr' | 'ar' | 'en' = 'fr',
+  ) {
+    const resolved = this.resolve(
+      {
+        designation: line?.designation ?? null,
+        category: line?.category ?? null,
+        elementType: line?.elementType ?? null,
+        accountCode: line?.accountCode ?? null,
+        resourceType: line?.resourceType ?? null,
+        taxRegimeCode: line?.taxRegimeCode ?? null,
+        quantity: line?.quantity ?? 1,
+        unitPrice: line?.unitPrice ?? 1,
+        totalHt: line?.totalHt ?? null,
+      },
+      profile ?? null,
+      lang,
+    );
+
+    return Object.values(BOQ_FISCAL_PROFILES)
+      .map((p) => ({
+        code: p.code,
+        label: getFiscalProfileLabel(p.code, lang),
+        vatRate: p.vatRate,
+        withholdingRate: p.withholdingRate,
+        recommended: activeProfileCode
+          ? p.code === activeProfileCode
+          : Math.abs(p.vatRate - resolved.vatRate) < 1e-9 && Math.abs(p.withholdingRate - resolved.rasRate) < 1e-9,
+      }))
+      .sort((a, b) => Number(b.recommended) - Number(a.recommended) || a.label.localeCompare(b.label));
+  }
+
   /** Régime de prestation d'une ligne (référentiel TAX_REGIMES). */
   static detectTaxRegime(line: TaxableLine): TaxRegimeDefinition {
     return resolveTaxRegime({
@@ -179,6 +218,7 @@ export class TaxService {
     const totalHt = computeLineHt(line);
     const vatAmount = round2(totalHt * vatRate);
     const rasAmount = round2(totalHt * rasRate);
+    const totalTtc = round2(totalHt + vatAmount - rasAmount);
 
     return {
       regimeCode: regime.code,
@@ -193,12 +233,12 @@ export class TaxService {
       totalHt: round2(totalHt),
       vatAmount,
       rasAmount,
-      totalTtc: round2(totalHt + vatAmount),
+      totalTtc,
       isDigitalService: TaxService.DIGITAL_REGIME_CODES.includes(regime.code),
       deductibility: this.checkDeductibility({
         supplierNif: line.supplierNif ?? null,
         supplierNifStatus: line.supplierNifStatus ?? 'unknown',
-        amount: round2(totalHt + vatAmount),
+        amount: totalTtc,
         paymentMethod: line.paymentMethod ?? null,
         hasNormalizedInvoice: line.hasNormalizedInvoice ?? null,
       }, lang),
@@ -235,6 +275,8 @@ export class TaxService {
       ELECTRONIC_TRANSACTION_TAX.appliesTo.some((m) => method.includes(m)) ||
       method.includes('mobile') ||
       method.includes('bankily') ||
+      method.includes('omni') ||
+      method.includes('masrvi') ||
       method.includes('transfer');
     if (!eligible) return 0;
     const raw = Math.max(0, Number(amount) || 0) * ELECTRONIC_TRANSACTION_TAX.rate;
@@ -296,7 +338,7 @@ export class TaxService {
     const totalHt = round2(resolved.reduce((s, r) => s + r.totalHt, 0));
     const totalVat = round2(resolved.reduce((s, r) => s + r.vatAmount, 0));
     const totalRas = round2(resolved.reduce((s, r) => s + r.rasAmount, 0));
-    const totalTtc = round2(totalHt + totalVat);
+    const totalTtc = round2(totalHt + totalVat - totalRas);
     const paymentMethod = lines.find((l) => l.paymentMethod)?.paymentMethod ?? null;
     const electronicTransactionTax = paymentMethod
       ? this.electronicTransactionTax(totalTtc, paymentMethod)

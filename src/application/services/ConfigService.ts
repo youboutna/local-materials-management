@@ -1,4 +1,5 @@
 /**
+ * src/application/services/ConfigService.ts
  * ConfigService — source unique du paramétrage système exposé à l'administration.
  *
  * - Lecture : cache mémoire → repository (DB ou localStorage) → valeurs d'environnement.
@@ -7,11 +8,11 @@
  */
 
 import { getAppConfig } from '@/config/app';
+import { APP_NAME, APP_VERSION, IS_LOCAL_BYPASS } from '@/config/constants';
 import { resolveSupabaseConfig } from '@/config/supabaseConfig';
-import { IS_LOCAL_BYPASS, APP_NAME, APP_VERSION } from '@/config/constants';
-import type { IConfigRepository, ConfigEntry } from '@/domain/repositories/IConfigRepository';
-import { SupabaseConfigRepository } from '@/infrastructure/adapters/supabase/SupabaseConfigRepository';
+import type { ConfigEntry, IConfigRepository } from '@/domain/repositories/IConfigRepository';
 import { LocalStorageConfigRepository } from '@/infrastructure/adapters/localStorage/LocalStorageConfigRepository';
+import { SupabaseConfigRepository } from '@/infrastructure/adapters/supabase/SupabaseConfigRepository';
 
 /** Fragments de nom indiquant une valeur sensible : jamais exposée dans l'UI. */
 const SENSITIVE_FRAGMENTS = ['SECRET', 'KEY', 'PASSWORD', 'TOKEN', 'JWT'];

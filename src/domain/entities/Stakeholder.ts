@@ -36,6 +36,7 @@ export interface StakeholderContact {
   email: string;
   phone?: string;
   position?: string;
+  nif?: string | null;
 }
 
 export interface StakeholderOrganization {
@@ -128,6 +129,10 @@ export class Stakeholder {
   get isInternal(): boolean { return this._isInternal; }
   get contact(): StakeholderContact { return this._contact; }
   get organization(): StakeholderOrganization | null { return this._organization; }
+  /** NIF de l'origine réelle du stakeholder : personne, fournisseur ou organisation. */
+  get nif(): string | null {
+    return this._contact.nif ?? this._organization?.nif ?? null;
+  }
   get responsibilities(): string[] { return [...this._responsibilities]; }
   get accessLevel(): 'read' | 'write' | 'admin' | 'full' { return this._accessLevel; }
   get startDate(): string | null { return this._startDate; }

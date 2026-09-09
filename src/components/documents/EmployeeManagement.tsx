@@ -46,6 +46,7 @@ interface EmployeeFormData {
   hourly_rate: number;
   currency: string;
   national_id: string;
+  nif: string;
   employee_type: string;
   status: string;
   availability: string;
@@ -72,6 +73,7 @@ const emptyForm: EmployeeFormData = {
   hourly_rate: 0,
   currency: 'MRU',
   national_id: '',
+  nif: '',
   employee_type: 'full_time',
   status: 'active',
   availability: 'available',
@@ -171,6 +173,7 @@ const EmployeeManagement = () => {
     hourlyRate: formData.hourly_rate || undefined,
     currency: formData.currency || undefined,
     nationalId: formData.national_id || undefined,
+    nif: formData.nif || null,
     type: formData.employee_type as EmployeeDTO['type'],
     status: formData.status as EmployeeDTO['status'],
     availability: formData.availability as EmployeeDTO['availability'],
@@ -221,6 +224,7 @@ const EmployeeManagement = () => {
       hourly_rate: employee.hourlyRate || 0,
       currency: employee.currency || 'MRU',
       national_id: employee.nationalId || '',
+      nif: employee.nif || '',
       employee_type: (employee.type as string) || 'full_time',
       status: (employee.status as string) || 'active',
       availability: (employee.availability as string) || 'available',
@@ -433,13 +437,21 @@ const EmployeeManagement = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label>NNI / Pièce d'identité</Label>
                         <Input
                           value={formData.national_id}
                           onChange={(e) => setFormData(prev => ({...prev, national_id: e.target.value}))}
                           placeholder="Numéro national d'identité"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>NIF fiscal</Label>
+                        <Input
+                          value={formData.nif}
+                          onChange={(e) => setFormData(prev => ({...prev, nif: e.target.value}))}
+                          placeholder="NIF de l'employé"
                         />
                       </div>
                       <div className="space-y-2">

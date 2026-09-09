@@ -39,6 +39,8 @@ export interface BoqDbRow {
 
   vat_rate?: number | null;
   ras_rate?: number | null;
+  supplier_nif?: string | null;
+  supplier_nif_status?: BoqLineDTO['supplierNifStatus'];
   fees?: number | null;
   phase_id?: string | null;
   milestone_id?: string | null;
@@ -129,6 +131,8 @@ export class BoqLineMapper {
       unitPrice,
       vatRate: row.vat_rate ?? 0,
       rasRate: row.ras_rate ?? 0,
+      supplierNif: row.supplier_nif ?? null,
+      supplierNifStatus: row.supplier_nif_status ?? 'unknown',
       taxRegimeCode: (row.metadata as { taxRegimeCode?: string } | null)?.taxRegimeCode ?? null,
       accountCode: (row.metadata as { accountCode?: string } | null)?.accountCode ?? null,
       fees: row.fees ?? 0,
@@ -189,6 +193,8 @@ export class BoqLineMapper {
       unit_price_ht: pu ?? (totalHt != null && qty ? (totalHt - fees) / qty : null),
       vat_rate: dto.vatRate ?? 0,
       ras_rate: dto.rasRate ?? 0,
+      supplier_nif: dto.supplierNif ?? null,
+      supplier_nif_status: dto.supplierNifStatus ?? 'unknown',
       fees: dto.fees ?? 0,
       phase_id: idOrCode(dto.phaseId).id,
       phase_code: idOrCode(dto.phaseId).code,

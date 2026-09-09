@@ -161,6 +161,7 @@ export class DocumentHeaderServiceInstance {
   }
 
   async findByDocumentId(documentId: string): Promise<DocumentHeaderDTO | null> {
+    if (!documentId) throw new Error('Document ID is required');
     return this.repository.findByDocumentId(documentId);
   }
 
@@ -177,6 +178,7 @@ export class DocumentHeaderServiceInstance {
   }
 
   async deleteByDocumentId(documentId: string): Promise<void> {
+    if (!documentId) throw new Error('Document ID is required');
     await this.repository.deleteByDocumentId(documentId);
   }
 

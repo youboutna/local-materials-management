@@ -112,7 +112,16 @@ export class LogExporterService {
         body: JSON.stringify({ logs: batch, sentAt: new Date().toISOString() }),
         keepalive: true,
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        if ([404, 405, 501].includes(response.status)) {
+          LOGGING_CONFIG.serverEnabled = false;
+          this.started = false;
+          this.stop();
+          this.queue = [];
+          return;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
     } catch {
       // Serveur indisponible : on garde les entrées localement (secours localStorage).
       this.queue = [...batch, ...this.queue].slice(-500);

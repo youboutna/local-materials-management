@@ -40,7 +40,7 @@ export interface LoggingConfig {
 
 export const LOGGING_CONFIG: LoggingConfig = {
   minLevel: level(env.VITE_LOG_LEVEL, 'info'),
-  serverEnabled: bool(env.VITE_LOG_SERVER_ENABLED, true),
+  serverEnabled: bool(env.VITE_LOG_SERVER_ENABLED, false),
   serverUrl: env.VITE_LOG_SERVER_URL || '/api/logs/export',
   batchSize: num(env.VITE_LOG_BATCH_SIZE, 50),
   flushIntervalMs: num(env.VITE_LOG_FLUSH_INTERVAL, 300_000),

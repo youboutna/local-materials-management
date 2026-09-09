@@ -8,6 +8,8 @@ export interface OrganizationDTO {
   address?: string;
   phone?: string;
   email?: string;
+  /** Identifiant fiscal de l'organisation (NIF). */
+  nif?: string | null;
   website?: string;
   logoUrl?: string;
   /** Organisation parente (hiérarchie des organisations). */

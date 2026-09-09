@@ -64,6 +64,8 @@ export interface StakeholderDTO extends BaseEntityDTO {
   name: string;
   email?: string;
   phone?: string;
+  /** NIF de l'organisation/fournisseur représenté. */
+  nif?: string | null;
   
   // Classification
   stakeholderType: StakeholderType;
@@ -111,6 +113,7 @@ export interface StakeholderDTO extends BaseEntityDTO {
     name?: string;
     email?: string;
     phone?: string;
+    nif?: string | null;
     position?: string;
   }; // Added for UI needs
   
@@ -130,6 +133,7 @@ export interface CreateStakeholderDTO {
   name: string;
   email?: string;
   phone?: string;
+  nif?: string | null;
   stakeholderType: StakeholderType;
   entityType: StakeholderEntityType;
   role: StakeholderRole;
@@ -162,6 +166,7 @@ export interface CreateStakeholderDTO {
     name?: string;
     email?: string;
     phone?: string;
+    nif?: string | null;
     position?: string;
   }; // Added for UI needs
 }
@@ -174,6 +179,7 @@ export interface UpdateStakeholderDTO {
   name?: string;
   email?: string;
   phone?: string;
+  nif?: string | null;
   stakeholderType?: StakeholderType;
   entityType?: StakeholderEntityType;
   role?: StakeholderRole;
@@ -210,6 +216,7 @@ export interface UpdateStakeholderDTO {
     name?: string;
     email?: string;
     phone?: string;
+    nif?: string | null;
     position?: string;
   }; // Added for UI needs
 }

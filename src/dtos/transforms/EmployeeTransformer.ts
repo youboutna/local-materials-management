@@ -57,6 +57,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
         tags: (row.tags as string[]) ?? null,
         notes: (row.notes as string) ?? null,
         nationalId: (row.national_id as string) ?? null,
+        nif: (row.nif as string) ?? null,
       },
     };
     return Employee.create(props);
@@ -108,6 +109,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       tags: x.tags ?? null,
       notes: x.notes ?? null,
       national_id: x.nationalId ?? null,
+      nif: x.nif ?? null,
     };
   }
 
@@ -150,6 +152,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       tags: x.tags ?? undefined,
       notes: x.notes ?? undefined,
       nationalId: x.nationalId ?? undefined,
+      nif: x.nif ?? null,
       organizationId: x.organizationId ?? null,
       managerId: entity.managerId,
       superiorId: entity.superiorId,
@@ -181,6 +184,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       tags: dto.tags ?? null,
       notes: dto.notes ?? null,
       nationalId: dto.nationalId ?? null,
+      nif: dto.nif ?? null,
     };
   }
 
@@ -263,6 +267,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
     // Extended RH / organigramme attributes
     const extras: Record<string, unknown> = {};
     if (dto.organizationId !== undefined) extras.organizationId = dto.organizationId;
+    if (dto.nif !== undefined) extras.nif = dto.nif;
     if (dto.type !== undefined) extras.employeeType = dto.type;
     if (dto.role !== undefined) extras.roleName = dto.role;
     if (dto.status !== undefined) extras.status = dto.status;

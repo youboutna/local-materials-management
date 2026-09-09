@@ -18,10 +18,41 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
 
   async save(documentId: string, header: DocumentHeaderDTO, userId?: string): Promise<DocumentHeaderDTO> {
     const dbRow = DocumentHeaderTransformer.toDBRow(documentId, header, userId);
+    const { data: existing, error: existingError } = await this.client
+      .from(this.table)
+      .select('*')
+      .eq('document_id', documentId)
+      .maybeSingle();
+
+    if (existingError) {
+      throw new Error(`Failed to read existing BOQ document header: ${existingError.message}`);
+    }
+
+    // Une édition des parties documentaires ne doit jamais réinitialiser le
+    // workflow, la signature ou l'audit déjà enregistrés.
+    const preserved = existing
+      ? {
+          workflow_stage: existing.workflow_stage,
+          validation_status: existing.validation_status,
+          validation_comment: existing.validation_comment,
+          signed_by: existing.signed_by,
+          signed_at: existing.signed_at,
+          signature_role: existing.signature_role,
+          source_document_id: existing.source_document_id,
+          source_document_type: existing.source_document_type,
+          next_document_id: existing.next_document_id,
+          next_document_type: existing.next_document_type,
+          stages_history: existing.stages_history,
+          workflow_instance_id: existing.workflow_instance_id,
+          metadata: existing.metadata,
+          deleted_at: existing.deleted_at,
+          created_by: existing.created_by,
+        }
+      : {};
 
     const { data: result, error } = await this.client
       .from(this.table)
-      .upsert(dbRow, { onConflict: 'document_id' })
+      .upsert({ ...dbRow, ...preserved }, { onConflict: 'document_id' })
       .select()
       .single();
 
@@ -140,6 +171,7 @@ export class SupabaseBoqDocumentHeaderAdapter implements IBoqDocumentHeaderRepos
   }
 
   async deleteByDocumentId(documentId: string): Promise<void> {
+    if (!documentId) throw new Error('Document ID is required');
     const { error } = await this.client
       .from(this.table)
       .delete()

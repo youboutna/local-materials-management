@@ -185,9 +185,9 @@ export function BoqWorkspace({
   const { data: activeEmployees = [] } = useActiveEmployeesHex();
   const { data: activeSuppliers = [] } = useActiveSuppliersHex();
   const stakeholders = useMemo<StakeholderOption[]>(() => [
-    ...organizations.map((o) => ({ id: o.id, name: o.name, type: 'organization' as const })),
+    ...organizations.map((o) => ({ id: o.id, name: o.name, type: 'organization' as const, nif: o.nif ?? null })),
     ...activeEmployees.map((e) => ({ id: e.id, name: e.full_name, type: 'employee' as const })),
-    ...activeSuppliers.map((s) => ({ id: s.id, name: s.name, type: 'supplier' as const })),
+    ...activeSuppliers.map((s) => ({ id: s.id, name: s.name, type: 'supplier' as const, nif: s.nif ?? null })),
   ], [organizations, activeEmployees, activeSuppliers]);
   /** Responsable par défaut (Zone 3) — appliqué aux nouvelles lignes sans partie prenante. */
   const [defaultStakeholderId, setDefaultStakeholderId] = useState<string>(() => readPrefs().stakeholderId ?? '');
@@ -204,6 +204,13 @@ export function BoqWorkspace({
     () => stakeholders.find((s) => s.id === defaultStakeholderId) ?? null,
     [stakeholders, defaultStakeholderId],
   );
+  const defaultSupplierNif = defaultStakeholder?.type === 'supplier'
+    ? defaultStakeholder.nif ?? null
+    : null;
+  useEffect(() => {
+    if (!defaultSupplierNif || compliance.supplierNif) return;
+    setCompliance((current) => ({ ...current, supplierNif: defaultSupplierNif }));
+  }, [compliance.supplierNif, defaultSupplierNif]);
   /** Référentiel verrouillé sur le projet actif (contexte projet = source de vérité). */
   const referentialLocked = mode === 'planning' && !!projectId && !!projectName;
   const effectiveReferential = referentialLocked ? referentialCode : activeReferential;
@@ -258,7 +265,7 @@ export function BoqWorkspace({
   /** Métadonnées par défaut d'une nouvelle ligne (responsable hérité de la Zone 3). */
   const defaultLineMetadata = useMemo<Record<string, unknown> | null>(
     () => (defaultStakeholder
-      ? { stakeholder: { id: defaultStakeholder.id, name: defaultStakeholder.name, type: defaultStakeholder.type } }
+      ? {       stakeholder: { id: defaultStakeholder.id, name: defaultStakeholder.name, type: defaultStakeholder.type, nif: defaultStakeholder.nif ?? null } }
       : null),
     [defaultStakeholder],
   );
@@ -266,6 +273,34 @@ export function BoqWorkspace({
   const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
     designation: '', unit: 'u', quantity: 1, unitPrice: 0,
   });
+
+  const fiscalProfileOptions = useMemo(
+    () => {
+      const serviceProfiles = TaxService.listAvailableProfiles(
+        { category, designation: form.designation ?? '', elementType },
+        fiscalCode,
+        getFiscalProfile(fiscalCode),
+        lang,
+      );
+      const list = serviceProfiles.length > 0 ? serviceProfiles : Object.values(BOQ_FISCAL_PROFILES).map((p) => ({
+        code: p.code,
+        label: getFiscalProfileLabel(p.code, lang),
+        vatRate: p.vatRate,
+        withholdingRate: p.withholdingRate,
+        recommended: p.code === fiscalCode,
+      }));
+      return list.sort((a, b) => Number(b.recommended) - Number(a.recommended) || a.label.localeCompare(b.label));
+    },
+    [category, form.designation, elementType, fiscalCode, lang],
+  );
+
+  useEffect(() => {
+    if (!fiscalProfileOptions.length) return;
+    if (!fiscalProfileOptions.some((p) => p.code === fiscalCode)) {
+      setFiscalCode(fiscalProfileOptions[0].code);
+      writePrefs({ fiscalCode: fiscalProfileOptions[0].code });
+    }
+  }, [fiscalCode, fiscalProfileOptions]);
 
   const [finalizing, setFinalizing] = useState(false);
 
@@ -392,10 +427,10 @@ export function BoqWorkspace({
     const htBase = computedQuantity * pu;
     const ht = htBase * (1 + (Number(overheadPct) || 0) / 100);
     const profile = getFiscalProfile(fiscalCode);
-    // La TVA/RAS dépendent de la nature du poste (travaux, fourniture, consulting…).
     const tax = TaxService.resolve({ category, designation: form.designation, elementType, totalHt: ht }, profile);
-    const tva = ht * tax.vatRate;
-    return { ht, tva, ttc: ht + tva, ras: ht * tax.rasRate, qty: computedQuantity, regimeLabel: tax.regimeLabel };
+    const tva = tax.vatAmount;
+    const ras = tax.rasAmount;
+    return { ht, tva, ttc: tax.totalTtc, ras, qty: computedQuantity, regimeLabel: tax.regimeLabel };
   }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct, category, form.designation, elementType]);
 
   // ---- Tampon local (batch) : « Ajouter » n'écrit PAS en DB.
@@ -430,7 +465,13 @@ export function BoqWorkspace({
     }
     const profile = getFiscalProfile(fiscalCode);
     // Fiscalité résolue une seule fois (régime + imputation PCM) pour la ligne saisie.
-    const manualTax = TaxService.resolve({ category, designation: form.designation, elementType }, profile);
+    const manualTax = TaxService.resolve({
+      category,
+      designation: form.designation,
+      elementType,
+      supplierNif: defaultSupplierNif,
+      supplierNifStatus: defaultSupplierNif ? 'unknown' : 'unknown',
+    }, profile);
     const overheadNote = (Number(overheadPct) || 0) > 0 ? `Frais généraux ${overheadPct}%` : null;
     const effectivePu = (Number(form.unitPrice) || 0) * (1 + (Number(overheadPct) || 0) / 100);
     const effectiveWbs: WbsValue = {
@@ -460,6 +501,8 @@ export function BoqWorkspace({
       vatRate: manualTax.vatRate,
       taxRegimeCode: manualTax.regimeCode,
       accountCode: manualTax.accountCode,
+      supplierNif: defaultSupplierNif,
+      supplierNifStatus: defaultSupplierNif ? 'unknown' : 'unknown',
       note: [
         category === 'overhead' ? 'Frais généraux' : null,
         overheadNote,
@@ -751,8 +794,10 @@ export function BoqWorkspace({
             <Select value={fiscalCode} onValueChange={(v) => { setFiscalCode(v); writePrefs({ fiscalCode: v }); }}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
-                  <SelectItem key={p.code} value={p.code}>{getFiscalProfileLabel(p.code, lang)} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%)</SelectItem>
+                {fiscalProfileOptions.map((p) => (
+                  <SelectItem key={p.code} value={p.code}>
+                    {p.label} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%){p.recommended ? ' · recommandé' : ''}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -875,12 +920,12 @@ export function BoqWorkspace({
                 </div>
                 <div className="col-span-3">
                   <Label><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
-                  <Select value={fiscalCode} onValueChange={setFiscalCode}>
+                  <Select value={fiscalCode} onValueChange={(v) => { setFiscalCode(v); writePrefs({ fiscalCode: v }); }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {Object.values(BOQ_FISCAL_PROFILES).map((p) => (
+                      {fiscalProfileOptions.map((p) => (
                         <SelectItem key={p.code} value={p.code}>
-                           {getFiscalProfileLabel(p.code, lang)} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%)
+                           {p.label} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%){p.recommended ? ' · recommandé' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>

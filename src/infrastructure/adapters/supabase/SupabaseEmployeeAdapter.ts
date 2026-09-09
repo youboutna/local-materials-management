@@ -85,6 +85,7 @@ export class SupabaseEmployeeAdapter implements IEmployeeRepository {
       tags: 'tags',
       notes: 'notes',
       nationalId: 'national_id',
+      nif: 'nif',
     };
     const extras = (data.extras || {}) as Record<string, unknown>;
     Object.entries(extrasMap).forEach(([key, column]) => {

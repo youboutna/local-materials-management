@@ -57,12 +57,15 @@ export class BoqFiscalRecapService {
       if (!ht) continue;
       const rate = Number(line.vatRate ?? 0);
       const vatRate = Number.isFinite(rate) ? (rate > 1 ? rate / 100 : rate) : 0;
+      const rasRate = Number(line.rasRate ?? 0);
+      const normalizedRasRate = Number.isFinite(rasRate) ? (rasRate > 1 ? rasRate / 100 : rasRate) : 0;
       const block = lineBlock(line);
       const key = `${block}:${vatRate}`;
       const group =
         map.get(key) ?? { vatRate, block, lineCount: 0, totalHt: 0, vatAmount: 0, totalTtc: 0 };
       group.lineCount += 1;
       group.totalHt += ht;
+      group.totalTtc += ht + ht * vatRate - ht * normalizedRasRate;
       map.set(key, group);
     }
 
@@ -70,17 +73,19 @@ export class BoqFiscalRecapService {
       .map((g) => {
         const totalHt = round2(g.totalHt);
         const vatAmount = round2(totalHt * g.vatRate);
-        return { ...g, totalHt, vatAmount, totalTtc: round2(totalHt + vatAmount) };
+        const totalTtc = round2(g.totalTtc);
+        return { ...g, totalHt, vatAmount, totalTtc };
       })
       .sort((a, b) => (a.block === b.block ? a.vatRate - b.vatRate : a.block === 'material' ? -1 : 1));
 
     const totalHt = round2(groups.reduce((s, g) => s + g.totalHt, 0));
     const totalVat = round2(groups.reduce((s, g) => s + g.vatAmount, 0));
+    const totalTtc = round2(groups.reduce((s, g) => s + g.totalTtc, 0));
     return {
       groups,
       totalHt,
       totalVat,
-      totalTtc: round2(totalHt + totalVat),
+      totalTtc,
       multiRate: new Set(groups.map((g) => g.vatRate)).size > 1,
     };
   }

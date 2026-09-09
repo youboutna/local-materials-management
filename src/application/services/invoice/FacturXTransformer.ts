@@ -108,8 +108,8 @@ export const FacturXTransformer = {
         acc.totalHt += totalHt;
         acc.totalTva += totalHt * vatRate;
         acc.withholding += totalHt * rasRate;
-        acc.totalTtc = acc.totalHt + acc.totalTva;
-        acc.netToPay = acc.totalTtc - acc.withholding;
+        acc.totalTtc = acc.totalHt + acc.totalTva - acc.withholding;
+        acc.netToPay = acc.totalTtc;
         return acc;
       },
       { totalHt: 0, totalTva: 0, totalTtc: 0, withholding: 0, netToPay: 0 },

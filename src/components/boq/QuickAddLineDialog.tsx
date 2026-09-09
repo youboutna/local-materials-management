@@ -9,7 +9,7 @@
  * Aucune règle métier ici : tout provient de BoqLineAutofillService + TaxService.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Sparkles, Wand2 } from 'lucide-react';
+import { Lightbulb, Plus, Sparkles, Wand2 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover'
 import { T } from '@/components/i18n/T';
 import { PcmAccountSelect } from './PcmAccountSelect';
 import { WbsSelector, type WbsScopeValue, type WbsValue } from './WbsSelector';
+import { MetreDialog } from './MetreDialog';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
 import type { ReferentialType } from '@/config/referentials';
 import { getUnitOptions } from '@/config/referentials/boq/unit-catalog.referential';
@@ -30,11 +31,13 @@ import { ELEMENT_TYPES } from '@/config/referentials/boq/element-types.referenti
 import { MeterService } from '@/application/services/boq/MeterService';
 import { TaxService } from '@/application/services/TaxService';
 import { getFiscalProfile } from '@/config/referentials/boq/default-values.referential';
+import { getRecommendationItems } from '@/config/referentials/boq/recommendations.referential';
 import {
   BoqLineAutofillService,
   type AutofillMaterial,
   type AutofillSuggestion,
 } from '@/application/services/boq/BoqLineAutofillService';
+import type { MeterOpening } from '@/dtos/boq/MeterInputDTO';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqResourceType } from '@/domain/entities/boq/BoqLine';
 
@@ -83,6 +86,11 @@ export function QuickAddLineDialog({
   const [note, setNote] = useState('');
   const [elementType, setElementType] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
+  const [openCount, setOpenCount] = useState<number | null>(null);
+  const [openWidth, setOpenWidth] = useState<number | null>(null);
+  const [openHeight, setOpenHeight] = useState<number | null>(null);
+  const [deductOpenings, setDeductOpenings] = useState(true);
+  const [meterDialogOpen, setMeterDialogOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [detections, setDetections] = useState<{ field: string; label: string; value: string }[]>([]);
   const touchedUnit = useRef(false);
@@ -100,7 +108,8 @@ export function QuickAddLineDialog({
     setDesignation(''); setUnit('u'); setQuantity(null); setUnitPrice(null);
     setLength(null); setWidth(null); setHeight(null); setResourceType('material');
     setAccountCode(null); setWbs(defaultWbs ?? {}); setNote('');
-    setElementType(null); setCategory(null); setDetections([]);
+    setElementType(null); setCategory(null); setOpenCount(null); setOpenWidth(null); setOpenHeight(null); setDeductOpenings(true);
+    setDetections([]);
     touchedUnit.current = false; touchedPrice.current = false; touchedAccount.current = false;
     touchedQty.current = false;
   };
@@ -141,15 +150,38 @@ export function QuickAddLineDialog({
 
   // Métré centralisé (MeterService) : le type d'ouvrage fixe l'unité attendue et
   // la formule ; la quantité se recalcule à chaque frappe sur L / l / h.
+  const openings = useMemo<MeterOpening[]>(() => {
+    if (!openWidth || !openHeight) return [];
+    return [{ width: openWidth, height: openHeight, count: openCount ?? 1 }];
+  }, [openCount, openWidth, openHeight]);
+
   const metre = useMemo(
-    () => MeterService.quantityFor({ designation, elementType, length, width, height }),
-    [designation, elementType, length, width, height],
+    () => MeterService.quantityFor({ designation, elementType, length, width, height, openings, deductOpenings }),
+    [designation, elementType, length, width, height, openings, deductOpenings],
   );
   useEffect(() => {
     if (metre.unit) setUnit(metre.unit);
     if (!touchedQty.current && metre.quantity > 0) setQuantity(Number(metre.quantity.toFixed(3)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metre.unit, metre.quantity]);
+
+  const recommendations = useMemo(() => (elementType ? getRecommendationItems(elementType) : []), [elementType]);
+
+  useEffect(() => {
+    if (!designation.trim() || accountCode) return;
+    const autoTax = TaxService.resolve(
+      {
+        designation,
+        resourceType,
+        category: category ?? null,
+        elementType,
+        accountCode: null,
+        totalHt: (quantity ?? 0) * (unitPrice ?? 0),
+      },
+      getFiscalProfile(fiscalProfileCode),
+    );
+    if (autoTax.accountCode && !touchedAccount.current) setAccountCode(autoTax.accountCode);
+  }, [accountCode, category, designation, elementType, fiscalProfileCode, quantity, resourceType, unitPrice]);
 
   const pickSuggestion = (s: AutofillSuggestion) => {
     setDesignation(s.label);
@@ -194,6 +226,8 @@ export function QuickAddLineDialog({
       phaseId: wbs.phaseId ?? null,
       milestoneId: wbs.milestoneId ?? null,
       taskId: wbs.taskId ?? null,
+      openings: openings.length ? openings : undefined,
+      deductOpenings,
       note: note.trim() || null,
       sourceType: 'rapide',
     });
@@ -202,7 +236,36 @@ export function QuickAddLineDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
+    <>
+      <MetreDialog
+        open={meterDialogOpen}
+        onOpenChange={setMeterDialogOpen}
+        initial={{
+          designation,
+          elementType,
+          unit,
+          length,
+          width,
+          height,
+          quantity: quantity ?? metre.quantity,
+          openings,
+          deductOpenings,
+        }}
+        onApply={(value) => {
+          setElementType(value.elementType);
+          setLength(value.length);
+          setWidth(value.width);
+          setHeight(value.height);
+          setUnit(value.unit || unit);
+          setQuantity(value.quantity);
+          setOpenCount(value.openings?.[0]?.count ?? null);
+          setOpenWidth(value.openings?.[0]?.width ?? null);
+          setOpenHeight(value.openings?.[0]?.height ?? null);
+          setDeductOpenings(value.deductOpenings ?? true);
+          if (value.quantity > 0) { touchedQty.current = true; }
+        }}
+      />
+      <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
       {trigger ? <DialogTrigger asChild disabled={disabled}>{trigger}</DialogTrigger> : null}
       <DialogContent className="max-h-[92vh] w-[min(96vw,900px)] max-w-none overflow-y-auto">
         <DialogHeader>
@@ -275,10 +338,16 @@ export function QuickAddLineDialog({
               <span className="text-xs font-semibold text-muted-foreground">
                 <T k="dqe.quickadd.takeoff" fallback="Métré (longueur × largeur × hauteur)" />
               </span>
-              <Button type="button" size="sm" variant="ghost" onClick={() => runAutofill()}>
-                <Wand2 className="mr-1 h-3.5 w-3.5" />
-                <T k="dqe.quickadd.detect" fallback="Détecter" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button type="button" size="sm" variant="ghost" onClick={() => setMeterDialogOpen(true)}>
+                  <Wand2 className="mr-1 h-3.5 w-3.5" />
+                  <T k="auto.boqworkspace.calcul_metre" fallback="Calcul métré" />
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => runAutofill()}>
+                  <Wand2 className="mr-1 h-3.5 w-3.5" />
+                  <T k="dqe.quickadd.detect" fallback="Détecter" />
+                </Button>
+              </div>
             </div>
             <div className="mb-3 grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
@@ -328,6 +397,29 @@ export function QuickAddLineDialog({
                 />
               </div>
             </div>
+            <div className="mt-3 rounded-md border bg-muted/25 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-[11px] font-semibold text-muted-foreground">Ouvertures à déduire</span>
+                <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  Déduire
+                  <input type="checkbox" checked={deductOpenings} onChange={(e) => setDeductOpenings(e.target.checked)} />
+                </label>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Nombre</Label>
+                  <Input inputMode="numeric" value={openCount ?? ''} onChange={(e) => setOpenCount(num(e.target.value))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Largeur (m)</Label>
+                  <Input inputMode="decimal" value={openWidth ?? ''} onChange={(e) => setOpenWidth(num(e.target.value))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Hauteur (m)</Label>
+                  <Input inputMode="decimal" value={openHeight ?? ''} onChange={(e) => setOpenHeight(num(e.target.value))} />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Classification + imputation */}
@@ -375,6 +467,23 @@ export function QuickAddLineDialog({
             </div>
           )}
 
+          {recommendations.length > 0 && (
+            <div className="rounded-md border bg-muted/30 p-3">
+              <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+                <Lightbulb className="h-3.5 w-3.5 text-primary" />
+                Recommandations ({recommendations.length})
+              </div>
+              <ul className="grid gap-1 text-xs sm:grid-cols-2">
+                {recommendations.map((r) => (
+                  <li key={r.label} className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>{r.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <Separator />
 
           {/* Aperçu fiscal temps réel */}
@@ -400,5 +509,6 @@ export function QuickAddLineDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
