@@ -67,6 +67,8 @@ export interface SupplierDetailsDTO extends SupplierDTO {
 export interface SupplierSummaryDTO {
   id: string;
   name: string;
+  /** NIF fiscal (contrôles LFR 2026 côté UI). */
+  nif?: string | null;
   email?: string;
   phone?: string;
   category?: string;

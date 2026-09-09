@@ -113,13 +113,13 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((t) => {
-            const isSelected = t.id === selectedTenderId;
-            const projectTitle = t.project_id ? projectById[t.project_id] : null;
-            const deadline = t.submission_deadline || t.deadline_date;
+          {filtered.map((tender) => {
+            const isSelected = tender.id === selectedTenderId;
+            const projectTitle = tender.project_id ? projectById[tender.project_id] : null;
+            const deadline = tender.submission_deadline || tender.deadline_date;
             return (
               <div
-                key={t.id}
+                key={tender.id}
                 className={`border rounded-lg p-3 space-y-2 transition-colors ${
                   isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/40'
                 }`}
@@ -127,43 +127,43 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      {t.tender_number && (
+                      {tender.tender_number && (
                         <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">
-                          {t.tender_number}
+                          {tender.tender_number}
                         </code>
                       )}
-                      <h3 className="font-semibold truncate">{t.title}</h3>
+                      <h3 className="font-semibold truncate">{tender.title}</h3>
                       {isSelected && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
                     </div>
-                    {t.description && (
+                    {tender.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                        {t.description}
+                        {tender.description}
                       </p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.selectionner')} onClick={() => onSelect(t)}>
+                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.selectionner')} onClick={() => onSelect(tender)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="ghost" title={t('auto.tenderlistview.voir_detail')} asChild>
-                      <Link to={`/tenders/${t.id}`}>
+                      <Link to={`/tenders/${tender.id}`}>
                         <FolderKanban className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.modifier')} onClick={() => onEdit(t)}>
+                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.modifier')} onClick={() => onEdit(tender)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.supprimer')} onClick={() => onDelete(t.id)}>
+                    <Button size="sm" variant="ghost" title={t('auto.tenderlistview.supprimer')} onClick={() => onDelete(tender.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <Badge className={STATUS_STYLE[t.status] || STATUS_STYLE.draft}><TranslatedStatus code={t.status} /></Badge>
-                  {t.selection_mode && <Badge variant="outline">{t.selection_mode}</Badge>}
-                  {t.market_type && <Badge variant="outline">{t.market_type}</Badge>}
-                  {t.procurement_type && <Badge variant="outline">{t.procurement_type}</Badge>}
+                  <Badge className={STATUS_STYLE[tender.status] || STATUS_STYLE.draft}><TranslatedStatus code={tender.status} /></Badge>
+                  {tender.selection_mode && <Badge variant="outline">{tender.selection_mode}</Badge>}
+                  {tender.market_type && <Badge variant="outline">{tender.market_type}</Badge>}
+                  {tender.procurement_type && <Badge variant="outline">{tender.procurement_type}</Badge>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -173,18 +173,18 @@ export function TenderListView({ tenders, projects, selectedTenderId, onSelect, 
                     </div>
                   )}
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Lanc: {fmt(t.launch_date)}
+                    <Calendar className="h-3 w-3" /> Lanc: {fmt(tender.launch_date)}
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" /> Limite: {fmt(deadline)}
                   </div>
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Attrib: {fmt(t.attribution_date)}
+                    <Calendar className="h-3 w-3" /> Attrib: {fmt(tender.attribution_date)}
                   </div>
                   <div>
-                    {t.estimated_value != null && (
+                    {tender.estimated_value != null && (
                       <span className="font-medium">
-                        Valeur: {Number(t.estimated_value).toLocaleString('fr-FR')} MRU
+                        Valeur: {Number(tender.estimated_value).toLocaleString('fr-FR')} MRU
                       </span>
                     )}
                   </div>

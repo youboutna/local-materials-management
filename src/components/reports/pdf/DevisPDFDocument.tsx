@@ -77,7 +77,7 @@ export function DevisPDFDocument({
   tender,
   config = {},
   company = {
-    name: t('auto.devispdfdocument.votre_entreprise'),
+    name: 'Votre entreprise',
     address: '123 Rue Exemple, Nouakchott, Mauritanie',
     phone: '+222 XX XX XX XX',
     email: 'contact@votreentreprise.mr'
