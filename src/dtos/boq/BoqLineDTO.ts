@@ -2,6 +2,7 @@
  * BoqLineDTO — camelCase DTO shared by services and UI.
  */
 import type { BoqResourceType, BoqSource, BoqStatus } from '@/domain/entities/boq/BoqLine';
+import type { MeterOpening } from '@/dtos/boq/MeterInputDTO';
 
 export type BoqSourceType = 'rapide' | 'avance' | 'import' | 'invoice';
 
@@ -16,7 +17,7 @@ export interface BoqLineDTO {
   width?: number | null;
   height?: number | null;
   /** Ouvertures à déduire du métré (portes, fenêtres…) — traçabilité du calcul. */
-  openings?: { width: number; height: number; count?: number }[] | null;
+  openings?: MeterOpening[];
   /** Indique si les ouvertures ont été déduites de la quantité calculée. */
   deductOpenings?: boolean | null;
   quantity: number;
