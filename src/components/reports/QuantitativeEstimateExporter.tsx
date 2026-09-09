@@ -75,12 +75,11 @@ interface QuantitativeEstimateExporterProps {
 }
 
 export function QuantitativeEstimateExporter({
-  const { t } = useLanguage();
   estimate,
   estimateItems,
   tender,
   company = {
-    name: t('auto.quantitativeestimateexporter.votre_entreprise'),
+    name: 'Votre entreprise',
     address: '123 Rue Exemple, Nouakchott, Mauritanie',
     phone: '+222 XX XX XX XX',
     email: 'contact@votreentreprise.mr'

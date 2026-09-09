@@ -74,7 +74,6 @@ const StakeholdersTeamStep: React.FC<StakeholdersTeamStepProps> = ({
   workflowData,
   onStepComplete,
 }) => {
-  const { t } = useLanguage();
   const { t } = useI18n();
   const projectData = workflowData?.projectData || ({} as ProjectDTO);
   const projectId = projectData.id;

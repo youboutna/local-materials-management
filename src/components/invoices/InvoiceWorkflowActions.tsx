@@ -101,7 +101,6 @@ export const InvoiceWorkflowActions: React.FC<Props> = ({
   onTransformed,
 
 }) => {
-  const { t } = useLanguage();
   const { toast } = useToast();
   const { t, language, translateStatus } = useI18n();
   const [busy, setBusy] = useState<string | null>(null);

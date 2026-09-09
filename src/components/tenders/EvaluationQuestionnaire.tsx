@@ -60,7 +60,6 @@ export const EvaluationQuestionnaire: React.FC<EvaluationQuestionnaireProps> = (
   regulatoryAnswers,
   onRegulatoryChange,
 }) => {
-  const { t } = useLanguage();
   const { t } = useI18n();
   const result = useMemo(() => computeGlobalScore(value, weights, criteria), [value, weights, criteria]);
 

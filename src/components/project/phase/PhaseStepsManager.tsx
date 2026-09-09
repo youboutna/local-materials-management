@@ -101,13 +101,13 @@ const getStatusLabel = (status: PhaseStatus | string) => i18nService.translateSt
 
 // Step Edit Form Component
 const StepEditDialog: React.FC<{
-  const { t } = useLanguage();
   step?: PhaseStepDTO;
   open: boolean;
   onClose: () => void;
   onSave: (data: Partial<PhaseStepDTO>) => void;
   isNew?: boolean;
 }> = ({ step, open, onClose, onSave, isNew }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<Partial<PhaseStepDTO>>({
     name: step?.name || '',
     description: step?.description || '',
@@ -261,13 +261,13 @@ const StepEditDialog: React.FC<{
 
 // Task Edit Form Component
 const TaskEditDialog: React.FC<{
-  const { t } = useLanguage();
   task?: PhaseTaskDTO;
   open: boolean;
   onClose: () => void;
   onSave: (data: Partial<PhaseTaskDTO>) => void;
   isNew?: boolean;
 }> = ({ task, open, onClose, onSave, isNew }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<Partial<PhaseTaskDTO>>({
     name: task?.name || '',
     description: task?.description || '',
@@ -401,7 +401,6 @@ const TaskEditDialog: React.FC<{
 
 // Step Card Component
 const StepCard: React.FC<{
-  const { t } = useLanguage();
   step: PhaseStepDTO;
   index: number;
   onEdit: () => void;
@@ -432,6 +431,7 @@ const StepCard: React.FC<{
   projectId,
   phaseId,
 }) => {
+  const { t } = useLanguage();
   const isCompleted = step.status === 'completed';
   const isInProgress = step.status === 'in_progress';
   const isDelayed = step.status === 'delayed';

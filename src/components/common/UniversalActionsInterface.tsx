@@ -62,7 +62,6 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
   triggerButton,
   contextualInfo
 }) => {
-  const { t } = useLanguage();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();

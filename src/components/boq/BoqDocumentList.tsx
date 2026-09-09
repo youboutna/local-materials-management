@@ -54,7 +54,6 @@ type SortKey = 'reference' | 'title' | 'lineCount' | 'totalHt' | 'totalTtc' | 's
 const PAGE_SIZES = [20, 50, 100];
 
 export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId, title, docPrefix, onOpen, onCreate }) => {
-  const { t } = useLanguage();
   const { t, translateStatus, locale } = useI18n();
   const { toast } = useToast();
   const { documents, rawLines, isLoading, invalidate } = useBoqDocumentList({ source, contextId, projectId });

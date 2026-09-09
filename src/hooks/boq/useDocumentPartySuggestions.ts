@@ -33,7 +33,7 @@ export function useDocumentPartySuggestions() {
       const [orgs, suppliers, employees] = await Promise.all([
         getOrganizationService().list().catch(() => []),
         getSupplierService().getAllSuppliers().catch(() => []),
-        getEmployeeService().findAll().catch(() => []),
+        getEmployeeService().getAllEmployees().catch(() => []),
       ]);
 
       const orgItems: DocumentPartySuggestion[] = (orgs ?? [])

@@ -169,8 +169,10 @@ export function QuickAddLineDialog({
 
   const recommendations = useMemo(() => (elementType ? getRecommendationItems(elementType) : []), [elementType]);
 
+  // Compte comptable + profil fiscal recalculés quand la catégorie, la nature,
+  // le type d'ouvrage ou le rattachement WBS (phase) change — sauf saisie manuelle.
   useEffect(() => {
-    if (!designation.trim() || accountCode) return;
+    if (!designation.trim() || touchedAccount.current) return;
     const autoTax = TaxService.resolve(
       {
         designation,
@@ -182,8 +184,10 @@ export function QuickAddLineDialog({
       },
       getFiscalProfile(fiscalProfileCode),
     );
-    if (autoTax.accountCode && !touchedAccount.current) setAccountCode(autoTax.accountCode);
-  }, [accountCode, category, designation, elementType, fiscalProfileCode, quantity, resourceType, unitPrice]);
+    if (autoTax.accountCode) setAccountCode(autoTax.accountCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, designation, elementType, resourceType, fiscalProfileCode, wbs.phaseId]);
+
 
   const pickSuggestion = (s: AutofillSuggestion) => {
     setDesignation(s.label);
@@ -473,7 +477,7 @@ export function QuickAddLineDialog({
             <div className="rounded-md border bg-muted/30 p-3">
               <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
                 <Lightbulb className="h-3.5 w-3.5 text-primary" />
-                Recommandations ({recommendations.length})
+                <T k="dqe.quickadd.recommendations" fallback="Recommandations" /> ({recommendations.length})
               </div>
               <ul className="grid gap-1 text-xs sm:grid-cols-2">
                 {recommendations.map((r) => (
