@@ -340,10 +340,10 @@ const AdministrativeEvaluation: React.FC<{
 
 // Technical Evaluation Component
 const TechnicalEvaluation: React.FC<{
-  const { t } = useLanguage();
   submission: Submission;
   onUpdate: (id: string, field: string, value: any) => void;
 }> = ({ submission, onUpdate }) => {
+  const { t } = useLanguage();
   const [score, setScore] = useState(submission.technical_score || 0);
   const [notes, setNotes] = useState(submission.evaluator_notes || '');
 
@@ -435,10 +435,10 @@ const TechnicalEvaluation: React.FC<{
 
 // Financial Evaluation Component
 const FinancialEvaluation: React.FC<{
-  const { t } = useLanguage();
   submission: Submission;
   onUpdate: (id: string, field: string, value: any) => void;
 }> = ({ submission, onUpdate }) => {
+  const { t } = useLanguage();
   const [score, setScore] = useState(submission.financial_score || 0);
   const [notes, setNotes] = useState(submission.evaluator_notes || '');
 

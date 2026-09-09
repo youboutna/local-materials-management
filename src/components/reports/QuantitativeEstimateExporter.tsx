@@ -86,7 +86,6 @@ export function QuantitativeEstimateExporter({
   }
 }: QuantitativeEstimateExporterProps) {
   const { t } = useLanguage();
-  const { t } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);

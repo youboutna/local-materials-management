@@ -84,7 +84,6 @@ export function DevisPDFDocument({
   }
 }: DevisPDFDocumentProps) {
   const { t } = useLanguage();
-  const { t } = useLanguage();
   const defaultConfig: ExportConfig = {
     title: `Devis Quantitatif Estimatif - ${tender?.title || tender?.projectReference || 'Appel d\'Offres'}`,
     includeCompanyHeader: true,

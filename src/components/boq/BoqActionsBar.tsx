@@ -80,7 +80,6 @@ export const BoqActionsBar: React.FC<Props> = ({
   onAttachToSubmission, onSubmitInvoice, onDistribute, onPublish,
   primarySlot, workflowSlot, badgesSlot, contextSlot,
 }) => {
-  const { t } = useLanguage();
 
   const { toast } = useToast();
   const { t } = useI18n();

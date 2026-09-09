@@ -274,7 +274,6 @@ interface AdvancedQuantityCalculatorProps {
 }
 
 const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({ projectId, phaseId, onPersisted }) => {
-  const { t } = useLanguage();
   const { t } = useI18n();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [calculations, setCalculations] = useState<CalculationResult[]>([]);
