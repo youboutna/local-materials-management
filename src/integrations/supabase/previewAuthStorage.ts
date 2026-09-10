@@ -5,6 +5,9 @@
  */
 // On a Lovable preview surface, broker the auth session to the editor over
 // postMessage so the project's preview surfaces share one login; else localStorage.
+//
+// ⚠️ PATCH MANUEL : les références `http://localhost:3000` ont été retirées.
+//    Si ce fichier est régénéré par Lovable, ce patch sera perdu.
 export function brokeredPreviewStorage() {
   if (typeof window === 'undefined') return undefined;
   const host = location.hostname;
@@ -23,13 +26,12 @@ export function brokeredPreviewStorage() {
   // Post only to the real editor ancestor, validated as a Lovable origin, so the
   // session token can never reach an untrusted embedder.
   const dev = host.endsWith('.lovableproject-dev.com') || host.endsWith('.gpt-eng.com');
-  const EDITOR = dev
-    ? /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$|^http:\/\/localhost:3000$/
-    : /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$/;
+  // ⚠️ localhost:3000 retiré : on n'accepte plus que les origines Lovable officielles.
+  const EDITOR = /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$/;
   const ancestor = (location.ancestorOrigins && location.ancestorOrigins[0]) || (document.referrer ? new URL(document.referrer).origin : '');
   const editorOrigins = ancestor && EDITOR.test(ancestor)
     ? [ancestor]
-    : (dev ? ['https://lovable.dev', 'http://localhost:3000'] : ['https://lovable.dev']);
+    : ['https://lovable.dev'];  // ⚠️ localhost:3000 retiré de la liste des origines de confiance
   const RESULT = 'lovable-preview-auth:result';
   const TIMEOUT = 2000;
   const newId = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
