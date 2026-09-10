@@ -3,12 +3,11 @@
  * Implements OAuth login functionality following hexagonal architecture
  */
 
+import { getOAuthRedirectUrl } from '@/config/supabaseConfig';
+import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
+import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-// ✅ Bon import : uniquement le hook, pas le contexte
-import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
-import { getOAuthRedirectUrl } from '@/config/supabaseConfig';
-import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { toast } from 'sonner';
 
 export interface UseOAuthLoginResult {
@@ -31,13 +30,13 @@ export function useOAuthLogin(): UseOAuthLoginResult {
       const code = urlParams.get('code');
       const state = urlParams.get('state');
       const provider = urlParams.get('provider') || sessionStorage.getItem('oauth_provider');
-      const error = urlParams.get('error');
+      const errorParam = urlParams.get('error');
 
-      if (error) {
+      if (errorParam) {
         const errorDescription = urlParams.get('error_description');
         throw new AppError(
-          ErrorCode.UNAUTHORIZED, 
-          errorDescription || `OAuth error: ${error}`
+          ErrorCode.UNAUTHORIZED,
+          errorDescription || `OAuth error: ${errorParam}`,
         );
       }
 
@@ -45,22 +44,25 @@ export function useOAuthLogin(): UseOAuthLoginResult {
         return; // Not an OAuth callback
       }
 
-      console.log('🔄 Handling OAuth callback for provider:', provider);
+      console.info('[OAuth Callback] Handling callback for provider:', provider);
+
+      // ✅ URL de retour : toujours le frontend, jamais localhost dans un build publié.
+      const redirectUri = getOAuthRedirectUrl();
 
       const oAuthData = {
         provider,
         code,
         state: state || undefined,
-        redirectUri: `${window.location.origin}${window.location.pathname}`
+        redirectUri,
       };
 
       await loginWithOAuth(oAuthData);
 
       sessionStorage.removeItem('oauth_provider');
       sessionStorage.removeItem('oauth_state');
+      sessionStorage.removeItem('oauth_redirect_uri');
 
       navigate(location.pathname, { replace: true });
-
     } catch (error) {
       console.error('OAuth callback error:', error);
       if (error instanceof AppError) {
@@ -75,20 +77,19 @@ export function useOAuthLogin(): UseOAuthLoginResult {
   // Initiate OAuth login
   const initiateOAuthLogin = useCallback(async (provider: string) => {
     try {
-      console.log('🚀 Initiating OAuth login for provider:', provider);
+      console.info('[OAuth] Initiating login for provider:', provider);
 
-      // URL de retour publique unique (jamais localhost dans un build publié).
+      // ✅ URL de retour unique (jamais localhost dans un build publié).
       const redirectUri = getOAuthRedirectUrl();
-      
+
       sessionStorage.setItem('oauth_provider', provider);
       sessionStorage.setItem('oauth_redirect_uri', redirectUri);
 
       const oAuthUrl = await generateOAuthUrl(provider, redirectUri);
 
-      console.log('🔗 Redirecting to OAuth URL:', oAuthUrl);
+      console.info('[OAuth] Redirecting to:', oAuthUrl);
 
       window.location.href = oAuthUrl;
-
     } catch (error) {
       console.error('OAuth initiation error:', error);
       if (error instanceof AppError) {
@@ -111,12 +112,14 @@ export function useOAuthLogin(): UseOAuthLoginResult {
   const [availableProviders, setAvailableProviders] = useState<any[]>([]);
 
   useEffect(() => {
-    getOAuthProviders().then(providers => {
-      setAvailableProviders(providers);
-    }).catch(error => {
-      console.error('Failed to fetch OAuth providers:', error);
-      setAvailableProviders([]);
-    });
+    getOAuthProviders()
+      .then(providers => {
+        setAvailableProviders(providers);
+      })
+      .catch(error => {
+        console.error('Failed to fetch OAuth providers:', error);
+        setAvailableProviders([]);
+      });
   }, [getOAuthProviders]);
 
   return {
@@ -124,6 +127,6 @@ export function useOAuthLogin(): UseOAuthLoginResult {
     handleOAuthCallback,
     isHandlingCallback: false,
     availableProviders,
-    getOAuthProviders
+    getOAuthProviders,
   };
 }

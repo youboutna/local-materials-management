@@ -11,6 +11,12 @@
  * du JWT anon est comparé au sous-domaine de l'URL ; toute clé incohérente est
  * ignorée (et tracée) au lieu d'être utilisée. `.env` n'est jamais modifié :
  * cette couche rend l'incohérence inoffensive.
+ *
+ * ⚠️ NE PAS CONFONDRE :
+ *   - getOAuthRedirectUrl()  → URL de RETOUR du FRONTEND (/auth/callback)
+ *                              Passée à supabase.auth.signInWithOAuth({ redirectTo })
+ *   - getOAuthCallbackUrl()  → URL de CALLBACK OAuth (côté Supabase/GoTrue)
+ *                              À déclarer dans Google Cloud Console / GitHub OAuth Apps
  */
 
 export interface SupabaseResolvedConfig {
@@ -106,21 +112,85 @@ export function requireSupabaseConfig(): SupabaseResolvedConfig {
 // ---------------------------------------------------------------------------
 
 /**
- * URL publique du site. Priorité : VITE_SITE_URL (ou runtime __APP_CONFIG__)
- * puis l'origine réelle du navigateur. Aucun fallback localhost codé en dur :
- * en production l'origine du navigateur est déjà le domaine public.
+ * Détecte si le navigateur est sur un domaine public (≠ localhost).
+ * En preview Lovable ou en prod, on doit TOUJOURS utiliser l'origine du
+ * navigateur, jamais une valeur `localhost` figée dans .env.
+ */
+function isBrowserOnPublicDomain(): boolean {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return !/^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(host);
+}
+
+/** Détecte si une URL est en HTTPS. */
+function isHttps(url: string): boolean {
+  return /^https:\/\//i.test(url);
+}
+
+/**
+ * URL publique du site (frontend).
+ *
+ * ⚠️ CORRECTIONS :
+ *  1. Si le navigateur est sur un domaine public, on IGNORE VITE_SITE_URL s'il
+ *     pointe vers localhost (cas typique de la preview Lovable où .env.development
+ *     contient VITE_SITE_URL=http://localhost:5173).
+ *  2. On force HTTPS dès que le navigateur est en HTTPS — jamais de redirect_to
+ *     en http:// depuis une page https://.
  */
 export function getSiteUrl(): string {
   const env = buildEnv();
   const configured = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
+  const browserOnPublic = isBrowserOnPublicDomain();
+  const browserOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+
+  // Priorité 1 : navigateur sur domaine public → utiliser son origine (déjà en https)
+  if (browserOnPublic && browserOrigin) {
+    const configuredIsLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(configured);
+    if (configuredIsLocalhost) {
+      console.warn(
+        `[SupabaseConfig] VITE_SITE_URL="${configured}" ignoré : navigateur sur "${browserOrigin}" (domaine public).`
+      );
+    } else if (configured && configured !== browserOrigin) {
+      console.warn(
+        `[SupabaseConfig] VITE_SITE_URL="${configured}" diffère de window.location.origin="${browserOrigin}". On utilise l'origine du navigateur.`
+      );
+    }
+    return browserOrigin;
+  }
+
+  // Priorité 2 : valeur configurée (dev local, SSR, CLI)
   if (configured) return configured;
-  if (typeof window !== 'undefined') return window.location.origin;
+
+  // Priorité 3 : origine du navigateur en dernier recours
+  if (browserOrigin) {
+    // En local, on accepte http:// ; en public, on force https://
+    if (browserOnPublic && !isHttps(browserOrigin)) {
+      return browserOrigin.replace(/^http:\/\//i, 'https://');
+    }
+    return browserOrigin;
+  }
+
   return '';
 }
 
-/** URL de retour unique des fournisseurs externes (GitHub, Google…). */
+/**
+ * URL de RETOUR après login (Supabase → frontend).
+ * C'est cette URL qu'on passe à `supabase.auth.signInWithOAuth({ redirectTo })`.
+ * Elle DOIT pointer vers le frontend, pas vers Supabase.
+ */
 export function getOAuthRedirectUrl(): string {
   return `${getSiteUrl()}/auth/callback`;
+}
+
+/**
+ * URL de CALLBACK OAuth (Google/GitHub → Supabase/GoTrue).
+ * ⚠️ NE PAS utiliser cette URL comme `redirectTo` dans signInWithOAuth.
+ * Elle doit être déclarée dans Google Cloud Console et GitHub OAuth Apps.
+ */
+export function getOAuthCallbackUrl(): string {
+  const { url } = resolveSupabaseConfig();
+  if (!url) return '';
+  return `${url.replace(/\/+$/, '')}/auth/v1/callback`;
 }
 
 /**
