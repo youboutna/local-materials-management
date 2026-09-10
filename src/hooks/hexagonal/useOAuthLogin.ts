@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 // ✅ Bon import : uniquement le hook, pas le contexte
 import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
+import { getOAuthRedirectUrl } from '@/config/supabaseConfig';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { toast } from 'sonner';
 
@@ -76,7 +77,8 @@ export function useOAuthLogin(): UseOAuthLoginResult {
     try {
       console.log('🚀 Initiating OAuth login for provider:', provider);
 
-      const redirectUri = `${window.location.origin}/auth?provider=${provider}`;
+      // URL de retour publique unique (jamais localhost dans un build publié).
+      const redirectUri = getOAuthRedirectUrl();
       
       sessionStorage.setItem('oauth_provider', provider);
       sessionStorage.setItem('oauth_redirect_uri', redirectUri);

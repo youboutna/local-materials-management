@@ -38,6 +38,7 @@ import Organizations from "./pages/Organizations";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import Contact from "./pages/Contact";
@@ -113,6 +114,7 @@ function App() {
                       {/* Public routes - always accessible */}
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<Auth />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/inbox" element={<Inbox />} />
                       <Route path="/terms" element={<Terms />} />
