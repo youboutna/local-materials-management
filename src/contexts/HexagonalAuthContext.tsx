@@ -3,6 +3,7 @@
 import { getAuthManager, type AuthManagerConfig } from '@/application/services/AuthManager';
 import type { AuthProvider } from '@/config/app';
 import { getAppConfig } from '@/config/app';
+import { getOAuthRedirectUrl } from '@/config/supabaseConfig';
 import { getOAuthProviderConfig } from '@/config/referentials/oauth-providers.referential';
 import type { LoginCredentials, RegisterData } from '@/domain/repositories/IAuthRepository';
 import type { AuthUser } from '@/dtos/entities/AuthDTO';
