@@ -311,13 +311,27 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const config = getAppConfig();
       const providerConfig = getOAuthProviderConfig(config.auth.provider as AuthProvider);
-      
+
+      // Retour toujours vers l'URL publique de l'application (jamais localhost
+      // dans un build publié) : /auth/callback.
+      const effectiveRedirect = redirectUri || getOAuthRedirectUrl();
+
       let authUrl = '';
-      
+
       switch (config.auth.provider) {
-        case 'supabase':
-          authUrl = `${config.auth.url}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUri)}`;
+        case 'supabase': {
+          // Le client Supabase construit lui-même l'URL /auth/v1/authorize à
+          // partir du projet résolu : aucune URL de base codée en dur.
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: provider as 'github' | 'google' | 'gitlab' | 'azure',
+            options: { redirectTo: effectiveRedirect, skipBrowserRedirect: true },
+          });
+          if (error) throw error;
+          if (!data?.url) throw new Error("URL OAuth introuvable pour le fournisseur " + provider);
+          authUrl = data.url;
           break;
+        }
         case 'keycloak':
           authUrl = `${config.auth.url}/realms/${config.auth.realm}/protocol/openid-connect/auth?client_id=${config.auth.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${(providerConfig.scopes || ['openid', 'profile', 'email']).join('%20')}`;
           break;
