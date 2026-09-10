@@ -31,3 +31,39 @@ export-monitor.ps1
 
 #add docker local files
 /supabase/docker/*.env
+
+# =============================================================================
+# Environment files
+# =============================================================================
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker/keycloak/.env
+docker/postgrest/.env
+supabase/docker/.env
+
+# Mais autoriser les templates :
+!.env.example
+!docker/keycloak/.env.example
+!docker/postgrest/.env.example
+!supabase/docker/.env.hadratech
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

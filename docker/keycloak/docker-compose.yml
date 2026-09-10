@@ -1,0 +1,150 @@
+# =============================================================================
+# Stack complète avec Keycloak pour SSO Entreprise
+# =============================================================================
+# 📁 Emplacement : docker/keycloak/docker-compose.yml
+# 🎯 Rôle : Scénario 4 – SSO Entreprise (Keycloak + PostgREST + MinIO)
+# 
+# Utilisation :
+#   cd docker/keycloak
+#   docker compose --env-file .env up -d
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # POSTGRES – Base de données
+  # ===========================================================================
+  postgres:
+    image: postgres:15
+    container_name: hadratech-keycloak-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-hadratech}
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,btp}
+      PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # ⬇️⬇️⬇️ MIGRATIONS HADRATECH ⬇️⬇️⬇️
+      # docker/keycloak/ → ../../ = racine → supabase/migrations/
+      - ../../supabase/migrations/:/docker-entrypoint-initdb.d/migrations/hadratech/:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-hadratech}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - keycloak-net
+
+  # ===========================================================================
+  # POSTGREST
+  # ===========================================================================
+  postgrest:
+    image: postgrest/postgrest:v12.0.2
+    container_name: hadratech-keycloak-postgrest
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-hadratech}
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,btp}
+      PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-please-change-me-32-chars-minimum}
+      PGRST_SERVER_PROXY_URI: ${API_EXTERNAL_URL:-http://localhost:3001}
+      PGRST_OPENAPI_SERVER_PROXY_URI: ${API_EXTERNAL_URL:-http://localhost:3001}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${POSTGREST_PORT:-3001}:3000"
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    networks:
+      - keycloak-net
+
+  # ===========================================================================
+  # KEYCLOAK
+  # ===========================================================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.7
+    container_name: hadratech-keycloak
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-hadratech}
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_PORT: 8080
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY: edge
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+    volumes:
+      - ./keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+      - "${KEYCLOAK_HTTPS_PORT:-8443}:8443"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - keycloak-net
+
+  # ===========================================================================
+  # MINIO
+  # ===========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: hadratech-keycloak-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - keycloak-net
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  postgres-data:
+    name: hadratech-keycloak-postgres-data
+  minio-data:
+    name: hadratech-keycloak-minio-data
+
+# =============================================================================
+# RÉSEAU
+# =============================================================================
+networks:
+  keycloak-net:
+    name: hadratech-keycloak-net
+    driver: bridge

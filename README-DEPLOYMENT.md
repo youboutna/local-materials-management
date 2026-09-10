@@ -4,127 +4,78 @@
 
 ---
 
+## 📋 Table des matières
+
+1. [Vue d'ensemble](#-vue-densemble)
+2. [Provider switches](#-provider-switches)
+3. [Scénarios de déploiement](#-scénarios-de-déploiement)
+4. [Structure des fichiers](#-structure-des-fichiers)
+5. [Scripts de déploiement](#-scripts-de-déploiement)
+6. [Démarrage rapide](#-démarrage-rapide)
+7. [Basculer entre scénarios](#-basculer-entre-scénarios)
+8. [Vérifications](#-vérifications)
+9. [Troubleshooting](#-troubleshooting)
+10. [Documentation complète](#-documentation-complète)
+
+---
+
 ## 📋 Vue d'ensemble
 
-Le déploiement est entièrement piloté par **variables d'environnement**. Les scénarios de déploiement sont documentés en détail dans **[`docs/SELF_HOSTING.md`](docs/SELF_HOSTING.md)**.
+Le déploiement est entièrement piloté par **variables d'environnement**. Les scénarios de déploiement sont documentés en détail dans **[`docs/SELF_HOSTING.md`](SELF_HOSTING.md)**.
 
-### 🔄 Provider switches (canoniques)
+### 🎯 Principes clés
+
+| Principe | Description |
+|----------|-------------|
+| **Infra-agnostique** | Aucun code à modifier pour changer d'infra |
+| **Piloté par `.env`** | 3 variables sélectionnent les providers |
+| **Scénarios isolés** | Chaque scénario a son dossier Docker |
+| **Secrets isolés** | `.env.local` (gitignored) contient les secrets |
+| **Idempotent** | Peut être ré-exécuté sans casser |
+
+---
+
+## 🔄 Provider switches
 
 Trois variables d'environnement sélectionnent les providers actifs, validés au démarrage par `src/config/app-validate.ts` :
 
-| Concern  | Env var                 | Valeurs                                        |
-| -------- | ----------------------- | --------------------------------------------- |
-| Auth     | `VITE_AUTH_PROVIDER`    | `supabase` \| `gotrue` \| `keycloak` \| `local` |
-| Data     | `VITE_DATA_PROVIDER`    | `supabase` \| `postgrest` \| `local`          |
-| Storage  | `VITE_STORAGE_PROVIDER` | `supabase` \| `s3` \| `minio` \| `local`      |
+| Concern | Env var | Valeurs | Défaut |
+|---------|---------|---------|--------|
+| **Auth** | `VITE_AUTH_PROVIDER` | `supabase` \| `gotrue` \| `keycloak` \| `local` | `supabase` |
+| **Data** | `VITE_DATA_PROVIDER` | `supabase` \| `postgrest` \| `local` | `supabase` |
+| **Storage** | `VITE_STORAGE_PROVIDER` | `supabase` \| `s3` \| `minio` \| `local` | `supabase` |
 
-**Configuration** : Copier `.env.example` vers `.env` et ajuster les valeurs. Consulter `docs/SELF_HOSTING.md` pour chaque scénario :
-- Supabase Cloud (managed)
-- Supabase Self-Hosted (Docker)
-- PostgREST + GoTrue + MinIO (stack légère)
-- Keycloak + PostgREST + MinIO (SSO Entreprise)
-- Développement local (mock)
+### Matrice de compatibilité
+Auth \ Data	supabase	postgrest	local
+supabase	✅	❌	❌
+gotrue	✅	✅	❌
+keycloak	❌	✅	❌
+local	✅ (B)	✅ (B')	✅ (C)
 
----
 
-## 🐳 Fichiers Docker Compose
-
-| Fichier | Stack | Utilisation |
-|---------|-------|-------------|
-| `docker-compose.yml` | Postgres + Keycloak + PostgREST + MinIO | SSO Entreprise, production |
-| `docker-compose.postgrest.yml` | PostgREST + GoTrue + MinIO | Stack légère OSS, développement |
-| `supabase/docker/docker-compose.yml` | Supabase complet (Kong + Studio + Realtime) | Self-hosted upstream |
+> ⚠️ **Mode B** : `VITE_JWT_SECRET` doit être synchronisé avec `JWT_SECRET` du backend.
 
 ---
 
-## 🛠️ Scripts de déploiement
+## 🎯 Scénarios de déploiement
 
-| Script | Description |
-|--------|-------------|
-| `scripts/install-cli.sh` | Installe la CLI Supabase via npm (locale ou globale) |
-| `scripts/deploy.sh` | Déploie les migrations Supabase (local ou production) |
-| `scripts/generate-keys.sh` | Génère les clés JWT pour le self-hosting |
-| `scripts/start-supabase.sh` | Démarre la stack Supabase self-hosted |
-| `scripts/setup-supabase-migrations.sh` | Copie les migrations dans les volumes Docker |
-| `scripts/create-migration.sh` | Crée un nouveau fichier de migration |
-| `scripts/sync-config.sh` | Synchronise les configurations entre fichiers `.env` |
-| `scripts/check-config.sh` | Vérifie la cohérence des fichiers de configuration |
+| # | Scénario | Dossier Compose | Front config | Cible |
+|---|----------|-----------------|--------------|-------|
+| 1 | **Supabase Cloud** | N/A (managé) | `VITE_*=supabase` + URL Cloud | Cloud |
+| 2 | **Supabase Self-Hosted** | `supabase/docker/` | `VITE_*=supabase` + URL self | VPS |
+| 3 | **OSS Légère** | `docker/postgrest/` | `VITE_*=gotrue/postgrest` | VPS |
+| 4 | **Keycloak SSO** | `docker/keycloak/` | `VITE_*=keycloak/postgrest` | Entreprise |
+| 5 | **Local Dev** | N/A | `VITE_*=local` | Machine locale |
 
----
+### Détail des scénarios
 
-## 🚀 Démarrage rapide
+#### 1. Supabase Cloud (managé)
 
-### 1. Installer la CLI Supabase
+**Recommandé pour** : prototypage rapide, MVP, petites équipes
 
-```bash
-# Installation locale (recommandée)
-./scripts/install-cli.sh
-
-# OU manuellement
-npm install supabase --save-dev
-
-2. Configurer l'environnement 
-```bash 
-# Copier le template
-cp .env.example .env
-
-# Ajuster selon votre scénario
-# Voir docs/SELF_HOSTING.md pour les détails# Copier le template
-cp .env.example .env
-
-# Ajuster selon votre scénario
-# Voir docs/SELF_HOSTING.md pour les détails
-
-3.Démarrer la stack (selon le scénario)
-
-    A   Option A – Supabase Self-Hosted (complet)
-    ```bash
-    cd supabase/docker && sh run.sh start
-
-    B Option B – Stack légère OSS
-    ```bash 
-    docker compose -f docker-compose.postgrest.yml up -d
-
-    c Option C – SSO Entreprise 
-```bash 
-    docker compose up -d
- 
-4. Déployer les migrations
-```bash
-# Local (Docker)
-./scripts/deploy.sh --push --local
-
-# Production (Supabase Cloud)
-./scripts/deploy.sh --push --prod --project-id <id> --anon-key <key>
-
-5. Lancer l'application
-# Installer les dépendances
-
-```bash  
-npm install
-
-# Démarrer le serveur de développement
-npm run dev
-
-# Build pour production
-```bash
-npm run build
-
-
-#📁 Structure des fichiers de configuration
-.
-├── .env                         # Variables d'environnement de l'application (VITE_*)
-├── .env.example                 # Template pour tous les scénarios
-├── supabase/
-│   ├── docker/
-│   │   ├── .env.hadratech       # Configuration Supabase self-hosted
-│   │   ├── .env                 # Utilisé par Docker Compose (copié depuis .env.hadratech)
-│   │   └── docker-compose.yml   # Stack complète upstream
-│   └── config.toml              # Configuration CLI Supabase (cloud)
-├── docs/
-│   └── SELF_HOSTING.md          # Guide complet des scénarios de déploiement
-└── scripts/
-    ├── deploy.sh                # Déploiement des migrations
-    ├── generate-keys.sh         # Génération des clés JWT
-    ├── start-supabase.sh        # Démarrage Supabase self-hosted
-    └── ...
+```env
+VITE_AUTH_PROVIDER=supabase
+VITE_DATA_PROVIDER=supabase
+VITE_STORAGE_PROVIDER=supabase
+VITE_SUPABASE_URL=https://arenvzltuvjjroigbzlu.supabase.co
+VITE_SUPABASE_ANON_KEY=<your-anon-key>

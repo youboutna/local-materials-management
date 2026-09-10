@@ -1,64 +1,43 @@
 # =============================================================================
-# Supabase Project Configuration – HadraTech-GPI
+# Supabase Project Configuration – HadraTech-GPI (PRODUCTION)
 # =============================================================================
-# 📁 Emplacement : supabase/config.toml
-# 🎯 Rôle : Configuration CLI Supabase (dev uniquement)
-# ⚠️ Pour la production self-hosted → supabase/docker/.env.hadratech
+# Utilisé pour le déploiement self-hosted (supabase/docker)
+# ⚠️ Ne pas utiliser en dev (conflits avec config.toml)
 # =============================================================================
 
 # ---- Projet ----
-project_id = "hadratech-gpi-local"
+project_id = "hadratech-gpi-prod"
 
 # =============================================================================
-# API
+# API (aligné avec .env.hadratech section PROD)
 # =============================================================================
 [api]
-# ⚠️ Port CLI (dev). En self-hosted Docker, Kong expose le 8000.
-port = 8000
-schemas = ["public", "btp"]
-extra_search_path = ["public", "extensions"]
+port = 8000  # ⚠️ Kong expose le 8000 en self-hosted
+schemas = ["public", "btp", "auth", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions", "btp"]
 max_rows = 1000
 
 # =============================================================================
 # Base de données
 # =============================================================================
 [db]
-port = 54322
-shadow_port = 54320
+port = 5432
 major_version = 15
 
 [db.pooler]
-enabled = false
-port = 54329
+enabled = true
+port = 6543
 pool_mode = "transaction"
 default_pool_size = 20
 max_client_conn = 100
 
-[db.seed]
-enabled = true
-sql_paths = ["./seed.sql"]
-
 # =============================================================================
-# Studio
-# =============================================================================
-[studio]
-enabled = true
-port = 54323
-api_url = "http://localhost"
-
-# =============================================================================
-# Auth (GoTrue)
+# Auth (GoTrue) – PRODUCTION
 # =============================================================================
 [auth]
 enabled = true
-site_url = "http://localhost:5173"
+site_url = "https://app.hadratech.com"
 additional_redirect_urls = [
-  # --- Dev local ---
-  "http://localhost:5173/auth/callback",
-  "http://localhost:5173/auth",
-  "http://localhost:5173/",
-  "http://localhost:8000/auth/v1/callback",
-  # --- Production (self-hosted) ---
   "https://app.hadratech.com/auth/callback",
   "https://app.hadratech.com/auth",
   "https://app.hadratech.com/",
@@ -74,45 +53,32 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
 
-[auth.sms]
-enable_signup = false
-enable_confirmations = false
-
-[auth.mfa]
-max_enrolled_factors = 10
-
 # =============================================================================
-# OAuth Providers
+# OAuth Providers – PRODUCTION
 # =============================================================================
-# ⚠️ Les vraies valeurs → .env (non versionné)
-# ⚠️ Les secrets → Dashboard Supabase (Authentication → Providers)
+# ⚠️ Les secrets doivent être injectés via variables d'env
+#    (voir .env.local côté front + Dashboard Supabase)
 
-# ---- Google OAuth ----
 [auth.external.google]
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
-# ⚠️ Dev local :
-redirect_uri = "http://localhost:8000/auth/v1/callback"
-# ⚠️ Prod self-hosted :
-# redirect_uri = "https://supabase.hadratech.com/auth/v1/callback"
+redirect_uri = "https://supabase.hadratech.com/auth/v1/callback"
 
-# ---- GitHub OAuth ----
 [auth.external.github]
 enabled = true
 client_id = "env(GITHUB_CLIENT_ID)"
 secret = "env(GITHUB_SECRET)"
-redirect_uri = "http://localhost:8000/auth/v1/callback"
+redirect_uri = "https://supabase.hadratech.com/auth/v1/callback"
 
-# ---- Microsoft OAuth (optionnel) ----
 [auth.external.microsoft]
 enabled = false
 client_id = "env(MICROSOFT_CLIENT_ID)"
 secret = "env(MICROSOFT_SECRET)"
-redirect_uri = "http://localhost:8000/auth/v1/callback"
+redirect_uri = "https://supabase.hadratech.com/auth/v1/callback"
 
 # =============================================================================
-# Storage
+# Storage – PRODUCTION
 # =============================================================================
 [storage]
 enabled = true
@@ -137,12 +103,6 @@ allowed_mime_types = [
 # =============================================================================
 [realtime]
 enabled = true
-
-# =============================================================================
-# Analytics
-# =============================================================================
-[analytics]
-enabled = false
 
 # =============================================================================
 # Edge Functions
@@ -173,17 +133,3 @@ verify_jwt = true
 # =============================================================================
 [logflare]
 enabled = false
-
-# =============================================================================
-# Migrations
-# =============================================================================
-# Format : <timestamp>_<name>.sql
-# ⚠️ Ne pas utiliser de tirets (-) après le timestamp
-# ⚠️ Utiliser des tirets bas (_)
-#
-# Migrations actuelles :
-#   - 20250719000001_create_suppliers_table.sql
-#   - 20250726000000_init.sql
-#   - 20260824120000_create_profit_distributions.sql
-#   - 20260909120000_create_profit_distributions.sql
-#   - 20260910120000_user_roles_status_alignment.sql

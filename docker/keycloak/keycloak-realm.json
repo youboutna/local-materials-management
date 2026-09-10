@@ -1,0 +1,85 @@
+{
+  "realm": "hadratech",
+  "enabled": true,
+  "displayName": "HadraTech-GPI",
+  "displayNameHtml": "<b>HadraTech-GPI</b> - Plateforme BTP Mauritanie",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 3600,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "clients": [
+    {
+      "clientId": "hadratech-frontend",
+      "name": "HadraTech-GPI Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:3001/*",
+        "https://app.hadratech.com/*",
+        "https://gpi.hadratech.com/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:3001",
+        "https://app.hadratech.com",
+        "https://gpi.hadratech.com"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "hadratech-backend",
+      "name": "HadraTech-GPI Backend (PostgREST)",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "hadratech-backend-secret-change-me"
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "super_admin", "description": "Super administrateur" },
+      { "name": "admin", "description": "Administrateur" },
+      { "name": "director", "description": "Directeur" },
+      { "name": "manager", "description": "Manager" },
+      { "name": "project_manager", "description": "Chef de projet" },
+      { "name": "consultant", "description": "Consultant" },
+      { "name": "engineering_consultant", "description": "Consultant ingénierie" },
+      { "name": "inspector", "description": "Inspecteur" },
+      { "name": "supplier", "description": "Fournisseur" },
+      { "name": "user", "description": "Utilisateur standard" }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin@hadratech.com",
+      "email": "admin@hadratech.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "HadraTech",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ChangeMe123!",
+          "temporary": true
+        }
+      ],
+      "realmRoles": ["super_admin", "admin"]
+    }
+  ]
+}
