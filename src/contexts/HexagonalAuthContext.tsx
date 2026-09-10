@@ -357,7 +357,7 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setLoading(true);
       const config = getAppConfig();
-      const redirectUri = `${window.location.origin}/auth/callback`;
+      const redirectUri = getOAuthRedirectUrl();
       const authUrl = await generateOAuthUrl(provider, redirectUri);
       
       // Rediriger l'utilisateur vers l'URL d'authentification
