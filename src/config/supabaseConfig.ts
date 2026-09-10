@@ -100,3 +100,33 @@ export function requireSupabaseConfig(): SupabaseResolvedConfig {
   }
   return config;
 }
+
+// ---------------------------------------------------------------------------
+// URLs publiques de l'application (OAuth externes)
+// ---------------------------------------------------------------------------
+
+/**
+ * URL publique du site. Priorité : VITE_SITE_URL (ou runtime __APP_CONFIG__)
+ * puis l'origine réelle du navigateur. Aucun fallback localhost codé en dur :
+ * en production l'origine du navigateur est déjà le domaine public.
+ */
+export function getSiteUrl(): string {
+  const env = buildEnv();
+  const configured = (env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
+  if (configured) return configured;
+  if (typeof window !== 'undefined') return window.location.origin;
+  return '';
+}
+
+/** URL de retour unique des fournisseurs externes (GitHub, Google…). */
+export function getOAuthRedirectUrl(): string {
+  return `${getSiteUrl()}/auth/callback`;
+}
+
+/**
+ * URL de base du service d'authentification (GoTrue) : toujours celle du projet
+ * Supabase résolu, jamais une valeur de repli locale lorsque l'URL est connue.
+ */
+export function getAuthBaseUrl(): string {
+  return resolveSupabaseConfig().url;
+}
