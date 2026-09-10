@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,8 @@ import {
   Trash2,
   Filter,
   Search,
-  Plus
+  Plus,
+  FolderX,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
@@ -45,14 +46,50 @@ import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import {
   useInspectionMonitoringHex,
-  type MonitoringInspection
-} from '@/hooks/hexagonal'
+  type MonitoringInspection,
+} from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
 
-// ✅ IMPORT entityLabels
 import { getEntityLabel } from '@/utils/entityLabels';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+// ────────────────────────────────────────────────────────────
+// Composant : état vide (aucun projet)
+// ────────────────────────────────────────────────────────────
+
+const NoProjectState: React.FC = () => (
+  <div className="flex items-center justify-center py-16 px-4">
+    <Card className="max-w-lg w-full">
+      <CardContent className="pt-6 text-center">
+        <FolderX className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-60" />
+        <h2 className="text-2xl font-bold mb-2">
+          <T
+            k="auto.rolebasedinspectionmonitoring.aucun_projet_disponible"
+            fallback="Aucun projet disponible"
+          />
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          <T
+            k="auto.rolebasedinspectionmonitoring.aucun_projet_description"
+            fallback="Le suivi des inspections nécessite au moins un projet actif. Créez ou activez un projet pour commencer."
+          />
+        </p>
+          <Button asChild>
+          <Link to="/projects/create">
+          <T k="auto.rolebasedinspectionmonitoring.creer_un_projet"
+              fallback="Créer un projet"
+            />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+// ────────────────────────────────────────────────────────────
+// Composant principal
+// ────────────────────────────────────────────────────────────
 
 const RoleBasedInspectionMonitoring = () => {
   const { t } = useLanguage();
@@ -65,8 +102,9 @@ const RoleBasedInspectionMonitoring = () => {
   const { hasAnyRole, userRoles } = useCurrentUserRoles();
   const userRole = userRoles[0] || 'viewer';
 
-  // ✅ Récupérer les projets pour les labels
-  const { projects = [] } = useProjectsHex();
+  // ✅ Récupérer les projets pour les labels (avec guard)
+  const { projects = [], isLoading: projectsLoading } = useProjectsHex();
+  const hasProjects = projects.length > 0;
 
   // State management
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,115 +118,178 @@ const RoleBasedInspectionMonitoring = () => {
     date: '',
     status: '',
     progress_at_inspection: 0,
-    comments: ''
+    comments: '',
   });
 
   const projectId = searchParams.get('project');
   const phaseId = searchParams.get('phase');
 
+  // ✅ FIX : Ref pour éviter le double appel openEditDialog
+  const processedInspectionIdRef = useRef<string | null>(null);
+
   // Role-based permissions
   const isInspector = hasAnyRole(['inspector', 'engineer', 'consultant']);
   const isProjectManager = hasAnyRole(['admin', 'director', 'project_manager', 'manager']);
   const isAdmin = hasAnyRole(['admin', 'super_admin']);
-  const isEngineeringConsultant = hasAnyRole(['consultant', 'engineer', 'engineering_consultant']);
+  const isEngineeringConsultant = hasAnyRole([
+    'consultant',
+    'engineer',
+    'engineering_consultant',
+  ]);
 
   // Use hexagonal hook
   const inspectionData = useInspectionMonitoringHex({
     filterByInspector: isInspector,
-    inspectorName: isInspector ? user?.email : undefined
+    inspectorName: isInspector ? user?.email : undefined,
   });
-  const { inspections = [], isLoading, getProjectTitle, sendNotification } = inspectionData;
+  const {
+    inspections = [],
+    isLoading,
+    getProjectTitle,
+    sendNotification,
+  } = inspectionData;
 
-  const sendAlertToHierarchy = async (inspectionId: string, message: string) => {
-    sendNotification({
-      recipientId: user?.id ?? '',
-      title: t('auto.rolebasedinspectionmonitoring.inspection_en_retard'),
-      message,
-      type: 'warning',
-      relatedId: inspectionId,
-    });
-    toast({
-      title: "Alerte envoyée",
-      description: "La hiérarchie a été notifiée",
-    });
-  };
+  // ✅ FIX : sendNotification avec gestion d'erreur
+  const sendAlertToHierarchy = useCallback(
+    async (inspectionId: string, message: string) => {
+      try {
+        await sendNotification({
+          recipientId: user?.id ?? '',
+          title: t('auto.rolebasedinspectionmonitoring.inspection_en_retard'),
+          message,
+          type: 'warning',
+          relatedId: inspectionId,
+        });
+        toast({
+          title: 'Alerte envoyée',
+          description: 'La hiérarchie a été notifiée',
+        });
+      } catch (error) {
+        console.error('[sendAlertToHierarchy] Error:', error);
+        toast({
+          title: 'Erreur',
+          description: "Impossible d'envoyer l'alerte",
+          variant: 'destructive',
+        });
+      }
+    },
+    [sendNotification, toast, user?.id, t]
+  );
+
+  // ✅ FIX : Calcul de la date "maintenant" une seule fois par render
+  const now = useMemo(() => new Date(), []);
+
+  // ✅ FIX : Inspections en retard (calculé une fois)
+  const overdueInspections = useMemo(() => {
+    return inspections.filter(
+      (i) =>
+        new Date(i.date) < now &&
+        !['completed', 'approved'].includes(i.status)
+    );
+  }, [inspections, now]);
 
   // Filter and paginate inspections
   const filteredInspections = useMemo(() => {
     let filtered = inspections;
 
     if (phaseId) {
-      filtered = filtered.filter(i => i.phase_id === phaseId);
+      filtered = filtered.filter((i) => i.phase_id === phaseId);
     }
     if (projectId) {
-      filtered = filtered.filter(i => i.project_id === projectId);
+      filtered = filtered.filter((i) => i.project_id === projectId);
     }
 
     if (searchTerm) {
-      filtered = filtered.filter(inspection =>
-        inspection.inspector.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inspection.comments?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inspection.id.toLowerCase().includes(searchTerm.toLowerCase())
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (inspection) =>
+          inspection.inspector.toLowerCase().includes(term) ||
+          inspection.comments?.toLowerCase().includes(term) ||
+          inspection.id.toLowerCase().includes(term)
       );
     }
 
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(inspection => inspection.status === statusFilter);
+      filtered = filtered.filter((inspection) => inspection.status === statusFilter);
     }
 
     return filtered;
   }, [inspections, searchTerm, statusFilter, phaseId, projectId]);
+
+  // ✅ FIX : Reset page si le filtre change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, phaseId, projectId]);
 
   const paginatedInspections = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredInspections.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredInspections, currentPage, itemsPerPage]);
 
+  // ✅ FIX : Total pages basé sur filteredInspections (pas inspections)
   const totalPages = Math.ceil(filteredInspections.length / itemsPerPage);
 
-  useEffect(() => {
-    const inspectionId = searchParams.get('id');
-    if (inspectionId && inspections.length > 0) {
-      const inspection = inspections.find(i => i.id === inspectionId);
-      if (inspection) {
-        openEditDialog(inspection);
-        setSearchParams({});
-      }
-    }
-  }, [searchParams, inspections]);
-
-  const safeDateInput = (raw: string | undefined | null): string => {
+  // ✅ FIX : safeDateInput en useCallback
+  const safeDateInput = useCallback((raw: string | undefined | null): string => {
     if (!raw) return '';
     const d = new Date(raw);
     return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
-  };
+  }, []);
 
-  const openEditDialog = (inspection: MonitoringInspection) => {
-    setEditingInspection(inspection);
-    setEditFormData({
-      inspector: inspection.inspector,
-      date: safeDateInput(inspection.date),
-      status: inspection.status,
-      progress_at_inspection: inspection.progress_at_inspection || 0,
-      comments: inspection.comments || ''
-    });
-    setIsEditDialogOpen(true);
-  };
+  // ✅ FIX : openEditDialog en useCallback
+  const openEditDialog = useCallback(
+    (inspection: MonitoringInspection) => {
+      setEditingInspection(inspection);
+      setEditFormData({
+        inspector: inspection.inspector,
+        date: safeDateInput(inspection.date),
+        status: inspection.status,
+        progress_at_inspection: inspection.progress_at_inspection || 0,
+        comments: inspection.comments || '',
+      });
+      setIsEditDialogOpen(true);
+    },
+    [safeDateInput]
+  );
+
+  // ✅ FIX : useEffect avec guard (ref) pour éviter le double appel
+  useEffect(() => {
+    const inspectionId = searchParams.get('id');
+    if (!inspectionId || inspections.length === 0) return;
+
+    // Guard : ne traiter qu'une seule fois
+    if (processedInspectionIdRef.current === inspectionId) return;
+    processedInspectionIdRef.current = inspectionId;
+
+    const inspection = inspections.find((i) => i.id === inspectionId);
+    if (inspection) {
+      openEditDialog(inspection);
+      setSearchParams({});
+    }
+  }, [searchParams, inspections, openEditDialog, setSearchParams]);
 
   const handleSaveEdit = async () => {
     if (!editingInspection) return;
 
     try {
-      console.log('Edit inspection:', { id: editingInspection.id, data: editFormData });
+      console.log('Edit inspection:', {
+        id: editingInspection.id,
+        data: editFormData,
+      });
       toast({
-        title: "Succès",
-        description: "Inspection mise à jour",
+        title: 'Succès',
+        description: 'Inspection mise à jour',
       });
 
       setIsEditDialogOpen(false);
       setEditingInspection(null);
     } catch (error) {
       console.error('Error updating inspection:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour l\'inspection',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -198,11 +299,16 @@ const RoleBasedInspectionMonitoring = () => {
     try {
       console.log('Delete inspection:', id);
       toast({
-        title: "Succès",
-        description: "Inspection supprimée",
+        title: 'Succès',
+        description: 'Inspection supprimée',
       });
     } catch (error) {
       console.error('Error deleting inspection:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer l\'inspection',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -224,13 +330,13 @@ const RoleBasedInspectionMonitoring = () => {
     );
   };
 
-  const createUrl = (() => {
+  const createUrl = useMemo(() => {
     const sp = new URLSearchParams();
     if (projectId) sp.set('project', projectId);
     if (phaseId) sp.set('phase', phaseId);
     const qs = sp.toString();
     return `/inspections/create${qs ? `?${qs}` : ''}`;
-  })();
+  }, [projectId, phaseId]);
 
   const clearScope = () => {
     const sp = new URLSearchParams(searchParams);
@@ -244,11 +350,14 @@ const RoleBasedInspectionMonitoring = () => {
     ? getEntityLabel(projectId, projects, 'project')
     : '';
 
-  const phaseLabel = phaseId
-    ? getEntityLabel(phaseId, projects, 'phase')
-    : '';
+  const phaseLabel = phaseId ? getEntityLabel(phaseId, projects, 'phase') : '';
 
-  if (isLoading) {
+  // ────────────────────────────────────────────────────────────
+  // RENDU CONDITIONNEL
+  // ────────────────────────────────────────────────────────────
+
+  // 1. En cours de chargement
+  if (isLoading || projectsLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -256,20 +365,37 @@ const RoleBasedInspectionMonitoring = () => {
     );
   }
 
+  // 2. Aucun projet disponible (démarrage à froid)
+  if (!hasProjects && !projectId && !phaseId) {
+    return <NoProjectState />;
+  }
+
+  // 3. Rendu normal
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold"><T k="auto.rolebasedinspectionmonitoring.suivi_des_inspections" fallback="Suivi des Inspections" /></h1>
+          <h1 className="text-3xl font-bold">
+            <T
+              k="auto.rolebasedinspectionmonitoring.suivi_des_inspections"
+              fallback="Suivi des Inspections"
+            />
+          </h1>
           <p className="text-muted-foreground">
-            <T k="auto.rolebasedinspectionmonitoring.gestion_des_inspections_selon_les_roles_et_permi" fallback="Gestion des inspections selon les rôles et permissions" />
+            <T
+              k="auto.rolebasedinspectionmonitoring.gestion_des_inspections_selon_les_roles_et_permi"
+              fallback="Gestion des inspections selon les rôles et permissions"
+            />
           </p>
         </div>
         {isAdmin && (
           <Button onClick={() => navigate(createUrl)}>
             <Plus className="h-4 w-4 mr-2" />
-            <T k="auto.rolebasedinspectionmonitoring.nouvelle_inspection" fallback="Nouvelle Inspection" />
+            <T
+              k="auto.rolebasedinspectionmonitoring.nouvelle_inspection"
+              fallback="Nouvelle Inspection"
+            />
           </Button>
         )}
       </div>
@@ -277,67 +403,93 @@ const RoleBasedInspectionMonitoring = () => {
       {(phaseId || projectId) && (
         <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2 text-sm">
           <span>
-            Filtré par {phaseId && <strong>phase {phaseLabel || phaseId.slice(0, 8)}…</strong>}
+            Filtré par{' '}
+            {phaseId && (
+              <strong>
+                phase {phaseLabel || phaseId.slice(0, 8)}…
+              </strong>
+            )}
             {phaseId && projectId && ' / '}
-            {projectId && <strong>projet {projectLabel || projectId.slice(0, 8)}…</strong>}
+            {projectId && (
+              <strong>
+                projet {projectLabel || projectId.slice(0, 8)}…
+              </strong>
+            )}
           </span>
-          <Button variant="ghost" size="sm" onClick={clearScope} aria-label={t('auto.rolebasedinspectionmonitoring.effacer_le_filtre')}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearScope}
+            aria-label={t('auto.rolebasedinspectionmonitoring.effacer_le_filtre')}
+          >
             <T k="auto.rolebasedinspectionmonitoring.effacer" fallback="Effacer" />
           </Button>
         </div>
       )}
 
       {/* Overdue Inspections */}
-      {inspections.filter(i =>
-        new Date(i.date) < new Date() &&
-        !['completed', 'approved'].includes(i.status)
-      ).length > 0 && (
+      {overdueInspections.length > 0 && (
         <div className="border-l-4 border-red-500 pl-4">
-          <h4 className="font-semibold text-destructive mb-2"> <T k="auto.rolebasedinspectionmonitoring.inspections_en_retard" fallback="Inspections en retard" /></h4>
+          <h4 className="font-semibold text-destructive mb-2">
+            <T
+              k="auto.rolebasedinspectionmonitoring.inspections_en_retard"
+              fallback="Inspections en retard"
+            />
+          </h4>
           <div className="space-y-2">
-            {inspections
-              .filter(i =>
-                new Date(i.date) < new Date() &&
-                !['completed', 'approved'].includes(i.status)
-              )
-              .map(inspection => {
-                // ✅ RÉSOLUTION DU LABEL DU PROJET
-                const inspectionProjectLabel = getEntityLabel(inspection.project_id, projects, 'project');
+            {overdueInspections.map((inspection) => {
+              const inspectionProjectLabel = getEntityLabel(
+                inspection.project_id,
+                projects,
+                'project'
+              );
+              const daysLate = Math.ceil(
+                (now.getTime() - new Date(inspection.date).getTime()) /
+                  (1000 * 60 * 60 * 24)
+              );
 
-                return (
-                  <div key={inspection.id} className="flex items-center justify-between bg-destructive/10 p-3 rounded">
-                    <div>
-                      <p className="font-medium">{inspectionProjectLabel}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Inspecteur: {inspection.inspector} •
-                        Date prévue: {new Date(inspection.date).toLocaleDateString('fr-FR')} •
-                        Retard: {Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {getStatusBadge(inspection.status)}
-                      {isProjectManager && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => sendAlertToHierarchy(
-                            inspection.id,
-                            `URGENT: Inspection en retard de ${Math.ceil((new Date().getTime() - new Date(inspection.date).getTime()) / (1000 * 60 * 60 * 24))} jour(s) pour le projet "${inspectionProjectLabel}" (Inspecteur: ${inspection.inspector})`
-                          )}
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          <T k="auto.rolebasedinspectionmonitoring.alerte_hierarchie" fallback="Alerte hiérarchie" />
-                        </Button>
-                      )}
-                    </div>
+              return (
+                <div
+                  key={inspection.id}
+                  className="flex items-center justify-between bg-destructive/10 p-3 rounded"
+                >
+                  <div>
+                    <p className="font-medium">{inspectionProjectLabel}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Inspecteur: {inspection.inspector} • Date prévue:{' '}
+                      {new Date(inspection.date).toLocaleDateString('fr-FR')} • Retard:{' '}
+                      {daysLate} jour(s)
+                    </p>
                   </div>
-                );
-              })}
+                  <div className="flex gap-2">
+                    {getStatusBadge(inspection.status)}
+                    {isProjectManager && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          sendAlertToHierarchy(
+                            inspection.id,
+                            `URGENT: Inspection en retard de ${daysLate} jour(s) pour le projet "${inspectionProjectLabel}" (Inspecteur: ${inspection.inspector})`
+                          )
+                        }
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        <T
+                          k="auto.rolebasedinspectionmonitoring.alerte_hierarchie"
+                          fallback="Alerte hiérarchie"
+                        />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Filters - inchangé */}
+      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -348,33 +500,70 @@ const RoleBasedInspectionMonitoring = () => {
         <CardContent>
           <div className="flex gap-4 items-end">
             <div className="flex-1">
-              <Label htmlFor="search"><T k="auto.rolebasedinspectionmonitoring.recherche" fallback="Recherche" /></Label>
+              <Label htmlFor="search">
+                <T
+                  k="auto.rolebasedinspectionmonitoring.recherche"
+                  fallback="Recherche"
+                />
+              </Label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <Search
+                  className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <Input
                   id="search"
                   type="search"
-                  placeholder={t('auto.rolebasedinspectionmonitoring.rechercher_par_inspecteur_commentaires_ou_id')}
+                  placeholder={t(
+                    'auto.rolebasedinspectionmonitoring.rechercher_par_inspecteur_commentaires_ou_id'
+                  )}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
-                  aria-label={t('auto.rolebasedinspectionmonitoring.rechercher_des_inspections')}
+                  aria-label={t(
+                    'auto.rolebasedinspectionmonitoring.rechercher_des_inspections'
+                  )}
                 />
               </div>
             </div>
             <div className="w-48">
-              <Label htmlFor="status"><T k="auto.rolebasedinspectionmonitoring.statut" fallback="Statut" /></Label>
+              <Label htmlFor="status">
+                <T
+                  k="auto.rolebasedinspectionmonitoring.statut"
+                  fallback="Statut"
+                />
+              </Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger id="status" aria-label={t('auto.rolebasedinspectionmonitoring.filtrer_par_statut')}>
+                <SelectTrigger
+                  id="status"
+                  aria-label={t(
+                    'auto.rolebasedinspectionmonitoring.filtrer_par_statut'
+                  )}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all"><T k="auto.rolebasedinspectionmonitoring.tous_les_statuts" fallback="Tous les statuts" /></SelectItem>
-                  <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
-                  <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
-                  <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
-                  <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
-                  <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
+                  <SelectItem value="all">
+                    <T
+                      k="auto.rolebasedinspectionmonitoring.tous_les_statuts"
+                      fallback="Tous les statuts"
+                    />
+                  </SelectItem>
+                  <SelectItem value="pending">
+                    <TranslatedStatus code="pending" />
+                  </SelectItem>
+                  <SelectItem value="in_progress">
+                    <TranslatedStatus code="in_progress" />
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    <TranslatedStatus code="completed" />
+                  </SelectItem>
+                  <SelectItem value="approved">
+                    <TranslatedStatus code="approved" />
+                  </SelectItem>
+                  <SelectItem value="rejected">
+                    <TranslatedStatus code="rejected" />
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -382,195 +571,323 @@ const RoleBasedInspectionMonitoring = () => {
         </CardContent>
       </Card>
 
-      {/* Inspections Table - inchangé sauf ID */}
+      {/* Inspections Table */}
       <Card>
         <CardHeader>
-          <CardTitle><T k="auto.rolebasedinspectionmonitoring.liste_des_inspections" fallback="Liste des Inspections" /></CardTitle>
+          <CardTitle>
+            <T
+              k="auto.rolebasedinspectionmonitoring.liste_des_inspections"
+              fallback="Liste des Inspections"
+            />
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead><T k="auto.rolebasedinspectionmonitoring.inspecteur" fallback="Inspecteur" /></TableHead>
-                <TableHead><T k="auto.rolebasedinspectionmonitoring.date" fallback="Date" /></TableHead>
-                <TableHead><T k="auto.rolebasedinspectionmonitoring.statut" fallback="Statut" /></TableHead>
-                <TableHead><T k="auto.rolebasedinspectionmonitoring.progression" fallback="Progression" /></TableHead>
-                <TableHead><T k="auto.rolebasedinspectionmonitoring.commentaires" fallback="Commentaires" /></TableHead>
-                <TableHead><T k="auto.rolebasedinspectionmonitoring.actions" fallback="Actions" /></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedInspections.map((inspection) => {
-                // ✅ RÉSOLUTION DU LABEL DU PROJET POUR LE LIEN
-                const inspectionProjectLabel = getEntityLabel(inspection.project_id, projects, 'project');
-
-                return (
-                  <TableRow key={inspection.id}>
-                    <TableCell className="font-mono text-sm">
-                      <Link
-                        to={`/inspections/${inspection.id}`}
-                        className="text-primary hover:underline inline-flex items-center gap-1"
-                        title={inspectionProjectLabel}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        {/* ✅ AFFICHAGE DU LABEL AU LIEU DE l'ID tronqué */}
-                        {inspectionProjectLabel || inspection.id.slice(0, 8)}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        {inspection.inspector}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(inspection.date).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(inspection.status)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${inspection.progress_at_inspection || 0}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm">{inspection.progress_at_inspection || 0}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate" title={inspection.comments || ''}>
-                        {inspection.comments || '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" aria-label={t('auto.rolebasedinspectionmonitoring.actions_sur_l_inspection')}>
-                            <Settings className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDialog(inspection)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            <T k="auto.rolebasedinspectionmonitoring.modifier" fallback="Modifier" />
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to={`/inspections/${inspection.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              <T k="auto.rolebasedinspectionmonitoring.voir_les_details" fallback="Voir les détails" />
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {isAdmin && (
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(inspection.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              <T k="auto.rolebasedinspectionmonitoring.supprimer" fallback="Supprimer" />
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-
-          {/* Pagination - inchangé */}
-          {totalPages > 1 && (
-            <div className="mt-4">
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={inspections.length}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                onItemsPerPageChange={setItemsPerPage}
+          {filteredInspections.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">
+              <T
+                k="auto.rolebasedinspectionmonitoring.aucune_inspection"
+                fallback="Aucune inspection trouvée"
               />
-            </div>
+            </p>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>
+                      <T
+                        k="auto.rolebasedinspectionmonitoring.inspecteur"
+                        fallback="Inspecteur"
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <T k="auto.rolebasedinspectionmonitoring.date" fallback="Date" />
+                    </TableHead>
+                    <TableHead>
+                      <T
+                        k="auto.rolebasedinspectionmonitoring.statut"
+                        fallback="Statut"
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <T
+                        k="auto.rolebasedinspectionmonitoring.progression"
+                        fallback="Progression"
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <T
+                        k="auto.rolebasedinspectionmonitoring.commentaires"
+                        fallback="Commentaires"
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <T
+                        k="auto.rolebasedinspectionmonitoring.actions"
+                        fallback="Actions"
+                      />
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedInspections.map((inspection) => {
+                    const inspectionProjectLabel = getEntityLabel(
+                      inspection.project_id,
+                      projects,
+                      'project'
+                    );
+
+                    return (
+                      <TableRow key={inspection.id}>
+                        <TableCell className="font-mono text-sm">
+                          <Link
+                            to={`/inspections/${inspection.id}`}
+                            className="text-primary hover:underline inline-flex items-center gap-1"
+                            title={inspectionProjectLabel}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            {inspectionProjectLabel || inspection.id.slice(0, 8)}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            {inspection.inspector}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(inspection.date).toLocaleDateString('fr-FR')}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(inspection.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${inspection.progress_at_inspection || 0}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <span className="text-sm">
+                              {inspection.progress_at_inspection || 0}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <div className="truncate" title={inspection.comments || ''}>
+                            {inspection.comments || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-label={t(
+                                  'auto.rolebasedinspectionmonitoring.actions_sur_l_inspection'
+                                )}
+                              >
+                                <Settings
+                                  className="h-4 w-4"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => openEditDialog(inspection)}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                <T
+                                  k="auto.rolebasedinspectionmonitoring.modifier"
+                                  fallback="Modifier"
+                                />
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to={`/inspections/${inspection.id}`}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  <T
+                                    k="auto.rolebasedinspectionmonitoring.voir_les_details"
+                                    fallback="Voir les détails"
+                                  />
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {isAdmin && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(inspection.id)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  <T
+                                    k="auto.rolebasedinspectionmonitoring.supprimer"
+                                    fallback="Supprimer"
+                                  />
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              {/* ✅ FIX : Pagination basée sur filteredInspections */}
+              {totalPages > 1 && (
+                <div className="mt-4">
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filteredInspections.length}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                    onItemsPerPageChange={setItemsPerPage}
+                  />
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
 
-      {/* Edit Dialog - inchangé */}
+      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle><T k="auto.rolebasedinspectionmonitoring.modifier_l_inspection" fallback="Modifier l'Inspection" /></DialogTitle>
+            <DialogTitle>
+              <T
+                k="auto.rolebasedinspectionmonitoring.modifier_l_inspection"
+                fallback="Modifier l'Inspection"
+              />
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="inspector"><T k="auto.rolebasedinspectionmonitoring.inspecteur" fallback="Inspecteur" /></Label>
+                <Label htmlFor="inspector">
+                  <T
+                    k="auto.rolebasedinspectionmonitoring.inspecteur"
+                    fallback="Inspecteur"
+                  />
+                </Label>
                 <Input
                   id="inspector"
                   value={editFormData.inspector}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, inspector: e.target.value }))}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({ ...prev, inspector: e.target.value }))
+                  }
                   disabled={!isAdmin}
                 />
               </div>
               <div>
-                <Label htmlFor="date"><T k="auto.rolebasedinspectionmonitoring.date" fallback="Date" /></Label>
+                <Label htmlFor="date">
+                  <T k="auto.rolebasedinspectionmonitoring.date" fallback="Date" />
+                </Label>
                 <Input
                   id="date"
                   type="date"
                   value={editFormData.date}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({ ...prev, date: e.target.value }))
+                  }
                   disabled={!isAdmin}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="status"><T k="auto.rolebasedinspectionmonitoring.statut" fallback="Statut" /></Label>
-                <Select value={editFormData.status} onValueChange={(value) => setEditFormData(prev => ({ ...prev, status: value }))}>
+                <Label htmlFor="status">
+                  <T
+                    k="auto.rolebasedinspectionmonitoring.statut"
+                    fallback="Statut"
+                  />
+                </Label>
+                <Select
+                  value={editFormData.status}
+                  onValueChange={(value) =>
+                    setEditFormData((prev) => ({ ...prev, status: value }))
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending"><TranslatedStatus code="pending" /></SelectItem>
-                    <SelectItem value="in_progress"><TranslatedStatus code="in_progress" /></SelectItem>
-                    <SelectItem value="completed"><TranslatedStatus code="completed" /></SelectItem>
-                    <SelectItem value="approved"><TranslatedStatus code="approved" /></SelectItem>
-                    <SelectItem value="rejected"><TranslatedStatus code="rejected" /></SelectItem>
+                    <SelectItem value="pending">
+                      <TranslatedStatus code="pending" />
+                    </SelectItem>
+                    <SelectItem value="in_progress">
+                      <TranslatedStatus code="in_progress" />
+                    </SelectItem>
+                    <SelectItem value="completed">
+                      <TranslatedStatus code="completed" />
+                    </SelectItem>
+                    <SelectItem value="approved">
+                      <TranslatedStatus code="approved" />
+                    </SelectItem>
+                    <SelectItem value="rejected">
+                      <TranslatedStatus code="rejected" />
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="progress"><T k="auto.rolebasedinspectionmonitoring.progression" fallback="Progression (%)" /></Label>
+                <Label htmlFor="progress">
+                  <T
+                    k="auto.rolebasedinspectionmonitoring.progression"
+                    fallback="Progression (%)"
+                  />
+                </Label>
                 <Input
                   id="progress"
                   type="number"
                   min="0"
                   max="100"
                   value={editFormData.progress_at_inspection}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, progress_at_inspection: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      progress_at_inspection: parseInt(e.target.value) || 0,
+                    }))
+                  }
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="comments"><T k="auto.rolebasedinspectionmonitoring.commentaires" fallback="Commentaires" /></Label>
+              <Label htmlFor="comments">
+                <T
+                  k="auto.rolebasedinspectionmonitoring.commentaires"
+                  fallback="Commentaires"
+                />
+              </Label>
               <Textarea
                 id="comments"
                 value={editFormData.comments}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, comments: e.target.value }))}
+                onChange={(e) =>
+                  setEditFormData((prev) => ({ ...prev, comments: e.target.value }))
+                }
                 rows={4}
-                placeholder={t('auto.rolebasedinspectionmonitoring.ajouter_des_commentaires_sur_l_inspection')}
+                placeholder={t(
+                  'auto.rolebasedinspectionmonitoring.ajouter_des_commentaires_sur_l_inspection'
+                )}
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                <T k="auto.rolebasedinspectionmonitoring.annuler" fallback="Annuler" />
+                <T
+                  k="auto.rolebasedinspectionmonitoring.annuler"
+                  fallback="Annuler"
+                />
               </Button>
               <Button onClick={handleSaveEdit}>
-                <T k="auto.rolebasedinspectionmonitoring.enregistrer" fallback="Enregistrer" />
+                <T
+                  k="auto.rolebasedinspectionmonitoring.enregistrer"
+                  fallback="Enregistrer"
+                />
               </Button>
             </div>
           </div>

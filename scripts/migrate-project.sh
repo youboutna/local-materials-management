@@ -35,7 +35,7 @@ if [ -f ".env" ]; then
   set +a
 fi
 
-NEW_REF="${VITE_SUPABASE_PROJECT_ID:-ttrfbzonzcyimfmezuqv}"
+NEW_REF="${VITE_SUPABASE_PROJECT_ID:-arenvzltuvjjroigbzlu}"
 OLD_REF="${OLD_PROJECT_REF:-huttgbybeuzeikaqfvam}"
 SCHEMA="${MIGRATION_SCHEMA:-btp}"
 SKIP_DATA=0

@@ -2,6 +2,11 @@
  * Supabase User Repository Adapter
  * Implements IUserRepository (CRUD + search on public.profiles / public.user_roles)
  * Distinct from SupabaseUserAdapter which implements IAuthRepository.
+ *
+ * Structure réelle de public.user_roles :
+ *   - id, user_id, role_name, assigned_by, assigned_at, status, expired_at
+ *   - UNIQUE(user_id, role_name)
+ *   - status IN ('active', 'pending', 'inactive')
  */
 
 import { User, UserRoleEntity, UserRoleStatus } from '@/domain/entities/User';
@@ -12,6 +17,10 @@ import {
 } from '@/domain/repositories/IUserRepository';
 import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
+
+// ────────────────────────────────────────────────────────────
+// TYPES DE ROW (alignés sur le schéma réel)
+// ────────────────────────────────────────────────────────────
 
 type ProfileRow = {
   id: string;
@@ -26,6 +35,10 @@ type ProfileRow = {
   updated_at: string | null;
 };
 
+/**
+ * Type aligné sur la vraie table public.user_roles
+ * ⚠️ Utiliser `expired_at` (pas `expires_at`)
+ */
 type RoleRow = {
   id: string;
   user_id: string;
@@ -33,23 +46,60 @@ type RoleRow = {
   status: string | null;
   assigned_at: string | null;
   assigned_by: string | null;
-  expires_at: string | null;
+  expired_at: string | null;
 };
+
+// ────────────────────────────────────────────────────────────
+// CONSTANTES
+// ────────────────────────────────────────────────────────────
 
 const PROFILE_COLUMNS =
   'id, full_name, phone, national_id, avatar_url, status, role, provider_data, created_at, updated_at';
 
+/**
+ * Colonnes de user_roles (source unique de vérité)
+ * ⚠️ Utiliser `expired_at` (pas `expires_at`)
+ */
+const ROLE_COLUMNS = 'id, user_id, role_name, status, assigned_at, assigned_by, expired_at';
+
+// ────────────────────────────────────────────────────────────
+// ADAPTER
+// ────────────────────────────────────────────────────────────
+
 export class SupabaseUserRepositoryAdapter implements IUserRepository {
-  // ---------- mapping ----------
+  // ────────────────────────────────────────────────────────────
+  // MAPPING
+  // ────────────────────────────────────────────────────────────
+
   private resolveEmail(row: ProfileRow): string {
     const fromProvider =
       row.provider_data && typeof row.provider_data === 'object'
         ? (row.provider_data as { email?: unknown }).email
         : undefined;
-    if (typeof fromProvider === 'string' && fromProvider.includes('@')) return fromProvider;
-    // The public profiles table does not expose auth emails; keep a stable
-    // non-routable placeholder so the domain entity stays valid.
+
+    if (typeof fromProvider === 'string' && fromProvider.includes('@')) {
+      return fromProvider;
+    }
+
     return `${row.id}@users.local`;
+  }
+
+  /**
+   * Mappe un statut DB vers UserRoleStatus
+   * 'inactive' peut être un INACTIVE ou un REVOKED métier.
+   * On choisit INACTIVE par défaut (plus neutre).
+   */
+  private mapDbStatusToDomain(dbStatus: string | null): UserRoleStatus {
+    switch (dbStatus) {
+      case 'active':
+        return UserRoleStatus.ACTIVE;
+      case 'pending':
+        return UserRoleStatus.PENDING;
+      case 'inactive':
+        return UserRoleStatus.INACTIVE;
+      default:
+        return UserRoleStatus.ACTIVE;
+    }
   }
 
   private mapRoles(rows: RoleRow[]): UserRoleEntity[] {
@@ -58,17 +108,18 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
         id: r.id,
         userId: r.user_id,
         roleName: r.role_name,
-        status: (r.status as UserRoleStatus) || UserRoleStatus.ACTIVE,
+        status: this.mapDbStatusToDomain(r.status),
         assignedAt: r.assigned_at ? new Date(r.assigned_at) : undefined,
         assignedBy: r.assigned_by || undefined,
-        expiresAt: r.expires_at ? new Date(r.expires_at) : undefined,
+        expiresAt: r.expired_at ? new Date(r.expired_at) : undefined,
       })
     );
   }
 
   private toDomain(row: ProfileRow, roles: RoleRow[] = []): User {
     let roleEntities = this.mapRoles(roles);
-    // Fallback on the legacy profiles.role column when no user_roles row exists.
+
+    // Fallback legacy : profiles.role si user_roles est vide
     if (roleEntities.length === 0 && row.role) {
       roleEntities = [
         UserRoleEntity.create({
@@ -98,16 +149,26 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
   private async loadRoles(userIds: string[]): Promise<Map<string, RoleRow[]>> {
     const map = new Map<string, RoleRow[]>();
     if (userIds.length === 0) return map;
+
     const { data, error } = await supabase
       .from('user_roles')
-      .select('id, user_id, role_name, status, assigned_at, assigned_by, expires_at')
+      .select(ROLE_COLUMNS)
       .in('user_id', userIds);
-    if (error) return map;
+
+    if (error) {
+      ErrorLogger.log(
+        new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to load roles', error, { userIds }),
+        'SupabaseUserRepositoryAdapter.loadRoles'
+      );
+      return map;
+    }
+
     (data as RoleRow[] | null)?.forEach((r) => {
       const list = map.get(r.user_id) ?? [];
       list.push(r);
       map.set(r.user_id, list);
     });
+
     return map;
   }
 
@@ -116,15 +177,20 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
     throw new AppError(ErrorCode.INTERNAL_ERROR, message);
   }
 
-  // ---------- reads ----------
+  // ────────────────────────────────────────────────────────────
+  // READS
+  // ────────────────────────────────────────────────────────────
+
   async findById(id: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('profiles')
       .select(PROFILE_COLUMNS)
       .eq('id', id)
       .maybeSingle();
+
     if (error) this.fail('Failed to load user profile', error);
     if (!data) return null;
+
     const roles = await this.loadRoles([id]);
     return this.toDomain(data as unknown as ProfileRow, roles.get(id) ?? []);
   }
@@ -135,7 +201,9 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
       .select(PROFILE_COLUMNS)
       .order('created_at', { ascending: false })
       .limit(1000);
+
     if (error) this.fail('Failed to load users', error);
+
     const rows = (data as unknown as ProfileRow[]) ?? [];
     const roles = await this.loadRoles(rows.map((r) => r.id));
     return rows.map((r) => this.toDomain(r, roles.get(r.id) ?? []));
@@ -146,13 +214,17 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
 
     if (options.searchTerm && options.searchTerm.trim().length > 0) {
       const term = `%${options.searchTerm.trim()}%`;
-      query = query.or(`full_name.ilike.${term},national_id.ilike.${term},phone.ilike.${term}`);
+      query = query.or(
+        `full_name.ilike.${term},national_id.ilike.${term},phone.ilike.${term}`
+      );
     }
+
     if (options.isActive !== undefined) {
       query = options.isActive
         ? query.neq('status', 'inactive')
         : query.eq('status', 'inactive');
     }
+
     const limit = options.limit ?? 50;
     const offset = options.offset ?? 0;
     query = query.range(offset, offset + limit - 1);
@@ -176,14 +248,19 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
       .from('user_roles')
       .select('user_id')
       .eq('role_name', role);
+
     if (error) this.fail('Failed to load users by role', error);
-    const ids = Array.from(new Set(((data as { user_id: string }[] | null) ?? []).map((r) => r.user_id)));
+
+    const ids = Array.from(
+      new Set(((data as { user_id: string }[] | null) ?? []).map((r) => r.user_id))
+    );
     if (ids.length === 0) return [];
 
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select(PROFILE_COLUMNS)
       .in('id', ids);
+
     if (profileError) this.fail('Failed to load users by role', profileError);
 
     const rows = (profiles as unknown as ProfileRow[]) ?? [];
@@ -196,10 +273,14 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
     return all.filter((u) => u.isActive);
   }
 
-  // ---------- writes ----------
+  // ────────────────────────────────────────────────────────────
+  // WRITES
+  // ────────────────────────────────────────────────────────────
+
   async create(userData: Omit<User, 'id'>): Promise<User> {
     const source = userData as unknown as Record<string, unknown>;
     const id = (source.id as string) || crypto.randomUUID();
+
     const { data, error } = await supabase
       .from('profiles')
       .insert({
@@ -212,6 +293,7 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
       })
       .select(PROFILE_COLUMNS)
       .single();
+
     if (error) this.fail('Failed to create user profile', error);
     return this.toDomain(data as unknown as ProfileRow);
   }
@@ -219,6 +301,7 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
   async update(id: string, userData: Partial<User>): Promise<User> {
     const source = userData as unknown as Record<string, unknown>;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
     if (source.fullName !== undefined) patch.full_name = source.fullName;
     if (source.phone !== undefined) patch.phone = source.phone;
     if (source.nationalId !== undefined) patch.national_id = source.nationalId;
@@ -231,7 +314,9 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
       .eq('id', id)
       .select(PROFILE_COLUMNS)
       .single();
+
     if (error) this.fail('Failed to update user profile', error);
+
     const roles = await this.loadRoles([id]);
     return this.toDomain(data as unknown as ProfileRow, roles.get(id) ?? []);
   }
@@ -241,6 +326,7 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
       .from('profiles')
       .update({ status: 'inactive', updated_at: new Date().toISOString() })
       .eq('id', id);
+
     if (error) this.fail('Failed to deactivate user', error);
   }
 }

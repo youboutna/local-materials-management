@@ -231,7 +231,7 @@ elif [ -n "$SQL_FILE" ]; then
         echo "    puis relancer ce script"
         echo ""
         echo -e "  ${BOLD}Option 2 - Exécuter via le Dashboard :${NC}"
-        echo "    1. Ouvrir https://app.supabase.com/project/ttrfbzonzcyimfmezuqv/sql"
+        echo "    1. Ouvrir https://app.supabase.com/project/arenvzltuvjjroigbzlu/sql"
         echo "    2. Copier/coller le contenu ci-dessous"
         echo "    3. Exécuter"
         echo ""
