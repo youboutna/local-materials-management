@@ -6,6 +6,8 @@
 
 -- 1. Créer la table user_roles si elle n'existe pas
 
+ALTER TABLE public.user_roles
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active' CHECK (status IN ('active','pending','inactive'));
 -- 2. Insérer les rôles (avec ON CONFLICT pour éviter les doublons)
 
 -- 3. Créer la fonction has_any_role qui interroge user_roles

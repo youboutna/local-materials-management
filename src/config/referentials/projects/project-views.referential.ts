@@ -57,7 +57,7 @@ export const PROJECT_VIEW_PROFILES: ProjectViewProfile[] = [
     tabs: ['overview', 'planification', 'dqe', 'execution', 'financier', 'conformite', 'suivi_evaluation', 'localisation', 'inspections', 'rapports'],
   },
   {
-    entityCode: 'SOMELEC_INFRA',
+    entityCode: 'BTP_INFRA',
     tabs: ['overview', 'planification', 'execution', 'financier', 'conformite', 'suivi_evaluation', 'inspections', 'localisation', 'documents', 'rapports'],
   },
   {

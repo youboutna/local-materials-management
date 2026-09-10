@@ -180,7 +180,7 @@
       "startDate": "2026-09-01",
       "endDate": "2026-10-31",
       "durationDays": 60,
-      "references": { "lot": "L1", "repository": "SOMELEC_INFRA" }
+      "references": { "lot": "L1", "repository": "BTP_INFRA" }
     },
     {
       "id": "EXECUTION_L2",
@@ -195,7 +195,7 @@
       "startDate": "2026-10-01",
       "endDate": "2026-12-31",
       "durationDays": 90,
-      "references": { "lot": "L2", "repository": "SOMELEC_INFRA" }
+      "references": { "lot": "L2", "repository": "BTP_INFRA" }
     },
     {
       "id": "EXECUTION_L3",
@@ -210,7 +210,7 @@
       "startDate": "2026-11-01",
       "endDate": "2027-01-31",
       "durationDays": 90,
-      "references": { "lot": "L3", "repository": "SOMELEC_INFRA" }
+      "references": { "lot": "L3", "repository": "BTP_INFRA" }
     },
     {
       "id": "EXECUTION_L4",
@@ -225,7 +225,7 @@
       "startDate": "2026-12-01",
       "endDate": "2027-02-28",
       "durationDays": 75,
-      "references": { "lot": "L4", "repository": "SOMELEC_INFRA" }
+      "references": { "lot": "L4", "repository": "BTP_INFRA" }
     },
     {
       "id": "EXECUTION_L5",
@@ -240,7 +240,7 @@
       "startDate": "2027-01-01",
       "endDate": "2027-03-31",
       "durationDays": 75,
-      "references": { "lot": "L5", "repository": "SOMELEC_INFRA" }
+      "references": { "lot": "L5", "repository": "BTP_INFRA" }
     },
     {
       "id": "HANDOVER",
@@ -255,7 +255,7 @@
       "startDate": "2027-03-01",
       "endDate": "2027-04-29",
       "durationDays": 45,
-      "references": { "repository": "SOMELEC_INFRA" }
+      "references": { "repository": "BTP_INFRA" }
     }
   ],
   "milestones": [

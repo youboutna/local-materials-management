@@ -6,7 +6,7 @@ Tu travailles sur **HadraTech-GPI** (Gestion de Projets , suivi d''Infrastructur
 - **Architecture hiérarchique 5 niveaux** : Projet → Phase → Étape → Jalon → Action
 - **Stack** : React + TypeScript + Supabase + Shadcn/ui + Tailwind CSS
 - **Pattern architectural** : Interface → Adapter → Repository → Service → Component (Hexagonal Architecture)
-- **Référentiel métier** : `src/config/referentials/*` exemple SOMELEC Standards (projets infrastructures avec bailleurs de fonds)
+- **Référentiel métier** : `src/config/referentials/*` exemple BTP Standards (projets infrastructures avec bailleurs de fonds)
 
 ## 📋 Phase Actuelle
 

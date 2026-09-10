@@ -1,9 +1,9 @@
 /**
  * Stratégies sectorielles - Wrapper sur PNDS, SDAU et autres référentiels existants
  */
+import type { ProjectReferential } from '../btp.referential';
 import { pndsReferential } from '../pnds.referential';
 import { sdauReferential } from '../snat-nouakchot.referential';
-import type { ProjectReferential } from '../somelec.referential';
 
 export interface SectorialStrategyMeta {
   code: string;

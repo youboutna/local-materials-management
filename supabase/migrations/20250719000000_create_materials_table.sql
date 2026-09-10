@@ -3,6 +3,16 @@
 -- Description: Crée la table btp.materials pour la gestion des matériaux
 -- =============================================================================
 
+
+-- 1. Vérifier que la fonction update_timestamp existe
+CREATE OR REPLACE FUNCTION update_timestamp()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
 -- 1. Créer la table materials dans le schéma btp
 CREATE TABLE IF NOT EXISTS btp.materials (
     id UUID DEFAULT gen_random_uuid(),

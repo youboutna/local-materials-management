@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS btp.tender_estimate_items (
   item_type TEXT DEFAULT 'material', -- 'material', 'labor', 'equipment', 'other'
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  supplier_id UUID ,
+  supplier_id UUID
 );
 
 -- Create table for parsed invoice data

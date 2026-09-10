@@ -29,10 +29,10 @@ export const DQE_CATEGORIES: DQECategory[] = [
   { code: 'RECEPTION',     label: { fr: 'Réception' },                   color: '#8b5cf6', unit: 'forfait', targetMargin: { min: 10, max: 30 }, applicableEntities: ['ETER'], order: 50 },
 
   // ----- SOMELEC (infrastructure électrique) -----
-  { code: 'GENIE_CIVIL',   label: { fr: 'Génie Civil' },                 color: '#0ea5e9', unit: 'm³',      targetMargin: { min: 8, max: 25 },  applicableEntities: ['SOMELEC_INFRA'], order: 10 },
-  { code: 'POSE_RESEAU',   label: { fr: 'Pose réseau' },                 color: '#14b8a6', unit: 'ml',      targetMargin: { min: 8, max: 25 },  applicableEntities: ['SOMELEC_INFRA'], order: 20 },
-  { code: 'EQUIPEMENT',    label: { fr: 'Équipements' },                 color: '#a855f7', unit: 'unité',   targetMargin: { min: 8, max: 25 },  applicableEntities: ['SOMELEC_INFRA'], order: 30 },
-  { code: 'TESTS',         label: { fr: 'Tests & mise en service' },     color: '#ec4899', unit: 'forfait', targetMargin: { min: 8, max: 25 },  applicableEntities: ['SOMELEC_INFRA'], order: 40 },
+  { code: 'GENIE_CIVIL',   label: { fr: 'Génie Civil' },                 color: '#0ea5e9', unit: 'm³',      targetMargin: { min: 8, max: 25 },  applicableEntities: ['BTP_INFRA'], order: 10 },
+  { code: 'POSE_RESEAU',   label: { fr: 'Pose réseau' },                 color: '#14b8a6', unit: 'ml',      targetMargin: { min: 8, max: 25 },  applicableEntities: ['BTP_INFRA'], order: 20 },
+  { code: 'EQUIPEMENT',    label: { fr: 'Équipements' },                 color: '#a855f7', unit: 'unité',   targetMargin: { min: 8, max: 25 },  applicableEntities: ['BTP_INFRA'], order: 30 },
+  { code: 'TESTS',         label: { fr: 'Tests & mise en service' },     color: '#ec4899', unit: 'forfait', targetMargin: { min: 8, max: 25 },  applicableEntities: ['BTP_INFRA'], order: 40 },
 ];
 
 export function getDQECategoriesForEntity(entityCode?: string): DQECategory[] {

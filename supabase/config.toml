@@ -5,7 +5,7 @@
 # =============================================================================
 
 # ---- Projet ----
-project_id = "ttrfbzonzcyimfmezuqv"
+project_id = "arenvzltuvjjroigbzlu"
 
 # ---- API ----
 [api]
@@ -22,7 +22,7 @@ additional_redirect_urls = [
   "http://localhost:5173/auth/callback",
   "http://localhost:5173/auth",
   "http://localhost:5173/",
-  "https://ttrfbzonzcyimfmezuqv.supabase.co/auth/v1/callback",
+  "https://arenvzltuvjjroigbzlu.supabase.co/auth/v1/callback",
   "https://*.lovableproject.com/auth/callback",
   "https://*.lovableproject.com/auth",
   "https://*.lovableproject.com/"
@@ -33,14 +33,14 @@ additional_redirect_urls = [
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
-redirect_uri = "https://ttrfbzonzcyimfmezuqv.supabase.co/auth/v1/callback"
+redirect_uri = "https://arenvzltuvjjroigbzlu.supabase.co/auth/v1/callback"
 
 # ---- GitHub OAuth (optionnel) ----
 # [auth.external.github]
 # enabled = false
 # client_id = "env(GITHUB_CLIENT_ID)"
 # secret = "env(GITHUB_CLIENT_SECRET)"
-# redirect_uri = "https://ttrfbzonzcyimfmezuqv.supabase.co/auth/v1/callback"
+# redirect_uri = "https://arenvzltuvjjroigbzlu.supabase.co/auth/v1/callback"
 
 # ---- Edge Functions ----
 [functions.send-email-notification]

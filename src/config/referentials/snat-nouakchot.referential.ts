@@ -3,7 +3,7 @@
  * Schéma Directeur d'Aménagement et d'Urbanisme avec financement JICA et approbations ministérielles
  */
 
-import { MultiLanguageLabel } from './somelec.referential';
+import { MultiLanguageLabel } from './btp.referential';
 
 export interface ReferentialTask {
   code: string;

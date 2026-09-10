@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -28,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
     AlertCircle,
     Building,
+    Calculator,
     Calendar,
     ClipboardCheck,
 
@@ -40,12 +41,11 @@ import {
     Plus,
     Trash2,
     Users,
-    Calculator,
     Zap
 } from 'lucide-react';
 
-import { CustomPhase, PhaseData } from '@/dtos/entities/PhaseDTO';
 import { T } from '@/components/i18n/T';
+import { CustomPhase, PhaseData } from '@/dtos/entities/PhaseDTO';
 
 
 // Types for procurement phases from referential
@@ -62,17 +62,16 @@ import { ReferentialType } from '@/config/referentials';
 
 import { useConstructionPhaseHex } from '@/hooks/hexagonal/useConstructionPhaseHex';
 
-import { PhaseService, getPhaseService} from '@/application/services/PhaseService';
+import { getPhaseService } from '@/application/services/PhaseService';
 
 import { getMilestoneService } from '@/application/services/MilestoneService';
 
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 import { referentialService } from '@/application/services/ReferentialService';
 import { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import { ProjectWorkflowData } from '@/dtos/workflows/ProjectWorkflowDTOs';
-import { toDateInput } from '@/lib/utils';
 import { usePhaseResourceCountsHex } from '@/hooks/hexagonal/usePhaseResourceCountsHex';
+import { toDateInput } from '@/lib/utils';
 
 import { i18nService } from '@/application/services/I18nService';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
@@ -234,7 +233,7 @@ const ConstructionPhaseManager: React.FC<ConstructionPhaseManagerProps> = ({
     checkAuthenticationAndProceed(async () => {
 
       // Get phase data from service
-      const referentialPhases = await referentialService.getPhasesForReferential('SOMELEC_INFRA');
+      const referentialPhases = await referentialService.getPhasesForReferential('BTP_INFRA');
       const phaseData = referentialPhases.find(p => p.code === selectedPhase);
       const phaseLabel = phaseData?.label || selectedPhase;
 
@@ -1571,7 +1570,7 @@ const StandardPhaseCreator: React.FC<{
     const fetchPhases = async () => {
       setLoading(true);
       try {
-        const phases = await referentialService.getPhasesForReferential('SOMELEC_INFRA');
+        const phases = await referentialService.getPhasesForReferential('BTP_INFRA');
         const phaseOptions = phases.map(phase => ({
           value: phase.code,
           label: phase.label
@@ -1598,7 +1597,7 @@ const StandardPhaseCreator: React.FC<{
 
       setLoading(true);
       try {
-        const phases = await referentialService.getPhasesForReferential('SOMELEC_INFRA');
+        const phases = await referentialService.getPhasesForReferential('BTP_INFRA');
         const selectedPhaseData = phases.find(p => p.code === selectedPhase);
 
         if (selectedPhaseData) {

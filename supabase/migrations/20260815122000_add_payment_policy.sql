@@ -13,4 +13,3 @@ DO $$ BEGIN
     CREATE POLICY "Users can update payments" ON btp.payments FOR UPDATE USING (created_by = auth.uid()) WITH CHECK (created_by = auth.uid());
   END IF;
 END $$;
-payments_status_check

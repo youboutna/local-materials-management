@@ -8,9 +8,9 @@
  */
 
 import {
-  WeightingModel,
-  getDefaultWeightingForProjectType,
-  getWeightingModel,
+    WeightingModel,
+    getDefaultWeightingForProjectType,
+    getWeightingModel,
 } from '@/config/referentials/weighting-models.referential';
 
 export interface WeightedItem {
@@ -27,7 +27,7 @@ export class WeightedProgressCalculator {
    * Calcule le TEP pondéré.
    * @param items Liste d'items avec progress (et éventuellement weight explicite).
    * @param model Modèle de pondération (résolu par projectType si absent).
-   * @param projectType Type de projet (SOMELEC_INFRA, ETER, ...).
+   * @param projectType Type de projet (BTP_INFRA, ETER, ...).
    */
   static compute(
     items: WeightedItem[],

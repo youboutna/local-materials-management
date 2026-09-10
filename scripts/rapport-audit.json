@@ -78507,7 +78507,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ReferentialTask\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:8, src/config/referentials/snat-nouakchot.referential.ts:8, src/config/referentials/somelec.referential.ts:13",
+          "message": "❌ [D001] Type dupliqué \"ReferentialTask\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:8, src/config/referentials/snat-nouakchot.referential.ts:8, src/config/referentials/btp.referential.ts:13",
           "line": 8,
           "match": "ReferentialTask"
         }
@@ -78520,7 +78520,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ReferentialStep\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:17, src/config/referentials/snat-nouakchot.referential.ts:26, src/config/referentials/somelec.referential.ts:22",
+          "message": "❌ [D001] Type dupliqué \"ReferentialStep\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:17, src/config/referentials/snat-nouakchot.referential.ts:26, src/config/referentials/btp.referential.ts:22",
           "line": 17,
           "match": "ReferentialStep"
         }
@@ -78533,7 +78533,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ReferentialPhase\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:24, src/config/referentials/snat-nouakchot.referential.ts:37, src/config/referentials/somelec.referential.ts:29",
+          "message": "❌ [D001] Type dupliqué \"ReferentialPhase\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:24, src/config/referentials/snat-nouakchot.referential.ts:37, src/config/referentials/btp.referential.ts:29",
           "line": 24,
           "match": "ReferentialPhase"
         }
@@ -78546,7 +78546,7 @@
           "ruleId": "D001",
           "priority": 2,
           "severity": "ERROR",
-          "message": "❌ [D001] Type dupliqué \"ProjectReferential\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:32, src/config/referentials/snat-nouakchot.referential.ts:46, src/config/referentials/somelec.referential.ts:39",
+          "message": "❌ [D001] Type dupliqué \"ProjectReferential\" trouvé dans 3 emplacements: src/config/referentials/pnds.referential.ts:32, src/config/referentials/snat-nouakchot.referential.ts:46, src/config/referentials/btp.referential.ts:39",
           "line": 32,
           "match": "ProjectReferential"
         }
@@ -83623,7 +83623,7 @@
           "line": 8
         },
         {
-          "file": "src/config/referentials/somelec.referential.ts",
+          "file": "src/config/referentials/btp.referential.ts",
           "line": 13
         }
       ]
@@ -83640,7 +83640,7 @@
           "line": 26
         },
         {
-          "file": "src/config/referentials/somelec.referential.ts",
+          "file": "src/config/referentials/btp.referential.ts",
           "line": 22
         }
       ]
@@ -83657,7 +83657,7 @@
           "line": 37
         },
         {
-          "file": "src/config/referentials/somelec.referential.ts",
+          "file": "src/config/referentials/btp.referential.ts",
           "line": 29
         }
       ]
@@ -83674,7 +83674,7 @@
           "line": 46
         },
         {
-          "file": "src/config/referentials/somelec.referential.ts",
+          "file": "src/config/referentials/btp.referential.ts",
           "line": 39
         }
       ]
@@ -94395,7 +94395,7 @@
       "p0Violations": 0
     },
     {
-      "file": "src/config/referentials/somelec.referential.ts",
+      "file": "src/config/referentials/btp.referential.ts",
       "score": 60,
       "type": "UTILITY",
       "layer": "UNKNOWN",

@@ -51,18 +51,18 @@ export interface ProjectReferential {
 }
 
 export const somelecReferential: ProjectReferential = {
-  code: 'SOMELEC_INFRA',
+  code: 'BTP_INFRA',
   name: {
-    code: 'SOMELEC_INFRA',
-    fr: 'Projet d\'Infrastructure SOMELEC',
-    ar: 'مشروع البنية التحتية سوميلك',
-    en: 'SOMELEC Infrastructure Project'
+    code: 'BTP_INFRA',
+    fr: 'Projet d\'Infrastructure BTP',
+    ar: 'مشروع البنية التحتية ',
+    en: 'BTP Infrastructure Project'
   },
   description: {
-    code: 'SOMELEC_INFRA_DESC',
-    fr: 'Projets d\'infrastructures électriques avec financement bailleur et consultant ingénierie',
-    ar: 'مشاريع البنية التحتية الكهربائية بتمويل المانحين والاستشارات الهندسية',
-    en: 'Electrical infrastructure projects with donor funding and engineering consultant'
+    code: 'BTP_INFRA_DESC',
+    fr: 'Projets d\'infrastructures  avec financement bailleur et consultant ingénierie',
+    ar: 'مشاريع البنية التحتية  بتمويل المانحين والاستشارات الهندسية',
+    en: 'BTP infrastructure projects with donor funding and engineering consultant'
   },
   requiresEngineeringConsultant: true,
   requiresDonorApproval: true,

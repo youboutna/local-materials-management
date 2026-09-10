@@ -3,7 +3,7 @@
  * Based on Mauritanian public procurement laws and procedures
  */
 
-import { ProjectReferential, MultiLanguageLabel } from './somelec.referential';
+import { ProjectReferential } from './btp.referential';
 
 // Types de procédures mauritaniennes
 export type ProcurementType = 

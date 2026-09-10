@@ -4,14 +4,32 @@
 -- Description: Table for storing project alerts with full audit trail
 -- Intégration avec le schéma existant (profiles, user_roles)
 -- ============================================================
+-- ============================================================
+-- 0. Create schema if not exists
+-- ============================================================
+CREATE SCHEMA IF NOT EXISTS btp;
+
+-- Ajouter la colonne status
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active';
+
+-- Mettre à jour les profils existants
+UPDATE public.profiles 
+SET status = 'active' 
+WHERE status IS NULL;
+
+-- Ajouter une contrainte de validation
+ALTER TABLE public.profiles 
+ADD CONSTRAINT check_profiles_status 
+CHECK (status IN ('active', 'inactive', 'suspended', 'pending'));
 
 -- ============================================================
--- 0. Drop table if exists (for re-runs)
+-- 1. Drop table if exists (for re-runs)
 -- ============================================================
 DROP TABLE IF EXISTS btp.project_alerts CASCADE;
 
 -- ============================================================
--- 1. Create the table
+-- 2. Create the table
 -- ============================================================
 CREATE TABLE btp.project_alerts (
   -- Primary identifiers

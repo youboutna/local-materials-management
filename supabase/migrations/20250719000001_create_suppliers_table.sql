@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS btp.suppliers (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT suppliers_pkey PRIMARY KEY (id), 
-    category TEXT,
+    category TEXT
 );
 
 ALTER TABLE btp.suppliers ENABLE ROW LEVEL SECURITY;

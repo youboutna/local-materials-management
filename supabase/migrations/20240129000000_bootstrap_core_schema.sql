@@ -37,6 +37,20 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Ajouter la colonne status
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active';
+
+-- Mettre à jour les profils existants
+UPDATE public.profiles 
+SET status = 'active' 
+WHERE status IS NULL;
+
+-- Ajouter une contrainte de validation
+ALTER TABLE public.profiles 
+ADD CONSTRAINT check_profiles_status 
+CHECK (status IN ('active', 'inactive', 'suspended', 'pending'));
+
 GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
 GRANT ALL ON public.profiles TO service_role;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;

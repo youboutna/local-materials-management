@@ -3,15 +3,15 @@
  * Central registry for all project referentials
  */
 
+import { MultiLanguageLabel, ProjectReferential, ReferentialPhase, ReferentialStep, ReferentialTask, somelecReferential } from './btp.referential';
 import { customStandardReferential } from './custom-standard.referential';
 import { distributionRuraleReferential } from './distribution-rurale.referential';
 import { mauritanianPublicProcurementReferential } from './mauritanian-public-procurement.referential';
 import { pndsReferential } from './pnds.referential';
 import { sdauReferential } from './snat-nouakchot.referential';
-import { MultiLanguageLabel, ProjectReferential, somelecReferential, ReferentialPhase, ReferentialStep, ReferentialTask } from './somelec.referential';
 
 export type ReferentialType = 
-  | 'SOMELEC_INFRA' 
+  | 'BTP_INFRA' 
   | 'MR_PUBLIC_PROCUREMENT' 
   | 'CUSTOM_STANDARD' 
   | 'DISTRIBUTION_RURALE' 
@@ -22,7 +22,7 @@ export type ReferentialType =
  * Registry of all available project referentials
  */
 export const REFERENTIAL_REGISTRY: Record<ReferentialType, ProjectReferential> = {
-  SOMELEC_INFRA: somelecReferential,
+  BTP_INFRA: somelecReferential,
   MR_PUBLIC_PROCUREMENT: mauritanianPublicProcurementReferential,
   CUSTOM_STANDARD: customStandardReferential,
   DISTRIBUTION_RURALE: distributionRuraleReferential,
@@ -128,37 +128,27 @@ export type ReferentialTaskDTO = {
 /**
  * Re-export milestone referential utilities
  */
-export { 
-  getMilestoneTemplates, 
-  getAvailablePhases, 
-  REFERENTIAL_MILESTONES,
-  getDefaultProjectMilestones,
-  getDefaultPhaseMilestones,
-  getMilestoneTemplatesWithDefaults,
-  DEFAULT_PROJECT_MILESTONES,
-  DEFAULT_PHASE_MILESTONES
-} from './milestones.referential';
-export { 
-  getSomelceMilestoneTemplates, 
-  getSomelceAvailablePhases, 
-  SOMELEC_PHASE_MAPPING, 
-  SOMELEC_ELECTRICAL_MILESTONES,
-  getCompleteReferential,
-  getReferentialType
+export {
+    getCompleteReferential,
+    getReferentialType, getSomelceAvailablePhases, getSomelceMilestoneTemplates, SOMELEC_ELECTRICAL_MILESTONES, SOMELEC_PHASE_MAPPING
 } from './milestones-elec.referential';
+export {
+    DEFAULT_PHASE_MILESTONES, DEFAULT_PROJECT_MILESTONES, getAvailablePhases, getDefaultPhaseMilestones, getDefaultProjectMilestones, getMilestoneTemplates, getMilestoneTemplatesWithDefaults, REFERENTIAL_MILESTONES
+} from './milestones.referential';
 
 
 // PTBA/PPM/PED/TBI — référentiels transverses (alignement docs/ARCHITECTURE_REFERENTIELS.md)
-export * from './indicator-templates.referential';
 export * from './deviation-rules.referential';
 export * from './dqe-context-mapping.referential';
+export * from './indicator-templates.referential';
 export * from './weighting-models.referential';
 
 // HadraTech-GPI — référentiels métiers transverses (rapports, vues, DQE, santé).
-export * from './reports/report-profiles.referential';
-export * from './inspections/inspection-statuses.referential';
-export * from './projects/project-views.referential';
 export * from './dqe/dqe-categories.referential';
+export * from './inspections/inspection-statuses.referential';
 export * from './kpi/health-thresholds.referential';
-export * from './projects/project-workflow-steps.referential';
 export * from './notifications/notification-types.referential';
+export * from './projects/project-views.referential';
+export * from './projects/project-workflow-steps.referential';
+export * from './reports/report-profiles.referential';
+

@@ -3,7 +3,7 @@
  * Generic construction phases for custom projects
  */
 
-import { ProjectReferential } from './somelec.referential';
+import { ProjectReferential } from './btp.referential';
 
 export const customStandardReferential: ProjectReferential = {
   code: 'CUSTOM_STANDARD',

@@ -46,7 +46,7 @@ export const DEVIATION_RULES: DeviationRule[] = [
     formula: '(actualCost - plannedBudget) / plannedBudget × 100',
     thresholds: { low: 5, medium: 10, high: 20 },
     scopes: ['task', 'phase', 'project'],
-    applicableTo: ['project', 'phase'], projectTypes: ['SOMELEC_INFRA', 'ETER'], autoAction: 'escalate', compareField: 'actualCost', targetField: 'plannedCost',
+    applicableTo: ['project', 'phase'], projectTypes: ['BTP_INFRA', 'ETER'], autoAction: 'escalate', compareField: 'actualCost', targetField: 'plannedCost',
   },
   {
     code: 'progress_deviation_pts',

@@ -420,7 +420,7 @@
    "marketType": "Travaux",
    "selectionMode": "appel d'offres international",
    "projectType": "infrastructure",
-   "referentialCode": "SOMELEC_INFRA",
+   "referentialCode": "BTP_INFRA",
    "launchDate": "2023-09-01",
    "attributionDate": "",
    "completionDate": "2025-12-31"

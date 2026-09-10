@@ -19,7 +19,7 @@ CREATE TABLE btp.tender_estimates (
   status TEXT DEFAULT 'draft',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  supplier_id UUID ,
+  supplier_id UUID 
 );
 
 -- Create tender_estimate_items table

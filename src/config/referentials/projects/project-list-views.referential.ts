@@ -49,7 +49,7 @@ export const PROJECT_LIST_VIEWS: Record<ProjectListViewKey, ProjectListViewDef> 
 };
 
 export interface ProjectListViewProfile {
-  /** Code d'entité ou contexte (DEFAULT, ETER, SOMELEC_INFRA, ...). */
+  /** Code d'entité ou contexte (DEFAULT, ETER, BTP_INFRA, ...). */
   entityCode: string;
   views: ProjectListViewKey[];
   defaultView: ProjectListViewKey;
@@ -58,7 +58,7 @@ export interface ProjectListViewProfile {
 export const PROJECT_LIST_VIEW_PROFILES: ProjectListViewProfile[] = [
   { entityCode: 'DEFAULT',        views: ['grid', 'map', 'interactive'], defaultView: 'grid' },
   { entityCode: 'ETER',           views: ['grid', 'map', 'interactive'], defaultView: 'grid' },
-  { entityCode: 'SOMELEC_INFRA',  views: ['grid', 'map', 'interactive'], defaultView: 'grid' },
+  { entityCode: 'BTP_INFRA',  views: ['grid', 'map', 'interactive'], defaultView: 'grid' },
 ];
 
 export function getProjectListViews(entityCode?: string): ProjectListViewDef[] {

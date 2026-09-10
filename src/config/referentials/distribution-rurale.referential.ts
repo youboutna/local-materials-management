@@ -3,7 +3,7 @@
  * Projects managed by Rural Distribution Department with Ministry funding
  */
 
-import { ProjectReferential } from './somelec.referential';
+import { ProjectReferential } from './btp.referential';
 
 export const distributionRuraleReferential: ProjectReferential = {
   code: 'DISTRIBUTION_RURALE',

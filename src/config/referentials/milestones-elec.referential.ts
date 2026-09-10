@@ -1,6 +1,6 @@
 import { MilestoneTemplateDTO } from "@/dtos/types/milestone-dto";
+import { somelecReferential } from "./btp.referential";
 import { REFERENTIAL_MILESTONES } from "./milestones.referential";
-import { somelecReferential } from "./somelec.referential";
 
 /**
  * Milestone templates for SOMELEC electrical infrastructure projects

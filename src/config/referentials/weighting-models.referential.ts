@@ -37,7 +37,7 @@ export const WEIGHTING_MODELS: WeightingModel[] = [
       RECEPTION: 10,
       CLOTURE: 5,
     },
-    applicableProjectTypes: ['SOMELEC_INFRA'],
+    applicableProjectTypes: ['BTP_INFRA'],
   },
   {
     code: 'eter_road_maintenance',

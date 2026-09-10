@@ -3,7 +3,7 @@
  * Plan National de Développement Sanitaire avec financement bailleurs et approbations ministérielles
  */
 
-import { MultiLanguageLabel } from './somelec.referential';
+import { MultiLanguageLabel } from './btp.referential';
 
 export interface ReferentialTask {
   code: string;
