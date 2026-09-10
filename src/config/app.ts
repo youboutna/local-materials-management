@@ -183,17 +183,25 @@ function buildConfig(): AppConfig {
   const storageProvider =
     (envOpt('VITE_STORAGE_PROVIDER') as StorageProvider | undefined) ?? defaults.storage.provider;
 
+  // ✅ Clé et URL résolues via SupabaseConfigService : jamais une clé d'un autre
+  // projet, et l'URL runtime (window.__APP_CONFIG__) est prise en compte.
+  const supabaseConfig = resolveSupabaseConfig();
+
+  // L'URL du service d'auth vient toujours du projet Supabase résolu quand elle
+  // existe : aucun repli localhost ne doit fuiter dans un build publié.
   const authUrl =
-    envOpt('VITE_SUPABASE_URL') ??
-    envOpt('VITE_GOTRUE_URL') ??
-    envOpt('VITE_KEYCLOAK_URL') ??
+    (authProvider === 'supabase' ? supabaseConfig.url : '') ||
+    envOpt('VITE_SUPABASE_URL') ||
+    envOpt('VITE_GOTRUE_URL') ||
+    envOpt('VITE_KEYCLOAK_URL') ||
     defaults.auth.url;
 
-  // ✅ Clé résolue via SupabaseConfigService : jamais une clé d'un autre projet
-  const supabaseConfig = resolveSupabaseConfig();
   const anonKey = supabaseConfig.publishableKey || defaults.auth.anonKey;
 
-  const projectId = envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId;
+  // Le ref du projet est déduit de l'URL : changer VITE_SUPABASE_PROJECT_ID seul
+  // ne déplace pas les appels REST, c'est VITE_SUPABASE_URL qui les pilote.
+  const projectId =
+    supabaseConfig.projectRef ?? envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId;
 
   const dataUrl =
     envOpt('VITE_POSTGREST_URL') ??
