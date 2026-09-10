@@ -1,6 +1,8 @@
 // Configuration Service - Architecture Hexagonale
 // Centralized configuration management for adapters and deployment settings
-
+/**
+ * /src/application/services/ConfigurationService.ts
+ */
 export interface DatabaseConfig {
   provider: 'supabase' | 'postgresql' | 'mysql' | 'mongodb';
   host: string;
@@ -72,6 +74,54 @@ export interface ConfigurationTemplate {
   setupSteps: string[];
   dockerCompose?: string;
 }
+
+// ============================================================================
+// UTILITAIRES — Résolution dynamique des URLs (aucun localhost codé en dur)
+// ============================================================================
+
+/**
+ * URL publique du frontend (le navigateur). En preview / prod, c'est
+ * window.location.origin. En dev local (SSR ou CLI), on retourne '' pour
+ * forcer la lecture des variables d'environnement.
+ */
+function resolveFrontendOrigin(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+  return '';
+}
+
+/**
+ * URL du backend Supabase (GoTrue). Lit la variable VITE_SUPABASE_URL.
+ * ⚠️ Ne JAMAIS utiliser le domaine du frontend ici.
+ */
+function resolveSupabaseUrl(): string {
+  const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+  const url = (env.VITE_SUPABASE_URL ?? '').trim().replace(/\/+$/, '');
+  return url;
+}
+
+/**
+ * URL de callback OAuth (destination de Google/GitHub → Supabase).
+ * Doit pointer vers Supabase/GoTrue, PAS vers le frontend.
+ */
+function resolveOAuthCallbackUri(): string {
+  const supabaseUrl = resolveSupabaseUrl();
+  if (!supabaseUrl) return '';
+  return `${supabaseUrl}/auth/v1/callback`;
+}
+
+/**
+ * URL de retour après login (Supabase → frontend).
+ * Doit pointer vers le frontend, PAS vers Supabase.
+ */
+function resolveOAuthRedirectTo(): string {
+  const origin = resolveFrontendOrigin();
+  if (!origin) return '';
+  return `${origin}/auth/callback`;
+}
+
+// ============================================================================
 
 export class ConfigurationService {
   private static instance: ConfigurationService;
@@ -183,9 +233,10 @@ export class ConfigurationService {
         url: 'https://your-project.supabase.co',
         clientId: 'your-publishable-key',
         clientSecret: 'your-service-role-key',
+        // ⚠️ redirectUris = URLs publiques du FRONTEND (après login)
+        //    NE PAS confondre avec le CALLBACK OAuth (côté Supabase).
         redirectUris: [
-          'http://localhost:3000',
-          'https://your-domain.com'
+          'https://your-domain.com/auth/callback',
         ],
         scopes: ['openid', 'profile', 'email']
       },
@@ -230,9 +281,9 @@ export class ConfigurationService {
         url: 'http://localhost:8080',
         realm: 'etr-ml',
         clientId: 'etr-ml-frontend',
+        // ⚠️ redirectUris = URLs publiques du FRONTEND (après login)
         redirectUris: [
-          'http://localhost:3000',
-          'http://localhost:3000/*'
+          'https://your-domain.com/auth/callback',
         ],
         scopes: ['openid', 'profile', 'email']
       },
@@ -281,8 +332,7 @@ export class ConfigurationService {
         clientId: 'your-client-id',
         clientSecret: 'your-client-secret',
         redirectUris: [
-          'https://your-domain.com',
-          'https://your-domain.com/*'
+          'https://your-domain.com/auth/callback',
         ],
         scopes: ['openid', 'profile', 'email', 'read:users']
       },
@@ -336,8 +386,7 @@ export class ConfigurationService {
         realm: 'company-realm',
         clientId: 'etr-ml-client',
         redirectUris: [
-          'https://etr-ml.company.com',
-          'https://etr-ml.company.com/*'
+          'https://etr-ml.company.com/auth/callback',
         ],
         scopes: ['openid', 'profile', 'email', 'roles']
       },
@@ -418,21 +467,17 @@ volumes:
   validateConfiguration(config: DeploymentConfig): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // Validate database config
     if (!config.database.host) errors.push('Database host is required');
     if (!config.database.database) errors.push('Database name is required');
     if (!config.database.username) errors.push('Database username is required');
     if (!config.database.password) errors.push('Database password is required');
 
-    // Validate auth config
     if (!config.auth.url) errors.push('Auth URL is required');
     if (!config.auth.clientId) errors.push('Auth client ID is required');
     if (!config.auth.redirectUris.length) errors.push('At least one redirect URI is required');
 
-    // Validate storage config
     if (!config.storage.endpoint) errors.push('Storage endpoint is required');
 
-    // Validate API config
     if (!config.api.baseUrl) errors.push('API base URL is required');
 
     return {
@@ -471,8 +516,16 @@ volumes:
   }
 
   // ============= OAuth Configuration Helper =============
-  getOAuthConfig(provider: string): { 
-    setupUrl: string; 
+  /**
+   * ⚠️ NE PAS CONFONDRE :
+   *   - redirect_to / redirectUris     → URL du FRONTEND (après login)
+   *   - oauthCallbackUri                → URL de SUPABASE (destination Google/GitHub)
+   *
+   * Le flux correct :
+   *   Frontend → Supabase → Google → Supabase (callback) → Frontend (redirect_to)
+   */
+  getOAuthConfig(provider: string): {
+    setupUrl: string;
     redirectUris: string[];
     setupInstructions: string[];
   } {
@@ -481,31 +534,49 @@ volumes:
       throw new Error('No configuration set');
     }
 
-    const currentDomain = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    // ✅ URL de CALLBACK OAuth (destination Google/GitHub → Supabase)
+    const oauthCallbackUri = resolveOAuthCallbackUri()
+      || `${config.auth.url.replace(/\/+$/, '')}/auth/v1/callback`;
+
+    // ✅ URL de RETOUR après login (destination Supabase → frontend)
+    const frontendOrigin = resolveFrontendOrigin()
+      || config.auth.redirectUris[0]
+      || '';
 
     switch (provider) {
       case 'google':
         return {
           setupUrl: 'https://console.cloud.google.com/apis/credentials',
-          redirectUris: config.auth.redirectUris,
+          // ⚠️ Ici on retourne le CALLBACK OAuth (côté Supabase), pas le frontend
+          redirectUris: [oauthCallbackUri].filter(Boolean),
           setupInstructions: [
-            'Go to Google Cloud Console - APIs & Credentials',
-            'Select your OAuth 2.0 Client ID',
-            'Add the redirect URIs above in the authorized redirect URIs',
-            'Configure the consent screen with your authorized domain',
-            'In Supabase - Auth - URL Configuration, set Site URL to your domain'
+            'Google Cloud Console → APIs & Services → Credentials',
+            `URI de redirection autorisés : ${oauthCallbackUri}`,
+            `Origines JavaScript autorisées : ${frontendOrigin}`,
+            'Vérifiez que le Client Secret dans Supabase = celui de Google Cloud (sans espaces)',
           ]
         };
       case 'keycloak':
         return {
           setupUrl: config.auth.url,
-          redirectUris: config.auth.redirectUris,
+          redirectUris: [oauthCallbackUri].filter(Boolean),
           setupInstructions: [
-            'Go to ' + config.auth.url + '/admin',
-            'Select realm: ' + config.auth.realm,
-            'Go to Clients - Find your client',
-            'Add the redirect URIs in Valid Redirect URIs',
-            'Configure Web Origins if needed'
+            `Allez sur ${config.auth.url}/admin`,
+            `Sélectionnez le realm : ${config.auth.realm}`,
+            'Clients → Sélectionnez votre client',
+            `Valid Redirect URIs : ${oauthCallbackUri}`,
+            `Web Origins : ${frontendOrigin}`,
+          ]
+        };
+      case 'auth0':
+        return {
+          setupUrl: 'https://manage.auth0.com',
+          redirectUris: [oauthCallbackUri].filter(Boolean),
+          setupInstructions: [
+            'Auth0 Dashboard → Applications → votre app',
+            `Allowed Callback URLs : ${oauthCallbackUri}`,
+            `Allowed Web Origins : ${frontendOrigin}`,
+            `Allowed Logout URLs : ${frontendOrigin}`,
           ]
         };
       default:
