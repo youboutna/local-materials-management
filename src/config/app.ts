@@ -204,9 +204,10 @@ function buildConfig(): AppConfig {
     supabaseConfig.projectRef ?? envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId;
 
   const dataUrl =
-    envOpt('VITE_POSTGREST_URL') ??
-    envOpt('VITE_SUPABASE_URL') ??
-    envOpt('VITE_DATABASE_URL') ??
+    envOpt('VITE_POSTGREST_URL') ||
+    (dataProvider === 'supabase' ? supabaseConfig.url : '') ||
+    envOpt('VITE_SUPABASE_URL') ||
+    envOpt('VITE_DATABASE_URL') ||
     defaults.data.url;
 
   const dataBlock = {
