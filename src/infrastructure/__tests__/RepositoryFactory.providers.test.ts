@@ -1,14 +1,22 @@
 /**
- * Provider selection tests
+ * RepositoryFactory + Deployment profiles — tests d'intégration
  *
- * Ensures VITE_AUTH_PROVIDER / VITE_DATA_PROVIDER / VITE_STORAGE_PROVIDER
- * select the correct adapters, cover dev + self-hosted scenarios, and that
- * the Settings UI taxonomy stays aligned with the canonical values wired
- * inside the RepositoryFactory (no dead paths, no duplicates).
+ * Vérifie deux couches complémentaires :
+ *  1. RepositoryFactory : sélection du bon adapter selon VITE_*_PROVIDER
+ *  2. Profiles : catalogue, manager, intégration app.ts, taxonomie UI
+ *
+ * ⚠️ Remplace l'ancien fichier qui testait ProviderSettings.tsx (supprimé).
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { validateProviders } from '@/config/app-validate';
+import { ALL_PROFILES, getProfileById } from '@/config/profiles';
+import {
+  getActiveProfileSync,
+  getProfileCustomConfigSync,
+  invalidateProfileCache,
+  listProfiles,
+} from '@/config/profile-manager';
 import { GoTrueAuthAdapter } from '@/infrastructure/adapters/auth/GoTrueAuthAdapter';
 import { KeycloakAuthAdapter } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
 import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapter';
@@ -29,7 +37,12 @@ function stubProviders(vars: Record<string, string | undefined>) {
 beforeEach(() => {
   vi.unstubAllEnvs();
   RepositoryFactory.reset();
+  invalidateProfileCache();
 });
+
+// =============================================================================
+// 1. RepositoryFactory — auth provider selection
+// =============================================================================
 
 describe('RepositoryFactory — auth provider selection', () => {
   it('selects LocalAuthAdapter when VITE_AUTH_PROVIDER=local', () => {
@@ -77,6 +90,10 @@ describe('RepositoryFactory — auth provider selection', () => {
   });
 });
 
+// =============================================================================
+// 2. RepositoryFactory — data provider selection
+// =============================================================================
+
 describe('RepositoryFactory — data provider selection', () => {
   it('reports VITE_DATA_PROVIDER=supabase', () => {
     stubProviders({ VITE_DATA_PROVIDER: 'supabase' });
@@ -100,6 +117,10 @@ describe('RepositoryFactory — data provider selection', () => {
     expect(RepositoryFactory.getDataKind()).toBe('local');
   });
 });
+
+// =============================================================================
+// 3. RepositoryFactory — storage provider selection
+// =============================================================================
 
 describe('RepositoryFactory — storage provider selection', () => {
   it('selects LocalStorageAdapter when VITE_STORAGE_PROVIDER=local', () => {
@@ -130,6 +151,10 @@ describe('RepositoryFactory — storage provider selection', () => {
   });
 });
 
+// =============================================================================
+// 4. validateProviders — rejects legacy / dead-path aliases
+// =============================================================================
+
 describe('validateProviders — rejects legacy / dead-path aliases', () => {
   it('accepts the canonical dev scenario (all local)', () => {
     expect(validateProviders({ auth: 'local', data: 'local', storage: 'local' })).toEqual([]);
@@ -150,9 +175,7 @@ describe('validateProviders — rejects legacy / dead-path aliases', () => {
     );
   });
 
-  it('flags legacy taxonomy values kept in UI dropdowns as invalid', () => {
-    // These appear only in the Settings UI (ProviderSettings.tsx) and must not
-    // resolve to any real adapter.
+  it('flags legacy taxonomy values as invalid', () => {
     const errors = validateProviders({ auth: 'auth0', data: 'mysql', storage: 'azure' });
     expect(errors).toHaveLength(3);
     expect(errors.join('\n')).toMatch(/VITE_AUTH_PROVIDER/);
@@ -161,32 +184,201 @@ describe('validateProviders — rejects legacy / dead-path aliases', () => {
   });
 });
 
-describe('Settings UI taxonomy — no duplicates, aligned with canonical providers', () => {
-  it('every canonical provider value exposed in app.ts is a supported adapter', async () => {
-    const { getAppConfig } = await import('@/config/app');
-    const cfg = getAppConfig();
-    // The default derived from env vars must resolve to a real adapter kind.
-    expect(['supabase', 'gotrue', 'keycloak', 'local']).toContain(cfg.auth.provider);
+// =============================================================================
+// 5. ✅ NOUVEAU — Catalogue de profils de déploiement
+// =============================================================================
+
+describe('Deployment profiles — catalogue', () => {
+  it('exposes the 5 canonical profiles', () => {
+    const ids = listProfiles().map((p) => p.id);
+    expect(ids).toEqual([
+      'supabase-cloud',
+      'supabase-selfhosted',
+      'postgrest-gotrue',
+      'keycloak-postgrest',
+      'local-bypass',
+    ]);
   });
 
-  it('ProviderSettings taxonomy has no duplicates', async () => {
-    // Read the component module and confirm option lists are unique. We inspect
-    // the raw file to avoid rendering the full React tree (which pulls in
-    // AuthManager side-effects).
-    const fs = await import('node:fs/promises');
-    const src = await fs.readFile('src/components/admin/ProviderSettings.tsx', 'utf8');
+  it('every profile has a unique id', () => {
+    const ids = ALL_PROFILES.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
 
-    const collect = (label: string) => {
-      const start = src.indexOf(`${label}: { value:`);
-      if (start === -1) return [] as string[];
-      const end = src.indexOf('];', start);
-      const block = src.slice(start, end);
-      return Array.from(block.matchAll(/value:\s*'([^']+)'/g)).map((m) => m[1]);
-    };
-
-    for (const label of ['authProviders', 'databaseProviders', 'storageProviders']) {
-      const values = collect(label);
-      expect(new Set(values).size, `${label} contains duplicates`).toBe(values.length);
+  it('every profile has required fields defined', () => {
+    for (const profile of ALL_PROFILES) {
+      expect(profile.id).toBeTruthy();
+      expect(profile.label).toBeTruthy();
+      expect(profile.description).toBeTruthy();
+      expect(profile.icon).toBeTruthy();
+      expect(['easy', 'medium', 'hard', 'expert']).toContain(profile.difficulty);
+      expect(typeof profile.recommended).toBe('boolean');
+      expect(profile.auth).toBeDefined();
+      expect(profile.data).toBeDefined();
+      expect(profile.storage).toBeDefined();
+      expect(Array.isArray(profile.requiredEnvVars)).toBe(true);
     }
+  });
+
+  it('getProfileById returns the correct profile', () => {
+    expect(getProfileById('supabase-cloud')?.label).toBe('Supabase Cloud');
+    expect(getProfileById('keycloak-postgrest')?.label).toContain('Keycloak');
+    expect(getProfileById('unknown-id')).toBeUndefined();
+  });
+
+  it('supabase-cloud is marked as recommended', () => {
+    const cloud = getProfileById('supabase-cloud');
+    expect(cloud?.recommended).toBe(true);
+  });
+
+  it('every profile declares a valid auth provider', () => {
+    const validAuthProviders = ['supabase', 'gotrue', 'keycloak', 'local'];
+    for (const profile of ALL_PROFILES) {
+      expect(validAuthProviders).toContain(profile.auth.provider);
+    }
+  });
+
+  it('every profile declares a valid data provider', () => {
+    const validDataProviders = ['supabase', 'postgrest', 'local', 'postgresql', 'mysql'];
+    for (const profile of ALL_PROFILES) {
+      expect(validDataProviders).toContain(profile.data.provider);
+    }
+  });
+
+  it('every profile declares a valid storage provider', () => {
+    const validStorageProviders = ['supabase', 's3', 'minio', 'local', 'azure', 'gcs', 'ftp'];
+    for (const profile of ALL_PROFILES) {
+      expect(validStorageProviders).toContain(profile.storage.provider);
+    }
+  });
+});
+
+// =============================================================================
+// 6. ✅ NOUVEAU — profile-manager
+// =============================================================================
+
+describe('profile-manager — getActiveProfileSync', () => {
+  it('returns the default profile in production mode', () => {
+    stubProviders({ VITE_APP_MODE: 'production' });
+    vi.stubEnv('MODE', 'production');
+    const profile = getActiveProfileSync();
+    expect(['supabase-cloud', 'supabase-selfhosted']).toContain(profile.id);
+  });
+
+  it('respects VITE_ACTIVE_PROFILE when set', () => {
+    stubProviders({ VITE_ACTIVE_PROFILE: 'keycloak-postgrest' });
+    invalidateProfileCache();
+    const profile = getActiveProfileSync();
+    expect(profile.id).toBe('keycloak-postgrest');
+  });
+
+  it('falls back to a valid profile when VITE_ACTIVE_PROFILE is unknown', () => {
+    stubProviders({ VITE_ACTIVE_PROFILE: 'nonexistent-profile-xyz' });
+    invalidateProfileCache();
+    const profile = getActiveProfileSync();
+    expect(profile).toBeDefined();
+    expect(profile.id).toBeTruthy();
+  });
+});
+
+describe('profile-manager — getProfileCustomConfigSync', () => {
+  it('returns an empty object when no config is cached', () => {
+    invalidateProfileCache();
+    const config = getProfileCustomConfigSync('supabase-cloud');
+    expect(config).toEqual({});
+  });
+});
+
+// =============================================================================
+// 7. ✅ NOUVEAU — Vérification absence legacy ProviderSettings / DatabaseSettings
+// =============================================================================
+
+describe('Legacy panels — removed from codebase', () => {
+  it('ProviderSettings.tsx and DatabaseSettings.tsx no longer exist', async () => {
+    const fs = await import('node:fs/promises');
+    const paths = [
+      'src/components/admin/ProviderSettings.tsx',
+      'src/components/admin/DatabaseSettings.tsx',
+    ];
+    for (const p of paths) {
+      const exists = await fs
+        .access(p)
+        .then(() => true)
+        .catch(() => false);
+      expect(exists, `${p} devrait être supprimé`).toBe(false);
+    }
+  });
+
+  it('no source file imports ProviderSettings or DatabaseSettings', async () => {
+    const fs = await import('node:fs/promises');
+    const path = await import('node:path');
+
+    async function walk(dir: string): Promise<string[]> {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      const files: string[] = [];
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          files.push(...(await walk(full)));
+        } else if (/\.(ts|tsx)$/.test(entry.name)) {
+          files.push(full);
+        }
+      }
+      return files;
+    }
+
+    const files = await walk('src');
+    const offenders: string[] = [];
+    for (const f of files) {
+      const content = await fs.readFile(f, 'utf8');
+      if (
+        /from\s+['"]@\/components\/admin\/(ProviderSettings|DatabaseSettings)['"]/.test(content) ||
+        /from\s+['"]\.\/(ProviderSettings|DatabaseSettings)['"]/.test(content)
+      ) {
+        offenders.push(f);
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+});
+
+// =============================================================================
+// 8. ✅ NOUVEAU — DeploymentProfileSelector existence
+// =============================================================================
+
+describe('DeploymentProfileSelector', () => {
+  it('exists and exports the component', async () => {
+    const fs = await import('node:fs/promises');
+    const content = await fs.readFile(
+      'src/components/admin/DeploymentProfileSelector.tsx',
+      'utf8',
+    );
+    expect(content).toMatch(/export\s+default\s+function\s+DeploymentProfileSelector/);
+    expect(content).toMatch(/listProfiles/);
+    expect(content).toMatch(/setActiveProfile/);
+    expect(content).toMatch(/signOut/);
+  });
+});
+
+// =============================================================================
+// 9. ✅ NOUVEAU — app.ts integration
+// =============================================================================
+
+describe('app.ts — profile integration', () => {
+  it('getAppConfig reads the active profile', async () => {
+    stubProviders({ VITE_ACTIVE_PROFILE: 'keycloak-postgrest' });
+    invalidateProfileCache();
+    const { getAppConfig } = await import('@/config/app');
+    const cfg = getAppConfig();
+    expect(cfg.auth.provider).toBe('keycloak');
+    expect(cfg.data.provider).toBe('postgrest');
+  });
+
+  it('falls back to supabase when no profile is active and no env is set', async () => {
+    invalidateProfileCache();
+    const { getAppConfig } = await import('@/config/app');
+    const cfg = getAppConfig();
+    expect(['supabase', 'local']).toContain(cfg.auth.provider);
   });
 });
