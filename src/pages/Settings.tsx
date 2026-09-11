@@ -1,21 +1,18 @@
-/**src/pages/settings.tsx
- **/
+/** src/pages/settings.tsx **/
 import AlertsProcessorSettings from "@/components/admin/AlertsProcessorSettings";
-import DatabaseSettings from "@/components/admin/DatabaseSettings";
 import DeploymentSettings from "@/components/admin/DeploymentSettings";
 import EscalationThresholdsSettings from "@/components/admin/EscalationThresholdsSettings";
 import KeycloakConfigurationTab from "@/components/admin/KeycloakConfigurationTab";
 import KeycloakSettings from "@/components/admin/KeycloakSettings";
 import LocalUserManagementPanel from "@/components/admin/LocalUserManagementPanel";
-import ProviderSettings from "@/components/admin/ProviderSettings";
 import StorageSettings from "@/components/admin/StorageSettings";
+import DeploymentProfileSelector from "@/components/admin/DeploymentProfileSelector";
 import { AppLayout } from "@/components/layout";
 import { AdminEmailsSettings } from "@/components/settings/AdminEmailsSettings";
 import AppearanceSettings from "@/components/settings/AppearanceSettings";
 import SystemSettingsPanel from "@/components/admin/SystemSettingsPanel";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -25,12 +22,10 @@ import {
   AlertTriangle,
   Cloud,
   Cog,
-  Database,
   Folder,
   Key,
   Mail,
   Palette,
-  Settings2,
   Users,
   Wrench,
 } from "lucide-react";
@@ -51,9 +46,8 @@ const SETTINGS_TABS: Array<{
   hideInDev?: boolean;
 }> = [
   { value: "appearance", icon: Palette, label: () => "Apparence" },
-  { value: "providers", hideInDev: true, icon: Cloud, label: () => "Providers" },
-  { value: "deployment", hideInDev: true, icon: Settings2, label: () => "Déploiement" },
-  { value: "database", icon: Database, label: (t) => t("settings.tabs.database") },
+  // ✅ Onglet fusionné : profil actif + documentation de déploiement
+  { value: "deployment", icon: Cloud, label: () => "Déploiement" },
   { value: "storage", icon: Folder, label: (t) => t("settings.tabs.storage") },
   { value: "keycloak", hideInDev: true, icon: Key, label: (t) => t("settings.tabs.keycloak") },
   { value: "keycloak-config", hideInDev: true, icon: Cog, label: (t) => t("settings.tabs.keycloak_config") },
@@ -71,7 +65,9 @@ const Settings = () => {
   const visibleTabs = SETTINGS_TABS.filter((tab) => !isDevMode || !tab.hideInDev);
   const urlTab = searchParams.get("tab");
   const activeTab =
-    urlTab && visibleTabs.some((s) => s.value === urlTab) ? urlTab : (visibleTabs[0]?.value ?? "appearance");
+    urlTab && visibleTabs.some((s) => s.value === urlTab)
+      ? urlTab
+      : (visibleTabs[0]?.value ?? "appearance");
   const setActiveTab = (value: string) => {
     const next = new URLSearchParams(searchParams);
     next.set("tab", value);
@@ -81,7 +77,7 @@ const Settings = () => {
   return (
     <AppLayout pageTitle={t("settings.title")}>
       <div className="max-w-7xl mx-auto space-y-4">
-        {/* Bandeau de statut compact (remplace la grande carte redondante) */}
+        {/* Bandeau de statut compact */}
         <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
           <Badge variant={isValid ? "default" : "destructive"}>
             {isValid ? "Configuration valide" : "Configuration invalide"}
@@ -136,16 +132,13 @@ const Settings = () => {
               <AppearanceSettings />
             </TabsContent>
 
-            <TabsContent value="providers" className="mt-0">
-              <ProviderSettings />
-            </TabsContent>
+            {/* ✅ Onglet Déploiement : sélecteur de profil + documentation */}
+            <TabsContent value="deployment" className="mt-0 space-y-6">
+              {/* 1. Action : choisir et activer le profil de déploiement */}
+              <DeploymentProfileSelector />
 
-            <TabsContent value="deployment" className="mt-0">
+              {/* 2. Aide : documentation des scénarios disponibles */}
               <DeploymentSettings />
-            </TabsContent>
-
-            <TabsContent value="database" className="mt-0">
-              <DatabaseSettings />
             </TabsContent>
 
             <TabsContent value="storage" className="mt-0">
