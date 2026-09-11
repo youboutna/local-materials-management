@@ -53,18 +53,29 @@ function resolveFrontendOrigin(): string {
 
 /**
  * URL de l'API en développement.
- * Priorité : VITE_API_URL > fallback backend local.
+ *
+ * Priorité :
+ *   1. VITE_API_URL                  (défini dans .env.development)
+ *   2. VITE_SUPABASE_URL + /rest/v1  (backend Supabase résolu)
+ *   3. ''                            (aucun fallback magique — l'appelant gère)
+ *
+ * ⚠️ Aucun localhost codé en dur. Si aucune URL n'est configurée,
+ *    on retourne une chaîne vide et on log un warning explicite.
  */
 function resolveDevApiUrl(): string {
   const configured = readEnv('VITE_API_URL', '');
   if (configured) return configured.replace(/\/+$/, '');
 
-  // Fallback : backend Supabase local en Docker (port 8000 par convention dans ce projet)
   const supabaseUrl = readEnv('VITE_SUPABASE_URL', '');
   if (supabaseUrl) return `${supabaseUrl.replace(/\/+$/, '')}/rest/v1`;
 
-  // Dernier recours explicite (dev uniquement)
-  return 'http://localhost:8000/rest/v1';
+  // ⚠️ Aucun fallback magique : on log et on retourne '' pour forcer
+  //    l'appelant à gérer l'absence de configuration.
+  console.warn(
+    '[DEV_CONFIG] Aucune URL d\'API configurée. ' +
+    'Définissez VITE_API_URL ou VITE_SUPABASE_URL dans votre fichier .env.'
+  );
+  return '';
 }
 
 // ============================================================================
@@ -158,7 +169,8 @@ export function isDevFeatureEnabled(feature: keyof typeof DEV_CONFIG.FEATURES): 
 
 /**
  * Get development API base URL.
- * ✅ Lit VITE_API_URL (défini dans .env.development) au lieu d'un localhost:3000 codé en dur.
+ * ✅ Lit VITE_API_URL ou VITE_SUPABASE_URL — aucun localhost codé en dur.
+ *    Retourne '' si aucune URL n'est configurée (l'appelant doit gérer).
  */
 export function getDevApiUrl(): string {
   return resolveDevApiUrl();
