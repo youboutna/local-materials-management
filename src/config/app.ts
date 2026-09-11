@@ -17,11 +17,12 @@
  * defaults, so existing .env files keep working during migration.
  *
  * ⚠️ AUCUN localhost codé en dur dans les fallbacks.
- *    Les valeurs runtime sont lues depuis window.__APP_CONFIG__ (permet à
- *    DatabaseSettings.tsx de changer la DB à chaud sans rebuild).
+ *    Les valeurs runtime sont lues depuis le profil de déploiement actif
+ *    (btp.system_settings) et depuis window.__APP_CONFIG__.
  */
 
 import { resolveSupabaseConfig } from '@/config/supabaseConfig';
+import { getActiveProfileSync, getProfileCustomConfigSync } from './profile-manager';
 
 export type Environment = 'development' | 'production' | 'staging';
 export type AppMode = 'development' | 'production' | 'local-bypass';
@@ -83,20 +84,17 @@ export interface AppConfig {
  * (runtime override, modifiable à chaud) puis à import.meta.env (build-time).
  */
 const env = (key: string, fallback = ''): string => {
-  // 1. Priorité au runtime override (window.__APP_CONFIG__)
   if (typeof window !== 'undefined') {
     const runtime = (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__;
     if (runtime && typeof runtime[key] === 'string' && runtime[key] !== '') {
       return runtime[key];
     }
   }
-  // 2. Ensuite import.meta.env (build-time, préfixé VITE_)
   const v = (import.meta as unknown as { env?: Record<string, string> }).env?.[key];
   return v !== undefined && v !== '' ? v : fallback;
 };
 
 const envOpt = (key: string): string | undefined => {
-  // Priorité runtime
   if (typeof window !== 'undefined') {
     const runtime = (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__;
     if (runtime && typeof runtime[key] === 'string' && runtime[key] !== '') {
@@ -122,6 +120,7 @@ export const DEFAULT_EXTRA_SEARCH_PATH = ['public', 'extensions', 'btp'];
 // ---------------------------------------------------------------------------
 // Mode resolution
 // ---------------------------------------------------------------------------
+
 function resolveMode(): AppMode {
   const explicit = envOpt('VITE_APP_MODE') as AppMode | undefined;
   if (explicit === 'development' || explicit === 'production' || explicit === 'local-bypass') {
@@ -140,10 +139,10 @@ function resolveEnvironment(mode: AppMode): Environment {
 // ---------------------------------------------------------------------------
 // Per-mode defaults
 // ---------------------------------------------------------------------------
-// ⚠️ AUCUN localhost codé en dur. Les URLs vides forcent la lecture de
-//    import.meta.env ou de window.__APP_CONFIG__ et loggent un warning si
-//    rien n'est configuré.
+// ⚠️ AUCUN localhost codé en dur. Les URLs vides sont complétées par
+//    le profil de déploiement actif ou par les variables d'environnement.
 // ---------------------------------------------------------------------------
+
 interface ModeDefaults {
   auth: { provider: AuthProvider; url: string; anonKey: string; projectId?: string };
   data: { provider: DatabaseProvider; url: string };
@@ -154,13 +153,7 @@ interface ModeDefaults {
 
 const MODE_DEFAULTS: Record<AppMode, ModeDefaults> = {
   development: {
-    auth: {
-      provider: 'supabase',
-      // ✅ Rempli par VITE_SUPABASE_URL ou window.__APP_CONFIG__.VITE_SUPABASE_URL
-      url: '',
-      anonKey: '',
-      projectId: '',
-    },
+    auth: { provider: 'supabase', url: '', anonKey: '', projectId: '' },
     data: { provider: 'supabase', url: '' },
     storage: { provider: 'supabase', endpoint: '', bucket: 'documents' },
     api: { baseUrl: '/api' },
@@ -174,12 +167,7 @@ const MODE_DEFAULTS: Record<AppMode, ModeDefaults> = {
     email: { provider: 'resend', from: 'onboarding@resend.dev' },
   },
   'local-bypass': {
-    auth: {
-      provider: 'local',
-      url: '',  // local-bypass n'a pas besoin d'URL réseau
-      anonKey: 'dev-mock-key',
-      projectId: 'local-dev',
-    },
+    auth: { provider: 'local', url: '', anonKey: 'dev-mock-key', projectId: 'local-dev' },
     data: { provider: 'local', url: '' },
     storage: { provider: 'local', endpoint: '', bucket: 'local' },
     api: { baseUrl: '' },
@@ -190,46 +178,53 @@ const MODE_DEFAULTS: Record<AppMode, ModeDefaults> = {
 // ---------------------------------------------------------------------------
 // Builder
 // ---------------------------------------------------------------------------
+
 function buildConfig(): AppConfig {
   const mode = resolveMode();
   const environment = resolveEnvironment(mode);
   const defaults = MODE_DEFAULTS[mode];
 
-  const authProvider =
-    (envOpt('VITE_AUTH_PROVIDER') as AuthProvider | undefined) ?? defaults.auth.provider;
-  const dataProvider =
-    (envOpt('VITE_DATA_PROVIDER') as DatabaseProvider | undefined) ??
-    (envOpt('VITE_DB_PROVIDER') as DatabaseProvider | undefined) ??
-    defaults.data.provider;
-  const storageProvider =
-    (envOpt('VITE_STORAGE_PROVIDER') as StorageProvider | undefined) ?? defaults.storage.provider;
+  // ✅ Lire le profil actif (cache amorcé par initProfileCache() au démarrage)
+  const profile = getActiveProfileSync();
+  const customConfig = getProfileCustomConfigSync(profile.id);
 
-  // ✅ Clé et URL résolues via SupabaseConfigService : jamais une clé d'un autre
-  // projet, et l'URL runtime (window.__APP_CONFIG__) est prise en compte.
-  const supabaseConfig = resolveSupabaseConfig();
-
-  // L'URL du service d'auth vient du projet Supabase résolu quand elle existe.
+  // ✅ Priorité : config custom (DB) > variables d'env > valeurs du profil > défauts
   const authUrl =
-    (authProvider === 'supabase' ? supabaseConfig.url : '') ||
+    customConfig.VITE_SUPABASE_URL ||
+    customConfig.VITE_GOTRUE_URL ||
+    customConfig.VITE_KEYCLOAK_URL ||
     envOpt('VITE_SUPABASE_URL') ||
     envOpt('VITE_GOTRUE_URL') ||
     envOpt('VITE_KEYCLOAK_URL') ||
+    profile.auth.url ||
     defaults.auth.url;
 
-  const anonKey = supabaseConfig.publishableKey || defaults.auth.anonKey;
+  const authProvider = profile.auth.provider;
 
-  const projectId =
-    supabaseConfig.projectRef ?? envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId;
+  const anonKey =
+    customConfig.VITE_SUPABASE_ANON_KEY ||
+    envOpt('VITE_SUPABASE_ANON_KEY') ||
+    envOpt('VITE_SUPABASE_PUBLISHABLE_KEY') ||
+    defaults.auth.anonKey;
 
   const dataUrl =
+    customConfig.VITE_POSTGREST_URL ||
+    customConfig.VITE_DATABASE_URL ||
     envOpt('VITE_POSTGREST_URL') ||
-    (dataProvider === 'supabase' ? supabaseConfig.url : '') ||
-    envOpt('VITE_SUPABASE_URL') ||
     envOpt('VITE_DATABASE_URL') ||
+    (profile.data.inheritFromAuth ? authUrl : '') ||
+    profile.data.url ||
     defaults.data.url;
 
+  const storageEndpoint =
+    customConfig.VITE_STORAGE_ENDPOINT ||
+    envOpt('VITE_STORAGE_ENDPOINT') ||
+    (profile.storage.inheritFromAuth ? authUrl : '') ||
+    profile.storage.url ||
+    defaults.storage.endpoint;
+
   const dataBlock = {
-    provider: dataProvider,
+    provider: profile.data.provider,
     url: dataUrl || undefined,
     schemas: splitList(envOpt('VITE_PGRST_SCHEMAS'), DEFAULT_SCHEMAS),
     extraSearchPath: splitList(envOpt('VITE_PGRST_EXTRA_SEARCH_PATH'), DEFAULT_EXTRA_SEARCH_PATH),
@@ -239,11 +234,11 @@ function buildConfig(): AppConfig {
   const emailProvider =
     (envOpt('VITE_EMAIL_PROVIDER') as 'smtp' | 'resend' | 'sendgrid') || defaults.email.provider;
 
-  // ✅ Warning explicite si aucune URL Supabase n'est disponible (dev/prod uniquement)
+  // ✅ Warning explicite si aucune URL n'est disponible (hors local-bypass)
   if (mode !== 'local-bypass' && !authUrl) {
     console.warn(
-      '[AppConfig] Aucune URL Supabase configurée. ' +
-      'Définissez VITE_SUPABASE_URL dans .env.[mode] ou via window.__APP_CONFIG__.'
+      `[AppConfig] Aucune URL configurée pour le profil actif "${profile.id}". ` +
+        `Rendez-vous dans Admin → Profil de déploiement.`,
     );
   }
 
@@ -254,29 +249,37 @@ function buildConfig(): AppConfig {
       provider: authProvider,
       url: authUrl || undefined,
       anonKey,
-      projectId,
-      clientId: envOpt('VITE_AUTH_CLIENT_ID') ?? envOpt('VITE_KEYCLOAK_CLIENT_ID'),
-      realm: envOpt('VITE_AUTH_REALM') ?? envOpt('VITE_KEYCLOAK_REALM'),
+      projectId: envOpt('VITE_SUPABASE_PROJECT_ID') ?? defaults.auth.projectId,
+      clientId:
+        customConfig.VITE_KEYCLOAK_CLIENT_ID ||
+        envOpt('VITE_KEYCLOAK_CLIENT_ID') ||
+        envOpt('VITE_AUTH_CLIENT_ID'),
+      realm:
+        customConfig.VITE_KEYCLOAK_REALM ||
+        envOpt('VITE_KEYCLOAK_REALM') ||
+        envOpt('VITE_AUTH_REALM'),
       redirectUri:
         envOpt('VITE_AUTH_REDIRECT_URI') ??
         (typeof window !== 'undefined' ? window.location.origin : undefined),
     },
     api: {
-      baseUrl: envOpt('VITE_API_URL') ?? defaults.api.baseUrl,
+      baseUrl: authUrl ? `${authUrl}/rest/v1` : envOpt('VITE_API_URL') ?? defaults.api.baseUrl,
       timeout: Number(envOpt('VITE_API_TIMEOUT') ?? 30000),
     },
     database: dataBlock,
     data: dataBlock,
     storage: {
-      provider: storageProvider,
-      endpoint:
-        envOpt('VITE_STORAGE_ENDPOINT') ??
-        envOpt('VITE_SUPABASE_URL') ??
-        defaults.storage.endpoint,
-      bucket: envOpt('VITE_STORAGE_BUCKET') ?? defaults.storage.bucket,
+      provider: profile.storage.provider,
+      endpoint: storageEndpoint || undefined,
+      bucket:
+        customConfig.VITE_STORAGE_BUCKET ||
+        envOpt('VITE_STORAGE_BUCKET') ||
+        defaults.storage.bucket,
       region: envOpt('VITE_STORAGE_REGION'),
-      accessKey: envOpt('VITE_STORAGE_ACCESS_KEY'),
-      secretKey: envOpt('VITE_STORAGE_SECRET_KEY'),
+      accessKey:
+        customConfig.VITE_STORAGE_ACCESS_KEY || envOpt('VITE_STORAGE_ACCESS_KEY'),
+      secretKey:
+        customConfig.VITE_STORAGE_SECRET_KEY || envOpt('VITE_STORAGE_SECRET_KEY'),
       publicBaseUrl: envOpt('VITE_STORAGE_PUBLIC_URL'),
     },
     email: {
@@ -289,6 +292,7 @@ function buildConfig(): AppConfig {
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
 export const getAppConfig = (): AppConfig => buildConfig();
 
 export const isSupabaseProvider = (): boolean => {
@@ -310,17 +314,12 @@ export const getEmailProvider = (): string => {
 };
 
 // ---------------------------------------------------------------------------
-// Helpers pour DatabaseSettings.tsx (changement à chaud)
+// Helpers runtime (compatibilité ascendante)
 // ---------------------------------------------------------------------------
 
 /**
  * Met à jour une variable d'environnement à chaud.
- * Utilisé par DatabaseSettings.tsx pour permettre de changer la DB
- * sans rebuild.
- *
- * @example
- *   setRuntimeConfig('VITE_SUPABASE_URL', 'https://nouveau.supabase.co');
- *   window.location.reload();  // Pour recharger le client Supabase
+ * ⚠️ Préférer désormais Admin → Profil de déploiement (btp.system_settings).
  */
 export function setRuntimeConfig(key: string, value: string): void {
   if (typeof window === 'undefined') return;
@@ -336,3 +335,8 @@ export function getRuntimeConfig(key: string): string | undefined {
   const w = window as Window & { __APP_CONFIG__?: Record<string, string> };
   return w.__APP_CONFIG__?.[key];
 }
+
+// Note : `resolveSupabaseConfig` reste importé pour compatibilité avec les
+// modules existants (supabaseConfig.ts). Il peut être retiré si aucun autre
+// module ne l'utilise.
+void resolveSupabaseConfig;

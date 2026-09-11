@@ -9,8 +9,10 @@
  *
  * Fallback : variable d'env VITE_ACTIVE_PROFILE (premier démarrage).
  *
- * ⚠️ L'adapter Supabase est importé dynamiquement : `src/config/app.ts`
- *    consomme ce module et ne doit pas créer de cycle avec le client.
+ * ⚠️ L'accès à btp.system_settings passe par SystemSettingsService
+ *    (injecté via RepositoryFactory), pas par l'adapter directement.
+ *    Cela respecte l'architecture hexagonale et évite les cycles avec
+ *    le client Supabase.
  */
 
 import {
@@ -19,23 +21,29 @@ import {
   getProfileById,
   type DeploymentProfile,
 } from './profiles';
-import type { ISystemSettingsRepository } from '@/domain/repositories/ISystemSettingsRepository';
+import { getSystemSettingsService } from '@/application/services/SystemSettingsService';
+
+// ---------------------------------------------------------------------------
+// Constantes
+// ---------------------------------------------------------------------------
 
 const CATEGORY = 'deployment';
 const KEY_ACTIVE_PROFILE = 'active_profile';
 const KEY_PROFILE_CONFIG_PREFIX = 'profile_config.';
 
-let adapter: ISystemSettingsRepository | null = null;
+// ---------------------------------------------------------------------------
+// Accès au service (lazy — évite tout cycle au chargement du module)
+// ---------------------------------------------------------------------------
 
-async function getAdapter(): Promise<ISystemSettingsRepository> {
-  if (!adapter) {
-    const { SupabaseSystemSettingsAdapter } = await import(
-      '@/infrastructure/adapters/supabase/SupabaseSystemSettingsAdapter'
-    );
-    adapter = new SupabaseSystemSettingsAdapter();
-  }
-  return adapter;
+type ServiceAccessor = ReturnType<typeof getSystemSettingsService>;
+
+function getService(): ServiceAccessor {
+  return getSystemSettingsService();
 }
+
+// ---------------------------------------------------------------------------
+// Cache en mémoire
+// ---------------------------------------------------------------------------
 
 interface CacheEntry<T> {
   value: T;
@@ -65,9 +73,14 @@ export function invalidateProfileCache(): void {
   cache.clear();
 }
 
+// ---------------------------------------------------------------------------
+// Helpers env
+// ---------------------------------------------------------------------------
+
 function envValue(key: string): string | undefined {
   if (typeof window !== 'undefined') {
-    const runtime = (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__;
+    const runtime = (window as Window & { __APP_CONFIG__?: Record<string, string> })
+      .__APP_CONFIG__;
     const fromRuntime = runtime?.[key];
     if (fromRuntime) return fromRuntime;
   }
@@ -75,16 +88,23 @@ function envValue(key: string): string | undefined {
   return value || undefined;
 }
 
-async function readSetting<T = unknown>(category: string, key: string): Promise<T | null> {
+// ---------------------------------------------------------------------------
+// Lecture / écriture via SystemSettingsService
+// ---------------------------------------------------------------------------
+
+async function readSetting<T = unknown>(
+  category: string,
+  key: string
+): Promise<T | null> {
   const cached = getCached<T>(category, key);
   if (cached !== undefined) return cached;
 
   try {
-    const repo = await getAdapter();
-    const row = await repo.findByCategoryAndKey(category, key);
-    if (!row) return null;
-    const value = (row.configuration ?? null) as T | null;
-    if (value !== null) setCached(category, key, value);
+    const service = getService();
+    const config = await service.getByCategoryAndKey(category, key);
+    if (config === null) return null;
+    const value = config as T;
+    setCached(category, key, value);
     return value;
   } catch (err) {
     console.warn(`[ProfileManager] Erreur lecture "${category}/${key}":`, err);
@@ -92,15 +112,23 @@ async function readSetting<T = unknown>(category: string, key: string): Promise<
   }
 }
 
-async function writeSetting(category: string, key: string, value: unknown): Promise<void> {
-  const repo = await getAdapter();
-  await repo.upsert({
+async function writeSetting(
+  category: string,
+  key: string,
+  value: unknown
+): Promise<void> {
+  const service = getService();
+  await service.upsertByCategoryAndKey(
     category,
     key,
-    configuration: value as Record<string, unknown>,
-  });
+    value as Record<string, unknown>
+  );
   cache.delete(cacheKey(category, key));
 }
+
+// ---------------------------------------------------------------------------
+// API publique — Profil actif
+// ---------------------------------------------------------------------------
 
 export async function getActiveProfile(): Promise<DeploymentProfile> {
   const stored = await readSetting<{ id: string }>(CATEGORY, KEY_ACTIVE_PROFILE);
@@ -132,7 +160,13 @@ export async function setActiveProfile(profileId: string): Promise<void> {
   setCached(CATEGORY, KEY_ACTIVE_PROFILE, { id: profileId });
 }
 
-export async function getProfileCustomConfig(profileId: string): Promise<Record<string, string>> {
+// ---------------------------------------------------------------------------
+// API publique — Config custom
+// ---------------------------------------------------------------------------
+
+export async function getProfileCustomConfig(
+  profileId: string
+): Promise<Record<string, string>> {
   const config = await readSetting<Record<string, string>>(
     CATEGORY,
     `${KEY_PROFILE_CONFIG_PREFIX}${profileId}`
@@ -140,9 +174,14 @@ export async function getProfileCustomConfig(profileId: string): Promise<Record<
   return config ?? {};
 }
 
-export function getProfileCustomConfigSync(profileId: string): Record<string, string> {
+export function getProfileCustomConfigSync(
+  profileId: string
+): Record<string, string> {
   return (
-    getCached<Record<string, string>>(CATEGORY, `${KEY_PROFILE_CONFIG_PREFIX}${profileId}`) ?? {}
+    getCached<Record<string, string>>(
+      CATEGORY,
+      `${KEY_PROFILE_CONFIG_PREFIX}${profileId}`
+    ) ?? {}
   );
 }
 
@@ -155,18 +194,29 @@ export async function setProfileCustomConfig(
   setCached(CATEGORY, key, config);
 }
 
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
+
 export function listProfiles(): DeploymentProfile[] {
   return ALL_PROFILES;
 }
 
+// ---------------------------------------------------------------------------
+// Amorçage du cache (appelé depuis main.tsx)
+// ---------------------------------------------------------------------------
+
 /**
  * Préchauffe le cache au démarrage : les lectures synchrones de app.ts
  * disposent alors du profil persisté sans requête bloquante.
+ *
+ * ⚠️ À appeler dans main.tsx AVANT createRoot().render().
  */
 export async function initProfileCache(): Promise<void> {
   try {
     const profile = await getActiveProfile();
     await getProfileCustomConfig(profile.id);
+    console.info('[ProfileManager] Cache préchargé pour le profil :', profile.id);
   } catch (err) {
     console.warn('[ProfileManager] Préchargement du profil impossible:', err);
   }
