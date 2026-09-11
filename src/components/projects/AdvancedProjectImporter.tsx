@@ -1,4 +1,15 @@
-import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+// src/components/projects/AdvancedProjectImporter.tsx
+//
+// Import avancé : QField/QGIS (GeoJSON, KML), MS Project (XML).
+// Aligné sur ProjectFileImporter : passe par ProjectFileImportOrchestrator.
+
+import { ProjectFileImportOrchestrator } from '@/application/services/ProjectFileImportOrchestrator';
+import {
+  projectImportTemplateService,
+  type TemplateFormat,
+} from '@/application/services/ProjectImportTemplateService';
+import type { ReferentialType } from '@/config/referentials';
+import { T } from '@/components/i18n/T';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,29 +17,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CreateProjectDTO, ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import { ImportResult } from '@/dtos/entities/ProjectReportDTO';
+import type { ImportResult } from '@/dtos/entities/ProjectReportDTO';
 import { useToast } from '@/hooks/use-toast';
 import {
-    AlertTriangle,
-    Calendar,
-    CheckCircle,
-    FileSpreadsheet,
-    FileText,
-    Map,
-    Upload,
-    X
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  Download,
+  FileText,
+  Map,
+  Upload,
+  X,
 } from 'lucide-react';
 import React, { useMemo, useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
-import { T } from '@/components/i18n/T';
-
-// Local type for import form data (subset of CreateProjectDTO)
-interface ProjectFormDTO extends Partial<CreateProjectDTO> {
-  coordinates?: { latitude: number; longitude: number };
-}
 
 type ImportMode = 'create' | 'update' | 'patch';
 
@@ -36,17 +40,25 @@ interface AdvancedProjectImporterProps {
   onImportComplete?: (result: ImportResult) => void;
 }
 
+const ACCEPTED_EXTENSIONS = '.geojson,.json,.kml,.xml';
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+
 export default function AdvancedProjectImporter({ onImportComplete }: AdvancedProjectImporterProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [importDetails, setImportDetails] = useState<Record<string, number> | null>(null);
   const [importMode, setImportMode] = useState<ImportMode>('create');
+  const [templateReferential, setTemplateReferential] = useState<ReferentialType>('CUSTOM_STANDARD');
+  const [templateFormat, setTemplateFormat] = useState<TemplateFormat>('json');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = useMemo(
-    () => getProjectService(),
+
+  const orchestrator = useMemo(() => new ProjectFileImportOrchestrator(), []);
+  const referentialOptions = useMemo(
+    () => projectImportTemplateService.listReferentials('fr'),
     [],
   );
 
@@ -62,359 +74,64 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 20 * 1024 * 1024) { // 20MB limit
+    if (file.size > MAX_FILE_SIZE) {
       toast({
         title: t('projects.import.invalidFile'),
-        description: t('projects.import.fileTooLarge') + ' 20 MB',
-        variant: "destructive",
+        description: `${t('projects.import.fileTooLarge')} ${formatFileSize(MAX_FILE_SIZE)}`,
+        variant: 'destructive',
       });
       return;
     }
 
     setSelectedFile(file);
     setImportResult(null);
-  };
-
-  // Parse GeoJSON (QField/QGIS format)
-  const parseGeoJSON = async (file: File): Promise<any[]> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const geoData = JSON.parse(content);
-          
-          if (geoData.type === 'FeatureCollection' && geoData.features) {
-            const projects = geoData.features.map((feature: any) => {
-              const props = feature.properties || {};
-              const coords = feature.geometry?.coordinates || [];
-              
-              return {
-                title: props.name || props.title || props.projet || 'Projet importé',
-                description: props.description || props.desc || '',
-                location: props.location || props.lieu || '',
-                budget: parseFloat(props.budget || props.cout || '0'),
-                startDate: props.start_date || props.dateDebut || props.startDate,
-                endDate: props.end_date || props.dateFin || props.endDate,
-                teamSize: parseInt(props.team_size || props.equipe || '1'),
-                // Extract coordinates from GeoJSON geometry
-                latitude: coords[1] || coords.lat,
-                longitude: coords[0] || coords.lng,
-                // QField specific fields
-                status: props.status || props.statut || 'en attente',
-                progress: parseInt(props.progress || props.avancement || '0'),
-                financingSource: props.financing_source || props.financement,
-                marketType: props.market_type || props.type_marche,
-                // Additional metadata
-                qfieldId: props.fid || props.id,
-                qfieldLayer: props.layer
-              };
-            });
-            resolve(projects);
-          } else {
-            reject(new Error('Format GeoJSON invalide'));
-          }
-        } catch (error) {
-          reject(new Error('Erreur de lecture du fichier GeoJSON'));
-        }
-      };
-      reader.onerror = () => reject(new Error('Erreur de lecture du fichier'));
-      reader.readAsText(file);
-    });
-  };
-
-  // Parse MS Project XML
-  const parseMSProjectXML = async (file: File): Promise<any[]> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(content, 'text/xml');
-          
-          // Check for XML parsing errors
-          if (xmlDoc.querySelector('parsererror')) {
-            reject(new Error('XML invalide'));
-            return;
-          }
-
-          const projects: any[] = [];
-          const tasks = xmlDoc.querySelectorAll('Task');
-          
-          // Group tasks into projects (tasks with no parent or summary tasks)
-          tasks.forEach((task) => {
-            const isSummary = task.querySelector('Summary')?.textContent === '1';
-            const outlineLevel = parseInt(task.querySelector('OutlineLevel')?.textContent || '1');
-            
-            if (outlineLevel === 1 || isSummary) {
-              const name = task.querySelector('Name')?.textContent || 'Projet importé';
-              const start = task.querySelector('Start')?.textContent;
-              const finish = task.querySelector('Finish')?.textContent;
-              const percentComplete = task.querySelector('PercentComplete')?.textContent;
-              const cost = task.querySelector('Cost')?.textContent;
-              const notes = task.querySelector('Notes')?.textContent;
-              
-              projects.push({
-                title: name,
-                description: notes || '',
-                location: '',
-                budget: parseFloat(cost || '0'),
-                startDate: start ? new Date(start).toISOString().split('T')[0] : '',
-                endDate: finish ? new Date(finish).toISOString().split('T')[0] : '',
-                progress: parseInt(percentComplete || '0'),
-                teamSize: 1,
-                // MS Project specific
-                msProjectId: task.querySelector('UID')?.textContent,
-                wbs: task.querySelector('WBS')?.textContent
-              });
-            }
-          });
-          
-          resolve(projects);
-        } catch (error) {
-          reject(new Error('Erreur de lecture du fichier MS Project XML'));
-        }
-      };
-      reader.onerror = () => reject(new Error('Erreur de lecture du fichier'));
-      reader.readAsText(file);
-    });
-  };
-
-  // Parse KML (alternative QGIS format)
-  const parseKML = async (file: File): Promise<any[]> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const parser = new DOMParser();
-          const kmlDoc = parser.parseFromString(content, 'text/xml');
-          
-          const placemarks = kmlDoc.querySelectorAll('Placemark');
-          const projects = Array.from(placemarks).map((placemark) => {
-            const name = placemark.querySelector('name')?.textContent || 'Projet importé';
-            const description = placemark.querySelector('description')?.textContent || '';
-            const coordinates = placemark.querySelector('coordinates')?.textContent?.trim().split(',');
-            
-            // Parse extended data
-            const extendedData: any = {};
-            placemark.querySelectorAll('Data').forEach((data) => {
-              const dataName = data.getAttribute('name');
-              const value = data.querySelector('value')?.textContent;
-              if (dataName && value) {
-                extendedData[dataName] = value;
-              }
-            });
-            
-            return {
-              title: name,
-              description: description,
-              location: extendedData.location || extendedData.lieu || '',
-              budget: parseFloat(extendedData.budget || extendedData.cout || '0'),
-              startDate: extendedData.startDate || extendedData.dateDebut,
-              endDate: extendedData.endDate || extendedData.dateFin,
-              teamSize: parseInt(extendedData.teamSize || '1'),
-              latitude: coordinates ? parseFloat(coordinates[1]) : undefined,
-              longitude: coordinates ? parseFloat(coordinates[0]) : undefined,
-              status: extendedData.status || 'en attente',
-              progress: parseInt(extendedData.progress || '0')
-            };
-          });
-          
-          resolve(projects);
-        } catch (error) {
-          reject(new Error('Erreur de lecture du fichier KML'));
-        }
-      };
-      reader.onerror = () => reject(new Error('Erreur de lecture du fichier'));
-      reader.readAsText(file);
-    });
-  };
-
-  const parseFile = async (file: File): Promise<any[]> => {
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    
-    switch (extension) {
-      case 'geojson':
-      case 'json':
-        // Try GeoJSON first, fall back to regular JSON
-        try {
-          return await parseGeoJSON(file);
-        } catch {
-          // Fall back to regular JSON parsing
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              try {
-                const content = e.target?.result as string;
-                const data = JSON.parse(content);
-                resolve(Array.isArray(data) ? data : [data]);
-              } catch (error) {
-                reject(new Error(t('projects.import.invalidJson')));
-              }
-            };
-            reader.readAsText(file);
-          });
-        }
-      
-      case 'kml':
-        return parseKML(file);
-      
-      case 'xml':
-        return parseMSProjectXML(file);
-      
-      case 'xlsx':
-      case 'xls':
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const data = new Uint8Array(e.target?.result as ArrayBuffer);
-              const workbook = XLSX.read(data, { type: 'array' });
-              const sheetName = workbook.SheetNames[0];
-              const worksheet = workbook.Sheets[sheetName];
-              const jsonData = XLSX.utils.sheet_to_json(worksheet);
-              resolve(jsonData);
-            } catch (error) {
-              reject(new Error(t('projects.import.excelReadError')));
-            }
-          };
-          reader.readAsArrayBuffer(file);
-        });
-      
-      default:
-        throw new Error(t('projects.import.unsupportedFormat'));
-    }
-  };
-
-  const transformToProjectData = (item: any): CreateProjectDTO => {
-    return {
-      title: item.title || item.nom || item.name || t('projects.import.defaultTitle'),
-      description: item.description || item.desc || '',
-      location: item.location || item.lieu || item.localisation || '',
-      status: (item.status || 'enCours') as ProjectStatus,
-      budget: parseFloat(item.budget || item.cout || item.montant || item.totalCost || '0'),
-      startDate: item.startDate || item.dateDebut || item.start_date || new Date().toISOString().split('T')[0],
-      endDate: item.endDate || item.dateFin || item.end_date,
-      teamSize: parseInt(item.teamSize || item.equipe || item.team_size || '1'),
-      latitude: item.latitude ? parseFloat(item.latitude) : undefined,
-      longitude: item.longitude ? parseFloat(item.longitude) : undefined,
-      
-      // Project details
-      financingSource: item.financingSource || item.sourceFinancement || item.financing_source,
-      marketType: item.marketType || item.typeMarche || item.market_type,
-      selectionMode: item.selectionMode || item.modeSelection || item.selection_mode,
-      projectReference: item.projectReference || item.project_reference || item.reference,
-      projectManagerId: item.projectResponsableId || item.project_responsable_id
-    };
+    setImportDetails(null);
   };
 
   const handleImport = async () => {
     if (!selectedFile) return;
 
     setImporting(true);
-    setImportProgress(0);
+    setImportProgress(10);
 
     try {
-      console.log('Starting file parsing...');
-      setImportProgress(25);
-      const rawData = await parseFile(selectedFile);
-      console.log('File parsed successfully, rows:', rawData.length);
-      
-      if (!rawData || rawData.length === 0) {
-        throw new Error(t('projects.import.noData'));
-      }
+      const serviceMode: 'create' | 'upsert' | 'partial_update' =
+        importMode === 'create' ? 'create'
+        : importMode === 'update' ? 'upsert'
+        : 'partial_update';
 
-      setImportProgress(50);
+      setImportProgress(40);
 
-      let importedCount = 0;
-      let updatedCount = 0;
-      const errors: string[] = [];
+      const { raw, ui } = await orchestrator.importFromFile(selectedFile, {
+        mode: serviceMode,
+        continueOnError: true,
+        referentialCode: undefined,
+        language: 'fr',
+      });
 
-      for (let i = 0; i < rawData.length; i++) {
-        try {
-          const projectData = transformToProjectData(rawData[i]);
-          const projectId = rawData[i].id;
-          
-          if (importMode === 'create') {
-            console.log('Creating project:', projectData.title);
-            await projectService.createProject(projectData);
-            importedCount++;
-          } else if (importMode === 'update' || importMode === 'patch') {
-            if (projectId) {
-              console.log(`${importMode === 'update' ? 'Updating' : 'Patching'} project:`, projectData.title);
-              
-              if (importMode === 'update') {
-                await projectService.updateProject(projectId, { id: projectId, ...projectData } as any);
-              } else {
-                const fieldsToUpdate: Record<string, any> = { id: projectId };
-                Object.keys(rawData[i]).forEach(key => {
-                  if (rawData[i][key] !== undefined && rawData[i][key] !== null && rawData[i][key] !== '') {
-                    const value = (projectData as any)[key];
-                    if (value !== undefined) {
-                      fieldsToUpdate[key] = value;
-                    }
-                  }
-                });
-                await projectService.updateProject(projectId, fieldsToUpdate as any);
-              }
-              updatedCount++;
-            } else {
-              console.log('No ID found, creating project:', projectData.title);
-              await projectService.createProject(projectData);
-              importedCount++;
-            }
-          }
-        } catch (error) {
-          const errorMsg = `${t('projects.import.line')} ${i + 1}: ${error instanceof Error ? error.message : t('common.error')}`;
-          console.error(errorMsg);
-          errors.push(errorMsg);
-        }
-        setImportProgress(50 + (i / rawData.length) * 50);
-      }
+      setImportProgress(100);
+      setImportDetails(raw.details ?? null);
+      setImportResult(ui);
+      onImportComplete?.(ui);
 
-      const totalProcessed = importedCount + updatedCount;
-      let message = '';
-      if (importMode === 'create') {
-        message = `${importedCount} ${t('projects.import.projectsImported')}`;
-      } else {
-        message = `${importedCount} ${t('projects.import.projectsCreated')}, ${updatedCount} ${t('projects.import.projectsUpdated')}`;
-      }
-      if (errors.length > 0) {
-        message += ` (${errors.length} ${t('projects.import.errors')})`;
-      }
-
-      const result: ImportResult = {
-        success: totalProcessed > 0,
-        message,
-        importedCount: totalProcessed,
-        errors: errors.length > 0 ? errors : undefined
-      };
-
-      setImportResult(result);
-      onImportComplete?.(result);
-
-      if (result.success) {
+      if (ui.success) {
         toast({
           title: t('projects.import.success'),
-          description: result.message,
+          description: ui.message,
         });
       }
-
     } catch (error) {
-      console.error('Import error:', error);
+      console.error('[AdvancedProjectImporter] Import error:', error);
       const result: ImportResult = {
         success: false,
         message: error instanceof Error ? error.message : t('projects.import.error'),
-        errors: [error instanceof Error ? error.message : t('common.error')]
+        errors: [error instanceof Error ? error.message : String(error)],
       };
-      
       setImportResult(result);
       toast({
         title: t('projects.import.error'),
         description: result.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setImporting(false);
@@ -425,116 +142,36 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
   const clearSelection = () => {
     setSelectedFile(null);
     setImportResult(null);
+    setImportDetails(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const downloadGeoJSONTemplate = () => {
-    const template = {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {
-            id: "00000000-0000-0000-0000-000000000000",
-            name: "Projet Exemple QField",
-            description: "Description du projet terrain",
-            location: "Nouakchott",
-            budget: 50000000,
-            start_date: "2025-01-01",
-            end_date: "2025-12-31",
-            team_size: 5,
-            status: "en cours",
-            progress: 25,
-            financing_source: "État",
-            market_type: "Public",
-            selection_mode: "Appel d'offres",
-            project_reference: "PRJ-2025-001",
-            main_contractor: "Entreprise Exemple SA",
-            inspections: JSON.stringify([
-              {
-                inspectionDate: "2025-02-15",
-                inspector: "Mohamed Ould Ahmed",
-                status: "completed",
-                progressAtInspection: 15,
-                comments: "Inspection terrain - Travaux conformes"
-              }
-            ]),
-            stakeholders: JSON.stringify([
-              {
-                name: "Ahmed Ould Mohamed",
-                email: "ahmed@example.com",
-                phone: "+22212345678",
-                role: "Chef de projet terrain",
-                isPrimary: true
-              }
-            ])
-          },
-          geometry: {
-            type: "Point",
-            coordinates: [-15.9582, 18.0735] // [longitude, latitude]
-          }
-        }
-      ]
-    };
-
-    const dataStr = JSON.stringify(template, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
+  const downloadTemplate = () => {
+    const { content, mimeType, filename } = projectImportTemplateService.serialize(
+      templateFormat,
+      { referentialCode: templateReferential, language: 'fr', withRelations: true },
+    );
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'template_qfield.geojson';
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
   };
 
-  const downloadMSProjectTemplate = () => {
-    const template = `<?xml version="1.0" encoding="UTF-8"?>
-<Project xmlns="http://schemas.microsoft.com/project">
-  <Tasks>
-    <Task>
-      <UID>00000000-0000-0000-0000-000000000000</UID>
-      <Name><T k="auto.advancedprojectimporter.projet_d_infrastructure_exemple" fallback="Projet d'Infrastructure Exemple" /></Name>
-      <Summary>1</Summary>
-      <OutlineLevel>1</OutlineLevel>
-      <Start>2025-01-01T08:00:00</Start>
-      <Finish>2025-12-31T17:00:00</Finish>
-      <PercentComplete>25</PercentComplete>
-      <Cost>50000000</Cost>
-      <Notes><T k="auto.advancedprojectimporter.description_detaillee_du_projet_d_infrastructure" fallback="Description détaillée du projet d'infrastructure" /></Notes>
-      <WBS>1</WBS>
-      <ExtendedAttribute>
-        <FieldName><T k="auto.advancedprojectimporter.reference" fallback="Reference" /></FieldName>
-        <Value><T k="auto.advancedprojectimporter.prj_2025_001" fallback="PRJ-2025-001" /></Value>
-      </ExtendedAttribute>
-      <ExtendedAttribute>
-        <FieldName><T k="auto.advancedprojectimporter.location" fallback="Location" /></FieldName>
-        <Value><T k="auto.advancedprojectimporter.nouakchott" fallback="Nouakchott" /></Value>
-      </ExtendedAttribute>
-      <ExtendedAttribute>
-        <FieldName><T k="auto.advancedprojectimporter.financingsource" fallback="FinancingSource" /></FieldName>
-        <Value><T k="auto.advancedprojectimporter.etat" fallback="État" /></Value>
-      </ExtendedAttribute>
-      <ExtendedAttribute>
-        <FieldName><T k="auto.advancedprojectimporter.inspections" fallback="Inspections" /></FieldName>
-        <Value>[{"inspectionDate":"2025-02-15","inspector":"Mohamed Ould Ahmed","status":"completed","progressAtInspection":15,"comments":"Inspection planification"}]</Value>
-      </ExtendedAttribute>
-      <ExtendedAttribute>
-        <FieldName><T k="auto.advancedprojectimporter.stakeholders" fallback="Stakeholders" /></FieldName>
-        <Value>[{"name":"Ahmed Ould Mohamed","email":"ahmed@example.com","phone":"+22212345678","role":"Chef de projet","isPrimary":true}]</Value>
-      </ExtendedAttribute>
-    </Task>
-  </Tasks>
-</Project>`;
-
-    const dataBlob = new Blob([template], { type: 'text/xml' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'template_msproject.xml';
-    link.click();
-    URL.revokeObjectURL(url);
+  const getFileIcon = () => {
+    if (!selectedFile) return <FileText className="h-5 w-5 text-muted-foreground" />;
+    const name = selectedFile.name.toLowerCase();
+    if (name.endsWith('.geojson') || name.endsWith('.kml')) {
+      return <Map className="h-5 w-5 text-primary" />;
+    }
+    if (name.endsWith('.xml')) {
+      return <Calendar className="h-5 w-5 text-success" />;
+    }
+    return <FileText className="h-5 w-5 text-muted-foreground" />;
   };
 
   return (
@@ -542,33 +179,36 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Import Avancé (QField/QGIS, MS Project)
+          <T k="auto.advancedprojectimporter.import_avance" fallback="Import Avancé (QField/QGIS, MS Project)" />
         </CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-4">
         <Tabs defaultValue="info">
           <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-2">
-            <TabsTrigger value="info"><T k="auto.advancedprojectimporter.information" fallback="Information" /></TabsTrigger>
-            <TabsTrigger value="templates"><T k="auto.advancedprojectimporter.templates" fallback="Templates" /></TabsTrigger>
+            <TabsTrigger value="info">
+              <T k="auto.advancedprojectimporter.information" fallback="Information" />
+            </TabsTrigger>
+            <TabsTrigger value="templates">
+              <T k="auto.advancedprojectimporter.templates" fallback="Templates" />
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="space-y-3">
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong><T k="auto.advancedprojectimporter.formats_supportes" fallback="Formats supportés :" /></strong>
+                <strong>
+                  <T k="auto.advancedprojectimporter.formats_supportes" fallback="Formats supportés :" />
+                </strong>
                 <ul className="mt-2 space-y-1 text-sm">
                   <li className="flex items-center gap-2">
                     <Map className="h-4 w-4" />
-                    <strong>QField/QGIS:</strong> <T k="auto.advancedprojectimporter.geojson_geojson_kml_kml" fallback="GeoJSON (.geojson), KML (.kml)" />
+                    <strong>QField/QGIS:</strong> GeoJSON (.geojson), KML (.kml)
                   </li>
                   <li className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    <strong><T k="auto.advancedprojectimporter.ms_project" fallback="MS Project:" /></strong> <T k="auto.advancedprojectimporter.xml_xml" fallback="XML (.xml)" />
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-4 w-4" />
-                    <strong><T k="auto.advancedprojectimporter.standard" fallback="Standard:" /></strong> <T k="auto.advancedprojectimporter.excel_xlsx_xls_json_json" fallback="Excel (.xlsx, .xls), JSON (.json)" />
+                    <strong>MS Project:</strong> XML (.xml)
                   </li>
                 </ul>
               </AlertDescription>
@@ -579,45 +219,73 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
                 QField/QGIS - Données terrain
               </h3>
               <p className="text-sm text-primary dark:text-blue-200">
-                Importez vos relevés terrain depuis QField. Les coordonnées GPS sont automatiquement extraites de la géométrie.
+                Importez vos relevés terrain depuis QField. Les coordonnées GPS sont automatiquement
+                extraites de la géométrie et les zones d'intervention sont créées depuis les polygones.
               </p>
             </div>
 
             <div className="bg-success-soft dark:bg-success/30 border border-success/30 dark:border-success rounded-lg p-4">
               <h3 className="font-medium text-success dark:text-success-foreground mb-2">
-                <T k="auto.advancedprojectimporter.ms_project_planification" fallback="MS Project - Planification" />
+                MS Project - Planification
               </h3>
               <p className="text-sm text-success dark:text-success-foreground">
-                Importez vos projets depuis Microsoft Project (format XML). Les tâches principales deviennent des projets.
+                Importez vos projets depuis Microsoft Project (XML). La hiérarchie des tâches est
+                préservée : niveau 1 → phases, niveau 2 → étapes, niveau 3+ → tâches.
               </p>
             </div>
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                onClick={downloadGeoJSONTemplate}
-                className="flex items-center gap-2 h-auto p-4"
-              >
-                <Map className="h-5 w-5" />
-                <div className="text-left">
-                  <div className="font-medium"><T k="auto.advancedprojectimporter.template_qfield" fallback="Template QField" /></div>
-                  <div className="text-xs opacity-70"><T k="auto.advancedprojectimporter.geojson_avec_coordonnees" fallback="GeoJSON avec coordonnées" /></div>
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+              <Label className="text-sm font-medium">
+                <T k="auto.advancedprojectimporter.telecharger_modele" fallback="Télécharger un modèle" />
+              </Label>
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    <T k="auto.advancedprojectimporter.referentiel" fallback="Référentiel" />
+                  </Label>
+                  <Select
+                    value={templateReferential}
+                    onValueChange={(v) => setTemplateReferential(v as ReferentialType)}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {referentialOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={downloadMSProjectTemplate}
-                className="flex items-center gap-2 h-auto p-4"
-              >
-                <Calendar className="h-5 w-5" />
-                <div className="text-left">
-                  <div className="font-medium"><T k="auto.advancedprojectimporter.template_ms_project" fallback="Template MS Project" /></div>
-                  <div className="text-xs opacity-70"><T k="auto.advancedprojectimporter.xml_microsoft_project" fallback="XML Microsoft Project" /></div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    <T k="auto.projectfileimporter.format" fallback="Format" />
+                  </Label>
+                  <Select
+                    value={templateFormat}
+                    onValueChange={(v) => setTemplateFormat(v as TemplateFormat)}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="json">JSON (complet)</SelectItem>
+                      <SelectItem value="csv">CSV (à plat)</SelectItem>
+                      <SelectItem value="geojson">GeoJSON (QField)</SelectItem>
+                      <SelectItem value="kml">KML (QGIS)</SelectItem>
+                      <SelectItem value="msproject-xml">MS Project XML</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </Button>
+                <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  <T k="auto.advancedprojectimporter.telecharger" fallback="Télécharger" />
+                </Button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
@@ -626,7 +294,11 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
           <Label className="text-sm font-medium mb-3 block">
             {t('projects.import.importMode')}
           </Label>
-          <RadioGroup value={importMode} onValueChange={(value) => setImportMode(value as ImportMode)} className="flex gap-4">
+          <RadioGroup
+            value={importMode}
+            onValueChange={(value) => setImportMode(value as ImportMode)}
+            className="flex gap-4"
+          >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="create" id="adv-mode-create" />
               <Label htmlFor="adv-mode-create" className="cursor-pointer">
@@ -646,11 +318,6 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
               </Label>
             </div>
           </RadioGroup>
-          <p className="text-xs text-muted-foreground mt-2">
-            {importMode === 'create' && t('projects.import.modeCreateDesc')}
-            {importMode === 'update' && t('projects.import.modeUpdateDesc')}
-            {importMode === 'patch' && t('projects.import.modePatchDesc')}
-          </p>
         </div>
 
         <div className="border-2 border-dashed border-border rounded-lg p-6">
@@ -659,7 +326,10 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
             <div className="mt-4">
               <label htmlFor="advanced-file-upload" className="cursor-pointer">
                 <span className="mt-2 block text-sm font-medium">
-                  <T k="auto.advancedprojectimporter.selectionnez_un_fichier_geojson_kml_xml_excel_js" fallback="Sélectionnez un fichier (GeoJSON, KML, XML, Excel, JSON)" />
+                  <T
+                    k="auto.advancedprojectimporter.selectionnez_un_fichier"
+                    fallback="Sélectionnez un fichier (GeoJSON, KML, XML)"
+                  />
                 </span>
                 <Input
                   ref={fileInputRef}
@@ -667,7 +337,7 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
                   name="advanced-file-upload"
                   type="file"
                   className="sr-only"
-                  accept=".geojson,.json,.kml,.xml,.xlsx,.xls"
+                  accept={ACCEPTED_EXTENSIONS}
                   onChange={handleFileSelect}
                 />
               </label>
@@ -678,16 +348,12 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         {selectedFile && (
           <div className="flex items-center justify-between p-3 bg-muted dark:bg-gray-900 rounded-lg">
             <div className="flex items-center gap-3">
-              {selectedFile.name.endsWith('.geojson') || selectedFile.name.endsWith('.kml') ? (
-                <Map className="h-5 w-5 text-primary" />
-              ) : selectedFile.name.endsWith('.xml') ? (
-                <Calendar className="h-5 w-5 text-success" />
-              ) : (
-                <FileText className="h-5 w-5 text-muted-foreground" />
-              )}
+              {getFileIcon()}
               <div>
                 <p className="text-sm font-medium">{selectedFile.name}</p>
-                <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatFileSize(selectedFile.size)}
+                </p>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={clearSelection}>
@@ -699,7 +365,9 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         {importing && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span><T k="auto.advancedprojectimporter.import_en_cours" fallback="Import en cours..." /></span>
+              <span>
+                <T k="auto.advancedprojectimporter.import_en_cours" fallback="Import en cours..." />
+              </span>
               <span>{importProgress}%</span>
             </div>
             <Progress value={importProgress} className="h-2" />
@@ -707,22 +375,48 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
         )}
 
         {importResult && (
-          <Alert className={importResult.success ? 'border-success/30 bg-success-soft' : 'border-destructive/30 bg-destructive/10'}>
+          <Alert
+            className={
+              importResult.success
+                ? 'border-success/30 bg-success-soft'
+                : 'border-destructive/30 bg-destructive/10'
+            }
+          >
             {importResult.success ? (
               <CheckCircle className="h-4 w-4 text-success" />
             ) : (
               <AlertTriangle className="h-4 w-4 text-destructive" />
             )}
-            <AlertDescription className={importResult.success ? 'text-success' : 'text-destructive'}>
+            <AlertDescription
+              className={importResult.success ? 'text-success' : 'text-destructive'}
+            >
               {importResult.message}
+
+              {importDetails && (
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {Object.entries(importDetails)
+                    .filter(([, value]) => typeof value === 'number' && value > 0)
+                    .map(([key, value]) => (
+                      <span
+                        key={key}
+                        className="rounded-md border border-border bg-background/60 px-2 py-0.5 text-foreground"
+                      >
+                        {t(`projects.import.details.${key}`)}: {value}
+                      </span>
+                    ))}
+                </div>
+              )}
+
               {importResult.errors && importResult.errors.length > 0 && (
                 <details className="mt-2">
                   <summary className="cursor-pointer font-medium">
-                    Erreurs détaillées ({importResult.errors.length})
+                    {t('projects.import.detailedErrors')} ({importResult.errors.length})
                   </summary>
                   <ul className="mt-2 space-y-1 text-xs">
                     {importResult.errors.map((error, index) => (
-                      <li key={index} className="ml-4">• {error}</li>
+                      <li key={index} className="ml-4">
+                        • {error}
+                      </li>
                     ))}
                   </ul>
                 </details>
@@ -737,7 +431,9 @@ export default function AdvancedProjectImporter({ onImportComplete }: AdvancedPr
             disabled={!selectedFile || importing}
             className="flex-1"
           >
-            {importing ? 'Import en cours...' : 'Importer les projets'}
+            {importing
+              ? t('projects.import.importing')
+              : t('projects.import.importProjects')}
           </Button>
           {selectedFile && (
             <Button variant="outline" onClick={clearSelection} disabled={importing}>

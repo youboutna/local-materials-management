@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,10 +12,10 @@ const ProjectImporter2025 = () => {
   const { importProjects, isImporting, lastImportResult } = useProjectImportExportHex();
   const [importProgress, setImportProgress] = useState(0);
 
-
   const projects2025 = [
     {
       project_order: 1,
+      id: 'a1b2c3d4-0001-4000-8000-000000000001',
       title: "Acquisition d'un progiciel de parallèlement GPS différentiel",
       description: "Acquisition d'un système GPS différentiel pour améliorer la précision des mesures topographiques",
       location: "Nouakchott",
@@ -35,6 +34,7 @@ const ProjectImporter2025 = () => {
     },
     {
       project_order: 2,
+      id: 'a1b2c3d4-0002-4000-8000-000000000002',
       title: "Construction du siège de ETR-ML en matériaux locaux",
       description: "Construction d'un bâtiment moderne utilisant des matériaux locaux pour le siège de ETR-ML",
       location: "Nouakchott",
@@ -53,6 +53,7 @@ const ProjectImporter2025 = () => {
     },
     {
       project_order: 3,
+      id: 'a1b2c3d4-0003-4000-8000-000000000003',
       title: "Acquisition du matériel de transport",
       description: "Acquisition de véhicules et équipements de transport pour les opérations de terrain",
       location: "Nouakchott",
@@ -71,6 +72,7 @@ const ProjectImporter2025 = () => {
     },
     {
       project_order: 4,
+      id: 'a1b2c3d4-0004-4000-8000-000000000004',
       title: "Acquisition de deux Scies à béton grand mobile",
       description: "Acquisition d'équipements de découpe de béton pour les travaux de construction",
       location: "Nouakchott",
@@ -89,6 +91,7 @@ const ProjectImporter2025 = () => {
     },
     {
       project_order: 5,
+      id: 'a1b2c3d4-0005-4000-8000-000000000005',
       title: "Formation et consommable pour le parc automobile",
       description: "Formation du personnel et acquisition de consommables pour la maintenance du parc automobile",
       location: "Nouakchott",
@@ -107,6 +110,7 @@ const ProjectImporter2025 = () => {
     },
     {
       project_order: 6,
+      id: 'a1b2c3d4-0006-4000-8000-000000000006',
       title: "Acquisition d'un lot de matériel d'exploitation",
       description: "Acquisition d'équipements divers pour les activités d'exploitation et de maintenance",
       location: "Nouakchott",
@@ -125,6 +129,7 @@ const ProjectImporter2025 = () => {
     },
     {
       project_order: 7,
+      id: 'a1b2c3d4-0007-4000-8000-000000000007',
       title: "Projet de recrutement des bureaux pour les suivis des travaux de construction et réhabilitation des infrastructures sociales et sanitaires en cinq lots",
       description: "Recrutement de bureaux d'études pour le suivi et contrôle des travaux d'infrastructures sociales et sanitaires",
       location: "National (5 lots)",
@@ -143,6 +148,7 @@ const ProjectImporter2025 = () => {
     },
     {
       project_order: 8,
+      id: 'a1b2c3d4-0008-4000-8000-000000000008',
       title: "Projet de Construction et de réhabilitation des infrastructures sociales et sanitaires en 11 lots districts",
       description: "Construction et réhabilitation d'infrastructures sociales et sanitaires réparties en 11 lots géographiques",
       location: "National (11 districts)",
@@ -163,6 +169,8 @@ const ProjectImporter2025 = () => {
 
   // Map the snake_case demo dataset to ProjectImportRow (camelCase DTO).
   const toImportRow = (p: typeof projects2025[number]): ProjectImportRow => ({
+    id: p.id,
+    externalRef: p.id,
     title: p.title,
     description: p.description,
     location: p.location,
@@ -178,19 +186,21 @@ const ProjectImporter2025 = () => {
     launchDate: p.launch_date,
     attributionDate: p.attribution_date,
     completionDate: p.completion_date,
+    referentialCode: 'BTP_INFRA',
   });
 
   const handleImport = async () => {
     setImportProgress(10);
     try {
-      await importProjects(projects2025.map(toImportRow));
+      await importProjects(
+        projects2025.map(toImportRow),
+        { generateMissingFromReferential: true } as never,
+      );
       setImportProgress(100);
     } finally {
       setTimeout(() => setImportProgress(0), 1200);
     }
   };
-
-
 
   const formatBudget = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {

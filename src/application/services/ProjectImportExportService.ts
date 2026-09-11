@@ -1,14 +1,22 @@
 // src/application/services/ProjectImportExportService.ts
-// VERSION CORRIGÉE v2.0 - Support complet pour l'import 2D3DTECH
-// 
-// Modifications:
-// 1. Ajout du support materialUsage dans les jalons
-// 2. Extension de ProjectImportMilestone avec tous les champs (priority, type, weight, notes, etc.)
-// 3. Correction de l'import des jalons avec materialUsage
-// 4. Ajout de la méthode importMilestoneWithMaterialUsage
-// 5. Support des champs supplémentaires dans les phases (estimatedCost, actualCost, budget, weight, dependencies)
-// 6. Correction des compteurs détaillés
-// 7. Ajout des logs de changement
+// VERSION v3.2 - Support multi-référentiels + fallback assignee robuste
+//
+// Nouveautés v3.2 :
+// 1. resolveTaskAssignees() : fallback sur utilisateur courant si assignedTo vide/invalide
+// 2. assigneeSource tracé dans metadata ('supplier'|'employee'|'user'|'mixed'|'fallback')
+// 3. resolveReference() durci (trim + validation type)
+//
+// Corrections v3.1 :
+// 1. estimatedDuration lit phase.dqeMapping AVANT le référentiel
+// 2. Fallback calculé sur les dates, puis les tâches, puis les steps, puis 0
+// 3. attachRootCollections préserve TOUS les champs (spread conditionnel)
+// 4. dqeMapping, isCritical, deliverables, type, order propagés
+// 5. requiresInspection / requiresEngineerApproval propagés
+// 6. Détection fichier template → import annulé
+// 7. Auto-génération phases UNIQUEMENT si option explicite
+// 8. getReferential() n'est plus une source de données (uniquement validation)
+// 9. validateAgainstReferential (rapport lecture seule, multi-référentiels)
+// 10. estimatedDurationDays → estimatedHours (1 jour = 8 heures)
 
 import { AuthService, getAuthService } from '@/application/services/AuthService';
 import { getMilestoneService } from '@/application/services/MilestoneService';
@@ -21,7 +29,7 @@ import { getTaskAssignmentService } from '@/application/services/TaskAssignmentS
 import { TaxService } from '@/application/services/TaxService';
 
 import { getEmployeeService } from '@/application/services/EmployeeService';
-import { getReferential, type ReferentialType } from '@/config/referentials';
+import type { ReferentialType } from '@/config/referentials';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 import { PhasePriority, PhaseStatus, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
@@ -33,7 +41,6 @@ import {
     normalizeTaskStatus
 } from '@/dtos/entities/TaskAssignmentDTO';
 import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
-import { ImportDTOTransformer } from '@/dtos/entities/ProjectImportDTO';
 
 import { getDQECategory } from '@/config/referentials/dqe/dqe-categories.referential';
 import type {
@@ -41,7 +48,6 @@ import type {
     ProjectDTO,
 } from '@/dtos/entities/ProjectDTO';
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
-import type { CreateProjectStakeholderDTO } from '@/dtos/entities/ProjectStakeholderDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
@@ -50,7 +56,7 @@ import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
 
 // =============================================================================
-// TYPES - VERSION CORRIGÉE AVEC SUPPORT MATERIALUSAGE
+// TYPES
 // =============================================================================
 
 export interface ImportOptions {
@@ -65,6 +71,8 @@ export interface ImportOptions {
   employeeResolution?: 'email' | 'externalRef' | 'both';
   supplierResolution?: 'name' | 'externalRef' | 'both';
   organizationResolution?: 'name' | 'code' | 'externalRef' | 'both';
+  generateMissingFromReferential?: boolean;
+  validateAgainstReferential?: boolean;
 }
 
 export interface ProjectImportRow {
@@ -122,6 +130,7 @@ export interface ProjectImportPhase {
   startDate?: string;
   endDate?: string;
   durationDays?: number;
+  estimatedDuration?: number;
   progress?: number;
   order?: number;
   status?: string;
@@ -131,52 +140,45 @@ export interface ProjectImportPhase {
   budget?: number;
   weight?: number;
   dependencies?: string[];
+  dqeMapping?: {
+    categories?: string[];
+    defaultDurationDays?: number;
+    [k: string]: unknown;
+  };
+  steps?: Array<{
+    code?: string;
+    label?: unknown;
+    name?: string;
+    order?: number;
+    tasks?: ProjectImportTask[];
+  }>;
   milestones?: ProjectImportMilestone[];
   tasks?: ProjectImportTask[];
   dqeLines?: BoqLineDTO[];
 }
 
-// =============================================================================
-// ProjectImportMilestone - VERSION CORRIGÉE AVEC MATERIALUSAGE
-// =============================================================================
-
 export interface ProjectImportMilestone {
-  // Identifiants
   externalRef?: string;
   phaseId?: string;
-  
-  // Informations Générales
   title?: string;
   name?: string;
   description?: string;
-  
-  // Dates
   targetDate?: string;
   target_date?: string;
   completionDate?: string;
   completion_date?: string;
-  
-  // Statut et Progression
   status?: string;
   progress?: number;
   progressPercent?: number;
-  
-  // Priorité et Type
   priority?: string;
   type?: string;
   stageType?: string;
-  
-  // Poids et Dépendances
   weight?: number;
   dependencies?: string[];
   deliverables?: string[];
-  
-  // Notes
+  isCritical?: boolean;
+  order?: number;
   notes?: string;
-  
-  // ============================================
-  // NOUVEAU - Support materialUsage
-  // ============================================
   materialUsage?: Array<{
     materialId: string;
     plannedQuantity: number;
@@ -185,8 +187,6 @@ export interface ProjectImportMilestone {
   }>;
   materialCostEstimate?: number;
   actualMaterialCost?: number;
-  
-  // Métadonnées
   metadata?: Record<string, unknown>;
 }
 
@@ -210,7 +210,10 @@ export interface ProjectImportTask {
   assignedName?: string;
   assignedID?: string;
   estimatedHours?: number;
+  estimatedDurationDays?: number;
   actualHours?: number;
+  requiresInspection?: boolean;
+  requiresEngineerApproval?: boolean;
 }
 
 export interface ProjectImportStakeholder {
@@ -224,10 +227,6 @@ export interface ProjectImportStakeholder {
   roleDescription?: string;
   isPrimary?: boolean;
 }
-
-// =============================================================================
-// ProjectImportResult - VERSION CORRIGÉE AVEC COMPTEURS DÉTAILLÉS
-// =============================================================================
 
 export interface ProjectImportResult {
   total: number;
@@ -377,10 +376,48 @@ export class ProjectImportExportService {
     return row.externalRef || row.id || row.projectReference || row.reference;
   }
 
+  private computeDurationFromDates(start?: string, end?: string): number | undefined {
+    if (!start || !end) return undefined;
+    const ms = new Date(end).getTime() - new Date(start).getTime();
+    if (isNaN(ms) || ms <= 0) return undefined;
+    return Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)));
+  }
+
+  private sumTaskDurations(tasks?: ProjectImportTask[]): number | undefined {
+    if (!tasks?.length) return undefined;
+    const total = tasks.reduce((sum, t) => {
+      const days = (t as { estimatedDurationDays?: number }).estimatedDurationDays;
+      if (typeof days === 'number' && days > 0) return sum + days;
+      if (typeof t.estimatedHours === 'number' && t.estimatedHours > 0) {
+        return sum + t.estimatedHours / 8;
+      }
+      return sum;
+    }, 0);
+    return total > 0 ? Math.round(total) : undefined;
+  }
+
+  private sumStepDurations(
+    steps?: Array<{ tasks?: ProjectImportTask[] }>,
+  ): number | undefined {
+    if (!steps?.length) return undefined;
+    const total = steps.reduce(
+      (sum, s) => sum + (this.sumTaskDurations(s.tasks) ?? 0),
+      0,
+    );
+    return total > 0 ? Math.round(total) : undefined;
+  }
+
+  private looksLikeReferentialTemplate(raw: Record<string, unknown>): boolean {
+    return (
+      typeof raw.referentialCode === 'string' &&
+      !('projects' in raw) &&
+      !('projets' in raw) &&
+      !Array.isArray(raw)
+    );
+  }
+
   // ===========================================================================
   // NORMALISATION UNIQUE DU DATASET
-  // Accepte les projets plats ET les enveloppes
-  // { project, phases, milestones, tasks, dqeLines, stakeholders, interventionZones }
   // ===========================================================================
 
   normalizeImportRow(input: unknown): ProjectImportRow {
@@ -390,7 +427,6 @@ export class ProjectImportExportService {
       ? { ...envelope }
       : { ...raw };
 
-    // Collections : celles de l'enveloppe prévalent, sinon celles du projet
     const pick = <T,>(key: string, altKey?: string): T | undefined => {
       const fromEnvelope = envelope ? (raw[key] ?? (altKey ? raw[altKey] : undefined)) : undefined;
       const fromBase = base[key] ?? (altKey ? base[altKey] : undefined);
@@ -399,7 +435,6 @@ export class ProjectImportExportService {
 
     const row = base as ProjectImportRow & Record<string, unknown>;
 
-    // Alias de champs
     row.title = String(
       (base.title ?? base.name ?? base.nom ?? base.intitule ?? '') as string,
     ).trim();
@@ -418,7 +453,6 @@ export class ProjectImportExportService {
       ?? (typeof budget === 'object' ? budget?.currency : undefined)
       ?? undefined) as string | undefined;
 
-    // Collections relationnelles
     row.phases = pick<ProjectImportPhase[]>('phases', 'plannedPhases') ?? [];
     row.milestones = pick<ProjectImportMilestone[]>('milestones', 'jalons') ?? [];
     row.tasks = pick<ProjectImportTask[]>('tasks', 'taches') ?? [];
@@ -433,11 +467,6 @@ export class ProjectImportExportService {
     return row as ProjectImportRow;
   }
 
-  /**
-   * Fan-out des blocs racine (`phases`, `milestones`, `tasks`, `boqLines`,
-   * `stakeholders`, `dqeDocuments`) vers les projets correspondants.
-   * Permet d'avaler un dataset "à plat" (généré / déduit) sans imbrication.
-   */
   private attachRootCollections(
     projects: ProjectImportRow[],
     raw: Record<string, unknown>,
@@ -463,88 +492,104 @@ export class ProjectImportExportService {
       return Array.isArray(value) ? (value as Array<Record<string, unknown>>) : [];
     };
 
-    // Phases
+    // ----- PHASES -----
     for (const item of rootArray('phases')) {
       const target = groupOf(item);
       if (!target) continue;
       const order = Number(item.order ?? item.orderIndex ?? (target.phases?.length ?? 0) + 1);
-      target.phases = [
-        ...(target.phases ?? []),
-        {
-          id: item.id as string | undefined,
-          externalRef: (item.externalRef as string | undefined) ?? (item.id as string | undefined),
-          name: String(item.name ?? item.title ?? `Phase ${order}`),
-          code: (item.code as string | undefined) ?? `PH${order}`,
-          description: item.description as string | undefined,
-          startDate: item.startDate as string | undefined,
-          endDate: item.endDate as string | undefined,
-          progress: item.progress as number | undefined,
-          order,
-          status: item.status as string | undefined,
-          estimatedCost: item.estimatedCost as number | undefined,
-          actualCost: item.actualCost as number | undefined,
-          budget: item.budget as number | undefined,
-          weight: item.weight as number | undefined,
-        },
-      ];
+
+      const normalized: ProjectImportPhase = {
+        ...(item as unknown as ProjectImportPhase),
+        id: item.id as string | undefined,
+        externalRef: (item.externalRef as string | undefined) ?? (item.id as string | undefined),
+        name: String(item.name ?? item.title ?? `Phase ${order}`),
+        code: (item.code as string | undefined) ?? `PH${order}`,
+        description: item.description as string | undefined,
+        startDate: item.startDate as string | undefined,
+        endDate: item.endDate as string | undefined,
+        progress: item.progress as number | undefined,
+        order,
+        status: item.status as string | undefined,
+        estimatedCost: item.estimatedCost as number | undefined,
+        actualCost: item.actualCost as number | undefined,
+        budget: item.budget as number | undefined,
+        weight: item.weight as number | undefined,
+        durationDays: item.durationDays as number | undefined,
+        estimatedDuration: item.estimatedDuration as number | undefined,
+        dqeMapping: item.dqeMapping as ProjectImportPhase['dqeMapping'],
+        steps: item.steps as ProjectImportPhase['steps'],
+      };
+
+      target.phases = [...(target.phases ?? []), normalized];
     }
 
-    // Jalons
+    // ----- JALONS -----
     for (const item of rootArray('milestones', 'jalons')) {
       const target = groupOf(item);
       if (!target) continue;
-      target.milestones = [
-        ...(target.milestones ?? []),
-        {
-          externalRef: (item.externalRef as string | undefined) ?? (item.id as string | undefined),
-          phaseId: item.phaseId as string | undefined,
-          title: (item.title as string | undefined) ?? (item.name as string | undefined),
-          name: item.name as string | undefined,
-          description: item.description as string | undefined,
-          targetDate: (item.targetDate as string | undefined) ?? (item.target_date as string | undefined),
-          completionDate: (item.completionDate as string | undefined) ?? (item.completion_date as string | undefined),
-          status: item.status as string | undefined,
-          progress: item.progress as number | undefined,
-          priority: item.priority as string | undefined,
-          weight: item.weight as number | undefined,
-        },
-      ];
+
+      const normalized: ProjectImportMilestone = {
+        ...(item as unknown as ProjectImportMilestone),
+        externalRef: (item.externalRef as string | undefined) ?? (item.id as string | undefined),
+        phaseId: item.phaseId as string | undefined,
+        title: (item.title as string | undefined) ?? (item.name as string | undefined),
+        name: item.name as string | undefined,
+        description: item.description as string | undefined,
+        targetDate: (item.targetDate as string | undefined) ?? (item.target_date as string | undefined),
+        completionDate: (item.completionDate as string | undefined) ?? (item.completion_date as string | undefined),
+        status: item.status as string | undefined,
+        progress: item.progress as number | undefined,
+        priority: item.priority as string | undefined,
+        weight: item.weight as number | undefined,
+        type: (item.type as string | undefined) ?? (item.stageType as string | undefined),
+        isCritical: item.isCritical as boolean | undefined,
+        order: item.order as number | undefined,
+        deliverables: item.deliverables as string[] | undefined,
+        dependencies: item.dependencies as string[] | undefined,
+        notes: item.notes as string | undefined,
+      };
+
+      target.milestones = [...(target.milestones ?? []), normalized];
     }
 
-    // Tâches
+    // ----- TÂCHES -----
     for (const item of rootArray('tasks', 'taches')) {
       const target = groupOf(item);
       if (!target) continue;
-      target.tasks = [
-        ...(target.tasks ?? []),
-        {
-          id: item.id as string | undefined,
-          title: (item.title as string | undefined) ?? (item.name as string | undefined),
-          name: item.name as string | undefined,
-          description: item.description as string | undefined,
-          status: item.status as string | undefined,
-          priority: item.priority as string | undefined,
-          progress: item.progress as number | undefined,
-          startDate: item.startDate as string | undefined,
-          endDate: item.endDate as string | undefined,
-          dueDate: (item.dueDate as string | undefined) ?? (item.due_date as string | undefined),
-          phaseId: item.phaseId as string | undefined,
-          assignedTo: item.assignedTo as string | string[] | undefined,
-          assigneeEmail: item.assigneeEmail as string | undefined,
-          estimatedHours: item.estimatedHours as number | undefined,
-          actualHours: item.actualHours as number | undefined,
-        },
-      ];
+
+      const normalized: ProjectImportTask = {
+        ...(item as unknown as ProjectImportTask),
+        id: item.id as string | undefined,
+        title: (item.title as string | undefined) ?? (item.name as string | undefined),
+        name: item.name as string | undefined,
+        description: item.description as string | undefined,
+        status: item.status as string | undefined,
+        priority: item.priority as string | undefined,
+        progress: item.progress as number | undefined,
+        startDate: item.startDate as string | undefined,
+        endDate: item.endDate as string | undefined,
+        dueDate: (item.dueDate as string | undefined) ?? (item.due_date as string | undefined),
+        phaseId: item.phaseId as string | undefined,
+        assignedTo: item.assignedTo as string | string[] | undefined,
+        assigneeEmail: item.assigneeEmail as string | undefined,
+        estimatedHours: item.estimatedHours as number | undefined,
+        estimatedDurationDays: item.estimatedDurationDays as number | undefined,
+        actualHours: item.actualHours as number | undefined,
+        requiresInspection: item.requiresInspection as boolean | undefined,
+        requiresEngineerApproval: item.requiresEngineerApproval as boolean | undefined,
+      };
+
+      target.tasks = [...(target.tasks ?? []), normalized];
     }
 
-    // Documents DQE (métadonnées : référence / titre portés sur les lignes)
+    // ----- DQE DOCUMENTS (métadonnées) -----
     const dqeDocByProject = new Map<ProjectImportRow, Record<string, unknown>>();
     for (const item of rootArray('dqeDocuments', 'dqe_documents')) {
       const target = groupOf(item);
       if (target && !dqeDocByProject.has(target)) dqeDocByProject.set(target, item);
     }
 
-    // Lignes DQE / BOQ
+    // ----- LIGNES DQE -----
     for (const item of rootArray('boqLines', 'dqeLines')) {
       const target = groupOf(item);
       if (!target) continue;
@@ -587,7 +632,7 @@ export class ProjectImportExportService {
       ];
     }
 
-    // Parties prenantes
+    // ----- STAKEHOLDERS -----
     for (const item of rootArray('stakeholders', 'parties')) {
       const target = groupOf(item);
       if (!target) continue;
@@ -616,12 +661,27 @@ export class ProjectImportExportService {
 
   normalizeDataset(input: unknown): ProjectImportDataset {
     const raw = (input ?? {}) as Record<string, unknown>;
+
+    if (this.looksLikeReferentialTemplate(raw)) {
+      console.warn(
+        `[ProjectImportExportService] Ce fichier est un TEMPLATE de référentiel ` +
+        `(${raw.referentialCode}), pas un jeu de données à importer. Import annulé.`,
+      );
+      return { projects: [] };
+    }
+
     const projectsSource = Array.isArray(raw) ? raw : (raw.projects ?? raw.projets ?? []);
     const projects = (Array.isArray(projectsSource) ? projectsSource : [projectsSource])
       .map((item) => this.normalizeImportRow(item));
 
     if (!Array.isArray(raw)) {
       this.attachRootCollections(projects, raw);
+    }
+
+    if (typeof raw.referentialCode === 'string') {
+      for (const project of projects) {
+        if (!project.referentialCode) project.referentialCode = raw.referentialCode;
+      }
     }
 
     return {
@@ -633,13 +693,96 @@ export class ProjectImportExportService {
     };
   }
 
-
-
+  /**
+   * Résout une référence (externalRef, UUID, etc.) vers un ID DB.
+   * Durci : trim + validation de type.
+   */
   private resolveReference(reference?: string, map?: Map<string, string>): string | undefined {
-    if (!reference) return undefined;
-    const mapped = map?.get(reference);
+    if (!reference || typeof reference !== 'string') return undefined;
+    const trimmed = reference.trim();
+    if (!trimmed) return undefined;
+
+    const mapped = map?.get(trimmed);
     if (mapped) return mapped;
-    return this.isUUID(reference) ? reference : undefined;
+
+    return this.isUUID(trimmed) ? trimmed : undefined;
+  }
+
+  /**
+   * Résout un ensemble d'assignees pour une tâche.
+   *
+   * Règles :
+   * - Chaque référence est résolue via les maps (suppliers, employees).
+   * - Les UUID valides sont conservés (peuvent cibler auth.users).
+   * - Si AUCUNE référence valide → fallback sur l'utilisateur courant.
+   *
+   * Retourne aussi la source agrégée pour traçabilité :
+   * 'supplier' | 'employee' | 'user' | 'mixed' | 'fallback'
+   */
+  private resolveTaskAssignees(
+    raw: string | string[] | undefined,
+    suppliers?: Map<string, string>,
+    employees?: Map<string, string>,
+  ): {
+    ids: string[];
+    names: string[];
+    emails: string[];
+    source: 'supplier' | 'employee' | 'user' | 'mixed' | 'fallback';
+  } {
+    const refs = Array.isArray(raw) ? raw : raw ? [raw] : [];
+    const ids: string[] = [];
+    const sources = new Set<'supplier' | 'employee' | 'user'>();
+
+    for (const ref of refs) {
+      if (!ref || typeof ref !== 'string') continue;
+      const trimmed = ref.trim();
+      if (!trimmed) continue;
+
+      const supId = this.resolveReference(trimmed, suppliers);
+      if (supId) {
+        ids.push(supId);
+        sources.add('supplier');
+        continue;
+      }
+
+      const empId = this.resolveReference(trimmed, employees);
+      if (empId) {
+        ids.push(empId);
+        sources.add('employee');
+        continue;
+      }
+
+      if (this.isUUID(trimmed)) {
+        ids.push(trimmed);
+        sources.add('user');
+      }
+    }
+
+    const uniqueIds = Array.from(new Set(ids));
+
+    // Fallback : aucune référence valide → utilisateur courant
+    if (uniqueIds.length === 0 && this.currentUserId) {
+      return {
+        ids: [this.currentUserId],
+        names: this.currentUserName ? [this.currentUserName] : [],
+        emails: this.currentUserEmail ? [this.currentUserEmail] : [],
+        source: 'fallback',
+      };
+    }
+
+    let aggregateSource: 'supplier' | 'employee' | 'user' | 'mixed' | 'fallback' = 'fallback';
+    if (sources.size === 1) {
+      aggregateSource = [...sources][0];
+    } else if (sources.size > 1) {
+      aggregateSource = 'mixed';
+    }
+
+    return {
+      ids: uniqueIds,
+      names: [],
+      emails: [],
+      source: aggregateSource,
+    };
   }
 
   private getDqeCode(line: BoqLineDTO): string | undefined {
@@ -660,6 +803,7 @@ export class ProjectImportExportService {
       'en attente': 'PENDING',
       'en_attente': 'PENDING',
       'pending': 'PENDING',
+      'not_started': 'PENDING',
       'suspendu': 'SUSPENDED',
       'suspend': 'SUSPENDED',
       'annule': 'CANCELLED',
@@ -670,15 +814,14 @@ export class ProjectImportExportService {
     return mapping[normalized] || 'DRAFT';
   }
 
-  // ===========================================================================
-  // NORMALISE MILESTONE STATUS - CORRIGÉ
-  // ===========================================================================
-
-  private normalizeMilestoneStatus(status?: string): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
+  private normalizeMilestoneStatus(
+    status?: string,
+  ): 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled' | undefined {
     if (!status) return undefined;
     const statuses: Record<string, 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'> = {
       planifie: 'pending',
       planned: 'pending',
+      not_started: 'pending',
       en_cours: 'in_progress',
       'en cours': 'in_progress',
       in_progress: 'in_progress',
@@ -695,11 +838,9 @@ export class ProjectImportExportService {
     return statuses[status.toLowerCase()] ?? 'pending';
   }
 
-  // ===========================================================================
-  // NORMALISE MILESTONE PRIORITY - NOUVEAU
-  // ===========================================================================
-
-  private normalizeMilestonePriority(priority?: string): 'low' | 'medium' | 'high' | 'critical' | undefined {
+  private normalizeMilestonePriority(
+    priority?: string,
+  ): 'low' | 'medium' | 'high' | 'critical' | undefined {
     if (!priority) return undefined;
     const normalized = priority.toLowerCase().trim();
     const mapping: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
@@ -715,10 +856,6 @@ export class ProjectImportExportService {
     };
     return mapping[normalized] || 'medium';
   }
-
-  // ===========================================================================
-  // CRÉE LES DONNÉES DE JALON AVEC MATERIALUSAGE - NOUVEAU
-  // ===========================================================================
 
   private createMilestoneData(
     projectId: string,
@@ -736,7 +873,6 @@ export class ProjectImportExportService {
       status: this.normalizeMilestoneStatus(milestone.status) || 'pending',
       progress_percentage: milestone.progress ?? milestone.progressPercent ?? 0,
       external_ref: milestone.externalRef,
-      // NOUVEAUX CHAMPS
       priority: this.normalizeMilestonePriority(milestone.priority) || 'medium',
       type: milestone.type,
       weight: milestone.weight,
@@ -744,18 +880,13 @@ export class ProjectImportExportService {
       stage_type: milestone.stageType,
       deliverables: milestone.deliverables || [],
       dependencies: milestone.dependencies || [],
-      // ============================================
-      // NOUVEAU - Support materialUsage
-      // ============================================
+      is_critical: milestone.isCritical ?? false,
+      order_index: milestone.order,
       material_usage: milestone.materialUsage,
       material_cost_estimate: milestone.materialCostEstimate,
       actual_material_cost: milestone.actualMaterialCost,
     };
   }
-
-  // ===========================================================================
-  // IMPORT MILESTONE AVEC MATERIALUSAGE - NOUVEAU
-  // ===========================================================================
 
   private async importMilestone(
     projectId: string,
@@ -766,7 +897,7 @@ export class ProjectImportExportService {
     existingMilestones: any[]
   ): Promise<void> {
     const milestoneData = this.createMilestoneData(projectId, phaseId, milestone, defaultDate);
-    
+
     const existingMilestone = existingMilestones.find((candidate) =>
       candidate.title === milestoneData.title ||
       candidate.external_ref === milestoneData.external_ref
@@ -775,23 +906,11 @@ export class ProjectImportExportService {
     if (existingMilestone) {
       await this.milestoneService.updateMilestone(existingMilestone.id, milestoneData);
       details.milestones += 1;
-      // Log du changement
-      if (milestoneData.material_usage) {
-        console.log(`[Import] Updated milestone ${milestoneData.title} with materialUsage:`, milestoneData.material_usage);
-      }
     } else {
       await this.milestoneService.createMilestone(milestoneData);
       details.milestones += 1;
-      // Log du changement
-      if (milestoneData.material_usage) {
-        console.log(`[Import] Created milestone ${milestoneData.title} with materialUsage:`, milestoneData.material_usage);
-      }
     }
   }
-
-  // ===========================================================================
-  // MAP DTO - CORRIGÉ
-  // ===========================================================================
 
   public mapImportRowToCreateDTO(
     row: ProjectImportRow,
@@ -851,7 +970,7 @@ export class ProjectImportExportService {
   }
 
   // ===========================================================================
-  // IMPORT RELATIONS - VERSION CORRIGÉE AVEC MATERIALUSAGE
+  // IMPORT RELATIONS
   // ===========================================================================
 
   private async importRelations(
@@ -861,33 +980,58 @@ export class ProjectImportExportService {
     suppliers?: Map<string, string>,
     organizations?: Map<string, string>,
     employees?: Map<string, string>,
+    options: ImportOptions = {},
+    changes?: ProjectImportResult['changes'],
   ): Promise<void> {
     const phaseIdMap = new Map<string, string>();
 
-    // 0. AUTO-ÉCHAFAUDAGE : JSON « léger » sans phases → structure issue du
-    // référentiel projet (doctrine légos métier : jamais de phases codées en dur).
-    if (!(row.phases ?? []).length && row.referentialCode) {
-      const existing = await this.phaseService.getPhasesByProject(projectId);
-      if (!existing.length) {
-        try {
-          const generated = await this.phaseService.createPhasesFromReferential(
-            projectId,
-            row.referentialCode as ReferentialType,
-          );
-          details.phases += generated.length;
-        } catch (error) {
-          console.warn('[ProjectImport] auto-génération des phases impossible', error);
+    if (!(row.phases ?? []).length) {
+      if (options.generateMissingFromReferential === true && row.referentialCode) {
+        const existing = await this.phaseService.getPhasesByProject(projectId);
+        if (!existing.length) {
+          try {
+            const generated = await this.phaseService.createPhasesFromReferential(
+              projectId,
+              row.referentialCode as ReferentialType,
+            );
+            details.phases += generated.length;
+            changes?.push({
+              entityType: 'phase',
+              entityId: 'batch',
+              entityName: 'Phases générées depuis le référentiel',
+              operation: 'created',
+              timestamp: new Date().toISOString(),
+              details: { source: 'referential', referentialCode: row.referentialCode },
+            });
+          } catch (error) {
+            console.warn('[ProjectImport] auto-génération des phases impossible', error);
+            changes?.push({
+              entityType: 'phase',
+              entityId: 'batch',
+              entityName: 'Échec génération phases',
+              operation: 'failed',
+              timestamp: new Date().toISOString(),
+              details: { error: String(error) },
+            });
+          }
         }
+      } else {
+        changes?.push({
+          entityType: 'phase',
+          entityId: 'batch',
+          entityName: 'Aucune phase fournie',
+          operation: 'skipped',
+          timestamp: new Date().toISOString(),
+          details: {
+            reason: 'JSON sans phases et génération référentielle non demandée',
+            hint: 'Utiliser ImportOptions.generateMissingFromReferential = true si souhaité',
+          },
+        });
       }
     }
 
     // 1. IMPORTER LES PHASES
-
     for (const phase of row.phases ?? []) {
-      const phaseConfig = row.referentialCode
-        ? getReferential(row.referentialCode as ReferentialType)?.phases.find((candidate) => candidate.code === phase.code)
-        : undefined;
-
       const existingPhases = await this.phaseService.getPhasesByProject(projectId);
 
       const existingPhase = existingPhases.find((candidate) => {
@@ -899,6 +1043,15 @@ export class ProjectImportExportService {
 
       const phaseCode = phase.code || `phase-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       const normalizedType = PhaseTransformer.normalizeDbPhaseType(phase.code ?? phase.name);
+
+      const estimatedDuration =
+        phase.durationDays
+        ?? phase.estimatedDuration
+        ?? phase.dqeMapping?.defaultDurationDays
+        ?? this.computeDurationFromDates(phase.startDate, phase.endDate)
+        ?? this.sumTaskDurations(phase.tasks)
+        ?? this.sumStepDurations(phase.steps)
+        ?? 0;
 
       const phaseData: Partial<PhaseDTO> = {
         id: existingPhase?.id ?? '',
@@ -914,9 +1067,9 @@ export class ProjectImportExportService {
         orderIndex: phase.order,
         startDate: phase.startDate,
         endDate: phase.endDate,
-        estimatedDuration: phase.durationDays ?? phaseConfig?.defaultDurationDays ?? phaseConfig?.dqeMapping?.defaultDurationDays,
-        customPhaseData: phaseConfig?.dqeMapping
-          ? { dqeMapping: phaseConfig.dqeMapping, phaseCode: phaseCode }
+        estimatedDuration,
+        customPhaseData: phase.dqeMapping
+          ? { dqeMapping: phase.dqeMapping, phaseCode: phaseCode }
           : { phaseCode: phaseCode },
         estimatedCost: phase.estimatedCost,
         actualCost: phase.actualCost,
@@ -940,10 +1093,9 @@ export class ProjectImportExportService {
         if (key) phaseIdMap.set(key, createdPhase.id);
       }
 
-      // 2. IMPORTER LES JALONS DE LA PHASE - AVEC MATERIALUSAGE
       const existingPhaseMilestones = await this.milestoneService.getPhaseMilestonesRaw(createdPhase.id);
       const defaultDate = row.endDate ?? row.startDate ?? new Date().toISOString();
-      
+
       for (const milestone of phase.milestones ?? []) {
         await this.importMilestone(
           projectId,
@@ -955,12 +1107,10 @@ export class ProjectImportExportService {
         );
       }
 
-      // 3. IMPORTER LES TÂCHES DE LA PHASE
       for (const task of phase.tasks ?? []) {
         await this.upsertTask(projectId, createdPhase.id, task, details, suppliers, employees);
       }
 
-      // 4. IMPORTER LES DQE LINES DE LA PHASE
       const dqeLines = (phase.dqeLines ?? []).map((line) => ({
         ...line,
         btpCode: line.btpCode ?? (line as BoqLineDTO & { code?: string }).code ?? undefined,
@@ -971,10 +1121,10 @@ export class ProjectImportExportService {
       await this.upsertDqeLines(projectId, createdPhase.id, dqeLines, details);
     }
 
-    // 5. IMPORTER LES JALONS PROJET - AVEC MATERIALUSAGE
+    // 5. JALONS PROJET
     const existingProjectMilestones = await this.milestoneService.getMilestonesByProject(projectId);
     const defaultDate = row.endDate ?? row.startDate ?? new Date().toISOString();
-    
+
     for (const milestone of row.milestones ?? []) {
       const targetPhaseId = milestone.phaseId ? phaseIdMap.get(milestone.phaseId) : undefined;
       await this.importMilestone(
@@ -987,13 +1137,13 @@ export class ProjectImportExportService {
       );
     }
 
-    // 6. IMPORTER LES TÂCHES PROJET
+    // 6. TÂCHES PROJET
     for (const task of row.tasks ?? []) {
       const targetPhaseId = task.phaseId ? phaseIdMap.get(task.phaseId) : undefined;
       await this.upsertTask(projectId, targetPhaseId, task, details, suppliers, employees);
     }
 
-    // 7. IMPORTER LES DQE LINES PROJET
+    // 7. LIGNES DQE PROJET
     let fallbackDqePhaseId: string | undefined;
     for (const line of row.dqeLines ?? []) {
       let targetPhaseId = line.phaseId ? phaseIdMap.get(line.phaseId) : undefined;
@@ -1011,7 +1161,7 @@ export class ProjectImportExportService {
       await this.upsertDqeLines(projectId, targetPhaseId, [dqeLine], details);
     }
 
-    // 8. IMPORTER LES STAKEHOLDERS
+    // 8. STAKEHOLDERS
     for (const stakeholder of row.stakeholders ?? []) {
       const organizationRef = stakeholder.organizationId;
       const supplierId = this.resolveReference(stakeholder.supplierId, suppliers);
@@ -1023,7 +1173,6 @@ export class ProjectImportExportService {
       const stakeholders = await this.stakeholderService.getProjectStakeholders(projectId);
       const existingStakeholder = stakeholders.find((candidate) =>
         (supplierId && candidate.supplierId === supplierId) ||
-        (organizationRef && candidate.roleDescription?.includes(organizationRef)) ||
         (employeeId && candidate.employeeId === employeeId)
       );
 
@@ -1036,7 +1185,7 @@ export class ProjectImportExportService {
         organizationId,
         employeeId,
         externalRef: stakeholder.externalRef || `SH-${projectId}-${organizationRef || stakeholder.supplierId || stakeholder.employeeId || 'na'}`,
-        roleDescription: [stakeholder.roleDescription ?? stakeholder.role, organizationRef].filter(Boolean).join(' - '),
+        roleDescription: [stakeholder.roleDescription ?? stakeholder.role].filter(Boolean).join(' - '),
         isPrimary: stakeholder.isPrimary,
       };
 
@@ -1049,14 +1198,6 @@ export class ProjectImportExportService {
     }
   }
 
-  // ===========================================================================
-  // UPSERT TASK - CORRIGÉ
-  // ===========================================================================
-
-  /**
-   * Rattache les lignes DQE projet sans phase explicite à une phase d'import dédiée
-   * plutôt que de les ignorer.
-   */
   private async ensureImportDqePhase(
     projectId: string,
     row: ProjectImportRow,
@@ -1105,43 +1246,17 @@ export class ProjectImportExportService {
       : await this.taskAssignmentService.getByProject(projectId);
     const existingTask = existingTasks.find((candidate) => candidate.name === name);
 
-    let assignees: string[] = [];
+    // ⬇️ v3.2 : résolution robuste des assignees + fallback sur l'utilisateur courant
+    const resolved = this.resolveTaskAssignees(task.assignedTo, suppliers, employees);
 
-    if (task.assignedTo) {
-      const raw = Array.isArray(task.assignedTo) ? task.assignedTo : [task.assignedTo];
-      assignees = raw
-        .map((a) => {
-          const supRef = this.resolveReference(a, suppliers);
-          if (supRef) return supRef;
-          const empRef = this.resolveReference(a, employees);
-          if (empRef) return empRef;
-          return undefined;
-        })
-        .filter((a): a is string => !!a);
-    }
+    let assigneeName = task.assigneeName || task.assignedName || resolved.names[0];
+    let assigneeEmail = task.assigneeEmail || task.AssignedEmail || resolved.emails[0];
 
-    if (assignees.length === 0 && this.currentUserId) {
-      assignees = [this.currentUserId];
-    }
+    if (!assigneeName && this.currentUserName) assigneeName = this.currentUserName;
+    if (!assigneeEmail && this.currentUserEmail) assigneeEmail = this.currentUserEmail;
 
-    let assigneeName = task.assigneeName || task.assignedName;
-    let assigneeEmail = task.assigneeEmail || task.AssignedEmail;
-
-    if (!assigneeName && this.currentUserName) {
-      assigneeName = this.currentUserName;
-    }
-    if (!assigneeEmail && this.currentUserEmail) {
-      assigneeEmail = this.currentUserEmail;
-    }
-
-    let assigneeType: 'supplier' | 'employee' | 'user' | undefined;
-    if (assignees.length > 0) {
-      const isSupplier = assignees.some((id) => suppliers?.has(id));
-      const isEmployee = assignees.some((id) => employees?.has(id));
-      if (isSupplier && !isEmployee) assigneeType = 'supplier';
-      else if (isEmployee && !isSupplier) assigneeType = 'employee';
-      else assigneeType = 'user';
-    }
+    const assignees = resolved.ids;
+    const assigneeType = resolved.source;
 
     let normalizedStatus = normalizeTaskStatus(task.status);
     if (task.progress !== undefined) {
@@ -1164,14 +1279,21 @@ export class ProjectImportExportService {
       assigneeName,
       assigneeEmail,
       startDate: task.startDate,
-      estimatedHours: task.estimatedHours,
+      estimatedHours:
+        task.estimatedHours
+        ?? (typeof task.estimatedDurationDays === 'number'
+          ? task.estimatedDurationDays * 8
+          : undefined),
       actualHours: task.actualHours,
       metadata: {
         assignedBy: this.currentUserId,
         assignedTo: assignees,
         assigneeType,
+        assigneeSource: resolved.source,
         importProgress: task.progress,
         importId: task.id,
+        requiresInspection: task.requiresInspection,
+        requiresEngineerApproval: task.requiresEngineerApproval,
       },
     };
 
@@ -1182,10 +1304,6 @@ export class ProjectImportExportService {
     }
     details.tasks += 1;
   }
-
-  // ===========================================================================
-  // UPSERT DQE LINES - CORRIGÉ
-  // ===========================================================================
 
   private async upsertDqeLines(
     projectId: string,
@@ -1210,8 +1328,7 @@ export class ProjectImportExportService {
       const mappedStatus = mapDqeStatus(dqeLine.status as string | undefined);
       const code = (dqeLine.code ?? dqeLine.btpCode) as string | undefined;
       const quantity = Number(dqeLine.quantity ?? 0);
-      const unitPrice =
-        dqeLine.unitPrice != null ? Number(dqeLine.unitPrice) : null;
+      const unitPrice = dqeLine.unitPrice != null ? Number(dqeLine.unitPrice) : null;
 
       const rawBoqData: BoqLineDTO = {
         source: 'dqe',
@@ -1250,10 +1367,8 @@ export class ProjectImportExportService {
           documentRef: (dqeLine.documentRef as string | undefined) ?? null,
           documentTitle: (dqeLine.documentTitle as string | undefined) ?? null,
         },
-
       } as BoqLineDTO;
 
-      // Fiscalité ligne à ligne : manuel > compte PCM > régime > mots-clés.
       const tax = TaxService.resolve(rawBoqData as never);
       const boqData: BoqLineDTO = {
         ...rawBoqData,
@@ -1267,7 +1382,6 @@ export class ProjectImportExportService {
           totalTtc: tax.totalTtc,
         },
       } as BoqLineDTO;
-
 
       const existingLine = existingLines.find(
         (line) =>
@@ -1286,7 +1400,7 @@ export class ProjectImportExportService {
   }
 
   // ===========================================================================
-  // MAIN IMPORT METHOD - CORRIGÉ
+  // MAIN IMPORT METHOD
   // ===========================================================================
 
   async importDataset(
@@ -1311,6 +1425,8 @@ export class ProjectImportExportService {
         employeeResolution: 'both',
         supplierResolution: 'both',
         organizationResolution: 'both',
+        generateMissingFromReferential: false,
+        validateAgainstReferential: false,
         ...dataset.options,
         ...options,
       };
@@ -1333,11 +1449,30 @@ export class ProjectImportExportService {
       }
 
       const references = await this.importDependencies(dataset, mergedOptions);
+
+      const referentialWarnings: Array<{ row: number; title: string; message: string }> = [];
+      if (mergedOptions.validateAgainstReferential) {
+        for (let i = 0; i < dataset.projects.length; i++) {
+          const row = dataset.projects[i];
+          if (!row.referentialCode || !(row.phases ?? []).length) continue;
+          const report = await this.validateRowAgainstReferential(row);
+          if (report.length > 0) {
+            referentialWarnings.push(
+              ...report.map((msg) => ({ row: i + 1, title: row.title, message: msg })),
+            );
+          }
+        }
+      }
+
       const result = await this.importProjects(
         dataset.projects,
         references,
         mergedOptions
       );
+
+      if (referentialWarnings.length > 0) {
+        result.errors.push(...referentialWarnings);
+      }
 
       return result;
     } catch (error) {
@@ -1350,10 +1485,6 @@ export class ProjectImportExportService {
       throw error;
     }
   }
-
-  // ===========================================================================
-  // IMPORT PROJECTS - CORRIGÉ
-  // ===========================================================================
 
   async importProjects(
     rows: ProjectImportRow[],
@@ -1383,7 +1514,6 @@ export class ProjectImportExportService {
     const mode = options.mode || 'upsert';
     const continueOnError = options.continueOnError || false;
 
-    // Normalisation défensive : accepte enveloppes imbriquées et alias
     rows = rows.map((row) => this.normalizeImportRow(row));
     result.total = rows.length;
 
@@ -1434,7 +1564,7 @@ export class ProjectImportExportService {
             });
             continue;
 
-          case 'create':
+          case 'create': {
             const dto = this.mapImportRowToCreateDTO(row, references.organizations);
             project = await this.projectService.createProject(dto);
             result.imported += 1;
@@ -1446,8 +1576,9 @@ export class ProjectImportExportService {
               timestamp: new Date().toISOString(),
             });
             break;
+          }
 
-          case 'update_full':
+          case 'update_full': {
             const updateFullDto = this.mapImportRowToCreateDTO(row, references.organizations);
             project = await this.projectService.updateProject(existing!.id, updateFullDto as never);
             result.imported += 1;
@@ -1459,8 +1590,9 @@ export class ProjectImportExportService {
               timestamp: new Date().toISOString(),
             });
             break;
+          }
 
-          case 'update_partial':
+          case 'update_partial': {
             const updatePartialDto = this.mapPartialUpdateDTO(row, references.organizations);
             project = await this.projectService.updateProject(existing!.id, updatePartialDto as never);
             result.imported += 1;
@@ -1472,8 +1604,9 @@ export class ProjectImportExportService {
               timestamp: new Date().toISOString(),
             });
             break;
+          }
 
-          case 'merge':
+          case 'merge': {
             const mergeDto = this.mapMergeDTO(row, existing!, references.organizations);
             project = await this.projectService.updateProject(existing!.id, mergeDto as never);
             result.imported += 1;
@@ -1485,8 +1618,9 @@ export class ProjectImportExportService {
               timestamp: new Date().toISOString(),
             });
             break;
+          }
 
-          default:
+          default: {
             const upsertDto = this.mapImportRowToCreateDTO(row, references.organizations);
             project = existing
               ? await this.projectService.updateProject(existing.id, upsertDto as never)
@@ -1499,19 +1633,21 @@ export class ProjectImportExportService {
               operation: existing ? 'updated' : 'created',
               timestamp: new Date().toISOString(),
             });
+          }
         }
 
         if (project?.id) {
           result.createdIds.push(project.id);
 
-          // Importer les relations avec materialUsage
           await this.importRelations(
             project.id,
             row,
             result.details,
             references.suppliers,
             references.organizations,
-            references.employees
+            references.employees,
+            options,
+            result.changes,
           );
         }
 
@@ -1532,15 +1668,6 @@ export class ProjectImportExportService {
 
     return result;
   }
-
-  // ===========================================================================
-  // AUTRES MÉTHODES (validateImportRows, importDependencies, importOrganizations, 
-  // importSuppliers, importEmployees, mapPartialUpdateDTO, mapMergeDTO, 
-  // findExistingProject, determineOperation, validateDataset, 
-  // toImportRow, toExportRowWithRelations, toExportRow, toCSV, exportProjects)
-  // ===========================================================================
-  
-  // ... (Ces méthodes restent inchangées, identiques à la version précédente)
 
   // ===========================================================================
   // VALIDATION
@@ -1576,6 +1703,61 @@ export class ProjectImportExportService {
     return errors;
   }
 
+  private async validateRowAgainstReferential(row: ProjectImportRow): Promise<string[]> {
+    const referentialCode = row.referentialCode;
+    if (!referentialCode) return [];
+
+    const messages: string[] = [];
+
+    try {
+      const { getReferential } = await import('@/config/referentials');
+      const referential = getReferential(referentialCode as never) as
+        | { phases?: Array<{ code?: string; id?: string }> }
+        | null
+        | undefined;
+
+      if (!referential) {
+        messages.push(
+          `Référentiel "${referentialCode}" introuvable — validation ignorée.`,
+        );
+        return messages;
+      }
+
+      const templateCodes = new Set(
+        (referential.phases ?? [])
+          .map((p) => p.code ?? p.id)
+          .filter((c): c is string => !!c),
+      );
+      const jsonCodes = new Set(
+        (row.phases ?? [])
+          .map((p) => p.code)
+          .filter((c): c is string => !!c),
+      );
+
+      const unknown = [...jsonCodes].filter((c) => !templateCodes.has(c));
+      const missing = [...templateCodes].filter((c) => !jsonCodes.has(c));
+
+      if (unknown.length > 0) {
+        messages.push(
+          `Phases inconnues du référentiel "${referentialCode}": ${unknown.join(', ')}`,
+        );
+      }
+      if (missing.length > 0 && jsonCodes.size > 0) {
+        messages.push(
+          `Phases standard manquantes pour "${referentialCode}": ${missing.join(', ')}`,
+        );
+      }
+    } catch (err) {
+      messages.push(
+        `Validation référentielle impossible pour "${referentialCode}": ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+
+    return messages;
+  }
+
   // ===========================================================================
   // IMPORT DEPENDENCIES
   // ===========================================================================
@@ -1597,11 +1779,9 @@ export class ProjectImportExportService {
     if (dataset.organizations?.length) {
       result.organizations = await this.importOrganizations(dataset.organizations, options);
     }
-
     if (dataset.suppliers?.length) {
       result.suppliers = await this.importSuppliers(dataset.suppliers, options);
     }
-
     if (dataset.employees?.length) {
       result.employees = await this.importEmployees(dataset.employees, options);
     }
@@ -1797,7 +1977,7 @@ export class ProjectImportExportService {
   }
 
   // ===========================================================================
-  // MAP PARTIAL UPDATE DTO
+  // PARTIAL UPDATE / MERGE / FIND / DETERMINE
   // ===========================================================================
 
   private mapPartialUpdateDTO(
@@ -1854,10 +2034,6 @@ export class ProjectImportExportService {
     return dto;
   }
 
-  // ===========================================================================
-  // MAP MERGE DTO
-  // ===========================================================================
-
   private mapMergeDTO(
     row: ProjectImportRow,
     existing: ProjectDTO,
@@ -1889,10 +2065,6 @@ export class ProjectImportExportService {
     return dto;
   }
 
-  // ===========================================================================
-  // FIND EXISTING PROJECT
-  // ===========================================================================
-
   private findExistingProject(
     projects: ProjectDTO[],
     externalRef?: string,
@@ -1907,10 +2079,6 @@ export class ProjectImportExportService {
         (title && candidate.title?.trim().toLowerCase() === title.trim().toLowerCase());
     }) ?? null;
   }
-
-  // ===========================================================================
-  // DETERMINE OPERATION
-  // ===========================================================================
 
   private determineOperation(
     existing: ProjectDTO | null,
@@ -1928,10 +2096,6 @@ export class ProjectImportExportService {
       default: return 'update_full';
     }
   }
-
-  // ===========================================================================
-  // VALIDATE DATASET
-  // ===========================================================================
 
   private async validateDataset(
     dataset: ProjectImportDataset,
