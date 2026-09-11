@@ -1,0 +1,45 @@
+import type { DeploymentProfile } from './types';
+
+export const POSTGREST_GOTRUE_PROFILE: DeploymentProfile = {
+  id: 'postgrest-gotrue',
+  label: 'PostgREST + GoTrue (OSS)',
+  description: "Stack légère open-source : GoTrue pour l'auth, PostgREST pour l'API.",
+  icon: '🔧',
+  difficulty: 'hard',
+  recommended: false,
+  auth: {
+    provider: 'gotrue',
+    url: '',
+    urlLabel: 'URL de GoTrue',
+    urlPlaceholder: 'http://localhost:9999',
+    requiresKey: false,
+    urlStorageKey: 'VITE_GOTRUE_URL',
+  },
+  data: {
+    provider: 'postgrest',
+    url: '',
+    urlLabel: 'URL de PostgREST',
+    urlPlaceholder: 'http://localhost:3001',
+    urlStorageKey: 'VITE_POSTGREST_URL',
+  },
+  storage: {
+    provider: 's3',
+    url: '',
+    urlLabel: 'Endpoint S3/MinIO',
+    urlPlaceholder: 'http://localhost:9000',
+    requiresKey: true,
+    keyLabel: 'Access Key',
+    requiresSecret: true,
+    secretLabel: 'Secret Key',
+    urlStorageKey: 'VITE_STORAGE_ENDPOINT',
+    keyStorageKey: 'VITE_STORAGE_ACCESS_KEY',
+    secretStorageKey: 'VITE_STORAGE_SECRET_KEY',
+  },
+  requiredEnvVars: [
+    'VITE_GOTRUE_URL',
+    'VITE_POSTGREST_URL',
+    'VITE_STORAGE_ENDPOINT',
+    'VITE_STORAGE_ACCESS_KEY',
+    'VITE_STORAGE_SECRET_KEY',
+  ],
+};
