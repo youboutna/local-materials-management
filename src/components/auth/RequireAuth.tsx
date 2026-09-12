@@ -47,7 +47,7 @@ const RequireAuth = ({ children, requiredRoles = [], silentRedirect = false }: R
   useEffect(() => {
     if (!unauthenticated) return;
     rememberRedirectAfterLogin(targetUrl);
-    logger.warning('Accès refusé : utilisateur non authentifié', 'system', 'access', { path: location.pathname });
+    logger.warning('system', 'Accès refusé : utilisateur non authentifié', undefined, { path: location.pathname });
     if (silentRedirect) setShouldRedirect(true);
   }, [unauthenticated, targetUrl, silentRedirect, location.pathname]);
 
@@ -69,7 +69,7 @@ const RequireAuth = ({ children, requiredRoles = [], silentRedirect = false }: R
   }
 
   if (requiredRoles.length > 0 && !matchesRequiredRoles(effectiveRoles, requiredRoles)) {
-    logger.warning('Accès refusé : rôle insuffisant', 'system', 'access', { path: location.pathname });
+    logger.warning('system', 'Accès refusé : rôle insuffisant', undefined, { path: location.pathname });
     return <AccessRestrictedMessage variant="forbidden" countdownSeconds={0} />;
   }
 
