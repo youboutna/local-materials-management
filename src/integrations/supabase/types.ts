@@ -338,10 +338,13 @@ export type Database = {
         Row: {
           arrival_date: string | null
           cargo_certificate_id: string | null
+          compartment_number: string | null
           created_at: string
           created_by: string | null
           delivery_number: string
           delivery_slip: string | null
+          delivery_slip_number: string | null
+          density_15c: number | null
           departure_date: string | null
           destination_depot_id: string | null
           destination_depot_name: string | null
@@ -358,10 +361,13 @@ export type Database = {
           origin_depot_id: string | null
           origin_depot_name: string | null
           product: string
+          product_standard: string | null
           quantity_difference: number | null
           quantity_received: number | null
           quantity_shipped: number
+          seal_numbers: string | null
           status: string
+          temperature_c: number | null
           transport_certificate: string | null
           truck_registration: string
           truck_technical_visit_expiry: string | null
@@ -370,14 +376,18 @@ export type Database = {
           unloading_qr_code: string | null
           unloading_report_number: string | null
           updated_at: string
+          volume_15c: number | null
         }
         Insert: {
           arrival_date?: string | null
           cargo_certificate_id?: string | null
+          compartment_number?: string | null
           created_at?: string
           created_by?: string | null
           delivery_number: string
           delivery_slip?: string | null
+          delivery_slip_number?: string | null
+          density_15c?: number | null
           departure_date?: string | null
           destination_depot_id?: string | null
           destination_depot_name?: string | null
@@ -394,10 +404,13 @@ export type Database = {
           origin_depot_id?: string | null
           origin_depot_name?: string | null
           product: string
+          product_standard?: string | null
           quantity_difference?: number | null
           quantity_received?: number | null
           quantity_shipped?: number
+          seal_numbers?: string | null
           status?: string
+          temperature_c?: number | null
           transport_certificate?: string | null
           truck_registration?: string
           truck_technical_visit_expiry?: string | null
@@ -406,14 +419,18 @@ export type Database = {
           unloading_qr_code?: string | null
           unloading_report_number?: string | null
           updated_at?: string
+          volume_15c?: number | null
         }
         Update: {
           arrival_date?: string | null
           cargo_certificate_id?: string | null
+          compartment_number?: string | null
           created_at?: string
           created_by?: string | null
           delivery_number?: string
           delivery_slip?: string | null
+          delivery_slip_number?: string | null
+          density_15c?: number | null
           departure_date?: string | null
           destination_depot_id?: string | null
           destination_depot_name?: string | null
@@ -430,10 +447,13 @@ export type Database = {
           origin_depot_id?: string | null
           origin_depot_name?: string | null
           product?: string
+          product_standard?: string | null
           quantity_difference?: number | null
           quantity_received?: number | null
           quantity_shipped?: number
+          seal_numbers?: string | null
           status?: string
+          temperature_c?: number | null
           transport_certificate?: string | null
           truck_registration?: string
           truck_technical_visit_expiry?: string | null
@@ -442,6 +462,7 @@ export type Database = {
           unloading_qr_code?: string | null
           unloading_report_number?: string | null
           updated_at?: string
+          volume_15c?: number | null
         }
         Relationships: []
       }
@@ -2623,6 +2644,8 @@ export type Database = {
           current_tarif_unit: number | null
           depot: string
           depot_id: string | null
+          depot_type: string | null
+          exploitation_stock_level: number | null
           fuel_type_code: string | null
           id: string
           last_revaluation_date: string | null
@@ -2631,11 +2654,17 @@ export type Database = {
           parent_stock_id: string | null
           product: string
           rotation_rate: number | null
+          security_stock_level: number | null
           station_id: string | null
           status: string
+          stock_category: string | null
+          stock_impompable: number | null
           stock_level: Database["public"]["Enums"]["stock_level"]
+          stock_outil: number | null
           trend: string | null
           updated_at: string
+          wilaya: string | null
+          zone: string | null
         }
         Insert: {
           brand_id?: string | null
@@ -2648,6 +2677,8 @@ export type Database = {
           current_tarif_unit?: number | null
           depot: string
           depot_id?: string | null
+          depot_type?: string | null
+          exploitation_stock_level?: number | null
           fuel_type_code?: string | null
           id?: string
           last_revaluation_date?: string | null
@@ -2656,11 +2687,17 @@ export type Database = {
           parent_stock_id?: string | null
           product: string
           rotation_rate?: number | null
+          security_stock_level?: number | null
           station_id?: string | null
           status?: string
+          stock_category?: string | null
+          stock_impompable?: number | null
           stock_level?: Database["public"]["Enums"]["stock_level"]
+          stock_outil?: number | null
           trend?: string | null
           updated_at?: string
+          wilaya?: string | null
+          zone?: string | null
         }
         Update: {
           brand_id?: string | null
@@ -2673,6 +2710,8 @@ export type Database = {
           current_tarif_unit?: number | null
           depot?: string
           depot_id?: string | null
+          depot_type?: string | null
+          exploitation_stock_level?: number | null
           fuel_type_code?: string | null
           id?: string
           last_revaluation_date?: string | null
@@ -2681,11 +2720,17 @@ export type Database = {
           parent_stock_id?: string | null
           product?: string
           rotation_rate?: number | null
+          security_stock_level?: number | null
           station_id?: string | null
           status?: string
+          stock_category?: string | null
+          stock_impompable?: number | null
           stock_level?: Database["public"]["Enums"]["stock_level"]
+          stock_outil?: number | null
           trend?: string | null
           updated_at?: string
+          wilaya?: string | null
+          zone?: string | null
         }
         Relationships: [
           {
