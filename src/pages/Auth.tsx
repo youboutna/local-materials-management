@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEV_MODE, DEV_USERS, setActiveDevRole } from '@/config/constants';
 import { resolveHomeRouteForRoles, DEFAULT_MANAGEMENT_HOME } from '@/config/referentials/auth/role-home-routes.referential';
+import { ROUTES, consumeRedirectAfterLogin } from '@/config/routes';
+import { Link } from 'react-router-dom';
 
 import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
 import {
@@ -78,7 +80,9 @@ const Auth = () => {
         ...(user.role ? [user.role] : []),
       ];
       const home = resolveHomeRouteForRoles(roles);
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+      const remembered = consumeRedirectAfterLogin();
+      const from =
+        remembered || (location.state as { from?: { pathname: string } })?.from?.pathname;
       // Les profils non gestionnaires sont toujours envoyés vers leur portail dédié
       const isManagement = home === DEFAULT_MANAGEMENT_HOME;
       const target = isManagement ? (from || home) : (from?.startsWith(home) ? from : home);
@@ -452,6 +456,13 @@ const Auth = () => {
                 <PasswordResetForm onBack={() => setActiveTab("login")} />
               </TabsContent>
             </Tabs>
+
+            <p className="mt-6 border-t pt-4 text-center text-sm text-muted-foreground">
+              Vous êtes fournisseur ?{' '}
+              <Link to={ROUTES.supplierRegister} className="text-primary underline">
+                Inscrivez-vous
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </div>

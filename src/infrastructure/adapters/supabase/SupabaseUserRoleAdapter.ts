@@ -10,7 +10,7 @@
  *   - assigned_by  : uuid NULL
  *   - assigned_at  : timestamptz NULL DEFAULT now()
  *   - status       : text NULL DEFAULT 'active' ('active' | 'pending' | 'inactive')
- *   - expired_at   : timestamptz NULL
+ *   - expires_at   : timestamptz NULL
  *   - UNIQUE(user_id, role_name)
  *
  * ⚠️ Le CHECK SQL n'accepte que : 'active', 'pending', 'inactive'
@@ -42,7 +42,7 @@ interface UserRoleRow {
   assigned_by: string | null;
   assigned_at: string | null;
   status: string | null;
-  expired_at: string | null;
+  expires_at: string | null;
 }
 
 /**
@@ -103,7 +103,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
       status: this.fromDbStatus(row.status),
       assignedAt: row.assigned_at ? new Date(row.assigned_at) : new Date(),
       assignedBy: row.assigned_by ?? undefined,
-      expiresAt: row.expired_at ? new Date(row.expired_at) : undefined,
+      expiresAt: row.expires_at ? new Date(row.expires_at) : undefined,
     });
   }
 
@@ -127,7 +127,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
           assigned_at: now.toISOString(),
           assigned_by: options?.assignedBy ?? null,
           status: 'active' as DbStatus,
-          expired_at: options?.expiresAt ? options.expiresAt.toISOString() : null,
+          expires_at: options?.expiresAt ? options.expiresAt.toISOString() : null,
         })
         .select()
         .single();
@@ -173,7 +173,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
         .from(SupabaseUserRoleAdapter.TABLE)
         .update({
           status: 'inactive' as DbStatus, // ✅ valeur littérale alignée sur le CHECK
-          expired_at: new Date().toISOString(),
+          expires_at: new Date().toISOString(),
           assigned_by: revokedBy ?? null,
         })
         .eq('user_id', userId)
@@ -241,7 +241,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
         .select('*')
         .eq('user_id', userId)
         .eq('status', 'active')
-        .or(`expired_at.is.null,expired_at.gt.${now}`)
+        .or(`expires_at.is.null,expires_at.gt.${now}`)
         .order('assigned_at', { ascending: false });
 
       if (error) {
@@ -279,7 +279,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
         .eq('user_id', userId)
         .eq('role_name', roleName)
         .eq('status', 'active')
-        .or(`expired_at.is.null,expired_at.gt.${now}`)
+        .or(`expires_at.is.null,expires_at.gt.${now}`)
         .limit(1);
 
       if (error) {
@@ -312,7 +312,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
         .eq('user_id', userId)
         .in('role_name', roleNames)
         .eq('status', 'active')
-        .or(`expired_at.is.null,expired_at.gt.${now}`)
+        .or(`expires_at.is.null,expires_at.gt.${now}`)
         .limit(1);
 
       if (error) {
@@ -456,7 +456,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
           supabase
             .from(SupabaseUserRoleAdapter.TABLE)
             .select('id', { count: 'exact', head: true })
-            .lt('expired_at', now),
+            .lt('expires_at', now),
           this.buildCountQuery({ ...criteria, status: UserRoleStatus.INACTIVE }),
           supabase
             .from(SupabaseUserRoleAdapter.TABLE)
@@ -564,7 +564,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     try {
       const { error } = await supabase
         .from(SupabaseUserRoleAdapter.TABLE)
-        .update({ expired_at: newExpiryDate.toISOString() })
+        .update({ expires_at: newExpiryDate.toISOString() })
         .eq('id', roleId);
 
       if (error) {
@@ -595,7 +595,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
       const { data, error } = await supabase
         .from(SupabaseUserRoleAdapter.TABLE)
         .update({ status: 'inactive' as DbStatus })
-        .lt('expired_at', now)
+        .lt('expires_at', now)
         .eq('status', 'active')
         .select('id');
 
@@ -664,7 +664,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
         'status',
         'assigned_at',
         'assigned_by',
-        'expired_at',
+        'expires_at',
       ];
       const csvContent = [
         headers.join(','),
@@ -716,7 +716,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
         try {
           const options: AssignRoleOptions = {
             assignedBy: rowData.assigned_by || undefined,
-            expiresAt: rowData.expired_at ? new Date(rowData.expired_at) : undefined,
+            expiresAt: rowData.expires_at ? new Date(rowData.expires_at) : undefined,
           };
 
           await this.assignRole(rowData.user_id, rowData.role_name as SomelecRole, options);
@@ -787,8 +787,8 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
     if (criteria.assignedBy) q = q.eq('assigned_by', criteria.assignedBy) as T;
     if (criteria.assignedAfter) q = q.gte('assigned_at', criteria.assignedAfter.toISOString()) as T;
     if (criteria.assignedBefore) q = q.lte('assigned_at', criteria.assignedBefore.toISOString()) as T;
-    if (criteria.expiresAfter) q = q.gte('expired_at', criteria.expiresAfter.toISOString()) as T;
-    if (criteria.expiresBefore) q = q.lte('expired_at', criteria.expiresBefore.toISOString()) as T;
+    if (criteria.expiresAfter) q = q.gte('expires_at', criteria.expiresAfter.toISOString()) as T;
+    if (criteria.expiresBefore) q = q.lte('expires_at', criteria.expiresBefore.toISOString()) as T;
 
     return q;
   }

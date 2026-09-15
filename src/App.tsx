@@ -39,6 +39,8 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import SupplierRegister from "./pages/auth/SupplierRegister";
+import PendingValidation from "./pages/fournisseur/PendingValidation";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import Contact from "./pages/Contact";
@@ -115,6 +117,11 @@ function App() {
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/auth/callback" element={<AuthCallback />} />
+                      <Route path="/fournisseur/register" element={<SupplierRegister />} />
+                      <Route
+                        path="/fournisseur/validation-en-cours"
+                        element={<PendingValidation />}
+                      />
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/inbox" element={<Inbox />} />
                       <Route path="/terms" element={<Terms />} />
