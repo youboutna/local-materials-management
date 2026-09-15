@@ -4,7 +4,7 @@
  * Distinct from SupabaseUserAdapter which implements IAuthRepository.
  *
  * Structure réelle de public.user_roles :
- *   - id, user_id, role_name, assigned_by, assigned_at, status, expired_at
+ *   - id, user_id, role_name, assigned_by, assigned_at, status, expires_at
  *   - UNIQUE(user_id, role_name)
  *   - status IN ('active', 'pending', 'inactive')
  */
@@ -37,7 +37,7 @@ type ProfileRow = {
 
 /**
  * Type aligné sur la vraie table public.user_roles
- * ⚠️ Utiliser `expired_at` (pas `expires_at`)
+ * ⚠️ Utiliser `expires_at` (pas `expires_at`)
  */
 type RoleRow = {
   id: string;
@@ -46,7 +46,7 @@ type RoleRow = {
   status: string | null;
   assigned_at: string | null;
   assigned_by: string | null;
-  expired_at: string | null;
+  expires_at: string | null;
 };
 
 // ────────────────────────────────────────────────────────────
@@ -58,9 +58,9 @@ const PROFILE_COLUMNS =
 
 /**
  * Colonnes de user_roles (source unique de vérité)
- * ⚠️ Utiliser `expired_at` (pas `expires_at`)
+ * ⚠️ Utiliser `expires_at` (pas `expires_at`)
  */
-const ROLE_COLUMNS = 'id, user_id, role_name, status, assigned_at, assigned_by, expired_at';
+const ROLE_COLUMNS = 'id, user_id, role_name, status, assigned_at, assigned_by, expires_at';
 
 // ────────────────────────────────────────────────────────────
 // ADAPTER
@@ -111,7 +111,7 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
         status: this.mapDbStatusToDomain(r.status),
         assignedAt: r.assigned_at ? new Date(r.assigned_at) : undefined,
         assignedBy: r.assigned_by || undefined,
-        expiresAt: r.expired_at ? new Date(r.expired_at) : undefined,
+        expiresAt: r.expires_at ? new Date(r.expires_at) : undefined,
       })
     );
   }
