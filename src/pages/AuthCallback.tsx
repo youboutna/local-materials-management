@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 import { DEFAULT_MANAGEMENT_HOME, resolveHomeRouteForRoles } from '@/config/referentials/auth/role-home-routes.referential';
 import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { consumeRedirectAfterLogin } from '@/config/routes';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -28,7 +29,9 @@ const AuthCallback = () => {
   useEffect(() => {
     if (user) {
       const roles = user.roles?.length ? user.roles : user.role ? [user.role] : [];
-      navigate(resolveHomeRouteForRoles(roles) || DEFAULT_MANAGEMENT_HOME, { replace: true });
+      const home = resolveHomeRouteForRoles(roles) || DEFAULT_MANAGEMENT_HOME;
+      const remembered = consumeRedirectAfterLogin();
+      navigate(remembered || home, { replace: true });
       return;
     }
     if (!isLoading && timedOut) {
