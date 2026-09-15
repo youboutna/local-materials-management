@@ -37,6 +37,7 @@ export interface EmployeeExtras {
   nationalId?: string | null;
   /** Numéro d'identification fiscale de l'employé, utilisable sur une facture. */
   nif?: string | null;
+  externalRef?: string | null;
 }
 
 /**

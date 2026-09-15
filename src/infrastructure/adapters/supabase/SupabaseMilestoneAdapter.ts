@@ -2,14 +2,40 @@
  * Supabase Milestone Adapter
  * Implements IMilestoneRepository interface using Supabase
  * Following hexagonal architecture principles
+ *
+ * ✅ v2.1 — Fix: update() convertit camelCase → snake_case avant envoi à PostgREST
  */
 
 import { CreateMilestoneData, IMilestoneRepository, UpdateMilestoneData } from '@/domain/repositories/IMilestoneRepository';
-import { MilestoneDTO, MaterialUsageDTO } from '@/dtos/entities/MilestoneDTO';
+import { MilestoneDTO } from '@/dtos/entities/MilestoneDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { Json } from '@/integrations/supabase/types';
 
 export class SupabaseMilestoneAdapter implements IMilestoneRepository {
+
+  /**
+   * ✅ Helper : convertit une clé camelCase en snake_case
+   * Ex : targetDate → target_date, isCritical → is_critical
+   */
+  private camelToSnake(key: string): string {
+    return key.replace(/[A-Z]/g, (m) => '_' + m.toLowerCase());
+  }
+
+  /**
+   * ✅ Helper : convertit un objet camelCase en objet snake_case
+   * Ignore les valeurs undefined.
+   */
+  private objectToSnake(
+    obj: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === undefined) continue;
+      result[this.camelToSnake(key)] = value;
+    }
+    return result;
+  }
+
   /**
    * Find milestone by ID
    */
@@ -46,7 +72,6 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
         .select('*')
         .eq('project_id', projectId)
         .order('target_date', { ascending: true });
-
 
       if (error) {
         console.error('Error finding milestones by project ID:', error);
@@ -133,11 +158,12 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
 
   /**
    * Create a new milestone
+   * ✅ create() envoie déjà du snake_case (mappings explicites)
    */
   async create(data: CreateMilestoneData): Promise<MilestoneDTO> {
     try {
       const now = new Date().toISOString();
-      
+
       const milestoneData = {
         project_id: data.projectId,
         phase_id: data.phaseId || null,
@@ -180,20 +206,24 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
 
   /**
    * Update a milestone
+   * ✅ v2.1 — Convertit camelCase → snake_case avant l'envoi à PostgREST
    */
   async update(id: string, data: UpdateMilestoneData): Promise<MilestoneDTO | null> {
     try {
-      const { type, dependencies, ...rest } = data;
+      const { type, dependencies, materialUsage, ...rest } = data;
+
+      // ✅ Conversion camelCase → snake_case de tous les autres champs
+      const restSnake = this.objectToSnake(rest as Record<string, unknown>);
+
       const updateData: Record<string, unknown> = {
-        ...rest,
+        ...restSnake,
         ...(type !== undefined ? { milestone_type: type } : {}),
         ...(dependencies !== undefined ? { predecessor_ids: dependencies } : {}),
-        material_usage: data.materialUsage !== undefined
-          ? (data.materialUsage as unknown as Json)
-          : undefined,
-        updated_at: new Date().toISOString()
+        ...(materialUsage !== undefined
+          ? { material_usage: materialUsage as unknown as Json }
+          : {}),
+        updated_at: new Date().toISOString(),
       };
-
 
       const { data: result, error } = await supabase
         .from('project_milestones')
@@ -304,7 +334,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       const now = new Date();
       const stats = data.reduce((acc, milestone) => {
         acc.total++;
-        
+
         if (milestone.status === 'completed') {
           acc.completed++;
         } else if (milestone.status && ['pending', 'in_progress'].includes(milestone.status)) {
@@ -313,7 +343,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
             acc.overdue++;
           }
         }
-        
+
         return acc;
       }, { total: 0, completed: 0, pending: 0, overdue: 0 });
 

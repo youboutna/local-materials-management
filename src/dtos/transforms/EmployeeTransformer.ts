@@ -4,14 +4,51 @@
  * 
  * KEY RULE: Never call `new Employee()` — always use `Employee.create(props)`
  * This ensures domain entities are decoupled from infrastructure
+ * 
+ * employee_id: alphanumérique (ex. EMP-DOUDOU-001), identique à external_ref si fourni
+ * id (DB): UUID v4 généré automatiquement
  */
 
 import { Employee, EmployeeProps } from '@/domain/entities/Employee';
-import { EmployeeDTO, CreateEmployeeDTO, UpdateEmployeeDTO, EmployeeDepartment, EmployeeRole, EmployeeType, EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
-import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
 import { Department } from '@/domain/types';
+import {
+  CreateEmployeeDTO,
+  EmployeeDepartment,
+  EmployeeDTO,
+  EmployeeRole,
+  EmployeeStatus,
+  EmployeeType,
+  UpdateEmployeeDTO,
+} from '@/dtos/entities/EmployeeDTO';
+import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
+import { v4 as uuidv4 } from 'uuid';
 
 export class EmployeeTransformer implements EntityToDTOMapper<Employee, EmployeeDTO> {
+
+  // =================== HELPERS ===================
+
+  /**
+   * Génère un employee_id alphanumérique unique basé sur l'UUID
+   * Format : EMP-XXXXXXXX (8 caractères hexadécimaux majuscules)
+   */
+  private static generateEmployeeId(): string {
+    return `EMP-${uuidv4().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  }
+
+  /**
+   * Génère un UUID v4
+   */
+  private static generateId(): string {
+    return uuidv4();
+  }
+
+  /**
+   * Vérifie si une valeur est un UUID v4 valide
+   */
+  private static isUuid(value: unknown): boolean {
+    if (typeof value !== 'string') return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
 
   // =================== DATABASE ↔ DOMAIN ===================
 
@@ -20,9 +57,20 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    * This is the ONLY method adapters should use
    */
   static fromDatabaseRow(row: Record<string, unknown>): Employee {
+    const rawId = row.id as string | undefined;
+    const rawEmployeeId = row.employee_id as string | undefined;
+
+    // id : UUID v4 obligatoire en DB
+    const id = rawId && this.isUuid(rawId) ? rawId : this.generateId();
+
+    // employee_id : alphanumérique, identique à external_ref si fourni
+    const employeeId = rawEmployeeId && rawEmployeeId.trim() !== ''
+      ? rawEmployeeId
+      : (row.external_ref as string | undefined) ?? this.generateEmployeeId();
+
     const props: EmployeeProps = {
-      id: row.id as string,
-      employeeId: (row.employee_id as string) || (row.id as string),
+      id,
+      employeeId,
       fullName: (row.full_name as string) || '',
       email: (row.email as string) ?? null,
       phone: (row.phone as string) ?? null,
@@ -39,6 +87,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       createdAt: (row.created_at as string) || new Date().toISOString(),
       updatedAt: (row.updated_at as string) || new Date().toISOString(),
       extras: {
+        externalRef: (row.external_ref as string) ?? null,
         organizationId: (row.organization_id as string) ?? null,
         employeeType: (row.employee_type as string) ?? null,
         roleName: (row.role as string) ?? null,
@@ -72,12 +121,27 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
 
   /**
    * Domain Entity → Supabase Insert/Update Object (snake_case)
+   * - id : UUID v4 (généré si absent)
+   * - employee_id : alphanumérique (identique à external_ref si fourni)
    */
   static toSupabase(entity: Employee): Record<string, unknown> {
     const x = entity.extras || {};
+
+    // id : UUID v4 obligatoire
+    const id = this.isUuid(entity.id) ? entity.id : this.generateId();
+
+    // employee_id : alphanumérique
+    // - priorité : entity.employeeId
+    // - sinon : x.externalRef
+    // - sinon : généré
+    const employeeId = entity.employeeId && entity.employeeId.trim() !== ''
+      ? entity.employeeId
+      : (x.externalRef as string) ?? this.generateEmployeeId();
+
     return {
-      id: entity.id,
-      employee_id: entity.employeeId,
+      id,
+      employee_id: employeeId,
+      external_ref: (x.externalRef as string) ?? employeeId,
       full_name: entity.fullName,
       email: entity.email,
       phone: entity.phone,
@@ -138,6 +202,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
       role: (x.roleName as EmployeeRole) || EmployeeRole.SPECIALIST,
       status: (x.status as EmployeeStatus) || (entity.isActive ? EmployeeStatus.ACTIVE : EmployeeStatus.INACTIVE),
       employeeId: entity.employeeId,
+      externalRef: (x.externalRef as string) ?? null,
       startDate: entity.hireDate ?? undefined,
       endDate: x.endDate ?? undefined,
       salary: entity.salary ?? undefined,
@@ -168,6 +233,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    */
   private static extrasFromDTO(dto: Partial<EmployeeDTO> & Partial<CreateEmployeeDTO>) {
     return {
+      externalRef: dto.externalRef ?? null,
       organizationId: dto.organizationId ?? null,
       employeeType: (dto.type as string) ?? null,
       roleName: (dto.role as string) ?? null,
@@ -193,9 +259,20 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    * Uses Employee.create() — never `new Employee()`
    */
   static toEntity(dto: EmployeeDTO): Employee {
+    // id : UUID v4
+    const id = this.isUuid(dto.id) ? dto.id : this.generateId();
+
+    // employee_id : alphanumérique
+    // - priorité : dto.employeeId
+    // - sinon : dto.externalRef
+    // - sinon : généré
+    const employeeId = dto.employeeId && dto.employeeId.trim() !== ''
+      ? dto.employeeId
+      : (dto.externalRef ?? this.generateEmployeeId());
+
     return Employee.create({
-      id: dto.id,
-      employeeId: dto.employeeId || dto.id,
+      id,
+      employeeId,
       fullName: dto.fullName || `${dto.firstName} ${dto.lastName}`.trim(),
       email: dto.email ?? null,
       phone: dto.phone ?? null,
@@ -218,9 +295,17 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    * Transform CreateEmployeeDTO to Employee entity
    */
   static fromCreateDTOToEntity(dto: CreateEmployeeDTO): Employee {
+    // id : UUID v4 (généré si absent)
+    const id = dto.id && this.isUuid(dto.id) ? dto.id : this.generateId();
+
+    // employee_id : alphanumérique
+    const employeeId = dto.employeeId && dto.employeeId.trim() !== ''
+      ? dto.employeeId
+      : (dto.externalRef ?? this.generateEmployeeId());
+
     return Employee.create({
-      id: crypto.randomUUID(),
-      employeeId: dto.employeeId || crypto.randomUUID(),
+      id,
+      employeeId,
       fullName: dto.fullName || `${dto.firstName} ${dto.lastName}`.trim(),
       email: dto.email ?? null,
       phone: dto.phone ?? null,
@@ -266,6 +351,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
 
     // Extended RH / organigramme attributes
     const extras: Record<string, unknown> = {};
+    if (dto.externalRef !== undefined) extras.externalRef = dto.externalRef;
     if (dto.organizationId !== undefined) extras.organizationId = dto.organizationId;
     if (dto.nif !== undefined) extras.nif = dto.nif;
     if (dto.type !== undefined) extras.employeeType = dto.type;
@@ -348,7 +434,8 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
     return { isValid: errors.length === 0, errors };
   }
 
-  // EntityToDTOMapper interface implementation
+  // =================== EntityToDTOMapper interface ===================
+
   toDTO(entity: Employee): EmployeeDTO { return EmployeeTransformer.toDTO(entity); }
   fromDTO(dto: EmployeeDTO): Employee { return EmployeeTransformer.toEntity(dto); }
   fromEntityToDTO(entity: Employee): EmployeeDTO { return EmployeeTransformer.toDTO(entity); }
@@ -356,7 +443,16 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
   toResponseDto(entity: Employee): EmployeeDTO { return EmployeeTransformer.toDTO(entity); }
   toRequestDto(dto: EmployeeDTO): EmployeeDTO { return dto; }
   toUpdateDto(dto: EmployeeDTO): Partial<EmployeeDTO> {
-    return { fullName: dto.fullName, email: dto.email, phone: dto.phone, position: dto.position, department: dto.department, startDate: dto.startDate, salary: dto.salary, isActive: dto.isActive };
+    return {
+      fullName: dto.fullName,
+      email: dto.email,
+      phone: dto.phone,
+      position: dto.position,
+      department: dto.department,
+      startDate: dto.startDate,
+      salary: dto.salary,
+      isActive: dto.isActive
+    };
   }
   validate(dto: EmployeeDTO): ValidationResult {
     const employee = EmployeeTransformer.toEntity(dto);
@@ -365,5 +461,7 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
   }
   toDTOs(entities: Employee[]): EmployeeDTO[] { return entities.map(entity => EmployeeTransformer.toDTO(entity)); }
   toEntities(dtos: EmployeeDTO[]): Employee[] { return dtos.map(dto => EmployeeTransformer.toEntity(dto)); }
-  toEntitiesFromDatabaseRows(rows: Record<string, unknown>[]): Employee[] { return rows.map(row => EmployeeTransformer.fromDatabaseRow(row)); }
+  toEntitiesFromDatabaseRows(rows: Record<string, unknown>[]): Employee[] {
+    return rows.map(row => EmployeeTransformer.fromDatabaseRow(row));
+  }
 }
