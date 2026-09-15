@@ -7,6 +7,9 @@ import { resolveHomeRouteForRoles, DEFAULT_MANAGEMENT_HOME } from '@/config/refe
 
 
 import { useLanguage } from '@/contexts/LanguageContext';
+import RequireAuth from '@/components/auth/RequireAuth';
+import { ROUTES } from '@/config/routes';
+import { PENDING_SUPPLIER_ROLE } from '@/config/referentials/auth/roles-responsibilities.referential';
 
 interface RoleBasedRouteProps {
   children: ReactNode;
@@ -65,7 +68,20 @@ const RoleBasedRoute = ({
         </div>
       );
     }
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return (
+      <RequireAuth silentRedirect={false}>
+        {children}
+      </RequireAuth>
+    );
+  }
+
+  // Fournisseur en attente de validation : accès limité à sa page d'attente
+  if (
+    isAuthenticated &&
+    hasAnyRole([PENDING_SUPPLIER_ROLE]) &&
+    location.pathname !== ROUTES.pendingValidation
+  ) {
+    return <Navigate to={ROUTES.pendingValidation} replace />;
   }
 
   // Admin/Director override - always allow access
