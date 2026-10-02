@@ -1089,7 +1089,7 @@ export class ProjectImportExportService {
           isActive: true,
           externalRef: trimmed,
           status: EmployeeStatus.ACTIVE,
-        });
+        } as any);
         context.employees?.set(trimmed, created.id);
         console.log(`[ensureParentEntity] ✅ Created employee: "${trimmed}" → ${created.id}`);
         return created.id;
