@@ -3684,6 +3684,7 @@ export type Database = {
         Row: {
           assigned_at: string | null
           assigned_by: string | null
+          expired_at: string | null
           expires_at: string | null
           id: string
           role_name: string
@@ -3693,6 +3694,7 @@ export type Database = {
         Insert: {
           assigned_at?: string | null
           assigned_by?: string | null
+          expired_at?: string | null
           expires_at?: string | null
           id?: string
           role_name: string
@@ -3702,6 +3704,7 @@ export type Database = {
         Update: {
           assigned_at?: string | null
           assigned_by?: string | null
+          expired_at?: string | null
           expires_at?: string | null
           id?: string
           role_name?: string
