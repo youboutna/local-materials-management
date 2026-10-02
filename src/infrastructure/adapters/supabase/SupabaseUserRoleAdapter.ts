@@ -284,7 +284,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
 
       if (error) {
         ErrorLogger.log(
-          error instanceof Error ? error : new Error(error.message || 'Failed to check user role'),
+          error instanceof Error ? error : new Error((error as any).message || 'Failed to check user role'),
           'SupabaseUserRoleAdapter.hasRole failed'
         );
         return false;
@@ -317,7 +317,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
 
       if (error) {
         ErrorLogger.log(
-          error instanceof Error ? error : new Error(error.message || 'Database query failed'),
+          error instanceof Error ? error : new Error((error as any).message || 'Database query failed'),
           'SupabaseUserRoleAdapter.hasAnyRole failed'
         );
         return false;
@@ -427,7 +427,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
 
       if (error) {
         ErrorLogger.log(
-          error instanceof Error ? error : new Error(error.message || 'Failed to count roles'),
+          error instanceof Error ? error : new Error((error as any).message || 'Failed to count roles'),
           'SupabaseUserRoleAdapter.countRoles failed'
         );
         return 0;
@@ -601,7 +601,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
 
       if (error) {
         ErrorLogger.log(
-          error instanceof Error ? error : new Error(error.message || 'Failed to cleanup roles'),
+          error instanceof Error ? error : new Error((error as any).message || 'Failed to cleanup roles'),
           'SupabaseUserRoleAdapter.cleanupExpiredRoles failed'
         );
         return 0;
@@ -632,7 +632,7 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
 
       if (error) {
         ErrorLogger.log(
-          error instanceof Error ? error : new Error(error.message || 'Failed to check role'),
+          error instanceof Error ? error : new Error((error as any).message || 'Failed to check role'),
           'SupabaseUserRoleAdapter.roleExists failed'
         );
         return false;
@@ -775,11 +775,11 @@ export class SupabaseUserRoleAdapter implements IUserRoleRepository {
   /**
    * Applique les critères de recherche à une requête Supabase
    */
-  private applyCriteria<T extends ReturnType<typeof supabase.from>>(
-    query: T,
+  private applyCriteria<T = any>(
+    query: any,
     criteria: Omit<RoleSearchCriteria, 'limit' | 'offset'>
-  ): T {
-    let q = query;
+  ): any {
+    let q: any = query;
 
     if (criteria.userId) q = q.eq('user_id', criteria.userId) as T;
     if (criteria.roleName) q = q.eq('role_name', criteria.roleName) as T;

@@ -1,3 +1,4 @@
+import { pdfWorkerUrl } from '@/lib/pdf/pdfWorker';
 import { BoqImportOrchestrator } from "@/application/services/boq/BoqImportOrchestrator";
 import { unifiedBoqParser } from "@/application/services/boq/UnifiedBoqParser";
 import { Badge } from "@/components/ui/badge";
@@ -30,10 +31,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
 import { useLanguage } from '@/contexts/LanguageContext';
 // PDF.js worker — bundled via Vite so its version always matches pdfjs-dist.
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const DEFAULT_FORM = {
   elementType: "basic_calculator",
