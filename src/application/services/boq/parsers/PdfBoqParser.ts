@@ -1,3 +1,4 @@
+import { pdfWorkerUrl } from '@/lib/pdf/pdfWorker';
 /**
  * PdfBoqParser — extracts BOQ rows from PDF using Y-clustering of pdfjs text items
  * with X-column detection, and falls back to OCR (tesseract.js) when no text is
@@ -112,10 +113,7 @@ export class PdfBoqParser implements IDocumentParser {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(pdfjs as any).GlobalWorkerOptions.workerSrc) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (pdfjs as any).GlobalWorkerOptions.workerSrc = new URL(
-        'pdfjs-dist/build/pdf.worker.min.mjs',
-        import.meta.url,
-      ).toString();
+      (pdfjs as any).GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
     }
     const buf = await file.arrayBuffer();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -2,6 +2,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url))
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
@@ -11,7 +14,7 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(rootDir, './src'),
     },
   },
   server: {
@@ -23,5 +26,6 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     chunkSizeWarningLimit: 1000,
+    commonjsOptions: { transformMixedEsModules: true },
   }
 }))
