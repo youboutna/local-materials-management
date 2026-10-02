@@ -1,6 +1,6 @@
 /**
  * TaskAssignment Transformer — SOURCE UNIQUE (Hexagonal)
- * 
+ *
  * Rôles du Transformer selon PROMPT.md :
  * - toDTO(entity): Domain → DTO (camelCase pour UI)
  * - toEntity(dto): DTO → Domain
@@ -8,18 +8,17 @@
  * - toRepository(entity): Domain → DB (snake_case)
  * - toDTOList(entities): Domain[] → DTO[]
  * - toEntityList(dtos): DTO[] → Domain[]
- * 
+ *
  * Flow complet :
- * UI (camelCase) → DTO (camelCase) → Transformer → Domain (camelCase) → 
+ * UI (camelCase) → DTO (camelCase) → Transformer → Domain (camelCase) →
  * Repository (snake_case) → Adapter → DB (snake_case)
- * 
- * Respecte la règle : Chaque couche a sa propre convention de casing
- * 
- * Corrections v3.3 :
- * - toEntity() : fallback title ?? name ?? throw
- * - fromRepository() : fallback row.title ?? row.name ?? 'Tâche'
- * - toRepository() : assigned_to sérialisé en tableau natif
- * - normalizeForPersistence() : validation title robuste
+ *
+ * Corrections v3.4 :
+ * - resolveTitle() exposé publiquement pour réutilisation dans le Service
+ * - toEntity() : fallback title ?? name ?? label ?? throw
+ * - fromRepository() : fallback row.title ?? row.name ?? row.label ?? 'Tâche'
+ * - formToCreateDTO() : validation stricte title ?? name
+ * - normalizeForPersistence() : utilise resolveTitle partagé
  */
 
 import { TaskAssignment } from '@/domain/entities/TaskAssignment';
@@ -39,29 +38,58 @@ export class TaskAssignmentTransformer {
 
   /**
    * Résout le titre d'une tâche depuis plusieurs sources possibles.
-   * Priorité : title > name > fallback
-   * Throw si aucun titre valide n'est trouvé et requireNonEmpty=true
+   * Priorité : title > name > label > fallback
+   *
+   * @param source - Objet source (DTO, entity, DB row, form data)
+   * @param fallback - Valeur de repli si aucun titre n'est trouvé
+   * @param requireNonEmpty - Si true, throw au lieu de retourner le fallback
+   * @returns Titre résolu (trimé) ou fallback
+   * @throws Error si requireNonEmpty=true et aucun titre valide
+   *
+   * ✅ Exposé publiquement pour réutilisation dans TaskAssignmentService.create()
    */
-  private static resolveTitle(
+  static resolveTitle(
     source: Record<string, unknown> | null | undefined,
     fallback = 'Tâche sans titre',
     requireNonEmpty = false,
   ): string {
-    const title =
-      (source?.title as string | undefined) ??
-      (source?.name as string | undefined) ??
-      (source?.label as string | undefined);
+    if (!source) {
+      if (requireNonEmpty) {
+        throw new Error('Task title is required (source is null)');
+      }
+      return fallback;
+    }
 
-    const trimmed = typeof title === 'string' ? title.trim() : '';
+    const rawTitle =
+      (source['title'] as string | undefined) ??
+      (source['name'] as string | undefined) ??
+      (source['label'] as string | undefined);
+
+    const trimmed = typeof rawTitle === 'string' ? rawTitle.trim() : '';
 
     if (!trimmed) {
       if (requireNonEmpty) {
-        throw new Error('Task title is required (neither "title" nor "name" provided)');
+        throw new Error(
+          'Task title is required (neither "title", "name" nor "label" provided)',
+        );
       }
       return fallback;
     }
 
     return trimmed;
+  }
+
+  /**
+   * Variante booléenne : vérifie si un titre peut être résolu sans throw.
+   * Utile pour les validateurs frontend.
+   */
+  static hasValidTitle(source: Record<string, unknown> | null | undefined): boolean {
+    if (!source) return false;
+    const rawTitle =
+      (source['title'] as string | undefined) ??
+      (source['name'] as string | undefined) ??
+      (source['label'] as string | undefined);
+    return typeof rawTitle === 'string' && rawTitle.trim().length > 0;
   }
 
   // ============= DOMAIN → DTO (camelCase) =============
@@ -108,21 +136,23 @@ export class TaskAssignmentTransformer {
    * Convertit une liste d'entités en liste de DTOs
    */
   static toDTOList(entities: TaskAssignment[]): TaskAssignmentDTO[] {
-    return entities.map(this.toDTO);
+    return entities.map((e) => this.toDTO(e));
   }
 
   // ============= DTO → DOMAIN (camelCase) =============
 
   /**
    * Convertit un DTO (camelCase) en entité domaine.
-   * ✅ Fallback : title ?? name ?? throw
+   * ✅ Fallback : title ?? name ?? label ?? throw
    */
   static toEntity(
     dto: CreateTaskAssignmentDTO | TaskAssignmentDTO | UpdateTaskAssignmentDTO,
   ): TaskAssignment {
-    const source = dto as TaskAssignmentDTO & CreateTaskAssignmentDTO & UpdateTaskAssignmentDTO;
+    const source = dto as TaskAssignmentDTO &
+      CreateTaskAssignmentDTO &
+      UpdateTaskAssignmentDTO;
 
-    // ✅ Résolution du titre avec fallback "name"
+    // ✅ Résolution du titre avec fallback complet
     const title = this.resolveTitle(
       source as unknown as Record<string, unknown>,
       'Tâche sans titre',
@@ -162,14 +192,16 @@ export class TaskAssignmentTransformer {
       notes: source.notes,
     };
 
-    return TaskAssignment.create(createData as Parameters<typeof TaskAssignment.create>[0]);
+    return TaskAssignment.create(
+      createData as Parameters<typeof TaskAssignment.create>[0],
+    );
   }
 
   /**
    * Convertit une liste de DTOs en entités
    */
   static toEntityList(dtos: CreateTaskAssignmentDTO[]): TaskAssignment[] {
-    return dtos.map(this.toEntity);
+    return dtos.map((dto) => this.toEntity(dto));
   }
 
   // ============= DOMAIN → DB (snake_case) =============
@@ -182,47 +214,38 @@ export class TaskAssignmentTransformer {
     const assignedTo = entity.assignedTo ?? [];
 
     const row: Row = {
-      // Champs texte
       title: entity.title,
       description: entity.description ?? null,
 
-      // Clés étrangères
       project_id: entity.projectId ?? null,
       phase_id: entity.phaseId ?? null,
       step_id: entity.stepId ?? null,
 
-      // ✅ Assignation : tableau natif (PostgREST uuid[])
       assigned_to: assignedTo.length > 0 ? assignedTo : null,
       assigned_by: entity.assignedBy ?? null,
 
-      // Informations assigné
       assignee_type: entity.assigneeType ?? null,
       assignee_name: entity.assigneeName ?? null,
       assignee_email: entity.assigneeEmail ?? null,
 
-      // Statut et priorité
       status: entity.status,
       priority: entity.priority,
       progress: entity.progress ?? 0,
 
-      // Dates
       start_date: entity.startDate?.toISOString() ?? null,
       end_date: entity.endDate?.toISOString() ?? null,
       due_date: entity.dueDate?.toISOString() ?? null,
       completed_at: entity.completedAt?.toISOString() ?? null,
 
-      // Durées
       estimated_duration: entity.estimatedDuration ?? null,
       actual_duration: entity.actualDuration ?? null,
 
-      // Données DQE reportées sur la tâche
       quantity: entity.quantity ?? null,
       unit: entity.unit ?? null,
       daily_rate: entity.dailyRate ?? null,
       cost_estimate: entity.estimatedCost ?? null,
       metadata: entity.metadata ?? {},
 
-      // Métadonnées
       notes: entity.notes ?? null,
       updated_at: new Date().toISOString(),
     };
@@ -246,17 +269,16 @@ export class TaskAssignmentTransformer {
 
   /**
    * Convertit une ligne DB (snake_case) en entité domaine.
-   * ✅ Fallback : row.title ?? row.name ?? 'Tâche'
+   * ✅ Fallback : row.title ?? row.name ?? row.label ?? 'Tâche'
    */
   static fromRepository(row: Row): TaskAssignment {
-    // Normalisation des assignés
     const rawAssigned = (row.assigned_to ?? row.assignee_id) as
       | string
       | string[]
       | null
       | undefined;
 
-    // ✅ Résolution du titre avec fallback "name"
+    // ✅ Résolution du titre avec fallback complet
     const title = this.resolveTitle(row, 'Tâche', false);
 
     const createData: Partial<TaskAssignment> = {
@@ -264,21 +286,17 @@ export class TaskAssignmentTransformer {
       title,
       description: (row.description as string) ?? undefined,
 
-      // Clés étrangères
       projectId: (row.project_id as string) ?? undefined,
       phaseId: (row.phase_id as string) ?? undefined,
       stepId: (row.step_id as string) ?? undefined,
 
-      // Assignation
       assignedTo: normalizeAssignedTo(rawAssigned),
       assignedBy: (row.assigned_by as string) ?? undefined,
 
-      // Informations assigné
       assigneeType: (row.assignee_type as 'employee' | 'supplier' | 'user') ?? undefined,
       assigneeName: (row.assignee_name as string) ?? undefined,
       assigneeEmail: (row.assignee_email as string) ?? undefined,
 
-      // Statut et priorité
       status: normalizeTaskStatus(
         row.status as string | undefined,
         row.progress as number | undefined,
@@ -286,17 +304,17 @@ export class TaskAssignmentTransformer {
       priority: normalizeTaskPriority(row.priority as string | undefined),
       progress: (row.progress as number) ?? 0,
 
-      // Dates
       startDate: row.start_date ? new Date(row.start_date as string) : undefined,
       endDate: row.end_date ? new Date(row.end_date as string) : undefined,
       dueDate: row.due_date ? new Date(row.due_date as string) : undefined,
       completedAt: row.completed_at ? new Date(row.completed_at as string) : undefined,
 
-      // Durées
       estimatedDuration: (row.estimated_duration as number) ?? undefined,
       actualDuration: (row.actual_duration as number) ?? undefined,
       quantity:
-        row.quantity !== null && row.quantity !== undefined ? Number(row.quantity) : undefined,
+        row.quantity !== null && row.quantity !== undefined
+          ? Number(row.quantity)
+          : undefined,
       unit: (row.unit as string) ?? undefined,
       dailyRate:
         row.daily_rate !== null && row.daily_rate !== undefined
@@ -308,28 +326,29 @@ export class TaskAssignmentTransformer {
           : undefined,
       metadata: (row.metadata as Record<string, unknown>) ?? {},
 
-      // Métadonnées
       notes: (row.notes as string) ?? undefined,
 
-      // Timestamps
       createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
       updatedAt: row.updated_at ? new Date(row.updated_at as string) : new Date(),
     };
 
-    return TaskAssignment.create(createData as Parameters<typeof TaskAssignment.create>[0]);
+    return TaskAssignment.create(
+      createData as Parameters<typeof TaskAssignment.create>[0],
+    );
   }
 
   /**
    * Convertit une liste de lignes DB en entités
    */
   static fromRepositoryList(rows: Row[]): TaskAssignment[] {
-    return rows.map(this.fromRepository);
+    return rows.map((row) => this.fromRepository(row));
   }
 
   // ============= UTILITAIRES =============
 
   /**
-   * Crée un DTO de création à partir d'un formulaire UI
+   * Crée un DTO de création à partir d'un formulaire UI.
+   * ✅ Fallback title ?? name
    */
   static formToCreateDTO(formData: {
     title?: string;
@@ -358,8 +377,11 @@ export class TaskAssignmentTransformer {
     dependencies?: string[];
     notes?: string;
   }): CreateTaskAssignmentDTO {
-    // ✅ Fallback title ?? name
-    const title = (formData.title ?? formData.name ?? '').trim();
+    const title = this.resolveTitle(
+      formData as unknown as Record<string, unknown>,
+      '',
+      true,
+    );
 
     return {
       title,
@@ -390,31 +412,34 @@ export class TaskAssignmentTransformer {
   }
 
   /**
-   * Crée un DTO de mise à jour à partir d'un formulaire UI
+   * Crée un DTO de mise à jour à partir d'un formulaire UI.
+   * ✅ Fallback title ?? name
    */
-  static formToUpdateDTO(formData: Partial<{
-    title: string;
-    name: string;
-    description?: string;
-    projectId?: string;
-    phaseId?: string;
-    stepId?: string;
-    assignedTo?: string | string[];
-    assignedBy?: string;
-    assigneeType?: 'employee' | 'supplier' | 'user';
-    assigneeName?: string;
-    assigneeEmail?: string;
-    status?: string;
-    priority?: string;
-    progress?: number;
-    type?: string;
-    startDate?: string;
-    endDate?: string;
-    dueDate?: string;
-    estimatedDuration?: number;
-    dependencies?: string[];
-    notes?: string;
-  }>): UpdateTaskAssignmentDTO {
+  static formToUpdateDTO(
+    formData: Partial<{
+      title: string;
+      name: string;
+      description?: string;
+      projectId?: string;
+      phaseId?: string;
+      stepId?: string;
+      assignedTo?: string | string[];
+      assignedBy?: string;
+      assigneeType?: 'employee' | 'supplier' | 'user';
+      assigneeName?: string;
+      assigneeEmail?: string;
+      status?: string;
+      priority?: string;
+      progress?: number;
+      type?: string;
+      startDate?: string;
+      endDate?: string;
+      dueDate?: string;
+      estimatedDuration?: number;
+      dependencies?: string[];
+      notes?: string;
+    }>,
+  ): UpdateTaskAssignmentDTO {
     return {
       title: formData.title ?? formData.name,
       description: formData.description,
@@ -441,7 +466,7 @@ export class TaskAssignmentTransformer {
 
   /**
    * Valide et normalise une tâche avant persistance.
-   * ✅ Validation robuste : title ?? name ?? throw
+   * ✅ Utilise resolveTitle() partagé
    */
   static normalizeForPersistence(entity: TaskAssignment): TaskAssignment {
     const title = this.resolveTitle(
@@ -461,6 +486,7 @@ export class TaskAssignmentTransformer {
 
   /**
    * Convertit un objet partiel en entité TaskAssignment.
+   * ✅ Fallback title ?? name ?? label
    */
   static toEntityPartial(partial: Partial<TaskAssignment>): TaskAssignment {
     const title = this.resolveTitle(

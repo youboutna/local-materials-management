@@ -1,6 +1,11 @@
 /**
  * TaskAssignment Service — SOURCE UNIQUE (Hexagonal)
  * Fusion définitive Task + TaskAssignment sur la table `task_assignments`.
+ *
+ * Corrections v3.4 :
+ * - create() : accepte title ?? name ?? label (via TaskAssignmentTransformer.resolveTitle)
+ * - update() : accepte name comme alias de title
+ * - Messages d'erreur explicites
  */
 
 import { TaskAssignment } from '@/domain/entities/TaskAssignment';
@@ -32,9 +37,32 @@ export class TaskAssignmentService {
   }
 
   // ============= CRUD (API simple) =============
+
+  /**
+   * Crée une nouvelle tâche.
+   * ✅ Accepte title ?? name ?? label (fallback complet via Transformer)
+   */
   async create(dto: CreateTaskAssignmentDTO): Promise<TaskAssignmentDTO> {
-    if (!dto.title) throw new Error('Task title is required');
-    const entity = TaskAssignmentTransformer.toEntity(dto);
+    // ✅ Résolution du titre AVANT le check — source unique de vérité
+    const resolvedTitle = TaskAssignmentTransformer.resolveTitle(
+      dto as unknown as Record<string, unknown>,
+      '',
+      false,
+    );
+
+    if (!resolvedTitle) {
+      throw new Error(
+        'Task title is required (neither "title", "name" nor "label" provided in DTO)',
+      );
+    }
+
+    // ✅ Réinjecte le titre résolu dans le DTO
+    const normalizedDto: CreateTaskAssignmentDTO = {
+      ...dto,
+      title: resolvedTitle,
+    };
+
+    const entity = TaskAssignmentTransformer.toEntity(normalizedDto);
     const saved = await this.repository.save(entity);
     return saved.toDTO();
   }
@@ -49,27 +77,47 @@ export class TaskAssignmentService {
     return entities.map((e) => e.toDTO());
   }
 
+  /**
+   * Met à jour une tâche.
+   * ✅ Accepte name comme alias de title
+   */
   async update(id: string, dto: UpdateTaskAssignmentDTO): Promise<TaskAssignmentDTO> {
     const entity = await this.repository.findById(id);
     if (!entity) throw new Error('TaskAssignment not found');
 
-    if (dto.title !== undefined) entity.title = dto.title;
+    // ✅ title OU name (fallback)
+    const source = dto as UpdateTaskAssignmentDTO & { name?: string };
+    const resolvedTitle =
+      dto.title !== undefined
+        ? dto.title
+        : source.name !== undefined
+        ? source.name
+        : undefined;
+
+    if (resolvedTitle !== undefined) entity.title = resolvedTitle;
+
     if (dto.description !== undefined) entity.description = dto.description;
     if (dto.projectId !== undefined) entity.projectId = dto.projectId;
     if (dto.phaseId !== undefined) entity.phaseId = dto.phaseId;
     if (dto.stepId !== undefined) entity.stepId = dto.stepId;
-    if (dto.priority !== undefined) entity.priority = normalizeTaskPriority(dto.priority as string);
+    if (dto.priority !== undefined)
+      entity.priority = normalizeTaskPriority(dto.priority as string);
     if (dto.progress !== undefined) entity.progress = dto.progress;
     if (dto.type !== undefined) entity.type = dto.type;
-    if (dto.startDate !== undefined) entity.startDate = dto.startDate ? new Date(dto.startDate) : undefined;
-    if (dto.endDate !== undefined) entity.endDate = dto.endDate ? new Date(dto.endDate) : undefined;
-    if (dto.dueDate !== undefined) entity.dueDate = dto.dueDate ? new Date(dto.dueDate) : undefined;
-    if (dto.assignedTo !== undefined) entity.assignedTo = normalizeAssignedTo(dto.assignedTo);
+    if (dto.startDate !== undefined)
+      entity.startDate = dto.startDate ? new Date(dto.startDate) : undefined;
+    if (dto.endDate !== undefined)
+      entity.endDate = dto.endDate ? new Date(dto.endDate) : undefined;
+    if (dto.dueDate !== undefined)
+      entity.dueDate = dto.dueDate ? new Date(dto.dueDate) : undefined;
+    if (dto.assignedTo !== undefined)
+      entity.assignedTo = normalizeAssignedTo(dto.assignedTo);
     if (dto.assignedBy !== undefined) entity.assignedBy = dto.assignedBy;
     if (dto.assigneeType !== undefined) entity.assigneeType = dto.assigneeType;
     if (dto.assigneeName !== undefined) entity.assigneeName = dto.assigneeName;
     if (dto.assigneeEmail !== undefined) entity.assigneeEmail = dto.assigneeEmail;
-    if (dto.estimatedDuration !== undefined) entity.estimatedDuration = dto.estimatedDuration;
+    if (dto.estimatedDuration !== undefined)
+      entity.estimatedDuration = dto.estimatedDuration;
     if (dto.actualDuration !== undefined) entity.actualDuration = dto.actualDuration;
     if (dto.quantity !== undefined) entity.quantity = dto.quantity;
     if (dto.unit !== undefined) entity.unit = dto.unit;
@@ -78,7 +126,8 @@ export class TaskAssignmentService {
     if (dto.metadata !== undefined) entity.metadata = dto.metadata;
     if (dto.dependencies !== undefined) entity.dependencies = dto.dependencies;
     if (dto.notes !== undefined) entity.notes = dto.notes;
-    if (dto.status !== undefined) entity.updateStatus(normalizeTaskStatus(dto.status as string));
+    if (dto.status !== undefined)
+      entity.updateStatus(normalizeTaskStatus(dto.status as string));
 
     entity.updatedAt = new Date();
     const saved = await this.repository.update(id, entity);
@@ -90,7 +139,9 @@ export class TaskAssignmentService {
   }
 
   // ============= Façade "request DTO" (compat UI) =============
-  async createTaskAssignment(request: CreateTaskAssignmentRequestDTO): Promise<TaskAssignmentDTO> {
+  async createTaskAssignment(
+    request: CreateTaskAssignmentRequestDTO,
+  ): Promise<TaskAssignmentDTO> {
     const { taskData } = request;
     return this.create({
       ...taskData,
@@ -100,7 +151,9 @@ export class TaskAssignmentService {
     });
   }
 
-  async updateTaskAssignment(request: UpdateTaskAssignmentRequestDTO): Promise<TaskAssignmentDTO> {
+  async updateTaskAssignment(
+    request: UpdateTaskAssignmentRequestDTO,
+  ): Promise<TaskAssignmentDTO> {
     const { updates } = request;
     return this.update(request.id, {
       ...updates,
@@ -112,7 +165,9 @@ export class TaskAssignmentService {
     await this.delete(request.id);
   }
 
-  async getTaskAssignmentById(request: GetTaskAssignmentByIdRequestDTO): Promise<TaskAssignmentDTO | null> {
+  async getTaskAssignmentById(
+    request: GetTaskAssignmentByIdRequestDTO,
+  ): Promise<TaskAssignmentDTO | null> {
     return this.getById(request.id);
   }
 
@@ -120,7 +175,9 @@ export class TaskAssignmentService {
     return this.getAll();
   }
 
-  async getTaskAssignments(request: GetTaskAssignmentsRequestDTO = {}): Promise<TaskAssignmentDTO[]> {
+  async getTaskAssignments(
+    request: GetTaskAssignmentsRequestDTO = {},
+  ): Promise<TaskAssignmentDTO[]> {
     return this.search(request.filters ?? {});
   }
 
@@ -216,7 +273,8 @@ export class TaskAssignmentService {
       byPriority,
       overdue,
       dueSoon,
-      completionRate: entities.length > 0 ? Math.round((completed / entities.length) * 100) : 0,
+      completionRate:
+        entities.length > 0 ? Math.round((completed / entities.length) * 100) : 0,
     };
   }
 }
