@@ -194,7 +194,6 @@ const ProjectImporter2025 = () => {
     try {
       await importProjects(
         projects2025.map(toImportRow),
-        { generateMissingFromReferential: true } as never,
       );
       setImportProgress(100);
     } finally {

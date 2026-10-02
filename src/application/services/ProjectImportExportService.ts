@@ -1218,10 +1218,10 @@ export class ProjectImportExportService {
       );
 
       if (match) {
-        await this.stakeholderService.updateProjectStakeholder(match.id, stakeholderData);
+        await this.stakeholderService.updateProjectStakeholder(match.id, stakeholderData as any);
         console.log(`[upsertStakeholder] ♻️  Updated: ${externalRef}`);
       } else {
-        await this.stakeholderService.addStakeholder(stakeholderData);
+        await this.stakeholderService.addStakeholder(stakeholderData as any);
         console.log(`[upsertStakeholder] ✅ Created: ${externalRef} (${entityType})`);
       }
 
@@ -2302,7 +2302,7 @@ export class ProjectImportExportService {
         employee = await this.employeeService.createEmployee({
           status: EmployeeStatus.ACTIVE,
           ...employeeData,
-        });
+        } as any);
       }
 
       references.set(row.id, employee.id);

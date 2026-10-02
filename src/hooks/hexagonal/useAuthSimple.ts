@@ -11,7 +11,7 @@ import { AuthProvider } from '@/config/app';
 
 export function useAuth() {
   const authManager = getAuthManager();
-  const authService = new AuthService(authManager.getAdapter() as any);
+  const authService = new AuthService(authManager.getAdapter() as any, undefined as any);
 
   const { data: user, isLoading, error, refetch } = useQuery({
     queryKey: ['auth', 'user'],

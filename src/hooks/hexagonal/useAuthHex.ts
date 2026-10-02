@@ -89,7 +89,7 @@ export function useAuthHex(): UseAuthHexResult {
   
   // Initialize services with transformers
   const authRepository = RepositoryFactory.getAuthRepository();
-  const authService = new AuthService(authRepository);
+  const authService = new AuthService(authRepository, RepositoryFactory.getUserRoleRepository());
 
   // Query for current user
   const {
@@ -500,7 +500,7 @@ export function useLoginHex() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const authRepository = RepositoryFactory.getAuthRepository();
-  const authService = new AuthService(authRepository);
+  const authService = new AuthService(authRepository, RepositoryFactory.getUserRoleRepository());
 
   return useMutation({
     mutationFn: async (credentials: LoginData) => {
@@ -523,7 +523,7 @@ export function useRegisterHex() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const authRepository = RepositoryFactory.getAuthRepository();
-  const authService = new AuthService(authRepository);
+  const authService = new AuthService(authRepository, RepositoryFactory.getUserRoleRepository());
 
   return useMutation({
     mutationFn: async (userData: RegisterData) => {

@@ -288,7 +288,7 @@ export function usePaymentBlocksHex(options?: MonitoringHookOptions) {
         blockingReasons: b.blockReason ?? {},
         notes: b.resolutionNotes ?? null,
         blockedAt: b.createdAt,
-        blockedBy: b.blockedBy ?? null,
+        blockedBy: (b as { blockedBy?: string | null }).blockedBy ?? null,
         resolvedAt: b.resolvedAt ?? null,
         resolvedBy: b.resolvedBy ?? null,
       }));
@@ -314,9 +314,9 @@ export function usePaymentBlocksHex(options?: MonitoringHookOptions) {
       try {
         const blockingService = getPaymentBlockingService();
         await blockingService.resolvePaymentBlock({
-          block_id: blockId,
-          resolution_notes: '',
-          resolved_by: resolvedBy,
+          blockId,
+          resolutionNotes: '',
+          resolvedBy,
         });
         await fetchBlocks();
         return true;

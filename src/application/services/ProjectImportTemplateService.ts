@@ -416,9 +416,9 @@ ${taskBlocks.map((block) => this.indent(block, 4)).join('\n')}
 
   private loadReferential(code: ReferentialType | string): ReturnType<typeof getReferential> {
     try {
-      return getReferential(code as ReferentialType) ?? null;
+      return getReferential(code as ReferentialType) ?? undefined;
     } catch {
-      return null;
+      return undefined;
     }
   }
 
@@ -437,7 +437,7 @@ ${taskBlocks.map((block) => this.indent(block, 4)).join('\n')}
     language: TemplateLanguage,
   ): Array<Record<string, unknown>> {
     if (!referential) return [];
-    const phases = (referential as { phases?: Array<Record<string, unknown>> }).phases ?? [];
+    const phases = (referential as unknown as { phases?: Array<Record<string, unknown>> }).phases ?? [];
 
     return phases.map((phase, index) => {
       const phaseLabel = this.resolveLabel(phase.label ?? phase.name, language);
