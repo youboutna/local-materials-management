@@ -296,7 +296,8 @@ export class EmployeeTransformer implements EntityToDTOMapper<Employee, Employee
    */
   static fromCreateDTOToEntity(dto: CreateEmployeeDTO): Employee {
     // id : UUID v4 (généré si absent)
-    const id = dto.id && this.isUuid(dto.id) ? dto.id : this.generateId();
+    const dtoId = (dto as { id?: string }).id;
+    const id = dtoId && this.isUuid(dtoId) ? dtoId : this.generateId();
 
     // employee_id : alphanumérique
     const employeeId = dto.employeeId && dto.employeeId.trim() !== ''

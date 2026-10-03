@@ -275,7 +275,7 @@ export class MSProjectXmlParser implements IProjectFileParser {
   }
 
   private sumHours(hours: Array<number | undefined>): number {
-    return hours.reduce((sum, h) => sum + (h ?? 0), 0);
+    return hours.reduce<number>((sum, h) => sum + (h ?? 0), 0);
   }
 
   private slugify(text: string): string {

@@ -353,6 +353,15 @@ export class ProjectImportExportService {
   // PRIVATE HELPERS
   // ===========================================================================
 
+  /** Échecs de persistance des sous-objets : remontés dans le résultat, jamais silencieux. */
+  private relationIssues: string[] = [];
+
+  private reportRelationIssue(context: string, err: unknown): void {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(context, err);
+    this.relationIssues.push(`${context.replace(/^\[importRelations\]\s*/, '').replace(/:$/, '')} — ${msg}`);
+  }
+
   private async loadCurrentUser(): Promise<void> {
     try {
       const user = await this.authService.getCurrentUser();
@@ -1089,7 +1098,7 @@ export class ProjectImportExportService {
           isActive: true,
           externalRef: trimmed,
           status: EmployeeStatus.ACTIVE,
-        });
+        } as any);
         context.employees?.set(trimmed, created.id);
         console.log(`[ensureParentEntity] ✅ Created employee: "${trimmed}" → ${created.id}`);
         return created.id;
@@ -1218,10 +1227,10 @@ export class ProjectImportExportService {
       );
 
       if (match) {
-        await this.stakeholderService.updateProjectStakeholder(match.id, stakeholderData);
+        await this.stakeholderService.updateProjectStakeholder(match.id, stakeholderData as any);
         console.log(`[upsertStakeholder] ♻️  Updated: ${externalRef}`);
       } else {
-        await this.stakeholderService.addStakeholder(stakeholderData);
+        await this.stakeholderService.addStakeholder(stakeholderData as any);
         console.log(`[upsertStakeholder] ✅ Created: ${externalRef} (${entityType})`);
       }
 
@@ -1354,7 +1363,7 @@ export class ProjectImportExportService {
             );
           }
         } catch (err) {
-          console.error(
+          this.reportRelationIssue(
             `[importRelations] Phase milestones failed for phase ${createdPhase.id}:`,
             err,
           );
@@ -1383,7 +1392,7 @@ export class ProjectImportExportService {
             );
           }
         } catch (err) {
-          console.error(
+          this.reportRelationIssue(
             `[importRelations] Phase tasks failed for phase ${createdPhase.id}:`,
             err,
           );
@@ -1401,13 +1410,13 @@ export class ProjectImportExportService {
           }));
           await this.upsertDqeLines(projectId, createdPhase.id, dqeLines, details);
         } catch (err) {
-          console.error(
+          this.reportRelationIssue(
             `[importRelations] Phase DQE failed for phase ${createdPhase.id}:`,
             err,
           );
         }
       } catch (err) {
-        console.error(`[importRelations] Phase failed:`, err);
+        this.reportRelationIssue(`[importRelations] Phase failed:`, err);
       }
     }
 
@@ -1432,7 +1441,7 @@ export class ProjectImportExportService {
         );
       }
     } catch (err) {
-      console.error('[importRelations] Project milestones failed:', err);
+      this.reportRelationIssue('[importRelations] Project milestones failed:', err);
     }
 
     // ----- TÂCHES PROJET (v4.1 : guard sur title/name) -----
@@ -1451,7 +1460,7 @@ export class ProjectImportExportService {
         await this.upsertTask(projectId, targetPhaseId, task, details, suppliers, employees);
       }
     } catch (err) {
-      console.error('[importRelations] Project tasks failed:', err);
+      this.reportRelationIssue('[importRelations] Project tasks failed:', err);
     }
 
     // ----- DQE PROJET -----
@@ -1475,7 +1484,7 @@ export class ProjectImportExportService {
         await this.upsertDqeLines(projectId, targetPhaseId, [dqeLine], details);
       }
     } catch (err) {
-      console.error('[importRelations] Project DQE failed:', err);
+      this.reportRelationIssue('[importRelations] Project DQE failed:', err);
     }
 
     // ----- STAKEHOLDERS (v4.0 : création automatique des parents) -----
@@ -1491,7 +1500,7 @@ export class ProjectImportExportService {
         );
       }
     } catch (err) {
-      console.error('[importRelations] Stakeholders failed:', err);
+      this.reportRelationIssue('[importRelations] Stakeholders failed:', err);
     }
   }
 
@@ -1793,7 +1802,12 @@ export class ProjectImportExportService {
         }
       }
 
+      this.relationIssues = [];
       const result = await this.importProjects(dataset.projects, references, mergedOptions);
+      for (const message of this.relationIssues) {
+        result.errors.push({ row: 0, title: 'Sous-objets', message });
+      }
+      this.relationIssues = [];
 
       if (referentialWarnings.length > 0) {
         result.errors.push(...referentialWarnings);
@@ -2302,7 +2316,7 @@ export class ProjectImportExportService {
         employee = await this.employeeService.createEmployee({
           status: EmployeeStatus.ACTIVE,
           ...employeeData,
-        });
+        } as any);
       }
 
       references.set(row.id, employee.id);

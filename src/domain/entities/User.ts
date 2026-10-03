@@ -155,7 +155,7 @@ export class UserRoleEntity {
 
   reactivate(): void {
     if (
-      this._status !== UserRoleStatus.INACTIVE &&
+      (this._status as UserRoleStatus) !== UserRoleStatus.INACTIVE &&
       this._status !== UserRoleStatus.REVOKED
     ) {
       throw new Error('Cannot reactivate a role that is not inactive or revoked');

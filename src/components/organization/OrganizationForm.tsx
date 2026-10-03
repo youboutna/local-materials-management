@@ -1,4 +1,5 @@
 // src/components/organizations/OrganizationForm.tsx
+import * as React from 'react';
 // Version générique alignée sur le schéma btp.organizations
 
 import { useState } from 'react';

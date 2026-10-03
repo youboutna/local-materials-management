@@ -20,7 +20,7 @@ export function useOwnerOrganization() {
       // Priorité : organisation par défaut → organisation racine → première active
       return (
         active.find((o) => o.isDefault) ??
-        active.find((o) => !o.parentId) ??
+        active.find((o) => !(o as { parentId?: string | null }).parentId) ??
         active[0] ??
         null
       );
