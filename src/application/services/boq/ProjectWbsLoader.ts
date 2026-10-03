@@ -71,7 +71,7 @@ export async function loadProjectWbs(projectId: string): Promise<ProjectWbsPhase
     btpClient.from('project_milestones').select('id, title, phase_id, order_index').eq('project_id', projectId),
     btpClient.from('task_assignments').select('id, title, phase_id').eq('project_id', projectId),
   ]);
-  const dbMilestones = (msRes.data ?? []) as { id: string; title: string | null; phase_id: string | null; order_index: number | null }[];
+  const dbMilestones = (msRes.data ?? []) as unknown as { id: string; title: string | null; phase_id: string | null; order_index: number | null }[];
   const dbTasks = (taskRes.data ?? []) as { id: string; title: string | null; phase_id: string | null }[];
 
   return data.map((row) => {
