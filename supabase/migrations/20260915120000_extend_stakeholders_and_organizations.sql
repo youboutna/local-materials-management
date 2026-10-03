@@ -176,7 +176,9 @@ BEGIN
     v_check_expr
   );
 
-  RAISE NOTICE '✅ Contrainte organizations_org_type_check créée (%% valeurs)', array_length(v_all_values, 1);
+  -- ✅ FIX : un seul % (pas de %%)
+  RAISE NOTICE '✅ Contrainte organizations_org_type_check créée (% valeurs)',
+    array_length(v_all_values, 1);
 END $$;
 
 -- 2.3 NOT NULL + DEFAULT après normalisation
@@ -541,10 +543,10 @@ FROM information_schema.columns
 WHERE table_schema = 'btp' AND table_name = 'organizations'
 ORDER BY ordinal_position;
 
--- 14.4 Colonnes de stakeholders
+-- 14.4 Colonnes de project_stakeholders (✅ FIX : était "stakeholders")
 SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
-WHERE table_schema = 'btp' AND table_name = 'stakeholders'
+WHERE table_schema = 'btp' AND table_name = 'project_stakeholders'
 ORDER BY ordinal_position;
 
 -- 14.5 Fonctions créées
