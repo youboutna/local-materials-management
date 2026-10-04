@@ -1,6 +1,8 @@
 /**
  * TaskAssignment Supabase Adapter — SOURCE UNIQUE
  * Table unique : task_assignments (schéma btp)
+ *
+ * v2.0 : propage action_type + fallback intelligent si NOT NULL violé
  */
 
 import { TaskAssignment } from '@/domain/entities/TaskAssignment';
@@ -12,38 +14,59 @@ import type { BtpTablesInsert } from '@/integrations/supabase/btp-types';
 const TABLE = 'task_assignments';
 
 export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
-  /** Élague les colonnes absentes du cache PostgREST puis rejoue l'écriture. */
   private async writeWithSchemaFallback(
     payload: Record<string, unknown>,
-    run: (data: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string; code?: string } | null }>,
+    run: (data: Record<string, unknown>) => Promise<{
+      data: unknown;
+      error: { message: string; code?: string } | null;
+    }>,
   ): Promise<Record<string, unknown>> {
     const current = { ...payload };
+
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const { data, error } = await run(current);
       if (!error) return data as Record<string, unknown>;
+
       const missing = /Could not find the '([^']+)' column/.exec(error.message)?.[1];
-      const nullColumn = /column "([^"]+)"[^"]*violates not-null/.exec(error.message)?.[1];
       if (missing && missing in current) {
+        console.warn(`[TaskAssignmentAdapter] Column "${missing}" absent, retry sans`);
         delete current[missing];
         continue;
       }
-      if (nullColumn && current[nullColumn] === null) {
-        delete current[nullColumn];
+
+      const nullColumn =
+        /null value in column "([^"]+)"[^"]*violates not-null/.exec(error.message)?.[1];
+      if (nullColumn && (current[nullColumn] === null || current[nullColumn] === undefined)) {
+        if (nullColumn === 'action_type') {
+          current.action_type = 'task_assignment';
+          console.warn('[TaskAssignmentAdapter] action_type NULL → fallback "task_assignment"');
+        } else {
+          delete current[nullColumn];
+          console.warn(`[TaskAssignmentAdapter] Column "${nullColumn}" NOT NULL, retry sans`);
+        }
         continue;
       }
+
       throw new Error(`Failed to save task: ${error.message}`);
     }
+
     throw new Error('Failed to save task: too many schema fallbacks');
   }
 
   private mapMany(rows: unknown): TaskAssignment[] {
-    return ((rows as Record<string, unknown>[]) ?? []).map((row) => TaskAssignmentTransformer.fromRepository(row));
+    return ((rows as Record<string, unknown>[]) ?? []).map((row) =>
+      TaskAssignmentTransformer.fromRepository(row),
+    );
   }
 
   async save(task: TaskAssignment): Promise<TaskAssignment> {
     const payload = TaskAssignmentTransformer.toRepository(task);
     const data = await this.writeWithSchemaFallback(payload, async (row) =>
-      supabase.from(TABLE).upsert(row as BtpTablesInsert<'task_assignments'>, { onConflict: 'id' }).select().single(),
+      supabase
+        .from(TABLE)
+        .upsert(row as BtpTablesInsert<'task_assignments'>, { onConflict: 'id' })
+        .select()
+        .single(),
     );
     return TaskAssignmentTransformer.fromRepository(data);
   }
@@ -55,7 +78,10 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
   }
 
   async findAll(): Promise<TaskAssignment[]> {
-    const { data, error } = await supabase.from(TABLE).select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*')
+      .order('created_at', { ascending: false });
     if (error) return [];
     return this.mapMany(data);
   }
@@ -101,10 +127,8 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
       .contains('assigned_to', [assigneeId])
       .order('created_at', { ascending: false });
     if (!error) return this.mapMany(data);
-    // La colonne héritée `assignee_id` n'existe plus : pas de fallback possible
     console.warn('findByAssignee failed:', error.message);
     return [];
-
   }
 
   findByAssignedTo(assigneeId: string): Promise<TaskAssignment[]> {
@@ -146,6 +170,7 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
     assignee?: string;
     projectId?: string;
     phaseId?: string;
+    actionType?: string;
   }): Promise<TaskAssignment[]> {
     let query = supabase.from(TABLE).select('*');
     if (filters.status) query = query.eq('status', filters.status);
@@ -153,13 +178,17 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
     if (filters.projectId) query = query.eq('project_id', filters.projectId);
     if (filters.phaseId) query = query.eq('phase_id', filters.phaseId);
     if (filters.assignee) query = query.contains('assigned_to', [filters.assignee]);
+    if (filters.actionType) query = query.eq('action_type', filters.actionType);
     if (filters.searchTerm) query = query.ilike('title', `%${filters.searchTerm}%`);
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) return [];
     return this.mapMany(data);
   }
 
-  async update(id: string, task: TaskAssignment | Partial<TaskAssignment>): Promise<TaskAssignment> {
+  async update(
+    id: string,
+    task: TaskAssignment | Partial<TaskAssignment>,
+  ): Promise<TaskAssignment> {
     const payload =
       task instanceof TaskAssignment
         ? TaskAssignmentTransformer.toRepository(task, false)
@@ -172,6 +201,7 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
 
   private partialToRow(partial: Partial<TaskAssignment>): Record<string, unknown> {
     const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
     if (partial.title !== undefined) row.title = partial.title;
     if (partial.description !== undefined) row.description = partial.description ?? null;
     if (partial.status !== undefined) row.status = partial.status;
@@ -181,15 +211,24 @@ export class TaskAssignmentAdapter implements ITaskAssignmentRepository {
     if (partial.projectId !== undefined) row.project_id = partial.projectId ?? null;
     if (partial.phaseId !== undefined) row.phase_id = partial.phaseId ?? null;
     if (partial.dueDate !== undefined) row.due_date = partial.dueDate?.toISOString() ?? null;
-    if (partial.completedAt !== undefined) row.completed_at = partial.completedAt?.toISOString() ?? null;
+    if (partial.completedAt !== undefined)
+      row.completed_at = partial.completedAt?.toISOString() ?? null;
     if (partial.quantity !== undefined) row.quantity = partial.quantity ?? null;
     if (partial.unit !== undefined) row.unit = partial.unit ?? null;
     if (partial.dailyRate !== undefined) row.daily_rate = partial.dailyRate ?? null;
-    if (partial.estimatedDuration !== undefined) row.estimated_duration = partial.estimatedDuration ?? null;
+    if (partial.estimatedDuration !== undefined)
+      row.estimated_duration = partial.estimatedDuration ?? null;
+
+    // ✅ v2.0 : action_type propagé avec fallback
+    if (partial.actionType !== undefined) {
+      row.action_type = partial.actionType ?? 'task_assignment';
+    }
+
     if (partial.assignedTo !== undefined) {
       const list = partial.assignedTo ?? [];
       row.assigned_to = list.length > 0 ? `{${list.join(',')}}` : null;
     }
+
     return row;
   }
 

@@ -2,14 +2,39 @@
  * Supabase User Adapter
  * Implements IAuthRepository using Supabase
  * Delegates profile operations to SupabaseUserProfileAdapter
- * Uses UserTransformer for mapping
+ *
+ * ⚠️ Un utilisateur peut avoir PLUSIEURS rôles dans public.user_roles.
+ * Toutes les opérations sur les rôles passent par des tableaux.
  */
 
 import { UserProfile } from '@/domain/entities/UserProfile';
-import { AuthSession, AuthUser, IAuthRepository, LoginCredentials, OAuthSignInParams, RegisterData } from '@/domain/repositories/IAuthRepository';
+import {
+  AuthSession,
+  AuthUser,
+  IAuthRepository,
+  LoginCredentials,
+  OAuthSignInParams,
+  RegisterData,
+} from '@/domain/repositories/IAuthRepository';
 import { supabase } from '@/integrations/supabase/client';
 import { SupabaseUserProfileAdapter } from './SupabaseUserProfileAdapter';
 import { BaseAuthAdapter } from '@/infrastructure/adapters/auth/BaseAuthAdapter';
+
+const ROLE_PRIORITY: string[] = [
+  'admin',
+  'super_admin',
+  'director',
+  'manager',
+  'inspector',
+  'supervisor',
+  'project_manager',
+  'project',
+  'project_project',
+  'supplier',
+  'consultant',
+  'public',
+  'user',
+];
 
 export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthRepository {
   private profileAdapter: SupabaseUserProfileAdapter;
@@ -33,7 +58,9 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
     }
   }
 
-  async signIn(credentials: LoginCredentials): Promise<{ session: AuthSession | null; error: Error | null }> {
+  async signIn(
+    credentials: LoginCredentials
+  ): Promise<{ session: AuthSession | null; error: Error | null }> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
@@ -47,10 +74,12 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
     }
   }
 
-  async signInWithIdToken(params: OAuthSignInParams): Promise<{ session: AuthSession | null; error: Error | null }> {
+  async signInWithIdToken(
+    params: OAuthSignInParams
+  ): Promise<{ session: AuthSession | null; error: Error | null }> {
     try {
       const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: params.provider as any,
+        provider: params.provider as never,
         token: params.token,
         nonce: params.nonce,
       });
@@ -122,13 +151,126 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
     }
   }
 
-  async updateUserRole(userId: string, role: string): Promise<{ user: AuthUser | null; error: Error | null }> {
+  // ============================
+  // ROLES — Multi-rôles
+  // ============================
+
+  async getUserRolesList(userId: string): Promise<string[]> {
+    if (!userId) return [];
     try {
-      const { error: upsertError } = await supabase
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
         .from('user_roles')
-        .upsert({ user_id: userId, role_name: role, assigned_at: new Date().toISOString(), status: 'active' });
-      if (upsertError) return { user: null, error: new Error(upsertError.message) };
-      await supabase.from('users' as any).update({ role }).eq('id', userId);
+        .select('role_name, status, expires_at')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .or(`expires_at.is.null,expires_at.gt.${now}`);
+
+      if (error) {
+        console.error('[SupabaseUserAdapter.getUserRolesList] Error:', error);
+        return [];
+      }
+      return (data ?? []).map((r) => r.role_name);
+    } catch (error) {
+      console.error('[SupabaseUserAdapter.getUserRolesList] Unexpected:', error);
+      return [];
+    }
+  }
+
+  async getPrimaryRole(userId: string): Promise<string> {
+    const roles = await this.getUserRolesList(userId);
+    if (roles.length === 0) return 'user';
+    for (const p of ROLE_PRIORITY) if (roles.includes(p)) return p;
+    return roles[0];
+  }
+
+  async updateUserRole(
+    userId: string,
+    role: string
+  ): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      if (!userId || !role) {
+        return { user: null, error: new Error('userId and role are required') };
+      }
+
+      const { data: existing, error: lookupError } = await supabase
+        .from('user_roles')
+        .select('id, status')
+        .eq('user_id', userId)
+        .eq('role_name', role)
+        .maybeSingle();
+
+      if (lookupError) return { user: null, error: new Error(lookupError.message) };
+
+      if (existing) {
+        if (existing.status !== 'active') {
+          const { error: updateError } = await supabase
+            .from('user_roles')
+            .update({
+              status: 'active',
+              assigned_at: new Date().toISOString(),
+              expires_at: null,
+            })
+            .eq('id', existing.id);
+          if (updateError) return { user: null, error: new Error(updateError.message) };
+        }
+        return this.getCurrentUser();
+      }
+
+      const { error: insertError } = await supabase.from('user_roles').insert({
+        user_id: userId,
+        role_name: role,
+        status: 'active',
+        assigned_at: new Date().toISOString(),
+      });
+
+      if (insertError && insertError.code !== '23505') {
+        return { user: null, error: new Error(insertError.message) };
+      }
+
+      return this.getCurrentUser();
+    } catch (error) {
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
+
+  async removeUserRole(
+    userId: string,
+    role: string
+  ): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      if (!userId || !role) {
+        return { user: null, error: new Error('userId and role are required') };
+      }
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ status: 'inactive' })
+        .eq('user_id', userId)
+        .eq('role_name', role);
+      if (error) return { user: null, error: new Error(error.message) };
+      return this.getCurrentUser();
+    } catch (error) {
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
+
+  async setUserRoles(
+    userId: string,
+    roles: string[]
+  ): Promise<{ user: AuthUser | null; error: Error | null }> {
+    try {
+      if (!userId) return { user: null, error: new Error('userId is required') };
+
+      const { error: revokeError } = await supabase
+        .from('user_roles')
+        .update({ status: 'inactive' })
+        .eq('user_id', userId);
+      if (revokeError) return { user: null, error: new Error(revokeError.message) };
+
+      for (const role of roles) {
+        const result = await this.updateUserRole(userId, role);
+        if (result.error) return result;
+      }
       return this.getCurrentUser();
     } catch (error) {
       return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
@@ -149,7 +291,9 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
 
   async confirmUserEmail(userId: string): Promise<{ error: Error | null }> {
     try {
-      const { error } = await supabase.auth.admin.updateUserById(userId, { email_confirm: true });
+      const { error } = await supabase.auth.admin.updateUserById(userId, {
+        email_confirm: true,
+      });
       return { error: error ? new Error(error.message) : null };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error('Unknown error') };
@@ -157,9 +301,11 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
   }
 
   // ============================
-  // Profile (delegation to profile adapter)
+  // Profile (delegation)
   // ============================
-  async getProfile(userId: string): Promise<{ profile: UserProfile | null; error: Error | null }> {
+  async getProfile(
+    userId: string
+  ): Promise<{ profile: UserProfile | null; error: Error | null }> {
     try {
       const profile = await this.profileAdapter.getProfileByUserId(userId);
       return { profile, error: null };
@@ -190,28 +336,47 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
   }
 
   // ============================
-  // Mapping helpers
+  // Mapping
   // ============================
-  private mapUser(user: any): AuthUser {
+  private mapUser(user: {
+    id: string;
+    email?: string;
+    user_metadata?: Record<string, unknown>;
+    phone?: string;
+    created_at?: string;
+    updated_at?: string;
+  }): AuthUser {
     return {
       id: user.id,
       email: user.email,
-      fullName: user.user_metadata?.full_name,
-      role: user.user_metadata?.role,
+      fullName: (user.user_metadata?.full_name as string) ?? undefined,
+      role: (user.user_metadata?.role as string) ?? undefined,
       phone: user.phone,
-      nationalId: user.user_metadata?.national_id,
+      nationalId: (user.user_metadata?.national_id as string) ?? undefined,
       createdAt: user.created_at,
-      updatedAt: user.updated_at
+      updatedAt: user.updated_at,
     };
   }
 
-  private mapSession(session: any): AuthSession {
+  private mapSession(session: {
+    access_token: string;
+    refresh_token: string;
+    expires_at?: number;
+    user: {
+      id: string;
+      email?: string;
+      user_metadata?: Record<string, unknown>;
+      phone?: string;
+      created_at?: string;
+      updated_at?: string;
+    };
+  }): AuthSession {
     const user = this.mapUser(session.user);
     return {
       accessToken: session.access_token,
       refreshToken: session.refresh_token,
-      expiresAt: new Date(session.expires_at || '').toISOString(),
-      user
+      expiresAt: new Date((session.expires_at ?? 0) * 1000).toISOString(),
+      user,
     };
   }
 }

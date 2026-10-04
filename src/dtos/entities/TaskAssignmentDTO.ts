@@ -1,16 +1,22 @@
 import { ENUM_LABELS, type EnumLabel } from '@/config/referentials/i18n/enum-labels.referential';
+
 /**
  * TaskAssignment Data Transfer Objects — SOURCE UNIQUE
- * Fusion définitive Task + TaskAssignment sur la table `task_assignments`.
- * `assignedTo` est TOUJOURS un tableau d'UUID côté DTO/entité.
- * camelCase uniquement, aucune logique métier (hors normalisation de vocabulaire).
+ *
+ * v2.1 : Alignement sur la contrainte DB task_assignments_status_check :
+ *        CHECK (status IN ('assigned', 'in_progress', 'completed', 'cancelled'))
+ *        - PENDING est alias de ASSIGNED
+ *        - BLOCKED est alias de IN_PROGRESS
  */
 
 export enum TaskStatus {
-  PENDING = 'pending',
+  /** ✅ Valeur DB officielle pour une tâche non commencée */
+  ASSIGNED = 'assigned',
+  /** @deprecated Alias de ASSIGNED — conservé pour compatibilité */
+  PENDING = 'assigned',
   IN_PROGRESS = 'in_progress',
-  /** Statut d'affichage uniquement — normalisé en `in_progress` avant persistance. */
-  BLOCKED = 'blocked',
+  /** @deprecated Alias de IN_PROGRESS — 'blocked' n'existe pas en DB */
+  BLOCKED = 'in_progress',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }
@@ -20,13 +26,11 @@ export enum TaskPriority {
   MEDIUM = 'medium',
   HIGH = 'high',
   URGENT = 'urgent',
-  /** Alias de vocabulaire UI — équivalent à URGENT. */
   CRITICAL = 'urgent',
 }
 
 export type AssigneeType = 'supplier' | 'employee' | 'user' | 'external';
 
-/** Type de tâche (classification métier facultative). */
 export enum TaskType {
   GENERAL = 'general',
   INSPECTION = 'inspection',
@@ -37,17 +41,37 @@ export enum TaskType {
   EXECUTION = 'execution',
 }
 
+export enum ActionType {
+  TASK_ASSIGNMENT = 'task_assignment',
+  SCHEDULE_INSPECTION = 'schedule_inspection',
+  SCHEDULE_CALL = 'schedule_call',
+  INFORM_HIERARCHY = 'inform_hierarchy',
+  SEND_NOTIFICATION = 'send_notification',
+  ASSIGN_TASK = 'assign_task',
+  APPROVE_PAYMENT = 'approve_payment',
+  ESCALATE_ISSUE = 'escalate_issue',
+  REQUEST_DOCUMENT = 'request_document',
+  SCHEDULE_MEETING = 'schedule_meeting',
+  HIERARCHY_NOTIFICATION = 'hierarchy_notification',
+  SMS = 'sms',
+  CALL = 'call',
+  EMAIL = 'email',
+  MAIL = 'mail',
+  EXPORT_RECEIPT = 'export_receipt',
+  BLOCKCHAIN_VERIFICATION = 'blockchain_verification',
+  TASK = 'task',
+  GENERAL = 'general',
+}
+
 export interface TaskAssignmentDTO {
   id: string;
   title: string;
-  /** Alias de compatibilité de `title` (lecture seule côté UI/rapports). */
   name?: string;
   description?: string;
   projectId?: string;
   phaseId?: string;
   stepId?: string;
   assignedTo: string[];
-  /** Alias de compatibilité : premier assigné. */
   assigneeId?: string;
   assignedBy?: string;
   assigneeType?: AssigneeType;
@@ -57,17 +81,16 @@ export interface TaskAssignmentDTO {
   priority: TaskPriority | string;
   progress: number;
   type?: TaskType | string;
+  actionType?: ActionType | string;
+  action_type?: string;
   startDate?: string;
   endDate?: string;
   dueDate?: string;
   completedAt?: string;
   estimatedDuration?: number;
   actualDuration?: number;
-  /** Quantité DQE reportée sur la tâche. */
   quantity?: number;
-  /** Unité DQE reportée sur la tâche. */
   unit?: string;
-  /** Taux journalier (main d'œuvre : unité homme·jour). */
   dailyRate?: number;
   estimatedCost?: number;
   actualCost?: number;
@@ -78,18 +101,15 @@ export interface TaskAssignmentDTO {
   updatedAt: string;
 }
 
-
 export interface CreateTaskAssignmentDTO {
   id?: string;
   title: string;
-  /** Alias de compatibilité de `title`. */
   name?: string;
   description?: string;
   projectId?: string;
   phaseId?: string;
   stepId?: string;
   assignedTo?: string | string[];
-  /** Alias de compatibilité : assigné unique. */
   assigneeId?: string;
   assignedBy?: string;
   assigneeType?: AssigneeType;
@@ -99,6 +119,8 @@ export interface CreateTaskAssignmentDTO {
   priority?: TaskPriority | string;
   progress?: number;
   type?: TaskType | string;
+  actionType?: ActionType | string;
+  action_type?: string;
   startDate?: string;
   endDate?: string;
   dueDate?: string;
@@ -116,7 +138,6 @@ export interface CreateTaskAssignmentDTO {
 
 export interface UpdateTaskAssignmentDTO {
   title?: string;
-  /** Alias de compatibilité de `title`. */
   name?: string;
   description?: string;
   projectId?: string;
@@ -126,12 +147,13 @@ export interface UpdateTaskAssignmentDTO {
   priority?: TaskPriority | string;
   progress?: number;
   type?: TaskType | string;
+  actionType?: ActionType | string;
+  action_type?: string;
   startDate?: string;
   endDate?: string;
   dueDate?: string;
   completedAt?: string;
   assignedTo?: string | string[];
-  /** Alias de compatibilité : assigné unique. */
   assigneeId?: string;
   assignedBy?: string;
   assigneeType?: AssigneeType;
@@ -149,7 +171,6 @@ export interface UpdateTaskAssignmentDTO {
   metadata?: Record<string, unknown>;
 }
 
-/** Filtres de recherche. */
 export interface TaskAssignmentFiltersDTO {
   searchTerm?: string;
   status?: string;
@@ -157,19 +178,19 @@ export interface TaskAssignmentFiltersDTO {
   assignee?: string;
   projectId?: string;
   phaseId?: string;
+  actionType?: string;
 }
 
-/** Statistiques agrégées. */
 export interface TaskAssignmentStatsDTO {
   total: number;
   byStatus: Record<string, number>;
   byPriority: Record<string, number>;
+  byActionType?: Record<string, number>;
   overdue: number;
   dueSoon: number;
   completionRate: number;
 }
 
-/** Normalise toute forme d'assignation vers un tableau d'UUID. */
 export function normalizeAssignedTo(assignedTo?: string | string[] | null): string[] {
   if (!assignedTo) return [];
   if (Array.isArray(assignedTo)) return assignedTo.filter((a) => !!a);
@@ -179,7 +200,12 @@ export function normalizeAssignedTo(assignedTo?: string | string[] | null): stri
   return [assignedTo];
 }
 
-/** Normalise un statut (FR/EN, accentué) vers le statut DB autorisé. */
+/**
+ * ✅ v2.1 : Toutes les valeurs 'pending' / 'todo' / 'not_started' etc.
+ * sont mappées vers TaskStatus.ASSIGNED (= 'assigned' en DB).
+ * Toutes les valeurs 'blocked' / 'delayed' / 'en_retard' sont mappées
+ * vers TaskStatus.IN_PROGRESS (= 'in_progress' en DB).
+ */
 export function normalizeTaskStatus(status?: string | null, progress?: number): TaskStatus {
   const key = (status ?? '')
     .normalize('NFD')
@@ -187,42 +213,50 @@ export function normalizeTaskStatus(status?: string | null, progress?: number): 
     .trim()
     .toLowerCase()
     .replace(/[\s-]+/g, '_');
+
   const map: Record<string, TaskStatus> = {
+    // ─── Completed ───
     termine: TaskStatus.COMPLETED,
     terminee: TaskStatus.COMPLETED,
     completed: TaskStatus.COMPLETED,
     done: TaskStatus.COMPLETED,
-    enCours: TaskStatus.IN_PROGRESS,
-    inProgress: TaskStatus.IN_PROGRESS,
+
+    // ─── In Progress ───
+    encours: TaskStatus.IN_PROGRESS,
+    inprogress: TaskStatus.IN_PROGRESS,
     started: TaskStatus.IN_PROGRESS,
-    enAttente: TaskStatus.PENDING,
-    planifie: TaskStatus.PENDING,
-    planifiee: TaskStatus.PENDING,
-    pending: TaskStatus.PENDING,
-    notStarted: TaskStatus.PENDING,
-    todo: TaskStatus.PENDING,
-    assigned: TaskStatus.PENDING,
     accepted: TaskStatus.IN_PROGRESS,
     delayed: TaskStatus.IN_PROGRESS,
-    enRetard: TaskStatus.IN_PROGRESS,
+    enretard: TaskStatus.IN_PROGRESS,
     bloque: TaskStatus.IN_PROGRESS,
     bloquee: TaskStatus.IN_PROGRESS,
     blocked: TaskStatus.IN_PROGRESS,
+
+    // ─── Assigned (ex-Pending) ───
+    enattente: TaskStatus.ASSIGNED,
+    planifie: TaskStatus.ASSIGNED,
+    planifiee: TaskStatus.ASSIGNED,
+    pending: TaskStatus.ASSIGNED,
+    notstarted: TaskStatus.ASSIGNED,
+    todo: TaskStatus.ASSIGNED,
+    assigned: TaskStatus.ASSIGNED,
+
+    // ─── Cancelled ───
     annule: TaskStatus.CANCELLED,
     annulee: TaskStatus.CANCELLED,
     cancelled: TaskStatus.CANCELLED,
     canceled: TaskStatus.CANCELLED,
     rejected: TaskStatus.CANCELLED,
   };
+
   if (map[key]) return map[key];
   if (progress != null) {
     if (progress >= 100) return TaskStatus.COMPLETED;
     if (progress > 0) return TaskStatus.IN_PROGRESS;
   }
-  return TaskStatus.PENDING;
+  return TaskStatus.ASSIGNED;
 }
 
-/** Normalise une priorité (FR/EN) vers la priorité DB autorisée. */
 export function normalizeTaskPriority(priority?: string | null): TaskPriority {
   const key = (priority ?? '')
     .normalize('NFD')
@@ -249,9 +283,16 @@ export function normalizeTaskPriority(priority?: string | null): TaskPriority {
   return map[key] ?? TaskPriority.MEDIUM;
 }
 
-// ============= Request DTOs (façade service) =============
+export function normalizeActionType(
+  actionType?: string | null,
+  action_type?: string | null,
+): string {
+  const raw = (actionType ?? action_type ?? '').toString().trim();
+  return raw || ActionType.TASK_ASSIGNMENT;
+}
 
-/** Champs tolérés en entrée UI (compat héritée). */
+// ============= Request DTOs =============
+
 export interface TaskAssignmentInputDTO extends CreateTaskAssignmentDTO {
   taskId?: string;
   assignmentNotes?: string;
@@ -284,14 +325,11 @@ export interface TaskAssignmentValidationResultDTO {
   errors: string[];
 }
 
-/** Libellés multilingues de TaskStatus (référentiel i18n — code technique inchangé). */
 export const TASK_STATUS_LABELS: Readonly<Record<TaskStatus, EnumLabel>> =
     ENUM_LABELS.TaskStatus as Readonly<Record<TaskStatus, EnumLabel>>;
 
-/** Libellés multilingues de TaskPriority (référentiel i18n — code technique inchangé). */
 export const TASK_PRIORITY_LABELS: Readonly<Record<TaskPriority, EnumLabel>> =
     ENUM_LABELS.TaskPriority as Readonly<Record<TaskPriority, EnumLabel>>;
 
-/** Libellés multilingues de TaskType (référentiel i18n — code technique inchangé). */
 export const TASK_TYPE_LABELS: Readonly<Record<TaskType, EnumLabel>> =
     ENUM_LABELS.TaskType as Readonly<Record<TaskType, EnumLabel>>;

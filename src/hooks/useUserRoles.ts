@@ -1,7 +1,9 @@
-/**
+/** path: src/hooks/useUserRoles.ts
  * User Roles Hook - Hexagonal Architecture
  * Uses UserService and AuthService for role management
  * Legacy interface maintained for backward compatibility
+ *
+ * ⚠️ Un utilisateur peut avoir PLUSIEURS rôles.
  */
 
 import { getAuthService } from '@/application/services/AuthService';
@@ -9,8 +11,13 @@ import { getUserService } from '@/application/services/UserService';
 import { DEV_MODE, getActiveDevRole, IS_LOCAL_BYPASS } from '@/config/constants';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/hexagonal/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
+
+// ────────────────────────────────────────────────────────────
+// TYPES
+// ────────────────────────────────────────────────────────────
 
 export interface UserRole {
   id: string;
@@ -36,128 +43,288 @@ export interface Role {
   updated_at: string;
 }
 
-// Initialize services
-const getServices = () => {
-  return {
-    authService: getAuthService(),
-    userService: getUserService()
-  };
-};
+// ────────────────────────────────────────────────────────────
+// CONSTANTES
+// ────────────────────────────────────────────────────────────
+
+const ROLE_PRIORITY: string[] = [
+  'admin',
+  'super_admin',
+  'director',
+  'manager',
+  'inspector',
+  'supervisor',
+  'project_manager',
+  'project',
+  'project_project',
+  'supplier',
+  'consultant',
+  'public',
+  'user',
+];
+
+const AVAILABLE_ROLES = [
+  'admin',
+  'super_admin',
+  'director',
+  'manager',
+  'project_manager',
+  'inspector',
+  'supervisor',
+  'supplier',
+  'consultant',
+  'agent',
+  'project',
+  'project_project',
+  'public',
+  'user',
+];
+
+// ────────────────────────────────────────────────────────────
+// HELPERS INTERNES
+// ────────────────────────────────────────────────────────────
+
+async function fetchUserRoles(userId: string): Promise<string[]> {
+  if (!userId) return [];
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role_name, status, expires_at')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .or(`expires_at.is.null,expires_at.gt.${now}`);
+
+  if (error) {
+    console.error('[useUserRoles] fetchUserRoles error:', error);
+    return [];
+  }
+  return (data ?? []).map((r) => r.role_name);
+}
+
+async function fetchUsersRoles(userIds: string[]): Promise<Map<string, string[]>> {
+  const map = new Map<string, string[]>();
+  if (!userIds || userIds.length === 0) return map;
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('user_id, role_name, status, expires_at')
+    .in('user_id', userIds)
+    .eq('status', 'active')
+    .or(`expires_at.is.null,expires_at.gt.${now}`);
+
+  if (error) {
+    console.error('[useUserRoles] fetchUsersRoles error:', error);
+    return map;
+  }
+
+  (data ?? []).forEach((r) => {
+    const list = map.get(r.user_id) ?? [];
+    list.push(r.role_name);
+    map.set(r.user_id, list);
+  });
+
+  return map;
+}
+
+function pickPrimaryRole(roles: string[]): string {
+  if (!roles || roles.length === 0) return 'user';
+  for (const p of ROLE_PRIORITY) if (roles.includes(p)) return p;
+  return roles[0];
+}
+
+async function insertUserRole(
+  userId: string,
+  roleName: string,
+  assignedBy?: string
+): Promise<{ ok: boolean; error?: string }> {
+  const { data: existing } = await supabase
+    .from('user_roles')
+    .select('id, status')
+    .eq('user_id', userId)
+    .eq('role_name', roleName)
+    .maybeSingle();
+
+  if (existing) {
+    if (existing.status !== 'active') {
+      const { error } = await supabase
+        .from('user_roles')
+        .update({
+          status: 'active',
+          assigned_at: new Date().toISOString(),
+          assigned_by: assignedBy ?? null,
+          expires_at: null,
+        })
+        .eq('id', existing.id);
+      if (error) return { ok: false, error: error.message };
+    }
+    return { ok: true };
+  }
+
+  const { error } = await supabase.from('user_roles').insert({
+    user_id: userId,
+    role_name: roleName,
+    status: 'active',
+    assigned_at: new Date().toISOString(),
+    assigned_by: assignedBy ?? null,
+  });
+
+  if (error && error.code !== '23505') {
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+async function deactivateUserRole(
+  userId: string,
+  roleName: string
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('user_roles')
+    .update({ status: 'inactive' })
+    .eq('user_id', userId)
+    .eq('role_name', roleName);
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+const getServices = () => ({
+  authService: getAuthService(),
+  userService: getUserService(),
+});
+
+// ────────────────────────────────────────────────────────────
+// HOOK 1 — useUserRoles(userId)
+// ────────────────────────────────────────────────────────────
 
 export const useUserRoles = (userId?: string) => {
   const { userService } = getServices();
 
-  const { data: userRoles, isLoading: rolesLoading, error: rolesError } = useQuery({
+  const {
+    data: userRoles,
+    isLoading: rolesLoading,
+    error: rolesError,
+    refetch,
+  } = useQuery({
     queryKey: ['userRoles', userId, DEV_MODE ? getActiveDevRole().role : null],
-    queryFn: async () => {
+    queryFn: async (): Promise<UserRole[]> => {
       if (!userId) return [];
+
       if (IS_LOCAL_BYPASS) {
         const role = getActiveDevRole().role;
-        return [{ id: `${userId}-${role}`, roleName: role, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }] as UserRole[];
+        return [
+          {
+            id: `${userId}-${role}`,
+            roleName: role,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ];
       }
-      
+
       try {
-        const user = await userService.getUserById(userId);
-        if (!user) return [];
-        
-        const roles: UserRole[] = user.primaryRole ? [{
-          id: `${userId}-${user.primaryRole}`,
-          roleName: String(user.primaryRole),
+        const roleNames = await fetchUserRoles(userId);
+
+        if (roleNames.length === 0) {
+          const user = await userService.getUserById(userId);
+          const legacyRole = (user as { role?: string } | null)?.role;
+          if (legacyRole && typeof legacyRole === 'string') {
+            return [
+              {
+                id: `${userId}-legacy-${legacyRole}`,
+                roleName: legacyRole,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            ];
+          }
+          return [];
+        }
+
+        return roleNames.map((roleName) => ({
+          id: `${userId}-${roleName}`,
+          roleName,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        }] : [];
-        
-        return roles;
+        }));
       } catch (error) {
-        console.error('Error fetching user roles:', error);
+        console.error('[useUserRoles] Error fetching user roles:', error);
         return [];
       }
     },
     enabled: !!userId,
     retry: 3,
-    retryDelay: 1000
+    retryDelay: 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const availableRoles = [
-    { id: 'admin', name: 'admin', description: 'Administrator' },
-    { id: 'director', name: 'director', description: 'Director' },
-    { id: 'manager', name: 'manager', description: 'Manager' },
-    { id: 'agent', name: 'agent', description: 'Agent' },
-    { id: 'supplier', name: 'supplier', description: 'Supplier' },
-    { id: 'user', name: 'user', description: 'User' }
-  ];
+  const availableRoles: Role[] = AVAILABLE_ROLES.map((r) => ({
+    id: r,
+    name: r,
+    description: r,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }));
 
   return {
     userRoles: userRoles || [],
     availableRoles,
     isLoading: rolesLoading,
-    error: rolesError as string | null
+    error: (rolesError as Error)?.message ?? null,
+    refetch,
   };
 };
 
+// ────────────────────────────────────────────────────────────
+// HOOK 2 — useCurrentUserRoles()
+// ────────────────────────────────────────────────────────────
+
 export const useCurrentUserRoles = () => {
-  const [currentUser, setCurrentUser] = useState<UserRole | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const { user, isAuthenticated } = useAuth();
-  const { authService, userService } = getServices();
 
   const loadCurrentUser = useCallback(async () => {
     if (!user?.id) return;
-    if (IS_LOCAL_BYPASS) {
-      setCurrentUser({
-        id: user.id,
-        roleName: getActiveDevRole().role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-      return;
-    }
-    const userData = await userService.getUserById(user.id);
-    setCurrentUser(userData ? {
-      roleName: String(userData.primaryRole || ''),
-      id: userData.id || user.id,
-      created_at: userData.createdAt?.toISOString?.() || new Date().toISOString(),
-      updated_at: userData.updatedAt?.toISOString?.() || new Date().toISOString(),
-    } : null);
-  }, [user?.id, userService]);
+    setCurrentUser({ id: user.id });
+  }, [user?.id]);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      loadCurrentUser();
-    }
+    if (isAuthenticated && user) loadCurrentUser();
   }, [isAuthenticated, user, loadCurrentUser]);
 
-  const { data: userRoles, isLoading, error } = useQuery({
-    queryKey: ['currentUserRoles', currentUser?.id, user?.role, DEV_MODE ? getActiveDevRole().role : null],
-    queryFn: async () => {
-      // DEV_MODE: no network — resolve roles from local DEV_USER profile.
+  const {
+    data: userRoles,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'currentUserRoles',
+      currentUser?.id,
+      user?.role,
+      DEV_MODE ? getActiveDevRole().role : null,
+    ],
+    queryFn: async (): Promise<string[]> => {
       if (IS_LOCAL_BYPASS) {
         const devRole = getActiveDevRole().role;
-        return Array.from(new Set([devRole, String(user?.role || '').toLowerCase()].filter(Boolean)));
+        return Array.from(
+          new Set([devRole, String(user?.role || '').toLowerCase()].filter(Boolean))
+        );
       }
 
       const fallbackRoles = user?.role ? [String(user.role).toLowerCase()] : [];
-
       const userId = currentUser?.id || user?.id;
       if (!userId) return fallbackRoles;
-      
+
       try {
-        const userServiceUser = await userService.getUserById(userId);
-        if (!userServiceUser) {
-          return fallbackRoles;
-        }
-        
-        // Get roles from the userRoles array (multi-role support)
-        const userRolesEntities = userServiceUser.userRoles || [];
-        const roleNames = userRolesEntities.map(ur => String(ur.roleName || ur).toLowerCase());
-        
-        // Also include primary role
-        const primaryRole = userServiceUser.primaryRole ? [String(userServiceUser.primaryRole).toLowerCase()] : [];
-        
-        const allRoles = Array.from(new Set([...roleNames, ...primaryRole, ...fallbackRoles]));
-        
-        return allRoles;
-      } catch (error) {
-        console.error('Error fetching current user roles:', error);
+        const roles = await fetchUserRoles(userId);
+        if (roles.length === 0) return fallbackRoles;
+        const normalized = roles.map((r) => r.toLowerCase());
+        return Array.from(new Set([...normalized, ...fallbackRoles]));
+      } catch (err) {
+        console.error('[useCurrentUserRoles] Error fetching roles:', err);
         return fallbackRoles;
       }
     },
@@ -168,144 +335,151 @@ export const useCurrentUserRoles = () => {
     placeholderData: () => {
       if (IS_LOCAL_BYPASS) return [getActiveDevRole().role];
       return user?.role ? [String(user.role).toLowerCase()] : [];
-    }
+    },
   });
 
-  const hasRole = (roleName: string) => {
-    return (userRoles as string[])?.includes(String(roleName).toLowerCase()) || false;
-  };
+  const roles = (userRoles as string[]) || [];
 
-  const hasAnyRole = (roleNames: string[]): boolean => {
-    const roles = userRoles || [];
-    return roleNames.some(role => roles.includes(role.toLowerCase()));
-  };
+  const hasRole = (roleName: string): boolean =>
+    roles.includes(String(roleName).toLowerCase());
 
-  const hasAllRoles = (roleNames: string[]) => {
-    const roles = (userRoles as string[]) || [];
-    if (roles.length === 0 || !Array.isArray(roles)) return false;
+  const hasAnyRole = (roleNames: string[]): boolean =>
+    roleNames.some((role) => roles.includes(role.toLowerCase()));
+
+  const hasAllRoles = (roleNames: string[]): boolean => {
+    if (roles.length === 0) return false;
     const wanted = roleNames.map((r) => String(r).toLowerCase());
     return wanted.every((role) => roles.includes(role));
   };
 
-  const getRoleCount = () => {
-    return (userRoles as string[])?.length || 0;
-  };
+  const getRoleCount = (): number => roles.length;
+  const getRoleNames = (): string[] => roles;
+  const getPrimaryRole = (): string => pickPrimaryRole(roles);
 
-  const getRoleNames = () => {
-    return (userRoles as string[]) || [];
-  };
-
-  const isSuperAdmin = () => {
-    return hasRole('super_admin') || hasRole('admin');
-  };
-
-  const isManager = () => {
-    return hasRole('manager') || hasRole('project_manager') || isSuperAdmin();
-  };
-
-  const isEmployee = () => {
-    return hasRole('employee') || hasRole('staff') || isManager();
-  };
+  const isSuperAdmin = (): boolean => hasAnyRole(['super_admin', 'admin']);
+  const isManager = (): boolean =>
+    hasAnyRole(['manager', 'project_manager']) || isSuperAdmin();
+  const isDirector = (): boolean => hasRole('director');
+  const isEmployee = (): boolean => hasAnyRole(['employee', 'staff']) || isManager();
 
   return {
-    userRoles: (userRoles as string[]) || [],
+    userRoles: roles,
+    currentUser,
     hasRole,
     hasAnyRole,
     hasAllRoles,
     getRoleCount,
     getRoleNames,
+    getPrimaryRole,
     isSuperAdmin,
     isManager,
+    isDirector,
     isEmployee,
     isLoading,
-    currentUser,
-    error
+    error: (error as Error)?.message ?? null,
+    refetch,
   };
 };
 
+// ────────────────────────────────────────────────────────────
+// HOOK 3 — useRoleManagement()
+// ────────────────────────────────────────────────────────────
+
 export const useRoleManagement = () => {
   const queryClient = useQueryClient();
-  const { userService } = getServices();
+  const { authService } = getServices();
 
   const assignRole = useMutation({
-    mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      try {
-        const user = await userService.getUserById(userId);
-        if (!user) throw new Error('User not found');
-        
-        const currentRoles = user.userRoles || [];
-        const hasRole = currentRoles.some(ur => 
-          String(ur.roleName || ur).toLowerCase() === String(roleName).toLowerCase()
-        );
-        
-        if (hasRole) {
-          return;
+    mutationFn: async ({
+      userId,
+      roleName,
+    }: {
+      userId: string;
+      roleName: string;
+    }) => {
+      const result = await insertUserRole(userId, roleName);
+      if (!result.ok) {
+        try {
+          await authService.assignUserRole(userId, roleName);
+        } catch {
+          throw new Error(result.error ?? "Impossible d'assigner le rôle");
         }
-        
-        // Update user role via service
-        await getAuthService().assignUserRole(userId, roleName);
-      } catch (error) {
-        console.error('Error assigning role:', error);
-        throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userRoles'] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['userRoles', variables.userId] });
       queryClient.invalidateQueries({ queryKey: ['currentUserRoles'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
-        title: "Rôle assigné",
-        description: "Le rôle a été assigné avec succès.",
+        title: 'Rôle assigné',
+        description: `Le rôle "${variables.roleName}" a été assigné avec succès.`,
       });
     },
     onError: (error) => {
+      console.error('[useRoleManagement.assignRole] Error:', error);
       toast({
-        title: "Erreur",
+        title: 'Erreur',
         description: "Impossible d'assigner le rôle.",
-        variant: "destructive",
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   const removeRole = useMutation({
-    mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      try {
-        const user = await userService.getUserById(userId);
-        if (!user) throw new Error('User not found');
-        
-        // Reset to default role
-        await getAuthService().assignUserRole(userId, 'agent');
-      } catch (error) {
-        console.error('Error removing role:', error);
-        throw error;
-      }
+    mutationFn: async ({
+      userId,
+      roleName,
+    }: {
+      userId: string;
+      roleName: string;
+    }) => {
+      const result = await deactivateUserRole(userId, roleName);
+      if (!result.ok) throw new Error(result.error ?? 'Impossible de retirer le rôle');
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userRoles'] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['userRoles', variables.userId] });
       queryClient.invalidateQueries({ queryKey: ['currentUserRoles'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
-        title: "Rôle retiré",
-        description: "Le rôle a été retiré avec succès.",
+        title: 'Rôle retiré',
+        description: `Le rôle "${variables.roleName}" a été retiré avec succès.`,
       });
     },
     onError: (error) => {
+      console.error('[useRoleManagement.removeRole] Error:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de retirer le rôle.",
-        variant: "destructive",
+        title: 'Erreur',
+        description: 'Impossible de retirer le rôle.',
+        variant: 'destructive',
       });
-    }
+    },
   });
+
+  const getUserRoles = async (userId: string): Promise<string[]> => {
+    try {
+      return await fetchUserRoles(userId);
+    } catch (err) {
+      console.error('[useRoleManagement.getUserRoles] Error:', err);
+      return [];
+    }
+  };
+
+  const getUsersRoles = async (userIds: string[]): Promise<Map<string, string[]>> => {
+    try {
+      return await fetchUsersRoles(userIds);
+    } catch (err) {
+      console.error('[useRoleManagement.getUsersRoles] Error:', err);
+      return new Map();
+    }
+  };
+
+  const getAllRoles = async (): Promise<string[]> => [...AVAILABLE_ROLES];
 
   return {
     assignRole,
     removeRole,
-    getUserRoles: async (userId: string) => {
-      const user = await userService.getUserById(userId);
-      if (!user) return [];
-      return user.userRoles?.map(ur => String(ur.roleName)) || [];
-    },
-    getAllRoles: async () => {
-      return ['admin', 'manager', 'project_manager', 'employee', 'staff', 'user'];
-    }
+    getUserRoles,
+    getUsersRoles,
+    getAllRoles,
   };
 };

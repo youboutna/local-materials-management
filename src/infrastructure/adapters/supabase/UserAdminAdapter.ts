@@ -1,6 +1,8 @@
 /**
  * Supabase adapter for user administration operations
  * Implements admin-level user management functionality
+ *
+ * ⚠️ Un utilisateur peut avoir PLUSIEURS rôles.
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -19,7 +21,7 @@ export class UserAdminAdapter implements UserAdminRepository {
           code: 'USER_ADMIN_ADAPTER_001',
           message: 'Échec de la récupération des profils utilisateurs',
           technicalError: error,
-          stack: new Error().stack
+          stack: new Error().stack,
         });
         throw new Error('USER_ADMIN_ADAPTER_001: Impossible de charger les profils utilisateurs');
       }
@@ -29,18 +31,25 @@ export class UserAdminAdapter implements UserAdminRepository {
         code: 'USER_ADMIN_ADAPTER_002',
         message: 'Erreur inattendue lors de la récupération des profils',
         error: err,
-        stack: new Error().stack
+        stack: new Error().stack,
       });
       throw err;
     }
   }
 
+  /**
+   * ✅ Retourne TOUS les rôles actifs d'un utilisateur.
+   * Filtre status='active' + expires_at non expiré.
+   */
   async getUserRoles(userId: string) {
     try {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('user_roles')
         .select('role_name')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .or(`expires_at.is.null,expires_at.gt.${now}`);
 
       if (error) {
         console.error('USER_ADMIN_ADAPTER_003: Failed to fetch user roles', {
@@ -48,7 +57,7 @@ export class UserAdminAdapter implements UserAdminRepository {
           message: `Échec de la récupération des rôles pour l'utilisateur ${userId}`,
           userId,
           technicalError: error,
-          stack: new Error().stack
+          stack: new Error().stack,
         });
         throw new Error('USER_ADMIN_ADAPTER_003: Impossible de charger les rôles utilisateur');
       }
@@ -59,7 +68,7 @@ export class UserAdminAdapter implements UserAdminRepository {
         message: 'Erreur inattendue lors de la récupération des rôles utilisateur',
         userId,
         error: err,
-        stack: new Error().stack
+        stack: new Error().stack,
       });
       throw err;
     }
@@ -77,7 +86,7 @@ export class UserAdminAdapter implements UserAdminRepository {
           message: "L'API admin n'est pas disponible pour cet utilisateur",
           userId,
           technicalError: adminError,
-          stack: new Error().stack
+          stack: new Error().stack,
         });
         userData = { user: null };
       }
@@ -85,10 +94,10 @@ export class UserAdminAdapter implements UserAdminRepository {
     } catch (err) {
       console.error('USER_ADMIN_ADAPTER_006: Unexpected error in getUserById', {
         code: 'USER_ADMIN_ADAPTER_006',
-        message: 'Erreur inattendue lors de la récupération de l utilisateur par ID',
+        message: "Erreur inattendue lors de la récupération de l'utilisateur par ID",
         userId,
         error: err,
-        stack: new Error().stack
+        stack: new Error().stack,
       });
       throw err;
     }
@@ -104,7 +113,7 @@ export class UserAdminAdapter implements UserAdminRepository {
           userId,
           status,
           technicalError: error,
-          stack: new Error().stack
+          stack: new Error().stack,
         });
         throw new Error('USER_ADMIN_ADAPTER_007: Impossible de modifier le statut utilisateur');
       }
@@ -115,7 +124,7 @@ export class UserAdminAdapter implements UserAdminRepository {
         userId,
         status,
         error: err,
-        stack: new Error().stack
+        stack: new Error().stack,
       });
       throw err;
     }

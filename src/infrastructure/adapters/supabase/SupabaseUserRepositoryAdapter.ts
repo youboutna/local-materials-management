@@ -1,12 +1,8 @@
 /**
  * Supabase User Repository Adapter
  * Implements IUserRepository (CRUD + search on public.profiles / public.user_roles)
- * Distinct from SupabaseUserAdapter which implements IAuthRepository.
  *
- * Structure réelle de public.user_roles :
- *   - id, user_id, role_name, assigned_by, assigned_at, status, expires_at
- *   - UNIQUE(user_id, role_name)
- *   - status IN ('active', 'pending', 'inactive')
+ * ⚠️ Un utilisateur peut avoir PLUSIEURS rôles.
  */
 
 import { User, UserRoleEntity, UserRoleStatus } from '@/domain/entities/User';
@@ -19,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 
 // ────────────────────────────────────────────────────────────
-// TYPES DE ROW (alignés sur le schéma réel)
+// TYPES
 // ────────────────────────────────────────────────────────────
 
 type ProfileRow = {
@@ -35,10 +31,6 @@ type ProfileRow = {
   updated_at: string | null;
 };
 
-/**
- * Type aligné sur la vraie table public.user_roles
- * ⚠️ Utiliser `expires_at` (pas `expires_at`)
- */
 type RoleRow = {
   id: string;
   user_id: string;
@@ -49,17 +41,22 @@ type RoleRow = {
   expires_at: string | null;
 };
 
-// ────────────────────────────────────────────────────────────
-// CONSTANTES
-// ────────────────────────────────────────────────────────────
+/**
+ * ✅ Type de patch pour la table `profiles`
+ * Colonnes réellement modifiables (whitelist)
+ */
+type ProfilePatch = {
+  full_name?: string | null;
+  phone?: string | null;
+  national_id?: string | null;
+  avatar_url?: string | null;
+  status?: string;
+  updated_at?: string;
+};
 
 const PROFILE_COLUMNS =
   'id, full_name, phone, national_id, avatar_url, status, role, provider_data, created_at, updated_at';
 
-/**
- * Colonnes de user_roles (source unique de vérité)
- * ⚠️ Utiliser `expires_at` (pas `expires_at`)
- */
 const ROLE_COLUMNS = 'id, user_id, role_name, status, assigned_at, assigned_by, expires_at';
 
 // ────────────────────────────────────────────────────────────
@@ -80,15 +77,9 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
     if (typeof fromProvider === 'string' && fromProvider.includes('@')) {
       return fromProvider;
     }
-
     return `${row.id}@users.local`;
   }
 
-  /**
-   * Mappe un statut DB vers UserRoleStatus
-   * 'inactive' peut être un INACTIVE ou un REVOKED métier.
-   * On choisit INACTIVE par défaut (plus neutre).
-   */
   private mapDbStatusToDomain(dbStatus: string | null): UserRoleStatus {
     switch (dbStatus) {
       case 'active':
@@ -119,7 +110,6 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
   private toDomain(row: ProfileRow, roles: RoleRow[] = []): User {
     let roleEntities = this.mapRoles(roles);
 
-    // Fallback legacy : profiles.role si user_roles est vide
     if (roleEntities.length === 0 && row.role) {
       roleEntities = [
         UserRoleEntity.create({
@@ -150,10 +140,13 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
     const map = new Map<string, RoleRow[]>();
     if (userIds.length === 0) return map;
 
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('user_roles')
       .select(ROLE_COLUMNS)
-      .in('user_id', userIds);
+      .in('user_id', userIds)
+      .eq('status', 'active')
+      .or(`expires_at.is.null,expires_at.gt.${now}`);
 
     if (error) {
       ErrorLogger.log(
@@ -244,10 +237,13 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
   }
 
   async findByRole(role: string): Promise<User[]> {
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .eq('role_name', role);
+      .eq('role_name', role)
+      .eq('status', 'active')
+      .or(`expires_at.is.null,expires_at.gt.${now}`);
 
     if (error) this.fail('Failed to load users by role', error);
 
@@ -281,16 +277,25 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
     const source = userData as unknown as Record<string, unknown>;
     const id = (source.id as string) || crypto.randomUUID();
 
+    const insertPayload: {
+      id: string;
+      full_name: string | null;
+      phone: string | null;
+      national_id: string | null;
+      avatar_url: string | null;
+      status: string;
+    } = {
+      id,
+      full_name: (source.fullName as string) || null,
+      phone: (source.phone as string) || null,
+      national_id: (source.nationalId as string) || null,
+      avatar_url: (source.avatarUrl as string) || null,
+      status: 'active',
+    };
+
     const { data, error } = await supabase
       .from('profiles')
-      .insert({
-        id,
-        full_name: (source.fullName as string) || null,
-        phone: (source.phone as string) || null,
-        national_id: (source.nationalId as string) || null,
-        avatar_url: (source.avatarUrl as string) || null,
-        status: 'active',
-      })
+      .insert(insertPayload)
       .select(PROFILE_COLUMNS)
       .single();
 
@@ -298,14 +303,21 @@ export class SupabaseUserRepositoryAdapter implements IUserRepository {
     return this.toDomain(data as unknown as ProfileRow);
   }
 
+  /**
+   * ✅ Patch typé explicitement (whitelist des colonnes modifiables).
+   * Corrige l'erreur TS "Argument of type Record<string, unknown> is not assignable..."
+   */
   async update(id: string, userData: Partial<User>): Promise<User> {
     const source = userData as unknown as Record<string, unknown>;
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-    if (source.fullName !== undefined) patch.full_name = source.fullName;
-    if (source.phone !== undefined) patch.phone = source.phone;
-    if (source.nationalId !== undefined) patch.national_id = source.nationalId;
-    if (source.avatarUrl !== undefined) patch.avatar_url = source.avatarUrl;
+    const patch: ProfilePatch = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (source.fullName !== undefined) patch.full_name = (source.fullName as string) ?? null;
+    if (source.phone !== undefined) patch.phone = (source.phone as string) ?? null;
+    if (source.nationalId !== undefined) patch.national_id = (source.nationalId as string) ?? null;
+    if (source.avatarUrl !== undefined) patch.avatar_url = (source.avatarUrl as string) ?? null;
     if (source.isActive !== undefined) patch.status = source.isActive ? 'active' : 'inactive';
 
     const { data, error } = await supabase
