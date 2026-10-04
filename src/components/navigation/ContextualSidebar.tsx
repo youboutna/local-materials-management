@@ -35,7 +35,6 @@ import {
   BarChart3,
   Palette,
   KeyRound,
-
 } from "lucide-react";
 import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
 
@@ -107,7 +106,6 @@ const navigationItems: NavItem[] = [
       { label: 'nav.consultant_portal', href: "/consultant-portal", roles: ["admin", "director", "manager", "consultant", "engineering_consultant"] },
       { label: 'auto.contextualsidebar.organisations', href: "/organizations", roles: ["admin", "director", "manager"] },
       { label: 'auto.contextualsidebar.utilisateurs', href: "/users", roles: ["admin", "director"] },
-
     ],
   },
   {
@@ -156,7 +154,6 @@ const navigationItems: NavItem[] = [
       { label: 'settings.tabs.system', href: "/settings?tab=system" },
     ],
   },
-
 ];
 
 
@@ -169,31 +166,45 @@ function NavItemComponent({
   collapsed?: boolean;
   depth?: number;
 }) {
+  // ==========================================================================
+  // ✅ RÈGLE DES HOOKS : TOUS les hooks EN PREMIER, sans exception
+  // ==========================================================================
   const { t } = useLanguage();
   const { hasAnyRole } = useAuth();
   const location = useLocation();
 
-  if (item.roles && !(hasAnyRole?.(item.roles) ?? false)) {
-    return null;
-  }
+  // ✅ useState ICI, AVANT tout early return
   const [isOpen, setIsOpen] = useState(() => {
-    // Auto-open if current path is within this section
     if (item.children) {
-      return item.children.some((child) => 
-        child.href && location.pathname.startsWith(child.href)
+      return item.children.some(
+        (child) => child.href && location.pathname.startsWith(child.href),
       );
     }
     return false;
   });
 
+  // ==========================================================================
+  // ✅ MAINTENANT on peut faire les early returns
+  // ==========================================================================
+  const hasRoleAccess = !item.roles || (hasAnyRole?.(item.roles) ?? false);
+
+  if (!hasRoleAccess) {
+    return null;
+  }
+
+  // ==========================================================================
+  // Variables dérivées
+  // ==========================================================================
   const isActive = item.href && location.pathname === item.href;
   const hasActiveChild = item.children?.some(
-    (child) => child.href && location.pathname.startsWith(child.href)
+    (child) => child.href && location.pathname.startsWith(child.href),
   );
 
   const IconComponent = item.icon;
 
-  // Action item (dialogue) — ex. partage & codes secrets fournisseurs
+  // ==========================================================================
+  // Rendu : action spéciale (dialogue)
+  // ==========================================================================
   if (item.action === 'secretManager') {
     return (
       <SecretAccessManager
@@ -207,7 +218,9 @@ function NavItemComponent({
     );
   }
 
-  // Simple link item
+  // ==========================================================================
+  // Rendu : simple lien
+  // ==========================================================================
   if (!item.children) {
     return (
       <Link
@@ -219,11 +232,12 @@ function NavItemComponent({
             ? "bg-primary/10 text-primary border-l-2 border-primary"
             : "text-muted-foreground",
           depth > 0 && "pl-10",
-          collapsed && "justify-center px-2"
+          collapsed && "justify-center px-2",
         )}
+        aria-current={isActive ? "page" : undefined}
       >
         {IconComponent && (
-          <IconComponent className={cn("h-4 w-4 flex-shrink-0", isActive && "text-primary")} />
+          <IconComponent className={cn("h-4 w-4 flex-shrink-0", isActive && "text-primary")} aria-hidden="true" />
         )}
         {!collapsed && <span className="truncate">{t(item.label)}</span>}
         {item.badge && !collapsed && (
@@ -235,30 +249,32 @@ function NavItemComponent({
     );
   }
 
-  // Collapsible group
+  // ==========================================================================
+  // Rendu : groupe repliable
+  // ==========================================================================
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
         <button
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all w-full",
-            "hover:bg-muted hover:text-foreground",
-            hasActiveChild
-              ? "text-foreground"
-              : "text-muted-foreground",
-            collapsed && "justify-center px-2"
+            "hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta-500",
+            hasActiveChild ? "text-foreground" : "text-muted-foreground",
+            collapsed && "justify-center px-2",
           )}
+          aria-expanded={isOpen}
+          aria-label={t(item.label)}
         >
           {IconComponent && (
-            <IconComponent className={cn("h-4 w-4 flex-shrink-0", hasActiveChild && "text-primary")} />
+            <IconComponent className={cn("h-4 w-4 flex-shrink-0", hasActiveChild && "text-primary")} aria-hidden="true" />
           )}
           {!collapsed && (
             <>
               <span className="truncate flex-1 text-left">{t(item.label)}</span>
               {isOpen ? (
-                <ChevronDown className="h-4 w-4 flex-shrink-0" />
+                <ChevronDown className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               ) : (
-                <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                <ChevronRight className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               )}
             </>
           )}
@@ -281,8 +297,9 @@ export function ContextualSidebar({ className, collapsed = false, onToggle }: Co
       className={cn(
         "flex flex-col border-r bg-card h-full transition-all duration-300",
         collapsed ? "w-16" : "w-64",
-        className
+        className,
       )}
+      aria-label="Navigation contextuelle"
     >
       <ScrollArea className="flex-1 py-4">
         <nav className="space-y-1 px-2">
@@ -303,7 +320,6 @@ export function ContextualSidebar({ className, collapsed = false, onToggle }: Co
         />
       </div>
     </aside>
-
   );
 }
 

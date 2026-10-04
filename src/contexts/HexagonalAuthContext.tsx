@@ -1,6 +1,7 @@
 // src/contexts/HexagonalAuthContext.tsx
 
 import { getAuthManager, type AuthManagerConfig } from '@/application/services/AuthManager';
+import { getAuthService } from '@/application/services/AuthService'; // ✅ Service applicatif
 import type { AuthProvider } from '@/config/app';
 import { getAppConfig } from '@/config/app';
 import { getOAuthProviderConfig } from '@/config/referentials/oauth-providers.referential';
@@ -29,20 +30,20 @@ export interface HexagonalAuthContextType {
   // Core auth state
   user: AuthUser | null;
   loading: boolean;
-  /** Alias de `loading` (compat présentation) */
   isLoading: boolean;
-  /** Session courante (compat présentation) */
   session: { user: AuthUser | null; provider?: string; expires_at?: string | number } | null;
   error: Error | null;
   isAuthenticated: boolean;
   currentProvider: AuthProvider;
 
+  // ✅ Rôle applicatif exposé (chargé depuis public.user_roles via AuthService)
+  role: string | null;
+  roles: string[];
+
   // Auth actions
   login: (credentials: LoginCredentials) => Promise<void>;
-  /** Connexion rapide DEV (LocalAuthAdapter, aucun appel réseau) */
   devLogin: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
-  /** Alias de `logout` (compat présentation) */
   signOut: () => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -73,14 +74,9 @@ export interface HexagonalAuthContextType {
 }
 
 // ============================================================================
-// CONTEXTE
+// CONTEXTE (singleton global pour HMR)
 // ============================================================================
 
-/**
- * Contexte partagé via un singleton global : en développement, le rechargement
- * à chaud (HMR) peut évaluer ce module plusieurs fois. Deux objets de contexte
- * distincts feraient échouer `useContext` côté consommateur.
- */
 type ContextGlobal = typeof globalThis & {
   __hexAuthContext__?: React.Context<HexagonalAuthContextType | undefined>;
 };
@@ -102,10 +98,14 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [showEmailEditor, setShowEmailEditor] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
 
+  // ✅ NOUVEAU : rôles applicatifs (chargés via AuthService → IUserRoleRepository → adapter Supabase)
+  const [role, setRole] = useState<string | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
+
   const authManager = getAuthManager();
 
   // ==========================================================================
-  // CHARGEMENT DE LA CONFIGURATION
+  // CONFIGURATION
   // ==========================================================================
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   // ==========================================================================
-  // CHARGEMENT DE L'UTILISATEUR
+  // CHARGEMENT UTILISATEUR
   // ==========================================================================
 
   const loadUser = useCallback(async () => {
@@ -139,7 +139,52 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [loadUser]);
 
   // ==========================================================================
-  // ACTIONS D'AUTHENTIFICATION
+  // ✅ CHARGEMENT DES RÔLES (via AuthService → IUserRoleRepository, architecture respectée)
+  // ==========================================================================
+
+  useEffect(() => {
+    const userId = (user as any)?.id;
+    if (!userId) {
+      setRole(null);
+      setRoles([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchRoles = async () => {
+      try {
+        const authService = getAuthService();
+        const userRoles = await authService.getUserRoles(userId);
+
+        // UserRoleEntity[] → extraction des noms de rôle (tolérant aux 2 formats)
+        const roleNames: string[] = (userRoles || [])
+          .map((r: any) => r?.role_name ?? r?.roleName ?? r?.role)
+          .filter((r: any): r is string => typeof r === 'string' && r.length > 0);
+
+        if (cancelled) return;
+
+        setRoles(roleNames);
+
+        // Rôle "principal" selon priorité métier
+        const priority = ['admin', 'director', 'manager', 'agent'];
+        const primary = priority.find((p) => roleNames.includes(p)) ?? roleNames[0] ?? null;
+        setRole(primary);
+      } catch (e) {
+        console.warn('[HexagonalAuth] getUserRoles failed:', e);
+        if (!cancelled) {
+          setRoles([]);
+          setRole(null);
+        }
+      }
+    };
+
+    fetchRoles();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // ==========================================================================
+  // ACTIONS AUTH
   // ==========================================================================
 
   const login = useCallback(async (credentials: LoginCredentials) => {
@@ -181,6 +226,8 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(true);
       await authManager.signOut();
       setUser(null);
+      setRole(null);   // ✅ reset
+      setRoles([]);    // ✅ reset
       toast.success('Vous avez été déconnecté');
     } catch (err) {
       const e = err instanceof Error ? err : new Error('Erreur de déconnexion');
@@ -236,57 +283,32 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [authManager]);
 
   // ==========================================================================
-  // OAuth FUNCTIONS
+  // OAUTH
   // ==========================================================================
 
-  /**
-   * Récupère la liste des fournisseurs OAuth disponibles.
-   */
   const getOAuthProviders = useCallback(async (): Promise<OAuthProviderConfig[]> => {
     try {
       const config = getAppConfig();
       const provider = config.auth.provider;
       const providerConfig = getOAuthProviderConfig(provider);
-
       const providers: OAuthProviderConfig[] = [];
 
       switch (provider) {
         case 'supabase':
           providers.push(
-            {
-              id: 'google',
-              providerName: 'google',
-              enabled: true,
-              scopes: providerConfig.scopes || ['openid', 'profile', 'email'],
-            },
-            {
-              id: 'github',
-              providerName: 'github',
-              enabled: true,
-              scopes: ['user:email'],
-            },
+            { id: 'google', providerName: 'google', enabled: true, scopes: providerConfig.scopes || ['openid', 'profile', 'email'] },
+            { id: 'github', providerName: 'github', enabled: true, scopes: ['user:email'] },
           );
           break;
         case 'keycloak':
-          providers.push({
-            id: 'keycloak',
-            providerName: 'keycloak',
-            enabled: true,
-            scopes: providerConfig.scopes || ['openid', 'profile', 'email', 'roles'],
-          });
+          providers.push({ id: 'keycloak', providerName: 'keycloak', enabled: true, scopes: providerConfig.scopes || ['openid', 'profile', 'email', 'roles'] });
           break;
         case 'auth0':
-          providers.push({
-            id: 'auth0',
-            providerName: 'auth0',
-            enabled: true,
-            scopes: providerConfig.scopes || ['openid', 'profile', 'email'],
-          });
+          providers.push({ id: 'auth0', providerName: 'auth0', enabled: true, scopes: providerConfig.scopes || ['openid', 'profile', 'email'] });
           break;
         default:
           break;
       }
-
       return providers;
     } catch (error) {
       console.error('Erreur lors de la récupération des providers OAuth:', error);
@@ -294,28 +316,11 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  /**
-   * Génère l'URL d'authentification OAuth.
-   *
-   * ⚠️ `redirectUri` (optionnel) = URL de RETOUR après login (frontend).
-   *    Ne jamais passer l'URL de callback Supabase ici.
-   */
-  const generateOAuthUrl = useCallback(async (
-    provider: string,
-    redirectUri?: string,
-  ): Promise<string> => {
+  const generateOAuthUrl = useCallback(async (provider: string, redirectUri?: string): Promise<string> => {
     try {
       const config = getAppConfig();
       const providerConfig = getOAuthProviderConfig(config.auth.provider as AuthProvider);
-
-      // ✅ URL de retour vers le frontend (jamais localhost dans un build publié)
       const effectiveRedirect = redirectUri || getOAuthRedirectUrl();
-
-      console.debug('[OAuth] generateOAuthUrl', {
-        provider,
-        effectiveRedirect,
-        authProvider: config.auth.provider,
-      });
 
       let authUrl = '';
 
@@ -332,18 +337,14 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
           break;
         }
         case 'keycloak':
-          // ✅ Utilise effectiveRedirect (pas redirectUri brut)
           authUrl = `${config.auth.url}/realms/${config.auth.realm}/protocol/openid-connect/auth?client_id=${config.auth.clientId}&redirect_uri=${encodeURIComponent(effectiveRedirect)}&response_type=code&scope=${(providerConfig.scopes || ['openid', 'profile', 'email']).join('%20')}`;
           break;
         case 'auth0':
-          // ✅ Utilise effectiveRedirect (pas redirectUri brut)
           authUrl = `${config.auth.url}/authorize?client_id=${config.auth.clientId}&redirect_uri=${encodeURIComponent(effectiveRedirect)}&response_type=code&scope=${(providerConfig.scopes || ['openid', 'profile', 'email']).join(' ')}`;
           break;
         default:
           throw new Error(`OAuth non supporté pour le fournisseur ${config.auth.provider}`);
       }
-
-      console.debug('[OAuth] authUrl generated:', authUrl);
       return authUrl;
     } catch (error) {
       console.error("Erreur lors de la génération de l'URL OAuth:", error);
@@ -351,56 +352,55 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  /**
-   * Connexion avec OAuth.
-   *
-   * ⚠️ Ne PAS remettre setLoading(false) après window.location.href : la page
-   *    va se recharger, et le state React va être détruit. Un setLoading(false)
-   *    ici provoquerait un flash visuel inutile.
-   */
   const loginWithOAuth = useCallback(async (
     input: string | { provider: string; code?: string; state?: string; redirectUri?: string },
   ) => {
     const provider = typeof input === 'string' ? input : input.provider;
-
-    // ✅ Respecter input.redirectUri s'il est fourni (callback flow)
     const redirectUri =
-      typeof input === 'object' && input.redirectUri
-        ? input.redirectUri
-        : getOAuthRedirectUrl();
+      typeof input === 'object' && input.redirectUri ? input.redirectUri : getOAuthRedirectUrl();
 
     try {
       setLoading(true);
-
       const authUrl = await generateOAuthUrl(provider, redirectUri);
-
-      console.info('[OAuth] Redirection vers:', authUrl);
       window.location.href = authUrl;
-
-      // ⚠️ Pas de setLoading(false) : la page se recharge, le state est détruit.
-      //    En cas d'erreur uniquement, on remet loading à false (catch ci-dessous).
     } catch (err) {
       setLoading(false);
       const e = err instanceof Error ? err : new Error('Erreur de connexion OAuth');
       setError(e);
-      console.error('[OAuth] Erreur:', e);
       throw e;
     }
   }, [generateOAuthUrl]);
 
   // ==========================================================================
-  // UTILITAIRES
+  // RÔLES : hasRole / hasAnyRole
   // ==========================================================================
 
   const hasRole = useCallback((roleName: string): boolean => {
-    if (!user) return false;
-    return user.role === roleName || !!user.roles?.includes(roleName);
-  }, [user]);
+    if (!roleName) return false;
+    if (role === roleName) return true;
+    if (roles.length > 0) return roles.includes(roleName);
+    // Dernier recours : metadata
+    const metaRole =
+      (user as any)?.role ||
+      (user as any)?.user_metadata?.role ||
+      (user as any)?.app_metadata?.role;
+    return metaRole === roleName;
+  }, [role, roles, user]);
 
   const hasAnyRole = useCallback((roleNames: string[]): boolean => {
-    if (!user) return false;
-    return roleNames.some(role => hasRole(role));
-  }, [user, hasRole]);
+    if (!roleNames?.length) return false;
+    if (role && roleNames.includes(role)) return true;
+    if (roles.length > 0 && roleNames.some((r) => roles.includes(r))) return true;
+    const metaRole =
+      (user as any)?.role ||
+      (user as any)?.user_metadata?.role ||
+      (user as any)?.app_metadata?.role;
+    return !!metaRole && roleNames.includes(metaRole);
+  }, [role, roles, user]);
+
+  // ==========================================================================
+  // DIVERS
+  // ==========================================================================
 
   const switchProvider = useCallback(async (config: AuthManagerConfig) => {
     try {
@@ -418,10 +418,6 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [loadUser]);
 
   const getCurrentProvider = useCallback(() => currentProvider, [currentProvider]);
-
-  // ==========================================================================
-  // ÉDITEUR D'EMAIL
-  // ==========================================================================
 
   const updateEmail = useCallback(async (newEmail: string) => {
     try {
@@ -446,33 +442,42 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setShowEmailEditor(true);
   }, []);
 
+  const supportedProviders = useMemo(() => [
+    { value: 'supabase' as AuthProvider, label: 'Supabase', description: 'Géré par Supabase' },
+    { value: 'keycloak' as AuthProvider, label: 'Keycloak', description: 'SSO Entreprise' },
+    { value: 'auth0' as AuthProvider, label: 'Auth0', description: 'Plateforme Auth0' },
+    { value: 'local' as AuthProvider, label: 'Local (DEV)', description: 'Mode développement' },
+    { value: 'custom' as AuthProvider, label: 'Custom', description: 'Personnalisé' },
+  ], []);
+
   // ==========================================================================
-  // FOURNISSEURS SUPPORTÉS
+  // ✅ UTILISATEUR ENRICHI (roles injectés pour MergedNavbar et autres consommateurs UI)
   // ==========================================================================
 
-  const supportedProviders = useMemo(() => {
-    return [
-      { value: 'supabase' as AuthProvider, label: 'Supabase', description: 'Géré par Supabase' },
-      { value: 'keycloak' as AuthProvider, label: 'Keycloak', description: 'SSO Entreprise' },
-      { value: 'auth0' as AuthProvider, label: 'Auth0', description: 'Plateforme Auth0' },
-      { value: 'local' as AuthProvider, label: 'Local (DEV)', description: 'Mode développement' },
-      { value: 'custom' as AuthProvider, label: 'Custom', description: 'Personnalisé' },
-    ];
-  }, []);
+  const enrichedUser = useMemo<AuthUser | null>(() => {
+    if (!user) return null;
+    return {
+      ...user,
+      roles: roles.length > 0 ? roles : ((user as any)?.roles ?? []),
+    } as AuthUser;
+  }, [user, roles]);
 
   // ==========================================================================
   // VALUE
   // ==========================================================================
 
   const value: HexagonalAuthContextType = {
-    user,
+    user: enrichedUser,
     loading,
     isLoading: loading,
-    session: user ? { user } : null,
+    session: enrichedUser ? { user: enrichedUser } : null,
     error,
-    isAuthenticated: !!user,
+    isAuthenticated: !!enrichedUser,
     currentProvider,
     isDevelopmentMode,
+
+    role,   // ✅ exposé
+    roles,  // ✅ exposé
 
     signOut: logout,
     login,
@@ -519,9 +524,5 @@ export const useHexagonalAuth = (): HexagonalAuthContextType => {
   }
   return context;
 };
-
-// ============================================================================
-// EXPORT
-// ============================================================================
 
 export default HexagonalAuthContext;
