@@ -95,7 +95,7 @@ secret = "env(GOOGLE_CLIENT_SECRET)"
 # ⚠️ Dev local :
 redirect_uri = "http://localhost:8000/auth/v1/callback"
 # ⚠️ Prod self-hosted :
-# redirect_uri = "https://supabase.hadratech.com/auth/v1/callback"
+# redirect_uri = "https://app.hadratech.com/auth/v1/callback"
 
 # ---- GitHub OAuth ----
 [auth.external.github]

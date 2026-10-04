@@ -47,9 +47,9 @@ SET status = 'active'
 WHERE status IS NULL;
 
 -- Ajouter une contrainte de validation
-ALTER TABLE public.profiles 
-ADD CONSTRAINT check_profiles_status 
-CHECK (status IN ('active', 'inactive', 'suspended', 'pending'));
+--ALTER TABLE public.profiles 
+--ADD CONSTRAINT check_profiles_status 
+--CHECK (status IN ('active', 'inactive', 'suspended', 'pending'));
 
 GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
 GRANT ALL ON public.profiles TO service_role;
