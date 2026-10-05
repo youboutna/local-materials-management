@@ -61,10 +61,8 @@ const Hero = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-terracotta-500 bg-opacity-20 border border-terracotta-500 border-opacity-30 text-terracotta-200 text-sm mb-6"
             >
               <Shield className="h-4 w-4" />
-              {safeT(
-                "index.direction_features.management",
-                "GESTION DE MATÉRIAUX"
-              )}
+                
+                Gestion de Stock et Projet pour EL HACHMIA SERVICES (BTP et Génie Civil)           
             </motion.div>
 
             {/* Titre principal */}
@@ -75,10 +73,10 @@ const Hero = () => {
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
             >
               <span className="block bg-gradient-to-br from-white to-gray-200 bg-clip-text text-transparent">
-                {safeT(
-                  "index.features.system",
-                  "Système de suivi des projets et Gestion des Matériaux"
-                )}
+                {
+                  
+                  "Optimiser le suivi, reporting et de Gestion de Projets géolocalisés avec calcul metré"
+                }
               </span>
               <span className="block bg-gradient-to-r from-sandstone-300 to-sandstone-200 bg-clip-text text-transparent">
                 {safeT("index.features.management", "Management System")}
@@ -94,7 +92,7 @@ const Hero = () => {
             >
               {safeT(
                 "index.direction_features.details",
-                "Visualisez en temps réel les indicateurs de performance, planifiez les investissements d'infrastructure et optimisez la répartition des ressources énergétiques sur le territoire national."
+                "Visualisez en temps réel les indicateurs de performance, planifiez les investissements d'infrastructure et optimisez la répartition des ressources sur le territoire national."
               )}
             </motion.p>
 
