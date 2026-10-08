@@ -1609,13 +1609,13 @@ export const translations = {
                 send: "Envoyer le message"
             },    
             info: {
-                title: "HADRATECH SERVICES: entreprise BTP et Génie Civil — NIF 01378215",
+                title: "HADRATECH SERVICES: entreprise BTP et Génie Civil — NIF 01010101",
                 address: "Adresse",
-                address_value: "Adresse :Nejah N°1980 B, TVZ, Nouakchott, Mauritanie",
+                address_value: "Adresse :Av ould meknass, TVZ, Nouakchott, Mauritanie",
                 phone: "Téléphone",
-                phone_value: "+222 44 22 38 39",
+                phone_value: "+222 41 43 89 08",
                 email: "Email",
-                email_value: "bmedlemine94@gmail.com",
+                email_value: "contact@hadratech.com",
                 hours: "Heures d'ouverture",
                 hours_value: "Lun-Ven : 8h00-17h00",
                 social: "Réseaux sociaux"
