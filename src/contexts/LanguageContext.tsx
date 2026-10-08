@@ -1368,7 +1368,7 @@ export const translations = {
 
         footer: {
             about: "À propos",
-            about_desc: "Notre système de gestion ,HadraTech-GPI, ERP est conçu pour simplifier et optimiser tous les aspects de vos projets de construction.",
+            about_desc: "Avec HadraTech-GPI, pilotez vos projets de construction en toute sérénité. Notre ERP unifié simplifie chaque étape et optimise vos ressources, vos délais et vos coûts",
             rights: "Tous droits réservés",
             by_hadratech: "Développé par HadraTech",
             quick_links: "Liens rapides",
@@ -1607,15 +1607,15 @@ export const translations = {
                 message: "Message",
                 message_placeholder: "Votre message...",
                 send: "Envoyer le message"
-            },
+            },    
             info: {
-                title: "Informations de contact",
+                title: "HADRATECH SERVICES: entreprise BTP et Génie Civil — NIF 01378215",
                 address: "Adresse",
-                address_value: "Nouakchott, Mauritanie",
+                address_value: "Adresse :Nejah N°1980 B, TVZ, Nouakchott, Mauritanie",
                 phone: "Téléphone",
-                phone_value: "+222 XX XX XX XX",
+                phone_value: "+222 44 22 38 39",
                 email: "Email",
-                email_value: "contact@example.com",
+                email_value: "bmedlemine94@gmail.com",
                 hours: "Heures d'ouverture",
                 hours_value: "Lun-Ven : 8h00-17h00",
                 social: "Réseaux sociaux"
@@ -1680,9 +1680,9 @@ export const translations = {
             description: "Pilotage des investissements et planification énergétique",
             powered: "Gestion de Projet Intégré, Propulsé par HadraTech",
             system: "Système de supervision et aide à la décision",
-            details: "Visualisez en temps réel les indicateurs de performance, planifiez les investissements d'infrastructure et optimisez la répartition des ressources énergétiques sur le territoire national.",
+            details: "Avec HadraTech-GPI, Visualisez en temps réel les indicateurs de performance, planifiez les investissements d'infrastructure et optimisez la répartition des ressources  sur le territoire national.",
             management : "Gestion des Actifs et Maintenance Préventive",
-    message:"Suivi et optimisation des infrastructures énergétiques",},
+    message:"Suivi et optimisation des infrastructures ",},
 
 // Pour les Bureaux d'Études
     consulting_features: {

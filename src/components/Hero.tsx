@@ -62,7 +62,7 @@ const Hero = () => {
             >
               <Shield className="h-4 w-4" />
                 
-                Gestion de Stock et Projet pour EL HACHMIA SERVICES (BTP et Génie Civil)           
+                Gestion de Stock et Projet pour HADRATECH SERVICES (BTP et Génie Civil)           
             </motion.div>
 
             {/* Titre principal */}

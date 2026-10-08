@@ -28,7 +28,8 @@
     "fix:hexagonal:all": "node scripts/fix-hexagonal-violations.js --all",
     "fix:hexagonal:verbose": "node scripts/fix-hexagonal-violations.js --verbose",
     "fix:hexagonal:analyze": "node scripts/fix-hexagonal-violations.js --analyze",
-    "fix:hexagonal:file": "node scripts/fix-hexagonal-violations.js --file"
+    "fix:hexagonal:file": "node scripts/fix-hexagonal-violations.js --file",
+    "build:zip": "npm run build && node scripts/zip-dist.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -120,6 +121,7 @@
     "@types/react-dom": "^18.3.0",
     "@types/uuid": "^9.0.8",
     "@vitejs/plugin-react-swc": "^3.5.0",
+    "archiver": "^8.0.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",

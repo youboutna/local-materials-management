@@ -23,7 +23,7 @@ const Footer = () => {
     contact: [
       { icon: Phone, text: "+222 44 22 38 39" },
       { icon: Mail, text: "bmedlemine94@gmail.com" },
-      { icon: Building2, text: "Description de l'entreprise BTP et Génie Civil — NIF 01378215" },
+      { icon: Building2, text: "HADRATECH SERVICES (BTP et Génie Civil)" },
       { icon: MapPin, text: "Adresse :Nejah N°1980 B, TVZ, Nouakchott, Mauritanie" },
     ],
     newsletter: "Newsletter",
