@@ -273,10 +273,10 @@ const Contact: React.FC = () => {
                     <div>
                       <p className="font-medium">{t("contact.info.phone") || "Téléphone"}</p>
                       <a
-                        href="tel:+22245000000"
+                        href="tel:+22241434908"
                         className="text-muted-foreground hover:text-primary"
                       >
-                        {t("contact.info.phone_value") || "+222 45 00 00 00"}
+                        {t("contact.info.phone_value") || "+222 41 43 89 08"}
                       </a>
                     </div>
                   </div>

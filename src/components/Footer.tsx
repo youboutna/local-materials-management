@@ -21,10 +21,10 @@ const Footer = () => {
       { name: t("contact.title"), href: "/contact" },
     ],
     contact: [
-      { icon: Phone, text: "+222 44 22 38 39" },
-      { icon: Mail, text: "bmedlemine94@gmail.com" },
+      { icon: Phone, text: "+222 41 43 89 08" },
+      { icon: Mail, text: "contact@hadratech.com" },
       { icon: Building2, text: "HADRATECH SERVICES (BTP et Génie Civil)" },
-      { icon: MapPin, text: "Adresse :Nejah N°1980 B, TVZ, Nouakchott, Mauritanie" },
+      { icon: MapPin, text: "Adresse :Av ould meknass, TVZ, Nouakchott, Mauritanie" },
     ],
     newsletter: "Newsletter",
   };
