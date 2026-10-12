@@ -3,15 +3,48 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Building2, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNewsletterSubscribersHex } from '@/hooks/hexagonal/useNewsletterSubscribersHex';
+import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { t } = useLanguage();
+  const { useSubscribe } = useNewsletterSubscribersHex();
+  const [email, setEmail] = useState('');
+  const [consentGiven, setConsentGiven] = useState(false);
+  const subscribeMutation = useSubscribe();
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) {
+      toast({ title: 'Please enter a valid email address', variant: 'destructive' });
+      return;
+    }
+    if (!consentGiven) {
+      toast({ title: 'Please consent to receive newsletter emails', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      await subscribeMutation.mutateAsync({ email, source: 'footer', consentGiven: true });
+      setEmail('');
+      setConsentGiven(false);
+      toast({ title: 'Subscription requested', description: 'Check your email to confirm your subscription.' });
+    } catch (error) {
+      toast({
+        title: 'Failed to subscribe',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const footerLinks = {
     quick: [
       { name: t("dashboard.title"), href: "/dashboard" },
       { name: t("projects.title"), href: "/projects" },
+      { name: "News", href: "/news" },
       { name: t("materials.title"), href: "/materials" },
       { name: t("nav.users"), href: "/users" },
     ],
@@ -137,16 +170,37 @@ const Footer = () => {
             <p className="text-adrar-200 text-sm mb-4">
               <T k="auto.footer.restez_informe_des_dernieres_nouveautes" fallback="Restez informé des dernières nouveautés" />
             </p>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder={t('auto.footer.votre_email')}
-                className="flex-1 px-3 py-2 bg-adrar-700 border border-adrar-600 rounded-lg text-white placeholder-adrar-300 text-sm focus:outline-none focus:border-terracotta-500"
-              />
-              <button className="px-4 py-2 bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-lg transition-colors text-sm">
-                OK
-              </button>
-            </div>
+            <form onSubmit={handleSubscribe} className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder={t('auto.footer.votre_email')}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-adrar-700 border border-adrar-600 rounded-lg text-white placeholder-adrar-300 text-sm focus:outline-none focus:border-terracotta-500"
+                  disabled={subscribeMutation.isPending}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={subscribeMutation.isPending}
+                  className="px-4 py-2 bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+                >
+                  {subscribeMutation.isPending ? '...' : 'OK'}
+                </button>
+              </div>
+              <label className="flex items-start gap-2 text-xs text-adrar-200">
+                <input
+                  type="checkbox"
+                  checked={consentGiven}
+                  onChange={(event) => setConsentGiven(event.target.checked)}
+                  required
+                  disabled={subscribeMutation.isPending}
+                  className="mt-0.5"
+                />
+                <span>I agree to receive newsletter emails. I can unsubscribe at any time.</span>
+              </label>
+            </form>
           </motion.div>
         </motion.div>
 

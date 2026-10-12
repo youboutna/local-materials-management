@@ -16,10 +16,10 @@ describe('TaskAssignment (source unique)', () => {
     expect(entity.priority).toBe(TaskPriority.HIGH);
   });
 
-  it('sérialise assigned_to au format tableau PostgreSQL', () => {
+  it('sérialise assigned_to comme tableau PostgreSQL', () => {
     const entity = TaskAssignment.create({ id: '1', title: 'T', assignedTo: ['u1', 'u2'] });
     const row = TaskAssignmentTransformer.toRepository(entity);
-    expect(row.assigned_to).toBe('{u1,u2}');
+    expect(row.assigned_to).toEqual(['u1', 'u2']);
     expect(row.assignee_id).toBeUndefined();
   });
 

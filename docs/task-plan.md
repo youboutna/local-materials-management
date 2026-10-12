@@ -793,3 +793,82 @@ Règle : **aucun composant `.tsx` ni hook ne parle directement à une Edge Funct
 | Stabilité `TooltipProvider` | ✅ | provider global monté dans `App.tsx`, 0 erreur console sur `/dqe/list` |
 
 Note d'architecture : aucune écriture Supabase ajoutée en UI — le stepper est purement dérivé des statuts de lignes (`resolveDocumentStatus`), le responsable par défaut est propagé via `metadata.stakeholder` du DTO puis persisté par `useBoqDocument`.
+
+## Plan proposé — Module Actualités, Newsletter et abonnements
+
+### Objectif et périmètre
+
+Créer un espace éditorial inspiré d'un CMS/blog, avec :
+
+- un menu public **Actualités** et des pages de consultation des articles publiés ;
+- une interface d'administration protégée pour le CRUD des articles et des newsletters ;
+- la gestion des abonnements depuis le formulaire du pied de page, actuellement limité à un champ et un bouton sans traitement ;
+- l'association facultative d'un article à un projet existant, avec autocomplétion, puis affichage contrôlé du nom, de la progression et de la durée du projet ;
+- la sélection de documents existants dans la GED, sans ré-uploader ni dupliquer les fichiers.
+
+Ce lot est planifié **après la clôture de la migration hexagonale et la levée du gel des nouvelles fonctionnalités** défini plus haut. Les estimations ci-dessous sont une première estimation pour un développeur, à confirmer après le cadrage technique.
+
+### État des briques réutilisables
+
+| Besoin | État constaté | Réutilisation prévue |
+| --- | --- | --- |
+| Saisie de texte enrichi | `RichTextEditor` basé sur TipTap, avec HTML en entrée/sortie | Le réutiliser pour l'article et le contenu de newsletter ; compléter les contrôles éditoriaux nécessaires sans créer un second éditeur. |
+| Autocomplétion projet | `EnhancedProjectSelector` et hooks projets disponibles | Sélectionner et persister le `projectId`; lire les champs `progress`, `startDate` et `endDate` depuis le DTO projet plutôt que les recopier dans un formulaire. |
+| GED | `DocumentService`, DTOs de document, stockage et composants GED présents | Lier des `documentId` à un article ; afficher titre, type et lien via les services GED existants. |
+| Envoi d'email | `CommunicationService` relaie les emails via la passerelle serveur | Réutiliser la frontière serveur ; ne jamais exposer de clé fournisseur ni envoyer une campagne depuis le navigateur. Une capacité d'envoi en lot reste à concevoir côté serveur. |
+| Newsletter du pied de page | Champ email et bouton « OK » sans formulaire ni appel métier | Connecter après création du flux d'inscription, avec états de chargement, succès et erreur. |
+
+### Modèle fonctionnel cible
+
+- **Article d'actualité** : titre, slug unique, résumé, contenu riche, statut (`draft`, `published`, éventuellement `scheduled`), dates de publication/création/mise à jour, documents GED associés et projet associé facultatif.
+- **Projet associé** : relation par identifiant vers le projet du système. Après sélection, afficher le nom, la progression et la durée dérivée des dates projet (`startDate` / `endDate`), en lecture seule. Si une date nécessaire manque, afficher une valeur explicite « non renseignée » ; ne pas inventer de durée. L'affichage de ces informations sur la page publique doit être explicitement activé par l'éditeur.
+- **Abonné** : email normalisé et unique, statut (`pending_confirmation`, `active`, `unsubscribed`), date/source du consentement et dates de confirmation/désinscription. Prévoir confirmation d'inscription et désinscription fonctionnelle dans chaque campagne.
+- **Newsletter/campagne** : objet, pré-en-tête, contenu riche, statut (`draft`, `scheduled`, `sending`, `sent`, `failed`), dates d'envoi et résultat d'envoi. L'envoi en masse nécessite un traitement serveur avec suppression des désinscrits, suivi des erreurs et prévention des doublons ; il ne doit pas être simulé par une boucle d'envoi côté client.
+
+Les nouveaux champs et tables suivront le flux existant : schéma PostgreSQL en `snake_case`, entités/DTOs/services en `camelCase`, repositories et adapters, puis hooks et UI. Les associations GED référenceront les identifiants des documents existants ; le contenu éditorial ne doit pas stocker une copie des fichiers.
+
+### Étapes et estimation initiale
+
+| Étape | Travaux | Estimation |
+| --- | --- | ---: |
+| 0. Cadrage et prérequis | Confirmer rôles autorisés, parcours de confirmation d'abonnement, règles de publication, visibilité des données projet et état de la migration. Vérifier les capacités réelles de la passerelle d'email et de la GED. | 1 j |
+| 1. Domaine et persistance | Définir entités, DTOs, repositories/adapters/services et migrations pour articles, abonnements, campagnes et liens vers documents. Ajouter contraintes d'unicité, index, RLS/politiques publiques minimales et politiques d'administration. | 2–3 j |
+| 2. CRUD éditorial | Ajouter routes/pages protégées et menu d'administration ; liste, recherche, création, modification, aperçu, archivage/suppression contrôlée et transitions brouillon/publication. Réutiliser TipTap et les conventions i18n existantes. | 2–3 j |
+| 3. Projet et GED | Intégrer le sélecteur avec autocomplétion ; présenter les métadonnées du projet sélectionné ; relier/supprimer des pièces jointes par le parcours GED existant ; vérifier droits d'accès aux documents. | 1–2 j |
+| 4. Consultation publique et abonnement | Ajouter le menu et les pages Actualités (liste, détail, 404/état vide), alimentées uniquement par les articles publiés ; connecter le pied de page à une inscription avec consentement, confirmation, anti-doublon et désinscription. | 2–3 j |
+| 5. Campagnes et recette | Ajouter la préparation et l'envoi serveur des newsletters, statuts/résultats, journalisation et protection contre les ré-envois ; couvrir les parcours par tests et recette des permissions, mails, liens GED et langues. | 2–3 j |
+
+**Durée totale estimée : 8–13 jours ouvrés**, hors délais de validation métier, configuration/délivrabilité email et déploiement des migrations. Réestimer l'étape 5 après vérification de la prise en charge serveur de l'envoi en lot.
+
+### Critères d'acceptation
+
+- Un utilisateur autorisé peut créer, lire, modifier et archiver/supprimer selon les règles retenues un article et une campagne ; un brouillon n'est jamais visible publiquement.
+- Une actualité publiée est accessible depuis le menu public, avec URL stable basée sur son slug.
+- La recherche de projet fonctionne sur le référentiel existant ; le projet lié reste traçable par ID et les informations projet affichées ne sont pas modifiables depuis l'article.
+- Les documents associés proviennent de la GED et respectent ses permissions ; aucun fichier n'est copié dans un stockage parallèle.
+- L'inscription confirme le consentement, empêche les doublons, ne réactive pas implicitement un désabonné et permet une désinscription effective.
+- Seuls les abonnés actifs reçoivent les campagnes ; une erreur d'envoi est visible et une relance ne provoque pas de doublon.
+- Les politiques RLS distinguent lecture publique des seuls contenus publiés, opérations d'administration et traitement sécurisé des adresses email.
+- Tests unitaires des règles métier, tests d'intégration repositories/adapters et tests UI des parcours principaux ; build, lint et tests ciblés passent.
+
+### Décisions à valider au cadrage
+
+1. Le double opt-in par email est recommandé avant l'activation d'un abonnement ; confirmer la règle de consentement et les textes légaux à afficher.
+2. La progression et la durée proviennent des valeurs actuelles du projet au moment de l'affichage ; confirmer si une copie « figée à la publication » est également requise pour l'archive éditoriale.
+3. Confirmer les rôles qui administrent actualités, abonnés et campagnes, ainsi que le mode d'envoi (immédiat uniquement ou programmation).
+
+### État de l'implémentation corrective — 2026-10-12
+
+- Build de production réparé : routes/pages, imports des sélecteurs, hooks de lecture, formulaires et types des trois tables Supabase sont maintenant cohérents.
+- Mapping des entités corrigé pour les créations et mises à jour Articles, abonnés et campagnes ; l'auteur des créations vient de la session authentifiée.
+- Migration Articles corrigée (index SQL) et RLS restreinte : brouillons privés, publication réservée aux rôles éditoriaux, contenu HTML assaini avant rendu public.
+- Consentement explicite exigé au formulaire et vérifié côté serveur ; confirmation et désinscription utilisent des jetons aléatoires à usage unique, stockés sous forme hachée et consommés atomiquement.
+- Les campagnes sont envoyées par une Edge Function qui vérifie le rôle d'administration, réclame atomiquement la campagne, limite les destinataires aux abonnés actifs consentants, journalise chaque livraison et ajoute un lien de désinscription.
+- Le dispatcher serveur sélectionne les campagnes échues ; sa déclenchement périodique doit être configuré dans l'environnement de déploiement.
+- Build Vite production passé et lint ciblé des fichiers frontend modifiés passé. Le typecheck complet reste en échec sur des erreurs préexistantes hors module (import/export projet, tâches/BOQ et leurs tests) ; aucune erreur Newsletter/Articles n'est ressortie. La validation de la migration et des Edge Functions reste à faire dans l'environnement Supabase réel.
+
+Configuration de déploiement requise pour les fonctions newsletter : `NEWSLETTER_SITE_URL` (ou `SITE_URL` comme valeur de repli), `NEWSLETTER_CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` et la configuration serveur du fournisseur d'email. Les tables métier Articles/Newsletter et leur RPC restent dans le schéma `btp`, qui doit être exposé dans Supabase API ; les fonctions Edge et les adaptateurs frontend utilisent ce schéma. `NEWSLETTER_SITE_URL` doit désigner l'origine publique de l'application qui héberge `/newsletter-action`; elle est requise uniquement pour les inscriptions qui envoient un email de confirmation et l'envoi des campagnes. Les endpoints `newsletter-campaign-dispatcher` et `newsletter-campaign-send` ont la vérification JWT de la passerelle désactivée ; ils appliquent respectivement le secret cron et l'authentification/contrôle de rôle eux-mêmes. Le planificateur externe doit appeler le dispatcher en POST avec `x-newsletter-cron-secret`. `project-alerts-processor` accepte soit un JWT associé à un rôle `admin`, `super_admin` ou `director`, soit le secret `PROJECT_ALERTS_CRON_SECRET` dans `x-cron-secret` pour les exécutions planifiées.
+
+`NEWSLETTER_SITE_URL` et `NEWSLETTER_CRON_SECRET` sont déclarés dans `.env.example` et `.env.development` pour le lancement local des Edge Functions ; le secret de développement est laissé vide afin d'être généré/configuré localement. En production, les valeurs doivent être configurées comme secrets Edge Functions et dans le planificateur, pas dans une variable `VITE_*`. Supabase fournit `SUPABASE_URL`, `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY` au runtime Edge ; ne pas copier la clé service-role dans le bundle frontend.
+
+Pour configurer l'origine publique de production (exemple : `https://app.hadratech.com`) : `npx supabase secrets set NEWSLETTER_SITE_URL=https://app.hadratech.com`. Le code accepte aussi `SITE_URL` comme repli ; `NEWSLETTER_SITE_URL` reste préférable si `SITE_URL` désigne une autre origine.

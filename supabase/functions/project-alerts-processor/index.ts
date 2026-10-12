@@ -1,8 +1,11 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import {
+  authorizeRequest,
+  createAdminClient,
+  corsHeaders,
+  hasValidCronSecret,
+  jsonResponse,
+} from '../_shared/http.ts';
 
 // Check intervals from ProjectManager (in days)
 const CHECK_SCHEDULE_INTERVALS = {
@@ -132,29 +135,27 @@ interface ProjectManagerAlert {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    let admin: ReturnType<typeof createAdminClient>;
+    if (hasValidCronSecret(req, 'PROJECT_ALERTS_CRON_SECRET')) {
+      admin = createAdminClient();
+    } else {
+      const auth = await authorizeRequest(req, ['admin', 'super_admin', 'director']);
+      if ('response' in auth) return auth.response;
+      admin = auth.admin;
+    }
+    const supabase = admin.schema('btp');
+    const publicDb = admin.schema('public');
 
     // Get processor configuration
     const config = await getProcessorConfig(supabase);
     
     if (!config.enabled) {
       console.log('Project alerts processor is disabled');
-      return new Response(
-        JSON.stringify({ message: 'Processor disabled', processed: 0 }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
+      return jsonResponse({ message: 'Processor disabled', processed: 0 });
     }
 
     console.log(`Starting project alerts processing with config:`, config);
@@ -182,19 +183,14 @@ Deno.serve(async (req) => {
 
     if (!projects || projects.length === 0) {
       console.log('No active projects to process');
-      return new Response(
-        JSON.stringify({ message: 'No active projects', processed: 0 }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200 
-        }
-      );
+      return jsonResponse({ message: 'No active projects', processed: 0 });
     }
 
     console.log(`Processing ${projects.length} projects`);
 
     let totalAlertsGenerated = 0;
     const processedProjects = [];
+    const failedProjects: string[] = [];
 
     // Process each project with respect to check intervals
     for (const project of projects) {
@@ -207,16 +203,22 @@ Deno.serve(async (req) => {
         
         if (checksToRun.length === 0) {
           console.log(`Skipping project ${project.title} - no checks due`);
+          processedProjects.push({
+            projectId: project.id,
+            title: project.title,
+            alertsGenerated: 0,
+            checksRun: checksToRun
+          });
           continue;
         }
 
         console.log(`Running checks for project ${project.title}: ${checksToRun.join(', ')}`);
 
         const projectContext = await buildProjectContext(supabase, project);
-        const alerts = await processProjectAlertsWithScheduling(projectContext, checksToRun);
+        const alerts = processProjectAlertsWithScheduling(projectContext, checksToRun);
         
         if (alerts.length > 0) {
-          await saveAlerts(supabase, alerts);
+          await saveAlerts(supabase, publicDb, alerts);
           totalAlertsGenerated += alerts.length;
           console.log(`Generated ${alerts.length} alerts for project ${project.title}`);
         }
@@ -233,55 +235,58 @@ Deno.serve(async (req) => {
 
       } catch (error) {
         console.error(`Error processing project ${project.id}:`, error);
-        // Continue with other projects
+        failedProjects.push(project.id);
       }
     }
 
     // Log processing summary
     await logProcessingSummary(supabase, {
-      processedProjects: projects.length,
+      processedProjects: processedProjects.length,
       totalAlerts: totalAlertsGenerated,
       processingTime: new Date().toISOString(),
-      config
+      config,
+      failedProjects
     });
 
-    console.log(`Processing complete: ${totalAlertsGenerated} alerts generated for ${projects.length} projects`);
+    console.log(`Processing complete: ${totalAlertsGenerated} alerts generated for ${processedProjects.length} projects`);
 
-    return new Response(
-      JSON.stringify({
-        message: 'Processing complete',
-        processed: projects.length,
-        alertsGenerated: totalAlertsGenerated,
-        projects: processedProjects
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
+    return jsonResponse({
+      message: failedProjects.length ? 'Processing completed with failures' : 'Processing complete',
+      processed: processedProjects.length,
+      failed: failedProjects.length,
+      failedProjectIds: failedProjects,
+      alertsGenerated: totalAlertsGenerated,
+      projects: processedProjects
+    }, failedProjects.length ? 207 : 200);
 
   } catch (error) {
     console.error('Error in project alerts processor:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
-    );
+    return jsonResponse({ error: 'Project alerts processing failed' }, 500);
   }
 });
 
 async function getProcessorConfig(supabase: SupabaseClient): Promise<ProcessorConfig> {
   // Try to get config from database settings table
-  const { data: settings } = await supabase
+  const { data: settings, error } = await supabase
     .from('system_settings')
     .select('*')
     .eq('category', 'alerts_processor')
-    .single();
+    .maybeSingle();
+  if (error) throw error;
 
-  if (settings?.configuration) {
-    return settings.configuration;
+  if (settings?.configuration && typeof settings.configuration === 'object') {
+    const configuration = settings.configuration as Partial<ProcessorConfig>;
+    if (typeof configuration.enabled !== 'boolean'
+      || !Number.isInteger(configuration.batchSize)
+      || (configuration.batchSize ?? 0) < 1
+      || (configuration.batchSize ?? 0) > 100
+      || !Number.isFinite(configuration.intervalMinutes)
+      || (configuration.intervalMinutes ?? 0) < 1
+      || !Number.isInteger(configuration.maxRetries)
+      || (configuration.maxRetries ?? 0) < 0) {
+      throw new Error('Invalid alerts processor configuration');
+    }
+    return configuration as ProcessorConfig;
   }
 
   // Default configuration
@@ -294,17 +299,18 @@ async function getProcessorConfig(supabase: SupabaseClient): Promise<ProcessorCo
 }
 
 async function buildProjectContext(supabase: SupabaseClient, project: Project): Promise<ProjectManagerContext> {
-  const [
-    { data: tasks },
-    { data: insurance },
-    { data: inspections },
-    { data: escalation }
-  ] = await Promise.all([
-    supabase.from('task_assignments').select('*').eq('project_id', project.id) as { data: TaskRecord[] | null },
-    supabase.from('insurance_certificates').select('*').eq('project_id', project.id) as { data: InsuranceRecord[] | null },
-    supabase.from('inspections').select('*').eq('project_id', project.id) as { data: InspectionRecord[] | null },
-    supabase.from('escalation_thresholds').select('*').eq('is_active', true) as { data: EscalationThresholdRecord[] | null }
+  const [tasksResult, insuranceResult, inspectionsResult, escalationResult] = await Promise.all([
+    supabase.from('task_assignments').select('*').eq('project_id', project.id),
+    supabase.from('insurance_certificates').select('*').eq('project_id', project.id),
+    supabase.from('inspections').select('*').eq('project_id', project.id),
+    supabase.from('escalation_thresholds').select('*').eq('is_active', true)
   ]);
+  const queryError = tasksResult.error ?? insuranceResult.error ?? inspectionsResult.error ?? escalationResult.error;
+  if (queryError) throw queryError;
+  const tasks = tasksResult.data as TaskRecord[] | null;
+  const insurance = insuranceResult.data as InsuranceRecord[] | null;
+  const inspections = inspectionsResult.data as InspectionRecord[] | null;
+  const escalation = escalationResult.data as EscalationThresholdRecord[] | null;
 
   return {
     id: project.id,
@@ -332,7 +338,7 @@ async function buildProjectContext(supabase: SupabaseClient, project: Project): 
   };
 }
 
-async function processProjectAlertsWithScheduling(projectContext: ProjectManagerContext, checksToRun: string[]): Promise<ProjectManagerAlert[]> {
+function processProjectAlertsWithScheduling(projectContext: ProjectManagerContext, checksToRun: string[]): ProjectManagerAlert[] {
   const alerts: ProjectManagerAlert[] = [];
   
   // Only run the checks that are due based on intervals
@@ -359,12 +365,13 @@ async function processProjectAlertsWithScheduling(projectContext: ProjectManager
 }
 
 async function getProjectCheckTimestamps(supabase: SupabaseClient, projectId: string): Promise<ProjectCheckTimestamps> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('system_settings')
     .select('*')
     .eq('category', 'project_check_timestamps')
     .eq('key', projectId)
     .maybeSingle();
+  if (error) throw error;
 
   if (data?.configuration) {
     return data.configuration;
@@ -427,7 +434,7 @@ async function updateProjectCheckTimestamps(supabase: SupabaseClient, projectId:
     updatedAt: now
   };
 
-  await supabase
+  const { error } = await supabase
     .from('system_settings')
     .upsert({
       category: 'project_check_timestamps',
@@ -435,6 +442,7 @@ async function updateProjectCheckTimestamps(supabase: SupabaseClient, projectId:
       configuration: updatedTimestamps,
       updated_at: now
     });
+  if (error) throw error;
 }
 
 function checkInsurancePolicies(project: ProjectManagerContext): ProjectManagerAlert[] {
@@ -509,7 +517,12 @@ function checkProjectDelays(project: ProjectManagerContext): ProjectManagerAlert
   if (totalWeight === 0) return alerts;
 
   const averageDelay = totalWeightedDelay / totalWeight;
-  const thresholds = project.escalationThresholds;
+  const thresholds = project.escalationThresholds ?? {
+    alert: 10,
+    notification: 20,
+    guarantee: 30,
+    legal: 40
+  };
 
   let level: number | null = null;
   if (averageDelay >= thresholds.legal) level = 4;
@@ -597,15 +610,34 @@ function checkFinancialRisks(project: ProjectManagerContext): ProjectManagerAler
   return alerts;
 }
 
-async function saveAlerts(supabase: SupabaseClient, alerts: ProjectManagerAlert[]): Promise<void> {
+async function saveAlerts(
+  supabase: SupabaseClient,
+  publicDb: SupabaseClient,
+  alerts: ProjectManagerAlert[],
+): Promise<void> {
   if (alerts.length === 0) return;
 
+  const { data: roleRows, error: rolesError } = await publicDb
+    .from('user_roles')
+    .select('user_id')
+    .in('role_name', ['admin', 'director', 'manager'])
+    .eq('status', 'active')
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+  if (rolesError) {
+    console.error('Error finding alert recipients:', rolesError);
+    throw rolesError;
+  }
+  const recipientIds = [...new Set((roleRows ?? []).map((row) => row.user_id).filter(Boolean))];
+  if (recipientIds.length === 0) {
+    throw new Error('No active admin, director, or manager users are available for project alerts');
+  }
+
   // Save alerts to notifications table
-  const notifications = alerts.map(alert => ({
+  const notifications = alerts.flatMap(alert => recipientIds.map((recipientId) => ({
     type: alert.type,
     title: alert.title,
     message: alert.message,
-    recipient_id: '00000000-0000-0000-0000-000000000000', // System notifications
+    recipient_id: recipientId,
     metadata: {
       projectId: alert.projectId,
       severity: alert.severity,
@@ -616,9 +648,9 @@ async function saveAlerts(supabase: SupabaseClient, alerts: ProjectManagerAlert[
       deadline: alert.deadline
     },
     related_id: alert.projectId
-  }));
+  })));
 
-  const { error } = await supabase
+  const { error } = await publicDb
     .from('notifications')
     .insert(notifications);
 
@@ -635,6 +667,7 @@ async function logProcessingSummary(
     totalAlerts: number;
     processingTime: string;
     config: ProcessorConfig;
+    failedProjects: string[];
   }
 ): Promise<void> {
   const { error } = await supabase

@@ -4,6 +4,8 @@ import {
   TaskStatus,
   TaskType,
   ActionType,
+  normalizeTaskPriority,
+  normalizeTaskStatus,
 } from '@/dtos/entities/TaskAssignmentDTO';
 
 export interface TaskAssignmentProps {
@@ -110,7 +112,13 @@ export class TaskAssignment {
     this.updatedAt = props.updatedAt;
   }
 
-  static create(props: Partial<TaskAssignmentProps> & { title: string }): TaskAssignment {
+  static create(
+    props: Omit<Partial<TaskAssignmentProps>, 'status' | 'priority'> & {
+      title: string;
+      status?: TaskStatus | string;
+      priority?: TaskPriority | string;
+    },
+  ): TaskAssignment {
     const now = new Date();
     return new TaskAssignment({
       id: props.id ?? crypto.randomUUID(),
@@ -125,8 +133,8 @@ export class TaskAssignment {
       assigneeName: props.assigneeName,
       assigneeEmail: props.assigneeEmail,
       // ✅ v2.1 : ASSIGNED par défaut (au lieu de PENDING)
-      status: props.status ?? TaskStatus.ASSIGNED,
-      priority: props.priority ?? TaskPriority.MEDIUM,
+      status: normalizeTaskStatus(props.status),
+      priority: normalizeTaskPriority(props.priority),
       progress: props.progress ?? 0,
       type: props.type,
       actionType: props.actionType ?? ActionType.TASK_ASSIGNMENT,

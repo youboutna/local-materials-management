@@ -35,6 +35,8 @@ import {
   BarChart3,
   Palette,
   KeyRound,
+  Newspaper,
+  Send,
 } from "lucide-react";
 import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
 
@@ -57,6 +59,11 @@ interface ContextualSidebarProps {
 }
 
 const navigationItems: NavItem[] = [
+  {
+    label: 'auto.newsletter.navigation.news',
+    href: "/news",
+    icon: Newspaper,
+  },
   {
     label: 'auto.contextualsidebar.dashboard',
     href: "/dashboard",
@@ -152,6 +159,9 @@ const navigationItems: NavItem[] = [
       { label: 'settings.tabs.storage', href: "/settings?tab=storage" },
       { label: 'settings.tabs.keycloak', href: "/settings?tab=keycloak" },
       { label: 'settings.tabs.system', href: "/settings?tab=system" },
+      { label: 'auto.newsletter.navigation.articles', href: "/admin/articles", roles: ["admin", "director"] },
+      { label: 'auto.newsletter.navigation.subscribers', href: "/admin/newsletter-subscribers", roles: ["admin", "director"] },
+      { label: 'auto.newsletter.navigation.campaigns', href: "/admin/newsletter-campaigns", icon: Send, roles: ["admin", "director"] },
     ],
   },
 ];

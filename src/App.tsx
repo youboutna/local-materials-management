@@ -77,6 +77,11 @@ import { EvaluationAccessPortal } from "./components/tenders/EvaluationAccessPor
 import SupplierSubmissionDashboard from "./components/suppliers/SupplierSubmissionDashboard";
 import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
+import { NewsPage } from "./pages/NewsPage";
+import { ArticlesAdminPage } from "./pages/admin/ArticlesAdminPage";
+import { NewsletterSubscribersAdminPage } from "./pages/admin/NewsletterSubscribersAdminPage";
+import { NewsletterCampaignsAdminPage } from "./pages/admin/NewsletterCampaignsAdminPage";
+import NewsletterActionPage from "./pages/NewsletterActionPage";
 
 import { DEV_MODE } from "./config/constants";
 import EnhancedMaterialForm from "./components/materials/EnhancedMaterialForm";
@@ -123,6 +128,9 @@ function App() {
                         element={<PendingValidation />}
                       />
                       <Route path="/contact" element={<Contact />} />
+                      <Route path="/news" element={<NewsPage />} />
+                      <Route path="/news/:slug" element={<NewsPage />} />
+                      <Route path="/newsletter-action" element={<NewsletterActionPage />} />
                       <Route path="/inbox" element={<Inbox />} />
                       <Route path="/terms" element={<Terms />} />
                       <Route path="/policy" element={<Policy />} />
@@ -387,6 +395,30 @@ function App() {
                         element={
                           <RoleBasedRoute allowedRoles={["admin", "director"]}>
                             <Settings />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/articles"
+                        element={
+                          <RoleBasedRoute allowedRoles={["admin", "director"]}>
+                            <ArticlesAdminPage />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/newsletter-subscribers"
+                        element={
+                          <RoleBasedRoute allowedRoles={["admin", "director"]}>
+                            <NewsletterSubscribersAdminPage />
+                          </RoleBasedRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/newsletter-campaigns"
+                        element={
+                          <RoleBasedRoute allowedRoles={["admin", "director"]}>
+                            <NewsletterCampaignsAdminPage />
                           </RoleBasedRoute>
                         }
                       />

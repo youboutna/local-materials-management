@@ -212,7 +212,7 @@ export function normalizeTaskStatus(status?: string | null, progress?: number): 
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
     .toLowerCase()
-    .replace(/[\s-]+/g, '_');
+    .replace(/[\s_-]+/g, '');
 
   const map: Record<string, TaskStatus> = {
     // ─── Completed ───

@@ -20,7 +20,7 @@ interface TaskListProps {
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, projectId }) => {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<'all' | 'completed' | 'in_progress' | 'pending' | 'blocked'>('all');
+  const [filter, setFilter] = useState<'all' | TaskStatus>('all');
 
   // Memoized task counts to avoid repeated filtering
   const taskCounts = useMemo(() => {

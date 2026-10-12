@@ -9,6 +9,7 @@ export enum ErrorCode {
   NOT_FOUND = 'NOT_FOUND',
   UNAUTHORIZED = 'UNAUTHORIZED',
   FORBIDDEN = 'FORBIDDEN',
+  INVALID_OPERATION = 'INVALID_OPERATION',
   
   // Server errors (5xx)
   DATABASE_ERROR = 'DATABASE_ERROR',
@@ -98,7 +99,7 @@ export class AppError extends Error {
       [ErrorCode.NOT_FOUND]: 'Ressource introuvable',
       [ErrorCode.UNAUTHORIZED]: 'Authentification requise',
       [ErrorCode.FORBIDDEN]: 'Accès interdit',
-      
+      [ErrorCode.INVALID_OPERATION]: 'Opération invalide',
       // Server errors (5xx)
       [ErrorCode.DATABASE_ERROR]: 'Erreur de base de données',
       [ErrorCode.NETWORK_ERROR]: 'Erreur de connexion',

@@ -11,7 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_PGRST_SCHEMAS?: string;
   readonly VITE_PGRST_EXTRA_SEARCH_PATH?: string;
   /** Secret HS256 partagé avec GoTrue/PostgREST pour le Mode B (local auth + self-hosted data). */
-  readonly VITE_JWT_SECRET?: string;
+  readonly WT_SECRET?: string;
   readonly VITE_JWT_EXPIRY?: string;
   readonly VITE_AUTH_PROVIDER?: string;
   readonly VITE_DATA_PROVIDER?: string;

@@ -7,6 +7,7 @@ import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { BoqPdfRenderer, type BoqPdfContext, type BoqPdfCompany } from './BoqPdfRenderer';
+import { CommunicationService } from '@/application/services/CommunicationService';
 
 export interface DocumentContext {
   docPrefix: string;
@@ -122,16 +123,14 @@ export const DocumentService = {
       for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       const b64 = btoa(binary);
 
-      const { RepositoryFactory } = await import('@/infrastructure/RepositoryFactory');
-      const { error } = await RepositoryFactory.getNotificationGateway().invokeFunction('send-email-notification', {
-        body: {
-          to: ctx.recipientEmail,
-          subject: `${ctx.title}`,
-          html: `<p>Bonjour,</p><p>Veuillez trouver ci-joint le document <strong>${ctx.title}</strong>.</p>`,
-          attachments: [{ filename, content: b64, contentType: 'application/pdf', encoding: 'base64' }],
-        },
+      const result = await CommunicationService.sendEmail({
+        to: ctx.recipientEmail,
+        subject: ctx.title,
+        message: `Veuillez trouver ci-joint le document ${ctx.title}.`,
+        html: `<p>Bonjour,</p><p>Veuillez trouver ci-joint le document <strong>${ctx.title}</strong>.</p>`,
+        attachments: [{ filename, content: b64, contentType: 'application/pdf', encoding: 'base64' }],
       });
-      if (error) return { ok: false, message: error.message };
+      if (!result.success) return { ok: false, message: 'L’Edge Function a refusé l’envoi du document.' };
       return { ok: true };
     } catch (e) {
       return { ok: false, message: e instanceof Error ? e.message : 'Envoi impossible' };

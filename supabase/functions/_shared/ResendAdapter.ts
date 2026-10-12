@@ -6,6 +6,14 @@
 import { EmailOptions, EmailProvider } from './EmailProvider.ts';
 import { getEmailFrom, getEnv } from './config/app.ts';
 
+const toBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  return btoa(binary);
+};
+
 export class ResendAdapter implements EmailProvider {
   private apiKey: string;
   private defaultFrom: string;
@@ -30,7 +38,7 @@ export class ResendAdapter implements EmailProvider {
 
     const attachments = (options.attachments ?? []).map((a) => ({
       filename: a.filename,
-      content: typeof a.content === 'string' ? a.content : btoa(String.fromCharCode(...a.content)),
+      content: typeof a.content === 'string' ? a.content : toBase64(a.content),
       content_type: a.contentType,
     }));
 

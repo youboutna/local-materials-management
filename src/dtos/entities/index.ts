@@ -102,3 +102,8 @@ export * from './UnifiedWorkflowDTO';
 export * from './OAuthProviderDTO';
 
 export * from './AlertDTO';
+
+// Newsletter module DTOs
+export * from './ArticleDTO';
+export * from './NewsletterSubscriberDTO';
+export * from './NewsletterCampaignDTO';

@@ -38,7 +38,7 @@ export function validateProviders(cfg: {
 
   // Matrice de compatibilité auth × data.
   // Mode B (local auth + supabase data) est valide : LocalAuthAdapter signe des
-  // JWT HS256 avec VITE_JWT_SECRET (partagé avec GoTrue) que la RLS accepte.
+  // JWT HS256 avec WT_SECRET (partagé avec GoTrue) que la RLS accepte.
   const validCombos = new Set([
     'supabase-supabase',
     'gotrue-supabase',

@@ -1,83 +1,65 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createEmailService } from '../_shared/EmailServiceFactory.ts';
-import { renderAdminNotificationEmail } from '../_templates/admin-notification.tsx';
-import { renderSupplierConfirmationEmail } from '../_templates/supplier-confirmation.tsx';
+import { createEmailService } from "../_shared/EmailServiceFactory.ts";
+import { renderAdminNotificationEmail } from "../_templates/admin-notification.tsx";
+import { renderSupplierConfirmationEmail } from "../_templates/supplier-confirmation.tsx";
+import { authorizeRequest, corsHeaders, jsonResponse } from "../_shared/http.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const isEmail = (value: unknown): value is string =>
+  typeof value === "string" && /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value);
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+serve(async (request) => {
+  if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
   try {
-    const {
-      supplier_email,
-      supplier_name,
-      tender_title,
-      submission_id,
-      secret_code,
-      admin_emails = []
-    } = await req.json();
-
-    if (!supplier_email || !tender_title || !submission_id || !secret_code) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: supplier_email, tender_title, submission_id, secret_code' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const auth = await authorizeRequest(request, ["admin", "director", "manager"]);
+    if ("response" in auth) return auth.response;
+    const body = await request.json();
+    const { supplier_email, supplier_name, tender_title, submission_id, secret_code } = body;
+    const adminEmails = body.admin_emails ?? [];
+    if (
+      !isEmail(supplier_email) ||
+      typeof tender_title !== "string" || !tender_title.trim() ||
+      typeof submission_id !== "string" || !submission_id.trim() ||
+      typeof secret_code !== "string" || !secret_code.trim() ||
+      !Array.isArray(adminEmails) || adminEmails.length > 20 ||
+      !adminEmails.every(isEmail)
+    ) {
+      return jsonResponse({ error: "Invalid supplier, tender, submission, secret code, or admin email data" }, 400);
     }
 
     const emailService = createEmailService();
-
-    // Email au fournisseur (confirmation)
-    await emailService.sendEmail({
+    const supplierResult = await emailService.sendEmail({
       to: supplier_email,
       subject: `Confirmation de soumission - ${tender_title}`,
-      html: renderSupplierConfirmationEmail({
-        supplier_name,
-        tender_title,
-        submission_id,
-        secret_code,
-      }),
+      html: renderSupplierConfirmationEmail({ supplier_name, tender_title, submission_id, secret_code }),
     });
+    if (!supplierResult.success) throw new Error("Supplier confirmation email was not accepted by the provider");
 
-    // Email aux administrateurs (notification)
     const adminHtml = renderAdminNotificationEmail({
       tender_title,
       supplier_name,
       supplier_email,
       submission_id,
     });
-
-    const adminPromises = admin_emails.map((adminEmail: string) =>
+    const adminResults = await Promise.allSettled(adminEmails.map((adminEmail: string) =>
       emailService.sendEmail({
         to: adminEmail,
         subject: `Nouvelle soumission - ${tender_title}`,
         html: adminHtml,
       })
-    );
+    ));
+    const successCount = adminResults.filter((result) => result.status === "fulfilled" && result.value.success).length;
+    const failedCount = adminResults.length - successCount;
 
-    const adminResults = await Promise.allSettled(adminPromises);
-    const successCount = adminResults.filter(r => r.status === 'fulfilled').length;
-    const failedCount = adminResults.filter(r => r.status === 'rejected').length;
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        supplier_email_sent: 'sent',
-        admin_emails_sent: successCount,
-        admin_emails_failed: failedCount,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({
+      success: failedCount === 0,
+      supplier_email_sent: true,
+      admin_emails_sent: successCount,
+      admin_emails_failed: failedCount,
+    }, failedCount ? 502 : 200);
   } catch (error) {
-    console.error('Error in send-tender-submission-notification:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error("Error in send-tender-submission-notification:", error);
+    return jsonResponse({ error: error instanceof Error ? error.message : "Unknown error" }, 500);
   }
 });

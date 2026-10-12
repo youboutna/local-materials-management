@@ -5,6 +5,7 @@
 import { PENDING_SUPPLIER_ROLE } from '@/config/referentials/auth/roles-responsibilities.referential';
 import { logger } from '@/application/services/LoggerService';
 import { getSystemSettingsService } from '@/application/services/SystemSettingsService';
+import { CommunicationService } from '@/application/services/CommunicationService';
 
 export interface SupplierRegistrationInput {
   companyName: string;
@@ -68,19 +69,17 @@ export class SupplierRegistrationService {
       const emails = await getSystemSettingsService().getAdminEmails();
       if (!emails?.length) return;
 
-      const { supabase } = await import('@/integrations/supabase/client');
-      await supabase.functions.invoke('send-email-notification', {
-        body: {
-          to: emails,
-          subject: `Nouvelle demande fournisseur : ${input.companyName}`,
-          message:
-            `Raison sociale : ${input.companyName}\n` +
-            `Identifiant fiscal : ${input.fiscalId}\n` +
-            `Activité : ${input.activityType}\n` +
-            `Zones : ${input.interventionZones.join(', ') || '—'}\n` +
-            `Contact : ${input.contactName} — ${input.email} — ${input.phone}`,
-        },
+      const result = await CommunicationService.sendEmail({
+        to: emails,
+        subject: `Nouvelle demande fournisseur : ${input.companyName}`,
+        message:
+          `Raison sociale : ${input.companyName}\n` +
+          `Identifiant fiscal : ${input.fiscalId}\n` +
+          `Activité : ${input.activityType}\n` +
+          `Zones : ${input.interventionZones.join(', ') || '—'}\n` +
+          `Contact : ${input.contactName} — ${input.email} — ${input.phone}`,
       });
+      if (!result.success) throw new Error('Email Edge Function rejected the notification');
     } catch (err) {
       logger.warning('service', "Notification administrateurs non envoyée", undefined, {
         message: err instanceof Error ? err.message : String(err),

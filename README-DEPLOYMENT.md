@@ -53,7 +53,7 @@ keycloak	❌	✅	❌
 local	✅ (B)	✅ (B')	✅ (C)
 
 
-> ⚠️ **Mode B** : `VITE_JWT_SECRET` doit être synchronisé avec `JWT_SECRET` du backend.
+> ⚠️ **Mode B** : `WT_SECRET` doit être synchronisé avec `JWT_SECRET` du backend.
 
 ---
 

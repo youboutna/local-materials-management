@@ -54,6 +54,7 @@ import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
+import type { BtpDatabase } from '@/integrations/supabase/btp-types';
 
 // =============================================================================
 // TYPES
@@ -471,7 +472,7 @@ export class ProjectImportExportService {
     rawId: string | undefined | null,
     rawExternalRef: string | undefined | null,
     options?: {
-      table?: string;
+      table?: keyof BtpDatabase['btp']['Tables'];
       checkExists?: boolean;
     },
   ): Promise<{ id: string; externalRef: string | undefined; existsInDb: boolean; existingId?: string }> {
@@ -633,7 +634,7 @@ export class ProjectImportExportService {
     try {
       if (this.isUUID(trimmed)) {
         const { data } = await supabase.from(table).select('id').eq('id', trimmed).maybeSingle();
-        if (data?.id) {
+        if (typeof data?.id === 'string') {
           map?.set(trimmed, data.id);
           return data.id;
         }
@@ -643,7 +644,7 @@ export class ProjectImportExportService {
           .select('id')
           .eq('external_ref', trimmed)
           .maybeSingle();
-        if (data?.id) {
+        if (typeof data?.id === 'string') {
           map?.set(trimmed, data.id);
           return data.id;
         }
@@ -2002,9 +2003,10 @@ export class ProjectImportExportService {
 
       try {
         if (existingLine?.id) {
+          const existingLineId = existingLine.id;
           await this.retryWithBackoff(
-            () => boqRepository.update(existingLine.id, boqData),
-            `updateBoqLine ${existingLine.id}`,
+            () => boqRepository.update(existingLineId, boqData),
+            `updateBoqLine ${existingLineId}`,
           );
         } else {
           await this.retryWithBackoff(

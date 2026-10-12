@@ -16,6 +16,7 @@ export interface SupplierNotificationData {
   email: string;
   supplier_name?: string;
   supplier_id?: string;
+  reset_token?: string;
   task_id?: string;
   task_title?: string;
   payment_id?: string;
@@ -73,26 +74,26 @@ export class SupplierNotificationService {
         completionUrl = await this.generateTaskCompletionUrl(request.data.task_id);
       }
 
-      const notificationData = {
+      const notificationData: Record<string, unknown> = {
         ...request.data,
         completion_url: completionUrl,
         priority: request.priority || 'medium',
         scheduled_at: request.scheduled_at || new Date().toISOString()
       };
 
-      // Create notification record using available repository
-      const result = await this.notificationRepository.createNotification({
-        recipientId: request.data.supplier_id || '',
-        title: `Notification: ${request.data.type}`,
-        message: `Notification sent to ${request.data.email}`,
-        type: 'info' as const,
-        read: false,
-        metadata: notificationData as any
-      });
+      const { data, error } = await RepositoryFactory.getNotificationGateway()
+        .invokeFunction<{ success?: boolean; notification_id?: string; error?: string }>(
+          'send-supplier-notification',
+          notificationData
+        );
+
+      if (error || !data?.success) {
+        throw new Error(data?.error ?? error?.message ?? 'Failed to send supplier notification');
+      }
 
       return {
         success: true,
-        notification_id: result.notification?.id,
+        notification_id: data.notification_id,
         sent_at: new Date().toISOString()
       };
     } catch (error) {
@@ -113,9 +114,11 @@ export class SupplierNotificationService {
       this.validatePasswordResetRequest(request);
 
       // Notification gateway wraps the RPC call so no direct supabase import is needed here.
-      const { data: resetData, error } = await RepositoryFactory.getNotificationGateway().rpc('generate_supplier_reset_token', {
-        supplier_email: request.supplierEmail
-      });
+      const { data: resetData, error } = await RepositoryFactory.getNotificationGateway().rpc<string>(
+        'generate_supplier_reset_token',
+        { p_supplier_email: request.supplierEmail },
+        'btp'
+      );
 
       if (error || !resetData) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to generate reset token');
@@ -126,7 +129,8 @@ export class SupplierNotificationService {
           type: 'password_reset',
           email: request.supplierEmail,
           supplier_name: request.supplierName,
-          supplier_id: request.supplierId
+          supplier_id: request.supplierId,
+          reset_token: resetData
         },
         priority: 'high'
       });

@@ -28,6 +28,8 @@ import {
   ClipboardList,
   Upload,
   Building2,
+  Newspaper,
+  Send,
   Shield,
   Lock,
   Cog,
@@ -162,6 +164,7 @@ const MergedNavbar = () => {
   const additionalNavItems = useMemo(
     () => [
       { name: t("nav.home"), href: "/", icon: Home },
+      { name: t("auto.newsletter.navigation.news"), href: "/news", icon: Newspaper },
       { name: t("project_import.title"), href: "/projects/import", icon: Upload },
       { name: t("dqe.navigation.module"), href: "/dqe/list", icon: FileText },
       { name: t("documents.title"), href: "/documents", icon: FileText },
@@ -369,6 +372,24 @@ const MergedNavbar = () => {
                                 </span>
                               </Link>
                             </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to="/admin/articles" className="flex items-center space-x-3 cursor-pointer py-2.5 focus-visible:bg-muted">
+                                <Newspaper className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                <span className="text-sm font-medium">{t("auto.newsletter.navigation.articles")}</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to="/admin/newsletter-subscribers" className="flex items-center space-x-3 cursor-pointer py-2.5 focus-visible:bg-muted">
+                                <UsersIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                <span className="text-sm font-medium">{t("auto.newsletter.navigation.subscribers")}</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to="/admin/newsletter-campaigns" className="flex items-center space-x-3 cursor-pointer py-2.5 focus-visible:bg-muted">
+                                <Send className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                                <span className="text-sm font-medium">{t("auto.newsletter.navigation.campaigns")}</span>
+                              </Link>
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                           </>
                         )}
@@ -500,6 +521,12 @@ const MergedNavbar = () => {
               </DropdownMenu>
             ) : (
               <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/news">
+                    <Newspaper className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {t("auto.newsletter.navigation.news")}
+                  </Link>
+                </Button>
                 <div className="hidden sm:flex items-center space-x-2">
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/auth?mode=login">{t("auth.login")}</Link>
@@ -574,6 +601,36 @@ const MergedNavbar = () => {
                             <span>{t("settings.title") || "Paramètres"}</span>
                           </Link>
                         </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link
+                            to="/admin/articles"
+                            className="flex items-center space-x-3 px-4 py-3 text-sm font-medium text-foreground hover:text-terracotta-600 hover:bg-muted w-full"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <Newspaper className="h-4 w-4" aria-hidden="true" />
+                            <span>{t("auto.newsletter.navigation.articles")}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link
+                            to="/admin/newsletter-subscribers"
+                            className="flex items-center space-x-3 px-4 py-3 text-sm font-medium text-foreground hover:text-terracotta-600 hover:bg-muted w-full"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <UsersIcon className="h-4 w-4" aria-hidden="true" />
+                            <span>{t("auto.newsletter.navigation.subscribers")}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link
+                            to="/admin/newsletter-campaigns"
+                            className="flex items-center space-x-3 px-4 py-3 text-sm font-medium text-foreground hover:text-terracotta-600 hover:bg-muted w-full"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <Send className="h-4 w-4" aria-hidden="true" />
+                            <span>{t("auto.newsletter.navigation.campaigns")}</span>
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
                     )}
@@ -603,6 +660,19 @@ const MergedNavbar = () => {
                       })}
 
                     <DropdownMenuSeparator />
+
+                    {!isAuthenticated && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/news"
+                          className="flex items-center space-x-3 px-4 py-3 text-sm font-medium text-foreground hover:text-terracotta-600 hover:bg-muted w-full"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Newspaper className="h-4 w-4" aria-hidden="true" />
+                          <span>{t("auto.newsletter.navigation.news")}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
 
                     <div className="px-4 py-3 space-y-3">
                       {isAuthenticated ? (

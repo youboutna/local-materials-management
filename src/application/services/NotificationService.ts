@@ -18,6 +18,7 @@ import {
 } from '@/dtos/entities/NotificationDTO';
 import { normalizeNotificationType } from '@/config/referentials/notifications/notification-types.referential';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { CommunicationService } from '@/application/services/CommunicationService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class NotificationService {
@@ -329,9 +330,15 @@ export class NotificationService {
    */
   async sendEmail(data: EmailData): Promise<void> {
     try {
-      const result = await this.notificationRepository.sendEmail(data);
-      
-      if (result.error) {
+      const result = await CommunicationService.sendEmail({
+        to: data.to,
+        subject: data.subject,
+        message: data.body,
+        html: data.html,
+        replyTo: data.replyTo,
+      });
+
+      if (!result.success) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to send email');
       }
     } catch (error) {

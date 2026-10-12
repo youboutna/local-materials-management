@@ -4,6 +4,7 @@
  * (emails, tender submission notices, supplier password-reset tokens).
  */
 import { supabase } from '@/integrations/supabase/client';
+import { btpClient } from '@/integrations/supabase/schema-clients';
 
 export interface InvokeFunctionResult<T = any> {
   data: T | null;
@@ -16,8 +17,13 @@ export class NotificationGatewayAdapter {
     return { data: (data as T) ?? null, error: error ? { message: error.message } : null };
   }
 
-  async rpc<T = any>(fn: string, params?: Record<string, unknown>): Promise<InvokeFunctionResult<T>> {
-    const { data, error } = await supabase.rpc(fn as any, params as any);
+  async rpc<T = any>(
+    fn: string,
+    params?: Record<string, unknown>,
+    schema: 'public' | 'btp' = 'public'
+  ): Promise<InvokeFunctionResult<T>> {
+    const client = schema === 'btp' ? btpClient : supabase;
+    const { data, error } = await client.rpc(fn as any, params as any);
     return { data: (data as T) ?? null, error: error ? { message: error.message } : null };
   }
 }

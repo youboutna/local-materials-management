@@ -298,15 +298,8 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    * Send email via Supabase function
    */
   async sendEmail(data: EmailData): Promise<{ error: Error | null }> {
-    try {
-      const { error } = await supabase.functions.invoke('send-email-notification', {
-        body: JSON.stringify(data)
-      });
-
-      return { error };
-    } catch (error) {
-      return { error: error as Error };
-    }
+    console.error('SupabaseNotificationAdapter.sendEmail bypassed CommunicationService');
+    return { error: new Error('Send email through CommunicationService.sendEmail') };
   }
 
   /**

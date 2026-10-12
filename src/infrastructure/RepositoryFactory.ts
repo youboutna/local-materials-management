@@ -86,6 +86,11 @@ import type { IWorkspaceRepository } from '@/domain/repositories/IWorkspaceRepos
 import type { ILocationRepository } from '@/domain/repositories/LocationRepository';
 import type { IPhaseEmployeeRepository } from '@/domain/repositories/IPhaseEmployeeRepository';
 import type { IPhaseMaterialRepository } from '@/domain/repositories/IPhaseMaterialRepository';
+import type { IArticleRepository } from '@/domain/repositories/IArticleRepository';
+import type { INewsletterSubscriberRepository } from '@/domain/repositories/INewsletterSubscriberRepository';
+import type { INewsletterCampaignRepository } from '@/domain/repositories/INewsletterCampaignRepository';
+import type { INewsletterSubscriptionGateway } from '@/domain/repositories/INewsletterSubscriptionGateway';
+import type { INewsletterCampaignDispatcher } from '@/domain/repositories/INewsletterCampaignDispatcher';
 
 // ================================================================
 // 3. IMPORTS – SUPABASE ADAPTERS
@@ -155,6 +160,11 @@ import { SupabaseSystemSettingsAdapter } from '@/infrastructure/adapters/supabas
 import { SupabaseTaskDependencyAdapter } from '@/infrastructure/adapters/supabase/SupabaseTaskDependencyAdapter';
 import { SupabaseDocumentValidationLogAdapter } from '@/infrastructure/adapters/supabase/SupabaseDocumentValidationLogAdapter';
 import { SupabaseBoqDocumentHeaderAdapter } from '@/infrastructure/adapters/supabase/SupabaseBoqDocumentHeaderAdapter';
+import { SupabaseArticleAdapter } from '@/infrastructure/adapters/supabase/SupabaseArticleAdapter';
+import { SupabaseNewsletterSubscriberAdapter } from '@/infrastructure/adapters/supabase/SupabaseNewsletterSubscriberAdapter';
+import { SupabaseNewsletterCampaignAdapter } from '@/infrastructure/adapters/supabase/SupabaseNewsletterCampaignAdapter';
+import { SupabaseNewsletterSubscriptionGateway } from '@/infrastructure/adapters/supabase/SupabaseNewsletterSubscriptionGateway';
+import { SupabaseNewsletterCampaignDispatcher } from '@/infrastructure/adapters/supabase/SupabaseNewsletterCampaignDispatcher';
 
 // ================================================================
 // 4. IMPORTS – AUTH ADAPTERS
@@ -274,6 +284,11 @@ interface RepositoryRegistry {
   taskAssignment?: ITaskAssignmentRepository;
   realtime?: IRealtimeRepository;
   boqDocumentHeader?: IBoqDocumentHeaderRepository;
+  article?: IArticleRepository;
+  newsletterSubscriber?: INewsletterSubscriberRepository;
+  newsletterCampaign?: INewsletterCampaignRepository;
+  newsletterSubscriptionGateway?: INewsletterSubscriptionGateway;
+  newsletterCampaignDispatcher?: INewsletterCampaignDispatcher;
 }
 
 const registry: RepositoryRegistry = {};
@@ -824,6 +839,40 @@ export class RepositoryFactory {
     if (registry.boqDocumentHeader) return registry.boqDocumentHeader;
     registry.boqDocumentHeader = new SupabaseBoqDocumentHeaderAdapter();
     return registry.boqDocumentHeader;
+  }
+
+  // ================================================================
+  // NEWSLETTER MODULE
+  // ================================================================
+
+  static getArticleRepository(): IArticleRepository {
+    if (registry.article) return registry.article;
+    registry.article = new SupabaseArticleAdapter();
+    return registry.article;
+  }
+
+  static getNewsletterSubscriberRepository(): INewsletterSubscriberRepository {
+    if (registry.newsletterSubscriber) return registry.newsletterSubscriber;
+    registry.newsletterSubscriber = new SupabaseNewsletterSubscriberAdapter();
+    return registry.newsletterSubscriber;
+  }
+
+  static getNewsletterCampaignRepository(): INewsletterCampaignRepository {
+    if (registry.newsletterCampaign) return registry.newsletterCampaign;
+    registry.newsletterCampaign = new SupabaseNewsletterCampaignAdapter();
+    return registry.newsletterCampaign;
+  }
+
+  static getNewsletterSubscriptionGateway(): INewsletterSubscriptionGateway {
+    if (registry.newsletterSubscriptionGateway) return registry.newsletterSubscriptionGateway;
+    registry.newsletterSubscriptionGateway = new SupabaseNewsletterSubscriptionGateway();
+    return registry.newsletterSubscriptionGateway;
+  }
+
+  static getNewsletterCampaignDispatcher(): INewsletterCampaignDispatcher {
+    if (registry.newsletterCampaignDispatcher) return registry.newsletterCampaignDispatcher;
+    registry.newsletterCampaignDispatcher = new SupabaseNewsletterCampaignDispatcher();
+    return registry.newsletterCampaignDispatcher;
   }
 
   // ================================================================

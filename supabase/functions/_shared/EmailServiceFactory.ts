@@ -28,9 +28,10 @@ export function createEmailService(): EmailService {
     case 'sendgrid':
       provider = new SendGridAdapter();
       break;
-    default:
-      console.warn(`[EmailServiceFactory] Unsupported provider "${providerName}", falling back to Resend`);
-      provider = new ResendAdapter();
+    default: {
+      const exhaustiveCheck: never = providerName;
+      throw new Error(`Unsupported email provider: ${exhaustiveCheck}`);
+    }
   }
 
   return new EmailService(provider);

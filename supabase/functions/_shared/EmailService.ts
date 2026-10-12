@@ -10,7 +10,7 @@ import { EmailOptions, EmailProvider } from './EmailProvider.ts';
 export class EmailService {
   constructor(private provider: EmailProvider) {}
 
-  async sendEmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string }> {
+  sendEmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string }> {
     return this.provider.send(options);
   }
 }

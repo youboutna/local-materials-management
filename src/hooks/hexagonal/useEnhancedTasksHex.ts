@@ -363,10 +363,9 @@ export function useEnhancedTasksHex(projectId: string) {
       }
 
       const validTransitions: Record<TaskStatus, TaskStatus[]> = {
-        [TaskStatus.PENDING]: [TaskStatus.IN_PROGRESS, TaskStatus.BLOCKED, TaskStatus.CANCELLED],
-        [TaskStatus.IN_PROGRESS]: [TaskStatus.COMPLETED, TaskStatus.BLOCKED, TaskStatus.PENDING, TaskStatus.CANCELLED],
-        [TaskStatus.COMPLETED]: [TaskStatus.PENDING],
-        [TaskStatus.BLOCKED]: [TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.CANCELLED],
+        [TaskStatus.ASSIGNED]: [TaskStatus.IN_PROGRESS, TaskStatus.CANCELLED],
+        [TaskStatus.IN_PROGRESS]: [TaskStatus.COMPLETED, TaskStatus.ASSIGNED, TaskStatus.CANCELLED],
+        [TaskStatus.COMPLETED]: [TaskStatus.ASSIGNED],
         [TaskStatus.CANCELLED]: [],
       };
 

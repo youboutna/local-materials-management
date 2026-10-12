@@ -29,6 +29,54 @@ export type WorkflowStepStatus =
 export type BtpDatabase = {
   btp: {
     Tables: {
+      articles: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          document_ids: string[]
+          id: string
+          metadata: Json | null
+          project_id: string | null
+          published_at: string | null
+          slug: string
+          status: "draft" | "published" | "archived"
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          document_ids?: string[]
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          published_at?: string | null
+          slug: string
+          status?: "draft" | "published" | "archived"
+          summary: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          document_ids?: string[]
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: "draft" | "published" | "archived"
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bank_guarantees: {
         Row: {
           guarantee_number: string | null
@@ -127,6 +175,162 @@ export type BtpDatabase = {
           id?: string
           is_active?: boolean
           reason?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_campaign_deliveries: {
+        Row: {
+          attempted_at: string | null
+          campaign_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          provider_reference: string | null
+          sent_at: string | null
+          status: "pending" | "sent" | "failed"
+          subscriber_id: string
+        }
+        Insert: {
+          attempted_at?: string | null
+          campaign_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          provider_reference?: string | null
+          sent_at?: string | null
+          status?: "pending" | "sent" | "failed"
+          subscriber_id: string
+        }
+        Update: {
+          attempted_at?: string | null
+          campaign_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          provider_reference?: string | null
+          sent_at?: string | null
+          status?: "pending" | "sent" | "failed"
+          subscriber_id?: string
+        }
+        Relationships: []
+      }
+      newsletter_campaigns: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          failed_count: number
+          id: string
+          metadata: Json | null
+          preheader: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          sent_count: number
+          status: "draft" | "scheduled" | "sending" | "sent" | "failed"
+          subject: string
+          total_recipients: number
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          metadata?: Json | null
+          preheader?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: "draft" | "scheduled" | "sending" | "sent" | "failed"
+          subject: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          metadata?: Json | null
+          preheader?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: "draft" | "scheduled" | "sending" | "sent" | "failed"
+          subject?: string
+          total_recipients?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          confirmed_at: string | null
+          consent_date: string
+          consent_given: boolean
+          email: string
+          id: string
+          metadata: Json | null
+          source: string | null
+          status: "pending_confirmation" | "active" | "unsubscribed"
+          subscribed_at: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          confirmed_at?: string | null
+          consent_date?: string
+          consent_given?: boolean
+          email: string
+          id?: string
+          metadata?: Json | null
+          source?: string | null
+          status?: "pending_confirmation" | "active" | "unsubscribed"
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          confirmed_at?: string | null
+          consent_date?: string
+          consent_given?: boolean
+          email?: string
+          id?: string
+          metadata?: Json | null
+          source?: string | null
+          status?: "pending_confirmation" | "active" | "unsubscribed"
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_subscription_tokens: {
+        Row: {
+          action: "confirm" | "unsubscribe"
+          created_at: string
+          expires_at: string
+          id: string
+          subscriber_id: string
+          token_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          action: "confirm" | "unsubscribe"
+          created_at?: string
+          expires_at: string
+          id?: string
+          subscriber_id: string
+          token_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          action?: "confirm" | "unsubscribe"
+          created_at?: string
+          expires_at?: string
+          id?: string
+          subscriber_id?: string
+          token_hash?: string
+          used_at?: string | null
         }
         Relationships: []
       }
@@ -6095,6 +6299,10 @@ export type BtpDatabase = {
       }
     }
     Functions: {
+      complete_newsletter_subscription_action: {
+        Args: { p_action: string; p_token_hash: string }
+        Returns: boolean
+      }
       admin_update_user_email: {
         Args: { new_email: string; target_user_id: string }
         Returns: undefined

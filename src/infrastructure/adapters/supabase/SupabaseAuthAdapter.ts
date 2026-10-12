@@ -303,20 +303,25 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
   // ────────────────────────────────────────────────────────────
 
   /**
-   * Update user's email without an active session.
-   * Uses a secure Supabase Edge Function (service_role) to bypass user permissions.
+   * Update the authenticated user's email through the protected Edge Function.
    */
-  async updateEmail(oldEmail: string, newEmail: string): Promise<{ error: Error | null }> {
+  async updateEmail(_oldEmail: string, newEmail: string): Promise<{ error: Error | null }> {
     try {
       const functionUrl = import.meta.env.VITE_SUPABASE_UPDATE_EMAIL_FUNCTION_URL;
       if (!functionUrl) {
         throw new Error('Update email function URL not configured in environment');
       }
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session) throw new Error('An active session is required to update the email');
 
       const response = await fetch(functionUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ oldEmail, newEmail }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ newEmail }),
       });
 
       if (!response.ok) {

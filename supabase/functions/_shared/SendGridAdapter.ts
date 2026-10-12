@@ -5,19 +5,14 @@
  */
 
 import { EmailOptions, EmailProvider } from './EmailProvider.ts';
-import { getEmailProvider } from './config/app.ts';
+import { getEmailFrom, getEnv } from './config/app.ts';
 
-const getEnv = (key: string): string | undefined => {
-  if (typeof Deno !== 'undefined' && Deno.env) {
-    return Deno.env.get(key);
+const toBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
   }
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env[key];
-  }
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env[key] || import.meta.env[`VITE_${key}`];
-  }
-  return undefined;
+  return btoa(binary);
 };
 
 export class SendGridAdapter implements EmailProvider {
@@ -25,15 +20,15 @@ export class SendGridAdapter implements EmailProvider {
   private defaultFrom: string;
 
   constructor() {
-    const config = getAppConfig();
     this.apiKey = getEnv('SENDGRID_API_KEY') || '';
-    this.defaultFrom = config.email?.from || getEnv('SENDGRID_FROM') || 'noreply@hadratech.com';
+    this.defaultFrom = getEmailFrom();
   }
 
   async send(options: EmailOptions): Promise<{ success: boolean; messageId?: string }> {
     if (!this.apiKey) {
       throw new Error('SendGrid API key is not configured.');
     }
+    if (!options.from && !this.defaultFrom) throw new Error('SendGrid sender address is not configured.');
 
     const to = Array.isArray(options.to) ? options.to.map((email) => ({ email })) : [{ email: options.to }];
     const from = options.from || this.defaultFrom;
@@ -49,7 +44,21 @@ export class SendGridAdapter implements EmailProvider {
         personalizations: [{ to }],
         from: { email: from },
         subject: options.subject,
-        content: [{ type: 'text/html', value: html }],
+        content: [
+          ...(options.text ? [{ type: 'text/plain', value: options.text }] : []),
+          { type: 'text/html', value: html },
+        ],
+        ...(options.replyTo ? { reply_to: { email: options.replyTo } } : {}),
+        ...(options.attachments?.length ? {
+          attachments: options.attachments.map((attachment) => ({
+            content: typeof attachment.content === 'string'
+              ? attachment.content
+              : toBase64(attachment.content),
+            filename: attachment.filename,
+            type: attachment.contentType,
+            disposition: 'attachment',
+          })),
+        } : {}),
       }),
     });
 

@@ -34,7 +34,7 @@ export interface EmailAttachmentPayload {
 }
 
 export interface SendEmailPayload {
-  to: string;
+  to: string | string[];
   subject: string;
   /** Corps texte (utilisé aussi comme fallback HTML si `html` absent) */
   message: string;
@@ -101,7 +101,7 @@ export class CommunicationService {
 
   static async sendEmail(payload: SendEmailPayload): Promise<CommunicationResult> {
     // 1. Créer la notification SEULEMENT SI le destinataire est un UUID (utilisateur interne)
-    const recipientId = isUuid(payload.to) ? payload.to : null;
+    const recipientId = typeof payload.to === 'string' && isUuid(payload.to) ? payload.to : null;
     if (recipientId) {
       await NotificationService.createNotification({
         recipientId,
@@ -117,7 +117,7 @@ export class CommunicationService {
         },
       });
     } else {
-      console.log(`[CommunicationService] Notification ignorée pour l'email externe: ${payload.to}`);
+      console.log('[CommunicationService] No internal notification recipient for email delivery');
     }
 
     // 2. Envoi côté serveur (Edge Function) : jamais d'appel direct au provider
@@ -146,7 +146,9 @@ export class CommunicationService {
         return { success: false, channel: 'email' };
       }
 
-      console.log(`[CommunicationService] Email sent via edge function to ${payload.to}`);
+      console.log('[CommunicationService] Email sent via edge function', {
+        recipientCount: Array.isArray(payload.to) ? payload.to.length : 1,
+      });
       return { success: true, channel: 'email', reference: data.messageId };
     } catch (error) {
       console.error('[CommunicationService] sendEmail error:', error);
@@ -228,7 +230,7 @@ export class CommunicationService {
     return { success: true, channel: 'call' };
   }
 
-  static async sendMail(payload: SendEmailPayload): Promise<CommunicationResult> {
+  static async sendMail(payload: Omit<SendEmailPayload, 'to'> & { to: string }): Promise<CommunicationResult> {
     const recipientId = isUuid(payload.to) ? payload.to : null;
     if (recipientId) {
       await NotificationService.createNotification({

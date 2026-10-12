@@ -2,7 +2,7 @@
  * LocalAuthAdapter — DEV / Mode B IAuthRepository implementation.
  *
  * Validates credentials against DEV_USERS (defaults + localStorage overrides)
- * and mints an HS256 JWT signed with VITE_JWT_SECRET so a self-hosted
+ * and mints an HS256 JWT signed with WT_SECRET so a self-hosted
  * PostgREST/GoTrue backend accepts the token for RLS in "Mode B" (local
  * auth + self-hosted data). Falls back to an opaque dev token if the secret
  * is missing (fully offline mode).
@@ -108,7 +108,7 @@ async function signHs256(payload: Record<string, unknown>, secret: string): Prom
 }
 
 async function mintAccessToken(profile: DevUserProfile, ttlSeconds: number): Promise<string> {
-  const secret = (import.meta as any)?.env?.VITE_JWT_SECRET as string | undefined;
+  const secret = (import.meta as any)?.env?.WT_SECRET as string | undefined;
   const now = Math.floor(Date.now() / 1000);
   const payload = {
     aud: 'authenticated',

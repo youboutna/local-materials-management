@@ -22,6 +22,7 @@ import type { ITaskAssignmentRepository } from '@/domain/repositories/ITaskAssig
 import type { IAlertRepository } from '@/domain/repositories/IAlertRepository';
 import type { Alert } from '@/domain/entities/Alert';
 import { TaskAssignment } from '@/domain/entities/TaskAssignment';
+import { normalizeTaskPriority, normalizeTaskStatus } from '@/dtos/entities/TaskAssignmentDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getBoqResourcePropagationService } from './BoqResourcePropagationService';
 import { BoqInjectionGateService } from './BoqInjectionGateService';
@@ -228,8 +229,8 @@ export class BoqDispatchService {
           description: `${effort.quantity} ${effort.unit ?? ''} — ${line.code ?? group.lot}`.trim(),
           projectId,
           phaseId,
-          status: rule.taskStatus,
-          priority: rule.taskPriority,
+          status: normalizeTaskStatus(rule.taskStatus),
+          priority: normalizeTaskPriority(rule.taskPriority),
           progress: 0,
           quantity: effort.quantity,
           unit: effort.unit ?? undefined,

@@ -108,25 +108,49 @@ enabled = true
 # Edge Functions
 # =============================================================================
 [functions.send-email-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-sms-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.schedule-call]
-verify_jwt = false
+verify_jwt = true
 
 [functions.assign-task-to-employee]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-tender-submission-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.update-email]
-verify_jwt = false
+verify_jwt = true
+
+[functions.send-project-report]
+verify_jwt = true
+
+[functions.send-tender-report]
+verify_jwt = true
+
+[functions.send-supplier-notification]
+verify_jwt = true
+
+[functions.validate-document]
+verify_jwt = true
 
 [functions.cleanup-expired-user-roles]
 verify_jwt = true
+
+[functions.newsletter-subscription]
+verify_jwt = false
+
+[functions.newsletter-campaign-send]
+verify_jwt = false
+
+[functions.newsletter-campaign-dispatcher]
+verify_jwt = false
+
+[functions.project-alerts-processor]
+verify_jwt = false
 
 # =============================================================================
 # Logs

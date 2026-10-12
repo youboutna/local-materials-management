@@ -15,9 +15,9 @@ describe('ProjectImportExportService — fixture round-trip', () => {
     expect(service.validateImportRows(fixture.projects)).toEqual([]);
   });
 
-  it('normalise budget, dates, référence et organisation', () => {
+  it('normalise budget, dates, référence et organisation', async () => {
     const source = fixture.projects[0];
-    const dto = service.mapImportRowToCreateDTO(source);
+    const dto = await service.mapImportRowToCreateDTO(source);
 
     expect(dto.title).toBe(source.title);
     expect(dto.externalRef).toBe(source.id);
@@ -30,9 +30,9 @@ describe('ProjectImportExportService — fixture round-trip', () => {
     expect(dto.startDate).toBe(expectedStart ? new Date(expectedStart).toISOString() : undefined);
   });
 
-  it('préserve les clés stables lors du retour vers le template', () => {
+  it('préserve les clés stables lors du retour vers le template', async () => {
     const source = fixture.projects[0];
-    const dto = service.mapImportRowToCreateDTO(source) as unknown as ProjectDTO;
+    const dto = await service.mapImportRowToCreateDTO(source) as unknown as ProjectDTO;
     const exported = service.toImportRow({
       ...dto,
       id: 'persisted-project-id',
@@ -73,5 +73,3 @@ describe('Normalisation phase_type (contrainte CHECK project_phases)', () => {
     expect(row['phase_code']).toBe('ETUDES');
   });
 });
-
-

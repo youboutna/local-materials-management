@@ -456,10 +456,10 @@ elif [ -f "$ROOT_ENV" ] && [ -f "$ENV_FILE" ]; then
     fi
   fi
   if [ -n "$JWT_SECRET" ]; then
-    if grep -qE '^VITE_JWT_SECRET=' "$ROOT_ENV"; then
-      sed -i.bak "s|^VITE_JWT_SECRET=.*$|VITE_JWT_SECRET=\"${JWT_SECRET}\"|" "$ROOT_ENV"
+    if grep -qE '^WT_SECRET=' "$ROOT_ENV"; then
+      sed -i.bak "s|^WT_SECRET=.*$|WT_SECRET=\"${JWT_SECRET}\"|" "$ROOT_ENV"
     else
-      echo "VITE_JWT_SECRET=\"${JWT_SECRET}\"" >> "$ROOT_ENV"
+      echo "WT_SECRET=\"${JWT_SECRET}\"" >> "$ROOT_ENV"
     fi
   fi
   # Force self-hosted URL

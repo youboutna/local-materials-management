@@ -1,11 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createEmailService } from '../_shared/EmailServiceFactory.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getEmailFrom } from '../_shared/config/app.ts';
+import { authorizeRequest, corsHeaders, jsonResponse } from "../_shared/http.ts";
+import { escapeHtml } from '../_shared/html.ts';
 
 const generateTenderReportHTML = (tenderTitle: string, reportTitle: string, fileName: string, generatedAt: string) => `<!DOCTYPE html>
 <html lang="fr">
@@ -37,50 +34,61 @@ const generateTenderReportHTML = (tenderTitle: string, reportTitle: string, file
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
+    const auth = await authorizeRequest(req, ['admin', 'director', 'manager']);
+    if ('response' in auth) return auth.response;
     const { to, tenderTitle, reportTitle, pdfBlob, fileName } = await req.json();
-
-    if (!to || !tenderTitle || !reportTitle) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: to, tenderTitle, reportTitle' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (typeof to !== 'string' || typeof tenderTitle !== 'string' || typeof reportTitle !== 'string') {
+      return jsonResponse({ error: 'Valid to, tenderTitle, and reportTitle fields are required' }, 400);
     }
+    if (typeof pdfBlob !== 'string' || pdfBlob.length > 14_000_000) {
+      return jsonResponse({ error: 'A PDF attachment smaller than 10 MB is required' }, 400);
+    }
+    const base64 = pdfBlob.replace(/^data:application\/pdf;base64,/i, '');
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64)) {
+      return jsonResponse({ error: 'pdfBlob must contain base64-encoded PDF data' }, 400);
+    }
+    const pdfBytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+    if (!pdfBytes.length || pdfBytes.length > 10_000_000 || pdfBytes[0] !== 0x25 || pdfBytes[1] !== 0x50) {
+      return jsonResponse({ error: 'pdfBlob is not a valid PDF or exceeds 10 MB' }, 400);
+    }
+    const safeFileName = typeof fileName === 'string' && fileName.trim()
+      ? fileName.replace(/[^\w.-]/g, '_').slice(0, 120)
+      : 'tender-report.pdf';
 
     const generatedAt = new Date().toLocaleDateString('fr-FR', { dateStyle: 'full', timeStyle: 'short' });
-    const html = generateTenderReportHTML(tenderTitle, reportTitle, fileName, generatedAt);
+    const html = generateTenderReportHTML(
+      escapeHtml(tenderTitle), escapeHtml(reportTitle), escapeHtml(safeFileName), generatedAt,
+    );
+    const emailFrom = getEmailFrom();
 
     const emailService = createEmailService();
-    await emailService.sendEmail({
+    const result = await emailService.sendEmail({
       to,
       subject: `Rapport d'appel d'offres : ${tenderTitle}`,
       html,
+      attachments: [{ filename: safeFileName, content: pdfBytes, contentType: 'application/pdf' }],
     });
+    if (!result.success) throw new Error('Email provider reported unsuccessful delivery');
 
-    await supabase.from('email_logs').insert({
-      recipient: to,
+    const { error: logError } = await auth.admin.schema('btp').from('email_logs').insert({
+      user_id: auth.user.id,
+      email_to: to,
+      email_from: emailFrom,
       subject: `Rapport d'appel d'offres : ${tenderTitle}`,
-      content_type: 'tender_report',
+      body: html,
+      template_name: 'tender_report',
       status: 'sent',
       metadata: { tenderTitle, reportTitle, fileName, generatedAt },
     });
+    if (logError) console.error('Tender report email was sent but could not be logged:', logError);
 
-    return new Response(
-      JSON.stringify({ success: true, message: 'Rapport envoyé par email' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ success: true, logRecorded: !logError, message: 'Rapport envoyé par email' });
 
   } catch (error) {
     console.error('Error in send-tender-report:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
 });

@@ -14,9 +14,9 @@ const env = (key: string): string | undefined => {
 };
 
 export function getEmailProvider(): EdgeEmailProvider {
-  const raw = (env('EMAIL_PROVIDER') || 'resend').toLowerCase();
+  const raw = (env('EMAIL_PROVIDER') || env('VITE_EMAIL_PROVIDER') || 'resend').toLowerCase();
   if (raw === 'smtp' || raw === 'sendgrid' || raw === 'resend') return raw;
-  return 'resend';
+  throw new Error(`Unsupported EMAIL_PROVIDER: ${raw}`);
 }
 
 export function getEmailFrom(): string {
@@ -24,7 +24,9 @@ export function getEmailFrom(): string {
     env('RESEND_FROM') ||
     env('SENDGRID_FROM') ||
     env('SMTP_FROM') ||
-    'onboarding@resend.dev'
+    env('Deno_mail_from_notif') ||
+    env('Deno_mail_from_name') ||
+    ''
   );
 }
 
