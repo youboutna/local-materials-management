@@ -37,6 +37,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { DocumentService, getDocumentService} from "@/application/services/DocumentService";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
+import { getDocumentTypeLabel as getDocTypeLabel } from '@/config/referentials/documents/document-types.referential';
 interface ProjectDocument {
   id: string;
   description?: string;
@@ -81,39 +82,7 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
     tags: doc.tags || undefined,
   }));
 
-  const documentTypes = [
-    {
-      value: "project_report",
-      label: t("documents.type.project_report"),
-      icon: FileBarChart,
-    },
-    { value: "contract", label: t("documents.type.contract"), icon: FileText },
-    {
-      value: "inspection_report",
-      label: t("documents.type.inspection_report"),
-      icon: FileText,
-    },
-    {
-      value: "location_photo",
-      label: t("documents.type.location_photo"),
-      icon: Image,
-    },
-    {
-      value: "supplier_info",
-      label: t("documents.type.supplier_info"),
-      icon: FileText,
-    },
-    {
-      value: "task_assignment",
-      label: t("documents.type.task_assignment"),
-      icon: FileText,
-    },
-    {
-      value: "employee_record",
-      label: t("documents.type.employee_record"),
-      icon: File,
-    },
-  ];
+
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,13 +160,21 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
   };
 
   const getDocumentIcon = (type: string) => {
-    const docType = documentTypes.find((dt) => dt.value === type);
-    return docType ? docType.icon : File;
+    // Simple icon mapping based on type
+    const iconMap: Record<string, any> = {
+      project_report: FileBarChart,
+      contract: FileText,
+      inspection_report: FileText,
+      location_photo: Image,
+      supplier_info: FileText,
+      task_assignment: FileText,
+      employee_record: File,
+    };
+    return iconMap[type] || File;
   };
 
   const getDocumentTypeLabel = (type: string) => {
-    const docType = documentTypes.find((dt) => dt.value === type);
-    return docType ? docType.label : t("documents.type.other") || "Autre";
+    return getDocTypeLabel(type);
   };
 
   const formatFileSize = (bytes?: number) => {

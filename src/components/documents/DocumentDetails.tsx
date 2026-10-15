@@ -8,6 +8,7 @@ import { FileText, Camera, FileBarChart, FileCheck, Building2, ClipboardList, Us
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { useToast } from '@/hooks/use-toast';
 import { T } from '@/components/i18n/T';
+import { getDocumentTypeLabel } from '@/config/referentials/documents/document-types.referential';
 
 interface Document {
   id: string;
@@ -58,19 +59,6 @@ const DocumentDetails = ({ document, open, onOpenChange }: DocumentDetailsProps)
       employee_record: Users
     };
     return icons[type as keyof typeof icons] || FileText;
-  };
-
-  const getDocumentTypeLabel = (type: string) => {
-    const labels = {
-      inspection_report: 'Rapport d\'inspection',
-      location_photo: 'Photo de localisation',
-      project_report: 'Rapport de projet',
-      contract: 'Contrat',
-      supplier_info: 'Informations fournisseur',
-      task_assignment: 'Affectation de tâche',
-      employee_record: 'Dossier employé'
-    };
-    return labels[type as keyof typeof labels] || type;
   };
 
   const getStatusColor = (status: string) => {

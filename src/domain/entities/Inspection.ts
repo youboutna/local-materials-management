@@ -228,6 +228,7 @@ export class Inspection {
     paymentType?: string;
     observations?: InspectionObservation[];
     participants?: InspectionParticipant[];
+    documents?: Document[];
   }): Inspection {
     const inspectorObj: Inspector = typeof params.inspector === 'string'
       ? { name: params.inspector, agency: '', type: 'employee' as const }
@@ -244,7 +245,7 @@ export class Inspection {
       inspectorObj,
       params.progressAtInspection || 0,
       params.comments,
-      [],
+      params.documents || [],
       new Date(),
       new Date(),
       params.projectId,

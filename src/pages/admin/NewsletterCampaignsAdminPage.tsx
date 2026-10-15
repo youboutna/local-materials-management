@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/hexagonal/useAuth';
 export function NewsletterCampaignsAdminPage() {
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -39,7 +40,13 @@ export function NewsletterCampaignsAdminPage() {
 
   const { useCountActiveSubscribers } = useNewsletterSubscribersHex();
 
-  const { data: campaigns, isLoading } = useAllCampaigns(statusFilter === 'all' ? undefined : statusFilter);
+  const { data: campaigns, isLoading, error: campaignsError } = useAllCampaigns(statusFilter === 'all' ? undefined : statusFilter);
+  const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase();
+  const visibleCampaigns = campaigns?.filter((campaign) =>
+    !normalizedSearchTerm ||
+    campaign.subject.toLocaleLowerCase().includes(normalizedSearchTerm) ||
+    campaign.preheader?.toLocaleLowerCase().includes(normalizedSearchTerm)
+  );
   const { data: selectedCampaign } = useCampaignById(selectedCampaignId || '');
   const { data: activeSubscriberCount } = useCountActiveSubscribers();
 
@@ -161,6 +168,8 @@ export function NewsletterCampaignsAdminPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search campaigns..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
               className="pl-10"
             />
           </div>
@@ -181,7 +190,12 @@ export function NewsletterCampaignsAdminPage() {
       </div>
 
       <div className="grid gap-4">
-        {campaigns?.map((campaign) => (
+        {campaignsError && (
+          <div role="alert" className="py-8 text-center text-destructive">
+            Failed to load campaigns. Please try again.
+          </div>
+        )}
+        {visibleCampaigns?.map((campaign) => (
           <Card key={campaign.id}>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -224,16 +238,18 @@ export function NewsletterCampaignsAdminPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedCampaignId(campaign.id);
-                    setIsEditDialogOpen(true);
-                  }}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
+                {campaign.status !== 'sent' && campaign.status !== 'sending' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedCampaignId(campaign.id);
+                      setIsEditDialogOpen(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
                 {campaign.status === 'draft' && (
                   <>
                     <Button
@@ -257,17 +273,22 @@ export function NewsletterCampaignsAdminPage() {
                     </Button>
                   </>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDelete(campaign.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {campaign.status !== 'sent' && campaign.status !== 'sending' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(campaign.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
         ))}
+        {visibleCampaigns?.length === 0 && !campaignsError && (
+          <div className="py-8 text-center text-muted-foreground">No campaigns match your search.</div>
+        )}
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -303,7 +324,9 @@ function CampaignForm({ campaign, onSubmit, onCancel }: CampaignFormProps) {
   const [subject, setSubject] = useState(campaign?.subject || '');
   const [preheader, setPreheader] = useState(campaign?.preheader || '');
   const [content, setContent] = useState(campaign?.content || '');
-  const [scheduledFor, setScheduledFor] = useState(campaign?.scheduledFor || '');
+  const [scheduledFor, setScheduledFor] = useState(
+    campaign?.scheduledFor ? new Date(campaign.scheduledFor).toISOString().slice(0, 16) : '',
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -347,16 +370,18 @@ function CampaignForm({ campaign, onSubmit, onCancel }: CampaignFormProps) {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="scheduledFor">Schedule For (Optional)</Label>
-        <Input
-          id="scheduledFor"
-          type="datetime-local"
-          min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
-          value={scheduledFor}
-          onChange={(e) => setScheduledFor(e.target.value)}
-        />
-      </div>
+      {!campaign && (
+        <div className="space-y-2">
+          <Label htmlFor="scheduledFor">Schedule For (Optional)</Label>
+          <Input
+            id="scheduledFor"
+            type="datetime-local"
+            min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+            value={scheduledFor}
+            onChange={(e) => setScheduledFor(e.target.value)}
+          />
+        </div>
+      )}
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>

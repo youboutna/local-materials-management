@@ -4,7 +4,7 @@
  */
 
 import { TenderDocument, TenderDocumentCategory, TenderDocumentStatus } from '@/domain/entities/TenderDocument';
-import { ITenderDocumentRepository, TenderDocumentJoinedRow, TenderStepDocumentRow } from '@/domain/repositories/ITenderDocumentRepository';
+import { CreateTenderDocumentAssociation, ITenderDocumentRepository, TenderDocumentJoinedRow, TenderStepDocumentRow } from '@/domain/repositories/ITenderDocumentRepository';
 import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTransformer';
 import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 
@@ -148,10 +148,32 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       if (error) {
         throw new Error(`Failed to delete tender document: ${error.message}`);
       }
+
     } catch (error) {
       console.error('Error deleting tender document:', error);
       throw error;
     }
+  }
+
+  async createTenderDocumentAssociation(input: CreateTenderDocumentAssociation): Promise<{ id: string }> {
+    const { data, error } = await supabase
+      .from('tender_documents')
+      .insert({
+        tender_id: input.tenderId ?? null,
+        project_id: input.projectId ?? null,
+        document_id: input.documentId,
+        category: input.category,
+        subcategory: input.subcategory,
+        is_required: input.isRequired,
+        is_submitted: input.isSubmitted,
+        status: input.status,
+        submission_date: input.submissionDate,
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 
   async findByProjectId(projectId: string): Promise<TenderDocument[]> {
@@ -408,7 +430,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
         .from('tender_documents')
         .select(`
           *,
-          document:documents(
+          document:documents!tender_documents_document_id_fkey(
             id,
             title,
             description,
@@ -423,13 +445,13 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
 
       if (error) {
         console.error('Error finding tender documents with document by tender ID:', error);
-        return [];
+        throw error;
       }
 
       return (data || []) as unknown as TenderDocumentJoinedRow[];
     } catch (error) {
       console.error('Unexpected error finding tender documents with document by tender ID:', error);
-      return [];
+      throw error;
     }
   }
 

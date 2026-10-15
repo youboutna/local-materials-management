@@ -54,6 +54,18 @@ export interface TenderStepDocumentRow {
   };
 }
 
+export interface CreateTenderDocumentAssociation {
+  tenderId?: string | null;
+  projectId?: string | null;
+  documentId: string;
+  category: string;
+  subcategory: string;
+  isRequired: boolean;
+  isSubmitted: boolean;
+  status: string;
+  submissionDate: string;
+}
+
 export interface ITenderDocumentRepository {
   // CRUD operations
   findById(id: string): Promise<TenderDocument | null>;
@@ -86,4 +98,5 @@ export interface ITenderDocumentRepository {
   // Joined read models (tender-scoped, used by tender document management UI)
   findByTenderIdWithDocument(tenderId: string): Promise<TenderDocumentJoinedRow[]>;
   findStepDocumentsByTenderId(tenderId: string): Promise<TenderStepDocumentRow[]>;
+  createTenderDocumentAssociation(input: CreateTenderDocumentAssociation): Promise<{ id: string }>;
 }

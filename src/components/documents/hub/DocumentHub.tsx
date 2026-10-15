@@ -20,7 +20,7 @@ interface Props {
 
 export function DocumentHub({ contract, heading, className }: Props) {
   const { t } = useLanguage();
-  const { data: rawItems = [], isLoading } = contract.useDocuments();
+  const { data: rawItems = [], isLoading, error } = contract.useDocuments();
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('date_desc');
   const [view, setView] = useState<ViewMode>('grid');
@@ -149,6 +149,10 @@ export function DocumentHub({ contract, heading, className }: Props) {
           {isLoading ? (
             <div className="flex h-full items-center justify-center p-8">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          ) : error ? (
+            <div role="alert" className="p-6 text-sm text-destructive">
+              {error.message || t('auto.documenthub.erreur')}
             </div>
           ) : filtered.length === 0 ? (
             <DocumentHubEmpty

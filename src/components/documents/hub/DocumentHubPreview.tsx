@@ -35,6 +35,7 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
   const [error, setError] = useState<string | null>(null);
 
   const proxy = contract.previewMode === 'proxy';
+  const resolveBlobUrl = contract.resolveBlobUrl;
 
   useEffect(() => {
     let cancelled = false;
@@ -42,8 +43,9 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
 
     async function load() {
       setError(null);
+      setDisplayUrl(null);
+      setLoadingBlob(false);
       if (!item?.fileUrl) {
-        setDisplayUrl(null);
         return;
       }
       if (!proxy) {
@@ -53,8 +55,8 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
       setLoadingBlob(true);
       try {
         let url: string | null = null;
-        if (contract.resolveBlobUrl) {
-          url = await contract.resolveBlobUrl(item);
+        if (resolveBlobUrl) {
+          url = await resolveBlobUrl(item);
         } else {
           const res = await fetch(item.fileUrl);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -62,9 +64,16 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
           url = URL.createObjectURL(blob);
           createdObjectUrl = url;
         }
-        if (!cancelled) setDisplayUrl(url);
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message ?? 'Impossible de charger le document');
+        if (!cancelled) {
+          if (url) setDisplayUrl(url);
+          else setError('Impossible de charger le document');
+        } else if (createdObjectUrl) {
+          URL.revokeObjectURL(createdObjectUrl);
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Impossible de charger le document');
+        }
       } finally {
         if (!cancelled) setLoadingBlob(false);
       }
@@ -75,10 +84,10 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
       cancelled = true;
       if (createdObjectUrl) URL.revokeObjectURL(createdObjectUrl);
     };
-  }, [item, proxy, contract]);
+  }, [item, proxy, resolveBlobUrl]);
 
   if (!item) return null;
-  const kind = getPreviewKind(item.mimeType);
+  const kind = getPreviewKind(item.mimeType, item.fileName);
   const catLabel = item.category
     ? contract.categoryLabels?.[item.category] ?? item.category
     : null;

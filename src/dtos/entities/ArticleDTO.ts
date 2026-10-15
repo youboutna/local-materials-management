@@ -7,6 +7,17 @@ import { BaseEntityDTO } from './BaseEntityDTO';
 
 export type ArticleStatus = 'draft' | 'published' | 'archived';
 
+export interface ArticleDocumentDTO {
+  id: string;
+  title: string;
+  type: string;
+  url: string;
+  fileName: string | null;
+  mimeType: string | null;
+  fileSize: number | null;
+  status: string;
+}
+
 export interface ArticleDTO extends BaseEntityDTO {
   title: string;
   slug: string;
@@ -21,12 +32,7 @@ export interface ArticleDTO extends BaseEntityDTO {
   projectName?: string;
   projectProgress?: number;
   projectDuration?: string;
-  documents?: Array<{
-    id: string;
-    title: string;
-    type: string;
-    url: string;
-  }>;
+  documents?: ArticleDocumentDTO[];
   showProjectInfo?: boolean;
   metadata?: Record<string, unknown>;
 }
@@ -36,7 +42,7 @@ export interface CreateArticleDTO {
   slug?: string;
   summary: string;
   content: string;
-  projectId?: string;
+  projectId?: string | null;
   documentIds?: string[];
   showProjectInfo?: boolean;
   metadata?: Record<string, unknown>;
@@ -48,7 +54,7 @@ export interface UpdateArticleDTO {
   summary?: string;
   content?: string;
   status?: ArticleStatus;
-  projectId?: string;
+  projectId?: string | null;
   documentIds?: string[];
   showProjectInfo?: boolean;
   metadata?: Record<string, unknown>;
@@ -68,10 +74,5 @@ export interface ArticleListDTO {
   projectId?: string;
   projectName?: string;
   showProjectInfo?: boolean;
-  documents?: Array<{
-    id: string;
-    title: string;
-    type: string;
-    url: string;
-  }>;
+  documentCount?: number;
 }

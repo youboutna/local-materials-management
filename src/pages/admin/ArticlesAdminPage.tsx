@@ -28,6 +28,7 @@ export function ArticlesAdminPage() {
   const { user } = useAuth();
   const {
     useAllArticles,
+    useSearchArticles,
     useArticleById,
     useCreateArticle,
     useUpdateArticle,
@@ -43,7 +44,19 @@ export function ArticlesAdminPage() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 
   // Queries
-  const { data: articles, isLoading } = useAllArticles(statusFilter === 'all' ? undefined : statusFilter);
+  const { data: articles, isLoading, error: articlesError } = useAllArticles(statusFilter === 'all' ? undefined : statusFilter);
+  const normalizedSearchTerm = searchTerm.trim();
+  const { data: searchedArticles, isLoading: isSearchLoading, error: searchError } = useSearchArticles(
+    normalizedSearchTerm,
+    statusFilter === 'all' ? undefined : statusFilter,
+  );
+  const visibleArticles = normalizedSearchTerm.length > 2
+    ? searchedArticles
+    : articles?.filter((article) => {
+        const query = normalizedSearchTerm.toLocaleLowerCase();
+        return !query || article.title.toLocaleLowerCase().includes(query) ||
+          article.summary.toLocaleLowerCase().includes(query);
+      });
   const { data: selectedArticle } = useArticleById(selectedArticleId || '');
 
   // Mutations
@@ -63,7 +76,7 @@ export function ArticlesAdminPage() {
       setIsCreateDialogOpen(false);
       toast({ title: 'Article created successfully' });
     } catch (error) {
-      toast({ title: 'Failed to create article', variant: 'destructive' });
+      toast({ title: 'Failed to create article', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
     }
   };
 
@@ -75,7 +88,7 @@ export function ArticlesAdminPage() {
       setSelectedArticleId(null);
       toast({ title: 'Article updated successfully' });
     } catch (error) {
-      toast({ title: 'Failed to update article', variant: 'destructive' });
+      toast({ title: 'Failed to update article', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
     }
   };
 
@@ -84,7 +97,7 @@ export function ArticlesAdminPage() {
       await publishMutation.mutateAsync(id);
       toast({ title: 'Article published successfully' });
     } catch (error) {
-      toast({ title: 'Failed to publish article', variant: 'destructive' });
+      toast({ title: 'Failed to publish article', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
     }
   };
 
@@ -93,7 +106,7 @@ export function ArticlesAdminPage() {
       await archiveMutation.mutateAsync(id);
       toast({ title: 'Article archived successfully' });
     } catch (error) {
-      toast({ title: 'Failed to archive article', variant: 'destructive' });
+      toast({ title: 'Failed to archive article', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
     }
   };
 
@@ -103,7 +116,7 @@ export function ArticlesAdminPage() {
       await deleteMutation.mutateAsync(id);
       toast({ title: 'Article deleted successfully' });
     } catch (error) {
-      toast({ title: 'Failed to delete article', variant: 'destructive' });
+      toast({ title: 'Failed to delete article', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
     }
   };
 
@@ -120,7 +133,7 @@ export function ArticlesAdminPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || (normalizedSearchTerm.length > 2 && isSearchLoading)) {
     return <div className="p-8">Loading...</div>;
   }
 
@@ -174,7 +187,12 @@ export function ArticlesAdminPage() {
       </div>
 
       <div className="grid gap-4">
-        {articles?.map((article) => (
+        {(normalizedSearchTerm.length > 2 ? searchError : articlesError) && (
+          <div role="alert" className="py-8 text-center text-destructive">
+            Failed to load articles. Please try again.
+          </div>
+        )}
+        {visibleArticles?.map((article) => (
           <Card key={article.id}>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -239,6 +257,9 @@ export function ArticlesAdminPage() {
             </CardContent>
           </Card>
         ))}
+        {visibleArticles?.length === 0 && !(normalizedSearchTerm.length > 2 ? searchError : articlesError) && (
+          <div className="py-8 text-center text-muted-foreground">No articles match your search.</div>
+        )}
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -285,7 +306,7 @@ function ArticleForm({ article, onSubmit, onCancel }: ArticleFormProps) {
       title,
       summary,
       content,
-      projectId,
+      projectId: projectId ?? null,
       documentIds,
       showProjectInfo,
     };

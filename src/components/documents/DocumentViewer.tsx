@@ -9,6 +9,7 @@ import { useDocumentStorage } from '@/hooks/useDocumentStorage';
 import { Building2, Calendar, Camera, ClipboardList, Download, ExternalLink, FileBarChart, FileCheck, FileText, FolderOpen, RotateCw, User, Users, ZoomIn } from 'lucide-react';
 import { useState } from 'react';
 import { T } from '@/components/i18n/T';
+import { getDocumentTypeLabel as getDocTypeLabel } from '@/config/referentials/documents/document-types.referential';
 
 interface Document {
   id: string;
@@ -50,16 +51,8 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
   };
 
   const getDocumentTypeLabel = (type: string) => {
-    const labels = {
-      inspection_report: 'Rapport d\'inspection',
-      location_photo: 'Photo de localisation',
-      project_report: 'Rapport de projet',
-      contract: 'Contrat',
-      supplier_info: 'Informations fournisseur',
-      task_assignment: 'Affectation de tâche',
-      employee_record: 'Dossier employé'
-    };
-    return labels[type as keyof typeof labels] || type;
+    // Use centralized referential for document type labels
+    return getDocTypeLabel(type);
   };
 
   const getStatusColor = (status: string) => {

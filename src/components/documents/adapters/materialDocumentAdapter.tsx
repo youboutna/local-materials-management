@@ -2,17 +2,19 @@ import { translateLabelMap } from '@/lib/i18n/labelMap';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 import { DocumentHubContract } from '../hub/types';
+import { DOCUMENT_TYPE_LABELS, type DocumentTypeCode } from '@/config/referentials/documents/document-types.referential';
 
-const MATERIAL_CATEGORY_LABEL_KEYS: Record<string, string> = {
-  specification: 'auto.materialdocumentadapter.fiche_technique',
-  certificate: 'auto.materialdocumentadapter.certificat',
-  manual: 'auto.materialdocumentadapter.manuel',
-  invoice: 'auto.materialdocumentadapter.facture',
-  delivery_note: 'auto.materialdocumentadapter.bon_de_livraison',
-  warranty: 'auto.materialdocumentadapter.garantie',
-  photo: 'auto.materialdocumentadapter.photo',
-  other: 'auto.materialdocumentadapter.autre',
-};
+// Material-specific document types (subset of centralized referential)
+const MATERIAL_DOCUMENT_TYPES: DocumentTypeCode[] = [
+  'specification',
+  'certificate',
+  'manual',
+  'invoice',
+  'delivery_note',
+  'warranty',
+  'photo',
+  'other'
+];
 
 /** Contexte matériau propagé aux documents (auto-complétion à l'upload). */
 export interface MaterialDocumentContext {
@@ -26,19 +28,26 @@ export function useMaterialDocumentAdapter(
   context: MaterialDocumentContext = {},
 ): DocumentHubContract {
   const { t } = useLanguage();
-  const MATERIAL_CATEGORY_LABELS = translateLabelMap(MATERIAL_CATEGORY_LABEL_KEYS, t);
   const { materialName, supplierId, supplierName } = context;
+
+  // Use centralized document type labels for materials
+  const materialCategoryLabels: Record<DocumentTypeCode, string> = {};
+  MATERIAL_DOCUMENT_TYPES.forEach(type => {
+    materialCategoryLabels[type] = DOCUMENT_TYPE_LABELS[type];
+  });
+
+  const uploadCategoryOptions = MATERIAL_DOCUMENT_TYPES.map(type => ({
+    value: type,
+    label: DOCUMENT_TYPE_LABELS[type]
+  }));
 
   return useDocumentsTableAdapter({
     scopeLabel: materialName ? `Documents — ${materialName}` : t('auto.materialdocumentadapter.documents_du_materiau'),
     queryKey: ['documents', 'material', materialId, supplierId ?? 'no-supplier'],
     filters: [{ column: 'metadata_material_id', value: materialId }],
     pathPrefix: `materials/${materialId}`,
-    categoryLabels: MATERIAL_CATEGORY_LABELS,
-    uploadCategoryOptions: Object.entries(MATERIAL_CATEGORY_LABELS).map(([value, label]) => ({
-      value,
-      label,
-    })),
+    categoryLabels: materialCategoryLabels,
+    uploadCategoryOptions,
     insertDefaults: {
       metadata: {
         material_id: materialId,
@@ -51,14 +60,11 @@ export function useMaterialDocumentAdapter(
       {
         key: 'category',
         label: t('auto.materialdocumentadapter.categorie'),
-        options: Object.entries(MATERIAL_CATEGORY_LABELS).map(([value, label]) => ({
-          value,
-          label,
-        })),
+        options: uploadCategoryOptions,
       },
     ],
     itemFacetBuilder: (row) => ({
-      category: MATERIAL_CATEGORY_LABELS[row.document_type] ?? row.document_type ?? null,
+      category: materialCategoryLabels[row.document_type as DocumentTypeCode] ?? row.document_type ?? null,
     }),
     previewMode: 'proxy',
   });

@@ -11,6 +11,10 @@ import {
   type DecompteRecordDTO,
   type DecompteStatus,
 } from '@/dtos/entities/DecompteRecordDTO';
+import type {
+  ConsultantInvoiceDecision,
+  ConsultantProgressInvoiceDTO,
+} from '@/dtos/entities/ConsultantProgressInvoiceDTO';
 
 // ✅ IMPORT formatReference
 import { formatReference } from '@/utils/entityLabels';
@@ -83,6 +87,84 @@ const toPaymentDto = (row: any): DecomptePaymentDTO => ({
 });
 
 export class SupabaseDecompteAdapter implements IDecompteRepository {
+  async findSubmittedProgressInvoices(): Promise<ConsultantProgressInvoiceDTO[]> {
+    const { data, error } = await (btpClient as any)
+      .from('progress_invoices')
+      .select('*')
+      .eq('status', 'submitted')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      invoiceNumber: row.invoice_number ?? '',
+      invoice_number: row.invoice_number ?? '',
+      invoiceType: row.invoice_type ?? 'progress',
+      invoice_type: row.invoice_type ?? 'progress',
+      progressPercentage: row.progress_percentage ?? 0,
+      progress_percentage: row.progress_percentage ?? 0,
+      previousProgress: row.previous_progress ?? 0,
+      previous_progress: row.previous_progress ?? 0,
+      totalContractAmount: row.total_contract_amount ?? 0,
+      total_contract_amount: row.total_contract_amount ?? 0,
+      invoiceAmount: row.invoice_amount ?? 0,
+      invoice_amount: row.invoice_amount ?? 0,
+      workDescription: row.work_description ?? '',
+      work_description: row.work_description ?? '',
+      status: row.status ?? 'submitted',
+      submittedAt: row.submitted_at ?? '',
+      submitted_at: row.submitted_at ?? '',
+      projectId: row.project_id ?? '',
+      project_id: row.project_id ?? '',
+      inspectionId: row.inspection_id ?? '',
+      inspection_id: row.inspection_id ?? '',
+      supportingDocuments: row.supporting_documents ?? [],
+      supporting_documents: row.supporting_documents ?? [],
+      submittedBy: row.submitted_by ?? '',
+      submitted_by: row.submitted_by ?? '',
+      createdAt: row.created_at ?? '',
+      created_at: row.created_at ?? '',
+      updatedAt: row.updated_at ?? '',
+      updated_at: row.updated_at ?? '',
+      projects: row.projects ? {
+        title: row.projects.title ?? '',
+        projectType: row.projects.project_type ?? '',
+        fundingSource: row.projects.funding_source ?? '',
+      } : undefined,
+    }));
+  }
+
+  async findProgressInvoiceWorkflowHistory(
+    id: string,
+  ): Promise<ConsultantInvoiceDecision['workflowHistory'] | null> {
+    const { data, error } = await (btpClient as any)
+      .from('progress_invoices')
+      .select('workflow_history')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return Array.isArray(data.workflow_history) ? data.workflow_history : [];
+  }
+
+  async updateConsultantInvoiceDecision(id: string, decision: ConsultantInvoiceDecision): Promise<void> {
+    const updateData: Record<string, unknown> = {
+      status: decision.status,
+      consultant_id: decision.consultantId,
+      consultant_validated_at: decision.validatedAt,
+      consultant_comments: decision.comments,
+      consultant_approval_status: decision.approved ? 'approved' : 'rejected',
+      workflow_history: decision.workflowHistory,
+    };
+    if (decision.serviceFaitDocumentId) {
+      updateData.service_fait_document_id = decision.serviceFaitDocumentId;
+    }
+    const { error } = await (btpClient as any)
+      .from('progress_invoices')
+      .update(updateData)
+      .eq('id', id);
+    if (error) throw error;
+  }
+
   async findByProjectId(projectId: string): Promise<DecompteRecordDTO[]> {
     const { data, error } = await (btpClient as any)
       .from('progress_invoices')

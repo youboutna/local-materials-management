@@ -2,13 +2,14 @@
  * Hook hexagonal pour les appels d'offres
  * Encapsule les use cases de l'architecture hexagonale
  */
-import { TenderService } from '@/application/services/TenderService';
+import { getTenderService } from '@/application/services/TenderService';
+import { getPhaseService } from '@/application/services/PhaseService';
+import { getProjectService } from '@/application/services/ProjectService';
 import { TenderSubmissionService } from '@/application/services/TenderSubmissionService';
 import { Tender } from '@/domain/entities/Tender';
 import { TenderSubmission } from '@/domain/entities/TenderSubmission';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface UseTenderHexResult {
   tenders: Tender[];
@@ -44,11 +45,7 @@ export interface ProjectPhaseForTender {
 }
 
 export function useTendersHex(): UseTenderHexResult {
-  // Initialize service with RepositoryFactory
-  const tenderService = useMemo(() => new TenderService(
-    RepositoryFactory.getTenderRepository(),
-    RepositoryFactory.getParsedInvoiceRepository()
-  ), []);
+  const tenderService = getTenderService();
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -79,11 +76,7 @@ export function useTendersHex(): UseTenderHexResult {
 }
 
 export function useTenderHex(tenderId: string | undefined): UseTenderByIdHexResult {
-  // Initialize service with RepositoryFactory
-  const tenderService = useMemo(() => new TenderService(
-    RepositoryFactory.getTenderRepository(),
-    RepositoryFactory.getParsedInvoiceRepository()
-  ), []);
+  const tenderService = getTenderService();
   const [tender, setTender] = useState<Tender | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -235,11 +228,9 @@ export function useProjectPhasesForTender(projectId?: string, tenderId?: string)
     queryKey: ['tender-project-phases', projectId, tenderId],
     queryFn: async (): Promise<{ projectInfo: { id: string; title: string } | null; phases: ProjectPhaseForTender[] }> => {
       if (!projectId) return { projectInfo: null, phases: [] };
-      const phaseRepo = RepositoryFactory.getPhaseRepository();
-      const projectRepo = RepositoryFactory.getProjectRepository();
       const [project, phases] = await Promise.all([
-        projectRepo.findById(projectId),
-        phaseRepo.findByProjectId(projectId),
+        getProjectService().getProjectById(projectId),
+        getPhaseService().getPhasesByProject(projectId),
       ]);
       const mapped: ProjectPhaseForTender[] = (phases || []).map((ph, idx) => {
         const p = ph as unknown as Record<string, unknown>;
@@ -280,8 +271,7 @@ export function useProjectPhasesForLots(projectId?: string) {
     queryKey: ['project-phases-for-lots', projectId],
     queryFn: async () => {
       if (!projectId) return [];
-      const phaseRepo = RepositoryFactory.getPhaseRepository();
-      const phases = await phaseRepo.findByProjectId(projectId);
+      const phases = await getPhaseService().getPhasesByProject(projectId);
       return (phases || []).map((ph, idx) => {
         const p = ph as unknown as Record<string, unknown>;
         return {

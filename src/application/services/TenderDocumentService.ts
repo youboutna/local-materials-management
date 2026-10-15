@@ -4,6 +4,8 @@
  */
 
 import { ITenderDocumentRepository } from '@/domain/repositories/ITenderDocumentRepository';
+import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
+import { Document, DocumentType } from '@/domain/entities/Document';
 import {
     ApproveTenderDocumentRequestDTO,
     CreateTenderDocumentDTO,
@@ -24,8 +26,103 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class TenderDocumentService {
   constructor(
-    private tenderDocumentRepository: ITenderDocumentRepository = RepositoryFactory.getTenderDocumentRepository()
+    private tenderDocumentRepository: ITenderDocumentRepository = RepositoryFactory.getTenderDocumentRepository(),
+    private documentRepository: IDocumentRepository = RepositoryFactory.getDocumentRepository()
   ) {}
+
+  async createTenderLevelDocument(input: CreateTenderDocumentUploadInput): Promise<{
+    document: Document;
+    tenderDoc: { id: string };
+  }> {
+    if (!input.tenderId || !input.title.trim() || !input.fileUrl) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Tender ID, title and file URL are required');
+    }
+    return this.persistTenderDocument(input);
+  }
+
+  async createTenderDocumentUpload(
+    input: CreateTenderDocumentUploadInput
+  ): Promise<{ documentId?: string; error?: string; stage?: 'document' | 'tender_document' }> {
+    let document: Document;
+    try {
+      document = await this.createGedDocument({
+        ...input,
+        documentType: input.documentType ?? DocumentType.CONTRACT,
+      });
+    } catch (error) {
+      console.error('TenderDocumentService.createTenderDocumentUpload document insert failed:', error);
+      return { error: error instanceof Error ? error.message : String(error), stage: 'document' };
+    }
+
+    try {
+      await this.tenderDocumentRepository.createTenderDocumentAssociation({
+        tenderId: input.tenderId,
+        projectId: input.projectId,
+        documentId: document.id,
+        category: input.category,
+        subcategory: input.subcategory,
+        isRequired: input.isRequired ?? true,
+        isSubmitted: input.isSubmitted ?? true,
+        status: input.status ?? 'draft',
+        submissionDate: new Date().toISOString(),
+      });
+      return { documentId: document.id };
+    } catch (error) {
+      console.error('TenderDocumentService.createTenderDocumentUpload association insert failed:', error);
+      try {
+        await this.documentRepository.delete(document.id);
+      } catch (cleanupError) {
+        console.error('TenderDocumentService.createTenderDocumentUpload document cleanup failed:', cleanupError);
+      }
+      return {
+        documentId: document.id,
+        error: error instanceof Error ? error.message : String(error),
+        stage: 'tender_document',
+      };
+    }
+  }
+
+  private async persistTenderDocument(input: CreateTenderDocumentUploadInput): Promise<{
+    document: Document;
+    tenderDoc: { id: string };
+  }> {
+    const document = await this.createGedDocument(input);
+    try {
+      const tenderDoc = await this.tenderDocumentRepository.createTenderDocumentAssociation({
+        tenderId: input.tenderId,
+        projectId: input.projectId,
+        documentId: document.id,
+        category: input.category,
+        subcategory: input.subcategory,
+        isRequired: input.isRequired ?? false,
+        isSubmitted: input.isSubmitted ?? true,
+        status: input.status ?? 'pending',
+        submissionDate: new Date().toISOString(),
+      });
+      return { document, tenderDoc };
+    } catch (error) {
+      try {
+        await this.documentRepository.delete(document.id);
+      } catch (cleanupError) {
+        console.error('TenderDocumentService.createTenderLevelDocument document cleanup failed:', cleanupError);
+      }
+      throw error;
+    }
+  }
+
+  private async createGedDocument(input: CreateTenderDocumentUploadInput): Promise<Document> {
+    return this.documentRepository.save(Document.create({
+      id: crypto.randomUUID(),
+      projectId: input.projectId,
+      title: input.title,
+      description: input.description,
+      fileUrl: input.fileUrl,
+      fileName: input.fileName,
+      fileSize: input.fileSize,
+      mimeType: input.mimeType,
+      documentType: input.documentType ?? DocumentType.TENDER,
+    }));
+  }
 
   /**
    * Create a new tender document
@@ -303,12 +400,20 @@ export function getTenderDocumentService(): TenderDocumentService {
 }
 
 export interface CreateTenderDocumentUploadInput {
-  projectId: string;
+  tenderId?: string;
+  projectId?: string;
   title: string;
   description: string;
   fileUrl: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  documentType?: DocumentType;
   category: string;
   subcategory: string;
+  isRequired?: boolean;
+  isSubmitted?: boolean;
+  status?: string;
 }
 
 /**
@@ -318,39 +423,5 @@ export interface CreateTenderDocumentUploadInput {
 export async function createTenderDocumentUpload(
   input: CreateTenderDocumentUploadInput
 ): Promise<{ documentId?: string; error?: string; stage?: 'document' | 'tender_document' }> {
-  const { btpClient } = await import('@/integrations/supabase/schema-clients');
-
-  const { data: docData, error: docError } = await btpClient
-    .from('documents')
-    .insert({
-      project_id: input.projectId,
-      title: input.title,
-      description: input.description,
-      file_url: input.fileUrl,
-      document_type: 'contract',
-    })
-    .select()
-    .single();
-
-  if (docError || !docData) {
-    return { error: docError?.message || 'document insert failed', stage: 'document' };
-  }
-
-  const { error: tenderDocError } = await btpClient
-    .from('tender_documents')
-    .insert([{
-      project_id: input.projectId,
-      category: input.category,
-      subcategory: input.subcategory,
-      is_required: true,
-      is_submitted: true,
-      status: 'draft',
-      document_id: (docData as { id: string }).id,
-    }]);
-
-  if (tenderDocError) {
-    return { documentId: (docData as { id: string }).id, error: tenderDocError.message, stage: 'tender_document' };
-  }
-
-  return { documentId: (docData as { id: string }).id };
+  return getTenderDocumentService().createTenderDocumentUpload(input);
 }

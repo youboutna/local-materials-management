@@ -1,9 +1,8 @@
 /**
  * Hexagonal hooks for Tender Document Management
- * Uses RepositoryFactory instead of direct Supabase access
+ * Uses application services for tender-document operations
  */
 
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getTenderDocumentService } from '@/application/services/TenderDocumentService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -57,34 +56,21 @@ export function useUploadTenderDocument(tenderId: string, projectId?: string) {
       fileUrl: string; fileName: string; fileType: string; fileSize: number;
       documentData: { category: TenderDocumentCategory; subcategory: string; title: string; description?: string; is_required?: boolean; };
     }) => {
-      const docRepo = RepositoryFactory.getDocumentRepository();
-      const tenderDocRepo = RepositoryFactory.getTenderDocumentRepository();
-
-      // Create document record
-      const document = await docRepo.save({
+      return getTenderDocumentService().createTenderLevelDocument({
+        tenderId,
+        projectId,
         title: documentData.title,
-        description: documentData.description || null,
-        fileUrl: fileUrl,
-        fileName: fileName,
+        description: documentData.description ?? '',
+        fileUrl,
+        fileName,
         mimeType: fileType,
-        fileSize: fileSize,
-        documentType: 'tender'
-      } as any);
-
-      // Create tender document record
-      const tenderDoc = await tenderDocRepo.save({
-        documentId: (document as any).id,
-        tenderId: tenderId,
-        projectId: projectId || null,
+        fileSize,
         category: documentData.category,
         subcategory: documentData.subcategory,
         isRequired: documentData.is_required ?? true,
         isSubmitted: true,
-        submissionDate: new Date().toISOString(),
-        status: 'pending'
-      } as any);
-
-      return { document, tenderDoc };
+        status: 'pending',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tender-documents', tenderId] });

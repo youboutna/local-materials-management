@@ -8,6 +8,7 @@ import { useSupplierDocumentsHex } from '@/hooks/hexagonal'
 import type { SupplierDTO as Supplier } from '@/dtos/entities/SupplierDTO';
 import type { SupplierDocument } from '@/hooks/hexagonal';
 import { T } from '@/components/i18n/T';
+import { getDocumentTypeLabel } from '@/config/referentials/documents/document-types.referential';
 
 interface SupplierDocumentsListProps {
   supplier: Supplier;
@@ -17,16 +18,6 @@ const SupplierDocumentsList = ({ supplier }: SupplierDocumentsListProps) => {
   const { openDocument } = useDocumentViewer();
   const { toast } = useToast();
   const { data: documents, isLoading } = useSupplierDocumentsHex(supplier.id);
-
-  const getDocumentTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      'supplier_catalog': 'Catalogue',
-      'supplier_info': 'Information fournisseur',
-      'contract': 'Contrat',
-      'other': 'Autre'
-    };
-    return types[type] || type;
-  };
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return 'N/A';

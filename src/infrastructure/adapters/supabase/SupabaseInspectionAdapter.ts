@@ -42,6 +42,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
       progressAtInspection: data.progress_at_inspection || 0,
       comments: data.comments || undefined,
       progress: data.progress_at_inspection || 0,
+      documents,
       observations: [],
       paymentType: data.payment_type || undefined
     });

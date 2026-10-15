@@ -16,6 +16,7 @@ import { DocumentDTO, DocumentStatus } from '@/dtos/entities/DocumentDTO';
 import { useDocumentViewer } from '@/components/documents/viewer';
 import { useDocumentChanges, type DocumentChangeEvent } from '@/components/documents/viewer/documentEvents';
 import { T } from '@/components/i18n/T';
+import { getDocumentTypeLabel } from '@/config/referentials/documents/document-types.referential';
 
 interface DocumentsListPaginatedProps {
   documents: DocumentDTO[];
@@ -88,22 +89,6 @@ const DocumentsListPaginated: React.FC<DocumentsListPaginatedProps> = ({
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100} ${sizes[i]}`;
-  };
-
-  const getDocumentTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      'contract': 'Contrat',
-      'invoice': 'Facture',
-      'report': 'Rapport',
-      'certificate': 'Certificat',
-      'permit': 'Permis',
-      'insurance': 'Assurance',
-      'photo': 'Photo',
-      'manual': 'Manuel',
-      'warranty': 'Garantie',
-      'other': 'Autre'
-    };
-    return labels[type] || type;
   };
 
   const getStatusBadgeVariant = (status: string) => {

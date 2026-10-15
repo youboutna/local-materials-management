@@ -11,6 +11,7 @@
  *   - ✅ assignUserRole / revokeUserRole typés SomelecRole
  *   - ✅ Plus d'appel à IAuthRepository.updateUserRole (déprécié)
  *   - ✅ Nouvelles méthodes getUserRoles / hasRole
+ *   - ✅ ensureUserRoleAssigned déplacé au niveau classe (fix syntaxe)
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
@@ -227,6 +228,26 @@ export class AuthService {
    */
   async assignUserRole(userId: string, role: SomelecRole): Promise<void> {
     try {
+      await this.userRoleRepository.assignRole(userId, role);
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to assign user role', error);
+    }
+  }
+
+  /**
+   * Assigne un rôle uniquement s'il n'est pas déjà présent (ou le réactive).
+   */
+  async ensureUserRoleAssigned(userId: string, role: SomelecRole): Promise<void> {
+    try {
+      const existingRoles = await this.userRoleRepository.getUserRoles(userId);
+      const existingRole = existingRoles.find((userRole) => userRole.roleName === role);
+      if (existingRole) {
+        if (existingRole.status !== 'active') {
+          await this.userRoleRepository.updateRoleStatus(existingRole.id, 'active');
+        }
+        return;
+      }
       await this.userRoleRepository.assignRole(userId, role);
     } catch (error) {
       if (error instanceof AppError) throw error;

@@ -46,6 +46,7 @@ export type DocumentHubContract = {
   useDocuments: () => {
     data: DocumentItem[];
     isLoading: boolean;
+    error?: { message: string } | null;
     refetch: () => void;
   };
   facets: DocumentFacetDef[];

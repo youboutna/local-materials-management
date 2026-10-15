@@ -9,6 +9,7 @@ import {
   CreateArticleDTO,
   UpdateArticleDTO,
   ArticleListDTO,
+  ArticleDocumentDTO,
 } from '@/dtos/entities/ArticleDTO';
 
 export class ArticleTransformer {
@@ -17,12 +18,7 @@ export class ArticleTransformer {
     projectName?: string;
     projectProgress?: number;
     projectDuration?: string;
-    documents?: Array<{
-      id: string;
-      title: string;
-      type: string;
-      url: string;
-    }>;
+    documents?: ArticleDocumentDTO[];
   }): ArticleDTO {
     const data = entity.toData();
     return {
@@ -68,7 +64,7 @@ export class ArticleTransformer {
       projectId: data.projectId,
       projectName: enrichData?.projectName,
       showProjectInfo: data.metadata?.showProjectInfo as boolean,
-      documents: enrichData?.documents,
+      documentCount: enrichData?.documents?.length ?? 0,
     };
   }
 
@@ -79,7 +75,7 @@ export class ArticleTransformer {
       summary: dto.summary,
       content: dto.content,
       status: 'draft',
-      projectId: dto.projectId,
+      projectId: dto.projectId ?? undefined,
       documentIds: dto.documentIds || [],
       authorId,
       metadata: dto.showProjectInfo !== undefined 

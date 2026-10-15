@@ -149,8 +149,8 @@ export class NewsletterCampaignService {
       }
 
       // Cannot delete sent campaigns
-      if (entity.isSent()) {
-        throw new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, 'Cannot delete sent campaigns');
+      if (entity.isSent() || entity.isSending()) {
+        throw new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, 'Cannot delete sent or sending campaigns');
       }
 
       await this.campaignRepository.delete(id);

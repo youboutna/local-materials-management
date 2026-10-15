@@ -2,6 +2,10 @@ import type {
   DecomptePaymentDTO,
   DecompteRecordDTO,
 } from '@/dtos/entities/DecompteRecordDTO';
+import type {
+  ConsultantInvoiceDecision,
+  ConsultantProgressInvoiceDTO,
+} from '@/dtos/entities/ConsultantProgressInvoiceDTO';
 
 /**
  * Port des décomptes (factures acceptées) — source unique du « dépensé réel ».
@@ -14,4 +18,7 @@ export interface IDecompteRepository {
   /** Transactions rattachées (par décompte, sinon par projet/phase). */
   findPaymentsByProjectId(projectId: string): Promise<DecomptePaymentDTO[]>;
   findPaymentsByPhaseId(phaseId: string): Promise<DecomptePaymentDTO[]>;
+  findSubmittedProgressInvoices(): Promise<ConsultantProgressInvoiceDTO[]>;
+  findProgressInvoiceWorkflowHistory(id: string): Promise<ConsultantInvoiceDecision['workflowHistory'] | null>;
+  updateConsultantInvoiceDecision(id: string, decision: ConsultantInvoiceDecision): Promise<void>;
 }

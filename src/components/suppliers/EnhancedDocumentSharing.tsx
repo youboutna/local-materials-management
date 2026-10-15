@@ -17,6 +17,7 @@ import { FileText, Search, Send, Upload } from 'lucide-react';
 import React, { useState } from 'react';
 import { T } from '@/components/i18n/T';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { DOCUMENT_TYPE_LABELS, type DocumentTypeCode } from '@/config/referentials/documents/document-types.referential';
 
 interface Document {
   id: string;
@@ -42,18 +43,11 @@ interface EnhancedDocumentSharingProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const DOCUMENT_TYPES = [
-  { value: 'inspection', label: 'Inspection' },
-  { value: 'plan', label: 'Plan' },
-  { value: 'photo', label: 'Photo' },
-  { value: 'invoice', label: 'Facture' },
-  { value: 'purchase_order', label: 'Bon de commande' },
-  { value: 'inquiry', label: 'Demande de renseignements' },
-  { value: 'contract', label: 'Contrat' },
-  { value: 'report', label: 'Rapport' },
-  { value: 'certificate', label: 'Certificat' },
-  { value: 'specification', label: 'Spécification' }
-];
+// Use centralized document types from referential
+const DOCUMENT_TYPES = Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => ({
+  value,
+  label
+}));
 
 export const EnhancedDocumentSharing: React.FC<EnhancedDocumentSharingProps> = ({
   supplier,

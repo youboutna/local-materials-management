@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { getPasswordService, PasswordService } from '@/application/services/PasswordService';
+import { getAuthService } from '@/application/services/AuthService';
 import { PasswordResetRequestDTO, PasswordUpdateRequestDTO } from '@/dtos/entities/PasswordDTO';
 
 interface PasswordError {
@@ -69,8 +70,7 @@ export const usePasswordManagement = () => {
         });
         
         // Sign out and redirect to login
-        const { supabase: sb } = await import('@/integrations/supabase/client');
-        await sb.auth.signOut();
+        await getAuthService().logout();
         navigate('/auth');
         
         return { success: true };

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createEmailService } from "../_shared/EmailServiceFactory.ts";
 import { escapeHtml } from "../_shared/html.ts";
+import sanitizeHtml from "npm:sanitize-html@2.17.0";
 import {
   authorizeRequest,
   createAdminClient,
@@ -20,10 +21,18 @@ const makeToken = (): string => {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
-const sanitizeEmailHtml = (html: string): string => html
-  .replace(/<(script|style|iframe|object|svg)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "")
-  .replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-  .replace(/(href|src)\s*=\s*("|\')\s*javascript:[\s\S]*?\2/gi, '$1="#"');
+const sanitizeEmailHtml = (html: string): string => sanitizeHtml(html, {
+  allowedTags: [
+    "a", "b", "blockquote", "br", "code", "del", "em", "h1", "h2", "h3",
+    "h4", "hr", "i", "img", "li", "ol", "p", "pre", "s", "strong", "u", "ul",
+  ],
+  allowedAttributes: {
+    a: ["href", "title"],
+    img: ["src", "alt", "width", "height", "title"],
+  },
+  allowedSchemes: ["http", "https", "mailto"],
+  allowProtocolRelative: false,
+});
 
 serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });

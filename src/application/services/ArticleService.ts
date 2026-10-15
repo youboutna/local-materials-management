@@ -10,6 +10,7 @@ import {
   CreateArticleDTO,
   UpdateArticleDTO,
   ArticleListDTO,
+  ArticleDocumentDTO,
 } from '@/dtos/entities/ArticleDTO';
 import { ArticleTransformer } from '@/dtos/transforms/ArticleTransformer';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
@@ -36,8 +37,13 @@ export class ArticleService {
       const entities = await this.articleRepository.findAll(status);
       const dtos = await Promise.all(
         entities.map(async (entity) => {
-          const enrichData = await this.getEnrichmentData(entity);
-          return ArticleTransformer.toListDTO(entity, enrichData);
+          const publicArticle = entity.isPublished();
+          const enrichData = await this.getEnrichmentData(entity, publicArticle);
+          const article = ArticleTransformer.toListDTO(entity, enrichData);
+          if (publicArticle && !article.showProjectInfo) {
+            article.projectId = undefined;
+          }
+          return article;
         })
       );
       return dtos;
@@ -70,8 +76,12 @@ export class ArticleService {
         return null;
       }
 
-      const enrichData = await this.getEnrichmentData(entity);
-      return ArticleTransformer.toDTO(entity, enrichData);
+      const enrichData = await this.getEnrichmentData(entity, true);
+      const article = ArticleTransformer.toDTO(entity, enrichData);
+      article.documentIds = enrichData.documents?.map((document) => document.id) ?? [];
+      article.projectId = article.showProjectInfo ? article.projectId : undefined;
+      article.metadata = article.showProjectInfo ? { showProjectInfo: true } : {};
+      return article;
     } catch (error) {
       console.error('ArticleService.getArticleBySlug failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch article');
@@ -118,14 +128,24 @@ export class ArticleService {
       }
 
       // Validate project if changed
-      if (dto.projectId !== undefined && dto.projectId !== entity.getProjectId()) {
+      if (dto.projectId && dto.projectId !== entity.getProjectId()) {
         const project = await this.projectService.getProjectById(dto.projectId);
         if (!project) {
           throw new AppError(ErrorCode.NOT_FOUND, 'Project not found');
         }
       }
 
-      const updateData = ArticleTransformer.toUpdateData(dto);
+      const documentIds = dto.documentIds === undefined ? undefined : [...new Set(dto.documentIds)];
+      if (documentIds) {
+        for (const docId of documentIds) {
+          const doc = await this.documentService.getDocumentById(docId);
+          if (!doc) {
+            throw new AppError(ErrorCode.NOT_FOUND, `Document ${docId} not found`);
+          }
+        }
+      }
+
+      const updateData = ArticleTransformer.toUpdateData({ ...dto, documentIds });
       entity.update(updateData);
       await this.articleRepository.update(id, entity);
 
@@ -247,34 +267,24 @@ export class ArticleService {
     }
   }
 
-  private async getEnrichmentData(entity: Article): Promise<{
+  private async getEnrichmentData(entity: Article, publicDocumentsOnly = false): Promise<{
     authorName?: string;
     projectName?: string;
     projectProgress?: number;
     projectDuration?: string;
-    documents?: Array<{
-      id: string;
-      title: string;
-      type: string;
-      url: string;
-    }>;
+    documents?: ArticleDocumentDTO[];
   }> {
     const enrichData: {
       authorName?: string;
       projectName?: string;
       projectProgress?: number;
       projectDuration?: string;
-      documents?: Array<{
-        id: string;
-        title: string;
-        type: string;
-        url: string;
-      }>;
+      documents?: ArticleDocumentDTO[];
     } = {};
 
     // Get project info if linked
     const projectId = entity.getProjectId();
-    if (projectId) {
+    if (projectId && (!publicDocumentsOnly || entity.toData().metadata?.showProjectInfo === true)) {
       const project = await this.projectService.getProjectById(projectId);
       if (project) {
         enrichData.projectName = project.title;
@@ -296,15 +306,33 @@ export class ArticleService {
       const documents = await Promise.all(
         documentIds.map(async (docId) => {
           const doc = await this.documentService.getDocumentById(docId);
-          return doc?.fileUrl ? {
+          if (!doc?.fileUrl || (publicDocumentsOnly && doc.isInternalOnly)) return null;
+          let url: URL;
+          try {
+            url = new URL(doc.fileUrl);
+          } catch {
+            return null;
+          }
+          if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null;
+          const hasAccessParameter = [...url.searchParams.keys()].some((key) =>
+            /token|signature|(^|[_-])sig($|[_-])|credential|api[_-]?key|auth/i.test(key)
+          );
+          if (publicDocumentsOnly && (url.hash || hasAccessParameter)) {
+            return null;
+          }
+          return {
             id: doc.id,
             title: doc.title,
             type: doc.documentType,
-            url: doc.fileUrl,
-          } : null;
+            url: url.toString(),
+            fileName: doc.fileName,
+            mimeType: doc.mimeType,
+            fileSize: doc.fileSize,
+            status: doc.status,
+          };
         })
       );
-      enrichData.documents = documents.filter((document) => document !== null);
+      enrichData.documents = documents.filter((document): document is ArticleDocumentDTO => document !== null);
     }
 
     return enrichData;

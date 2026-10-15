@@ -69,7 +69,7 @@ export function UniversalDocumentViewer({
   const [textContent, setTextContent] = useState<string | null>(null);
 
   const isProxy = proxy && doc?.source !== 'local';
-  const kind = useMemo(() => getPreviewKind(doc?.mimeType), [doc?.mimeType]);
+  const kind = useMemo(() => getPreviewKind(doc?.mimeType, doc?.fileName), [doc?.mimeType, doc?.fileName]);
 
   useEffect(() => {
     setStatus(doc?.status ?? 'draft');
@@ -111,8 +111,13 @@ export function UniversalDocumentViewer({
           url = created;
         }
         if (!cancelled) setDisplayUrl(url);
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message ?? 'Impossible de charger le document');
+      } catch (e: unknown) {
+        // Fallback: show direct URL if proxy fails
+        if (!cancelled) {
+          console.warn('Proxy mode failed, falling back to direct URL:', e);
+          setDisplayUrl(doc.fileUrl);
+          setError(null); // Clear error since we have a fallback
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -164,9 +169,9 @@ export function UniversalDocumentViewer({
       }
       toast.success(`Statut mis à jour : ${viewerStatusLabel(next)}`);
       onStatusChanged?.(doc.id, next);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setStatus(previous);
-      toast.error(e?.message ?? 'Changement de statut impossible');
+      toast.error(e instanceof Error ? e.message : 'Changement de statut impossible');
     } finally {
       setSavingStatus(false);
     }

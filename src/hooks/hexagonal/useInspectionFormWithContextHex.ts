@@ -1,3 +1,5 @@
+import { getInspectionService } from '@/application/services/InspectionService';
+
 export async function createInspectionWithContextHex(params: {
   projectId: string;
   date: string;
@@ -7,20 +9,13 @@ export async function createInspectionWithContextHex(params: {
   comments: string | null;
   phaseId: string | null;
 }) {
-  const { btpClient } = await import('@/integrations/supabase/schema-clients');
-  const { data: inspection, error } = await btpClient.from('inspections')
-    .insert({
-      project_id: params.projectId,
-      date: params.date,
-      status: params.status,
-      inspector: params.inspectorName,
-      progress_at_inspection: params.progress,
-      comments: params.comments,
-      phase_id: params.phaseId,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return inspection;
+  return getInspectionService().createInspection({
+    projectId: params.projectId,
+    date: params.date,
+    status: params.status,
+    inspector: params.inspectorName,
+    progressAtInspection: params.progress,
+    comments: params.comments ?? undefined,
+    phaseId: params.phaseId ?? undefined,
+  });
 }

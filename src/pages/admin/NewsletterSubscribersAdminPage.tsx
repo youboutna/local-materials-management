@@ -27,8 +27,13 @@ export function NewsletterSubscribersAdminPage() {
     useCountActiveSubscribers,
   } = useNewsletterSubscribersHex();
 
-  const { data: subscribers, isLoading } = useAllSubscribers(statusFilter === 'all' ? undefined : statusFilter);
-  const { data: searchResults } = useSearchSubscribers(searchTerm);
+  const { data: subscribers, isLoading, error: subscribersError } = useAllSubscribers(statusFilter === 'all' ? undefined : statusFilter);
+  const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase();
+  const {
+    data: searchResults,
+    isLoading: isSearchLoading,
+    error: searchError,
+  } = useSearchSubscribers(normalizedSearchTerm);
   const { data: activeCount } = useCountActiveSubscribers();
 
   const unsubscribeMutation = useUnsubscribe();
@@ -39,7 +44,7 @@ export function NewsletterSubscribersAdminPage() {
       await unsubscribeMutation.mutateAsync(id);
       toast({ title: 'Subscriber unsubscribed successfully' });
     } catch (error) {
-      toast({ title: 'Failed to unsubscribe', variant: 'destructive' });
+      toast({ title: 'Failed to unsubscribe', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
     }
   };
 
@@ -49,7 +54,7 @@ export function NewsletterSubscribersAdminPage() {
       await deleteMutation.mutateAsync(id);
       toast({ title: 'Subscriber deleted successfully' });
     } catch (error) {
-      toast({ title: 'Failed to delete subscriber', variant: 'destructive' });
+      toast({ title: 'Failed to delete subscriber', description: error instanceof Error ? error.message : undefined, variant: 'destructive' });
     }
   };
 
@@ -66,9 +71,14 @@ export function NewsletterSubscribersAdminPage() {
     }
   };
 
-  const displaySubscribers = searchTerm.length > 2 ? searchResults : subscribers;
+  const filterByStatus = (subscriber: NonNullable<typeof subscribers>[number]) =>
+    (statusFilter === 'all' || subscriber.status === statusFilter) &&
+    (!normalizedSearchTerm || subscriber.email.toLocaleLowerCase().includes(normalizedSearchTerm));
+  const displaySubscribers = normalizedSearchTerm.length > 2
+    ? searchResults?.filter(filterByStatus)
+    : subscribers?.filter(filterByStatus);
 
-  if (isLoading) {
+  if (isLoading || (normalizedSearchTerm.length > 2 && isSearchLoading)) {
     return <div className="p-8">Loading...</div>;
   }
 
@@ -111,6 +121,11 @@ export function NewsletterSubscribersAdminPage() {
       </div>
 
       <div className="grid gap-4">
+        {(normalizedSearchTerm.length > 2 ? searchError : subscribersError) && (
+          <div role="alert" className="py-8 text-center text-destructive">
+            Failed to load subscribers. Please try again.
+          </div>
+        )}
         {displaySubscribers?.map((subscriber) => (
           <Card key={subscriber.id}>
             <CardHeader>
@@ -155,7 +170,7 @@ export function NewsletterSubscribersAdminPage() {
         ))}
       </div>
 
-      {displaySubscribers?.length === 0 && (
+      {displaySubscribers?.length === 0 && !(normalizedSearchTerm.length > 2 ? searchError : subscribersError) && (
         <div className="text-center py-12 text-muted-foreground">
           No subscribers found
         </div>

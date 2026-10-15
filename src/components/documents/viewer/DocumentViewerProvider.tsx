@@ -83,7 +83,15 @@ export function useDocumentViewer(): DocumentViewerContextValue {
     return {
       openDocument: (input: any) => {
         const d = normalizeViewable(input);
-        if (d.fileUrl) window.open(d.fileUrl, '_blank', 'noopener');
+        if (d.fileUrl) {
+          try {
+            window.open(d.fileUrl, '_blank', 'noopener');
+          } catch (e) {
+            console.error('Failed to open document:', e);
+          }
+        } else {
+          console.warn('No file URL available for document:', d.title);
+        }
       },
       closeDocument: () => undefined,
     };

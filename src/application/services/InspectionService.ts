@@ -36,7 +36,7 @@ export class InspectionService {
     catch (error) { ErrorLogger.log(error as Error, 'InspectionService.getInspectionsByProject'); throw error; }
   }
 
-  async createInspection(data: Omit<InspectionExecutionDataDTO, 'id' | 'documents'>): Promise<Inspection> {
+  async createInspection(data: Omit<InspectionExecutionDataDTO, 'id' | 'documents'> & { documentsData?: unknown }): Promise<Inspection> {
     try {
       const newInspection = Inspection.create({
         id: crypto.randomUUID(),
@@ -49,6 +49,7 @@ export class InspectionService {
         progressAtInspection: data.progressAtInspection ?? 0,
         observations: (data.observations ?? []) as never,
         paymentType: data.paymentType,
+        documents: (data.documentsData ?? []) as never,
         comments: data.comments
       });
       // create() renvoie l'entité persistée (round-trip DB) quand le repo le supporte

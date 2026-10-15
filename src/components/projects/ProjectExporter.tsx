@@ -1,5 +1,6 @@
 
-import { ProjectService, getProjectService} from '@/application/services/ProjectService';
+import { getProjectService } from '@/application/services/ProjectService';
+import type { ProjectDetailDTO, ProjectDTO } from '@/dtos/entities/ProjectDTO';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,10 +22,76 @@ import * as XLSX from 'xlsx';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+
+type ProjectExportContact = {
+  name: string;
+  role: string;
+  organization?: string;
+  email?: string;
+  phone?: string;
+  isPrimary?: boolean;
+};
+
+type ProjectExportData = Pick<
+  ProjectDTO,
+  | 'id'
+  | 'title'
+  | 'description'
+  | 'location'
+  | 'status'
+  | 'progress'
+  | 'budget'
+  | 'startDate'
+  | 'endDate'
+  | 'teamSize'
+  | 'thumbnail'
+  | 'category'
+  | 'subCategory'
+  | 'priorityLevel'
+  | 'riskLevel'
+  | 'environmentalImpact'
+  | 'financingSource'
+  | 'marketType'
+  | 'selectionMode'
+  | 'launchDate'
+  | 'attributionDate'
+  | 'projectReference'
+  | 'mainContractor'
+  | 'allowsInitialPayment'
+  | 'initialPaymentPercentage'
+  | 'projectResponsableId'
+> & {
+  latitude: number | '';
+  longitude: number | '';
+  totalCost: number;
+  spentAmount: number;
+  remainingBudget: number;
+  tasksCount: number;
+  completedTasksCount: number;
+  phasesCount: number;
+  inspectionsCount: number;
+  risksCount: number;
+  resourcesCount: number;
+  expensesCount: number;
+  alertsCount: number;
+  phases: ProjectDetailDTO['plannedPhases'];
+  tasks: ProjectDetailDTO['tasks'];
+  inspections: ProjectDetailDTO['inspections'];
+  risks: ProjectDetailDTO['risks'];
+  resources: NonNullable<ProjectDetailDTO['resources']>;
+  expenses: ProjectDetailDTO['expenses'];
+  alerts: ProjectDetailDTO['alerts'];
+  insurancePolicies: NonNullable<ProjectDetailDTO['insurancePolicies']>;
+  contacts: ProjectExportContact[];
+  milestones: ProjectDetailDTO['milestones'];
+  documents: NonNullable<ProjectDetailDTO['documents']>;
+  stakeholders: ProjectDetailDTO['stakeholders'];
+};
+
 const ProjectExporter = () => {
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'json' | 'excel' | 'csv'>('json');
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<ProjectDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
@@ -43,14 +110,19 @@ const ProjectExporter = () => {
         setProjects(data);
         // Select all projects by default
         setSelectedProjects(data.map(p => p.id));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error loading projects:', error);
+        toast({
+          title: t('projects.export.error'),
+          description: error instanceof Error ? error.message : t('projects.export.errorDescription'),
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
       }
     };
     loadProjects();
-  }, []);
+  }, [projectService, t, toast]);
 
   // Filter projects based on search query
   const filteredProjects = projects.filter(project => {
@@ -80,7 +152,7 @@ const ProjectExporter = () => {
     }
   };
 
-  const prepareProjectData = async () => {
+  const prepareProjectData = async (): Promise<ProjectExportData[]> => {
     // Only export selected projects
     const projectsToExport = projects.filter(p => selectedProjects.includes(p.id));
     
@@ -89,98 +161,100 @@ const ProjectExporter = () => {
       projectsToExport.map(async (project) => {
         try {
           const detail = await projectService.getProjectWithDetails(project.id);
+          if (!detail) {
+            throw new Error(`Project details not found for ${project.id}`);
+          }
+          const expenses = detail?.expenses ?? [];
+          const budget = detail?.budget ?? project.budget;
+          const spentAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+          const contacts: ProjectExportContact[] = [
+            ...(detail?.contacts ?? []).map((contact) => ({
+              name: contact.name,
+              role: contact.role,
+              organization: contact.company,
+              email: contact.email,
+              phone: contact.phone,
+              isPrimary: contact.isPrimary,
+            })),
+            ...(detail?.stakeholders ?? []).map((stakeholder) => ({
+              name: stakeholder.name,
+              role: stakeholder.role,
+              organization: stakeholder.organization,
+              email: stakeholder.email,
+              phone: stakeholder.phone,
+              isPrimary: stakeholder.isPrimary,
+            })),
+          ];
+
           return {
             // Basic info
-            id: detail?.id || project.id,
-            title: detail?.title || project.title,
-            description: detail?.description || project.description,
-            location: detail?.location || project.location,
-            status: detail?.status || project.status,
-            progress: detail?.progress || project.progress,
-            budget: detail?.budget || project.budget,
-            startDate: detail?.startDate || project.startDate,
-            endDate: detail?.endDate || project.endDate || '',
-            teamSize: detail?.teamSize || project.teamSize,
-            thumbnail: detail?.thumbnail || '',
+            id: detail?.id ?? project.id,
+            title: detail?.title ?? project.title,
+            description: detail?.description ?? project.description,
+            location: detail?.location ?? project.location,
+            status: detail?.status ?? project.status,
+            progress: detail?.progress ?? project.progress,
+            budget,
+            startDate: detail?.startDate ?? project.startDate,
+            endDate: detail?.endDate ?? project.endDate ?? '',
+            teamSize: detail?.teamSize ?? project.teamSize,
+            thumbnail: detail?.thumbnail ?? '',
             
             // Location details
-            latitude: detail?.coordinates?.latitude || project.coordinates?.latitude || '',
-            longitude: detail?.coordinates?.longitude || project.coordinates?.longitude || '',
+            latitude: detail?.coordinates?.latitude ?? project.coordinates?.latitude ?? '',
+            longitude: detail?.coordinates?.longitude ?? project.coordinates?.longitude ?? '',
             
             // Classification
-            category: detail?.category || project.category || '',
-            subCategory: detail?.subCategory || project.subCategory || '',
-            priorityLevel: detail?.priorityLevel || project.priorityLevel || '',
-            riskLevel: detail?.riskLevel || project.riskLevel || '',
-            environmentalImpact: detail?.environmentalImpact || project.environmentalImpact || '',
-            sustainabilityScore: (detail as any)?.sustainabilityScore || (project as any)?.sustainabilityScore || 0,
+            category: detail?.category ?? project.category ?? '',
+            subCategory: detail?.subCategory ?? project.subCategory ?? '',
+            priorityLevel: detail?.priorityLevel ?? project.priorityLevel ?? '',
+            riskLevel: detail?.riskLevel ?? project.riskLevel ?? '',
+            environmentalImpact: detail?.environmentalImpact ?? project.environmentalImpact ?? '',
             
             // Project details
-            financingSource: detail?.financingSource || project.financingSource || '',
-            marketType: detail?.marketType || project.marketType || '',
-            selectionMode: detail?.selectionMode || project.selectionMode || '',
-            launchDate: detail?.launchDate || project.launchDate || '',
-            attributionDate: detail?.attributionDate || project.attributionDate || '',
-            projectReference: detail?.projectReference || '',
-            mainContractor: detail?.mainContractor || '',
-            allowsInitialPayment: detail?.allowsInitialPayment || false,
-            initialPaymentPercentage: detail?.initialPaymentPercentage || 0,
-            projectResponsableId: detail?.projectResponsableId || '',
+            financingSource: detail?.financingSource ?? project.financingSource ?? '',
+            marketType: detail?.marketType ?? project.marketType ?? '',
+            selectionMode: detail?.selectionMode ?? project.selectionMode ?? '',
+            launchDate: detail?.launchDate ?? project.launchDate ?? '',
+            attributionDate: detail?.attributionDate ?? project.attributionDate ?? '',
+            projectReference: detail?.projectReference ?? project.projectReference ?? '',
+            mainContractor: detail?.mainContractor ?? project.mainContractor ?? '',
+            allowsInitialPayment: detail?.allowsInitialPayment ?? false,
+            initialPaymentPercentage: detail?.initialPaymentPercentage ?? 0,
+            projectResponsableId: detail?.projectResponsableId ?? '',
             
             // Financial details
-            totalCost: detail?.budget || project.budget || 0,
-            spentAmount: detail?.expenses?.reduce((sum: number, exp: any) => sum + (exp.amount || 0), 0) || 0,
-            remainingBudget: (detail?.budget || 0) - (detail?.expenses?.reduce((sum: number, exp: any) => sum + (exp.amount || 0), 0) || 0),
+            totalCost: budget,
+            spentAmount,
+            remainingBudget: budget - spentAmount,
             
             // Statistics
-            tasksCount: detail?.tasks?.length || 0,
-            completedTasksCount: detail?.tasks?.filter((t: any) => t.status === 'completed').length || 0,
-            phasesCount: Array.isArray(detail?.plannedPhases) ? detail.plannedPhases.length : 0,
-            inspectionsCount: Array.isArray(detail?.inspections) ? detail.inspections.length : 0,
-            risksCount: Array.isArray(detail?.risks) ? detail.risks.length : 0,
-            resourcesCount: Array.isArray(detail?.resources) ? detail.resources.length : 0,
-            expensesCount: Array.isArray(detail?.expenses) ? detail.expenses.length : 0,
-            alertsCount: Array.isArray(detail?.alerts) ? detail.alerts.length : 0,
+            tasksCount: detail?.tasks.length ?? 0,
+            completedTasksCount: detail?.tasks.filter((task) => task.status === 'completed').length ?? 0,
+            phasesCount: detail?.plannedPhases.length ?? 0,
+            inspectionsCount: detail?.inspections.length ?? 0,
+            risksCount: detail?.risks.length ?? 0,
+            resourcesCount: detail?.resources?.length ?? 0,
+            expensesCount: expenses.length,
+            alertsCount: detail?.alerts.length ?? 0,
             
             // Related data arrays
-            phases: detail?.plannedPhases || [],
-            tasks: detail?.tasks || [],
-            inspections: detail?.inspections || [],
-            risks: detail?.risks || [],
-            resources: detail?.resources || [],
-            expenses: detail?.expenses || [],
-            alerts: detail?.alerts || [],
-            insurancePolicies: detail?.insurancePolicies || [],
-            contacts: (detail as any)?.contacts || [],
-            milestones: detail?.milestones || detail?.constructionMilestones || [],
-            documents: detail?.documents || [],
-            stakeholders: detail?.stakeholders || []
+            phases: detail?.plannedPhases ?? [],
+            tasks: detail?.tasks ?? [],
+            inspections: detail?.inspections ?? [],
+            risks: detail?.risks ?? [],
+            resources: detail?.resources ?? [],
+            expenses,
+            alerts: detail?.alerts ?? [],
+            insurancePolicies: detail?.insurancePolicies ?? [],
+            contacts,
+            milestones: detail?.milestones ?? detail?.constructionMilestones ?? [],
+            documents: detail?.documents ?? [],
+            stakeholders: detail?.stakeholders ?? [],
           };
         } catch (error) {
           console.error(`Error fetching details for project ${project.id}:`, error);
-          // Return basic project data if detail fetch fails
-          return {
-            id: project.id,
-            title: project.title,
-            description: project.description,
-            location: project.location,
-            status: project.status,
-            progress: project.progress,
-            budget: project.budget,
-            startDate: project.startDate,
-            endDate: project.endDate || '',
-            teamSize: project.teamSize,
-            latitude: project.coordinates?.latitude || '',
-            longitude: project.coordinates?.longitude || '',
-            phases: [],
-            tasks: [],
-            inspections: [],
-            risks: [],
-            resources: [],
-            expenses: [],
-            alerts: [],
-            contacts: []
-          };
+          throw error;
         }
       })
     );
@@ -259,13 +333,13 @@ const ProjectExporter = () => {
     XLSX.utils.book_append_sheet(workbook, projectsSheet, 'Projets');
     
     // Tasks sheet
-    const allTasks: any[] = [];
+    const allTasks: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      project.tasks?.forEach((task: any) => {
+      project.tasks.forEach((task) => {
         allTasks.push({
           projectId: project.id,
           project: project.title,
-          taskName: task.name || task.title,
+          taskName: task.title,
           description: task.description,
           status: task.status,
           priority: task.priority,
@@ -275,7 +349,7 @@ const ProjectExporter = () => {
           dueDate: task.dueDate,
           assignedTo: task.assignedTo,
           assignedBy: task.assignedBy,
-          cost: task.cost,
+          cost: task.estimatedCost ?? task.actualCost,
           notes: task.notes,
           completedAt: task.completedAt
         });
@@ -287,16 +361,16 @@ const ProjectExporter = () => {
     }
     
     // Phases sheet
-    const allPhases: any[] = [];
+    const allPhases: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      project.phases?.forEach((phase: any) => {
+      project.phases.forEach((phase) => {
         allPhases.push({
           projectId: project.id,
           project: project.title,
-          phaseName: phase.phase_name || phase.name,
+          phaseName: phase.name,
           status: phase.status,
-          startDate: phase.start_date || phase.startDate,
-          endDate: phase.end_date || phase.endDate,
+          startDate: phase.startDate,
+          endDate: phase.endDate,
           progress: phase.progress,
           budget: phase.budget,
           description: phase.description,
@@ -311,20 +385,20 @@ const ProjectExporter = () => {
     }
     
     // Inspections sheet
-    const allInspections: any[] = [];
+    const allInspections: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      project.inspections?.forEach((inspection: any) => {
+      project.inspections.forEach((inspection) => {
         allInspections.push({
           projectId: project.id,
           project: project.title,
-          inspector: inspection.inspector,
-          date: inspection.date,
+          inspector: inspection.inspectorName ?? inspection.inspector,
+          date: inspection.scheduledDate ?? inspection.date,
           status: inspection.status,
           progressAtInspection: inspection.progressAtInspection,
-          comments: inspection.comments,
+          comments: inspection.comments ?? inspection.notes,
           phaseId: inspection.phaseId,
-          issues: inspection.issues?.length || 0,
-          documents: inspection.documents?.length || 0
+          issues: inspection.actionItems?.length ?? 0,
+          documents: inspection.documents?.length ?? 0
         });
       });
     });
@@ -334,13 +408,13 @@ const ProjectExporter = () => {
     }
     
     // Risks sheet
-    const allRisks: any[] = [];
+    const allRisks: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      project.risks?.forEach((risk: any) => {
+      project.risks.forEach((risk) => {
         allRisks.push({
           projectId: project.id,
           project: project.title,
-          riskName: risk.name || risk.title,
+          riskName: risk.title,
           description: risk.description,
           category: risk.category,
           probability: risk.probability,
@@ -348,7 +422,7 @@ const ProjectExporter = () => {
           severity: risk.severity,
           status: risk.status,
           mitigationPlan: risk.mitigationPlan,
-          owner: risk.owner,
+          owner: risk.owner ?? risk.mitigationOwner,
           identifiedDate: risk.identifiedDate,
           reviewDate: risk.reviewDate
         });
@@ -360,20 +434,17 @@ const ProjectExporter = () => {
     }
     
     // Expenses sheet
-    const allExpenses: any[] = [];
+    const allExpenses: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      project.expenses?.forEach((expense: any) => {
+      project.expenses.forEach((expense) => {
         allExpenses.push({
           projectId: project.id,
           project: project.title,
-          amount: expense.amount || 0,
-          date: expense.date || expense.payment_date || '',
-          description: expense.description || '',
-          category: expense.category || '',
-          paymentMethod: expense.payment_method || expense.paymentMethod,
-          transactionId: expense.transaction_id || expense.transactionId,
-          contractorName: expense.contractor_name || expense.contractorName,
-          approvedBy: expense.approved_by || expense.approvedBy,
+          amount: expense.amount,
+          date: expense.date ?? expense.paymentDate,
+          paymentMethod: expense.paymentMethod,
+          transactionId: expense.transactionId,
+          contractorName: expense.contractorName,
           status: expense.status
         });
       });
@@ -384,10 +455,9 @@ const ProjectExporter = () => {
     }
     
     // Resources sheet
-    const allResources: any[] = [];
+    const allResources: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      const projectResources = Array.isArray(project.resources) ? project.resources : [];
-      projectResources.forEach((resource: any) => {
+      project.resources.forEach((resource) => {
         allResources.push({
           projectId: project.id,
           project: project.title,
@@ -395,10 +465,8 @@ const ProjectExporter = () => {
           name: resource.name,
           quantity: resource.quantity,
           unit: resource.unit,
-          costPerUnit: resource.costPerUnit,
-          totalCost: resource.totalCost,
-          supplier: resource.supplier,
-          availability: resource.availability
+          cost: resource.cost,
+          assignedTo: resource.assignedTo
         });
       });
     });
@@ -408,14 +476,9 @@ const ProjectExporter = () => {
     }
     
     // Contacts/Stakeholders sheet
-    const allContacts: any[] = [];
+    const allContacts: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      // Merge contacts and stakeholders with array safety
-      const contacts = Array.isArray(project.contacts) ? project.contacts : [];
-      const stakeholders = Array.isArray(project.stakeholders) ? project.stakeholders : [];
-      const projectContacts = [...contacts, ...stakeholders];
-      
-      projectContacts.forEach((contact: any) => {
+      project.contacts.forEach((contact) => {
         allContacts.push({
           projectId: project.id,
           project: project.title,
@@ -434,15 +497,15 @@ const ProjectExporter = () => {
     }
     
     // Milestones sheet
-    const allMilestones: any[] = [];
+    const allMilestones: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      project.milestones?.forEach((milestone: any) => {
+      project.milestones.forEach((milestone) => {
         allMilestones.push({
           projectId: project.id,
           project: project.title,
-          name: milestone.name || milestone.title,
-          plannedDate: milestone.plannedDate || milestone.targetDate,
-          actualDate: milestone.actualDate || milestone.completionDate,
+          name: milestone.title,
+          plannedDate: milestone.targetDate,
+          actualDate: milestone.completionDate,
           status: milestone.status
         });
       });
@@ -453,16 +516,16 @@ const ProjectExporter = () => {
     }
     
     // Documents sheet
-    const allDocuments: any[] = [];
+    const allDocuments: Array<Record<string, unknown>> = [];
     data.forEach(project => {
-      project.documents?.forEach((doc: any) => {
+      project.documents.forEach((doc) => {
         allDocuments.push({
           projectId: project.id,
           project: project.title,
-          name: doc.name,
-          type: doc.type,
-          url: doc.url,
-          uploadDate: doc.uploadDate
+          name: doc.title,
+          type: doc.documentType,
+          url: doc.fileUrl,
+          uploadDate: doc.createdAt
         });
       });
     });

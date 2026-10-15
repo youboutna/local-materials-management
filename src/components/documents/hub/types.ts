@@ -13,24 +13,52 @@ export type {
 import type { PreviewKind } from '@/dtos/entities/DocumentHubDTO';
 export type { PreviewKind };
 
-export function getPreviewKind(mime: string | null | undefined): PreviewKind {
-  if (!mime) return 'unknown';
-  const m = mime.toLowerCase();
-  if (m === 'application/pdf') return 'pdf';
-  if (m.startsWith('image/')) return 'image';
-  if (m.startsWith('video/')) return 'video';
-  if (m.startsWith('audio/')) return 'audio';
-  if (m.startsWith('text/') || m === 'application/json' || m === 'application/xml') return 'text';
-  if (
-    m.includes('spreadsheet') ||
-    m.includes('excel') ||
-    m.includes('word') ||
-    m.includes('presentation') ||
-    m.includes('powerpoint') ||
-    m.includes('officedocument')
-  )
-    return 'office';
-  return 'unknown';
+export function getPreviewKind(mime: string | null | undefined, fileName?: string | null): PreviewKind {
+  const m = mime?.toLowerCase() ?? '';
+  const genericMime = !m || m === 'application/octet-stream' || m === 'binary/octet-stream';
+
+  if (!genericMime) {
+    if (m === 'application/pdf') return 'pdf';
+    if (m.startsWith('image/')) return 'image';
+    if (m.startsWith('video/')) return 'video';
+    if (m.startsWith('audio/')) return 'audio';
+    if (m.startsWith('text/') || m === 'application/json' || m === 'application/xml') return 'text';
+    if (
+      m.includes('spreadsheet') ||
+      m.includes('excel') ||
+      m.includes('word') ||
+      m.includes('presentation') ||
+      m.includes('powerpoint') ||
+      m.includes('officedocument')
+    )
+      return 'office';
+  }
+
+  const extension = fileName?.split(/[?#]/, 1)[0].split('.').pop()?.toLowerCase();
+  const extensionKinds: Record<string, PreviewKind> = {
+    pdf: 'pdf',
+    png: 'image',
+    jpg: 'image',
+    jpeg: 'image',
+    webp: 'image',
+    gif: 'image',
+    svg: 'image',
+    mp4: 'video',
+    webm: 'video',
+    mp3: 'audio',
+    wav: 'audio',
+    csv: 'text',
+    txt: 'text',
+    json: 'text',
+    xml: 'text',
+    doc: 'office',
+    docx: 'office',
+    xls: 'office',
+    xlsx: 'office',
+    ppt: 'office',
+    pptx: 'office',
+  };
+  return (extension && extensionKinds[extension]) || 'unknown';
 }
 
 export function formatBytes(bytes: number | null | undefined): string {

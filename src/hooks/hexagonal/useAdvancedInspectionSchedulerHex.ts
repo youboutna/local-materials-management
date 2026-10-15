@@ -1,24 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
+import { getPhaseService } from '@/application/services/PhaseService';
+import { getEmployeeService } from '@/application/services/EmployeeService';
+import { getSupplierService } from '@/application/services/SupplierService';
 
 export function useProjectPhasesAsStepsHex(projectId?: string) {
   return useQuery({
     queryKey: ['project-phases-as-steps', projectId],
     queryFn: async () => {
       if (!projectId) return [];
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { data: phases, error } = await btpClient.from('project_phases')
-        .select('id, phase_name, order_index, status, progress')
-        .eq('project_id', projectId)
-        .order('order_index');
-
-      if (error) throw error;
-
-      return (phases || []).map(p => ({
-        id: p.id,
-        name: p.phase_name,
-        order_index: p.order_index || 0,
-        status: p.status || 'pending',
-        progress: p.progress || 0
+      const phases = await getPhaseService().getPhasesByProject(projectId);
+      return phases.map(phase => ({
+        id: phase.id,
+        name: phase.phaseName,
+        order_index: phase.orderIndex || 0,
+        status: phase.status || 'pending',
+        progress: phase.progress || 0
       }));
     },
     enabled: !!projectId
@@ -29,28 +25,14 @@ export function useInspectorsHex() {
   return useQuery({
     queryKey: ['inspectors'],
     queryFn: async () => {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-
-      const { data: employeesData, error: employeesError } = await btpClient.from('employees')
-        .select('id, full_name, phone, position, department')
-        .eq('is_active', true)
-        .order('full_name');
-
-      if (employeesError) throw employeesError;
-
-      const { data: suppliersData, error: suppliersError } = await btpClient.from('suppliers')
-        .select('id, name, contact_person, email, phone, category, nif')
-        .eq('is_active', true)
-        .order('name');
-
-      if (suppliersError) throw suppliersError;
-
-      const allEmployees = employeesData || [];
-      const allSuppliers = suppliersData || [];
+      const [allEmployees, allSuppliers] = await Promise.all([
+        getEmployeeService().getActiveEmployees(),
+        getSupplierService().getActiveSuppliers(),
+      ]);
 
       const supplierInspectors = allSuppliers.map(supplier => ({
         id: supplier.id,
-        full_name: supplier.contact_person || supplier.name,
+        full_name: supplier.contactPerson || supplier.name,
         phone: supplier.phone,
         position: `Responsable - ${supplier.name}`,
         department: supplier.category,
@@ -59,7 +41,11 @@ export function useInspectorsHex() {
       }));
 
       const employeeInspectors = allEmployees.map(emp => ({
-        ...emp,
+        id: emp.id,
+        full_name: emp.fullName,
+        phone: emp.phone,
+        position: emp.position,
+        department: emp.department,
         nif: null as string | null,
         type: 'employee' as const
       }));

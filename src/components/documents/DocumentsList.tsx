@@ -16,6 +16,7 @@ import { useDocumentChanges } from '@/components/documents/viewer/documentEvents
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { getDocumentTypeLabel } from '@/config/referentials/documents/document-types.referential';
 
 interface DocumentsListProps {
   onDocumentSelect?: (document: DocumentDTO) => void;
@@ -52,18 +53,7 @@ const DocumentsList = ({ onDocumentSelect }: DocumentsListProps) => {
 
 
 
-  const getDocumentTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      'inspection_report': 'Rapport d\'inspection',
-      'location_photo': 'Photo de localisation',
-      'project_report': 'Rapport de projet',
-      'contract': 'Contrat',
-      'supplier_info': 'Information fournisseur',
-      'task_assignment': 'Affectation de tâche',
-      'employee_record': 'Dossier employé'
-    };
-    return types[type] || type;
-  };
+
 
   const getStatusColor = (status: string | null) => {
     switch (status) {

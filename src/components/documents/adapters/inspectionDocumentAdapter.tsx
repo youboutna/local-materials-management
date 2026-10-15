@@ -2,6 +2,16 @@ import { translateLabelMap } from '@/lib/i18n/labelMap';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
 import { DocumentHubContract } from '../hub/types';
+import { DOCUMENT_TYPE_LABELS, type DocumentTypeCode } from '@/config/referentials/documents/document-types.referential';
+
+// Inspection-specific document types (subset of centralized referential)
+const INSPECTION_DOCUMENT_TYPES: DocumentTypeCode[] = [
+  'pv',
+  'report',
+  'photo',
+  'checklist',
+  'other'
+];
 
 const INSPECTION_CATEGORY_LABEL_KEYS: Record<string, string> = {
   pv: 'auto.inspectiondocumentadapter.pv',
@@ -14,28 +24,34 @@ const INSPECTION_CATEGORY_LABEL_KEYS: Record<string, string> = {
 export function useInspectionDocumentAdapter(inspectionId: string): DocumentHubContract {
   const { t } = useLanguage();
   const INSPECTION_CATEGORY_LABELS = translateLabelMap(INSPECTION_CATEGORY_LABEL_KEYS, t);
+  
+  // Use centralized document type labels as fallback
+  const categoryLabels: Record<DocumentTypeCode, string> = {};
+  INSPECTION_DOCUMENT_TYPES.forEach(type => {
+    categoryLabels[type] = INSPECTION_CATEGORY_LABELS[type] ?? DOCUMENT_TYPE_LABELS[type];
+  });
+
+  const uploadCategoryOptions = INSPECTION_DOCUMENT_TYPES.map(type => ({
+    value: type,
+    label: categoryLabels[type]
+  }));
+
   return useDocumentsTableAdapter({
     scopeLabel: "Documents de l'inspection",
     queryKey: ['documents', 'inspection', inspectionId],
     filters: [{ column: 'inspection_id', value: inspectionId }],
     pathPrefix: `inspections/${inspectionId}`,
-    categoryLabels: INSPECTION_CATEGORY_LABELS,
-    uploadCategoryOptions: Object.entries(INSPECTION_CATEGORY_LABELS).map(([value, label]) => ({
-      value,
-      label,
-    })),
+    categoryLabels,
+    uploadCategoryOptions,
     facets: [
       {
         key: 'category',
         label: t('auto.inspectiondocumentadapter.categorie'),
-        options: Object.entries(INSPECTION_CATEGORY_LABELS).map(([value, label]) => ({
-          value,
-          label,
-        })),
+        options: uploadCategoryOptions,
       },
     ],
     itemFacetBuilder: (row) => ({
-      category: INSPECTION_CATEGORY_LABELS[row.document_type] ?? row.document_type ?? null,
+      category: categoryLabels[row.document_type as DocumentTypeCode] ?? row.document_type ?? null,
     }),
     previewMode: 'proxy',
   });

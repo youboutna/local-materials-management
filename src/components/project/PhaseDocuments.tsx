@@ -12,6 +12,7 @@ import { usePhaseDocuments, useDocumentDelete } from '@/hooks/hexagonal';
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
+import { getDocumentTypeLabel } from '@/config/referentials/documents/document-types.referential';
 interface PhaseDocumentsProps {
   phaseId: string;
   projectId: string;
@@ -40,19 +41,6 @@ const PhaseDocuments: React.FC<PhaseDocumentsProps> = ({ phaseId, projectId, pha
   const handleDocumentUploaded = () => {
     queryClient.invalidateQueries({ queryKey: ['documents', 'phase', phaseId] });
     setIsAdding(false);
-  };
-
-  const getDocumentTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      plan: 'Plan',
-      contract: 'Contrat',
-      inspection_report: 'Rapport d\'inspection',
-      invoice: 'Facture',
-      permit: 'Permis',
-      photo: 'Photo',
-      other: 'Autre',
-    };
-    return types[type] || type;
   };
 
   const getDocumentTypeColor = (type: string) => {

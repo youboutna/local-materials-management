@@ -1,16 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
+import { getProjectService } from '@/application/services/ProjectService';
+import { getInspectionService } from '@/application/services/InspectionService';
 
 export function useProjectForSchedulerHex(projectId?: string) {
   return useQuery({
     queryKey: ['project-for-scheduler', projectId],
     queryFn: async () => {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { data, error } = await btpClient.from('projects')
-        .select('id, title, location, status, project_reference, budget, progress, main_contractor')
-        .eq('id', projectId as string)
-        .single();
-
-      if (error) throw error;
+      const data = await getProjectService().findById(projectId as string);
+      if (!data) throw new Error('Project not found');
       return {
         id: data.id || '',
         title: data.title || '',
@@ -35,18 +32,14 @@ export async function scheduleStepInspectionHex(params: {
   additionalData?: any;
 }) {
   const { projId, phaseId, inspector, date, additionalData } = params;
-  const { btpClient } = await import('@/integrations/supabase/schema-clients');
-  const { error } = await btpClient.from('inspections')
-    .insert({
-      project_id: projId,
-      phase_id: additionalData?.phase_id || phaseId,
-      inspector,
-      date: new Date(date).toISOString(),
-      status: 'scheduled',
-      progress_at_inspection: additionalData?.target_progress || 0,
-      comments: additionalData?.requirements || '',
-      payment_type: additionalData?.inspection_type || 'progress'
-    });
-
-  if (error) throw error;
+  await getInspectionService().createInspection({
+    projectId: projId,
+    phaseId: additionalData?.phase_id || phaseId,
+    inspector,
+    date: new Date(date).toISOString(),
+    status: 'scheduled',
+    progressAtInspection: additionalData?.target_progress || 0,
+    comments: additionalData?.requirements || '',
+    paymentType: additionalData?.inspection_type || 'progress',
+  });
 }

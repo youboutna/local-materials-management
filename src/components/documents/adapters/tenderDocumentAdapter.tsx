@@ -148,6 +148,7 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
   const useDocumentsHook = () => ({
     data: items,
     isLoading: tenderDocsQuery.isLoading,
+    error: tenderDocsQuery.error,
     refetch: () => {
       tenderDocsQuery.refetch();
       qc.invalidateQueries({ queryKey: ['tender-lot-documents', tenderId] });

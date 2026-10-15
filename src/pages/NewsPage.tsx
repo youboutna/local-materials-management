@@ -12,6 +12,7 @@ import { useArticlesHex } from '@/hooks/hexagonal/useArticlesHex';
 import { ArticleDTO } from '@/dtos/entities/ArticleDTO';
 import { Calendar, ArrowLeft, Building2, FileText } from 'lucide-react';
 import { sanitizeArticleHtml } from '@/utils/sanitizeArticleHtml';
+import { useDocumentViewer } from '@/components/documents/viewer';
 
 export function NewsPage() {
   const { slug } = useParams<{ slug?: string }>();
@@ -27,10 +28,14 @@ export function NewsPage() {
 
 function ArticleList() {
   const { useAllArticles } = useArticlesHex();
-  const { data: articles, isLoading } = useAllArticles('published');
+  const { data: articles, isLoading, error } = useAllArticles('published');
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>;
+  }
+
+  if (error) {
+    return <div role="alert" className="p-8 text-destructive">Unable to load news articles. Please try again.</div>;
   }
 
   return (
@@ -62,10 +67,10 @@ function ArticleList() {
                   )}
                   <div className="flex items-center justify-between">
                     <Badge variant="outline">Read more</Badge>
-                    {article.documents && article.documents.length > 0 && (
+                    {!!article.documentCount && article.documentCount > 0 && (
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <FileText className="h-4 w-4" />
-                        <span>{article.documents.length}</span>
+                        <span>{article.documentCount}</span>
                       </div>
                     )}
                   </div>
@@ -87,10 +92,24 @@ function ArticleList() {
 
 function ArticleDetail({ slug }: { slug: string }) {
   const { useArticleBySlug } = useArticlesHex();
-  const { data: article, isLoading } = useArticleBySlug(slug);
+  const { data: article, isLoading, error } = useArticleBySlug(slug);
+  const { openDocument } = useDocumentViewer();
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 text-center">
+          <p role="alert" className="mb-4 text-destructive">Unable to load this article. Please try again.</p>
+          <Link to="/news">
+            <Button>Back to News</Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   if (!article) {
@@ -165,17 +184,26 @@ function ArticleDetail({ slug }: { slug: string }) {
               <CardContent>
                 <div className="space-y-2">
                   {article.documents.map((doc) => (
-                    <a
+                    <Button
                       key={doc.id}
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-3 hover:bg-muted rounded transition-colors"
+                      type="button"
+                      variant="ghost"
+                      className="flex h-auto w-full items-center justify-start gap-2 p-3 hover:bg-muted"
+                      onClick={() => openDocument({
+                        id: doc.id,
+                        title: doc.title,
+                        documentType: doc.type,
+                        fileName: doc.fileName,
+                        fileUrl: doc.url,
+                        mimeType: doc.mimeType,
+                        fileSize: doc.fileSize,
+                        status: doc.status,
+                      }, { allowStatusChange: false })}
                     >
                       <FileText className="h-4 w-4" />
                       <span>{doc.title}</span>
                       <Badge variant="outline" className="ml-auto">{doc.type}</Badge>
-                    </a>
+                    </Button>
                   ))}
                 </div>
               </CardContent>

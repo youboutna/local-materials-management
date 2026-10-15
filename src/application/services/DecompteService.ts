@@ -16,6 +16,10 @@ import {
   type DecompteFinancialSummaryDTO,
   type DecompteRecordDTO,
 } from '@/dtos/entities/DecompteRecordDTO';
+import type {
+  ConsultantInvoiceDecision,
+  ConsultantProgressInvoiceDTO,
+} from '@/dtos/entities/ConsultantProgressInvoiceDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
@@ -44,6 +48,49 @@ export class DecompteService {
   async getPhaseDecomptes(phaseId: string): Promise<DecompteRecordDTO[]> {
     if (!phaseId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Phase ID is required');
     return this.repository.findByPhaseId(phaseId);
+  }
+
+  async getSubmittedProgressInvoices(): Promise<ConsultantProgressInvoiceDTO[]> {
+    return this.repository.findSubmittedProgressInvoices();
+  }
+
+  async validateConsultantInvoice(input: {
+    invoiceId: string;
+    approved: boolean;
+    comments: string;
+    serviceFaitDocumentId: string | null;
+    userId: string;
+  }): Promise<void> {
+    if (!input.invoiceId || !input.userId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invoice ID and user ID are required');
+    }
+    const existingWorkflow = await this.repository.findProgressInvoiceWorkflowHistory(input.invoiceId);
+    if (!existingWorkflow) {
+      throw new AppError(ErrorCode.NOT_FOUND, 'Progress invoice not found');
+    }
+
+    const status = input.approved ? 'consultant_approved' : 'consultant_rejected';
+    const validatedAt = new Date().toISOString();
+    const decision: ConsultantInvoiceDecision = {
+      status,
+      consultantId: input.userId,
+      comments: input.comments,
+      approved: input.approved,
+      serviceFaitDocumentId: input.serviceFaitDocumentId,
+      validatedAt,
+      workflowHistory: [
+        ...existingWorkflow,
+        {
+          action: status,
+          timestamp: validatedAt,
+          user_id: input.userId,
+          employee_id: input.userId,
+          comments: input.comments,
+          status,
+        },
+      ],
+    };
+    await this.repository.updateConsultantInvoiceDecision(input.invoiceId, decision);
   }
 
   /** Dépensé réel du projet = Σ décomptes validés. */

@@ -142,7 +142,7 @@ export class Article {
     this.updatedAt = new Date().toISOString();
   }
 
-  update(data: Partial<Omit<ArticleData, 'id' | 'createdAt' | 'authorId'>>): void {
+  update(data: Partial<Omit<ArticleData, 'id' | 'createdAt' | 'authorId' | 'projectId'>> & { projectId?: string | null }): void {
     if (data.title !== undefined) {
       this.title = data.title;
       this.slug = data.slug || Article.generateSlug(data.title);
@@ -150,7 +150,7 @@ export class Article {
     if (data.summary !== undefined) this.summary = data.summary;
     if (data.content !== undefined) this.content = data.content;
     if (data.status !== undefined) this.status = data.status;
-    if (data.projectId !== undefined) this.projectId = data.projectId;
+    if (data.projectId !== undefined) this.projectId = data.projectId ?? undefined;
     if (data.documentIds !== undefined) this.documentIds = data.documentIds;
     if (data.metadata !== undefined) this.metadata = data.metadata;
     this.updatedAt = new Date().toISOString();

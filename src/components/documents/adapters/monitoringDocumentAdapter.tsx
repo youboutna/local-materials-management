@@ -7,23 +7,24 @@ import { useLanguage } from '@/contexts/LanguageContext';
  */
 import { DocumentHubContract } from '../hub/types';
 import { useDocumentsTableAdapter } from './documentsTableAdapter';
+import { DOCUMENT_TYPE_LABELS, type DocumentTypeCode } from '@/config/referentials/documents/document-types.referential';
 
 export type MonitoringDocumentScope = 'bank_guarantee' | 'insurance' | 'payment';
 
-const CATEGORY_OPTIONS: Record<MonitoringDocumentScope, { value: string; label: string }[]> = {
+const CATEGORY_OPTIONS: Record<MonitoringDocumentScope, { value: DocumentTypeCode; label: string }[]> = {
   bank_guarantee: [
     { value: 'contract', label: 'Contrat de caution' },
     { value: 'project_report', label: 'Attestation bancaire' },
     { value: 'other', label: 'Autre document' },
   ],
   insurance: [
-    { value: 'contract', label: "Police / Certificat d'assurance" },
+    { value: 'policy', label: "Police / Certificat d'assurance" },
     { value: 'project_report', label: 'Avenant' },
     { value: 'other', label: 'Autre document' },
   ],
   payment: [
-    { value: 'contract', label: 'Facture' },
-    { value: 'project_report', label: 'Bon de commande' },
+    { value: 'invoice', label: 'Facture' },
+    { value: 'purchase_order', label: 'Bon de commande' },
     { value: 'other', label: 'Attestation / Autre document' },
   ],
 };
@@ -39,15 +40,19 @@ export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): Do
   const SCOPE_LABELS = translateLabelMap(SCOPE_LABEL_KEYS, t);
   const scopeLabel = SCOPE_LABELS[scope];
 
+  // Use centralized document type labels as fallback
+  const categoryLabels: Record<DocumentTypeCode, string> = {};
+  CATEGORY_OPTIONS[scope].forEach(opt => {
+    categoryLabels[opt.value] = opt.label;
+  });
+
   return useDocumentsTableAdapter({
     scopeLabel,
     queryKey: ['documents', 'monitoring', scope],
     filters: [{ column: 'metadata_scope', value: scope }],
     pathPrefix: `monitoring/${scope}`,
     uploadCategoryOptions: CATEGORY_OPTIONS[scope],
-    categoryLabels: Object.fromEntries(
-      CATEGORY_OPTIONS[scope].map((o) => [o.value, o.label]),
-    ) as Record<string, string>,
+    categoryLabels,
     facets: [
       {
         key: 'category',
@@ -55,7 +60,9 @@ export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): Do
         options: CATEGORY_OPTIONS[scope],
       },
     ],
-    itemFacetBuilder: (row: any) => ({ category: row.document_type ?? null }),
+    itemFacetBuilder: (row: any) => ({ 
+      category: categoryLabels[row.document_type as DocumentTypeCode] ?? DOCUMENT_TYPE_LABELS[row.document_type as DocumentTypeCode] ?? row.document_type ?? null 
+    }),
     insertDefaults: { metadata: { scope } },
     previewMode: 'proxy',
   });

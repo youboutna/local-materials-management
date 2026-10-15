@@ -17,6 +17,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { T } from '@/components/i18n/T';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getDocumentTypeLabel as getDocTypeLabel, DOCUMENT_TYPE_LABELS, type DocumentTypeCode } from '@/config/referentials/documents/document-types.referential';
 
 interface MaterialDocumentMetadata {
   materialId: string;
@@ -65,13 +66,14 @@ interface MaterialDocumentsProps {
   readonly?: boolean;
 }
 
-const DOCUMENT_TYPES = [
-  { value: 'invoice', label: 'Facture', icon: FileText },
-  { value: 'delivery_note', label: 'Bon de livraison', icon: FileText },
-  { value: 'warranty', label: 'Garantie', icon: FileText },
-  { value: 'certificate', label: 'Certificat', icon: FileText },
-  { value: 'manual', label: 'Manuel', icon: FileText },
-  { value: 'other', label: 'Autre', icon: FileText },
+// Material-specific document types (subset of centralized referential)
+const MATERIAL_DOCUMENT_TYPES: Array<{ value: DocumentTypeCode; label: string }> = [
+  { value: 'invoice', label: DOCUMENT_TYPE_LABELS.invoice },
+  { value: 'delivery_note', label: DOCUMENT_TYPE_LABELS.delivery_note },
+  { value: 'warranty', label: DOCUMENT_TYPE_LABELS.warranty },
+  { value: 'certificate', label: DOCUMENT_TYPE_LABELS.certificate },
+  { value: 'manual', label: DOCUMENT_TYPE_LABELS.manual },
+  { value: 'other', label: DOCUMENT_TYPE_LABELS.other },
 ];
 
 const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, readonly = false }) => {
@@ -291,7 +293,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
   };
 
   const getDocumentTypeLabel = (type: string) => {
-    return DOCUMENT_TYPES.find(t => t.value === type)?.label || type;
+    return getDocTypeLabel(type);
   };
 
   const formatFileSize = (bytes?: number) => {
@@ -346,7 +348,7 @@ const MaterialDocuments: React.FC<MaterialDocumentsProps> = ({ materialId, reado
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {DOCUMENT_TYPES.map(type => (
+                          {MATERIAL_DOCUMENT_TYPES.map(type => (
                             <SelectItem key={type.value} value={type.value}>
                               {type.label}
                             </SelectItem>

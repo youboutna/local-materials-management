@@ -1,4 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getInspectionService } from '@/application/services/InspectionService';
+import { Inspection, InspectionStatus } from '@/domain/entities/Inspection';
 
 export interface PhaseInspectionFormData {
   inspector: string;
@@ -9,19 +11,38 @@ export interface PhaseInspectionFormData {
   documentsData?: Record<string, unknown>;
 }
 
+interface PhaseInspectionRow {
+  id: string;
+  project_id: string;
+  phase_id: string | null;
+  inspector: string;
+  date: string;
+  status: string;
+  progress_at_inspection: number;
+  comments: string | null;
+  documents: unknown;
+}
+
+function toPhaseInspectionRow(inspection: Inspection, documents?: unknown): PhaseInspectionRow {
+  const status = inspection.status.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`).replace(/^_/, '');
+  return {
+    id: inspection.id,
+    project_id: inspection.projectId || '',
+    phase_id: inspection.phaseId || null,
+    inspector: inspection.inspector.name,
+    date: inspection.date,
+    status,
+    progress_at_inspection: inspection.progressAtInspection,
+    comments: inspection.comments ?? null,
+    documents: documents ?? inspection.documents,
+  };
+}
+
 export function usePhaseInspectionsListHex(phaseId: string) {
   return useQuery({
     queryKey: ['phase-inspections', phaseId],
-    queryFn: async () => {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { data, error } = await btpClient.from('inspections')
-        .select('*')
-        .eq('phase_id', phaseId)
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
+    queryFn: async () => (await getInspectionService().getInspectionsByPhase(phaseId))
+      .map((inspection) => toPhaseInspectionRow(inspection)),
   });
 }
 
@@ -29,26 +50,20 @@ export function useAddPhaseInspectionHex(phaseId: string, projectId: string, syn
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (inspectionData: PhaseInspectionFormData) => {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { data, error } = await btpClient.from('inspections')
-        .insert({
-          project_id: projectId,
-          phase_id: phaseId,
-          inspector: inspectionData.inspector,
-          date: new Date(inspectionData.date).toISOString(),
-          status: inspectionData.status,
-          progress_at_inspection: parseInt(inspectionData.progressAtInspection) || 0,
-          comments: inspectionData.comments,
-          documents: inspectionData.documentsData || {},
-        } as never)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const inspection = await getInspectionService().createInspection({
+        projectId,
+        phaseId,
+        inspector: inspectionData.inspector,
+        date: new Date(inspectionData.date).toISOString(),
+        status: inspectionData.status,
+        progressAtInspection: parseInt(inspectionData.progressAtInspection) || 0,
+        comments: inspectionData.comments,
+        documentsData: inspectionData.documentsData || {},
+      });
 
       await syncProgress();
 
-      return data;
+      return toPhaseInspectionRow(inspection, inspectionData.documentsData || {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
@@ -60,14 +75,7 @@ export function useAddPhaseInspectionHex(phaseId: string, projectId: string, syn
 export function useDeletePhaseInspectionHex(phaseId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { error } = await btpClient.from('inspections')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => getInspectionService().deleteInspection(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['phase-inspections', phaseId] });
     },
