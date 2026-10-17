@@ -14,4 +14,5 @@
 - [ ] Corriger et tester les URL, le CRUD et l’affichage de la GED
 - [ ] Finaliser et tester les corrections du module newsletter
 - [ ] Vérifier et corriger la préparation Docker auto-hébergée
+- [ ] Confirmer l’ouverture de l’aperçu et exécuter les tests de non-régression ciblés
 - [ ] Vérifier les parcours authentifiés GED/newsletter — bloqué : Supabase externe sans session de test disponible
