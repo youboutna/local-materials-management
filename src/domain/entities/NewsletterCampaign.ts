@@ -191,6 +191,10 @@ export class NewsletterCampaign {
       this.scheduledFor = undefined;
       this.sentAt = undefined;
     }
+    if (data.scheduledFor !== undefined) {
+      this.scheduledFor = data.scheduledFor;
+      this.status = 'scheduled';
+    }
     if (data.metadata !== undefined) this.metadata = data.metadata;
     this.updatedAt = new Date().toISOString();
   }

@@ -80,7 +80,14 @@ export class NewsletterCampaignService {
         throw new AppError(ErrorCode.BUSINESS_RULE_VIOLATION, 'Cannot update sent or sending campaigns');
       }
 
-      const updateData = NewsletterCampaignTransformer.toUpdateData(dto);
+      const scheduledTimestamp = dto.scheduledFor === undefined ? undefined : Date.parse(dto.scheduledFor);
+      if (scheduledTimestamp !== undefined && (!Number.isFinite(scheduledTimestamp) || scheduledTimestamp <= Date.now())) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Scheduled date must be in the future');
+      }
+      const updateData = NewsletterCampaignTransformer.toUpdateData({
+        ...dto,
+        scheduledFor: scheduledTimestamp === undefined ? undefined : new Date(scheduledTimestamp).toISOString(),
+      });
       entity.update(updateData);
       await this.campaignRepository.update(id, entity);
       return NewsletterCampaignTransformer.toDTO(entity);

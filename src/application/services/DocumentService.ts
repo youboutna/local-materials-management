@@ -11,13 +11,18 @@ import { CreateDocumentDTO, DocumentDTO, UpdateDocumentDTO } from '@/dtos/entiti
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { getStorageService } from './StorageService';
+import { getStorageService, type StorageService } from './StorageService';
+import { StorageReferenceTransformer } from '@/dtos/transforms/StorageReferenceTransformer';
 
 export class DocumentService {
   private documentRepository: IDocumentRepository;
 
-  constructor(repository?: IDocumentRepository) {
+  constructor(repository?: IDocumentRepository, private readonly storageService?: StorageService) {
     this.documentRepository = repository || RepositoryFactory.getDocumentRepository();
+  }
+
+  private getStorage(): StorageService {
+    return this.storageService ?? getStorageService();
   }
 
   /**
@@ -37,6 +42,7 @@ export class DocumentService {
    * Créer un document avec upload de fichier
    */
   async createDocument(data: CreateDocumentDTO): Promise<DocumentDTO> {
+    let uploadedPath: string | undefined;
     try {
       let fileUrl = data.fileUrl;
       let fileName = data.fileName;
@@ -44,7 +50,7 @@ export class DocumentService {
       let mimeType = data.mimeType;
 
       if (data.file) {
-        const storageService = getStorageService();
+        const storageService = this.getStorage();
         const uploadResult = await storageService.uploadFile({
           bucket: 'documents',
           path: `${crypto.randomUUID()}-${data.file.name}`,
@@ -53,6 +59,7 @@ export class DocumentService {
         if (!uploadResult) {
           throw new AppError(ErrorCode.INTERNAL_ERROR, 'Upload failed');
         }
+        uploadedPath = uploadResult.path;
         fileUrl = uploadResult.publicUrl;
         fileName = data.file.name;
         fileSize = data.file.size;
@@ -86,8 +93,13 @@ export class DocumentService {
       const saved = await this.documentRepository.save(entity);
       return DocumentTransformer.toDTO(saved);
     } catch (error) {
+      if (uploadedPath) {
+        await this.getStorage().deleteFile({ bucket: 'documents', path: uploadedPath }).catch((cleanupError) => {
+          console.error('Document upload rollback failed:', cleanupError);
+        });
+      }
       console.error('DocumentService.createDocument failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
+      throw error instanceof Error ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
     }
   }
 
@@ -224,6 +236,10 @@ export class DocumentService {
       const existing = await this.documentRepository.findById(id);
       if (!existing) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
+      }
+      if (existing.fileUrl) {
+        const reference = StorageReferenceTransformer.toStorageRequest(existing.fileUrl);
+        if (reference) await this.getStorage().deleteFile(reference);
       }
       await this.documentRepository.delete(id);
     } catch (error) {
@@ -420,9 +436,8 @@ export class DocumentService {
       if (!doc) {
         throw new AppError(ErrorCode.NOT_FOUND, 'Document not found');
       }
-      const storageService = getStorageService();
-      const blob = await storageService.downloadFile({ bucket: 'documents', path: doc.fileUrl || '' });
-      return blob;
+      if (!doc.fileUrl) throw new AppError(ErrorCode.NOT_FOUND, 'Document has no file');
+      return await this.getStorage().downloadReference(doc.fileUrl);
     } catch (error) {
       console.error('DocumentService.downloadDocument failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to download document');
