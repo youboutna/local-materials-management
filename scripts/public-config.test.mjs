@@ -6,6 +6,7 @@ test('public configuration round trips without code execution', () => assert.dee
 test('private settings and service-role keys cannot be published', () => {
   assert.throws(() => validatePublicConfig({ ...base, SUPABASE_SERVICE_ROLE_KEY: 'test-only' }));
   assert.throws(() => validatePublicConfig({ ...base, VITE_SUPABASE_PUBLISHABLE_KEY: `h.${Buffer.from('{"role":"service_role"}').toString('base64url')}.s` }));
+  assert.throws(() => validatePublicConfig({ ...base, VITE_SUPABASE_ANON_KEY: `h.${Buffer.from('{"role":"service_role"}').toString('base64url')}.s` }));
 });
 test('production config disables DEV and forbids credential URLs', () => {
   assert.throws(() => validatePublicConfig({ ...base, VITE_DEV_MODE: 'true' }));

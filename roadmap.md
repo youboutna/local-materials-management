@@ -21,7 +21,8 @@
 - [x] Corriger les actions des portails consultant/prestataire : upload unique associé, conformité phase, portée des alertes et accès clavier fournisseur
 - [x] Tester les workflows modifiés : 55 tests ciblés passants, compilation OK et lint des nouveaux services/référentiels/tests ; limites connectées consignées
 - [ ] Recette intégrale des portails, emails, permissions et planificateurs d’escalade/inspection — bloqué : Supabase externe sans session de test injectable ni environnement serveur vérifiable
-- [ ] Activer livraison SMS et courrier postal — bloqué : fournisseurs d’envoi non configurés ; aucun succès simulé
-- [ ] P0 : externaliser la configuration publique et sécuriser les paramètres sans écrire les fichiers .env
-- [ ] P0 : livrer une procédure reproductible pour servir dist dans l’infrastructure Docker existante, avec contrôles et retour arrière
-- [ ] Relier le fournisseur SMS et tester les résultats réels — attente de connexion fournisseur
+- [ ] Activer livraison SMS et courrier postal — bloqué : expéditeur SMS absent/refusé ; prestataire courrier postal non configuré
+- [x] P0 : configuration publique externe validée, montage lecture seule, paramètres sans secrets et synchronisation .env désactivée
+- [x] P0 : procédure dist → Docker indépendante de l’infrastructure existante, contrôles HTTP et retour arrière livrés
+- [x] Fournisseur Twilio relié, accès applicatif vérifié HTTP 200, port SMS et résultats testés, fonction déployée
+- [ ] Envoyer puis vérifier la livraison SMS — bloqué : compte Twilio sans numéro actif et saisie expéditeur refusée

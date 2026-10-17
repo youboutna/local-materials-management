@@ -123,14 +123,8 @@ const ProviderSettings = () => {
           [type]: result.error ? 'failed' : 'connected'
         }));
       } else {
-        // For database and storage, simulate for now
-        setTimeout(() => {
-          const isConnected = Math.random() > 0.3; // 70% success rate for demo
-          setConnectionStatus(prev => ({
-            ...prev,
-            [type]: isConnected ? 'connected' : 'failed'
-          }));
-        }, 2000);
+        // No connection probe exists for these providers; never simulate readiness.
+        setConnectionStatus(prev => ({ ...prev, [type]: 'unknown' }));
       }
     } catch (error) {
       console.error(`Error testing ${type} provider:`, error);
