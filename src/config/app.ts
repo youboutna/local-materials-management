@@ -186,7 +186,9 @@ function buildConfig(): AppConfig {
 
   // ✅ Lire le profil actif (cache amorcé par initProfileCache() au démarrage)
   const profile = getActiveProfileSync();
-  const customConfig = getProfileCustomConfigSync(profile.id);
+  const operatorManaged = typeof window !== 'undefined' &&
+    (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__?.VITE_ACTIVE_PROFILE === 'supabase-selfhosted';
+  const customConfig = operatorManaged ? {} : getProfileCustomConfigSync(profile.id);
 
   // ✅ Priorité : config custom (DB) > variables d'env > valeurs du profil > défauts
   const authUrl =
@@ -201,7 +203,8 @@ function buildConfig(): AppConfig {
 
   const authProvider = profile.auth.provider;
 
-  const anonKey =
+  const anonKey = authProvider === 'supabase' && !customConfig.VITE_SUPABASE_URL
+    ? resolveSupabaseConfig().publishableKey :
     customConfig.VITE_SUPABASE_ANON_KEY ||
     envOpt('VITE_SUPABASE_ANON_KEY') ||
     envOpt('VITE_SUPABASE_PUBLISHABLE_KEY') ||
@@ -276,10 +279,6 @@ function buildConfig(): AppConfig {
         envOpt('VITE_STORAGE_BUCKET') ||
         defaults.storage.bucket,
       region: envOpt('VITE_STORAGE_REGION'),
-      accessKey:
-        customConfig.VITE_STORAGE_ACCESS_KEY || envOpt('VITE_STORAGE_ACCESS_KEY'),
-      secretKey:
-        customConfig.VITE_STORAGE_SECRET_KEY || envOpt('VITE_STORAGE_SECRET_KEY'),
       publicBaseUrl: envOpt('VITE_STORAGE_PUBLIC_URL'),
     },
     email: {

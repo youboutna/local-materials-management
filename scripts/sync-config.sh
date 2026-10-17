@@ -2,7 +2,7 @@
 # =============================================================================
 # sync-config.sh – Synchronise les configurations entre cloud et self-hosted
 # =============================================================================
-# Extrait les valeurs de config.toml et les applique aux fichiers self-hosted
+# Reports reviewed non-secret configuration; never rewrites environment files.
 # =============================================================================
 
 set -e
@@ -36,32 +36,5 @@ echo "   Schemas: $SCHEMAS"
 echo "   Extra search: $EXTRA_SEARCH"
 echo "   Site URL: $SITE_URL"
 
-# Mettre à jour .env.hadratech
-if [ -f "$ENV_HADRATECH" ]; then
-    echo -e "${YELLOW}📝 Mise à jour de $ENV_HADRATECH...${NC}"
-    
-    # Mettre à jour PGRST_DB_SCHEMAS
-    sed -i "s|^PGRST_DB_SCHEMAS=.*$|PGRST_DB_SCHEMAS=$SCHEMAS|" "$ENV_HADRATECH"
-    
-    # Mettre à jour PGRST_DB_EXTRA_SEARCH_PATH
-    sed -i "s|^PGRST_DB_EXTRA_SEARCH_PATH=.*$|PGRST_DB_EXTRA_SEARCH_PATH=$EXTRA_SEARCH|" "$ENV_HADRATECH"
-    
-    echo -e "${GREEN}✅ $ENV_HADRATECH mis à jour${NC}"
-fi
-
-# Mettre à jour .env (application) — protégé
-if [ "${ALLOW_ENV_WRITE:-0}" != "1" ]; then
-    echo -e "${YELLOW}⏭️  .env racine non modifié (protection). ALLOW_ENV_WRITE=1 pour autoriser.${NC}"
-elif [ -f "$ENV_APP" ]; then
-    echo -e "${YELLOW}📝 Mise à jour de $ENV_APP...${NC}"
-    
-    # Mettre à jour VITE_PGRST_SCHEMAS
-    sed -i "s|^VITE_PGRST_SCHEMAS=.*$|VITE_PGRST_SCHEMAS=$SCHEMAS|" "$ENV_APP"
-    
-    # Mettre à jour VITE_PGRST_EXTRA_SEARCH_PATH
-    sed -i "s|^VITE_PGRST_EXTRA_SEARCH_PATH=.*$|VITE_PGRST_EXTRA_SEARCH_PATH=$EXTRA_SEARCH|" "$ENV_APP"
-    
-    echo -e "${GREEN}✅ $ENV_APP mis à jour${NC}"
-fi
-
-echo -e "${GREEN}✅ Synchronisation terminée${NC}"
+echo 'Read-only report complete. No .env file was modified, regardless of ALLOW_ENV_WRITE.'
+echo 'Manage server secrets outside the checkout; use scripts/prepare-public-config.mjs for public frontend settings.'

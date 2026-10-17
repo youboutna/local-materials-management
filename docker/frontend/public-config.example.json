@@ -1,0 +1,9 @@
+{
+  "VITE_SUPABASE_URL": "https://supabase.example.com",
+  "VITE_SUPABASE_PUBLISHABLE_KEY": "",
+  "VITE_ACTIVE_PROFILE": "supabase-selfhosted",
+  "VITE_APP_MODE": "production",
+  "VITE_DEV_MODE": "false",
+  "VITE_BTP_SCHEMA": "btp",
+  "VITE_STORAGE_BUCKET": "documents"
+}

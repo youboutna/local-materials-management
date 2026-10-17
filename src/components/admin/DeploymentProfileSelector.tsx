@@ -89,23 +89,6 @@ function ProfileConfigFields({ profile, values, onChange }: ProfileConfigFieldsP
           profile.storage.urlPlaceholder
         )}
 
-      {profile.storage.requiresKey &&
-        profile.storage.keyStorageKey &&
-        field(
-          profile.storage.keyStorageKey,
-          profile.storage.keyLabel ?? 'Access Key',
-          undefined,
-          'password'
-        )}
-
-      {profile.storage.requiresSecret &&
-        profile.storage.secretStorageKey &&
-        field(
-          profile.storage.secretStorageKey,
-          profile.storage.secretLabel ?? 'Secret Key',
-          undefined,
-          'password'
-        )}
     </div>
   );
 }

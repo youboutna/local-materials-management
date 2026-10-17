@@ -11,6 +11,7 @@ import type {
   SystemSettingRow,
 } from '@/domain/repositories/ISystemSettingsRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { assertSafeSetting, safeSettings } from '@/config/settings-safety';
 
 const ADMIN_EMAILS_KEY = 'admin_notification_emails';
 
@@ -22,7 +23,7 @@ export class SystemSettingsService {
   // =========================================================================
 
   async getAll(): Promise<SystemSettingRow[]> {
-    return this.repository.findAll();
+    return safeSettings(await this.repository.findAll());
   }
 
   /**
@@ -32,6 +33,7 @@ export class SystemSettingsService {
   async getConfiguration(key: string): Promise<Record<string, unknown>> {
     if (!key) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Setting key is required');
     const row = await this.repository.findByKey(key);
+    assertSafeSetting(key, row?.configuration);
     return (row?.configuration as Record<string, unknown>) ?? {};
   }
 
@@ -49,6 +51,7 @@ export class SystemSettingsService {
       );
     }
     const row = await this.repository.findByCategoryAndKey(category, key);
+    assertSafeSetting(key, row?.configuration);
     return (row?.configuration as Record<string, unknown>) ?? null;
   }
 
@@ -59,7 +62,7 @@ export class SystemSettingsService {
     if (!category) {
       throw new AppError(ErrorCode.VALIDATION_ERROR, 'Category is required');
     }
-    return this.repository.findByCategory(category);
+    return safeSettings(await this.repository.findByCategory(category));
   }
 
   // =========================================================================
@@ -72,6 +75,7 @@ export class SystemSettingsService {
     category = 'general'
   ): Promise<SystemSettingRow> {
     if (!key) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Setting key is required');
+    assertSafeSetting(key, configuration);
     return this.repository.upsert({ key, category, configuration });
   }
 
@@ -90,6 +94,7 @@ export class SystemSettingsService {
         'Both category and key are required'
       );
     }
+    assertSafeSetting(key, configuration);
     return this.repository.upsert({ category, key, configuration });
   }
 
