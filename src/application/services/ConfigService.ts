@@ -73,12 +73,14 @@ export class ConfigService {
   }
 
   async get<T = unknown>(key: string, fallback?: T): Promise<T> {
+    assertSafeSetting(key, undefined);
     const cached = this.cache.get(key);
     if (cached) return cached.value as T;
 
     try {
       const entry = await this.repository.findByKey(key);
       if (entry && entry.value !== undefined) {
+        assertSafeSetting(key, entry.value);
         this.cache.set(key, entry);
         return entry.value as T;
       }

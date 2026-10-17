@@ -4,6 +4,10 @@
 - Orchestrate document file cleanup in DocumentService, retain the row when file deletion fails, and roll back newly uploaded files on failed persistence; this prevents silent orphan creation on the normal CRUD paths.
 - Normalize campaign scheduling in the application service and persist it through the domain entity; editing and dedicated scheduling must agree.
 - Ship the frontend container from the production dist artifact with SPA fallback and JavaScript MIME for PDF workers; keep build inputs and private environment files out of the serving image.
+- Mount validated public runtime configuration read-only before client initialization; operator self-hosted settings override persisted deployment profiles to prevent stale database settings from rerouting a release.
+- Generic system settings and browser configuration must reject private credentials; server provider ports read secrets only from their execution environment.
+- Release the frontend independently with an immutable image tag and explicit public config path; never rebuild or restart existing backend services during a frontend release.
+- SMS uses the server-side provider port and reports accepted status separately from delivery; server role authorization protects paid sends.
 - Self-hosted startup scripts must not generate, rewrite, or print environment secrets; apply application migrations explicitly rather than relying on nested initialization mounts.
 - Communication actions must resolve user contacts through UserService and check provider results before claiming delivery; recipient IDs are not phone numbers or email addresses.
 - Inspection updates must persist dates and inspector IDs and read back the stored entity; the inspection workflow policy lives in the inspections referential, not in presentation code.

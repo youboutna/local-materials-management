@@ -4,7 +4,6 @@
  * Following hexagonal architecture principles
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { 
   INotificationRepository, 
   NotificationData, 
@@ -309,11 +308,12 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async sendSMS(data: SMSData): Promise<{ error: Error | null }> {
     try {
-      const { error } = await supabase.functions.invoke('send-sms-notification', {
-        body: JSON.stringify(data)
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: result, error } = await supabase.functions.invoke('send-sms-notification', {
+        body: data
       });
-
-      return { error };
+      if (error) return { error };
+      return { error: result?.success === true ? null : new Error(result?.error || 'SMS was not accepted by provider') };
     } catch (error) {
       return { error: error as Error };
     }
