@@ -165,6 +165,11 @@ export class CommunicationService {
   }
 
   static async sendSMS(payload: SendSmsPayload): Promise<CommunicationResult> {
+    let to = payload.to;
+    try {
+      if (isUuid(to)) to = (await this.resolveRecipient(to)).phone;
+      if (!/^\+[1-9]\d{7,14}$/.test(to) || !payload.message.trim()) return { success: false, channel: 'sms' };
+    } catch { return { success: false, channel: 'sms' }; }
     const recipientId = isUuid(payload.to) ? payload.to : null;
     if (recipientId) {
       await NotificationService.createNotification({
@@ -186,7 +191,7 @@ export class CommunicationService {
       const repo = RepositoryFactory.getNotificationRepository();
       if (repo && typeof repo.sendSMS === 'function') {
         const { error } = await repo.sendSMS({
-          to: payload.to,
+          to,
           message: payload.message,
         });
         if (error) return { success: false, channel: 'sms' };

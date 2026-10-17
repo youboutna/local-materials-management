@@ -4,7 +4,6 @@
  * Following hexagonal architecture principles
  */
 
-import { supabase } from '@/integrations/supabase/client';
 import { 
   INotificationRepository, 
   NotificationData, 
@@ -19,6 +18,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async createNotification(notification: Omit<NotificationData, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ notification: NotificationData | null; error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       // Colonnes réellement persistées dans public.notifications
       const payload = {
         recipient_id: notification.recipientId,
@@ -80,6 +80,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async getUserNotifications(userId: string, limit = 50): Promise<{ notifications: NotificationData[]; error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       console.log('SupabaseNotificationAdapter.getUserNotifications: Querying notifications for userId:', userId, 'limit:', limit);
       
       const { data, error } = await supabase
@@ -139,6 +140,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async listAllNotifications(limit = 200): Promise<{ notifications: NotificationData[]; error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -175,6 +177,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async getNotificationById(notificationId: string): Promise<{ notification: NotificationData | null; error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -196,6 +199,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
     patch: Partial<Omit<NotificationData, 'id' | 'createdAt'>>
   ): Promise<{ notification: NotificationData | null; error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('notifications')
         .update({ ...patch, updated_at: new Date().toISOString() })
@@ -216,6 +220,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async markAsRead(notificationId: string): Promise<{ error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('notifications')
         .update({ read: true, updated_at: new Date().toISOString() })
@@ -232,6 +237,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async markAsUnread(notificationId: string): Promise<{ error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('notifications')
         .update({ read: false, updated_at: new Date().toISOString() })
@@ -248,6 +254,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async markAllAsRead(userId: string): Promise<{ error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('notifications')
         .update({ read: true, updated_at: new Date().toISOString() })
@@ -285,6 +292,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async deleteNotification(notificationId: string): Promise<{ error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('notifications')
         .delete()
@@ -309,11 +317,12 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async sendSMS(data: SMSData): Promise<{ error: Error | null }> {
     try {
-      const { error } = await supabase.functions.invoke('send-sms-notification', {
-        body: JSON.stringify(data)
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: result, error } = await supabase.functions.invoke('send-sms-notification', {
+        body: data
       });
-
-      return { error };
+      if (error) return { error };
+      return { error: result?.success === true ? null : new Error(result?.error || 'SMS was not accepted by provider') };
     } catch (error) {
       return { error: error as Error };
     }
@@ -324,6 +333,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async scheduleCall(data: CallData): Promise<{ error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase.functions.invoke('schedule-call', {
         body: JSON.stringify(data)
       });
@@ -339,6 +349,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async getUnreadCount(userId: string): Promise<{ count: number; error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('notifications')
         .select('id', { count: 'exact' })
@@ -360,6 +371,7 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
    */
   async getSystemNotifications(limit = 100): Promise<{ notifications: NotificationData[]; error: Error | null }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
         .from('notifications')
         .select('*')

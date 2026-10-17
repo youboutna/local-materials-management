@@ -1,8 +1,16 @@
 services:
   app:
+    image: hadratech-frontend:${APP_IMAGE_TAG:-local}
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile
     restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ${PUBLIC_CONFIG_FILE:?Set an absolute path to the reviewed public config.js}
+        target: /usr/share/nginx/html/config.js
+        read_only: true
+        bind:
+          create_host_path: false
     ports:
       - "127.0.0.1:${APP_PORT:-8088}:80"

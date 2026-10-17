@@ -13,6 +13,7 @@ import { resolveSupabaseConfig } from '@/config/supabaseConfig';
 import type { ConfigEntry, IConfigRepository } from '@/domain/repositories/IConfigRepository';
 import { LocalStorageConfigRepository } from '@/infrastructure/adapters/localStorage/LocalStorageConfigRepository';
 import { SupabaseConfigRepository } from '@/infrastructure/adapters/supabase/SupabaseConfigRepository';
+import { assertSafeSetting, safeSettings } from '@/config/settings-safety';
 
 /** Fragments de nom indiquant une valeur sensible : jamais exposée dans l'UI. */
 const SENSITIVE_FRAGMENTS = ['SECRET', 'KEY', 'PASSWORD', 'TOKEN', 'JWT'];
@@ -72,12 +73,14 @@ export class ConfigService {
   }
 
   async get<T = unknown>(key: string, fallback?: T): Promise<T> {
+    assertSafeSetting(key, undefined);
     const cached = this.cache.get(key);
     if (cached) return cached.value as T;
 
     try {
       const entry = await this.repository.findByKey(key);
       if (entry && entry.value !== undefined) {
+        assertSafeSetting(key, entry.value);
         this.cache.set(key, entry);
         return entry.value as T;
       }
@@ -90,6 +93,7 @@ export class ConfigService {
   }
 
   async set(key: string, value: unknown, category = 'general'): Promise<void> {
+    assertSafeSetting(key, value);
     await this.repository.upsert({ key, value, category });
     this.cache.set(key, { key, value, category });
   }
@@ -103,6 +107,7 @@ export class ConfigService {
       console.warn('[ConfigService] paramètres persistés indisponibles:', error);
     }
 
+    persisted = safeSettings(persisted);
     const persistedKeys = new Set(persisted.map((entry) => entry.key));
     const envEntries: ConfigEntry[] = Object.keys(this.envDefaults)
       .filter((key) => !persistedKeys.has(key) && !ConfigService.isSensitive(key))

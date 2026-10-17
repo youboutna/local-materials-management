@@ -22,6 +22,7 @@ import {
   type DeploymentProfile,
 } from './profiles';
 import { getSystemSettingsService } from '@/application/services/SystemSettingsService';
+import { assertSafeSetting } from './settings-safety';
 
 // ---------------------------------------------------------------------------
 // Constantes
@@ -140,6 +141,11 @@ export async function getActiveProfile(): Promise<DeploymentProfile> {
 }
 
 export function getActiveProfileSync(): DeploymentProfile {
+  // An operator-provided self-hosted runtime config is authoritative at boot.
+  if (typeof window !== 'undefined' && (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__?.VITE_ACTIVE_PROFILE === 'supabase-selfhosted') {
+    const selfHosted = getProfileById('supabase-selfhosted');
+    if (selfHosted) return selfHosted;
+  }
   const cached = getCached<{ id: string }>(CATEGORY, KEY_ACTIVE_PROFILE);
   if (cached?.id) {
     const profile = getProfileById(cached.id);
@@ -189,6 +195,7 @@ export async function setProfileCustomConfig(
   profileId: string,
   config: Record<string, string>
 ): Promise<void> {
+  assertSafeSetting('profile_config', config);
   const key = `${KEY_PROFILE_CONFIG_PREFIX}${profileId}`;
   await writeSetting(CATEGORY, key, config);
   setCached(CATEGORY, key, config);
