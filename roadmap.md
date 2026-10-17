@@ -17,3 +17,6 @@
 - [x] Confirmer l’ouverture de l’aperçu, compilation sans erreur et 24 tests ciblés passants
 - [ ] Valider démarrage Docker, migrations et envoi réel newsletter — bloqué : Docker absent du sandbox, validation sur serveur nécessaire ; alternatives Keycloak/MinIO non turnkey (extension pgjwt, signature S3, intégration JWT)
 - [ ] Vérifier les parcours authentifiés GED/newsletter — bloqué : Supabase externe sans session de test disponible
+- [ ] Corriger les actions notifications/escalades, emails, inspections et paiements selon les référentiels
+- [ ] Finaliser les actions des portails consultant/prestataire et leur accessibilité
+- [ ] Tester les workflows modifiés et consigner les limites de validation connectée
