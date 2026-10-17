@@ -29,10 +29,17 @@ import { InspectionService } from '../InspectionService';
 import { InspectionSchedulingService } from '../InspectionSchedulingService';
 import { ConsultantScopeService } from '../ConsultantScopeService';
 import { WorkflowOrchestrator } from '../WorkflowOrchestrator';
+import { InspectionComplianceService } from '../InspectionComplianceService';
 
 beforeEach(() => vi.clearAllMocks());
 
 describe('Communication action results', () => {
+  it('sends the complete call contract and relies on the server notification', async () => {
+    mocks.invoke.mockResolvedValue({ data: { success: true }, error: null });
+    expect((await CommunicationService.scheduleCall({ recipientId: 'user', recipientPhone: '+22212345678', subject: 'Payment', message: 'Follow up', scheduledFor: '2026-11-01T10:00:00Z' })).success).toBe(true);
+    expect(mocks.invoke).toHaveBeenCalledWith('schedule-call', expect.objectContaining({ recipientId: 'user', recipientPhone: '+22212345678', scheduledFor: '2026-11-01T10:00:00Z', priority: 'medium', actionType: 'follow_up' }));
+    expect(mocks.notifications.createNotification).not.toHaveBeenCalled();
+  });
   it('does not report a failed SMS as delivered', async () => {
     mocks.notifications.sendSMS.mockResolvedValue({ error: new Error('Delivery rejected') });
     expect(await CommunicationService.sendSMS({ to: '+22212345678', message: 'Reminder' })).toEqual({ success: false, channel: 'sms' });
@@ -73,6 +80,13 @@ describe('Inspection scheduling persistence', () => {
 });
 
 describe('Notification context and consultant scope', () => {
+  it('counts completed and approved inspections only as phase evidence', () => {
+    expect([...InspectionComplianceService.countByPhase([
+      { phaseId: 'p1', status: 'Pending' }, { phaseId: 'p1', status: 'Rejected' },
+      { phaseId: 'p1', status: 'Completed' }, { phaseId: 'p1', status: 'Approved' },
+      { phaseId: 'p2', status: 'Scheduled' },
+    ])]).toEqual([['p1', 2]]);
+  });
   it('preserves project and phase context through persistence', async () => {
     const repository = { createNotification: vi.fn(async data => ({ notification: { ...data, id: 'notification' }, error: null })) } as unknown as INotificationRepository;
     const result = await new NotificationService(repository).createNotification({ recipientId: 'user', title: 'Inspection', message: 'Scheduled', type: 'info', projectId: 'project', phaseId: 'phase' });
