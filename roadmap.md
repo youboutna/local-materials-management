@@ -11,8 +11,9 @@
 - [x] Supprimer le défilement horizontal des lignes et du mapping DQE à toutes les largeurs
 - [x] Extraire l’enveloppe documentaire (émetteur, destinataire, référence, date, projet, validité, devise, normes Factur-X) comme contexte et non comme lignes DQE
 - [x] Afficher l’enveloppe dans un panneau de contexte responsive au-dessus de l’aperçu d’import
-- [ ] Corriger et tester les URL, le CRUD et l’affichage de la GED
-- [ ] Finaliser et tester les corrections du module newsletter
-- [ ] Vérifier et corriger la préparation Docker auto-hébergée
-- [ ] Confirmer l’ouverture de l’aperçu et exécuter les tests de non-régression ciblés
+- [x] Corriger les chemins/buckets GED, le mapping et le nettoyage des fichiers ; tests de services passants
+- [x] Corriger la programmation newsletter et tester consentement, erreurs et résultats d’envoi
+- [x] Corriger les chemins/ports Docker, ajouter le conteneur frontend et sécuriser le script de démarrage ; vérification statique effectuée
+- [x] Confirmer l’ouverture de l’aperçu, compilation sans erreur et 24 tests ciblés passants
+- [ ] Valider démarrage Docker, migrations et envoi réel newsletter — bloqué : Docker absent du sandbox, validation sur serveur nécessaire ; alternatives Keycloak/MinIO non turnkey (extension pgjwt, signature S3, intégration JWT)
 - [ ] Vérifier les parcours authentifiés GED/newsletter — bloqué : Supabase externe sans session de test disponible
