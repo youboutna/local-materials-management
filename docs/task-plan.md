@@ -63,6 +63,18 @@ UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adap
 
 ### Validation ciblée — 17/10/2026
 
+#### Actions, inspections et portails — correctifs complémentaires
+
+- 55 tests ciblés passants (7 fichiers), compilation automatique sans erreur ; lint ciblé des nouveaux services/référentiels/tests passé.
+- Actions paiement : contacts résolus via UserService, envois email/SMS et programmation d'appel vérifiés ; escalades utilisent les canaux sélectionnés et conservent le contexte projet/paiement. Aucun succès simulé pour le courrier postal non configuré.
+- Appels : contrat complet transmis à la fonction serveur `schedule-call`, qui reste responsable de sa notification ; évite l'ancien payload incompatible et les doubles notifications.
+- Inspections : dates et identifiants inspecteur persistés, lecture retour de l'entité enregistrée, statuts camelCase convertis en snake_case, absence de ligne modifiée remontée. La création consultant passe désormais par InspectionService, non par un objet DB passé directement au repository.
+- Programmation : identifiant d'inspection distinct de celui d'une étape ; création si nécessaire et conservation de l'identifiant en cas de nouvelle tentative ; identité du demandeur issue de la session. Le contrôle « notifier l'entrepreneur » sans effet a été retiré.
+- Politique : transitions/pièces d'inspection et limites/chaînes/délais d'initiation des paiements centralisés dans les référentiels ; politique paiement injectable, valeurs historiques conservées comme défauts explicites. Pas de nouvel écran de configuration ni de modification des permissions serveur.
+- Portails : upload fournisseur unique via DocumentService avec supplierId, taille et type ; fichier conservé après erreur pour réessai. Portée consultant exclut les alertes/garanties/assurances hors projets ; seules les inspections terminées/approuvées comptent dans les preuves de phase ; actions d'alertes désactivées pendant traitement et libellés de statuts traduits.
+- Paiement workflow : identité/contact prestataire obligatoires, rejet des montants non finis et événement cohérent avec le montant effectivement enregistré ; l'ancien seuil UI 25 % est remplacé par l'éligibilité du calculateur de décompte (pas un paiement automatique).
+- Limites : SMS serveur explicitement non configuré (501), courrier postal non configuré ; réception réelle email, planificateurs serveur, permissions et parcours privés restent non validés sur Supabase externe. Navigateur : connexion fournisseur visible sans erreur runtime ; portail consultant encore en attente d'authentification au moment de la capture. Docker et migration globale restent non clôturés.
+
 - Compilation automatique : **build OK** après correction des erreurs de types GED, articles, export projet et adapters.
 - Tests ciblés : **4 fichiers / 24 tests passants** (stockage/GED, campagnes, abonnements, import projet).
 - GED : bucket/path conservés lors du téléchargement et de la suppression, rollback d’upload en cas d’échec de persistance, mapping camelCase des documents d’appel d’offres corrigé.

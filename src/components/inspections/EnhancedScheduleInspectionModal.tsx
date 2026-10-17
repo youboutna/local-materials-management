@@ -68,6 +68,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
   const [selectedDocuments, setSelectedDocuments] = useState<InspectionDocumentType[]>([]);
   const [notifyContractor, setNotifyContractor] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdInspectionId, setCreatedInspectionId] = useState<string>();
 
   // Get current step index
   const currentStepIndex = WORKFLOW_STEPS.findIndex(s => s.key === currentStep);
@@ -81,6 +82,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
       setDetails(null);
       setSelectedDocuments([]);
       setNotifyContractor(true);
+      setCreatedInspectionId(undefined);
     }
     onOpenChange(newOpen);
   };
@@ -154,7 +156,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
         // Schedule inspection
         try {
           const scheduledDate = new Date(`${details.scheduled_date}T${details.scheduled_time || '09:00'}:00`).toISOString();
-          let targetInspectionId = inspectionId;
+          let targetInspectionId = inspectionId ?? createdInspectionId;
           if (!targetInspectionId) {
             const created = await InspectionWorkflowService.createInspectionRequest({
               projectId, phaseId, stepId, inspectionType,
@@ -164,6 +166,7 @@ const EnhancedScheduleInspectionModal: React.FC<EnhancedScheduleInspectionModalP
               notes: details.requirements,
             });
             targetInspectionId = created.id;
+            setCreatedInspectionId(created.id);
           }
           if (!targetInspectionId) throw new Error(t('auto.enhancedscheduleinspectionmodal.erreur_lors_de_la_soumission'));
           await InspectionWorkflowService.scheduleInspection({

@@ -17,6 +17,8 @@
 - [x] Confirmer l’ouverture de l’aperçu, compilation sans erreur et 24 tests ciblés passants
 - [ ] Valider démarrage Docker, migrations et envoi réel newsletter — bloqué : Docker absent du sandbox, validation sur serveur nécessaire ; alternatives Keycloak/MinIO non turnkey (extension pgjwt, signature S3, intégration JWT)
 - [ ] Vérifier les parcours authentifiés GED/newsletter — bloqué : Supabase externe sans session de test disponible
-- [ ] Corriger les actions notifications/escalades, emails, inspections et paiements selon les référentiels
-- [ ] Finaliser les actions des portails consultant/prestataire et leur accessibilité
-- [ ] Tester les workflows modifiés et consigner les limites de validation connectée
+- [x] Corriger les défauts identifiés des actions notifications/escalades, emails, inspections et paiements ; référentiels centralisés
+- [x] Corriger les actions des portails consultant/prestataire : upload unique associé, conformité phase, portée des alertes et accès clavier fournisseur
+- [x] Tester les workflows modifiés : 55 tests ciblés passants, compilation OK et lint des nouveaux services/référentiels/tests ; limites connectées consignées
+- [ ] Recette intégrale des portails, emails, permissions et planificateurs d’escalade/inspection — bloqué : Supabase externe sans session de test injectable ni environnement serveur vérifiable
+- [ ] Activer livraison SMS et courrier postal — bloqué : fournisseurs d’envoi non configurés ; aucun succès simulé

@@ -543,11 +543,14 @@ const UnifiedSupplierPortal = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (isLoginMode) void handleLogin(); else void handleSignUp(); }}>
             <div>
               <Label htmlFor="email"><T k="auto.unifiedsupplierportal.email" fallback="Email" /></Label>
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="votre@email.com"
@@ -558,15 +561,18 @@ const UnifiedSupplierPortal = () => {
               <Input
                 id="password"
                 type="password"
+                autoComplete={isLoginMode ? 'current-password' : 'new-password'}
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
             </div>
             <Button
-              onClick={isLoginMode ? handleLogin : handleSignUp}
+              type="submit"
               className="w-full"
-              disabled={loading}
+              disabled={loading || loginMutation.isPending || signUpMutation.isPending}
+              aria-busy={loginMutation.isPending || signUpMutation.isPending}
             >
               {loading
                 ? "Chargement..."
@@ -574,6 +580,7 @@ const UnifiedSupplierPortal = () => {
                 ? "Se connecter"
                 : "S'inscrire"}
             </Button>
+            </form>
             <Button
               variant="ghost"
               onClick={() => setIsLoginMode(!isLoginMode)}
