@@ -208,38 +208,16 @@ export class CommunicationService {
       return { success: false, channel: 'call' };
     }
     try {
-      const repo = RepositoryFactory.getNotificationRepository();
-      if (!repo || typeof repo.scheduleCall !== 'function') return { success: false, channel: 'call' };
-      const result = await repo.scheduleCall({
-        to: payload.recipientPhone,
-        scheduledAt: payload.scheduledFor,
-        message: payload.message,
+      const result = await notificationGatewayAdapter.invokeFunction<{ success?: boolean }>('schedule-call', {
+        ...payload,
+        priority: payload.priority ?? 'medium',
+        actionType: payload.actionType ?? 'follow_up',
       });
-      if (result.error) return { success: false, channel: 'call' };
+      if (result.error || !result.data?.success) return { success: false, channel: 'call' };
     } catch (error) {
       console.error('CommunicationService.scheduleCall: exception', error);
       return { success: false, channel: 'call' };
     }
-    try {
-      await NotificationService.createNotification({
-      recipientId: payload.recipientId,
-      title: `📞 Appel programmé: ${payload.subject}`,
-      message: payload.message,
-      type: 'system',
-      metadata: {
-        channel: 'call',
-        phone: payload.recipientPhone,
-        priority: payload.priority,
-        scheduledFor: payload.scheduledFor,
-        actionType: payload.actionType,
-        ...(payload.metadata ?? {}),
-      },
-    });
-
-    } catch (error) {
-      console.error('Scheduled call notification failed:', error);
-    }
-
     return { success: true, channel: 'call' };
   }
 

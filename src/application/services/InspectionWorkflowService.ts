@@ -31,6 +31,7 @@ import { INSPECTION_WORKFLOW_TRANSITIONS, INSPECTION_REQUIRED_DOCUMENTS } from '
 
 export type InspectionWorkflowStatus = 
   | 'requested'
+  | 'pending'
   | 'scheduled'
   | 'in_progress'
   | 'completed'
@@ -157,7 +158,7 @@ export class InspectionWorkflowService {
         description: request.notes || '',
         inspector: request.requestedBy,
         date: request.requestedDate,
-        status: InspectionStatus.REQUESTED,
+        status: InspectionStatus.PENDING,
         priority: request.priority as InspectionPriority || InspectionPriority.MEDIUM,
         type: request.inspectionType as InspectionType
       };

@@ -4,6 +4,7 @@
  */
 
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getInspectionService } from '@/application/services/InspectionService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface InspectionFormData {
@@ -87,16 +88,15 @@ export function useCreateInspection() {
 
   return useMutation({
     mutationFn: async (data: InspectionFormData) => {
-      const repo = RepositoryFactory.getInspectionRepository();
-      return await repo.create({
-        project_id: data.projectId || data.project_id,
+      return await getInspectionService().createInspection({
+        projectId: data.projectId || data.project_id,
         inspector: data.inspector,
         date: new Date(data.date).toISOString(),
         status: data.status,
-        progress_at_inspection: data.progressAtInspection || data.progress_at_inspection,
+        progressAtInspection: data.progressAtInspection ?? data.progress_at_inspection,
         comments: data.comments,
-        phase_id: data.phaseId || data.phase_id,
-      } as any);
+        phaseId: data.phaseId || data.phase_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections-list'] });
@@ -110,17 +110,15 @@ export function useUpdateInspection() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InspectionFormData }) => {
-      const repo = RepositoryFactory.getInspectionRepository();
-      return await repo.update(id, {
-        project_id: data.projectId || data.project_id,
+      return await getInspectionService().updateInspection(id, {
+        projectId: data.projectId || data.project_id,
         inspector: data.inspector,
         date: new Date(data.date).toISOString(),
         status: data.status,
-        progress_at_inspection: data.progressAtInspection || data.progress_at_inspection,
+        progressAtInspection: data.progressAtInspection ?? data.progress_at_inspection,
         comments: data.comments,
-        phase_id: data.phaseId || data.phase_id,
-        updated_at: new Date().toISOString(),
-      } as any);
+        phaseId: data.phaseId || data.phase_id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections-list'] });
@@ -134,8 +132,7 @@ export function useDeleteInspection() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const repo = RepositoryFactory.getInspectionRepository();
-      return await repo.delete(id);
+      return await getInspectionService().deleteInspection(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inspections-list'] });

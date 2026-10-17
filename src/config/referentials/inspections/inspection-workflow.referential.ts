@@ -2,6 +2,7 @@
 import type { WorkflowTransition, RequiredDocument } from '@/application/services/InspectionWorkflowService';
 
 export const INSPECTION_WORKFLOW_TRANSITIONS: WorkflowTransition[] = [
+    { from: 'pending', to: 'scheduled', requiredRole: ['technical_manager', 'inspector'] },
     {
       from: 'requested',
       to: 'scheduled',

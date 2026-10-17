@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   notifications: { sendSMS: vi.fn(), scheduleCall: vi.fn(), createNotification: vi.fn() },
   createPayment: vi.fn(),
   calculate: vi.fn(),
+  invoke: vi.fn(),
 }));
 vi.mock('@/infrastructure/RepositoryFactory', () => ({
   RepositoryFactory: {
@@ -21,6 +22,7 @@ vi.mock('../AutomaticDecompteCalculator', () => ({
 }));
 vi.mock('../CheckpointVerificationEngine', () => ({ getCheckpointVerificationEngine: () => ({}) }));
 vi.mock('../PaymentService', () => ({ getPaymentService: () => ({ createPayment: mocks.createPayment }) }));
+vi.mock('@/infrastructure/adapters/supabase/NotificationGatewayAdapter', () => ({ notificationGatewayAdapter: { invokeFunction: mocks.invoke } }));
 import { CommunicationService } from '../CommunicationService';
 import { NotificationService } from '../NotificationService';
 import { InspectionService } from '../InspectionService';
@@ -40,13 +42,13 @@ describe('Communication action results', () => {
     expect((await CommunicationService.sendSMS({ to: '+22212345678', message: 'Reminder' })).success).toBe(false);
   });
   it('does not announce a call when scheduling fails', async () => {
-    mocks.notifications.scheduleCall.mockResolvedValue({ error: new Error('Rejected') });
+    mocks.invoke.mockResolvedValue({ error: new Error('Rejected'), data: null });
     expect((await CommunicationService.scheduleCall({ recipientId: 'user', recipientPhone: '+22212345678', subject: 'Payment', message: 'Follow up', scheduledFor: '2026-11-01T10:00:00Z' })).success).toBe(false);
     expect(mocks.notifications.createNotification).not.toHaveBeenCalled();
   });
   it('never uses a user UUID as a phone', async () => {
     expect((await CommunicationService.scheduleCall({ recipientId: 'user', recipientPhone: 'a0000000-0000-0000-0000-000000000001', subject: 'Payment', message: 'Follow up', scheduledFor: '2026-11-01' })).success).toBe(false);
-    expect(mocks.notifications.scheduleCall).not.toHaveBeenCalled();
+    expect(mocks.invoke).not.toHaveBeenCalled();
   });
 });
 

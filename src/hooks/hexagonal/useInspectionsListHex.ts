@@ -9,6 +9,8 @@ import { StatusType } from '@/components/StatusBadge';
 
 export interface InspectionData {
   id: string;
+  projectId?: string;
+  phaseId?: string;
   date: string;
   status: StatusType;
   inspector: string;
@@ -26,6 +28,8 @@ export function useInspectionsListHex(projectId: string) {
       
       return inspections.map((item) => ({
         id: item.id,
+        projectId: item.projectId,
+        phaseId: item.phaseId,
         date: item.date,
         status: (item.status as string || 'pending') as StatusType,
         inspector: typeof item.inspector === 'string' ? item.inspector : (item.inspector as any)?.name || '',
