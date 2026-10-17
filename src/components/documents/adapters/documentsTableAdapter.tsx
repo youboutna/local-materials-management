@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getStorageService } from '@/application/services/StorageService';
 import { getAuthService } from '@/application/services/AuthService';
+import { DocumentService } from '@/application/services/DocumentService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import {
   DocumentFacetDef,
@@ -149,8 +150,9 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
   };
 
   const onDelete = async (item: DocumentItem) => {
-    await documentRepository.delete(item.id);
-    qc.invalidateQueries({ queryKey });
+    await new DocumentService(documentRepository).deleteDocument(item.id);
+    await qc.invalidateQueries({ queryKey: ['documents'] });
+    await qc.invalidateQueries({ queryKey });
   };
 
   return {

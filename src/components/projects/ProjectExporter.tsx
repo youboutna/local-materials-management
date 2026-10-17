@@ -158,7 +158,7 @@ const ProjectExporter = () => {
     
     // Fetch detailed data for each selected project
     const detailedProjects = await Promise.all(
-      projectsToExport.map(async (project) => {
+      projectsToExport.map(async (project): Promise<ProjectExportData> => {
         try {
           const detail = await projectService.getProjectWithDetails(project.id);
           if (!detail) {
@@ -207,9 +207,9 @@ const ProjectExporter = () => {
             // Classification
             category: detail?.category ?? project.category ?? '',
             subCategory: detail?.subCategory ?? project.subCategory ?? '',
-            priorityLevel: detail?.priorityLevel ?? project.priorityLevel ?? '',
-            riskLevel: detail?.riskLevel ?? project.riskLevel ?? '',
-            environmentalImpact: detail?.environmentalImpact ?? project.environmentalImpact ?? '',
+            priorityLevel: detail?.priorityLevel ?? project.priorityLevel,
+            riskLevel: detail?.riskLevel ?? project.riskLevel,
+            environmentalImpact: detail?.environmentalImpact ?? project.environmentalImpact,
             
             // Project details
             financingSource: detail?.financingSource ?? project.financingSource ?? '',
@@ -305,7 +305,6 @@ const ProjectExporter = () => {
       priorityLevel: p.priorityLevel,
       riskLevel: p.riskLevel,
       environmentalImpact: p.environmentalImpact,
-      sustainabilityScore: p.sustainabilityScore,
       
       // Project details
       financingSource: p.financingSource,

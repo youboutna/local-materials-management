@@ -2,8 +2,8 @@
 # =============================================================================
 # setup-supabase-migrations.sh – Lie les migrations HadraTech aux volumes
 # =============================================================================
-# Les fichiers de migration sont dans /supabase/migrations/
-# Ils sont montés directement dans le conteneur via docker-compose.yml
+# This script inventories migrations; it does not apply them.
+# Nested init mounts do not execute application migrations automatically.
 # =============================================================================
 
 set -e
@@ -45,6 +45,7 @@ echo ""
 echo -e "${GREEN}✅ Migrations are ready.${NC}"
 echo ""
 echo "📋 Next steps:"
-echo "   1. The migrations are mounted via docker-compose.yml"
+echo "   1. Review the target database and reconcile existing migration history"
 echo "   2. Start Supabase: cd $SUPABASE_DOCKER_DIR && sh run.sh start"
-echo "   3. Migrations will run automatically on startup"
+echo '   3. Apply explicitly: supabase db push --db-url "$DEPLOY_DATABASE_URL"'
+echo "   4. Deploy required edge functions and verify authenticated CRUD"

@@ -1,6 +1,9 @@
 /** Converts stored file references to bucket-relative storage requests. */
 export class StorageReferenceTransformer {
   static toStorageRequest(reference: string, defaultBucket = 'documents'): { bucket: string; path: string } | null {
+    if (/^local:\/\//i.test(reference)) {
+      return { bucket: defaultBucket, path: reference.slice('local://'.length) };
+    }
     if (/^(blob:|data:)/i.test(reference)) return null;
     if (/^https?:\/\//i.test(reference)) {
       const url = new URL(reference);

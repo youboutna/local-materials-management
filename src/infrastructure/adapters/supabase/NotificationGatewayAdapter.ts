@@ -3,8 +3,7 @@
  * invocations and RPC calls used for notification-related side effects
  * (emails, tender submission notices, supplier password-reset tokens).
  */
-import { supabase } from '@/integrations/supabase/client';
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface InvokeFunctionResult<T = any> {
   data: T | null;
@@ -13,6 +12,7 @@ export interface InvokeFunctionResult<T = any> {
 
 export class NotificationGatewayAdapter {
   async invokeFunction<T = any>(name: string, body: Record<string, unknown> | undefined): Promise<InvokeFunctionResult<T>> {
+    const { supabase } = await import('@/integrations/supabase/client');
     const { data, error } = await supabase.functions.invoke(name, { body });
     return { data: (data as T) ?? null, error: error ? { message: error.message } : null };
   }
@@ -22,8 +22,9 @@ export class NotificationGatewayAdapter {
     params?: Record<string, unknown>,
     schema: 'public' | 'btp' = 'public'
   ): Promise<InvokeFunctionResult<T>> {
-    const client = schema === 'btp' ? btpClient : supabase;
-    const { data, error } = await client.rpc(fn as any, params as any);
+    const { supabase } = await import('@/integrations/supabase/client');
+    const client = (supabase as SupabaseClient).schema(schema);
+    const { data, error } = await client.rpc(fn, params);
     return { data: (data as T) ?? null, error: error ? { message: error.message } : null };
   }
 }

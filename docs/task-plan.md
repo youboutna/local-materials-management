@@ -61,6 +61,15 @@ UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adap
 
 ## 📊 ÉTAT ACTUEL DE LA MIGRATION — 31/07/2026
 
+### Validation ciblée — 17/10/2026
+
+- Compilation automatique : **build OK** après correction des erreurs de types GED, articles, export projet et adapters.
+- Tests ciblés : **4 fichiers / 24 tests passants** (stockage/GED, campagnes, abonnements, import projet).
+- GED : bucket/path conservés lors du téléchargement et de la suppression, rollback d’upload en cas d’échec de persistance, mapping camelCase des documents d’appel d’offres corrigé.
+- Newsletter : la date programmée est réellement enregistrée en modification ; consentement, refus d’envoi anticipé et résultats persistés sont testés.
+- Auto-hébergement : conteneur frontend ajouté, chemins/ports corrigés, démarrage sans écriture ni affichage de secrets ; YAML et scripts vérifiés statiquement.
+- **Clôture production non acquise** : Docker indisponible ici, Supabase externe sans session injectable ; démarrage serveur, migrations, fonctions edge, livraison email et parcours privés restent à vérifier. Les profils Keycloak/MinIO demandent encore leurs dépendances d’intégration (pgjwt, signature S3, JWT/PostgREST).
+
 ### Revue de migration — 19/08/2026 (exécution Phase 8)
 
 | Indicateur | Mesure | Statut |

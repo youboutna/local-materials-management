@@ -11,8 +11,6 @@ import {
   UploadResult,
 } from '@/domain/repositories/IStorageRepository';
 
-const joinPath = (bucket: string, path: string) => path;
-
 export class StorageProviderToRepositoryAdapter implements IStorageRepository {
   constructor(private readonly provider: IStorageProvider) {}
 
@@ -21,7 +19,7 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     path: string,
     file: File
   ): Promise<{ result: UploadResult | null; error: Error | null }> {
-    const res = await this.provider.uploadFile(file, joinPath(bucket, path), { upsert: false, metadata: { bucket } });
+    const res = await this.provider.uploadFile(file, path, { upsert: false, metadata: { bucket } });
     if (!res.success) {
       return { result: null, error: new Error(res.error || 'Upload failed') };
     }
@@ -40,17 +38,16 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     // Provider exposes an async API; services expect a sync string.
     // Supabase-compatible public URL resolution is delegated lazily.
     const anyProvider = this.provider as unknown as {
-      getPublicUrlSync?: (path: string) => string;
+      getPublicUrlSync?: (path: string, bucket?: string) => string;
     };
     if (typeof anyProvider.getPublicUrlSync === 'function') {
-      return anyProvider.getPublicUrlSync(joinPath(bucket, path));
+      return anyProvider.getPublicUrlSync(path, bucket);
     }
-    return joinPath(bucket, path);
+    return path;
   }
 
   async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
-    const reference = await this.provider.getPublicUrl(path);
-    const res = await this.provider.deleteFile(reference.url || joinPath(bucket, path));
+    const res = await this.provider.deleteFile(path, bucket);
     return { error: res.success ? null : new Error(res.error || 'Delete failed') };
   }
 
@@ -58,7 +55,7 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     bucket: string,
     prefix?: string
   ): Promise<{ files: StorageFile[]; error: Error | null }> {
-    const res = await this.provider.listFiles(prefix);
+    const res = await this.provider.listFiles(prefix, bucket);
     if (!res.success) {
       return { files: [], error: new Error(res.error || 'List failed') };
     }
@@ -78,8 +75,7 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     bucket: string,
     path: string
   ): Promise<{ data: Blob | null; error: Error | null }> {
-    const reference = await this.provider.getPublicUrl(path);
-    const res = await this.provider.downloadFile(reference.url || joinPath(bucket, path));
+    const res = await this.provider.downloadFile(path, bucket);
     if (!res.success || !res.data) {
       return { data: null, error: new Error(res.error || 'Download failed') };
     }
@@ -91,7 +87,7 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     path: string
   ): Promise<{ exists: boolean; error: Error | null }> {
     try {
-      const exists = await this.provider.fileExists(joinPath(bucket, path));
+      const exists = await this.provider.fileExists(path, bucket);
       return { exists, error: null };
     } catch (e) {
       return { exists: false, error: e as Error };

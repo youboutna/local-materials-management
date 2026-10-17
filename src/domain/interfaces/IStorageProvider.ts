@@ -25,7 +25,7 @@ export interface IStorageProvider {
   /**
    * Download a file from storage
    */
-  downloadFile(path: string): Promise<{
+  downloadFile(path: string, bucket?: string): Promise<{
     success: boolean;
     data?: Blob;
     error?: string;
@@ -34,7 +34,7 @@ export interface IStorageProvider {
   /**
    * Delete a file from storage
    */
-  deleteFile(path: string): Promise<{
+  deleteFile(path: string, bucket?: string): Promise<{
     success: boolean;
     error?: string;
   }>;
@@ -42,7 +42,7 @@ export interface IStorageProvider {
   /**
    * Get public URL for a file
    */
-  getPublicUrl(path: string): Promise<{
+  getPublicUrl(path: string, bucket?: string): Promise<{
     success: boolean;
     url?: string;
     error?: string;
@@ -51,7 +51,7 @@ export interface IStorageProvider {
   /**
    * List files in storage
    */
-  listFiles(prefix?: string): Promise<{
+  listFiles(prefix?: string, bucket?: string): Promise<{
     success: boolean;
     files?: Array<{
       name: string;
@@ -65,5 +65,5 @@ export interface IStorageProvider {
   /**
    * Check if a file exists
    */
-  fileExists(path: string): Promise<boolean>;
+  fileExists(path: string, bucket?: string): Promise<boolean>;
 }

@@ -8,6 +8,7 @@ import { UserProfile, ProfileStatus } from '@/domain/entities/UserProfile';
 import { AppError, ErrorCode, ErrorLogger } from '@/utils/errorHandling';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { IUserProfileRepository, ProfileSearchCriteria, ProfileStatistics, UpdateProfileData, CreateProfileData } from '@/domain/repositories/IUserProfileRepository';
 
 /**
@@ -439,14 +440,15 @@ export class SupabaseUserProfileAdapter implements IUserProfileRepository {
         .eq('is_admin', true);
 
       // Récupérer les profils par département (depuis la table employees)
-      const { data: profilesByDepartment, error: deptError } = await supabase
+      const employeeClient = (supabase as SupabaseClient).schema('btp');
+      const { data: profilesByDepartment, error: deptError } = await employeeClient
         .from('employees')
         .select('department')
         .not('department', 'is', null)
         .eq('is_active', true);
 
       // Récupérer les profils par position (depuis la table employees)
-      const { data: profilesByPosition, error: posError } = await supabase
+      const { data: profilesByPosition, error: posError } = await employeeClient
         .from('employees')
         .select('position')
         .not('position', 'is', null)

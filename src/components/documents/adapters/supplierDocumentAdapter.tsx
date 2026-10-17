@@ -26,7 +26,7 @@ export function useSupplierDocumentAdapter(supplierId: string): DocumentHubContr
   const SUPPLIER_CATEGORY_LABELS = translateLabelMap(SUPPLIER_CATEGORY_LABEL_KEYS, t);
   
   // Use centralized document type labels as fallback
-  const categoryLabels: Record<DocumentTypeCode, string> = {};
+  const categoryLabels: Record<string, string> = {};
   SUPPLIER_DOCUMENT_TYPES.forEach(type => {
     categoryLabels[type] = SUPPLIER_CATEGORY_LABELS[type] ?? DOCUMENT_TYPE_LABELS[type];
   });

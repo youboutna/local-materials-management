@@ -31,7 +31,7 @@ export function useMaterialDocumentAdapter(
   const { materialName, supplierId, supplierName } = context;
 
   // Use centralized document type labels for materials
-  const materialCategoryLabels: Record<DocumentTypeCode, string> = {};
+  const materialCategoryLabels: Record<string, string> = {};
   MATERIAL_DOCUMENT_TYPES.forEach(type => {
     materialCategoryLabels[type] = DOCUMENT_TYPE_LABELS[type];
   });
