@@ -17,6 +17,7 @@ describe('Storage references and document persistence', () => {
   it('keeps nested paths and excludes browser blobs from repository requests', () => {
     expect(StorageReferenceTransformer.toStorageRequest('/phase/toit.pdf')).toEqual({ bucket: 'documents', path: 'phase/toit.pdf' });
     expect(StorageReferenceTransformer.toStorageRequest('blob:http://localhost/id')).toBeNull();
+    expect(StorageReferenceTransformer.toStorageRequest('local://phase/toit.pdf')).toEqual({ bucket: 'documents', path: 'phase/toit.pdf' });
   });
 
   it('passes the original key and bucket to download and delete without generating URLs', async () => {

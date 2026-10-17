@@ -448,7 +448,11 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
         throw error;
       }
 
-      return (data || []).map((row) => ({
+      return (data || []).map((row): TenderDocumentJoinedRow => {
+        if (!row.tender_id || !row.document_id || !row.category || !row.created_at) {
+          throw new Error(`Incomplete tender document association: ${row.id}`);
+        }
+        return {
         id: row.id,
         tenderId: row.tender_id,
         documentId: row.document_id,
@@ -468,7 +472,8 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
           mimeType: row.document.mime_type ?? undefined,
           fileSize: row.document.file_size ?? undefined,
         } : null,
-      }));
+        };
+      });
     } catch (error) {
       console.error('Unexpected error finding tender documents with document by tender ID:', error);
       throw error;
