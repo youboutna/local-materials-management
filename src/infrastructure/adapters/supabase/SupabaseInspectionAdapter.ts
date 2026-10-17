@@ -1,4 +1,3 @@
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import type { BtpTables, BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import type { Json } from '@/integrations/supabase/types';
 import { IInspectionRepository, InspectionObservation } from '@/domain/repositories/IInspectionRepository';
@@ -10,6 +9,9 @@ type InspectionRow = BtpTables<'inspections'>;
 type InspectionInsert = BtpTablesInsert<'inspections'>;
 
 export class SupabaseInspectionAdapter implements IInspectionRepository {
+  private toStatusCode(status: string): string {
+    return status.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+  }
   private mapToEntity(data: InspectionRow): Inspection {
     // Convert string status to InspectionStatus enum
     const status = Inspection.mapStringToStatus(data.status || '');
@@ -51,14 +53,14 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   private mapToRow(inspection: Inspection): Omit<InspectionInsert, 'createdAt' | 'updatedAt'> {
     const inspectorName = typeof inspection.inspector === 'string'
       ? inspection.inspector
-      : inspection.inspector?.name ?? '';
+      : inspection.inspector?.id ?? inspection.inspector?.employeeId ?? inspection.inspector?.name ?? '';
     return {
       id: inspection.id,
       project_id: inspection.projectId || '',
       phase_id: inspection.phaseId || null,
       inspector: inspectorName, // Extract name from Inspector object
       date: inspection.date,
-      status: inspection.status.toString().toLowerCase(), // Convert enum to string
+      status: this.toStatusCode(inspection.status),
       progress_at_inspection: inspection.progressAtInspection,
       comments: inspection.comments || null,
       documents: (inspection.documents || []) as unknown as Json,
@@ -99,8 +101,11 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async update(id: string, data: Partial<Inspection>): Promise<void> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const updateData: Record<string, unknown> = {};
-    if (data.status !== undefined) updateData.status = String(data.status).toLowerCase();
+    if (data.date !== undefined) updateData.date = data.date;
+    if (data.inspector !== undefined) updateData.inspector = typeof data.inspector === 'string' ? data.inspector : data.inspector.id ?? data.inspector.employeeId ?? data.inspector.name;
+    if (data.status !== undefined) updateData.status = this.toStatusCode(String(data.status));
     if (data.progressAtInspection !== undefined) updateData.progress_at_inspection = data.progressAtInspection;
     if (data.comments !== undefined) updateData.comments = data.comments;
     if (data.documents !== undefined) updateData.documents = data.documents;
@@ -108,12 +113,15 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
       updateData.payment_type = (data as { paymentType?: string }).paymentType;
     }
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('inspections')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', id)
+      .select('id')
+      .maybeSingle();
 
     if (error) throw new Error(`Failed to update inspection: ${error.message}`);
+    if (!updated) throw new Error('Inspection update affected no accessible row');
   }
 
   async delete(id: string): Promise<void> {
