@@ -448,7 +448,27 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
         throw error;
       }
 
-      return (data || []) as unknown as TenderDocumentJoinedRow[];
+      return (data || []).map((row) => ({
+        id: row.id,
+        tenderId: row.tender_id,
+        documentId: row.document_id,
+        category: row.category,
+        subcategory: row.subcategory ?? undefined,
+        isRequired: row.is_required ?? undefined,
+        reviewerNotes: row.reviewer_notes ?? undefined,
+        status: row.status ?? undefined,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at ?? undefined,
+        document: row.document ? {
+          id: row.document.id,
+          title: row.document.title ?? undefined,
+          description: row.document.description ?? undefined,
+          fileUrl: row.document.file_url ?? undefined,
+          fileName: row.document.file_name ?? undefined,
+          mimeType: row.document.mime_type ?? undefined,
+          fileSize: row.document.file_size ?? undefined,
+        } : null,
+      }));
     } catch (error) {
       console.error('Unexpected error finding tender documents with document by tender ID:', error);
       throw error;

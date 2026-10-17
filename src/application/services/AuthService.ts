@@ -26,6 +26,7 @@ import {
 } from '@/domain/repositories/IAuthRepository';
 import type { IUserRoleRepository } from '@/domain/repositories/IUserRoleRepository';
 import type { SomelecRole, UserRoleEntity } from '@/domain/entities/User';
+import { UserRoleStatus } from '@/domain/entities/User';
 
 export class AuthService {
   constructor(
@@ -244,7 +245,7 @@ export class AuthService {
       const existingRole = existingRoles.find((userRole) => userRole.roleName === role);
       if (existingRole) {
         if (existingRole.status !== 'active') {
-          await this.userRoleRepository.updateRoleStatus(existingRole.id, 'active');
+          await this.userRoleRepository.updateRoleStatus(existingRole.id, UserRoleStatus.ACTIVE);
         }
         return;
       }

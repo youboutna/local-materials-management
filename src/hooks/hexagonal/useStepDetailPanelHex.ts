@@ -13,10 +13,10 @@ export function useProjectForSchedulerHex(projectId?: string) {
         title: data.title || '',
         location: data.location || undefined,
         status: data.status || undefined,
-        project_reference: data.project_reference || '',
+        project_reference: data.projectReference || '',
         budget: data.budget || undefined,
         progress: data.progress || undefined,
-        contractor_name: data.main_contractor || undefined,
+        contractor_name: data.mainContractor || undefined,
         contractor_contact: undefined
       };
     },

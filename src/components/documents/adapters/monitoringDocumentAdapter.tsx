@@ -24,7 +24,7 @@ const CATEGORY_OPTIONS: Record<MonitoringDocumentScope, { value: DocumentTypeCod
   ],
   payment: [
     { value: 'invoice', label: 'Facture' },
-    { value: 'purchase_order', label: 'Bon de commande' },
+    { value: 'supporting_document', label: 'Bon de commande' },
     { value: 'other', label: 'Attestation / Autre document' },
   ],
 };
@@ -41,7 +41,7 @@ export function useMonitoringDocumentAdapter(scope: MonitoringDocumentScope): Do
   const scopeLabel = SCOPE_LABELS[scope];
 
   // Use centralized document type labels as fallback
-  const categoryLabels: Record<DocumentTypeCode, string> = {};
+  const categoryLabels: Record<string, string> = {};
   CATEGORY_OPTIONS[scope].forEach(opt => {
     categoryLabels[opt.value] = opt.label;
   });

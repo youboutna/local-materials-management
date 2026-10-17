@@ -37,7 +37,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { DocumentService, getDocumentService} from "@/application/services/DocumentService";
 
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
-import { getDocumentTypeLabel as getDocTypeLabel } from '@/config/referentials/documents/document-types.referential';
+import { DOCUMENT_TYPE_LABELS, getDocumentTypeLabel as getDocTypeLabel } from '@/config/referentials/documents/document-types.referential';
 interface ProjectDocument {
   id: string;
   description?: string;
@@ -57,6 +57,7 @@ interface ProjectDocumentsProps {
 
 const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
   const { t } = useLanguage();
+  const documentTypes = Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => ({ value, label }));
 
   const { documents: rawDocuments, isLoading: loading, refetch: fetchDocuments } = useDocumentsHex({ projectId });
   const [searchTerm, setSearchTerm] = useState("");
@@ -72,13 +73,13 @@ const ProjectDocuments = ({ projectId }: ProjectDocumentsProps) => {
   const documents: ProjectDocument[] = (rawDocuments || []).map((doc: any) => ({
     id: doc.id,
     description: doc.description || undefined,
-    file_name: doc.file_name || undefined,
-    file_url: doc.file_url || undefined,
-    mime_type: doc.mime_type || undefined,
-    file_size: doc.file_size || undefined,
-    document_type: doc.document_type,
+    file_name: doc.fileName || undefined,
+    file_url: doc.fileUrl || undefined,
+    mime_type: doc.mimeType || undefined,
+    file_size: doc.fileSize || undefined,
+    document_type: doc.documentType,
     status: doc.status || "draft",
-    created_at: doc.created_at || new Date().toISOString(),
+    created_at: doc.createdAt || new Date().toISOString(),
     tags: doc.tags || undefined,
   }));
 

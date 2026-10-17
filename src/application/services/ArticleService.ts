@@ -304,7 +304,7 @@ export class ArticleService {
     const documentIds = entity.getDocumentIds();
     if (documentIds.length > 0) {
       const documents = await Promise.all(
-        documentIds.map(async (docId) => {
+        documentIds.map(async (docId): Promise<ArticleDocumentDTO | null> => {
           const doc = await this.documentService.getDocumentById(docId);
           if (!doc?.fileUrl || (publicDocumentsOnly && doc.isInternalOnly)) return null;
           let url: URL;

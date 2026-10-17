@@ -120,7 +120,7 @@ export class TenderDocumentService {
       fileName: input.fileName,
       fileSize: input.fileSize,
       mimeType: input.mimeType,
-      documentType: input.documentType ?? DocumentType.TENDER,
+      documentType: input.documentType ?? DocumentType.TENDER_DOCUMENT,
     }));
   }
 

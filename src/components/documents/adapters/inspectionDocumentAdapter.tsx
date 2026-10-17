@@ -26,7 +26,7 @@ export function useInspectionDocumentAdapter(inspectionId: string): DocumentHubC
   const INSPECTION_CATEGORY_LABELS = translateLabelMap(INSPECTION_CATEGORY_LABEL_KEYS, t);
   
   // Use centralized document type labels as fallback
-  const categoryLabels: Record<DocumentTypeCode, string> = {};
+  const categoryLabels: Record<string, string> = {};
   INSPECTION_DOCUMENT_TYPES.forEach(type => {
     categoryLabels[type] = INSPECTION_CATEGORY_LABELS[type] ?? DOCUMENT_TYPE_LABELS[type];
   });

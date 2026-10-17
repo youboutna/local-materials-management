@@ -32,7 +32,7 @@ export function useProjectDocumentAdapter(projectId: string): DocumentHubContrac
   const PROJECT_CATEGORY_LABELS = translateLabelMap(PROJECT_CATEGORY_LABEL_KEYS, t);
   
   // Use centralized document type labels as fallback
-  const categoryLabels: Record<DocumentTypeCode, string> = {};
+  const categoryLabels: Record<string, string> = {};
   PROJECT_DOCUMENT_TYPES.forEach(type => {
     categoryLabels[type] = PROJECT_CATEGORY_LABELS[type] ?? DOCUMENT_TYPE_LABELS[type];
   });

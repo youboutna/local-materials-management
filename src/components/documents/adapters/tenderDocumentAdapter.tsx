@@ -98,16 +98,16 @@ export function useTenderDocumentAdapter(tenderId: string, projectId?: string): 
 
     // Tender-level documents
     for (const t of tenderDocsQuery.data ?? []) {
-      const doc = t.document ?? {};
+      const doc = t.document;
       out.push({
         id: `tender-${t.id}`,
-        title: doc.title || t.subcategory || 'Document',
-        fileName: doc.file_name ?? null,
-        fileUrl: doc.file_url ?? null,
-        mimeType: doc.mime_type ?? null,
-        fileSize: doc.file_size ?? null,
-        createdAt: t.created_at,
-        updatedAt: t.updated_at ?? t.created_at,
+        title: doc?.title || t.subcategory || 'Document',
+        fileName: doc?.fileName ?? null,
+        fileUrl: doc?.fileUrl ?? null,
+        mimeType: doc?.mimeType ?? null,
+        fileSize: doc?.fileSize ?? null,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt ?? t.createdAt,
         category: normalizeCategory(t.category),
         status: t.status ?? null,
         facets: {
