@@ -38,7 +38,11 @@ const envDevMode =
  * exécuté après le démarrage (adaptateurs, services, UI) afin de refléter
  * immédiatement une surcharge administrateur.
  */
-export const isDevMode = (): boolean => readDevModeOverride() ?? envDevMode;
+export const isDevMode = (): boolean => {
+  const runtime = isBrowser ? (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__ : undefined;
+  if (runtime?.VITE_ACTIVE_PROFILE === 'supabase-selfhosted' && runtime.VITE_DEV_MODE === 'false') return false;
+  return readDevModeOverride() ?? envDevMode;
+};
 
 /** Valeur figée au chargement du module (compatibilité ascendante). */
 export const DEV_MODE = isDevMode();

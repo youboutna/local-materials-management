@@ -132,6 +132,7 @@ async function writeSetting(
 // ---------------------------------------------------------------------------
 
 export async function getActiveProfile(): Promise<DeploymentProfile> {
+  if (typeof window !== 'undefined' && (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__?.VITE_ACTIVE_PROFILE === 'supabase-selfhosted') return getActiveProfileSync();
   const stored = await readSetting<{ id: string }>(CATEGORY, KEY_ACTIVE_PROFILE);
   if (stored?.id) {
     const profile = getProfileById(stored.id);

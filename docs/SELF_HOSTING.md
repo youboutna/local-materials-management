@@ -1,5 +1,7 @@
 # Self-hosting Guide
 
+For the current P0 release procedure, external public configuration, packaging an existing `npm run build` artifact, rollback and remaining acceptance gates, see [SELF_HOSTED_RELEASE.md](SELF_HOSTED_RELEASE.md). The frontend Compose now requires `PUBLIC_CONFIG_FILE`; use that procedure rather than the older commands below without a mounted config.
+
 This app is provider-agnostic. Auth, data, and storage are switched via
 environment variables — no code change required.
 

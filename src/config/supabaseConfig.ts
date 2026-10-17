@@ -37,7 +37,12 @@ const runtimeConfig = (): EnvRecord =>
 
 const buildEnv = (): EnvRecord => {
   const viteEnv = (import.meta as unknown as { env?: EnvRecord }).env ?? {};
-  return { ...viteEnv, ...runtimeConfig() };
+  const runtime = runtimeConfig();
+  if (runtime.VITE_SUPABASE_URL) {
+    // Never reuse a baked-in hosted key when switching to a self-hosted URL.
+    return { ...viteEnv, VITE_SUPABASE_ANON_KEY: undefined, VITE_SUPABASE_PUBLISHABLE_KEY: undefined, ...runtime };
+  }
+  return { ...viteEnv, ...runtime };
 };
 
 /** Référence de projet contenue dans une URL Supabase. */
