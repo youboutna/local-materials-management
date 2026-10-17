@@ -7,6 +7,7 @@
 import { NotificationService } from './NotificationService';
 import { notificationGatewayAdapter } from '@/infrastructure/adapters/supabase/NotificationGatewayAdapter';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getUserService } from './UserService';
 
 
 export type CommunicationPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -80,6 +81,12 @@ const isUuid = (value: string): boolean => {
 };
 
 export class CommunicationService {
+  static async resolveRecipient(recipientId: string): Promise<{ id: string; email: string; phone: string }> {
+    const user = await getUserService().getUserById(recipientId);
+    if (!user) throw new Error('Destinataire introuvable');
+    return { id: user.id, email: user.email || '', phone: user.phone || '' };
+  }
+
   static async assignTask(payload: AssignTaskPayload): Promise<CommunicationResult> {
     await NotificationService.createNotification({
       recipientId: payload.assigneeId,
@@ -182,21 +189,39 @@ export class CommunicationService {
           to: payload.to,
           message: payload.message,
         });
-        if (error) {
-          console.error('CommunicationService.sendSMS: error', error);
-        }
+        if (error) return { success: false, channel: 'sms' };
       } else {
         console.warn('[CommunicationService] sendSMS not implemented by repository');
+        return { success: false, channel: 'sms' };
       }
     } catch (error) {
       console.error('CommunicationService.sendSMS: exception', error);
+      return { success: false, channel: 'sms' };
     }
 
     return { success: true, channel: 'sms' };
   }
 
   static async scheduleCall(payload: ScheduleCallPayload): Promise<CommunicationResult> {
-    await NotificationService.createNotification({
+    if (!payload.recipientPhone || isUuid(payload.recipientPhone) || !payload.scheduledFor ||
+        !Number.isFinite(Date.parse(payload.scheduledFor))) {
+      return { success: false, channel: 'call' };
+    }
+    try {
+      const repo = RepositoryFactory.getNotificationRepository();
+      if (!repo || typeof repo.scheduleCall !== 'function') return { success: false, channel: 'call' };
+      const result = await repo.scheduleCall({
+        to: payload.recipientPhone,
+        scheduledAt: payload.scheduledFor,
+        message: payload.message,
+      });
+      if (result.error) return { success: false, channel: 'call' };
+    } catch (error) {
+      console.error('CommunicationService.scheduleCall: exception', error);
+      return { success: false, channel: 'call' };
+    }
+    try {
+      await NotificationService.createNotification({
       recipientId: payload.recipientId,
       title: `📞 Appel programmé: ${payload.subject}`,
       message: payload.message,
@@ -211,20 +236,8 @@ export class CommunicationService {
       },
     });
 
-    try {
-      const repo = RepositoryFactory.getNotificationRepository();
-      if (repo && typeof repo.scheduleCall === 'function') {
-        await repo.scheduleCall({
-          to: payload.recipientPhone,
-          scheduledAt: payload.scheduledFor,
-          message: payload.message,
-        });
-
-      } else {
-        console.warn('[CommunicationService] scheduleCall not implemented by repository');
-      }
     } catch (error) {
-      console.error('CommunicationService.scheduleCall: exception', error);
+      console.error('Scheduled call notification failed:', error);
     }
 
     return { success: true, channel: 'call' };

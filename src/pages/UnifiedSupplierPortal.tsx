@@ -358,28 +358,23 @@ const UnifiedSupplierPortal = () => {
   };
 
   const handleFileUpload = async () => {
-    if (!uploadFile || !uploadTitle.trim() || !user) return;
-
-    const safeName = uploadFile.name.replace(/[^\w.\-]+/g, "_");
-    const uniquePath = `supplier-uploads/${user.id}/${Date.now()}-${formatReference(crypto.randomUUID(), '')}-${safeName}`;
-    const uploadResult = await storageUpload(uploadFile, uniquePath);
-
-    if (!uploadResult.success) {
-      return;
-    }
-
-    uploadDocumentMutation.mutate({
+    if (!uploadFile || !uploadTitle.trim() || !user || !supplierProfile || uploadDocumentMutation.isPending) return;
+    try {
+      await uploadDocumentMutation.mutateAsync({
       file: uploadFile,
       userId: user.id,
       title: uploadTitle,
       description: uploadDescription,
       documentType: documentType,
-      supplierId: supplierProfile?.id,
+      supplierId: supplierProfile.id,
     });
 
     setUploadFile(null);
     setUploadTitle("");
     setUploadDescription("");
+    } catch {
+      // The mutation reports the error; preserve the selected file for retry.
+    }
   };
 
   const handleTaskComment = async (taskId: string) => {
@@ -826,12 +821,13 @@ const UnifiedSupplierPortal = () => {
 
                   <Button
                     onClick={handleFileUpload}
-                    disabled={uploading || !uploadFile || !uploadTitle.trim()}
+                    disabled={uploadDocumentMutation.isPending || !supplierProfile || !uploadFile || !uploadTitle.trim()}
+                    aria-busy={uploadDocumentMutation.isPending}
                     className="w-full"
                   >
-                    {uploading
-                      ? "Téléchargement..."
-                      : "Télécharger le document"}
+                    {uploadDocumentMutation.isPending
+                      ? t('auto.projectdocumentupload.telechargement_en_cours')
+                      : t('auto.projectdocumentupload.telecharger_le_document')}
                   </Button>
                 </CardContent>
               </Card>

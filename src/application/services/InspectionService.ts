@@ -68,6 +68,8 @@ export class InspectionService {
       if (!existing) throw new AppError('NOT_FOUND' as ErrorCode, 'Inspection not found');
       
       const entityUpdates: Partial<Inspection> = {
+        date: updates.date,
+        inspector: updates.inspector ? { id: updates.inspector, employeeId: updates.inspector, name: updates.inspector, agency: '', type: 'employee' } : undefined,
         status: updates.status ? Inspection.mapStringToStatus(updates.status) : undefined,
         progressAtInspection: updates.progressAtInspection,
         comments: updates.comments ?? undefined,
@@ -75,19 +77,9 @@ export class InspectionService {
       
       await this.repository.update(id, entityUpdates);
       
-      return Inspection.create({
-        id: existing.id,
-        projectId: existing.projectId,
-        phaseId: existing.phaseId,
-        stepId: existing.stepId,
-        inspector: existing.inspector,
-        date: existing.date,
-        status: updates.status ? Inspection.mapStringToStatus(updates.status) : existing.status,
-        progressAtInspection: updates.progressAtInspection ?? existing.progressAtInspection,
-        comments: updates.comments ?? existing.comments,
-        completedAt: updates.completedAt ?? existing.completedAt,
-        completedBy: updates.completedBy ?? existing.completedBy
-      });
+      const persisted = await this.repository.findById(id);
+      if (!persisted) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found after update');
+      return persisted;
     } catch (error) { ErrorLogger.log(error as Error, 'InspectionService.updateInspection'); throw error; }
   }
 

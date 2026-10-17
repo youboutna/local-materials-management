@@ -59,6 +59,8 @@ export class NotificationService {
         message: data.message,
         type: normalizeNotificationType(data.type) as NotificationData['type'],
         read: false,
+        projectId: data.projectId ?? data.metadata?.projectId ?? data.metadata?.project_id,
+        phaseId: data.phaseId ?? data.metadata?.phaseId ?? data.metadata?.phase_id,
         priority: data.priority || 'medium',
         expiresAt: data.expiresAt || undefined,
         actionUrl: data.actionUrl || undefined,
@@ -87,6 +89,8 @@ export class NotificationService {
         message: result.notification.message,
         type: result.notification.type,
         read: result.notification.read,
+        projectId: result.notification.projectId,
+        phaseId: result.notification.phaseId,
         createdAt: result.notification.createdAt || new Date().toISOString(),
         updatedAt: result.notification.updatedAt,
         priority: result.notification.priority,
@@ -158,7 +162,7 @@ export class NotificationService {
       // Filter notifications related to this project
       const projectNotifications = allUsersResult.notifications.filter(notification => {
         const metadata = notification.metadata || {};
-        return metadata.project_id === projectId;
+        return notification.projectId === projectId || metadata.projectId === projectId || metadata.project_id === projectId;
       });
 
       return projectNotifications.map(notification => this.mapToDTO(notification));
@@ -436,6 +440,8 @@ export class NotificationService {
       message: notification.message,
       type: notification.type,
       read: notification.read,
+      projectId: notification.projectId,
+      phaseId: notification.phaseId,
       createdAt: notification.createdAt || new Date().toISOString(),
       updatedAt: notification.updatedAt || undefined,
       priority: notification.priority || undefined,
