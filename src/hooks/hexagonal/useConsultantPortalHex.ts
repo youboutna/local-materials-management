@@ -56,7 +56,7 @@ export function useConsultantPortalHex(consultantId?: string) {
 
   const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);
 
-  const { alerts, isLoading: alertsLoading, acknowledgeAlert, resolveAlert } = useAlertsHex();
+  const { alerts, isLoading: alertsLoading, acknowledgeAlert, resolveAlert, isUpdating: isActingOnAlerts } = useAlertsHex();
   const { notifications, markAsRead, isLoading: notificationsLoading } = useNotificationsHex();
   const { data: guarantees = [], isLoading: guaranteesLoading } = useBankGuaranteesList();
   const { certificates = [], isLoading: insuranceLoading } = useInsuranceCertificatesHex();
@@ -135,6 +135,7 @@ export function useConsultantPortalHex(consultantId?: string) {
       projectsLoading || alertsLoading || guaranteesLoading || !!insuranceLoading || notificationsLoading,
     acknowledgeAlert,
     resolveAlert,
+    isActingOnAlerts,
     markNotificationAsRead: markAsRead,
     daysUntil,
   };

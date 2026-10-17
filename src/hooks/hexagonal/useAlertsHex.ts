@@ -207,7 +207,7 @@ export function useAlertsHex(): UseAlertsHexResult {
     acknowledgeAlert: (id) => { void runMutation(() => acknowledgeAlertMutation.mutateAsync(id), "L'alerte a été marquée comme reconnue.", "Impossible de marquer l'alerte comme reconnue."); },
     resolveAlert: (id) => { void runMutation(() => resolveAlertMutation.mutateAsync(id), "L'alerte a été résolue.", "Impossible de résoudre l'alerte."); },
     isCreating: createAlertMutation.isPending,
-    isUpdating: updateAlertMutation.isPending,
+    isUpdating: updateAlertMutation.isPending || acknowledgeAlertMutation.isPending || resolveAlertMutation.isPending,
     isDeleting: deleteAlertMutation.isPending,
     getAlertSeverity,
     getAlertPriority,

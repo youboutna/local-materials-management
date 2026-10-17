@@ -90,6 +90,7 @@ const ConsultantDashboard = () => {
     isLoading,
     acknowledgeAlert,
     resolveAlert,
+    isActingOnAlerts,
     markNotificationAsRead,
   } = useConsultantPortalHex(userId ?? undefined);
 
@@ -350,6 +351,7 @@ const ConsultantDashboard = () => {
               expiries={expiries}
               onAcknowledge={acknowledgeAlert}
               onResolve={resolveAlert}
+              isPending={isActingOnAlerts}
             />
           </TabsContent>
 
