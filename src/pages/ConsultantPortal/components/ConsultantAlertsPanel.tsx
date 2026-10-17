@@ -13,18 +13,21 @@ import type { AlertData } from '@/dtos/entities/AlertDTO';
 import type { ExpiryItem } from '@/hooks/hexagonal/useConsultantPortalHex';
 import { formatAmount2 } from '@/utils/reportNumbers';
 import { T } from '@/components/i18n/T';
+import { useI18n } from '@/hooks/useI18n';
 
 interface Props {
   alerts: AlertData[];
   expiries: ExpiryItem[];
   onAcknowledge: (id: string) => void;
   onResolve: (id: string) => void;
+  isPending?: boolean;
 }
 
 const severityVariant = (severity?: string) =>
   severity === 'critical' ? 'destructive' : severity === 'high' ? 'default' : 'secondary';
 
-export function ConsultantAlertsPanel({ alerts, expiries, onAcknowledge, onResolve }: Props) {
+export function ConsultantAlertsPanel({ alerts, expiries, onAcknowledge, onResolve, isPending }: Props) {
+  const { translateSeverity, translateStatus } = useI18n();
   return (
     <div className="space-y-4">
       <Card>
@@ -60,17 +63,17 @@ export function ConsultantAlertsPanel({ alerts, expiries, onAcknowledge, onResol
                     </TableCell>
                     <TableCell>
                       <Badge variant={severityVariant(alert.severity as string)}>
-                        {String(alert.severity ?? 'info')}
+                        {translateSeverity(alert.severity)}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{String(alert.status ?? 'active')}</Badge>
+                      <Badge variant="outline">{translateStatus(alert.status ?? 'active')}</Badge>
                     </TableCell>
                     <TableCell className="space-x-2 text-right">
-                      <Button size="sm" variant="outline" onClick={() => onAcknowledge(alert.id)}>
+                      <Button size="sm" variant="outline" disabled={isPending || alert.acknowledged || alert.status === 'resolved'} onClick={() => onAcknowledge(alert.id)}>
                         <T k="auto.consultantalertspanel.accuser_reception" fallback="Accuser réception" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => onResolve(alert.id)}>
+                      <Button size="sm" variant="ghost" disabled={isPending || alert.status === 'resolved'} onClick={() => onResolve(alert.id)}>
                         <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden="true" />
                         <T k="auto.consultantalertspanel.resoudre" fallback="Résoudre" />
                       </Button>

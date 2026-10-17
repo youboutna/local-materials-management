@@ -9,6 +9,15 @@ import { StorageService } from '../StorageService';
 import { DocumentService } from '../DocumentService';
 
 describe('Storage references and document persistence', () => {
+  it('uploads a supplier document once and persists its supplier and file metadata', async () => {
+    const repository = { save: vi.fn(async entity => entity) } as unknown as IDocumentRepository;
+    const storage = { uploadFile: vi.fn().mockResolvedValue({ path: 'supplier.pdf', publicUrl: 'https://storage.example.com/storage/v1/object/public/documents/supplier.pdf' }) } as unknown as StorageService;
+    const file = new File(['invoice'], 'supplier.pdf', { type: 'application/pdf' });
+    const result = await new DocumentService(repository, storage).createDocument({ title: 'Supplier file', documentType: DocumentType.PLAN, file, supplierId: 'supplier-id', uploadedBy: 'user-id' });
+    expect(storage.uploadFile).toHaveBeenCalledTimes(1);
+    expect(repository.save).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ supplierId: 'supplier-id', fileSize: 7, mimeType: 'application/pdf' });
+  });
   it.each(['public', 'sign', 'authenticated'])('extracts encoded object paths from %s URLs', (mode) => {
     expect(StorageReferenceTransformer.toStorageRequest(`https://storage.example.com/storage/v1/object/${mode}/plans/phase%201/toit.png?token=temporary`))
       .toEqual({ bucket: 'plans', path: 'phase 1/toit.png' });

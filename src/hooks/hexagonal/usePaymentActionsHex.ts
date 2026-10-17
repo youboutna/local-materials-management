@@ -76,12 +76,10 @@ export function usePaymentActionsHex() {
   // Create notification mutation
   const createNotificationMutation = useMutation({
     mutationFn: async (notification: NotificationRequest) => {
-      await notificationService.notifyUser(
-        notification.recipientId,
-        notification.title,
-        notification.message,
-        notification.type as any
-      );
+      await notificationService.createNotification({
+        ...notification,
+        type: 'system',
+      });
     },
     onSuccess: () => {
       toast({ title: 'Notification créée', description: 'Notification envoyée avec succès' });
@@ -122,12 +120,15 @@ export function usePaymentActionsHex() {
   const sendSmsMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: SmsRequest; metadata: ActionMetadata }) => {
       for (const recipient of values.recipientIds) {
-        await CommunicationService.sendSMS({
-          to: recipient,
+        const contact = await CommunicationService.resolveRecipient(recipient);
+        if (!contact.phone) throw new Error('Téléphone du destinataire manquant');
+        const result = await CommunicationService.sendSMS({
+          to: contact.phone,
           message: values.message,
           actionType: 'payment_action',
           metadata: metadata as unknown as Record<string, unknown>,
         });
+        if (!result.success) throw new Error('Échec de l’envoi du SMS');
       }
     },
     onSuccess: () => {
@@ -141,15 +142,19 @@ export function usePaymentActionsHex() {
   // Schedule call via edge function
   const scheduleCallMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: CallRequest; metadata: ActionMetadata }) => {
-      await CommunicationService.scheduleCall({
-        recipientId: values.recipientIds[0],
-        recipientPhone: values.recipientIds[0],
+      const recipientId = values.recipientIds[0];
+      if (!recipientId) throw new Error('Destinataire requis');
+      const contact = await CommunicationService.resolveRecipient(recipientId);
+      const result = await CommunicationService.scheduleCall({
+        recipientId,
+        recipientPhone: contact.phone,
         subject: 'Appel de suivi paiement',
         message: values.message,
         scheduledFor: values.dueDate,
         actionType: 'payment_action',
         metadata: metadata as unknown as Record<string, unknown>,
       });
+      if (!result.success) throw new Error('Échec de la programmation de l’appel');
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'Appel programmé' });
@@ -163,13 +168,16 @@ export function usePaymentActionsHex() {
   const sendEmailMutation = useMutation({
     mutationFn: async ({ values, metadata }: { values: EmailRequest; metadata: ActionMetadata }) => {
       for (const recipient of values.recipientIds) {
-        await CommunicationService.sendEmail({
-          to: recipient,
+        const contact = await CommunicationService.resolveRecipient(recipient);
+        if (!contact.email) throw new Error('Email du destinataire manquant');
+        const result = await CommunicationService.sendEmail({
+          to: contact.email,
           subject: values.subject,
           message: values.body,
           actionType: 'payment_action',
           metadata: metadata as unknown as Record<string, unknown>,
         });
+        if (!result.success) throw new Error('Échec de l’envoi de l’email');
       }
     },
     onSuccess: () => {
@@ -215,7 +223,7 @@ export function usePaymentActionsHex() {
     sendSms: sendSmsMutation.mutateAsync,
     scheduleCall: scheduleCallMutation.mutateAsync,
     sendEmail: sendEmailMutation.mutateAsync,
-    isPending: taskAssignmentMutation.isPending || 
+    isPending: createNotificationMutation.isPending || taskAssignmentMutation.isPending || 
                sendSmsMutation.isPending || 
                scheduleCallMutation.isPending || 
                sendEmailMutation.isPending

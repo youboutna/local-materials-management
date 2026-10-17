@@ -154,6 +154,8 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
         message: item.message,
         type: item.type as NotificationData['type'],
         read: item.read,
+        projectId: item.project_id,
+        phaseId: item.phase_id,
         createdAt: item.created_at,
         updatedAt: item.updated_at,
         priority: undefined,

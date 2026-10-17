@@ -29,6 +29,7 @@ import { usePhasesHex } from '@/hooks/hexagonal/usePhasesHex';
 import { useInspectionsListHex } from '@/hooks/hexagonal/useInspectionsListHex';
 import { useCreateInspection } from '@/hooks/hexagonal/useInspectionsCrudHex';
 import { useI18n } from '@/hooks/useI18n';
+import { InspectionComplianceService } from '@/application/services/InspectionComplianceService';
 
 interface ProjectOption {
   id: string;
@@ -51,13 +52,7 @@ export function ConsultantInspectionsPanel({ projects }: Props) {
 
   /** Conformité : une phase est validable si elle porte au moins une inspection réalisée. */
   const inspectionsByPhase = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const insp of inspections as unknown as Array<Record<string, unknown>>) {
-      const phaseId = (insp.phaseId ?? insp.phase_id) as string | undefined;
-      if (!phaseId) continue;
-      map.set(phaseId, (map.get(phaseId) ?? 0) + 1);
-    }
-    return map;
+    return InspectionComplianceService.countByPhase(inspections);
   }, [inspections]);
 
   const submitInspection = async () => {
@@ -192,7 +187,7 @@ export function ConsultantInspectionsPanel({ projects }: Props) {
                         </Button>
                         <Button
                           size="sm"
-                          disabled={isUpdating || isValidated}
+                          disabled={isUpdating || isValidated || count === 0}
                           onClick={() => validatePhase(phase.id, progress)}
                         >
                           <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden="true" />

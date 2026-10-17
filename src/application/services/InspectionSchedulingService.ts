@@ -124,6 +124,8 @@ export class InspectionSchedulingService {
     }
 
     try {
+      const existing = await this.inspectionRepository.findById(request.inspectionId);
+      if (!existing) throw new AppError(ErrorCode.NOT_FOUND, 'Inspection not found');
       const scheduledAt = `${request.scheduledDate}T${request.scheduledTime || '09:00'}:00`;
       await this.inspectionRepository.update(request.inspectionId, {
         date: scheduledAt,
@@ -181,6 +183,9 @@ export class InspectionSchedulingService {
    */
   validateScheduleData(data: Partial<ScheduleInspectionRequestDto>): ValidationResult {
     const errors: string[] = [];
+
+    if (!data.inspectionId) errors.push('Inspection requise');
+    if (data.scheduledDate && !Number.isFinite(Date.parse(data.scheduledDate))) errors.push('Date invalide');
 
     if (!data.scheduledDate) {
       errors.push('La date de programmation est requise');

@@ -1,4 +1,3 @@
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import type { BtpTables, BtpTablesInsert } from '@/integrations/supabase/btp-types';
 import type { Json } from '@/integrations/supabase/types';
 import { IInspectionRepository, InspectionObservation } from '@/domain/repositories/IInspectionRepository';
@@ -10,6 +9,9 @@ type InspectionRow = BtpTables<'inspections'>;
 type InspectionInsert = BtpTablesInsert<'inspections'>;
 
 export class SupabaseInspectionAdapter implements IInspectionRepository {
+  private toStatusCode(status: string): string {
+    return status.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+  }
   private mapToEntity(data: InspectionRow): Inspection {
     // Convert string status to InspectionStatus enum
     const status = Inspection.mapStringToStatus(data.status || '');
@@ -51,14 +53,14 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   private mapToRow(inspection: Inspection): Omit<InspectionInsert, 'createdAt' | 'updatedAt'> {
     const inspectorName = typeof inspection.inspector === 'string'
       ? inspection.inspector
-      : inspection.inspector?.name ?? '';
+      : inspection.inspector?.id ?? inspection.inspector?.employeeId ?? inspection.inspector?.name ?? '';
     return {
       id: inspection.id,
       project_id: inspection.projectId || '',
       phase_id: inspection.phaseId || null,
       inspector: inspectorName, // Extract name from Inspector object
       date: inspection.date,
-      status: inspection.status.toString().toLowerCase(), // Convert enum to string
+      status: this.toStatusCode(inspection.status),
       progress_at_inspection: inspection.progressAtInspection,
       comments: inspection.comments || null,
       documents: (inspection.documents || []) as unknown as Json,
@@ -68,6 +70,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
 
 
   async findById(id: string): Promise<Inspection | null> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -79,6 +82,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findAll(): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -89,6 +93,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async save(inspection: Inspection): Promise<void> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const inspectionData = this.mapToRow(inspection);
 
     const { error } = await supabase
@@ -99,8 +104,11 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async update(id: string, data: Partial<Inspection>): Promise<void> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const updateData: Record<string, unknown> = {};
-    if (data.status !== undefined) updateData.status = String(data.status).toLowerCase();
+    if (data.date !== undefined) updateData.date = data.date;
+    if (data.inspector !== undefined) updateData.inspector = typeof data.inspector === 'string' ? data.inspector : data.inspector.id ?? data.inspector.employeeId ?? data.inspector.name;
+    if (data.status !== undefined) updateData.status = this.toStatusCode(String(data.status));
     if (data.progressAtInspection !== undefined) updateData.progress_at_inspection = data.progressAtInspection;
     if (data.comments !== undefined) updateData.comments = data.comments;
     if (data.documents !== undefined) updateData.documents = data.documents;
@@ -108,15 +116,19 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
       updateData.payment_type = (data as { paymentType?: string }).paymentType;
     }
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('inspections')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', id)
+      .select('id')
+      .maybeSingle();
 
     if (error) throw new Error(`Failed to update inspection: ${error.message}`);
+    if (!updated) throw new Error('Inspection update affected no accessible row');
   }
 
   async delete(id: string): Promise<void> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { error } = await supabase
       .from('inspections')
       .delete()
@@ -126,6 +138,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findByProjectId(projectId: string): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -137,6 +150,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findByPhaseId(phaseId: string): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -148,12 +162,14 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findByStepId(stepId: string): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     // Inspections don't have step_id in current schema - return empty for now
     // This could be extended to filter by metadata/documents if needed
     return [];
   }
 
   async findByStatus(status: InspectionStatus): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -165,6 +181,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findByInspector(inspectorId: string): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -176,6 +193,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findScheduledBetween(startDate: string, endDate: string): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('*')
@@ -188,6 +206,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findUpcoming(days: number): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const now = new Date();
     const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -204,6 +223,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findOverdue(): Promise<Inspection[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const now = new Date().toISOString();
 
     const { data, error } = await supabase
@@ -218,6 +238,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async countByStatus(projectId: string): Promise<Record<InspectionStatus, number>> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { data, error } = await supabase
       .from('inspections')
       .select('status')
@@ -237,11 +258,13 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async getAverageCompletionTime(projectId: string): Promise<number> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     // This would need a more complex query or calculation
     return 0;
   }
 
   async create(data: Partial<Inspection>): Promise<Inspection> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const inspectionData = this.mapToRow(data as Inspection);
 
     const { data: inserted, error } = await supabase
@@ -255,6 +278,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async addDocument(document: { inspectionId: string; document: Document; uploadedAt: string; uploadedBy: string }): Promise<void> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { supabase: publicClient } = await import('@/integrations/supabase/client');
     const doc = document.document as unknown as Record<string, unknown>;
     const { error } = await publicClient
@@ -274,6 +298,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async findDocumentsByInspectionId(inspectionId: string): Promise<Document[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     const { supabase: publicClient } = await import('@/integrations/supabase/client');
     const { data, error } = await publicClient
       .from('inspection_documents' as any)
@@ -296,6 +321,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
   }
 
   async getChecklistTemplate(inspectionType: string): Promise<ChecklistItem[]> {
+    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
     // For now, return a basic checklist template based on inspection type
     // In a real implementation, this would fetch from a checklist_templates table
     const templates: Record<string, ChecklistItem[]> = {

@@ -6,15 +6,14 @@ import {
   CreatePaymentInitiationDTO,
   InitiatorRole,
   PaymentInitiationNotificationDTO,
-  ROLE_APPROVAL_CHAIN,
-  ROLE_PAYMENT_LIMITS,
   SupplierCompletionDTO
 } from '@/dtos/entities/PaymentInitiationDTO';
+import { PAYMENT_INITIATION_POLICY, type PaymentInitiationPolicy } from '@/config/referentials/payment-initiation.referential';
 
 export class PaymentInitiationService {
   private static instance: PaymentInitiationService | null = null;
 
-  constructor(private readonly repository: IPaymentInitiationRepository) {}
+  constructor(private readonly repository: IPaymentInitiationRepository, private readonly policy: PaymentInitiationPolicy = PAYMENT_INITIATION_POLICY) {}
 
   /** Instance par défaut branchée sur l'adaptateur Supabase. */
   static getInstance(): PaymentInitiationService {
@@ -28,14 +27,15 @@ export class PaymentInitiationService {
 
   async createInitiation(dto: CreatePaymentInitiationDTO, initiatorId: string): Promise<PaymentInitiationNotificationDTO> {
     // 1. Validation métier des limites par rôle
-    const limit = ROLE_PAYMENT_LIMITS[dto.initiatorRole];
+    if (!Number.isFinite(dto.estimatedAmount) || dto.estimatedAmount <= 0) throw new Error('Positive finite payment amount required');
+    const limit = this.policy.limits[dto.initiatorRole];
     if (limit === undefined || dto.estimatedAmount > limit) {
       throw new Error(`Le montant dépasse la limite autorisée pour votre rôle (${limit?.toLocaleString() || 0} MRU)`);
     }
 
     // 2. Validation de la justification pour les inspecteurs
-    if (dto.initiatorRole === 'inspector' && dto.justification.length < 50) {
-      throw new Error('La justification doit contenir au moins 50 caractères pour les inspecteurs');
+    if (dto.initiatorRole === 'inspector' && dto.justification.length < this.policy.inspectorJustificationMinLength) {
+      throw new Error(`La justification doit contenir au moins ${this.policy.inspectorJustificationMinLength} caractères pour les inspecteurs`);
     }
 
     // 3. Construction de la chaîne d'approbation
@@ -44,7 +44,7 @@ export class PaymentInitiationService {
     // 4. Détermination du statut initial
     const initialStatus = approvalChain.length === 0 ? 'ready_for_supplier' : 'pending_approval';
     const supplierDeadline = initialStatus === 'ready_for_supplier' 
-      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() 
+      ? new Date(Date.now() + this.policy.supplierResponseDays * 86_400_000).toISOString()
       : undefined;
 
     // 5. Récupération des informations du fournisseur
@@ -172,13 +172,13 @@ export class PaymentInitiationService {
   }
 
   private async buildApprovalChain(initiatorRole: InitiatorRole): Promise<ApprovalChainStep[]> {
-    const chain = ROLE_APPROVAL_CHAIN[initiatorRole] || [];
+    const chain = this.policy.approvalChain[initiatorRole] || [];
     
     return chain.map((role, index) => ({
       level: index + 1,
       role,
       status: 'pending' as const,
-      deadline: new Date(Date.now() + (index + 1) * 3 * 24 * 60 * 60 * 1000).toISOString()
+      deadline: new Date(Date.now() + (index + 1) * this.policy.approvalStepDays * 86_400_000).toISOString()
     }));
   }
 

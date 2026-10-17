@@ -189,8 +189,11 @@ export class WorkflowOrchestrator {
    */
   async triggerPayment(request: TriggerPaymentRequestDTO): Promise<TriggerPaymentResponseDTO> {
     try {
-      if (!request.phaseId || request.amount <= 0) {
+      if (!request.phaseId || !Number.isFinite(request.amount) || request.amount <= 0) {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid phase ID or amount');
+      }
+      if (!request.contractorId?.trim() || !request.contractorName?.trim() || !request.contractorContact?.trim()) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Contractor identity and contact are required');
       }
 
       // 1. Vérifier que le décompte est valide
@@ -212,9 +215,9 @@ export class WorkflowOrchestrator {
        // Using repository pattern with required payment fields
        const paymentData = {
          projectId: this.projectId,
-         contractorId: request.contractorId || 'unknown',
-         contractorName: request.contractorName || 'Unknown Contractor',
-         contractorContact: request.contractorContact || '',
+         contractorId: request.contractorId,
+         contractorName: request.contractorName,
+         contractorContact: request.contractorContact,
          phaseId: request.phaseId,
          amount: actualAmount,
          status: 'pending' as const,
@@ -231,7 +234,7 @@ export class WorkflowOrchestrator {
       // 3. Émettre l'événement de paiement
       const paymentEvent: WorkflowEvent = {
         type: 'PAYMENT_CREATED',
-        payload: { paymentId, amount: request.amount },
+        payload: { paymentId, amount: actualAmount },
       };
       this.emit(paymentEvent);
 

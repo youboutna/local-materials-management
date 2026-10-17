@@ -249,7 +249,7 @@ const UnifiedSupplierPortal = () => {
     initiationId?: string;
   } | null>(null);
   const { toast } = useToast();
-  const { uploadFile: storageUpload, uploading } = useDocumentStorage();
+  const { uploadFile: storageUpload } = useDocumentStorage();
 
   const navigate = useNavigate();
   const { user, session, loading } = useSupplierPortalAuthHex();
@@ -358,28 +358,23 @@ const UnifiedSupplierPortal = () => {
   };
 
   const handleFileUpload = async () => {
-    if (!uploadFile || !uploadTitle.trim() || !user) return;
-
-    const safeName = uploadFile.name.replace(/[^\w.\-]+/g, "_");
-    const uniquePath = `supplier-uploads/${user.id}/${Date.now()}-${formatReference(crypto.randomUUID(), '')}-${safeName}`;
-    const uploadResult = await storageUpload(uploadFile, uniquePath);
-
-    if (!uploadResult.success) {
-      return;
-    }
-
-    uploadDocumentMutation.mutate({
+    if (!uploadFile || !uploadTitle.trim() || !user || !supplierProfile || uploadDocumentMutation.isPending) return;
+    try {
+      await uploadDocumentMutation.mutateAsync({
       file: uploadFile,
       userId: user.id,
       title: uploadTitle,
       description: uploadDescription,
       documentType: documentType,
-      supplierId: supplierProfile?.id,
+      supplierId: supplierProfile.id,
     });
 
     setUploadFile(null);
     setUploadTitle("");
     setUploadDescription("");
+    } catch {
+      // The mutation reports the error; preserve the selected file for retry.
+    }
   };
 
   const handleTaskComment = async (taskId: string) => {
@@ -548,11 +543,14 @@ const UnifiedSupplierPortal = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); if (isLoginMode) void handleLogin(); else void handleSignUp(); }}>
             <div>
               <Label htmlFor="email"><T k="auto.unifiedsupplierportal.email" fallback="Email" /></Label>
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="votre@email.com"
@@ -563,15 +561,18 @@ const UnifiedSupplierPortal = () => {
               <Input
                 id="password"
                 type="password"
+                autoComplete={isLoginMode ? 'current-password' : 'new-password'}
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
             </div>
             <Button
-              onClick={isLoginMode ? handleLogin : handleSignUp}
+              type="submit"
               className="w-full"
-              disabled={loading}
+              disabled={loading || loginMutation.isPending || signUpMutation.isPending}
+              aria-busy={loginMutation.isPending || signUpMutation.isPending}
             >
               {loading
                 ? "Chargement..."
@@ -579,6 +580,7 @@ const UnifiedSupplierPortal = () => {
                 ? "Se connecter"
                 : "S'inscrire"}
             </Button>
+            </form>
             <Button
               variant="ghost"
               onClick={() => setIsLoginMode(!isLoginMode)}
@@ -826,12 +828,13 @@ const UnifiedSupplierPortal = () => {
 
                   <Button
                     onClick={handleFileUpload}
-                    disabled={uploading || !uploadFile || !uploadTitle.trim()}
+                    disabled={uploadDocumentMutation.isPending || !supplierProfile || !uploadFile || !uploadTitle.trim()}
+                    aria-busy={uploadDocumentMutation.isPending}
                     className="w-full"
                   >
-                    {uploading
-                      ? "Téléchargement..."
-                      : "Télécharger le document"}
+                    {uploadDocumentMutation.isPending
+                      ? t('auto.projectdocumentupload.telechargement_en_cours')
+                      : t('auto.projectdocumentupload.telecharger_le_document')}
                   </Button>
                 </CardContent>
               </Card>

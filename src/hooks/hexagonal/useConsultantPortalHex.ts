@@ -10,6 +10,8 @@ import { useAlertsHex } from '@/hooks/hexagonal/useAlertsHex';
 import { useNotificationsHex } from '@/hooks/hexagonal/useNotificationsHex';
 import { useBankGuaranteesList } from '@/hooks/hexagonal/useBankGuaranteesHex';
 import { useInsuranceCertificatesHex } from '@/hooks/hexagonal/useInsuranceCertificatesHex';
+import { ConsultantScopeService } from '@/application/services/ConsultantScopeService';
+import { DERIVED_ALERT_RULES } from '@/config/referentials/notifications/derived-alerts.referential';
 
 export interface ConsultantProjectRef {
   id: string;
@@ -40,8 +42,9 @@ export function useConsultantPortalHex(consultantId?: string) {
     enabled: !!consultantId,
     staleTime: 60_000,
     queryFn: async (): Promise<ConsultantProjectRef[]> => {
+      if (!consultantId) return [];
       const { getProjectService } = await import('@/application/services/ProjectService');
-      const list = await getProjectService().getProjectsByConsultantId(consultantId!);
+      const list = await getProjectService().getProjectsByConsultantId(consultantId);
       return list.map((p) => ({
         id: p.id,
         title: p.title ?? 'Projet sans titre',
@@ -53,7 +56,7 @@ export function useConsultantPortalHex(consultantId?: string) {
 
   const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);
 
-  const { alerts, isLoading: alertsLoading, acknowledgeAlert, resolveAlert } = useAlertsHex();
+  const { alerts, isLoading: alertsLoading, acknowledgeAlert, resolveAlert, isUpdating: isActingOnAlerts } = useAlertsHex();
   const { notifications, markAsRead, isLoading: notificationsLoading } = useNotificationsHex();
   const { data: guarantees = [], isLoading: guaranteesLoading } = useBankGuaranteesList();
   const { certificates = [], isLoading: insuranceLoading } = useInsuranceCertificatesHex();
@@ -61,16 +64,12 @@ export function useConsultantPortalHex(consultantId?: string) {
 
   const scopedAlerts = useMemo(
     () =>
-      (alerts ?? []).filter((a) => {
-        const pid = (a as { projectId?: string }).projectId;
-        return !pid || projectIds.includes(pid);
-      }),
+      ConsultantScopeService.filterProjects(alerts ?? [], projectIds),
     [alerts, projectIds],
   );
 
   const expiries = useMemo<ExpiryItem[]>(() => {
-    const fromGuarantees: ExpiryItem[] = (guarantees ?? [])
-      .filter((g) => !g.projectId || projectIds.includes(g.projectId))
+    const fromGuarantees: ExpiryItem[] = ConsultantScopeService.filterProjects(guarantees ?? [], projectIds)
       .map((g) => ({
         id: g.id,
         kind: 'bank_guarantee' as const,
@@ -81,8 +80,7 @@ export function useConsultantPortalHex(consultantId?: string) {
         amount: g.guaranteeAmount,
       }));
 
-    const fromInsurance: ExpiryItem[] = (certificates ?? [])
-      .filter((c) => !c.projectId || projectIds.includes(c.projectId))
+    const fromInsurance: ExpiryItem[] = ConsultantScopeService.filterProjects(certificates ?? [], projectIds)
       .map((c) => ({
         id: c.id,
         kind: 'insurance' as const,
@@ -112,7 +110,8 @@ export function useConsultantPortalHex(consultantId?: string) {
     ).length;
     const expiringSoon = expiries.filter((e) => {
       const d = daysUntil(e.expiryDate);
-      return d !== null && d <= 30;
+      const rule = DERIVED_ALERT_RULES.find(r => r.kind === (e.kind === 'bank_guarantee' ? 'guarantee_expiring' : 'insurance_expiring'));
+      return d !== null && Boolean(rule && d <= rule.thresholds.medium);
     }).length;
     return {
       projectCount: projects.length,
@@ -136,6 +135,7 @@ export function useConsultantPortalHex(consultantId?: string) {
       projectsLoading || alertsLoading || guaranteesLoading || !!insuranceLoading || notificationsLoading,
     acknowledgeAlert,
     resolveAlert,
+    isActingOnAlerts,
     markNotificationAsRead: markAsRead,
     daysUntil,
   };

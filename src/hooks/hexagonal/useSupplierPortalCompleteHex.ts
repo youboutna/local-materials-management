@@ -254,24 +254,17 @@ export function useUploadSupplierDocumentHex() {
     mutationFn: async ({ file, title, description, documentType, userId, supplierId }: {
       file: File; title: string; description?: string; documentType: string; userId: string; supplierId?: string;
     }) => {
-      const fileName = `${crypto.randomUUID()}.${file.name.split('.').pop()}`;
-      const filePath = `supplier-documents/${userId}/${fileName}`;
-
-      const storageService = getStorageService();
-      await storageService.uploadFile({ bucket: 'supplier-documents', path: filePath, file });
-
-      const publicUrl = storageService.getPublicUrl({ bucket: 'supplier-documents', path: filePath });
-
+      if (!supplierId) throw new Error('Fournisseur requis');
       const documentService = getDocumentService();
-      await documentService.createDocument({
+      const document = await documentService.createDocument({
         title,
         description: description || '',
-        fileName: file.name,
-        fileUrl: publicUrl,
-        documentType: documentType as any,
+        file,
+        supplierId,
+        documentType: documentType as Parameters<DocumentService['createDocument']>[0]['documentType'],
         uploadedBy: userId,
-      } as any);
-      return { success: true, url: publicUrl };
+      });
+      return { success: true, url: document.fileUrl };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-documents'] });

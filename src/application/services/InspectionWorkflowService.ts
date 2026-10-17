@@ -22,6 +22,8 @@ import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { DocumentService } from './DocumentService';
 import { InspectionService } from './InspectionService';
 import { NotificationService } from './NotificationService';
+import { getEmployeeService } from './EmployeeService';
+import { INSPECTION_WORKFLOW_TRANSITIONS, INSPECTION_REQUIRED_DOCUMENTS } from '@/config/referentials/inspections/inspection-workflow.referential';
 
 // ============================================================================
 // TYPES
@@ -29,6 +31,7 @@ import { NotificationService } from './NotificationService';
 
 export type InspectionWorkflowStatus = 
   | 'requested'
+  | 'pending'
   | 'scheduled'
   | 'in_progress'
   | 'completed'
@@ -134,58 +137,8 @@ export class InspectionWorkflowService {
   // WORKFLOW TRANSITIONS CONFIGURATION
   // ============================================================================
 
-  private workflowTransitions: WorkflowTransition[] = [
-    {
-      from: 'requested',
-      to: 'scheduled',
-      requiredRole: ['technical_manager', 'inspector']
-    },
-    {
-      from: 'scheduled',
-      to: 'in_progress',
-      requiredRole: ['inspector']
-    },
-    {
-      from: 'in_progress',
-      to: 'completed',
-      requiredRole: ['inspector']
-    },
-    {
-      from: 'completed',
-      to: 'approved',
-      requiredRole: ['technical_manager', 'project_manager'],
-      requiresApproval: true
-    },
-    {
-      from: 'completed',
-      to: 'rejected',
-      requiredRole: ['technical_manager', 'project_manager'],
-      requiresApproval: true
-    },
-    {
-      from: 'completed',
-      to: 'requires_changes',
-      requiredRole: ['technical_manager', 'project_manager']
-    }
-  ];
-
-  // Required documents by inspection type
-  private requiredDocumentsByType: Record<string, RequiredDocument[]> = {
-    'regular': [
-      { type: 'pv_service_fait', label: 'PV de service fait', required: true, maxCount: 1, acceptedFormats: ['pdf'] },
-      { type: 'photos', label: 'Photos de fin de travaux', required: true, minCount: 5, maxCount: 20, acceptedFormats: ['jpg', 'jpeg', 'png'] }
-    ],
-    'main_levee': [
-      { type: 'pv_main_levee', label: 'PV de main levée', required: true, maxCount: 1, acceptedFormats: ['pdf'] },
-      { type: 'photos', label: 'Photos de fin de travaux', required: true, minCount: 10, maxCount: 30, acceptedFormats: ['jpg', 'jpeg', 'png'] },
-      { type: 'geolocation', label: 'Coordonnées GPS', required: false, maxCount: 1, acceptedFormats: ['gpx', 'kml'] }
-    ],
-    'decompte': [
-      { type: 'decompte', label: 'Décompte de travaux', required: true, maxCount: 1, acceptedFormats: ['pdf', 'xlsx'] },
-      { type: 'attachement', label: 'Attachements', required: true, minCount: 1, acceptedFormats: ['pdf'] },
-      { type: 'photos', label: 'Photos des travaux', required: true, minCount: 5, maxCount: 15, acceptedFormats: ['jpg', 'jpeg', 'png'] }
-    ]
-  };
+  private workflowTransitions = INSPECTION_WORKFLOW_TRANSITIONS;
+  private requiredDocumentsByType = INSPECTION_REQUIRED_DOCUMENTS;
 
   // ============================================================================
   // WORKFLOW OPERATIONS
@@ -216,10 +169,10 @@ export class InspectionWorkflowService {
       await this.sendWorkflowNotification(
         'Nouvelle demande d\'inspection',
         `Une inspection a été demandée pour le projet ${request.projectId}`,
-        'info'
+        'info', inspection
       );
       
-      return inspectionData;
+      return { ...inspectionData, id: inspection.id };
     } catch (error) {
       console.error('Error creating inspection request:', error);
       throw error instanceof AppError ? error : new AppError(
@@ -234,13 +187,16 @@ export class InspectionWorkflowService {
    */
   async scheduleInspection(schedule: InspectionSchedule): Promise<UpdateInspectionDTO> {
     try {
+      if (!schedule.inspectionId || !schedule.inspectorId || !Number.isFinite(Date.parse(schedule.scheduledDate))) {
+        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Inspection, inspector and valid date are required');
+      }
       await this.validateWorkflowTransition(schedule.inspectionId, 'scheduled', ['technical_manager', 'inspector']);
 
       const updateData: UpdateInspectionDTO = {
         id: schedule.inspectionId,
         date: schedule.scheduledDate,
         inspector: schedule.inspectorId,
-        status: InspectionStatus.IN_PROGRESS,
+        status: InspectionStatus.SCHEDULED,
         comments: schedule.notes || ''
       };
 
@@ -249,7 +205,7 @@ export class InspectionWorkflowService {
       await this.sendWorkflowNotification(
         'Inspection planifiée',
         `L'inspection ${schedule.inspectionId} a été planifiée pour le ${schedule.scheduledDate}`,
-        'info'
+        'info', inspection
       );
 
       return updateData;
@@ -291,7 +247,7 @@ export class InspectionWorkflowService {
       await this.sendWorkflowNotification(
         'Inspection terminée',
         `L'inspection ${execution.inspectionId} a été terminée`,
-        'info'
+        'info', inspection
       );
 
       return updateData;
@@ -334,7 +290,7 @@ export class InspectionWorkflowService {
         `L'inspection ${review.inspectionId} a été rejetée` :
         `L'inspection ${review.inspectionId} requiert des modifications`;
 
-      await this.sendWorkflowNotification(notificationTitle, notificationMessage, 'info');
+      await this.sendWorkflowNotification(notificationTitle, notificationMessage, 'info', inspection);
 
       return updateData;
     } catch (error) {
@@ -404,7 +360,7 @@ export class InspectionWorkflowService {
       throw new AppError(ErrorCode.NOT_FOUND, 'Inspection non trouvée');
     }
 
-    const currentStatus = inspection.status as string;
+    const currentStatus = String(inspection.status).replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
     const validTransition = this.workflowTransitions.find(
       t => t.from === currentStatus && t.to === targetStatus
     );
@@ -431,11 +387,21 @@ export class InspectionWorkflowService {
   private async sendWorkflowNotification(
     title: string,
     message: string,
-    type: 'info' | 'warning' | 'success' | 'error'
+    type: 'info' | 'warning' | 'success' | 'error',
+    inspection: import('@/domain/entities/Inspection').Inspection
   ): Promise<void> {
     try {
+      const inspectorId = inspection.inspector.employeeId ?? inspection.inspector.id ?? inspection.inspector.name;
+      const employee = inspectorId ? await getEmployeeService().getEmployeeById(inspectorId) : null;
+      const recipientId = employee?.userId;
+      if (!recipientId) {
+        console.warn('Inspection notification has no linked user', { inspectionId: inspection.id });
+        return;
+      }
       await this.notificationService.createNotification({
-        recipientId: 'system',
+        recipientId,
+        projectId: inspection.projectId,
+        phaseId: inspection.phaseId,
         title,
         message,
         type: type as any,

@@ -4,6 +4,7 @@
  */
 
 import { InspectionService } from '@/application/services/InspectionService';
+import { AutomaticDecompteCalculator } from '@/application/services/AutomaticDecompteCalculator';
 import type { InspectionStatus } from '@/domain/entities/Inspection';
 import { useToast } from '@/hooks/use-toast';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
@@ -156,9 +157,17 @@ export function useInspectionWorkflowHex(): UseInspectionWorkflowHexResult {
         comments: input.comments || undefined,
       };
 
-      await inspectionService.updateInspection(input.inspectionId, updates as any);
-
-      const canTriggerPayment = input.status === 'approved' && (input.progressAtInspection ?? 0) >= 25;
+      const inspection = await inspectionService.updateInspection(input.inspectionId, updates as any);
+      let canTriggerPayment = false;
+      if (String(inspection.status).toLowerCase() === 'approved' && inspection.projectId) {
+        try {
+          const eligibility = await new AutomaticDecompteCalculator(inspection.projectId)
+            .canGenerateDecompte({ projectId: inspection.projectId, phaseId: inspection.phaseId });
+          canTriggerPayment = eligibility.allowed;
+        } catch (eligibilityError) {
+          console.error('Inspection saved; payment eligibility unavailable:', eligibilityError);
+        }
+      }
 
       toast({
         title: 'Inspection exécutée',

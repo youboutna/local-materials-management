@@ -86,18 +86,7 @@ export const ROLE_LABELS: Record<InitiatorRole, string> = {
   director: 'Directeur'
 };
 
-export const ROLE_PAYMENT_LIMITS: Record<InitiatorRole, number> = {
-  inspector: 500000,
-  project_manager: 2000000,
-  manager: 2000000,
-  supervisor: 5000000,
-  director: 20000000
-};
-
-export const ROLE_APPROVAL_CHAIN: Record<InitiatorRole, InitiatorRole[]> = {
-  inspector: ['manager', 'supervisor', 'director'],
-  project_manager: ['supervisor', 'director'],
-  manager: ['supervisor', 'director'],
-  supervisor: ['director'],
-  director: []
-};
+import { PAYMENT_INITIATION_POLICY } from '@/config/referentials/payment-initiation.referential';
+/** Compatibility exports; rules are owned by the referential. */
+export const ROLE_PAYMENT_LIMITS = PAYMENT_INITIATION_POLICY.limits;
+export const ROLE_APPROVAL_CHAIN = PAYMENT_INITIATION_POLICY.approvalChain;
