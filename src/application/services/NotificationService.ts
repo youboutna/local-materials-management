@@ -153,7 +153,10 @@ export class NotificationService {
 
       // For now, we'll get all notifications and filter by project metadata
       // This is a workaround until we have a proper project notification repository method
-      const allUsersResult = await this.notificationRepository.getUserNotifications('all', 1000);
+      if (!this.notificationRepository.listAllNotifications) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Project notification listing is unavailable');
+      }
+      const allUsersResult = await this.notificationRepository.listAllNotifications(1000);
       
       if (allUsersResult.error) {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get project notifications');

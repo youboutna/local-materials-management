@@ -153,12 +153,11 @@ export class InspectionWorkflowService {
       const inspectionData: CreateInspectionDTO = {
         projectId: request.projectId,
         phaseId: request.phaseId,
-        stepId: request.stepId,
         title: `Inspection - ${request.inspectionType}`,
         description: request.notes || '',
         inspector: request.requestedBy,
         date: request.requestedDate,
-        status: InspectionStatus.PENDING,
+        status: InspectionStatus.REQUESTED,
         priority: request.priority as InspectionPriority || InspectionPriority.MEDIUM,
         type: request.inspectionType as InspectionType
       };

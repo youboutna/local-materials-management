@@ -202,22 +202,6 @@ const InspectionReviewStep: React.FC<InspectionReviewStepProps> = ({
 
       <Separator />
 
-      {/* Notifications */}
-      <div className="flex items-center space-x-4 p-4 rounded-lg border bg-muted/20">
-        <Bell className="h-5 w-5 text-muted-foreground" />
-        <div className="flex-1">
-          <Label htmlFor="notify" className="font-medium"><T k="auto.inspectionreviewstep.notifications" fallback="Notifications" /></Label>
-          <p className="text-xs text-muted-foreground">
-            Notifier l'entrepreneur de cette {mode === 'request' ? 'demande' : 'programmation'}
-          </p>
-        </div>
-        <Checkbox
-          id="notify"
-          checked={notifyContractor}
-          onCheckedChange={(checked) => onNotifyContractorChange(checked as boolean)}
-        />
-      </div>
-
       {/* Submit Button */}
       <div className="flex justify-end pt-4">
         <Button 

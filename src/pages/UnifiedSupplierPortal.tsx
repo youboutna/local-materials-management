@@ -249,7 +249,7 @@ const UnifiedSupplierPortal = () => {
     initiationId?: string;
   } | null>(null);
   const { toast } = useToast();
-  const { uploadFile: storageUpload, uploading } = useDocumentStorage();
+  const { uploadFile: storageUpload } = useDocumentStorage();
 
   const navigate = useNavigate();
   const { user, session, loading } = useSupplierPortalAuthHex();

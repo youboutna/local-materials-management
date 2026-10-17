@@ -160,9 +160,13 @@ export function useInspectionWorkflowHex(): UseInspectionWorkflowHexResult {
       const inspection = await inspectionService.updateInspection(input.inspectionId, updates as any);
       let canTriggerPayment = false;
       if (String(inspection.status).toLowerCase() === 'approved' && inspection.projectId) {
-        const eligibility = await new AutomaticDecompteCalculator(inspection.projectId)
-          .canGenerateDecompte({ projectId: inspection.projectId, phaseId: inspection.phaseId });
-        canTriggerPayment = eligibility.allowed;
+        try {
+          const eligibility = await new AutomaticDecompteCalculator(inspection.projectId)
+            .canGenerateDecompte({ projectId: inspection.projectId, phaseId: inspection.phaseId });
+          canTriggerPayment = eligibility.allowed;
+        } catch (eligibilityError) {
+          console.error('Inspection saved; payment eligibility unavailable:', eligibilityError);
+        }
       }
 
       toast({
