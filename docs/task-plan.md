@@ -63,6 +63,13 @@ UI Component → Transformer → DTO (camelCase) → Service → Domain ← Adap
 
 ### Validation ciblée — 17/10/2026
 
+#### P0 auto-hébergement et SMS
+
+- Procédure exécutée côté code : [SELF_HOSTED_RELEASE.md](SELF_HOSTED_RELEASE.md), build sur hôte Node 22 puis image dist/Nginx ; configuration publique externe validée et montée en lecture seule ; release frontend indépendante et rollback par tag.
+- Aucun fichier .env modifié. Script de synchronisation désormais strictement en lecture seule ; les paramètres génériques refusent les secrets et masquent les lignes sensibles. Audit RLS/rotation des secrets historiques reste à effectuer sur le serveur.
+- Twilio connecté et accès applicatif vérifié HTTP 200 ; port serveur SMS, validation E.164, contrôle du résultat, autorisation des rôles actifs et fonction déployée. Aucun numéro actif disponible ; formulaire expéditeur refusé, donc aucun SMS réel envoyé.
+- 40 tests Vitest ciblés et 3 tests de configuration publique passants ; compilation automatique OK. Docker absent : lancement conteneurs, backend auto-hébergé, migrations, livraison et parcours authentifiés non validés ; planificateurs/appels/rappels ne doivent pas être déclarés opérationnels sans workers et recette serveur.
+
 #### Actions, inspections et portails — correctifs complémentaires
 
 - 55 tests ciblés passants (7 fichiers), compilation automatique sans erreur ; lint ciblé des nouveaux services/référentiels/tests passé.
