@@ -9,3 +9,5 @@
 - Inspection updates must persist dates and inspector IDs and read back the stored entity; the inspection workflow policy lives in the inspections referential, not in presentation code.
 - Supplier uploads must use DocumentService once with the supplier association; shared cleanup and rollback prevent duplicate files and unlinked records.
 - ConsultantScopeService filters project-bound presentation records; server-side permissions remain authoritative and are not replaced by UI filtering.
+- Payment initiation limits, approval chains, and deadlines come from the injectable payment-initiation referential; DTO compatibility exports must not own business rules.
+- InspectionComplianceService evaluates phase evidence against the inspection-compliance referential; pending or rejected inspections must not count as completed compliance evidence.
