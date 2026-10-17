@@ -5,6 +5,7 @@
 
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { CommunicationService } from './CommunicationService';
 
 export interface ActionFormData {
   actionType: 'task_assignment' | 'hierarchy_notification' | 'sms' | 'call' | 'email' | 'mail';
@@ -42,216 +43,87 @@ export interface ActionMetadata {
 export class PaymentControlActionsService {
   constructor(
     private authRepository = RepositoryFactory.getAuthRepository(),
-    private notificationRepository = RepositoryFactory.getNotificationRepository()
+    private notificationRepository = RepositoryFactory.getNotificationRepository(),
+    private communication = CommunicationService,
   ) {}
 
-  async createTaskAssignment(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
-    try {
-      if (!values.recipientIds || values.recipientIds.length === 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
-      }
-      if (!values.title || !values.message) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
-      }
-      if (!metadata.paymentId || !metadata.projectId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID and project ID are required in metadata');
-      }
+  private validate(values: ActionFormData, metadata: ActionMetadata): void {
+    if (!values.recipientIds?.length || !values.title?.trim() || !values.message?.trim() || !metadata.paymentId || !metadata.projectId) {
+      throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipients, title, message, payment and project are required');
+    }
+  }
 
-      const authResult = await this.authRepository.getCurrentUser();
-      const userId = authResult?.user?.id || 'system';
-      
-      // Create task assignment notification for each recipient
-      for (const recipientId of values.recipientIds) {
-        await this.notificationRepository.createNotification({
-          recipientId: recipientId,
-          title: values.title,
-          message: values.message,
-          type: 'info',
-          read: false
-        });
-      }
-      
-      console.log('Task assignment created:', { values, metadata, createdBy: userId });
-    } catch (error) {
-      console.error('PaymentControlActionsService.createTaskAssignment failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create task assignment');
+  private async notify(values: ActionFormData, metadata: ActionMetadata, type: 'info' | 'warning'): Promise<void> {
+    this.validate(values, metadata);
+    for (const recipientId of values.recipientIds) {
+      const result = await this.notificationRepository.createNotification({
+        recipientId, title: values.title, message: values.message, type, read: false,
+        projectId: metadata.projectId,
+        metadata: { ...metadata, channel: 'notification' },
+      });
+      if (result.error) throw result.error;
+      if (!result.notification) throw new Error('Notification was not persisted');
+    }
+  }
+
+  async createTaskAssignment(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
+    this.validate(values, metadata);
+    for (const assigneeId of values.recipientIds) {
+      const result = await this.communication.assignTask({
+        assigneeId, title: values.title, description: values.message,
+        priority: values.priority, dueDate: values.dueDate,
+        projectId: metadata.projectId, relatedId: metadata.paymentId,
+        actionType: values.actionType, metadata: { ...metadata },
+      });
+      if (!result.success) throw new Error('Task assignment failed');
     }
   }
 
   async sendSMSNotification(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
-    try {
-      if (!values.recipientIds || values.recipientIds.length === 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
-      }
-      if (!values.message) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Message is required');
-      }
-      if (!metadata.paymentId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
-      }
-
-      // SMS notification logic - would use NotificationService
-      console.log('SMS notification:', {
-        recipients: values.recipientIds,
-        message: values.message,
-        metadata
-      });
-      
-      // Create notification records for tracking
-      for (const recipientId of values.recipientIds) {
-        await this.notificationRepository.createNotification({
-          recipientId: recipientId,
-          title: values.title,
-          message: values.message,
-          type: 'info',
-          read: false
-        });
-      }
-    } catch (error) {
-      console.error('PaymentControlActionsService.sendSMSNotification failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to send SMS notification');
+    this.validate(values, metadata);
+    for (const id of values.recipientIds) {
+      const contact = await this.communication.resolveRecipient(id);
+      if (!contact.phone) throw new Error('Recipient phone is missing');
+      const result = await this.communication.sendSMS({ to: contact.phone, message: values.message, priority: values.priority, actionType: values.actionType, metadata: { ...metadata } });
+      if (!result.success) throw new Error('SMS delivery failed');
     }
   }
 
   async scheduleCall(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
-    try {
-      if (!values.recipientIds || values.recipientIds.length === 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
-      }
-      if (!values.title || !values.message) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
-      }
-      if (!metadata.paymentId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
-      }
-
-      // Call scheduling logic - would use CommunicationService
-      console.log('Call scheduled:', {
-        recipients: values.recipientIds,
-        subject: values.title,
-        message: values.message,
-        priority: values.priority,
-        metadata
+    this.validate(values, metadata);
+    for (const recipientId of values.recipientIds) {
+      const contact = await this.communication.resolveRecipient(recipientId);
+      const result = await this.communication.scheduleCall({
+        recipientId, recipientPhone: contact.phone, subject: values.title,
+        message: values.message, priority: values.priority, scheduledFor: values.dueDate,
+        actionType: values.actionType, metadata: { ...metadata },
       });
-      
-      for (const recipientId of values.recipientIds) {
-        await this.notificationRepository.createNotification({
-          recipientId: recipientId,
-          title: `Appel programmé: ${values.title}`,
-          message: values.message,
-          type: 'info',
-          read: false
-        });
-      }
-    } catch (error) {
-      console.error('PaymentControlActionsService.scheduleCall failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to schedule call');
+      if (!result.success) throw new Error('Call scheduling failed');
     }
   }
 
   async sendEmailNotification(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
-    try {
-      if (!values.recipientIds || values.recipientIds.length === 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
-      }
-      if (!values.title || !values.message) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
-      }
-      if (!metadata.paymentId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
-      }
-
-      // Email notification logic - would use EmailService
-      console.log('Email notification:', {
-        recipients: values.recipientIds,
-        subject: values.title,
-        message: values.message,
-        priority: values.priority,
-        metadata
-      });
-      
-      for (const recipientId of values.recipientIds) {
-        await this.notificationRepository.createNotification({
-          recipientId: recipientId,
-          title: values.title,
-          message: values.message,
-          type: 'info',
-          read: false
-        });
-      }
-    } catch (error) {
-      console.error('PaymentControlActionsService.sendEmailNotification failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to send email notification');
+    this.validate(values, metadata);
+    for (const id of values.recipientIds) {
+      const contact = await this.communication.resolveRecipient(id);
+      if (!contact.email) throw new Error('Recipient email is missing');
+      const result = await this.communication.sendEmail({ to: contact.email, subject: values.title, message: values.message, priority: values.priority, actionType: values.actionType, metadata: { ...metadata } });
+      if (!result.success) throw new Error('Email delivery failed');
     }
   }
 
   async createHierarchyNotification(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
-    try {
-      if (!values.recipientIds || values.recipientIds.length === 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
-      }
-      if (!values.title || !values.message) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
-      }
-      if (!metadata.paymentId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
-      }
-
-      const authResult = await this.authRepository.getCurrentUser();
-      const userId = authResult?.user?.id || 'system';
-      
-      // Hierarchy notification logic
-      for (const recipientId of values.recipientIds) {
-        await this.notificationRepository.createNotification({
-          recipientId: recipientId,
-          title: values.title,
-          message: values.message,
-          type: 'warning',
-          read: false
-        });
-      }
-      
-      console.log('Hierarchy notification created:', { values, metadata, createdBy: userId });
-    } catch (error) {
-      console.error('PaymentControlActionsService.createHierarchyNotification failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create hierarchy notification');
+    await this.notify(values, metadata, 'warning');
+    for (const channel of values.notificationChannels ?? []) {
+      if (channel === 'email') await this.sendEmailNotification(values, metadata);
+      else if (channel === 'sms') await this.sendSMSNotification(values, metadata);
+      else if (channel === 'call') await this.scheduleCall(values, metadata);
     }
   }
 
   async createMailAction(values: ActionFormData, metadata: ActionMetadata): Promise<void> {
-    try {
-      if (!values.recipientIds || values.recipientIds.length === 0) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Recipient IDs are required');
-      }
-      if (!values.title || !values.message) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Title and message are required');
-      }
-      if (!metadata.paymentId) {
-        throw new AppError(ErrorCode.VALIDATION_ERROR, 'Payment ID is required in metadata');
-      }
-
-      // Mail action logic - would use MailService
-      console.log('Mail action:', {
-        recipients: values.recipientIds,
-        subject: values.title,
-        message: values.message,
-        priority: values.priority,
-        metadata
-      });
-      
-      for (const recipientId of values.recipientIds) {
-        await this.notificationRepository.createNotification({
-          recipientId: recipientId,
-          title: `Courrier: ${values.title}`,
-          message: values.message,
-          type: 'info',
-          read: false
-        });
-      }
-    } catch (error) {
-      console.error('PaymentControlActionsService.createMailAction failed:', error);
-      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create mail action');
-    }
+    this.validate(values, metadata);
+    throw new AppError(ErrorCode.VALIDATION_ERROR, 'Postal delivery is not configured; no letter was sent');
   }
 }
 
