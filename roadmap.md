@@ -11,3 +11,7 @@
 - [x] Supprimer le défilement horizontal des lignes et du mapping DQE à toutes les largeurs
 - [x] Extraire l’enveloppe documentaire (émetteur, destinataire, référence, date, projet, validité, devise, normes Factur-X) comme contexte et non comme lignes DQE
 - [x] Afficher l’enveloppe dans un panneau de contexte responsive au-dessus de l’aperçu d’import
+- [ ] Corriger et tester les URL, le CRUD et l’affichage de la GED
+- [ ] Finaliser et tester les corrections du module newsletter
+- [ ] Vérifier et corriger la préparation Docker auto-hébergée
+- [ ] Vérifier les parcours authentifiés GED/newsletter — bloqué : Supabase externe sans session de test disponible
