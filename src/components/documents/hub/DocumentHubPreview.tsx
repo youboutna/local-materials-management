@@ -14,12 +14,13 @@ import { DocumentItem, DocumentHubContract, formatBytes, getPreviewKind } from '
 import { MimeIcon } from './MimeIcon';
 import { T } from '@/components/i18n/T';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getStorageService } from '@/application/services/StorageService';
 
 interface Props {
   item: DocumentItem | null;
   contract: DocumentHubContract;
   onClose: () => void;
-  onDelete?: (item: DocumentItem) => void;
+  onDelete?: (item: DocumentItem) => Promise<boolean | void> | boolean | void;
 }
 
 /**
@@ -33,6 +34,7 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
   const [loadingBlob, setLoadingBlob] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const proxy = contract.previewMode === 'proxy';
   const resolveBlobUrl = contract.resolveBlobUrl;
@@ -58,9 +60,7 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
         if (resolveBlobUrl) {
           url = await resolveBlobUrl(item);
         } else {
-          const res = await fetch(item.fileUrl);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const blob = await res.blob();
+          const blob = await getStorageService().downloadReference(item.fileUrl);
           url = URL.createObjectURL(blob);
           createdObjectUrl = url;
         }
@@ -229,9 +229,17 @@ export function DocumentHubPreview({ item, contract, onClose, onDelete }: Props)
                   variant="ghost"
                   size="sm"
                   className="text-destructive hover:text-destructive"
-                  onClick={() => {
-                    onDelete(item);
-                    onClose();
+                  disabled={deleting}
+                  onClick={async () => {
+                    setDeleting(true);
+                    try {
+                      const deleted = await onDelete(item);
+                      if (deleted !== false) onClose();
+                    } catch (error) {
+                      setError(error instanceof Error ? error.message : t('auto.documenthub.suppression_impossible'));
+                    } finally {
+                      setDeleting(false);
+                    }
                   }}
                 >
                   <Trash2 className="mr-1 h-3.5 w-3.5" />

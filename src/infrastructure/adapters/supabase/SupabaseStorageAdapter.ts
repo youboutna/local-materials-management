@@ -6,7 +6,7 @@
  */
 
 import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
-import { supabase } from '@/integrations/supabase/client';
+import { StorageReferenceTransformer } from '@/dtos/transforms/StorageReferenceTransformer';
 
 export class SupabaseStorageAdapter implements IStorageProvider {
   private defaultBucket: string = 'documents';
@@ -28,6 +28,7 @@ export class SupabaseStorageAdapter implements IStorageProvider {
     error?: string;
   }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const bucket = options?.metadata?.bucket || this.defaultBucket;
       
       const { data, error } = await supabase.storage
@@ -68,9 +69,12 @@ export class SupabaseStorageAdapter implements IStorageProvider {
     error?: string;
   }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const reference = StorageReferenceTransformer.toStorageRequest(path, this.defaultBucket);
+      if (!reference) throw new Error('Invalid storage reference');
       const { data, error } = await supabase.storage
-        .from(this.defaultBucket)
-        .download(path);
+        .from(reference.bucket)
+        .download(reference.path);
 
       if (error) {
         return { success: false, error: error.message };
@@ -93,9 +97,12 @@ export class SupabaseStorageAdapter implements IStorageProvider {
     error?: string;
   }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const reference = StorageReferenceTransformer.toStorageRequest(path, this.defaultBucket);
+      if (!reference) throw new Error('Invalid storage reference');
       const { error } = await supabase.storage
-        .from(this.defaultBucket)
-        .remove([path]);
+        .from(reference.bucket)
+        .remove([reference.path]);
 
       if (error) {
         return { success: false, error: error.message };
@@ -119,6 +126,7 @@ export class SupabaseStorageAdapter implements IStorageProvider {
     error?: string;
   }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data } = supabase.storage
         .from(this.defaultBucket)
         .getPublicUrl(path);
@@ -146,6 +154,7 @@ export class SupabaseStorageAdapter implements IStorageProvider {
     error?: string;
   }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase.storage
         .from(this.defaultBucket)
         .list(prefix);
@@ -175,6 +184,7 @@ export class SupabaseStorageAdapter implements IStorageProvider {
    */
   async fileExists(path: string): Promise<boolean> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const pathParts = path.split('/');
       const fileName = pathParts.pop() || '';
       const prefix = pathParts.join('/');
@@ -220,6 +230,7 @@ export class SupabaseStorageAdapter implements IStorageProvider {
     error?: string;
   }> {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(path, file, {
