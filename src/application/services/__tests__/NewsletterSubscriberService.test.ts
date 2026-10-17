@@ -46,4 +46,9 @@ describe('NewsletterSubscriberService', () => {
         'Invalid or expired link',
       ));
   });
+
+  it('requires explicit consent before requesting a subscription', async () => {
+    await expect(service.subscribe({ email: 'reader@example.com', consentGiven: false })).rejects.toThrow('Explicit consent is required');
+    expect(subscriptionGateway.requestSubscription).not.toHaveBeenCalled();
+  });
 });
