@@ -21,7 +21,7 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     path: string,
     file: File
   ): Promise<{ result: UploadResult | null; error: Error | null }> {
-    const res = await this.provider.uploadFile(file, joinPath(bucket, path), { upsert: true });
+    const res = await this.provider.uploadFile(file, joinPath(bucket, path), { upsert: false, metadata: { bucket } });
     if (!res.success) {
       return { result: null, error: new Error(res.error || 'Upload failed') };
     }
@@ -67,8 +67,8 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
       path: prefix ? `${prefix}/${f.name}` : f.name,
       bucket,
       size: f.size,
-      created_at: f.createdAt,
-      updated_at: f.updatedAt,
+        createdAt: f.createdAt,
+      updatedAt: f.updatedAt,
     }));
     return { files, error: null };
   }
