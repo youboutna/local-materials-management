@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.3"
   }
   public: {
     Tables: {
@@ -1278,15 +1278,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_payment_blocks_project"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       payment_control_actions: {
         Row: {
@@ -1405,15 +1397,7 @@ export type Database = {
           start_date?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "phase_employees_phase_id_fkey"
-            columns: ["phase_id"]
-            isOneToOne: false
-            referencedRelation: "project_phases"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       phase_materials: {
         Row: {
@@ -1587,15 +1571,7 @@ export type Database = {
           updated_at?: string
           volatility_check?: boolean | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "price_calculations_stock_movement_id_fkey"
-            columns: ["stock_movement_id"]
-            isOneToOne: false
-            referencedRelation: "stock_movements"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       price_references: {
         Row: {
@@ -1772,6 +1748,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_admin: boolean | null
+          last_login_at: string | null
           national_id: string | null
           phone: string | null
           provider_data: Json | null
@@ -1792,6 +1769,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_admin?: boolean | null
+          last_login_at?: string | null
           national_id?: string | null
           phone?: string | null
           provider_data?: Json | null
@@ -1812,6 +1790,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          last_login_at?: string | null
           national_id?: string | null
           phone?: string | null
           provider_data?: Json | null
@@ -1946,15 +1925,7 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "project_alerts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       project_comments: {
         Row: {
@@ -1990,13 +1961,6 @@ export type Database = {
             columns: ["parent_comment_id"]
             isOneToOne: false
             referencedRelation: "project_comments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_comments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -2074,15 +2038,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "project_milestones_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       project_resources: {
         Row: {
@@ -2127,15 +2083,7 @@ export type Database = {
           unit?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "project_resources_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       project_risks: {
         Row: {
@@ -2218,13 +2166,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "project_risks_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -2324,13 +2265,6 @@ export type Database = {
             referencedRelation: "project_resources"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "resource_assignments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "task_assignments"
-            referencedColumns: ["id"]
-          },
         ]
       }
       risk_task_relations: {
@@ -2358,13 +2292,6 @@ export type Database = {
             columns: ["risk_id"]
             isOneToOne: false
             referencedRelation: "project_risks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "risk_task_relations_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "task_assignments"
             referencedColumns: ["id"]
           },
         ]
@@ -2793,15 +2720,7 @@ export type Database = {
           submission_id?: string
           user_agent?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "submission_access_logs_submission_id_fkey"
-            columns: ["submission_id"]
-            isOneToOne: false
-            referencedRelation: "tender_submissions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -3135,22 +3054,7 @@ export type Database = {
           lag_days?: number | null
           task_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "task_dependencies_depends_on_task_id_fkey"
-            columns: ["depends_on_task_id"]
-            isOneToOne: false
-            referencedRelation: "task_assignments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "task_dependencies_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "task_assignments"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tender_document_submissions: {
         Row: {
@@ -3291,13 +3195,6 @@ export type Database = {
             columns: ["estimate_id"]
             isOneToOne: false
             referencedRelation: "tender_estimates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tender_estimate_items_material_id_fkey"
-            columns: ["material_id"]
-            isOneToOne: false
-            referencedRelation: "materials"
             referencedColumns: ["id"]
           },
         ]
@@ -3515,15 +3412,7 @@ export type Database = {
           sharing_secret_id?: string
           user_agent?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "tender_sharing_access_logs_sharing_secret_id_fkey"
-            columns: ["sharing_secret_id"]
-            isOneToOne: false
-            referencedRelation: "tender_sharing_secrets"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tender_submission_documents: {
         Row: {
@@ -3553,22 +3442,7 @@ export type Database = {
           subcategory?: string | null
           submission_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tender_submission_documents_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tender_submission_documents_submission_id_fkey"
-            columns: ["submission_id"]
-            isOneToOne: false
-            referencedRelation: "tender_submissions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tender_suppliers: {
         Row: {
@@ -3589,22 +3463,7 @@ export type Database = {
           supplier_id?: string
           tender_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tender_suppliers_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tender_suppliers_tender_id_fkey"
-            columns: ["tender_id"]
-            isOneToOne: false
-            referencedRelation: "tenders"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tender_workflow_status: {
         Row: {
@@ -3649,15 +3508,7 @@ export type Database = {
           tender_id?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "tender_workflow_status_tender_id_fkey"
-            columns: ["tender_id"]
-            isOneToOne: false
-            referencedRelation: "tenders"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       territories: {
         Row: {
@@ -4006,87 +3857,6 @@ export type Database = {
         }
         Relationships: []
       }
-      bank_guarantees: {
-        Row: {
-          bank_name: string | null
-          contractor_id: string | null
-          created_at: string | null
-          expiry_date: string | null
-          guarantee_amount: number | null
-          guarantee_type: string | null
-          id: string | null
-          issue_date: string | null
-          project_id: string | null
-          released_at: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          bank_name?: string | null
-          contractor_id?: string | null
-          created_at?: string | null
-          expiry_date?: string | null
-          guarantee_amount?: number | null
-          guarantee_type?: string | null
-          id?: string | null
-          issue_date?: string | null
-          project_id?: string | null
-          released_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          bank_name?: string | null
-          contractor_id?: string | null
-          created_at?: string | null
-          expiry_date?: string | null
-          guarantee_amount?: number | null
-          guarantee_type?: string | null
-          id?: string | null
-          issue_date?: string | null
-          project_id?: string | null
-          released_at?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      boq_alignment_history: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          extracted_name: string | null
-          id: string | null
-          normalized_key: string | null
-          occurrences: number | null
-          resource_id: string | null
-          resource_type: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          extracted_name?: string | null
-          id?: string | null
-          normalized_key?: string | null
-          occurrences?: number | null
-          resource_id?: string | null
-          resource_type?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          extracted_name?: string | null
-          id?: string | null
-          normalized_key?: string | null
-          occurrences?: number | null
-          resource_id?: string | null
-          resource_type?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       catch_records: {
         Row: {
           actual_sale_value: number | null
@@ -4153,158 +3923,9 @@ export type Database = {
         }
         Relationships: []
       }
-      compliance_audit_log: {
-        Row: {
-          changed_at: string | null
-          changed_by: string | null
-          compliance_item_id: string | null
-          field_name: string | null
-          id: string | null
-          new_value: string | null
-          old_value: string | null
-        }
-        Insert: {
-          changed_at?: string | null
-          changed_by?: string | null
-          compliance_item_id?: string | null
-          field_name?: string | null
-          id?: string | null
-          new_value?: string | null
-          old_value?: string | null
-        }
-        Update: {
-          changed_at?: string | null
-          changed_by?: string | null
-          compliance_item_id?: string | null
-          field_name?: string | null
-          id?: string | null
-          new_value?: string | null
-          old_value?: string | null
-        }
-        Relationships: []
-      }
-      compliance_documents: {
-        Row: {
-          category: string | null
-          compliance_item_id: string | null
-          created_at: string | null
-          document_id: string | null
-          file_url: string | null
-          id: string | null
-          is_required: boolean | null
-          subcategory: string | null
-          updated_at: string | null
-          uploaded_at: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          category?: string | null
-          compliance_item_id?: string | null
-          created_at?: string | null
-          document_id?: string | null
-          file_url?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          subcategory?: string | null
-          updated_at?: string | null
-          uploaded_at?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          category?: string | null
-          compliance_item_id?: string | null
-          created_at?: string | null
-          document_id?: string | null
-          file_url?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          subcategory?: string | null
-          updated_at?: string | null
-          uploaded_at?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: []
-      }
-      compliance_items: {
-        Row: {
-          bank_guarantee_id: string | null
-          category: string | null
-          compliance_level: string | null
-          created_at: string | null
-          created_by: string | null
-          deadline: string | null
-          description: string | null
-          external_references: string[] | null
-          id: string | null
-          last_reviewed: string | null
-          mitigation_plan: string | null
-          mitigation_required: boolean | null
-          next_review: string | null
-          priority: string | null
-          project_id: string | null
-          responsible: string | null
-          risk_level: string | null
-          status: string | null
-          subcategory: string | null
-          title: string | null
-          type: string | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          bank_guarantee_id?: string | null
-          category?: string | null
-          compliance_level?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          deadline?: string | null
-          description?: string | null
-          external_references?: string[] | null
-          id?: string | null
-          last_reviewed?: string | null
-          mitigation_plan?: string | null
-          mitigation_required?: boolean | null
-          next_review?: string | null
-          priority?: string | null
-          project_id?: string | null
-          responsible?: string | null
-          risk_level?: string | null
-          status?: string | null
-          subcategory?: string | null
-          title?: string | null
-          type?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          bank_guarantee_id?: string | null
-          category?: string | null
-          compliance_level?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          deadline?: string | null
-          description?: string | null
-          external_references?: string[] | null
-          id?: string | null
-          last_reviewed?: string | null
-          mitigation_plan?: string | null
-          mitigation_required?: boolean | null
-          next_review?: string | null
-          priority?: string | null
-          project_id?: string | null
-          responsible?: string | null
-          risk_level?: string | null
-          status?: string | null
-          subcategory?: string | null
-          title?: string | null
-          type?: string | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
       compliance_items_with_details: {
         Row: {
+          bank_guarantee: Json | null
           bank_guarantee_id: string | null
           category: string | null
           compliance_level: string | null
@@ -4330,33 +3951,6 @@ export type Database = {
           type: string | null
           updated_at: string | null
           updated_by: string | null
-        }
-        Relationships: []
-      }
-      compliance_notes: {
-        Row: {
-          compliance_item_id: string | null
-          created_at: string | null
-          created_by: string | null
-          id: string | null
-          note: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          compliance_item_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string | null
-          note?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          compliance_item_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string | null
-          note?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -4403,8 +3997,11 @@ export type Database = {
           errors: Json | null
           id: string | null
           is_valid: boolean | null
+          processing_time_ms: number | null
           submission_id: string | null
           validated_at: string | null
+          validated_by: string | null
+          validation_type: string | null
           warnings: Json | null
         }
         Insert: {
@@ -4413,8 +4010,11 @@ export type Database = {
           errors?: Json | null
           id?: string | null
           is_valid?: boolean | null
+          processing_time_ms?: number | null
           submission_id?: string | null
           validated_at?: string | null
+          validated_by?: string | null
+          validation_type?: string | null
           warnings?: Json | null
         }
         Update: {
@@ -4423,198 +4023,12 @@ export type Database = {
           errors?: Json | null
           id?: string | null
           is_valid?: boolean | null
+          processing_time_ms?: number | null
           submission_id?: string | null
           validated_at?: string | null
+          validated_by?: string | null
+          validation_type?: string | null
           warnings?: Json | null
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
-          assigned_to: string | null
-          created_at: string | null
-          deadline_date: string | null
-          description: string | null
-          document_type: Database["public"]["Enums"]["document_type"] | null
-          file_name: string | null
-          file_size: number | null
-          file_url: string | null
-          id: string | null
-          inspection_id: string | null
-          is_internal_only: boolean | null
-          is_shared_with_suppliers: boolean | null
-          metadata: Json | null
-          mime_type: string | null
-          payment_id: string | null
-          phase_id: string | null
-          project_id: string | null
-          shared_date: string | null
-          status: Database["public"]["Enums"]["document_status"] | null
-          supplier_id: string | null
-          tags: string[] | null
-          title: string | null
-          updated_at: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          created_at?: string | null
-          deadline_date?: string | null
-          description?: string | null
-          document_type?: Database["public"]["Enums"]["document_type"] | null
-          file_name?: string | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          is_internal_only?: boolean | null
-          is_shared_with_suppliers?: boolean | null
-          metadata?: Json | null
-          mime_type?: string | null
-          payment_id?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          shared_date?: string | null
-          status?: Database["public"]["Enums"]["document_status"] | null
-          supplier_id?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          created_at?: string | null
-          deadline_date?: string | null
-          description?: string | null
-          document_type?: Database["public"]["Enums"]["document_type"] | null
-          file_name?: string | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          is_internal_only?: boolean | null
-          is_shared_with_suppliers?: boolean | null
-          metadata?: Json | null
-          mime_type?: string | null
-          payment_id?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          shared_date?: string | null
-          status?: Database["public"]["Enums"]["document_status"] | null
-          supplier_id?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: []
-      }
-      employees: {
-        Row: {
-          certifications: Json | null
-          created_at: string | null
-          department: string | null
-          email: string | null
-          employee_id: string | null
-          full_name: string | null
-          hire_date: string | null
-          id: string | null
-          is_active: boolean | null
-          manager_id: string | null
-          phone: string | null
-          position: string | null
-          salary: number | null
-          skills: string[] | null
-          superior_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          certifications?: Json | null
-          created_at?: string | null
-          department?: string | null
-          email?: string | null
-          employee_id?: string | null
-          full_name?: string | null
-          hire_date?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          manager_id?: string | null
-          phone?: string | null
-          position?: string | null
-          salary?: number | null
-          skills?: string[] | null
-          superior_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          certifications?: Json | null
-          created_at?: string | null
-          department?: string | null
-          email?: string | null
-          employee_id?: string | null
-          full_name?: string | null
-          hire_date?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          manager_id?: string | null
-          phone?: string | null
-          position?: string | null
-          salary?: number | null
-          skills?: string[] | null
-          superior_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      enhanced_project_milestones: {
-        Row: {
-          completed_date: string | null
-          created_at: string | null
-          dependencies: Json | null
-          description: string | null
-          id: string | null
-          notes: string | null
-          phase_id: string | null
-          project_id: string | null
-          status: string | null
-          target_date: string | null
-          title: string | null
-          updated_at: string | null
-          weight: number | null
-        }
-        Insert: {
-          completed_date?: string | null
-          created_at?: string | null
-          dependencies?: Json | null
-          description?: string | null
-          id?: string | null
-          notes?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          status?: string | null
-          target_date?: string | null
-          title?: string | null
-          updated_at?: string | null
-          weight?: number | null
-        }
-        Update: {
-          completed_date?: string | null
-          created_at?: string | null
-          dependencies?: Json | null
-          description?: string | null
-          id?: string | null
-          notes?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          status?: string | null
-          target_date?: string | null
-          title?: string | null
-          updated_at?: string | null
-          weight?: number | null
         }
         Relationships: []
       }
@@ -4906,111 +4320,6 @@ export type Database = {
         }
         Relationships: []
       }
-      inspections: {
-        Row: {
-          comments: string | null
-          created_at: string | null
-          date: string | null
-          documents: Json | null
-          id: string | null
-          inspector: string | null
-          payment_type: string | null
-          phase_id: string | null
-          progress_at_inspection: number | null
-          project_id: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          comments?: string | null
-          created_at?: string | null
-          date?: string | null
-          documents?: Json | null
-          id?: string | null
-          inspector?: string | null
-          payment_type?: string | null
-          phase_id?: string | null
-          progress_at_inspection?: number | null
-          project_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          comments?: string | null
-          created_at?: string | null
-          date?: string | null
-          documents?: Json | null
-          id?: string | null
-          inspector?: string | null
-          payment_type?: string | null
-          phase_id?: string | null
-          progress_at_inspection?: number | null
-          project_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      insurance_certificates: {
-        Row: {
-          certificate_url: string | null
-          contractor_id: string | null
-          contractor_name: string | null
-          coverage_amount: number | null
-          coverage_type: string | null
-          created_at: string | null
-          id: string | null
-          insurance_company: string | null
-          last_verified: string | null
-          notes: string | null
-          policy_number: string | null
-          project_id: string | null
-          status: string | null
-          updated_at: string | null
-          valid_from: string | null
-          valid_until: string | null
-          verified_by: string | null
-        }
-        Insert: {
-          certificate_url?: string | null
-          contractor_id?: string | null
-          contractor_name?: string | null
-          coverage_amount?: number | null
-          coverage_type?: string | null
-          created_at?: string | null
-          id?: string | null
-          insurance_company?: string | null
-          last_verified?: string | null
-          notes?: string | null
-          policy_number?: string | null
-          project_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-          valid_from?: string | null
-          valid_until?: string | null
-          verified_by?: string | null
-        }
-        Update: {
-          certificate_url?: string | null
-          contractor_id?: string | null
-          contractor_name?: string | null
-          coverage_amount?: number | null
-          coverage_type?: string | null
-          created_at?: string | null
-          id?: string | null
-          insurance_company?: string | null
-          last_verified?: string | null
-          notes?: string | null
-          policy_number?: string | null
-          project_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-          valid_from?: string | null
-          valid_until?: string | null
-          verified_by?: string | null
-        }
-        Relationships: []
-      }
       lab_test_prescriptions: {
         Row: {
           created_at: string | null
@@ -5038,204 +4347,6 @@ export type Database = {
           special_instructions?: string | null
           updated_at?: string | null
           urgency_level?: string | null
-        }
-        Relationships: []
-      }
-      material_documents: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          document_date: string | null
-          document_number: string | null
-          document_type: string | null
-          expiry_date: string | null
-          file_name: string | null
-          file_size: number | null
-          file_url: string | null
-          id: string | null
-          material_id: string | null
-          metadata: Json | null
-          mime_type: string | null
-          supplier_name: string | null
-          tags: string[] | null
-          title: string | null
-          updated_at: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          document_date?: string | null
-          document_number?: string | null
-          document_type?: string | null
-          expiry_date?: string | null
-          file_name?: string | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string | null
-          material_id?: string | null
-          metadata?: Json | null
-          mime_type?: string | null
-          supplier_name?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          document_date?: string | null
-          document_number?: string | null
-          document_type?: string | null
-          expiry_date?: string | null
-          file_name?: string | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string | null
-          material_id?: string | null
-          metadata?: Json | null
-          mime_type?: string | null
-          supplier_name?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: []
-      }
-      material_suppliers: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          is_preferred: boolean | null
-          last_price_update: string | null
-          lead_time_days: number | null
-          material_id: string | null
-          minimum_order_quantity: number | null
-          supplier_id: string | null
-          unit_price: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          is_preferred?: boolean | null
-          last_price_update?: string | null
-          lead_time_days?: number | null
-          material_id?: string | null
-          minimum_order_quantity?: number | null
-          supplier_id?: string | null
-          unit_price?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          is_preferred?: boolean | null
-          last_price_update?: string | null
-          lead_time_days?: number | null
-          material_id?: string | null
-          minimum_order_quantity?: number | null
-          supplier_id?: string | null
-          unit_price?: number | null
-        }
-        Relationships: []
-      }
-      materials: {
-        Row: {
-          adresse: Json | null
-          asin: string | null
-          available_quantity: number | null
-          category: string | null
-          coordinates_latitude: number | null
-          coordinates_longitude: number | null
-          created_at: string | null
-          description: string | null
-          ean: string | null
-          forme: string | null
-          gtin: string | null
-          id: string | null
-          image: string | null
-          last_restock: string | null
-          localisation: Json | null
-          material_status: string | null
-          min_quantity: number | null
-          multilang_labels: Json | null
-          name: string | null
-          origin_location: string | null
-          price_per_unit: number | null
-          quantity: number | null
-          sku: string | null
-          subcategory: string | null
-          supplier: Json | null
-          tags: Json | null
-          timeline: Json | null
-          unit: string | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          adresse?: Json | null
-          asin?: string | null
-          available_quantity?: number | null
-          category?: string | null
-          coordinates_latitude?: number | null
-          coordinates_longitude?: number | null
-          created_at?: string | null
-          description?: string | null
-          ean?: string | null
-          forme?: string | null
-          gtin?: string | null
-          id?: string | null
-          image?: string | null
-          last_restock?: string | null
-          localisation?: Json | null
-          material_status?: string | null
-          min_quantity?: number | null
-          multilang_labels?: Json | null
-          name?: string | null
-          origin_location?: string | null
-          price_per_unit?: number | null
-          quantity?: number | null
-          sku?: string | null
-          subcategory?: string | null
-          supplier?: Json | null
-          tags?: Json | null
-          timeline?: Json | null
-          unit?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          adresse?: Json | null
-          asin?: string | null
-          available_quantity?: number | null
-          category?: string | null
-          coordinates_latitude?: number | null
-          coordinates_longitude?: number | null
-          created_at?: string | null
-          description?: string | null
-          ean?: string | null
-          forme?: string | null
-          gtin?: string | null
-          id?: string | null
-          image?: string | null
-          last_restock?: string | null
-          localisation?: Json | null
-          material_status?: string | null
-          min_quantity?: number | null
-          multilang_labels?: Json | null
-          name?: string | null
-          origin_location?: string | null
-          price_per_unit?: number | null
-          quantity?: number | null
-          sku?: string | null
-          subcategory?: string | null
-          supplier?: Json | null
-          tags?: Json | null
-          timeline?: Json | null
-          unit?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
         }
         Relationships: []
       }
@@ -5443,156 +4554,6 @@ export type Database = {
         }
         Relationships: []
       }
-      organizational_hierarchy: {
-        Row: {
-          can_approve_payments: boolean | null
-          can_approve_projects: boolean | null
-          can_escalate_to_director: boolean | null
-          created_at: string | null
-          department: string | null
-          direct_reports_count: number | null
-          employee_id: string | null
-          id: string | null
-          level: number | null
-          notification_preferences: Json | null
-          organization_id: string | null
-          parent_id: string | null
-          position_title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          can_approve_payments?: boolean | null
-          can_approve_projects?: boolean | null
-          can_escalate_to_director?: boolean | null
-          created_at?: string | null
-          department?: string | null
-          direct_reports_count?: number | null
-          employee_id?: string | null
-          id?: string | null
-          level?: number | null
-          notification_preferences?: Json | null
-          organization_id?: string | null
-          parent_id?: string | null
-          position_title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          can_approve_payments?: boolean | null
-          can_approve_projects?: boolean | null
-          can_escalate_to_director?: boolean | null
-          created_at?: string | null
-          department?: string | null
-          direct_reports_count?: number | null
-          employee_id?: string | null
-          id?: string | null
-          level?: number | null
-          notification_preferences?: Json | null
-          organization_id?: string | null
-          parent_id?: string | null
-          position_title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      organizations: {
-        Row: {
-          address: string | null
-          code: string | null
-          created_at: string | null
-          description: string | null
-          email: string | null
-          id: string | null
-          is_active: boolean | null
-          logo_url: string | null
-          name: string | null
-          phone: string | null
-          updated_at: string | null
-          website: string | null
-        }
-        Insert: {
-          address?: string | null
-          code?: string | null
-          created_at?: string | null
-          description?: string | null
-          email?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          logo_url?: string | null
-          name?: string | null
-          phone?: string | null
-          updated_at?: string | null
-          website?: string | null
-        }
-        Update: {
-          address?: string | null
-          code?: string | null
-          created_at?: string | null
-          description?: string | null
-          email?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          logo_url?: string | null
-          name?: string | null
-          phone?: string | null
-          updated_at?: string | null
-          website?: string | null
-        }
-        Relationships: []
-      }
-      parsed_invoices: {
-        Row: {
-          created_at: string | null
-          document_id: string | null
-          file_name: string | null
-          id: string | null
-          invoice_date: string | null
-          invoice_number: string | null
-          items: Json | null
-          parsed_data: Json | null
-          parsing_errors: string | null
-          parsing_status: string | null
-          supplier_info: Json | null
-          tax_amount: number | null
-          tender_id: string | null
-          total_amount: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          document_id?: string | null
-          file_name?: string | null
-          id?: string | null
-          invoice_date?: string | null
-          invoice_number?: string | null
-          items?: Json | null
-          parsed_data?: Json | null
-          parsing_errors?: string | null
-          parsing_status?: string | null
-          supplier_info?: Json | null
-          tax_amount?: number | null
-          tender_id?: string | null
-          total_amount?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          document_id?: string | null
-          file_name?: string | null
-          id?: string | null
-          invoice_date?: string | null
-          invoice_number?: string | null
-          items?: Json | null
-          parsed_data?: Json | null
-          parsing_errors?: string | null
-          parsing_status?: string | null
-          supplier_info?: Json | null
-          tax_amount?: number | null
-          tender_id?: string | null
-          total_amount?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       patients: {
         Row: {
           address: string | null
@@ -5632,75 +4593,6 @@ export type Database = {
         }
         Relationships: []
       }
-      payments: {
-        Row: {
-          account_number: string | null
-          amount: number | null
-          bank_name: string | null
-          check_number: string | null
-          contractor_contact: string | null
-          contractor_id: string | null
-          contractor_name: string | null
-          created_at: string | null
-          id: string | null
-          inspection_id: string | null
-          mobile_number: string | null
-          mobile_operator: string | null
-          payment_date: string | null
-          payment_method: string | null
-          phase_id: string | null
-          progress_at_payment: number | null
-          project_id: string | null
-          receiver_name: string | null
-          transaction_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          account_number?: string | null
-          amount?: number | null
-          bank_name?: string | null
-          check_number?: string | null
-          contractor_contact?: string | null
-          contractor_id?: string | null
-          contractor_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          mobile_number?: string | null
-          mobile_operator?: string | null
-          payment_date?: string | null
-          payment_method?: string | null
-          phase_id?: string | null
-          progress_at_payment?: number | null
-          project_id?: string | null
-          receiver_name?: string | null
-          transaction_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          account_number?: string | null
-          amount?: number | null
-          bank_name?: string | null
-          check_number?: string | null
-          contractor_contact?: string | null
-          contractor_id?: string | null
-          contractor_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          mobile_number?: string | null
-          mobile_operator?: string | null
-          payment_date?: string | null
-          payment_method?: string | null
-          phase_id?: string | null
-          progress_at_payment?: number | null
-          project_id?: string | null
-          receiver_name?: string | null
-          transaction_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       prescriptions: {
         Row: {
           created_at: string | null
@@ -5734,741 +4626,6 @@ export type Database = {
           remarks?: string | null
           status?: string | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      progress_invoices: {
-        Row: {
-          consultant_approval_status: string | null
-          consultant_comments: string | null
-          consultant_id: string | null
-          consultant_validated_at: string | null
-          created_at: string | null
-          cumulative_paid: number | null
-          donor_approval_required: boolean | null
-          donor_approved_at: string | null
-          donor_comments: string | null
-          id: string | null
-          inspection_id: string | null
-          inspection_report_url: string | null
-          invoice_amount: number | null
-          invoice_number: string | null
-          invoice_type: string | null
-          lot_details: Json | null
-          ministry_comments: string | null
-          ministry_reviewer_id: string | null
-          ministry_validated_at: string | null
-          paid_at: string | null
-          previous_progress: number | null
-          progress_increment: number | null
-          progress_percentage: number | null
-          project_id: string | null
-          quantities_executed: Json | null
-          retention_amount: number | null
-          service_fait_document_id: string | null
-          status: string | null
-          submitted_at: string | null
-          submitted_by: string | null
-          supporting_documents: Json | null
-          total_contract_amount: number | null
-          updated_at: string | null
-          work_description: string | null
-          workflow_history: Json | null
-        }
-        Insert: {
-          consultant_approval_status?: string | null
-          consultant_comments?: string | null
-          consultant_id?: string | null
-          consultant_validated_at?: string | null
-          created_at?: string | null
-          cumulative_paid?: number | null
-          donor_approval_required?: boolean | null
-          donor_approved_at?: string | null
-          donor_comments?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          inspection_report_url?: string | null
-          invoice_amount?: number | null
-          invoice_number?: string | null
-          invoice_type?: string | null
-          lot_details?: Json | null
-          ministry_comments?: string | null
-          ministry_reviewer_id?: string | null
-          ministry_validated_at?: string | null
-          paid_at?: string | null
-          previous_progress?: number | null
-          progress_increment?: number | null
-          progress_percentage?: number | null
-          project_id?: string | null
-          quantities_executed?: Json | null
-          retention_amount?: number | null
-          service_fait_document_id?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          submitted_by?: string | null
-          supporting_documents?: Json | null
-          total_contract_amount?: number | null
-          updated_at?: string | null
-          work_description?: string | null
-          workflow_history?: Json | null
-        }
-        Update: {
-          consultant_approval_status?: string | null
-          consultant_comments?: string | null
-          consultant_id?: string | null
-          consultant_validated_at?: string | null
-          created_at?: string | null
-          cumulative_paid?: number | null
-          donor_approval_required?: boolean | null
-          donor_approved_at?: string | null
-          donor_comments?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          inspection_report_url?: string | null
-          invoice_amount?: number | null
-          invoice_number?: string | null
-          invoice_type?: string | null
-          lot_details?: Json | null
-          ministry_comments?: string | null
-          ministry_reviewer_id?: string | null
-          ministry_validated_at?: string | null
-          paid_at?: string | null
-          previous_progress?: number | null
-          progress_increment?: number | null
-          progress_percentage?: number | null
-          project_id?: string | null
-          quantities_executed?: Json | null
-          retention_amount?: number | null
-          service_fait_document_id?: string | null
-          status?: string | null
-          submitted_at?: string | null
-          submitted_by?: string | null
-          supporting_documents?: Json | null
-          total_contract_amount?: number | null
-          updated_at?: string | null
-          work_description?: string | null
-          workflow_history?: Json | null
-        }
-        Relationships: []
-      }
-      project_budget_links: {
-        Row: {
-          action_code: string | null
-          allocated_ce: number | null
-          allocated_cp: number | null
-          chapter_code: string | null
-          created_at: string | null
-          created_by: string | null
-          fiscal_year: number | null
-          id: string | null
-          line_code: string | null
-          ministry_code: string | null
-          notes: string | null
-          program_code: string | null
-          project_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          action_code?: string | null
-          allocated_ce?: number | null
-          allocated_cp?: number | null
-          chapter_code?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          fiscal_year?: number | null
-          id?: string | null
-          line_code?: string | null
-          ministry_code?: string | null
-          notes?: string | null
-          program_code?: string | null
-          project_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          action_code?: string | null
-          allocated_ce?: number | null
-          allocated_cp?: number | null
-          chapter_code?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          fiscal_year?: number | null
-          id?: string | null
-          line_code?: string | null
-          ministry_code?: string | null
-          notes?: string | null
-          program_code?: string | null
-          project_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      project_materials: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          material_id: string | null
-          phase_id: string | null
-          project_id: string | null
-          quantity: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          material_id?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          material_id?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      project_organizations: {
-        Row: {
-          contract_amount: number | null
-          contract_end_date: string | null
-          contract_start_date: string | null
-          created_at: string | null
-          id: string | null
-          is_primary: boolean | null
-          organization_id: string | null
-          project_id: string | null
-          role: string | null
-        }
-        Insert: {
-          contract_amount?: number | null
-          contract_end_date?: string | null
-          contract_start_date?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_primary?: boolean | null
-          organization_id?: string | null
-          project_id?: string | null
-          role?: string | null
-        }
-        Update: {
-          contract_amount?: number | null
-          contract_end_date?: string | null
-          contract_start_date?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_primary?: boolean | null
-          organization_id?: string | null
-          project_id?: string | null
-          role?: string | null
-        }
-        Relationships: []
-      }
-      project_phases: {
-        Row: {
-          actual_cost: number | null
-          actual_duration: number | null
-          construction_phase: string | null
-          construction_stage: string | null
-          created_at: string | null
-          created_by: string | null
-          custom_phase_data: Json | null
-          dependencies: Json | null
-          description: string | null
-          end_date: string | null
-          estimated_cost: number | null
-          estimated_duration: number | null
-          human_resources: Json | null
-          id: string | null
-          location: string | null
-          materials: Json | null
-          milestones: Json | null
-          notes: string | null
-          order_index: number | null
-          phase_name: string | null
-          phase_type: string | null
-          progress: number | null
-          project_id: string | null
-          start_date: string | null
-          status: string | null
-          suppliers: Json | null
-          updated_at: string | null
-          weight: number | null
-        }
-        Insert: {
-          actual_cost?: number | null
-          actual_duration?: number | null
-          construction_phase?: string | null
-          construction_stage?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          custom_phase_data?: Json | null
-          dependencies?: Json | null
-          description?: string | null
-          end_date?: string | null
-          estimated_cost?: number | null
-          estimated_duration?: number | null
-          human_resources?: Json | null
-          id?: string | null
-          location?: string | null
-          materials?: Json | null
-          milestones?: Json | null
-          notes?: string | null
-          order_index?: number | null
-          phase_name?: string | null
-          phase_type?: string | null
-          progress?: number | null
-          project_id?: string | null
-          start_date?: string | null
-          status?: string | null
-          suppliers?: Json | null
-          updated_at?: string | null
-          weight?: number | null
-        }
-        Update: {
-          actual_cost?: number | null
-          actual_duration?: number | null
-          construction_phase?: string | null
-          construction_stage?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          custom_phase_data?: Json | null
-          dependencies?: Json | null
-          description?: string | null
-          end_date?: string | null
-          estimated_cost?: number | null
-          estimated_duration?: number | null
-          human_resources?: Json | null
-          id?: string | null
-          location?: string | null
-          materials?: Json | null
-          milestones?: Json | null
-          notes?: string | null
-          order_index?: number | null
-          phase_name?: string | null
-          phase_type?: string | null
-          progress?: number | null
-          project_id?: string | null
-          start_date?: string | null
-          status?: string | null
-          suppliers?: Json | null
-          updated_at?: string | null
-          weight?: number | null
-        }
-        Relationships: []
-      }
-      project_stakeholders: {
-        Row: {
-          contract_type: string | null
-          created_at: string | null
-          employee_id: string | null
-          end_date: string | null
-          external_email: string | null
-          external_name: string | null
-          external_phone: string | null
-          hourly_rate: number | null
-          id: string | null
-          is_active: boolean | null
-          is_primary: boolean | null
-          notes: string | null
-          project_id: string | null
-          responsibilities: string[] | null
-          role_description: string | null
-          stakeholder_entity_type: string | null
-          stakeholder_type: string | null
-          start_date: string | null
-          supplier_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          contract_type?: string | null
-          created_at?: string | null
-          employee_id?: string | null
-          end_date?: string | null
-          external_email?: string | null
-          external_name?: string | null
-          external_phone?: string | null
-          hourly_rate?: number | null
-          id?: string | null
-          is_active?: boolean | null
-          is_primary?: boolean | null
-          notes?: string | null
-          project_id?: string | null
-          responsibilities?: string[] | null
-          role_description?: string | null
-          stakeholder_entity_type?: string | null
-          stakeholder_type?: string | null
-          start_date?: string | null
-          supplier_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          contract_type?: string | null
-          created_at?: string | null
-          employee_id?: string | null
-          end_date?: string | null
-          external_email?: string | null
-          external_name?: string | null
-          external_phone?: string | null
-          hourly_rate?: number | null
-          id?: string | null
-          is_active?: boolean | null
-          is_primary?: boolean | null
-          notes?: string | null
-          project_id?: string | null
-          responsibilities?: string[] | null
-          role_description?: string | null
-          stakeholder_entity_type?: string | null
-          stakeholder_type?: string | null
-          start_date?: string | null
-          supplier_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      project_strategy_links: {
-        Row: {
-          chantier_code: string | null
-          contribution_pct: number | null
-          created_at: string | null
-          created_by: string | null
-          id: string | null
-          intervention_code: string | null
-          justification: string | null
-          lever_code: string | null
-          objective_code: string | null
-          project_id: string | null
-          source_referential: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          chantier_code?: string | null
-          contribution_pct?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string | null
-          intervention_code?: string | null
-          justification?: string | null
-          lever_code?: string | null
-          objective_code?: string | null
-          project_id?: string | null
-          source_referential?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          chantier_code?: string | null
-          contribution_pct?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string | null
-          intervention_code?: string | null
-          justification?: string | null
-          lever_code?: string | null
-          objective_code?: string | null
-          project_id?: string | null
-          source_referential?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      projects: {
-        Row: {
-          adresse: Json | null
-          allows_initial_payment: boolean | null
-          area_sqm: number | null
-          attribution_date: string | null
-          bank_guarantee_amount: number | null
-          bank_guarantee_percentage: number | null
-          bank_guarantee_required: boolean | null
-          budget: number | null
-          check_schedule_last_run: Json | null
-          client_id: string | null
-          closure_notes: string | null
-          completion_date: string | null
-          coordinates_latitude: number | null
-          coordinates_longitude: number | null
-          created_at: string | null
-          created_by: string | null
-          currency: string | null
-          current_phase: string | null
-          current_stage: string | null
-          description: string | null
-          donor_organization: string | null
-          end_date: string | null
-          engineering_consultant_id: string | null
-          environmental_constraints: string | null
-          estimated_days: number | null
-          financing_source: string | null
-          forme: string | null
-          funding_source: string | null
-          geographic_zone: string | null
-          has_utilities: boolean | null
-          id: string | null
-          initial_advance_percentage: number | null
-          initial_payment_percentage: number | null
-          insurance_required: boolean | null
-          launch_date: string | null
-          localisation: Json | null
-          location: string | null
-          main_contractor: string | null
-          market_type: string | null
-          materials_budget: number | null
-          methodology: string | null
-          payment_frequency: string | null
-          payment_mode: string | null
-          payment_workflow_config: Json | null
-          permit_number: string | null
-          priority: string | null
-          procurement_lead_time: number | null
-          progress: number | null
-          project_order: number | null
-          project_reference: string | null
-          project_reference_number: string | null
-          project_responsable_id: string | null
-          project_type: string | null
-          reception_status: string | null
-          referential_code: string | null
-          requires_consultant_validation: boolean | null
-          requires_ministry_approval: boolean | null
-          requires_permits: boolean | null
-          resource_assignment: string | null
-          retention_percentage: number | null
-          sector: string | null
-          selection_mode: string | null
-          site_details: string | null
-          start_date: string | null
-          status: string | null
-          supervisor_id: string | null
-          team_size: number | null
-          technical_manager_id: string | null
-          terrain_type: string | null
-          thumbnail: string | null
-          title: string | null
-          updated_at: string | null
-          workspace_id: string | null
-        }
-        Insert: {
-          adresse?: Json | null
-          allows_initial_payment?: boolean | null
-          area_sqm?: number | null
-          attribution_date?: string | null
-          bank_guarantee_amount?: number | null
-          bank_guarantee_percentage?: number | null
-          bank_guarantee_required?: boolean | null
-          budget?: number | null
-          check_schedule_last_run?: Json | null
-          client_id?: string | null
-          closure_notes?: string | null
-          completion_date?: string | null
-          coordinates_latitude?: number | null
-          coordinates_longitude?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          currency?: string | null
-          current_phase?: string | null
-          current_stage?: string | null
-          description?: string | null
-          donor_organization?: string | null
-          end_date?: string | null
-          engineering_consultant_id?: string | null
-          environmental_constraints?: string | null
-          estimated_days?: number | null
-          financing_source?: string | null
-          forme?: string | null
-          funding_source?: string | null
-          geographic_zone?: string | null
-          has_utilities?: boolean | null
-          id?: string | null
-          initial_advance_percentage?: number | null
-          initial_payment_percentage?: number | null
-          insurance_required?: boolean | null
-          launch_date?: string | null
-          localisation?: Json | null
-          location?: string | null
-          main_contractor?: string | null
-          market_type?: string | null
-          materials_budget?: number | null
-          methodology?: string | null
-          payment_frequency?: string | null
-          payment_mode?: string | null
-          payment_workflow_config?: Json | null
-          permit_number?: string | null
-          priority?: string | null
-          procurement_lead_time?: number | null
-          progress?: number | null
-          project_order?: number | null
-          project_reference?: string | null
-          project_reference_number?: string | null
-          project_responsable_id?: string | null
-          project_type?: string | null
-          reception_status?: string | null
-          referential_code?: string | null
-          requires_consultant_validation?: boolean | null
-          requires_ministry_approval?: boolean | null
-          requires_permits?: boolean | null
-          resource_assignment?: string | null
-          retention_percentage?: number | null
-          sector?: string | null
-          selection_mode?: string | null
-          site_details?: string | null
-          start_date?: string | null
-          status?: string | null
-          supervisor_id?: string | null
-          team_size?: number | null
-          technical_manager_id?: string | null
-          terrain_type?: string | null
-          thumbnail?: string | null
-          title?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Update: {
-          adresse?: Json | null
-          allows_initial_payment?: boolean | null
-          area_sqm?: number | null
-          attribution_date?: string | null
-          bank_guarantee_amount?: number | null
-          bank_guarantee_percentage?: number | null
-          bank_guarantee_required?: boolean | null
-          budget?: number | null
-          check_schedule_last_run?: Json | null
-          client_id?: string | null
-          closure_notes?: string | null
-          completion_date?: string | null
-          coordinates_latitude?: number | null
-          coordinates_longitude?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          currency?: string | null
-          current_phase?: string | null
-          current_stage?: string | null
-          description?: string | null
-          donor_organization?: string | null
-          end_date?: string | null
-          engineering_consultant_id?: string | null
-          environmental_constraints?: string | null
-          estimated_days?: number | null
-          financing_source?: string | null
-          forme?: string | null
-          funding_source?: string | null
-          geographic_zone?: string | null
-          has_utilities?: boolean | null
-          id?: string | null
-          initial_advance_percentage?: number | null
-          initial_payment_percentage?: number | null
-          insurance_required?: boolean | null
-          launch_date?: string | null
-          localisation?: Json | null
-          location?: string | null
-          main_contractor?: string | null
-          market_type?: string | null
-          materials_budget?: number | null
-          methodology?: string | null
-          payment_frequency?: string | null
-          payment_mode?: string | null
-          payment_workflow_config?: Json | null
-          permit_number?: string | null
-          priority?: string | null
-          procurement_lead_time?: number | null
-          progress?: number | null
-          project_order?: number | null
-          project_reference?: string | null
-          project_reference_number?: string | null
-          project_responsable_id?: string | null
-          project_type?: string | null
-          reception_status?: string | null
-          referential_code?: string | null
-          requires_consultant_validation?: boolean | null
-          requires_ministry_approval?: boolean | null
-          requires_permits?: boolean | null
-          resource_assignment?: string | null
-          retention_percentage?: number | null
-          sector?: string | null
-          selection_mode?: string | null
-          site_details?: string | null
-          start_date?: string | null
-          status?: string | null
-          supervisor_id?: string | null
-          team_size?: number | null
-          technical_manager_id?: string | null
-          terrain_type?: string | null
-          thumbnail?: string | null
-          title?: string | null
-          updated_at?: string | null
-          workspace_id?: string | null
-        }
-        Relationships: []
-      }
-      quantity_takeoffs: {
-        Row: {
-          created_at: string | null
-          element_type: string | null
-          height: number | null
-          id: string | null
-          length: number | null
-          material_id: string | null
-          milestone_id: string | null
-          note: string | null
-          phase_id: string | null
-          project_id: string | null
-          quantity: number | null
-          resource_type: string | null
-          source: string | null
-          task_id: string | null
-          total_value: number | null
-          unit: string | null
-          unit_price: number | null
-          updated_at: string | null
-          vat_rate: number | null
-          width: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          element_type?: string | null
-          height?: number | null
-          id?: string | null
-          length?: number | null
-          material_id?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          resource_type?: string | null
-          source?: string | null
-          task_id?: string | null
-          total_value?: number | null
-          unit?: string | null
-          unit_price?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          element_type?: string | null
-          height?: number | null
-          id?: string | null
-          length?: number | null
-          material_id?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          resource_type?: string | null
-          source?: string | null
-          task_id?: string | null
-          total_value?: number | null
-          unit?: string | null
-          unit_price?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
         }
         Relationships: []
       }
@@ -6604,297 +4761,6 @@ export type Database = {
         }
         Relationships: []
       }
-      stock_movements: {
-        Row: {
-          created_at: string | null
-          destination: string | null
-          destination_code: string | null
-          destination_stock_id: string | null
-          id: string | null
-          index_km: number | null
-          label_prod_ar: string | null
-          label_prod_fr: string | null
-          label_vill_ar: string | null
-          label_vill_fr: string | null
-          movement_date: string | null
-          movement_type: string | null
-          notes: string | null
-          origin_code: string | null
-          prix_base: number | null
-          quantity: number | null
-          rec_id: string | null
-          recorded_by: string | null
-          reference: string | null
-          rejection_reason: string | null
-          source_stock_id: string | null
-          stock_id: string | null
-          supplier: string | null
-          tarif_unit: number | null
-          total_value: number | null
-          unit_price: number | null
-          validated_at: string | null
-          validated_by: string | null
-          validation_status:
-            | Database["public"]["Enums"]["movement_validation_status"]
-            | null
-        }
-        Insert: {
-          created_at?: string | null
-          destination?: string | null
-          destination_code?: string | null
-          destination_stock_id?: string | null
-          id?: string | null
-          index_km?: number | null
-          label_prod_ar?: string | null
-          label_prod_fr?: string | null
-          label_vill_ar?: string | null
-          label_vill_fr?: string | null
-          movement_date?: string | null
-          movement_type?: string | null
-          notes?: string | null
-          origin_code?: string | null
-          prix_base?: number | null
-          quantity?: number | null
-          rec_id?: string | null
-          recorded_by?: string | null
-          reference?: string | null
-          rejection_reason?: string | null
-          source_stock_id?: string | null
-          stock_id?: string | null
-          supplier?: string | null
-          tarif_unit?: number | null
-          total_value?: number | null
-          unit_price?: number | null
-          validated_at?: string | null
-          validated_by?: string | null
-          validation_status?:
-            | Database["public"]["Enums"]["movement_validation_status"]
-            | null
-        }
-        Update: {
-          created_at?: string | null
-          destination?: string | null
-          destination_code?: string | null
-          destination_stock_id?: string | null
-          id?: string | null
-          index_km?: number | null
-          label_prod_ar?: string | null
-          label_prod_fr?: string | null
-          label_vill_ar?: string | null
-          label_vill_fr?: string | null
-          movement_date?: string | null
-          movement_type?: string | null
-          notes?: string | null
-          origin_code?: string | null
-          prix_base?: number | null
-          quantity?: number | null
-          rec_id?: string | null
-          recorded_by?: string | null
-          reference?: string | null
-          rejection_reason?: string | null
-          source_stock_id?: string | null
-          stock_id?: string | null
-          supplier?: string | null
-          tarif_unit?: number | null
-          total_value?: number | null
-          unit_price?: number | null
-          validated_at?: string | null
-          validated_by?: string | null
-          validation_status?:
-            | Database["public"]["Enums"]["movement_validation_status"]
-            | null
-        }
-        Relationships: []
-      }
-      submission_activity_logs: {
-        Row: {
-          action: string | null
-          created_at: string | null
-          details: string | null
-          id: string | null
-          performed_by: string | null
-          submission_id: string | null
-        }
-        Insert: {
-          action?: string | null
-          created_at?: string | null
-          details?: string | null
-          id?: string | null
-          performed_by?: string | null
-          submission_id?: string | null
-        }
-        Update: {
-          action?: string | null
-          created_at?: string | null
-          details?: string | null
-          id?: string | null
-          performed_by?: string | null
-          submission_id?: string | null
-        }
-        Relationships: []
-      }
-      supplier_notifications: {
-        Row: {
-          created_by: string | null
-          email: string | null
-          expires_at: string | null
-          id: string | null
-          metadata: Json | null
-          notification_type: string | null
-          reset_token: string | null
-          sent_at: string | null
-          supplier_id: string | null
-          task_id: string | null
-          used_at: string | null
-        }
-        Insert: {
-          created_by?: string | null
-          email?: string | null
-          expires_at?: string | null
-          id?: string | null
-          metadata?: Json | null
-          notification_type?: string | null
-          reset_token?: string | null
-          sent_at?: string | null
-          supplier_id?: string | null
-          task_id?: string | null
-          used_at?: string | null
-        }
-        Update: {
-          created_by?: string | null
-          email?: string | null
-          expires_at?: string | null
-          id?: string | null
-          metadata?: Json | null
-          notification_type?: string | null
-          reset_token?: string | null
-          sent_at?: string | null
-          supplier_id?: string | null
-          task_id?: string | null
-          used_at?: string | null
-        }
-        Relationships: []
-      }
-      supplier_payment_requests: {
-        Row: {
-          amount: number | null
-          approved_at: string | null
-          approved_by: string | null
-          created_at: string | null
-          description: string | null
-          id: string | null
-          inspection_id: string | null
-          notes: string | null
-          payment_reason: string | null
-          project_id: string | null
-          rejection_reason: string | null
-          requested_date: string | null
-          status: string | null
-          supplier_id: string | null
-          supporting_documents: string[] | null
-          updated_at: string | null
-        }
-        Insert: {
-          amount?: number | null
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          notes?: string | null
-          payment_reason?: string | null
-          project_id?: string | null
-          rejection_reason?: string | null
-          requested_date?: string | null
-          status?: string | null
-          supplier_id?: string | null
-          supporting_documents?: string[] | null
-          updated_at?: string | null
-        }
-        Update: {
-          amount?: number | null
-          approved_at?: string | null
-          approved_by?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          inspection_id?: string | null
-          notes?: string | null
-          payment_reason?: string | null
-          project_id?: string | null
-          rejection_reason?: string | null
-          requested_date?: string | null
-          status?: string | null
-          supplier_id?: string | null
-          supporting_documents?: string[] | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      suppliers: {
-        Row: {
-          account_number: string | null
-          address: string | null
-          bank_name: string | null
-          category: string | null
-          commerce_register_ref: string | null
-          contact_person: string | null
-          created_at: string | null
-          default_password_reset_required: boolean | null
-          email: string | null
-          id: string | null
-          is_active: boolean | null
-          name: string | null
-          nif: string | null
-          phone: string | null
-          rating: number | null
-          rib: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          account_number?: string | null
-          address?: string | null
-          bank_name?: string | null
-          category?: string | null
-          commerce_register_ref?: string | null
-          contact_person?: string | null
-          created_at?: string | null
-          default_password_reset_required?: boolean | null
-          email?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          nif?: string | null
-          phone?: string | null
-          rating?: number | null
-          rib?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          account_number?: string | null
-          address?: string | null
-          bank_name?: string | null
-          category?: string | null
-          commerce_register_ref?: string | null
-          contact_person?: string | null
-          created_at?: string | null
-          default_password_reset_required?: boolean | null
-          email?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          name?: string | null
-          nif?: string | null
-          phone?: string | null
-          rating?: number | null
-          rib?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       supply_categories: {
         Row: {
           description: string | null
@@ -6916,504 +4782,6 @@ export type Database = {
         }
         Relationships: []
       }
-      task_assignments: {
-        Row: {
-          actual_cost: number | null
-          actual_duration: number | null
-          assigned_by: string | null
-          assigned_to: string | null
-          assignee_email: string | null
-          assignee_name: string | null
-          assignee_type: string | null
-          completion_date: string | null
-          completion_token: string | null
-          completion_url: string | null
-          cost_estimate: number | null
-          created_at: string | null
-          critical_path: boolean | null
-          description: string | null
-          due_date: string | null
-          end_date: string | null
-          estimated_duration: number | null
-          id: string | null
-          most_likely_estimate: number | null
-          notes: string | null
-          optimistic_estimate: number | null
-          pessimistic_estimate: number | null
-          phase_id: string | null
-          priority: string | null
-          progress: number | null
-          project_id: string | null
-          start_date: string | null
-          status: string | null
-          title: string | null
-          updated_at: string | null
-          weight: number | null
-        }
-        Insert: {
-          actual_cost?: number | null
-          actual_duration?: number | null
-          assigned_by?: string | null
-          assigned_to?: string | null
-          assignee_email?: string | null
-          assignee_name?: string | null
-          assignee_type?: string | null
-          completion_date?: string | null
-          completion_token?: string | null
-          completion_url?: string | null
-          cost_estimate?: number | null
-          created_at?: string | null
-          critical_path?: boolean | null
-          description?: string | null
-          due_date?: string | null
-          end_date?: string | null
-          estimated_duration?: number | null
-          id?: string | null
-          most_likely_estimate?: number | null
-          notes?: string | null
-          optimistic_estimate?: number | null
-          pessimistic_estimate?: number | null
-          phase_id?: string | null
-          priority?: string | null
-          progress?: number | null
-          project_id?: string | null
-          start_date?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          weight?: number | null
-        }
-        Update: {
-          actual_cost?: number | null
-          actual_duration?: number | null
-          assigned_by?: string | null
-          assigned_to?: string | null
-          assignee_email?: string | null
-          assignee_name?: string | null
-          assignee_type?: string | null
-          completion_date?: string | null
-          completion_token?: string | null
-          completion_url?: string | null
-          cost_estimate?: number | null
-          created_at?: string | null
-          critical_path?: boolean | null
-          description?: string | null
-          due_date?: string | null
-          end_date?: string | null
-          estimated_duration?: number | null
-          id?: string | null
-          most_likely_estimate?: number | null
-          notes?: string | null
-          optimistic_estimate?: number | null
-          pessimistic_estimate?: number | null
-          phase_id?: string | null
-          priority?: string | null
-          progress?: number | null
-          project_id?: string | null
-          start_date?: string | null
-          status?: string | null
-          title?: string | null
-          updated_at?: string | null
-          weight?: number | null
-        }
-        Relationships: []
-      }
-      tender_documents: {
-        Row: {
-          category:
-            | Database["public"]["Enums"]["tender_document_category"]
-            | null
-          created_at: string | null
-          document_id: string | null
-          id: string | null
-          is_required: boolean | null
-          is_submitted: boolean | null
-          project_id: string | null
-          reviewer_notes: string | null
-          status: string | null
-          subcategory:
-            | Database["public"]["Enums"]["tender_document_subcategory"]
-            | null
-          submission_date: string | null
-          tender_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          category?:
-            | Database["public"]["Enums"]["tender_document_category"]
-            | null
-          created_at?: string | null
-          document_id?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          is_submitted?: boolean | null
-          project_id?: string | null
-          reviewer_notes?: string | null
-          status?: string | null
-          subcategory?:
-            | Database["public"]["Enums"]["tender_document_subcategory"]
-            | null
-          submission_date?: string | null
-          tender_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          category?:
-            | Database["public"]["Enums"]["tender_document_category"]
-            | null
-          created_at?: string | null
-          document_id?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          is_submitted?: boolean | null
-          project_id?: string | null
-          reviewer_notes?: string | null
-          status?: string | null
-          subcategory?:
-            | Database["public"]["Enums"]["tender_document_subcategory"]
-            | null
-          submission_date?: string | null
-          tender_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      tender_sharing_secrets: {
-        Row: {
-          access_count: number | null
-          allowed_document_ids: string[] | null
-          created_at: string | null
-          expires_at: string | null
-          id: string | null
-          is_active: boolean | null
-          max_access_count: number | null
-          metadata: Json | null
-          secret_code: string | null
-          shared_by: string | null
-          supplier_email: string | null
-          supplier_id: string | null
-          tender_id: string | null
-          updated_at: string | null
-          workflow_phase: string | null
-          workflow_stage: string | null
-        }
-        Insert: {
-          access_count?: number | null
-          allowed_document_ids?: string[] | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          max_access_count?: number | null
-          metadata?: Json | null
-          secret_code?: string | null
-          shared_by?: string | null
-          supplier_email?: string | null
-          supplier_id?: string | null
-          tender_id?: string | null
-          updated_at?: string | null
-          workflow_phase?: string | null
-          workflow_stage?: string | null
-        }
-        Update: {
-          access_count?: number | null
-          allowed_document_ids?: string[] | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          max_access_count?: number | null
-          metadata?: Json | null
-          secret_code?: string | null
-          shared_by?: string | null
-          supplier_email?: string | null
-          supplier_id?: string | null
-          tender_id?: string | null
-          updated_at?: string | null
-          workflow_phase?: string | null
-          workflow_stage?: string | null
-        }
-        Relationships: []
-      }
-      tender_step_documents: {
-        Row: {
-          created_at: string | null
-          document_id: string | null
-          document_type: string | null
-          id: string | null
-          is_required: boolean | null
-          reviewer_notes: string | null
-          status: string | null
-          step_id: string | null
-          submitted_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          document_id?: string | null
-          document_type?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          reviewer_notes?: string | null
-          status?: string | null
-          step_id?: string | null
-          submitted_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          document_id?: string | null
-          document_type?: string | null
-          id?: string | null
-          is_required?: boolean | null
-          reviewer_notes?: string | null
-          status?: string | null
-          step_id?: string | null
-          submitted_at?: string | null
-        }
-        Relationships: []
-      }
-      tender_steps: {
-        Row: {
-          actual_completion_date: string | null
-          approval_deadline: string | null
-          assigned_to: string | null
-          completed_at: string | null
-          created_at: string | null
-          description: string | null
-          due_date: string | null
-          id: string | null
-          notes: string | null
-          procurement_phase: string | null
-          procurement_stage: string | null
-          required_documents: string[] | null
-          review_deadline: string | null
-          status: string | null
-          step_number: number | null
-          submission_date: string | null
-          tender_id: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          actual_completion_date?: string | null
-          approval_deadline?: string | null
-          assigned_to?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          due_date?: string | null
-          id?: string | null
-          notes?: string | null
-          procurement_phase?: string | null
-          procurement_stage?: string | null
-          required_documents?: string[] | null
-          review_deadline?: string | null
-          status?: string | null
-          step_number?: number | null
-          submission_date?: string | null
-          tender_id?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          actual_completion_date?: string | null
-          approval_deadline?: string | null
-          assigned_to?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          due_date?: string | null
-          id?: string | null
-          notes?: string | null
-          procurement_phase?: string | null
-          procurement_stage?: string | null
-          required_documents?: string[] | null
-          review_deadline?: string | null
-          status?: string | null
-          step_number?: number | null
-          submission_date?: string | null
-          tender_id?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      tender_submissions: {
-        Row: {
-          administrative_score: number | null
-          created_at: string | null
-          evaluation_phase: string | null
-          evaluation_stage: string | null
-          evaluator_notes: string | null
-          financial_score: number | null
-          id: string | null
-          is_secret_active: boolean | null
-          max_secret_access: number | null
-          reviewed_at: string | null
-          reviewer_id: string | null
-          secret_access_count: number | null
-          secret_code: string | null
-          secret_created_at: string | null
-          secret_expires_at: string | null
-          status: string | null
-          submission_date: string | null
-          supplier_email: string | null
-          supplier_name: string | null
-          technical_score: number | null
-          tender_id: string | null
-          total_score: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          administrative_score?: number | null
-          created_at?: string | null
-          evaluation_phase?: string | null
-          evaluation_stage?: string | null
-          evaluator_notes?: string | null
-          financial_score?: number | null
-          id?: string | null
-          is_secret_active?: boolean | null
-          max_secret_access?: number | null
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          secret_access_count?: number | null
-          secret_code?: string | null
-          secret_created_at?: string | null
-          secret_expires_at?: string | null
-          status?: string | null
-          submission_date?: string | null
-          supplier_email?: string | null
-          supplier_name?: string | null
-          technical_score?: number | null
-          tender_id?: string | null
-          total_score?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          administrative_score?: number | null
-          created_at?: string | null
-          evaluation_phase?: string | null
-          evaluation_stage?: string | null
-          evaluator_notes?: string | null
-          financial_score?: number | null
-          id?: string | null
-          is_secret_active?: boolean | null
-          max_secret_access?: number | null
-          reviewed_at?: string | null
-          reviewer_id?: string | null
-          secret_access_count?: number | null
-          secret_code?: string | null
-          secret_created_at?: string | null
-          secret_expires_at?: string | null
-          status?: string | null
-          submission_date?: string | null
-          supplier_email?: string | null
-          supplier_name?: string | null
-          technical_score?: number | null
-          tender_id?: string | null
-          total_score?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      tenders: {
-        Row: {
-          attribution_date: string | null
-          award_criteria: string | null
-          budget_max: number | null
-          budget_min: number | null
-          contract_duration: number | null
-          created_at: string | null
-          current_phase: number | null
-          current_stage: string | null
-          deadline_date: string | null
-          description: string | null
-          eligibility_requirements: Json | null
-          estimated_value: number | null
-          evaluation_criteria: Json | null
-          evaluation_deadline: string | null
-          financing_source: string | null
-          id: string | null
-          launch_date: string | null
-          market_type: string | null
-          procurement_type: string | null
-          project_id: string | null
-          project_reference: string | null
-          publication_date: string | null
-          selection_mode: string | null
-          status: string | null
-          submission_deadline: string | null
-          tender_category: string | null
-          tender_number: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          attribution_date?: string | null
-          award_criteria?: string | null
-          budget_max?: number | null
-          budget_min?: number | null
-          contract_duration?: number | null
-          created_at?: string | null
-          current_phase?: number | null
-          current_stage?: string | null
-          deadline_date?: string | null
-          description?: string | null
-          eligibility_requirements?: Json | null
-          estimated_value?: number | null
-          evaluation_criteria?: Json | null
-          evaluation_deadline?: string | null
-          financing_source?: string | null
-          id?: string | null
-          launch_date?: string | null
-          market_type?: string | null
-          procurement_type?: string | null
-          project_id?: string | null
-          project_reference?: string | null
-          publication_date?: string | null
-          selection_mode?: string | null
-          status?: string | null
-          submission_deadline?: string | null
-          tender_category?: string | null
-          tender_number?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          attribution_date?: string | null
-          award_criteria?: string | null
-          budget_max?: number | null
-          budget_min?: number | null
-          contract_duration?: number | null
-          created_at?: string | null
-          current_phase?: number | null
-          current_stage?: string | null
-          deadline_date?: string | null
-          description?: string | null
-          eligibility_requirements?: Json | null
-          estimated_value?: number | null
-          evaluation_criteria?: Json | null
-          evaluation_deadline?: string | null
-          financing_source?: string | null
-          id?: string | null
-          launch_date?: string | null
-          market_type?: string | null
-          procurement_type?: string | null
-          project_id?: string | null
-          project_reference?: string | null
-          publication_date?: string | null
-          selection_mode?: string | null
-          status?: string | null
-          submission_deadline?: string | null
-          tender_category?: string | null
-          tender_number?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       user_profiles: {
         Row: {
           full_name: string | null
@@ -7429,402 +4797,6 @@ export type Database = {
           full_name?: string | null
           role?: never
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      v_boq_estimates: {
-        Row: {
-          btp_code: string | null
-          created_at: string | null
-          designation: string | null
-          discount: number | null
-          document_id: string | null
-          element_type: string | null
-          estimate_id: string | null
-          fees: number | null
-          height: number | null
-          id: string | null
-          import_source: string | null
-          length: number | null
-          line_type: string | null
-          metadata: Json | null
-          milestone_code: string | null
-          milestone_id: string | null
-          note: string | null
-          phase_code: string | null
-          phase_id: string | null
-          project_id: string | null
-          quantity: number | null
-          ras_rate: number | null
-          recipient_id: string | null
-          resource_id: string | null
-          resource_kind: string | null
-          sender_id: string | null
-          source_type: string | null
-          status: string | null
-          submission_id: string | null
-          task_code: string | null
-          task_id: string | null
-          tender_id: string | null
-          total_ht: number | null
-          total_ras: number | null
-          total_ttc: number | null
-          total_tva: number | null
-          unit: string | null
-          unit_price_ht: number | null
-          updated_at: string | null
-          vat_rate: number | null
-          width: number | null
-        }
-        Insert: {
-          btp_code?: string | null
-          created_at?: string | null
-          designation?: string | null
-          discount?: number | null
-          document_id?: string | null
-          element_type?: string | null
-          estimate_id?: string | null
-          fees?: number | null
-          height?: number | null
-          id?: string | null
-          import_source?: string | null
-          length?: number | null
-          line_type?: string | null
-          metadata?: Json | null
-          milestone_code?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_code?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          ras_rate?: number | null
-          recipient_id?: string | null
-          resource_id?: string | null
-          resource_kind?: string | null
-          sender_id?: string | null
-          source_type?: string | null
-          status?: string | null
-          submission_id?: string | null
-          task_code?: string | null
-          task_id?: string | null
-          tender_id?: string | null
-          total_ht?: number | null
-          total_ras?: number | null
-          total_ttc?: number | null
-          total_tva?: number | null
-          unit?: string | null
-          unit_price_ht?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
-        }
-        Update: {
-          btp_code?: string | null
-          created_at?: string | null
-          designation?: string | null
-          discount?: number | null
-          document_id?: string | null
-          element_type?: string | null
-          estimate_id?: string | null
-          fees?: number | null
-          height?: number | null
-          id?: string | null
-          import_source?: string | null
-          length?: number | null
-          line_type?: string | null
-          metadata?: Json | null
-          milestone_code?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_code?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          ras_rate?: number | null
-          recipient_id?: string | null
-          resource_id?: string | null
-          resource_kind?: string | null
-          sender_id?: string | null
-          source_type?: string | null
-          status?: string | null
-          submission_id?: string | null
-          task_code?: string | null
-          task_id?: string | null
-          tender_id?: string | null
-          total_ht?: number | null
-          total_ras?: number | null
-          total_ttc?: number | null
-          total_tva?: number | null
-          unit?: string | null
-          unit_price_ht?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
-        }
-        Relationships: []
-      }
-      v_boq_invoices: {
-        Row: {
-          btp_code: string | null
-          created_at: string | null
-          designation: string | null
-          discount: number | null
-          document_id: string | null
-          element_type: string | null
-          estimate_id: string | null
-          fees: number | null
-          height: number | null
-          id: string | null
-          import_source: string | null
-          length: number | null
-          line_type: string | null
-          metadata: Json | null
-          milestone_code: string | null
-          milestone_id: string | null
-          note: string | null
-          phase_code: string | null
-          phase_id: string | null
-          project_id: string | null
-          quantity: number | null
-          ras_rate: number | null
-          recipient_id: string | null
-          resource_id: string | null
-          resource_kind: string | null
-          sender_id: string | null
-          source_type: string | null
-          status: string | null
-          submission_id: string | null
-          task_code: string | null
-          task_id: string | null
-          tender_id: string | null
-          total_ht: number | null
-          total_ras: number | null
-          total_ttc: number | null
-          total_tva: number | null
-          unit: string | null
-          unit_price_ht: number | null
-          updated_at: string | null
-          vat_rate: number | null
-          width: number | null
-        }
-        Insert: {
-          btp_code?: string | null
-          created_at?: string | null
-          designation?: string | null
-          discount?: number | null
-          document_id?: string | null
-          element_type?: string | null
-          estimate_id?: string | null
-          fees?: number | null
-          height?: number | null
-          id?: string | null
-          import_source?: string | null
-          length?: number | null
-          line_type?: string | null
-          metadata?: Json | null
-          milestone_code?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_code?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          ras_rate?: number | null
-          recipient_id?: string | null
-          resource_id?: string | null
-          resource_kind?: string | null
-          sender_id?: string | null
-          source_type?: string | null
-          status?: string | null
-          submission_id?: string | null
-          task_code?: string | null
-          task_id?: string | null
-          tender_id?: string | null
-          total_ht?: number | null
-          total_ras?: number | null
-          total_ttc?: number | null
-          total_tva?: number | null
-          unit?: string | null
-          unit_price_ht?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
-        }
-        Update: {
-          btp_code?: string | null
-          created_at?: string | null
-          designation?: string | null
-          discount?: number | null
-          document_id?: string | null
-          element_type?: string | null
-          estimate_id?: string | null
-          fees?: number | null
-          height?: number | null
-          id?: string | null
-          import_source?: string | null
-          length?: number | null
-          line_type?: string | null
-          metadata?: Json | null
-          milestone_code?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_code?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          ras_rate?: number | null
-          recipient_id?: string | null
-          resource_id?: string | null
-          resource_kind?: string | null
-          sender_id?: string | null
-          source_type?: string | null
-          status?: string | null
-          submission_id?: string | null
-          task_code?: string | null
-          task_id?: string | null
-          tender_id?: string | null
-          total_ht?: number | null
-          total_ras?: number | null
-          total_ttc?: number | null
-          total_tva?: number | null
-          unit?: string | null
-          unit_price_ht?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
-        }
-        Relationships: []
-      }
-      v_boq_quantity_takeoffs: {
-        Row: {
-          btp_code: string | null
-          created_at: string | null
-          designation: string | null
-          discount: number | null
-          document_id: string | null
-          element_type: string | null
-          estimate_id: string | null
-          fees: number | null
-          height: number | null
-          id: string | null
-          import_source: string | null
-          length: number | null
-          line_type: string | null
-          metadata: Json | null
-          milestone_code: string | null
-          milestone_id: string | null
-          note: string | null
-          phase_code: string | null
-          phase_id: string | null
-          project_id: string | null
-          quantity: number | null
-          ras_rate: number | null
-          recipient_id: string | null
-          resource_id: string | null
-          resource_kind: string | null
-          sender_id: string | null
-          source_type: string | null
-          status: string | null
-          submission_id: string | null
-          task_code: string | null
-          task_id: string | null
-          tender_id: string | null
-          total_ht: number | null
-          total_ras: number | null
-          total_ttc: number | null
-          total_tva: number | null
-          unit: string | null
-          unit_price_ht: number | null
-          updated_at: string | null
-          vat_rate: number | null
-          width: number | null
-        }
-        Insert: {
-          btp_code?: string | null
-          created_at?: string | null
-          designation?: string | null
-          discount?: number | null
-          document_id?: string | null
-          element_type?: string | null
-          estimate_id?: string | null
-          fees?: number | null
-          height?: number | null
-          id?: string | null
-          import_source?: string | null
-          length?: number | null
-          line_type?: string | null
-          metadata?: Json | null
-          milestone_code?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_code?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          ras_rate?: number | null
-          recipient_id?: string | null
-          resource_id?: string | null
-          resource_kind?: string | null
-          sender_id?: string | null
-          source_type?: string | null
-          status?: string | null
-          submission_id?: string | null
-          task_code?: string | null
-          task_id?: string | null
-          tender_id?: string | null
-          total_ht?: number | null
-          total_ras?: number | null
-          total_ttc?: number | null
-          total_tva?: number | null
-          unit?: string | null
-          unit_price_ht?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
-        }
-        Update: {
-          btp_code?: string | null
-          created_at?: string | null
-          designation?: string | null
-          discount?: number | null
-          document_id?: string | null
-          element_type?: string | null
-          estimate_id?: string | null
-          fees?: number | null
-          height?: number | null
-          id?: string | null
-          import_source?: string | null
-          length?: number | null
-          line_type?: string | null
-          metadata?: Json | null
-          milestone_code?: string | null
-          milestone_id?: string | null
-          note?: string | null
-          phase_code?: string | null
-          phase_id?: string | null
-          project_id?: string | null
-          quantity?: number | null
-          ras_rate?: number | null
-          recipient_id?: string | null
-          resource_id?: string | null
-          resource_kind?: string | null
-          sender_id?: string | null
-          source_type?: string | null
-          status?: string | null
-          submission_id?: string | null
-          task_code?: string | null
-          task_id?: string | null
-          tender_id?: string | null
-          total_ht?: number | null
-          total_ras?: number | null
-          total_ttc?: number | null
-          total_tva?: number | null
-          unit?: string | null
-          unit_price_ht?: number | null
-          updated_at?: string | null
-          vat_rate?: number | null
-          width?: number | null
         }
         Relationships: []
       }
@@ -7876,42 +4848,6 @@ export type Database = {
         }
         Relationships: []
       }
-      workspaces: {
-        Row: {
-          contact_manager: string | null
-          contact_phone: string | null
-          created_at: string | null
-          facilities: Json | null
-          id: string | null
-          location: string | null
-          name: string | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          contact_manager?: string | null
-          contact_phone?: string | null
-          created_at?: string | null
-          facilities?: Json | null
-          id?: string | null
-          location?: string | null
-          name?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          contact_manager?: string | null
-          contact_phone?: string | null
-          created_at?: string | null
-          facilities?: Json | null
-          id?: string | null
-          location?: string | null
-          name?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       admin_update_user_email: {
@@ -7926,12 +4862,17 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      can_create_notification_for_user: {
+        Args: { target_recipient_id: string }
+        Returns: boolean
+      }
       can_inspect: { Args: { _user_id: string }; Returns: boolean }
       can_view_national_data: { Args: { _user_id: string }; Returns: boolean }
       can_view_stock: {
         Args: { _stock_id: string; _user_id: string }
         Returns: boolean
       }
+      cleanup_expired_user_roles: { Args: never; Returns: number }
       create_progress_invoice: {
         Args: {
           p_inspection_id: string
@@ -7942,7 +4883,7 @@ export type Database = {
           p_quantities_executed?: Json
           p_work_description: string
         }
-        Returns: Database["public"]["Views"]["progress_invoices"]["Row"]
+        Returns: unknown
         SetofOptions: {
           from: "*"
           to: "progress_invoices"
@@ -8025,7 +4966,7 @@ export type Database = {
           position_title: string
         }[]
       }
-      get_highest_role: { Args: { _user_id: string }; Returns: string }
+      get_highest_role: { Args: { p_user_id: string }; Returns: string }
       get_project_hierarchy: {
         Args: { project_id_param: string }
         Returns: {
@@ -8055,10 +4996,7 @@ export type Database = {
           submission_id: string
         }[]
       }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: Database["public"]["Enums"]["user_role"]
-      }
+      get_user_role: { Args: { p_user_id: string }; Returns: string }
       get_user_roles: {
         Args: { target_user_id: string }
         Returns: {
@@ -8099,6 +5037,7 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
+      is_current_user_director: { Args: never; Returns: boolean }
       is_depot_manager_of: {
         Args: { _depot_id: string; _user_id: string }
         Returns: boolean
@@ -8111,6 +5050,7 @@ export type Database = {
         Args: { _stock_id: string; _user_id: string }
         Returns: boolean
       }
+      is_user_admin: { Args: { p_user_id: string }; Returns: boolean }
       normalize_intervention_zones: { Args: { input: Json }; Returns: Json }
       search_projects_autocomplete: {
         Args: { search_term?: string }
@@ -8172,14 +5112,42 @@ export type Database = {
         | "employee_record"
         | "tender"
         | "supplier_catalog"
+      inspection_status:
+        | "approved"
+        | "requires_changes"
+        | "rejected"
+        | "pending"
       mission_status: "planned" | "in_progress" | "completed" | "cancelled"
       movement_validation_status:
         | "pending"
         | "validated"
         | "rejected"
         | "in_transit"
+      notification_type:
+        | "task_assignment"
+        | "project_update"
+        | "inspection_required"
+        | "payment_due"
+        | "document_review"
+        | "system"
+      project_status:
+        | "en cours"
+        | "terminé"
+        | "en attente"
+        | "en inspection"
+        | "suspendu"
+        | "annulé"
       stock_level: "national" | "brand" | "station"
       supply_request_status: "pending" | "approved" | "rejected" | "completed"
+      task_priority: "low" | "medium" | "high" | "urgent"
+      task_status: "pending" | "in_progress" | "completed" | "cancelled"
+      task_type:
+        | "project"
+        | "inspection"
+        | "document"
+        | "payment"
+        | "material"
+        | "general"
       tender_document_category: "administrative" | "technical" | "financial"
       tender_document_subcategory:
         | "lettre_soumission"
@@ -8249,6 +5217,13 @@ export type Database = {
         | "agent"
         | "supplier"
       vessel_status: "active" | "maintenance" | "inactive"
+      workflow_step_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "approved"
+        | "rejected"
+        | "on_hold"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -8411,6 +5386,12 @@ export const Constants = {
         "tender",
         "supplier_catalog",
       ],
+      inspection_status: [
+        "approved",
+        "requires_changes",
+        "rejected",
+        "pending",
+      ],
       mission_status: ["planned", "in_progress", "completed", "cancelled"],
       movement_validation_status: [
         "pending",
@@ -8418,8 +5399,34 @@ export const Constants = {
         "rejected",
         "in_transit",
       ],
+      notification_type: [
+        "task_assignment",
+        "project_update",
+        "inspection_required",
+        "payment_due",
+        "document_review",
+        "system",
+      ],
+      project_status: [
+        "en cours",
+        "terminé",
+        "en attente",
+        "en inspection",
+        "suspendu",
+        "annulé",
+      ],
       stock_level: ["national", "brand", "station"],
       supply_request_status: ["pending", "approved", "rejected", "completed"],
+      task_priority: ["low", "medium", "high", "urgent"],
+      task_status: ["pending", "in_progress", "completed", "cancelled"],
+      task_type: [
+        "project",
+        "inspection",
+        "document",
+        "payment",
+        "material",
+        "general",
+      ],
       tender_document_category: ["administrative", "technical", "financial"],
       tender_document_subcategory: [
         "lettre_soumission",
@@ -8491,6 +5498,14 @@ export const Constants = {
         "supplier",
       ],
       vessel_status: ["active", "maintenance", "inactive"],
+      workflow_step_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "approved",
+        "rejected",
+        "on_hold",
+      ],
     },
   },
 } as const

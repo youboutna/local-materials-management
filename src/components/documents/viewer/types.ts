@@ -38,7 +38,7 @@ export interface DocumentViewerOptions {
   onStatusChanged?: (id: string, status: string) => void;
   /** Override de la persistance du statut (modules non hexagonaux) */
   onStatusChange?: (id: string, status: string) => Promise<void> | void;
-  onDelete?: (doc: ViewableDocument) => void;
+  onDelete?: (doc: ViewableDocument) => Promise<void> | void;
   /** Résolution personnalisée du contenu (stockage privé, signed URL, etc.) */
   resolveBlobUrl?: (doc: ViewableDocument) => Promise<string | null>;
 }

@@ -61,10 +61,10 @@ export function DocumentViewerProvider({ children }: { children: ReactNode }) {
         }}
         onDelete={
           options.onDelete
-            ? (d) => {
+            ? async (d) => {
+                await options.onDelete?.(d);
                 emitDocumentChanged({ kind: 'deleted', id: d.id });
                 queryClient.invalidateQueries({ queryKey: ['documents'] });
-                options.onDelete?.(d);
               }
             : undefined
         }

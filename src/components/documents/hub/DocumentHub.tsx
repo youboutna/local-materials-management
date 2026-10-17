@@ -107,13 +107,15 @@ export function DocumentHub({ contract, heading, className }: Props) {
   };
 
   const handleDelete = async (item: DocumentItem) => {
-    if (!contract.onDelete) return;
-    if (!window.confirm(`Supprimer « ${item.title} » ?`)) return;
+    if (!contract.onDelete) return false;
+    if (!window.confirm(`Supprimer « ${item.title} » ?`)) return false;
     try {
       await contract.onDelete(item);
       toast({ title: t('auto.documenthub.document_supprime') });
-    } catch (err: any) {
-      toast({ title: t('auto.documenthub.erreur'), description: err?.message ?? t('auto.documenthub.suppression_impossible'), variant: 'destructive' });
+      return true;
+    } catch (err: unknown) {
+      toast({ title: t('auto.documenthub.erreur'), description: err instanceof Error ? err.message : t('auto.documenthub.suppression_impossible'), variant: 'destructive' });
+      return false;
     }
   };
 
@@ -145,7 +147,7 @@ export function DocumentHub({ contract, heading, className }: Props) {
           onClear={() => setSelected({})}
         />
 
-        <main className="flex-1 overflow-auto">
+        <div className="min-w-0 flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex h-full items-center justify-center p-8">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -181,7 +183,7 @@ export function DocumentHub({ contract, heading, className }: Props) {
               onDelete={contract.onDelete ? handleDelete : undefined}
             />
           )}
-        </main>
+        </div>
       </div>
 
       <DocumentHubPreview

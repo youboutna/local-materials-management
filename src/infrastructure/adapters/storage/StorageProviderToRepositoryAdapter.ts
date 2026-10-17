@@ -21,7 +21,7 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     path: string,
     file: File
   ): Promise<{ result: UploadResult | null; error: Error | null }> {
-    const res = await this.provider.uploadFile(file, joinPath(bucket, path), { upsert: true });
+    const res = await this.provider.uploadFile(file, joinPath(bucket, path), { upsert: false, metadata: { bucket } });
     if (!res.success) {
       return { result: null, error: new Error(res.error || 'Upload failed') };
     }
@@ -49,7 +49,8 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
   }
 
   async deleteFile(bucket: string, path: string): Promise<{ error: Error | null }> {
-    const res = await this.provider.deleteFile(joinPath(bucket, path));
+    const reference = await this.provider.getPublicUrl(path);
+    const res = await this.provider.deleteFile(reference.url || joinPath(bucket, path));
     return { error: res.success ? null : new Error(res.error || 'Delete failed') };
   }
 
@@ -67,8 +68,8 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
       path: prefix ? `${prefix}/${f.name}` : f.name,
       bucket,
       size: f.size,
-      created_at: f.createdAt,
-      updated_at: f.updatedAt,
+        createdAt: f.createdAt,
+      updatedAt: f.updatedAt,
     }));
     return { files, error: null };
   }
@@ -77,7 +78,8 @@ export class StorageProviderToRepositoryAdapter implements IStorageRepository {
     bucket: string,
     path: string
   ): Promise<{ data: Blob | null; error: Error | null }> {
-    const res = await this.provider.downloadFile(joinPath(bucket, path));
+    const reference = await this.provider.getPublicUrl(path);
+    const res = await this.provider.downloadFile(reference.url || joinPath(bucket, path));
     if (!res.success || !res.data) {
       return { data: null, error: new Error(res.error || 'Download failed') };
     }

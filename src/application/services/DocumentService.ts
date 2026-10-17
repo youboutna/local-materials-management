@@ -47,7 +47,7 @@ export class DocumentService {
         const storageService = getStorageService();
         const uploadResult = await storageService.uploadFile({
           bucket: 'documents',
-          path: `documents/${Date.now()}-${data.file.name}`,
+          path: `${crypto.randomUUID()}-${data.file.name}`,
           file: data.file,
         });
         if (!uploadResult) {
@@ -83,8 +83,8 @@ export class DocumentService {
         approvalStatus: data.approvalStatus,
       });
 
-      await this.documentRepository.save(entity);
-      return DocumentTransformer.toDTO(entity);
+      const saved = await this.documentRepository.save(entity);
+      return DocumentTransformer.toDTO(saved);
     } catch (error) {
       console.error('DocumentService.createDocument failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to create document');
@@ -212,7 +212,7 @@ export class DocumentService {
       return DocumentTransformer.toDTO(updated);
     } catch (error) {
       console.error('DocumentService.updateDocument failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update document');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to update document');
     }
   }
 
@@ -228,7 +228,7 @@ export class DocumentService {
       await this.documentRepository.delete(id);
     } catch (error) {
       console.error('DocumentService.deleteDocument failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete document');
+      throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete document');
     }
   }
 

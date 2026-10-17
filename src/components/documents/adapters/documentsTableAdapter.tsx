@@ -105,16 +105,17 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
   const useDocuments = () => ({
     data: items,
     isLoading: query.isLoading,
+    error: query.error,
     refetch: () => query.refetch(),
   });
 
   const onUpload = async (input: UploadInput) => {
     // 1. Upload file to Storage
     const safeName = input.file.name.replace(/[^\w.\-]+/g, '_');
-    const path = `${pathPrefix ?? scopeLabel.toLowerCase().replace(/\s+/g, '-')}/${Date.now()}_${safeName}`;
+    const path = `${pathPrefix ?? scopeLabel.toLowerCase().replace(/\s+/g, '-')}/${crypto.randomUUID()}_${safeName}`;
     const storageService = getStorageService();
-    await storageService.uploadFile({ bucket, path, file: input.file });
-    const publicUrl = storageService.getPublicUrl({ bucket, path });
+    const upload = await storageService.uploadFile({ bucket, path, file: input.file });
+    const publicUrl = upload.publicUrl;
 
     // 2. Insert document row
     const filterDefaults: Record<string, unknown> = {};
@@ -137,8 +138,14 @@ export function useDocumentsTableAdapter(opts: DocumentsTableAdapterOptions): Do
       ...insertDefaults,
       ...(input.extras ?? {}),
     };
-    await documentRepository.insertRaw(insertPayload);
-    qc.invalidateQueries({ queryKey });
+    try {
+      await documentRepository.insertRaw(insertPayload);
+    } catch (error) {
+      await storageService.deleteFile({ bucket, path }).catch(() => undefined);
+      throw error;
+    }
+    await qc.invalidateQueries({ queryKey: ['documents'] });
+    await qc.invalidateQueries({ queryKey });
   };
 
   const onDelete = async (item: DocumentItem) => {

@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getDocumentService } from '@/application/services/DocumentService';
+import { getStorageService } from '@/application/services/StorageService';
 import { MimeIcon } from '@/components/documents/hub/MimeIcon';
 import { formatBytes, getPreviewKind } from '@/components/documents/hub/types';
 import { TranslatedCategory } from '@/components/i18n/TranslatedBadges';
@@ -66,6 +67,7 @@ export function UniversalDocumentViewer({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('draft');
   const [savingStatus, setSavingStatus] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [textContent, setTextContent] = useState<string | null>(null);
 
   const isProxy = proxy && doc?.source !== 'local';
@@ -82,6 +84,8 @@ export function UniversalDocumentViewer({
 
     async function load() {
       setError(null);
+      setDisplayUrl(null);
+      setLoading(false);
       if (!doc) return;
 
       // Fichier local (avant upload / mise à jour)
@@ -104,19 +108,19 @@ export function UniversalDocumentViewer({
         if (resolveBlobUrl) {
           url = await resolveBlobUrl(doc);
         } else {
-          const res = await fetch(doc.fileUrl);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const blob = await res.blob();
+          const blob = await getStorageService().downloadReference(doc.fileUrl);
           created = URL.createObjectURL(blob);
           url = created;
         }
-        if (!cancelled) setDisplayUrl(url);
-      } catch (e: unknown) {
-        // Fallback: show direct URL if proxy fails
+        if (cancelled && created) URL.revokeObjectURL(created);
         if (!cancelled) {
-          console.warn('Proxy mode failed, falling back to direct URL:', e);
-          setDisplayUrl(doc.fileUrl);
-          setError(null); // Clear error since we have a fallback
+          if (!url) throw new Error(t('auto.documenthubpreview.fichier_introuvable'));
+          setDisplayUrl(url);
+        }
+      } catch (e: unknown) {
+        if (!cancelled) {
+          setDisplayUrl(null);
+          setError(e instanceof Error ? e.message : t('auto.documenthubpreview.fichier_introuvable'));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -341,9 +345,17 @@ export function UniversalDocumentViewer({
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => {
-                      onDelete(doc);
-                      onClose();
+                    disabled={deleting}
+                    onClick={async () => {
+                      setDeleting(true);
+                      try {
+                        await onDelete(doc);
+                        onClose();
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : t('auto.documenthub.suppression_impossible'));
+                      } finally {
+                        setDeleting(false);
+                      }
                     }}
                   >
                     <Trash2 className="mr-1 h-3.5 w-3.5" />

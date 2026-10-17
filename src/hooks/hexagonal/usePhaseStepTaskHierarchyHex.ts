@@ -29,7 +29,7 @@ export function usePhaseStepTaskHierarchyHex(projectId: string) {
         progress: phase.progress || 0,
         start_date: phase.startDate || undefined,
         end_date: phase.endDate || undefined,
-      })) as PhaseStepTaskRow[];
+      })) as PhaseStepTaskRow[],
     enabled: !!projectId && projectId !== 'new-project',
   });
 }

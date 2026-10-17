@@ -10,6 +10,7 @@ import {
 } from '@/domain/repositories/IStorageRepository';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { StorageReferenceTransformer } from '@/dtos/transforms/StorageReferenceTransformer';
 
 // Service DTOs for data exchange
 export interface UploadFileRequestDto {
@@ -57,6 +58,15 @@ export class StorageService {
   constructor(
     private storageRepository: IStorageRepository = RepositoryFactory.getStorageRepository()
   ) {}
+
+  /** Read private/public storage through the authenticated repository, never a public-URL fallback. */
+  async downloadReference(reference: string): Promise<Blob> {
+    const request = StorageReferenceTransformer.toStorageRequest(reference);
+    if (request) return this.downloadFile(request);
+    const response = await fetch(reference);
+    if (!response.ok) throw new AppError(ErrorCode.INTERNAL_ERROR, `HTTP ${response.status}`);
+    return response.blob();
+  }
 
   /**
    * Upload file to storage
@@ -262,7 +272,7 @@ export class StorageService {
         this.deleteFile({ bucket: request.bucket, path })
       );
 
-      await Promise.allSettled(deletePromises);
+      await Promise.all(deletePromises);
     } catch (error) {
       console.error('StorageService.deleteMultipleFiles failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to delete multiple files');
