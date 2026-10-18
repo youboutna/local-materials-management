@@ -1,10 +1,12 @@
-# Cohérence métier et génération complète du planning
+# Cohérence métier et plannings génériques pilotés par référentiels
 
 ## Résultat attendu
 
-Unifier Consommations, Dépenses et Recettes autour des circuits existants, sans double comptage, puis créer le projet du planning fourni avec lecture retour.
+Unifier Consommations, Dépenses et Recettes autour des circuits existants, sans double comptage, et générer/importer des plannings variés selon leurs référentiels métier, avec lecture retour.
 
 Périmètre : tous les manquements de l’audit précédent. Les autres chantiers historiques ne seront pas déclarés terminés par ce lot.
+
+**Principe directeur :** tout comportement métier est paramétrable par référentiels, jamais codé en dur. Le planning fourni est un cas illustratif, pas un modèle obligatoire. Phases, durées, profils, charges, circuits, seuils et obligations varient selon métier, réglementation, entité et projet.
 
 ## 1. Sources métier et rapprochement
 
@@ -16,7 +18,7 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 
 ## 2. Consommations et circuits selon contexte
 
-- Nouvel achat : expression de besoin → validation → devis/commande → réception → consommation constatée → facture/décompte → règlement. Réutiliser les étapes existantes sans créer un second workflow.
+- Résoudre le circuit applicable depuis le référentiel associé au projet : étapes, prérequis, acteurs et pièces. Exemple achat : besoin → validation → devis/commande → réception → consommation → facture/décompte → règlement ; ce n’est pas une séquence universelle imposée.
 - Stock disponible : sélectionner la ressource et enregistrer l’utilisation réelle sans imposer une nouvelle expression de besoin. Distinguer réception, disponibilité et utilisation ; une quantité livrée n’est pas automatiquement consommée.
 - Main-d’œuvre : sélectionner l’expert/l’affectation, saisir les jours ou heures réellement effectués, les faire valider et les relier à la prestation facturée si applicable.
 - Équipement : saisir l’utilisation réelle et son unité, avec rattachement à la tâche et au contrat/location si applicable.
@@ -42,21 +44,29 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 - L’agrégateur de ressources distingue affectation, livraison et consommation effective et évite de compter une même ligne planifiée depuis plusieurs sources.
 - Fournir des synthèses cohérentes projet/phase et jour/mois/année, avec quantités regroupées par unité compatible ; aucun total de litres et de jours-homme.
 - Conserver les identifiants des entités indépendamment des événements datés du calendrier. Les vues n’enregistrent pas des copies des paiements/factures.
-- Placer les règles, seuils, éligibilités et formules dans les référentiels ; les composants ne font que présenter les résultats.
+- Placer règles, seuils, éligibilités et formules dans les référentiels ; les composants présentent les résultats. Réutiliser les moteurs existants sans branches spécifiques ETER/SOMELEC ni constantes issues d’un exemple.
 
-## 5. Génération depuis le planning fourni
+## 5. Génération/import de plannings génériques
 
-- Ajouter une entrée « Planning » à l’import projet existant : collage du texte, lecture des tableaux structurés et aperçu editable avant toute création. Signaler toute section ou ligne non interprétée ; ne jamais la perdre silencieusement.
-- Demander la date de démarrage, le titre/référence, l’organisation responsable et la devise dans cet aperçu. Les tarifs et budgets restent facultatifs et non inventés.
-- Préserver les phases 0 à 6 et leurs chevauchements, puis la phase 7 d’accompagnement J+1 à J+60 après livraison : sept phases d’exécution plus une phase post-livraison.
-- Conserver séparément dates de phase et dates des livrables : Modélisation S3–S7 avec livrable S8 ; Développement S8–S13 avec livrable S12. Afficher ces différences pour confirmation, sans corriger arbitrairement le document.
-- Générer les missions élémentaires, tâches, jalons, livrables et liens de phase avec références externes stables. Aucune répartition artificielle des jours des experts entre tâches.
-- Reprendre les six experts, leurs profils et charges M1–M4 : 54, 66, 64, 58, 50 et 60 J/H ; totaux mensuels 58, 96, 108 et 90 ; total 352 J/H et 16 hommes-mois sur base 22. Persister les allocations mensuelles dans une structure dédiée, pas dans des notes ou des coûts.
-- Afficher capacité et surcharge par expert : conserver les valeurs 24/26/28 J/H et avertir par rapport à la base 22, sans les réduire. La convention des périodes M1–M4 est visible et modifiable ; ne pas assimiler silencieusement 16 semaines à quatre mois calendaires.
-- Gouvernance : COPIL aux fins de phase, COTEC toutes les deux semaines, synchronisation interne hebdomadaire ; participants connus, sans heures inventées ni invitations fictives.
-- Reprendre les sept risques, leurs niveaux, responsables et mitigations, dont le délai de relecture de 10 jours.
-- PAQ : ISO 9001:2015, ISO/TC 211, contrôles géométriques/attributaires, OGC, contrôle croisé ≥10 % par couche et recette logicielle comme exigences/tâches ; aucune conformité acquise présumée.
-- Prévoir aperçu des sections, correction, validation, création, reprise et lecture du projet créé. Conserver le texte source et un rapport des éléments créés/réutilisés/rejetés.
+- Ajouter « Planning » à l’import existant : collage de texte/tableaux ou formats structurés existants, sélection du référentiel et aperçu éditable. Prévoir mapping des colonnes/sections inconnues ; signaler l’information non interprétée, sans promettre une compréhension parfaite de tout texte.
+- Couvrir un nombre variable de phases, tâches, ressources et périodes sans noms ni formats propres à l’exemple. Générer depuis un référentiel ou importer un planning existant ; ne pas remplacer les données importées par un modèle implicite.
+- Demander date d’ancrage, titre/référence, organisation, devise et paramètres manquants dans l’aperçu. Tarifs/budgets non inventés ; écarts avec le référentiel signalés, jamais corrigés silencieusement.
+- Résoudre dates absolues/relatives, dépendances, chevauchements, calendriers ouvrés, périodicité et étapes post-réception selon données et référentiel. Dates de phase et jalons restent distinctes.
+- Générer missions, tâches, jalons, livrables et liens avec références stables ; aucune répartition artificielle de charges entre tâches.
+- Persister allocations par ressource et période dans une structure dédiée. Unités, capacité, conversion jours/heures/hommes-mois, seuils de surcharge et convention des périodes sont configurables ; les informations absentes restent inconnues.
+- Gouvernance configurable : instances, rôles, participants, cadences et événements déclencheurs ; pas de COPIL/COTEC obligatoires pour tous les métiers ni d’invitations fictives.
+- Risques et assurance qualité : importer/générer catégories, évaluations, responsables, mitigations, contrôles, preuves et délais selon le référentiel applicable. Aucune norme ou fréquence de l’exemple imposée globalement ; les exigences ne valent pas preuve de conformité.
+- Conserver source, référentiel/version et rapport créé/réutilisé/rejeté. Aperçu, correction, validation, création/reprise et lecture retour couvrent toutes les sections reconnues.
+- **Cas illustratif de recette uniquement :** conserver les huit phases, chevauchements, livrables S8/S12, accompagnement 60 jours, six experts/352 JH, base 22, réunions, sept risques, délai 10 jours et contrôle 10 % du document fourni. Ces valeurs restent données de test/import, jamais constantes métier.
+
+### Référentiels métier, réglementaires et d’entité
+
+- Réutiliser/compléter le catalogue existant : création, import, édition, validation, versionnement et association aux projets. Référentiels configurables stockés par code et labels fr/ar/en ; données projet non traduites.
+- Définir les règles comme données exécutables par moteurs génériques : champs requis, transitions, acteurs autorisés, obligations, délais, calendriers, unités, plafonds, formules et indicateurs. Les permissions restent validées côté serveur.
+- Composer socle métier, réglementation, entité et paramètres projet avec priorité explicite ; détecter conflits, cycles, codes inconnus et configurations incomplètes. Ne jamais désactiver une obligation réglementaire par simple surcharge projet.
+- Préparer l’adaptation Stratégie Nationale, Code Travaux, Code de l’électricité, guides de suivi-évaluation, ETER/SOMELEC sans réécrire le moteur. Charger uniquement des règles sourcées et validées ; ne pas inventer de dispositions légales.
+- Figer la version appliquée et sa provenance pour l’audit ; une mise à jour du catalogue ne modifie pas silencieusement les projets existants. Changement de version avec aperçu d’impact et validation.
+- Démontrer qu’ajouter/modifier un référentiel change le comportement sans ajouter de logique spécifique à l’interface ou au moteur.
 
 ## 6. Persistance, architecture et sécurité
 
@@ -72,9 +82,9 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 ## 7. Validation et critères de clôture
 
 - Tests métier : absence de double comptage, achats vs stock, réception vs utilisation, quantités partielles, unités, monnaies, HT/TVA/TTC, règlements partiels, avoirs, rapprochement historique et permissions de références.
-- Tests planning : huit phases conservées, chevauchements et dates de livrables exacts, accompagnement à 60 jours, six experts et total 352 J/H, capacités, réunions, sept risques, délai 10 jours et contrôle PAQ 10 %.
+- Tests génériques : plusieurs métiers/configurations avec phases, durées, unités, capacités et cadences différentes ; versionnement, composition, conflits, obligations et changement de référentiel sans modification du moteur. Le document fourni est un cas de recette avec ses valeurs exactes, pas le seul modèle testé.
 - Tests de conversion, repositories/services, transactions/reprises et réimport : un second essai ne crée pas de doublons ; une erreur est visible et récupérable.
 - Exécuter les suites existantes concernées et les nouveaux tests ; vérifier la compilation automatique puis les parcours visibles sur plusieurs largeurs.
-- Recette complète avec un compte autorisé : création du projet depuis l’aperçu, lecture retour des phases/charges/risques/PAQ, consommation liée, dépense validée, règlement partiel et encaissement, puis vérification des trois vues et métriques.
+- Recette autorisée sur plusieurs référentiels : génération/import, lecture retour des phases/allocations/risques/qualité, consommation liée, dépense validée, règlement partiel et encaissement ; vérifier vues et métriques. Tester volumes et pagination sans limite arbitraire issue de l’exemple.
 - Supabase externe sans session injectable : tester ce qui est accessible sans contourner l’authentification ; la recette privée restera bloquée sans accès autorisé.
 - Clôture uniquement sur preuves ; nommer chaque blocage restant, y compris les anciens blocages Docker/SMS.
