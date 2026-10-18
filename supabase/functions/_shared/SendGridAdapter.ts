@@ -67,6 +67,6 @@ export class SendGridAdapter implements EmailProvider {
       throw new Error(`SendGrid error: ${response.status} - ${text}`);
     }
 
-    return { success: true, messageId: 'sg-' + Date.now() };
+    return { success: true, messageId: response.headers.get('x-message-id') || undefined };
   }
 }

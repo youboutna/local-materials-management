@@ -20,10 +20,10 @@ export function getEmailProvider(): EdgeEmailProvider {
 }
 
 export function getEmailFrom(): string {
+  const provider = getEmailProvider();
+  const key = provider === 'resend' ? 'RESEND_FROM' : provider === 'sendgrid' ? 'SENDGRID_FROM' : 'SMTP_FROM';
   return (
-    env('RESEND_FROM') ||
-    env('SENDGRID_FROM') ||
-    env('SMTP_FROM') ||
+    env(key) ||
     env('Deno_mail_from_notif') ||
     env('Deno_mail_from_name') ||
     ''

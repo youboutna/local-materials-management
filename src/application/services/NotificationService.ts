@@ -37,13 +37,13 @@ export class NotificationService {
       markAllAsRead: async (recipientId: string) => ({ success: true, error: null }),
       deleteNotification: async (id: string) => ({ success: true, error: null }),
       getUnreadCount: async (recipientId: string) => Promise.resolve({ count: 0, error: null }),
-      sendEmail: async () => ({ success: true, error: null }),
-      sendSMS: async () => ({ success: true, error: null }),
+      sendEmail: async () => ({ error: new Error('Email provider is not configured') }),
+      sendSMS: async () => ({ error: new Error('SMS provider is not configured') }),
       makeCall: async () => ({ success: true, error: null }),
       logCommunication: async () => ({ success: true, error: null }),
       getUserNotifications: async (userId: string, limit?: number) => Promise.resolve({ notifications: [], error: null }),
       getSystemNotifications: async (limit?: number) => Promise.resolve({ notifications: [], error: null }),
-      scheduleCall: async () => ({ success: true, error: null })
+      scheduleCall: async () => ({ error: new Error('Call scheduling is not configured') })
     } as unknown as INotificationRepository;
   }
 
@@ -359,10 +359,8 @@ export class NotificationService {
    */
   async sendSMS(data: SMSData): Promise<void> {
     try {
-      const result = await this.notificationRepository.sendSMS(data);
-      
-      if (result.error) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to send SMS');
+      for (const to of Array.isArray(data.to) ? data.to : [data.to]) {
+        CommunicationService.requireSuccess(await CommunicationService.sendSMS({ to, message: data.message }));
       }
     } catch (error) {
       console.error('NotificationService.sendSMS failed:', error);
@@ -375,11 +373,8 @@ export class NotificationService {
    */
   async scheduleCall(data: CallData): Promise<void> {
     try {
-      const result = await this.notificationRepository.scheduleCall(data);
-      
-      if (result.error) {
-        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to schedule call');
-      }
+      const contact = await CommunicationService.resolveRecipient(data.to);
+      CommunicationService.requireSuccess(await CommunicationService.scheduleCall({ recipientId: contact.id, recipientPhone: contact.phone, subject: data.message || 'Call', message: data.message || '', scheduledFor: data.scheduledAt }));
     } catch (error) {
       console.error('NotificationService.scheduleCall failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to schedule call');

@@ -315,14 +315,14 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
   /**
    * Send SMS via Supabase function
    */
-  async sendSMS(data: SMSData): Promise<{ error: Error | null }> {
+  async sendSMS(data: SMSData): Promise<{ error: Error | null; reference?: string; status?: string }> {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       const { data: result, error } = await supabase.functions.invoke('send-sms-notification', {
         body: data
       });
       if (error) return { error };
-      return { error: result?.success === true ? null : new Error(result?.error || 'SMS was not accepted by provider') };
+      return { error: result?.success === true ? null : new Error(result?.error || 'SMS was not accepted by provider'), reference: result?.messageId, status: result?.status };
     } catch (error) {
       return { error: error as Error };
     }
