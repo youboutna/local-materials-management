@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.validate_operation_family() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$ BEGIN IF NEW.kind='consumption' AND NEW.resource_family IS NULL THEN RAISE EXCEPTION 'Consumption requires a resource family'; END IF; RETURN NEW; END $$;
+REVOKE ALL ON FUNCTION public.validate_operation_family() FROM PUBLIC,anon;
+CREATE TRIGGER validate_operation_family BEFORE INSERT OR UPDATE ON btp.project_operation_entries FOR EACH ROW EXECUTE FUNCTION public.validate_operation_family();
