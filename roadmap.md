@@ -36,3 +36,7 @@
 - [x] Tests ciblés calendrier/communication/configuration release passants ; compilation contrôlée
 - [ ] Audit sécurité antérieur : 125 signalements préexistants, notamment politiques et fonctions — audit dédié requis avant production
 - [ ] Vérifier l’ouverture connectée du calendrier : aperçu signé-out resté sur Chargement ; aucun parcours CRUD réel validé
+- [x] Renforcer release Docker : refus tags mutables/existants, lancement sans reconstruction, comparaison worker servi et tests de scripts
+- [x] Vérifier Twilio actuellement : HTTP 200, aucun numéro ni Messaging Service ; tester configuration et erreurs SMS jusqu’à l’adapter
+- [ ] Activer expéditeur Twilio puis configurer TWILIO_FROM_NUMBER ou Messaging Service et valider livraison réelle — bloqué : aucun expéditeur actif
+- [ ] Démarrer et tester l’image réelle sur le serveur Docker — bloqué : Docker/daemon et accès serveur absents ici ; tests de scripts simulés seulement

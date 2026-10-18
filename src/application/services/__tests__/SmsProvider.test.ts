@@ -20,4 +20,20 @@ describe('SMS provider outcomes', () => {
       expect((await new TwilioSmsProvider(env, vi.fn().mockResolvedValue(response)).send({ to: '+22212345678', message: 'Reminder' })).success).toBe(false);
     }
   });
+  it('preserves provider rejection status and details', async () => {
+    const body = '{"code":21608,"message":"Recipient is not verified"}';
+    expect(await new TwilioSmsProvider(env, vi.fn().mockResolvedValue(new Response(body, { status: 400 }))).send({ to: '+22212345678', message: 'Reminder' })).toMatchObject({ success: false, providerStatus: 400, details: body });
+  });
+  it('uses the configured messaging service rather than a sender number', async () => {
+    const service = `MG${'a'.repeat(32)}`;
+    const http = vi.fn().mockResolvedValue(new Response('{"sid":"SM-test","status":"queued"}', { status: 201 }));
+    await new TwilioSmsProvider(key => key === 'TWILIO_MESSAGING_SERVICE_SID' ? service : env(key), http).send({ to: '+22212345678', message: 'Reminder' });
+    expect(http.mock.calls[0][1].body.get('MessagingServiceSid')).toBe(service);
+    expect(http.mock.calls[0][1].body.has('From')).toBe(false);
+  });
+  it('rejects malformed messaging services before a paid request', async () => {
+    const http = vi.fn();
+    expect(await new TwilioSmsProvider(key => key === 'TWILIO_MESSAGING_SERVICE_SID' ? 'invalid' : env(key), http).send({ to: '+22212345678', message: 'Reminder' })).toMatchObject({ success: false });
+    expect(http).not.toHaveBeenCalled();
+  });
 });

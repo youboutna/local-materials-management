@@ -321,7 +321,11 @@ export class SupabaseNotificationAdapter implements INotificationRepository {
       const { data: result, error } = await supabase.functions.invoke('send-sms-notification', {
         body: data
       });
-      if (error) return { error };
+      if (error) {
+        const { FunctionsHttpError } = await import('@supabase/supabase-js');
+        const details = error instanceof FunctionsHttpError ? await error.context.text() : error.message;
+        return { error: new Error(details || error.message) };
+      }
       return { error: result?.success === true ? null : new Error(result?.error || 'SMS was not accepted by provider'), reference: result?.messageId, status: result?.status };
     } catch (error) {
       return { error: error as Error };
