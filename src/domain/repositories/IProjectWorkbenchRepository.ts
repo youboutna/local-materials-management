@@ -4,6 +4,7 @@ export interface IProjectWorkbenchRepository {
   operations(projectId: string): Promise<ProjectOperationDTO[]>;
   saveOperation(input: SaveProjectOperationDTO): Promise<ProjectOperationDTO>;
   deleteOperation(projectId: string, id: string): Promise<void>;
+  transitionOperation(projectId: string, id: string, status: 'validated' | 'cancelled'): Promise<void>;
   domains(): Promise<InfraDomainDTO[]>;
   assetTypes(domain?: string): Promise<AssetTypeDTO[]>;
   saveAssetType(input: SaveAssetTypeDTO): Promise<string>;

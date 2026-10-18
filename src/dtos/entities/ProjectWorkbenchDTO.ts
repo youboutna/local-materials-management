@@ -6,7 +6,7 @@ export type WorkbenchView = 'calendar' | 'consumption' | 'expense' | 'revenue' |
 export type CalendarPeriod = 'day' | 'month' | 'year';
 export interface WorkbenchProjectDTO { id: string; title: string; reference?: string; canManage: boolean }
 export interface ProjectCalendarEventDTO { id: string; entityId?: string; title: string; kind: 'task' | 'phase' | 'inspection' | 'payment' | 'consumption' | 'expense' | 'revenue'; dateKind: 'start' | 'end' | 'due' | 'scheduled' | 'actual' | 'payment' | 'recorded'; date?: string; href: string; phaseId?: string }
-export interface ProjectOperationDTO { id: string; projectId: string; phaseId?: string; taskId?: string; kind: 'consumption' | 'expense' | 'revenue'; occurredOn: string; label: string; resourceFamily?: 'human' | 'material' | 'equipment'; quantity: number; unit: string; amount: number; currency: string; sourceReference?: string; notes?: string }
+export interface ProjectOperationDTO { id: string; projectId: string; phaseId?: string; taskId?: string; kind: 'consumption' | 'expense' | 'revenue'; occurredOn: string; label: string; resourceFamily?: 'human' | 'material' | 'equipment'; quantity: number; unit: string; amount: number; currency: string; sourceReference?: string; notes?: string; status?: 'draft' | 'validated' | 'cancelled'; contextCode?: string; sourceLineId?: string; decompteId?: string; resourceId?: string; perspective?: 'owner' | 'contractor'; requestKey?: string }
 export type SaveProjectOperationDTO = Omit<ProjectOperationDTO, 'id'> & { id?: string };
 
 /** Référentiels SIG ouverts, seedés par le métier (schéma infra). */

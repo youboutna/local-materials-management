@@ -22,6 +22,7 @@ import type {
 } from '@/dtos/entities/ConsultantProgressInvoiceDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { DEFAULT_OPERATION_POLICY, type OperationPolicy } from '@/config/referentials/projects/operation-policy.referential';
 
 export interface DecompteScopeResult {
   decomptes: DecompteRecordDTO[];
@@ -136,20 +137,23 @@ export class DecompteService {
   static sumValidated(decomptes: DecompteRecordDTO[]): number {
     return (decomptes ?? [])
       .filter(isDecompteValidated)
-      .reduce((sum, d) => sum + (d.validatedAmount || d.amount || 0), 0);
+      .reduce((sum, d) => sum + (d.validatedAmount ?? d.amount ?? 0), 0);
   }
 
   static sumPaid(
     decomptes: DecompteRecordDTO[],
     payments: DecomptePaymentDTO[] = [],
+    policy: OperationPolicy = DEFAULT_OPERATION_POLICY,
   ): number {
-    const fromPayments = (payments ?? []).reduce((sum, p) => sum + (p.amount || 0), 0);
+    const fromPayments = (payments ?? [])
+      .filter(p => !policy.excludedPaymentStatuses.includes(String(p.status ?? '').toLowerCase()))
+      .reduce((sum, p) => sum + (p.amount ?? 0), 0);
     const fromDecomptes = (decomptes ?? [])
       .filter(isDecomptePaid)
-      .reduce((sum, d) => sum + (d.paidAmount || d.validatedAmount || d.amount || 0), 0);
+      .reduce((sum, d) => sum + (d.paidAmount ?? d.validatedAmount ?? d.amount ?? 0), 0);
     // Les paiements sont la source de vérité dès qu'ils existent ; sinon on
     // retombe sur les décomptes soldés (données historiques sans transaction).
-    return fromPayments > 0 ? fromPayments : fromDecomptes;
+    return payments.length > 0 ? fromPayments : fromDecomptes;
   }
 
   static buildSummary(

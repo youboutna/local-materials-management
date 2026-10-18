@@ -43,7 +43,7 @@ const toDto = (row: any): DecompteRecordDTO => {
     row.paid_amount != null
       ? Number(row.paid_amount)
       : status === 'paid'
-        ? validated || amount
+        ? validated
         : Number(row.cumulative_paid ?? 0) > 0
           ? Number(row.cumulative_paid)
           : 0;
@@ -84,6 +84,7 @@ const toPaymentDto = (row: any): DecomptePaymentDTO => ({
   paymentMethod: row.payment_method ?? null,
   transactionId: row.transaction_id ?? null,
   receiverName: row.receiver_name ?? null,
+  status: row.status ?? null,
 });
 
 export class SupabaseDecompteAdapter implements IDecompteRepository {

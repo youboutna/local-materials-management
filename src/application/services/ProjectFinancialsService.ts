@@ -19,28 +19,9 @@ import {
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { getDecompteService } from '@/application/services/DecompteService';
 import { DecompteService } from '@/application/services/DecompteService';
+import { DEFAULT_OPERATION_POLICY, type OperationPolicy } from '@/config/referentials/projects/operation-policy.referential';
 
 const round2 = (v: number): number => Number((Number.isFinite(v) ? v : 0).toFixed(2));
-
-/** Étapes documentaires assimilées à un DQE de référence. */
-const DQE_STAGES = ['dqe', 'previsionnel', 'prévisionnel', 'estimate'];
-/** Étapes documentaires assimilées à un devis / offre contractuelle. */
-const QUOTE_STAGES = ['devis', 'quote', 'offre', 'contrat', 'contract'];
-/** Statuts métier valant acceptation contractuelle. */
-const ACCEPTED_STATUSES = [
-  'accepted',
-  'accepte',
-  'accepté',
-  'signe',
-  'signé',
-  'signed',
-  'valide',
-  'validé',
-  'validated',
-  'awarded',
-  'attribue',
-  'attribué',
-];
 
 const stageOf = (line: BoqLineDTO): string =>
   String(line.documentType ?? line.dqeType ?? '').toLowerCase();
@@ -53,12 +34,12 @@ const lineTotal = (line: BoqLineDTO): number => {
   return (line.quantity ?? 0) * (line.unitPrice ?? 0);
 };
 
-const isValidatedLine = (line: BoqLineDTO): boolean => {
+const isValidatedLine = (line: BoqLineDTO, policy: OperationPolicy): boolean => {
   const status = String(line.status ?? '').toLowerCase();
   const business = businessStatusOf(line);
   return (
-    ['validated', 'invoiced', 'paid', 'archived'].includes(status) ||
-    ACCEPTED_STATUSES.some((s) => business.includes(s))
+    policy.validatedStatuses.includes(status) ||
+    policy.acceptedStatuses.includes(business)
   );
 };
 
@@ -97,26 +78,14 @@ export class ProjectFinancialsService {
   }
 
   private async loadLines(scope: FinancialScope, entityId: string): Promise<BoqLineDTO[]> {
-    try {
-      return await boqRepository.list(
-        scope === 'phase'
-          ? { source: 'dqe', phaseId: entityId }
-          : { source: 'dqe', contextId: entityId, projectId: entityId },
-      );
-    } catch {
-      return [];
-    }
+    const lists = await Promise.all((['dqe', 'supplier_bid', 'invoice'] as const).map(source =>
+      boqRepository.list(scope === 'phase' ? { source, phaseId: entityId } : { source, projectId: entityId })));
+    return lists.flat();
   }
 
   private async loadDecomptes(scope: FinancialScope, entityId: string) {
-    try {
-      const service = getDecompteService();
-      return scope === 'phase'
-        ? await service.getPhaseFinancials(entityId)
-        : await service.getProjectFinancials(entityId);
-    } catch {
-      return { decomptes: [], payments: [], summary: null } as any;
-    }
+    const service = getDecompteService();
+    return scope === 'phase' ? service.getPhaseFinancials(entityId) : service.getProjectFinancials(entityId);
   }
 
   /** Calcul pur — testable et réutilisable côté UI sans nouvel appel réseau. */
@@ -128,15 +97,21 @@ export class ProjectFinancialsService {
     lines: BoqLineDTO[];
     decomptes: Parameters<typeof DecompteService.sumValidated>[0];
     payments: Parameters<typeof DecompteService.sumPaid>[1];
+    policy?: OperationPolicy;
   }): ProjectFinancialDTO {
     const { scope, entityId, currency, declaredBudget, lines, decomptes, payments } = args;
+    const policy = args.policy ?? DEFAULT_OPERATION_POLICY;
+    const uniqueLines = [...new Map(lines.map((line, index) => [line.id ?? `unpersisted:${index}`, line])).values()];
 
-    const dqeValidated = (lines ?? [])
-      .filter((l) => DQE_STAGES.includes(stageOf(l)) && isValidatedLine(l))
+    const dqeValidated = uniqueLines
+      .filter((l) => policy.dqeStages.includes(stageOf(l)) && isValidatedLine(l, policy))
       .reduce((sum, l) => sum + lineTotal(l), 0);
 
-    const engaged = (lines ?? [])
-      .filter((l) => QUOTE_STAGES.includes(stageOf(l)) && isValidatedLine(l))
+    const commitmentLines = uniqueLines.filter(l => policy.commitmentStages.includes(stageOf(l)) && isValidatedLine(l, policy));
+    // A signed successor replaces its accepted source offer, never adds to it.
+    const supersededDocuments = new Set(commitmentLines.map(l => l.sourceDocumentId).filter(Boolean));
+    const engaged = commitmentLines
+      .filter(l => !l.documentId || !supersededDocuments.has(l.documentId))
       .reduce((sum, l) => sum + lineTotal(l), 0);
 
     let budgetTotal = round2(dqeValidated);
