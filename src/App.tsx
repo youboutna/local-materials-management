@@ -19,6 +19,7 @@ import Home from "./pages/Home";
 import Projects from "./pages/Projects";
 import ProjectCreate from "./pages/ProjectCreate";
 import ProjectDetail from "./pages/ProjectDetail";
+import ProjectCalendar from './pages/ProjectCalendar';
 import ProjectEdit from "./pages/ProjectEdit";
 import ProjectImport from "./pages/ProjectImport";
 import ContractsList from "./pages/ContractsList";
@@ -248,6 +249,7 @@ function App() {
                           </RoleBasedRoute>
                         }
                       />
+                      <Route path="/projects/calendar" element={<RoleBasedRoute><ProjectCalendar /></RoleBasedRoute>} />
                       <Route
                         path="/projects/:id/edit"
                         element={

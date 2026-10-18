@@ -42,6 +42,7 @@ const DEFAULT_BTP_SCHEMA = 'btp';
 export const SCHEMAS = {
   PUBLIC: 'public',
   BTP: 'btp',
+  INFRA: 'infra',
 } as const;
 
 export type SchemaName = string;

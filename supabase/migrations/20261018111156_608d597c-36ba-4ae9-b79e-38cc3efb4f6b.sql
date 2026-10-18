@@ -1,0 +1,12 @@
+CREATE SCHEMA IF NOT EXISTS workbench_private;
+REVOKE ALL ON SCHEMA workbench_private FROM PUBLIC, anon;
+GRANT USAGE ON SCHEMA workbench_private TO authenticated,service_role;
+ALTER FUNCTION public.project_workbench_access(uuid,boolean) SET SCHEMA workbench_private;
+ALTER FUNCTION public.project_workbench_projects() SET SCHEMA workbench_private;
+REVOKE ALL ON FUNCTION workbench_private.project_workbench_access(uuid,boolean),workbench_private.project_workbench_projects() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION workbench_private.project_workbench_access(uuid,boolean),workbench_private.project_workbench_projects() TO authenticated,service_role;
+CREATE FUNCTION public.project_workbench_access(p_project_id uuid,p_write boolean DEFAULT false) RETURNS boolean LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$ SELECT workbench_private.project_workbench_access(p_project_id,p_write) $$;
+CREATE FUNCTION public.project_workbench_projects() RETURNS TABLE(id uuid,title text,reference text,can_manage boolean) LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$ SELECT * FROM workbench_private.project_workbench_projects() $$;
+REVOKE ALL ON FUNCTION public.project_workbench_access(uuid,boolean),public.project_workbench_projects(),public.validate_project_workbench_record() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.project_workbench_access(uuid,boolean),public.project_workbench_projects() TO authenticated,service_role;
+NOTIFY pgrst,'reload schema';

@@ -39,6 +39,7 @@ import {
   Send,
 } from "lucide-react";
 import { SecretAccessManager } from "@/components/navigation/SecretAccessManager";
+import { WORKBENCH_VIEWS, WORKBENCH_ROUTE } from '@/config/referentials/projects/project-workbench.referential';
 
 
 interface NavItem {
@@ -74,6 +75,7 @@ const navigationItems: NavItem[] = [
     icon: Briefcase,
     children: [
       { label: 'auto.contextualsidebar.tous_les_projets', href: "/projects" },
+      ...WORKBENCH_VIEWS.map(view => ({ label: `workbench.${view}`, href: `${WORKBENCH_ROUTE}?view=${view}` })),
       { label: 'auto.contextualsidebar.creer_un_projet', href: "/projects/create" },
       { label: 'auto.contextualsidebar.importer', href: "/projects/import" },
     ],
