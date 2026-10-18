@@ -1,0 +1,4 @@
+REVOKE ALL ON FUNCTION public.project_workbench_access(uuid,boolean),public.project_workbench_projects(),public.infra_asset_list(uuid),public.infra_asset_save(uuid,text,text,jsonb,text,uuid),public.infra_asset_delete(uuid,uuid),public.infra_zone_analysis(uuid,jsonb,double precision),public.infra_realization_save(uuid,uuid,text,uuid,date,uuid),public.validate_project_workbench_record(),public.validate_operation_family(),public.validate_infra_asset_geometry() FROM PUBLIC,anon;
+REVOKE ALL ON FUNCTION workbench_private.project_workbench_access(uuid,boolean),workbench_private.project_workbench_projects() FROM PUBLIC,anon;
+REVOKE ALL ON SCHEMA infra,workbench_private FROM anon;
+NOTIFY pgrst,'reload schema';
