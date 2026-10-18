@@ -30,7 +30,7 @@ describe('ProjectResourceAggregatorService', () => {
         },
       ],
       executedMaterials: [{ name: 'Béton B25', unit: 'm3', quantityUsed: 8, unitPrice: 1000 }],
-      executedResources: [{ name: 'Maçon', type: 'labor', quantity: 90, costPerUnit: 50 }],
+      executedResources: [{ name: 'Maçon', type: 'labor', quantityUsed: 90, costPerUnit: 50 }],
     });
 
     expect(container.materials.plannedCost).toBe(10000);
@@ -45,5 +45,19 @@ describe('ProjectResourceAggregatorService', () => {
     const container = service.aggregate({ projectId: 'p1' });
     expect(container.totals.lineCount).toBe(0);
     expect(container.totals.consumptionRate).toBe(0);
+  });
+  it('does not count allocated or delivered quantities as consumption', () => {
+    const result=service.aggregate({projectId:'p',executedResources:[{name:'Expert',quantity:22}],executedMaterials:[{name:'Fuel',quantity:100}],executedTasks:[{title:'Task',status:'completed',estimatedDuration:10,progress:100}]});
+    expect(result.totals.actualCost).toBe(0);
+    expect(result.totals.lineCount).toBe(0);
+  });
+  it('deduplicates a planned BOQ line exposed in both project and phase', () => {
+    const line={id:'line',designation:'Fuel',quantity:100,unit:'L',unitPrice:2,phaseId:'ph'};
+    const result=service.aggregate({projectId:'p',phases:[{id:'ph',dqeLines:[line]}],boqLines:[line]});
+    expect(result.materials.plannedCost).toBe(200);
+  });
+  it('does not combine different measurement units', () => {
+    const result=service.aggregate({projectId:'p',boqLines:[{designation:'Expert',resourceType:'labor',unit:'h',quantity:8},{designation:'Expert',resourceType:'labor',unit:'j',quantity:1}]});
+    expect(result.human.lines).toHaveLength(2);
   });
 });

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS operation_request_key_all ON btp.project_operation_entries(project_id,request_key);
