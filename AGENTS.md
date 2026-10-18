@@ -17,3 +17,5 @@
 - InspectionComplianceService evaluates phase evidence against the inspection-compliance referential; pending or rejected inspections must not count as completed compliance evidence.
 - Keep GIS assets, layers and spatial analysis in the dedicated infra schema, integrating BTP project scopes through ports and explicit associations; this separates spatial storage from project workflows without duplicating identity or business data.
 - Reuse GeocodingService for address resolution and a spatial-analysis port for metric PostGIS operations; geocoding approximations must not determine authoritative project coverage counts.
+- Compose calendar data through ProjectWorkbenchService and its repository port, with server-authorized project selection; dated operational entries must stay distinct from payment aliases to prevent double counting.
+- Keep privileged workbench access helpers in the unexposed workbench_private schema behind invoker API wrappers; never grant anonymous execution.

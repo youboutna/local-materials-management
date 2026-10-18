@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.validate_infra_asset_geometry() RETURNS trigger LANGUAGE plpgsql SET search_path=public,extensions AS $$ BEGIN IF extensions.ST_XMin(NEW.geometry)<-180 OR extensions.ST_XMax(NEW.geometry)>180 OR extensions.ST_YMin(NEW.geometry)<-90 OR extensions.ST_YMax(NEW.geometry)>90 THEN RAISE EXCEPTION 'Coordinates must use longitude/latitude in WGS84'; END IF; NEW.updated_at=now(); RETURN NEW; END $$;
+REVOKE ALL ON FUNCTION public.validate_infra_asset_geometry() FROM PUBLIC,anon;
+CREATE TRIGGER validate_asset_coordinates BEFORE INSERT OR UPDATE ON infra.assets FOR EACH ROW EXECUTE FUNCTION public.validate_infra_asset_geometry();

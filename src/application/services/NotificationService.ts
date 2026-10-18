@@ -336,6 +336,7 @@ export class NotificationService {
    */
   async sendEmail(data: EmailData): Promise<void> {
     try {
+      const { CommunicationService } = await import('./CommunicationService');
       const result = await CommunicationService.sendEmail({
         to: data.to,
         subject: data.subject,
@@ -358,6 +359,7 @@ export class NotificationService {
    */
   async sendSMS(data: SMSData): Promise<void> {
     try {
+      const { CommunicationService } = await import('./CommunicationService');
       for (const to of Array.isArray(data.to) ? data.to : [data.to]) {
         CommunicationService.requireSuccess(await CommunicationService.sendSMS({ to, message: data.message }));
       }
@@ -372,6 +374,7 @@ export class NotificationService {
    */
   async scheduleCall(data: CallData): Promise<void> {
     try {
+      const { CommunicationService } = await import('./CommunicationService');
       const contact = await CommunicationService.resolveRecipient(data.to);
       CommunicationService.requireSuccess(await CommunicationService.scheduleCall({ recipientId: contact.id, recipientPhone: contact.phone, subject: data.message || 'Call', message: data.message || '', scheduledFor: data.scheduledAt }));
     } catch (error) {
