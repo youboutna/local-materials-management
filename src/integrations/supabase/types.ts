@@ -5028,6 +5028,37 @@ export type Database = {
         Args: { template_id: string }
         Returns: undefined
       }
+      infra_asset_delete: {
+        Args: { p_asset_id: string; p_project_id: string }
+        Returns: undefined
+      }
+      infra_asset_list: {
+        Args: { p_project_id: string }
+        Returns: {
+          asset_type: string
+          geojson: Json
+          id: string
+          name: string
+          project_id: string
+          properties: Json
+          status: string
+        }[]
+      }
+      infra_asset_save: {
+        Args: {
+          p_asset_id?: string
+          p_asset_type: string
+          p_geojson: Json
+          p_name: string
+          p_project_id: string
+          p_status?: string
+        }
+        Returns: string
+      }
+      infra_zone_analysis: {
+        Args: { p_buffer_meters?: number; p_project_id: string; p_zone: Json }
+        Returns: Json
+      }
       is_brand_manager_of_station: {
         Args: { _station_id: string; _user_id: string }
         Returns: boolean
@@ -5052,6 +5083,19 @@ export type Database = {
       }
       is_user_admin: { Args: { p_user_id: string }; Returns: boolean }
       normalize_intervention_zones: { Args: { input: Json }; Returns: Json }
+      project_workbench_access: {
+        Args: { p_project_id: string; p_write?: boolean }
+        Returns: boolean
+      }
+      project_workbench_projects: {
+        Args: never
+        Returns: {
+          can_manage: boolean
+          id: string
+          reference: string
+          title: string
+        }[]
+      }
       search_projects_autocomplete: {
         Args: { search_term?: string }
         Returns: {
