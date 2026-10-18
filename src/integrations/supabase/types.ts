@@ -5055,6 +5055,17 @@ export type Database = {
         }
         Returns: string
       }
+      infra_realization_save: {
+        Args: {
+          p_asset_id: string
+          p_completed_on?: string
+          p_inspection_id?: string
+          p_phase_id?: string
+          p_project_id: string
+          p_realization: string
+        }
+        Returns: string
+      }
       infra_zone_analysis: {
         Args: { p_buffer_meters?: number; p_project_id: string; p_zone: Json }
         Returns: Json
