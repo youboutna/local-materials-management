@@ -36,3 +36,4 @@
 - [x] Tests ciblés calendrier/communication/configuration release passants ; compilation contrôlée
 - [ ] Audit sécurité antérieur : 125 signalements préexistants, notamment politiques et fonctions — audit dédié requis avant production
 - [ ] Vérifier l’ouverture connectée du calendrier : aperçu signé-out resté sur Chargement ; aucun parcours CRUD réel validé
+- [ ] Finaliser release Docker et SMS Twilio : revue des scripts, tests de release, vérification actuelle des expéditeurs et configuration sécurisée
