@@ -29,6 +29,7 @@ import {
 import React, { useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { T } from '@/components/i18n/T';
+import { PlanningImportPreview } from '@/components/projects/PlanningImportPreview';
 
 type ImportMode = "create" | "update" | "patch";
 
@@ -474,6 +475,7 @@ export default function ProjectFileImporter({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <PlanningImportPreview referentialCode={templateReferential} onPrepared={file=>{setSelectedFile(file);setImportResult(null);}} />
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>

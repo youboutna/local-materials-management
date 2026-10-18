@@ -16,6 +16,8 @@ import {
   getReferential,
   type ReferentialType,
 } from '@/config/referentials';
+import type { PlanningPreviewDTO, PlanningPreviewInputDTO } from '@/dtos/entities/PlanningPreviewDTO';
+import { addDays,format,isValid,parseISO } from 'date-fns';
 
 // =============================================================================
 // TYPES
@@ -55,6 +57,62 @@ export interface ReferentialOption {
 // =============================================================================
 
 export class ProjectImportTemplateService {
+  /** Controlled table import, not an inference engine for arbitrary prose. */
+  previewPlanning(input: PlanningPreviewInputDTO): PlanningPreviewDTO {
+    const anchor=parseISO(input.startDate);
+    if(!isValid(anchor) || !input.title.trim() || !input.reference.trim()) throw new Error('Title, reference and valid start date are required');
+    const {mapping}=input;
+    if(!Number.isInteger(mapping.daysPerWeek) || mapping.daysPerWeek<=0) throw new Error('Invalid calendar period');
+    const week=new RegExp(mapping.weekPattern,'i');
+    const post=new RegExp(mapping.postDeliveryPattern,'i');
+    const milestone=new RegExp(mapping.milestonePattern,'i');
+    const dateAt=(offset:number)=>format(addDays(anchor,offset),'yyyy-MM-dd');
+    const project: PlanningPreviewDTO['project']={title:input.title.trim(),externalRef:input.reference.trim(),projectReference:input.reference.trim(),startDate:input.startDate,currency:input.currency,referentialCode:input.referentialCode,phases:[]};
+    const unmatchedLines:PlanningPreviewDTO['unmatchedLines']=[];
+    const pendingPost:Array<{index:number;start:number;end:number}>=[];
+    const warnings:string[]=[];
+    for(const [index,text] of input.text.split(/\r?\n/).entries()) {
+      if(!text.trim()) continue;
+      const columns=text.split(mapping.delimiter);
+      const schedule=columns[mapping.scheduleColumn] ?? '';
+      const range=schedule.match(week); const after=schedule.match(post);
+      const name=columns[mapping.phaseColumn]?.trim();
+      if(!name || (!range && !after)) {unmatchedLines.push({line:index+1,text});continue;}
+      const phaseIndex=project.phases?.length ?? 0;
+      const ref=`${input.reference}:phase:${phaseIndex}`;
+      const phase: NonNullable<typeof project.phases>[number]={externalRef:ref,code:`import_${phaseIndex}`,name,description:columns[mapping.missionsColumn]?.trim(),order:phaseIndex,progress:0};
+      if(range) {
+        const start=Number(range[1]);const end=Number(range[2] ?? range[1]);
+        if(start<1 || end<start) throw new Error(`Invalid schedule at line ${index+1}`);
+        phase.startDate=dateAt((start-1)*mapping.daysPerWeek);
+        phase.endDate=dateAt(end*mapping.daysPerWeek-1);
+      } else if(after) pendingPost.push({index:phaseIndex,start:Number(after[1]),end:Number(after[2])});
+      const deliverable=columns[mapping.deliverableColumn]?.trim();
+      if(deliverable) {
+        const explicit=deliverable.match(milestone);
+        phase.milestones=[{title:deliverable,name:deliverable,targetDate:explicit?dateAt(Number(explicit[1])*mapping.daysPerWeek-1):phase.endDate,externalRef:`${ref}:delivery`}];
+      }
+      phase.tasks=(phase.description ?? '').split(',').map(title=>title.trim()).filter(Boolean).map((title,taskIndex)=>({id:`${ref}:task:${taskIndex}`,title,startDate:phase.startDate,endDate:phase.endDate,metadata:{sourceLine:index+1}}));
+      project.phases?.push(phase);
+    }
+    const delivery=(project.phases ?? []).map(p=>p.endDate).filter((d):d is string=>Boolean(d)).sort().at(-1);
+    for(const pending of pendingPost) {
+      const phase=project.phases?.[pending.index];
+      if(!phase || !delivery || pending.end<pending.start) throw new Error('Post-delivery period has no valid anchor');
+      phase.startDate=format(addDays(parseISO(delivery),pending.start),'yyyy-MM-dd');
+      phase.endDate=format(addDays(parseISO(delivery),pending.end),'yyyy-MM-dd');
+      for(const task of phase.tasks ?? []) {task.startDate=phase.startDate;task.endDate=phase.endDate;}
+      for(const item of phase.milestones ?? []) if(!item.targetDate) item.targetDate=phase.endDate;
+    }
+    if(!project.phases?.length) throw new Error('No schedule row matched the selected mapping');
+    project.endDate=delivery;
+    for(const phase of project.phases) for(const item of phase.milestones ?? []) {
+      if(item.targetDate && phase.endDate && item.targetDate>phase.endDate) warnings.push(`${phase.name}: ${item.title} (${item.targetDate}) > ${phase.endDate}`);
+    }
+    // Unmapped sections remain in the exported source, never silently discarded.
+    project.description=input.text;
+    return {project,unmatchedLines,warnings,sourceText:input.text};
+  }
   // ---------------------------------------------------------------------------
   // LISTE DES RÉFÉRENTIELS
   // ---------------------------------------------------------------------------
