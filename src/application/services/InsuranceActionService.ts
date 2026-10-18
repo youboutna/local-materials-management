@@ -235,7 +235,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
       switch (action.actionType) {
         case 'email':
           if (employee.email) {
-            await communicationService.sendEmail({
+            communicationService.requireSuccess(await communicationService.sendEmail({
               to: employee.email,
               subject: action.title,
               message: action.message,
@@ -247,25 +247,25 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
                 insuranceId: action.insuranceId,
                 projectId: action.projectId
               }
-            });
+            }));
           }
           break;
 
         case 'sms':
           if (employee.phone) {
-            await communicationService.sendSMS({
+            communicationService.requireSuccess(await communicationService.sendSMS({
               to: employee.phone,
               message: action.message,
               priority: action.priority,
               actionType: action.actionType,
               metadata: action.metadata
-            });
+            }));
           }
           break;
 
         case 'call':
           if (employee.phone) {
-            await communicationService.scheduleCall({
+            communicationService.requireSuccess(await communicationService.scheduleCall({
               recipientId: employee.id ?? "",
               recipientPhone: employee.phone,
               subject: action.title,
@@ -274,7 +274,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
               scheduledFor: action.dueDate,
               actionType: action.actionType,
               metadata: action.metadata
-            });
+            }));
           }
           break;
       }

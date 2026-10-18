@@ -241,7 +241,7 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
       switch (action.actionType) {
         case 'email':
           if (employee.email) {
-            await communicationService.sendEmail({
+            communicationService.requireSuccess(await communicationService.sendEmail({
               to: employee.email,
               subject: action.title,
               message: action.message,
@@ -253,25 +253,25 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
                 inspectionId: action.inspectionId,
                 projectId: action.projectId
               }
-            });
+            }));
           }
           break;
 
         case 'sms':
           if (employee.phone) {
-            await communicationService.sendSMS({
+            communicationService.requireSuccess(await communicationService.sendSMS({
               to: employee.phone,
               message: action.message,
               priority: action.priority,
               actionType: action.actionType,
               metadata: action.metadata
-            });
+            }));
           }
           break;
 
         case 'call':
           if (employee.phone) {
-            await communicationService.scheduleCall({
+            communicationService.requireSuccess(await communicationService.scheduleCall({
               recipientId: employee.id ?? "",
               recipientPhone: employee.phone,
               subject: action.title,
@@ -280,7 +280,7 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
               scheduledFor: action.dueDate,
               actionType: action.actionType,
               metadata: action.metadata
-            });
+            }));
           }
           break;
       }

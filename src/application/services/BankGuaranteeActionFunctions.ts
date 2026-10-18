@@ -339,7 +339,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
       switch (action.actionType) {
         case 'email':
           if (target.email) {
-            await communicationService.sendEmail({
+            communicationService.requireSuccess(await communicationService.sendEmail({
               to: target.email,
               subject: `[URGENT] ${action.title} - Garantie Bancaire`,
               message: contextualMessage,
@@ -354,14 +354,14 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
                 targetType: target.type,
                 targetName: target.name
               }
-            });
+            }));
           }
           break;
 
         case 'sms':
           if (target.phone) {
             const smsMessage = `[GARANTIE BANCAIRE] ${action.title}: ${action.message}. Projet: ${action.metadata?.project?.title || action.projectId}`;
-            await communicationService.sendSMS({
+            communicationService.requireSuccess(await communicationService.sendSMS({
               to: target.phone,
               message: smsMessage,
               priority: action.priority,
@@ -371,13 +371,13 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
                 targetName: target.name,
                 bankGuaranteeAmount: bankGuaranteeDetails.data?.guarantee_amount
               }
-            });
+            }));
           }
           break;
 
         case 'call':
           if (target.phone) {
-            await communicationService.scheduleCall({
+            communicationService.requireSuccess(await communicationService.scheduleCall({
               recipientId: target.id,
               recipientPhone: target.phone,
               subject: `[URGENT] Garantie Bancaire - ${action.title}`,
@@ -390,7 +390,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
                 bankGuaranteeDetails: bankGuaranteeDetails.data,
                 projectData: action.metadata?.project
               }
-            });
+            }));
           }
           break;
       }
