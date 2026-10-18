@@ -43,15 +43,57 @@ export class ProjectWorkbenchTransformer {
   static geojsonToImport(text: string, defaultTypeCode: string, typeProperty = 'asset_type_code', nameProperty = 'name'): ImportFeatureItemDTO[] {
     let parsed: Row;
     try { parsed = JSON.parse(text); } catch { throw new Error('Invalid GeoJSON file'); }
+    ProjectWorkbenchTransformer.assertWgs84Crs(parsed.crs);
     const features: Row[] = parsed.type === 'FeatureCollection' && Array.isArray(parsed.features) ? parsed.features as Row[]
       : parsed.type === 'Feature' ? [parsed] : isGeometry(parsed) ? [{ type: 'Feature', geometry: parsed, properties: {} }] : [];
     if (!features.length) throw new Error('GeoJSON contains no feature');
+    const source = parsed.type === 'FeatureCollection' ? { collection: optional(parsed.name), metadata: parsed.metadata ?? undefined } : undefined;
     return features.map((feature, index) => {
-      const properties = (feature.properties || {}) as Row;
+      const properties = { ...((feature.properties || {}) as Row) };
       const code = optional(properties[typeProperty]) || defaultTypeCode;
       if (!code) throw new Error(`Feature ${index + 1}: asset type missing`);
       if (!isGeometry(feature.geometry)) throw new Error(`Feature ${index + 1}: invalid geometry`);
+      ProjectWorkbenchTransformer.assertLonLat(feature.geometry, index + 1);
+      if (feature.id !== undefined && properties.source_id === undefined) properties.source_id = feature.id;
+      if (source && (source.collection || source.metadata)) properties._import = source;
       return { name: optional(properties[nameProperty]) || optional(properties.label) || `${code}-${index + 1}`, asset_type_code: code, status: optional(properties.status) || 'planned', geometry: feature.geometry, properties };
     });
+  }
+  /** Seules les coordonnées WGS84 lon/lat sont acceptées (CRS84 / EPSG:4326). */
+  static assertWgs84Crs(crs: unknown) {
+    if (!crs) return;
+    const name = String(((crs as Row).properties as Row | undefined)?.name ?? '');
+    if (!/CRS84$|EPSG:+4326$|EPSG::4326$/i.test(name)) throw new Error(`Unsupported CRS ${name || 'unknown'}: reproject to WGS84 (EPSG:4326)`);
+  }
+  static assertLonLat(geometry: Geometry, index: number) {
+    const walk = (value: unknown): void => {
+      if (Array.isArray(value) && typeof value[0] === 'number') {
+        const [lng, lat] = value as number[];
+        if (!(lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90)) throw new Error(`Feature ${index}: coordinates must be longitude/latitude`);
+      } else if (Array.isArray(value)) value.forEach(walk);
+    };
+    if (geometry.type === 'GeometryCollection') geometry.geometries.forEach(g => ProjectWorkbenchTransformer.assertLonLat(g, index));
+    else walk(geometry.coordinates);
+  }
+  /** Table attributaire ↔ properties. Les valeurs JSON (nombres, listes, objets) sont conservées. */
+  static propertiesToAttributes(properties: Record<string, unknown> = {}): Array<{ key: string; value: string }> {
+    return Object.entries(properties).filter(([key]) => key !== '_import').map(([key, value]) => ({ key, value: typeof value === 'string' ? value : JSON.stringify(value) }));
+  }
+  static attributesToProperties(rows: Array<{ key: string; value: string }>, preserved: Record<string, unknown> = {}): Record<string, unknown> {
+    const duplicates = ProjectWorkbenchTransformer.duplicateAttributeKeys(rows);
+    if (duplicates.size) throw new Error(`Duplicate attribute: ${[...duplicates].join(', ')}`);
+    const out: Record<string, unknown> = preserved._import ? { _import: preserved._import } : {};
+    for (const { key, value } of rows) {
+      const k = key.trim(); if (!k) continue;
+      const v = value.trim();
+      if (/^(-?\d+(\.\d+)?|true|false|null|\[.*\]|\{.*\})$/s.test(v)) { try { out[k] = JSON.parse(v); continue; } catch { /* texte */ } }
+      out[k] = value;
+    }
+    return out;
+  }
+  static duplicateAttributeKeys(rows: Array<{ key: string }>): Set<string> {
+    const seen = new Set<string>(); const dup = new Set<string>();
+    rows.forEach(({ key }) => { const k = key.trim(); if (!k) return; if (seen.has(k)) dup.add(k); seen.add(k); });
+    return dup;
   }
 }
