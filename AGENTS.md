@@ -15,3 +15,5 @@
 - ConsultantScopeService filters project-bound presentation records; server-side permissions remain authoritative and are not replaced by UI filtering.
 - Payment initiation limits, approval chains, and deadlines come from the injectable payment-initiation referential; DTO compatibility exports must not own business rules.
 - InspectionComplianceService evaluates phase evidence against the inspection-compliance referential; pending or rejected inspections must not count as completed compliance evidence.
+- Keep GIS assets, layers and spatial analysis in the dedicated infra schema, integrating BTP project scopes through ports and explicit associations; this separates spatial storage from project workflows without duplicating identity or business data.
+- Reuse GeocodingService for address resolution and a spatial-analysis port for metric PostGIS operations; geocoding approximations must not determine authoritative project coverage counts.

@@ -50,10 +50,16 @@ Des entrées de menu directes **Calendrier projets**, **Consommations**, **Métr
 ## Lot 5 — Infrastructures GIS liées aux zones
 
 - Ajouter un inventaire et une carte projet pour créer, consulter, modifier et supprimer des ouvrages et segments de réseau, avec leurs liens aux zones d’intervention et phases.
-- Réutiliser la carte GIS ; garder les emprises projet distinctes des équipements/ouvrages persistés.
-- Adapter les modèles utiles du dépôt electricity_network dans le périmètre **btp/public**, sans importer sa seconde authentification, ses sessions ou ses autorisations permissives.
-- Prévoir conversion GeoJSON/PostGIS, ordre des coordonnées, géométries valides et rattachement projet ; conserver les zones projet existantes.
+- **Décision confirmée : un schéma dédié `infra` (nom SQL minuscule)** contient les infrastructures, couches cartographiques et analyses SIG ; le métier projet reste dans `btp`, l’identité et les services transverses restent partagés. Aucun déplacement des tables BTP existantes.
+- Réutiliser la carte GIS et **GeocodingService** pour la recherche d’adresse et le géocodage ; garder les emprises projet distinctes des équipements/ouvrages persistés. Le géocodage ne remplace pas les calculs spatiaux fiables.
+- Adapter les modèles utiles du dépôt electricity_network dans **infra**, sans importer sa seconde authentification, ses sessions ou ses autorisations permissives.
+- Couplage faible : ports/DTOs et associations explicites infrastructure–projet–phase, sans recopier les projets dans infra ni faire lire les tables BTP directement par les composants cartographiques. Les emprises sont fournies au moteur spatial par le service projet, avec provenance/version.
+- Prévoir conversion GeoJSON/PostGIS, ordre des coordonnées, géométries valides, trous et multipolygones, gestion des cercles et rattachement projet ; conserver les zones projet existantes.
+- Fournir buffers en mètres, recherche de proximité, intersection et couverture de zone, avec filtres de couche/type/statut. Calculs métriques via PostGIS et unités explicites, jamais en degrés ni à partir d’une wilaya approximative.
+- Afficher deux résultats séparés : **ouvrages présents dans la zone** et **ouvrages réalisés dans le cadre du projet**, puis permettre l’ouverture de leur liste et détail. Dédupliquer les ouvrages touchant plusieurs zones ; pour les lignes, montrer aussi la longueur effectivement intersectée.
+- La présence est déterminée par la géométrie selon une relation spatiale explicite ; la réalisation exige une association au projet et une preuve de réalisation validée selon le référentiel. Une association ou un statut planifié ne suffit pas. Distinguer réalisation totale/partielle sans compter une portion comme ouvrage entièrement achevé.
 - Types d’ouvrage, statuts et validations définis dans les référentiels ; droits de lecture/écriture par projet vérifiés côté serveur avant activation du CRUD.
+- Déployer migrations, index spatiaux et fonctions de requête autorisées ; configurer explicitement l’exposition du schéma infra avec grants USAGE/table/fonction adaptés et RLS. Le comptage respecte les mêmes droits que les listes et ne révèle pas des ouvrages inaccessibles.
 
 ## Détails techniques et garde-fous
 
@@ -66,7 +72,7 @@ Des entrées de menu directes **Calendrier projets**, **Consommations**, **Métr
 
 ## Validation et limites
 
-- Exécuter les tests ciblés existants et ajouter des tests pour résultats de communication, résolution des contacts, périodes calendaires, isolation projet, consommation datée, non-double-comptage financier, unités/calibration et géométries.
+- Exécuter les tests ciblés existants et ajouter des tests pour résultats de communication, résolution des contacts, périodes calendaires, isolation projet, consommation datée, non-double-comptage financier, unités/calibration et géométries ; tester buffers métriques, frontières/trous/multipolygones, déduplication interzones et séparation présence/réalisation avec preuve et autorisation.
 - Vérifier les formulaires, erreurs, nouvelles tentatives, lecture retour des données enregistrées et navigation ; contrôler le rendu ordinateur/mobile et la compilation automatique.
 - Les lots sont livrés progressivement, sans déclarer l’ensemble terminé à partir d’un écran vide ou d’un test simulé.
 - **Blocages externes connus :** expéditeur Twilio absent, réception/livraison réelle non vérifiée, Supabase externe sans session de test injectable et Docker absent ici. Les permissions et parcours privés nécessiteront une recette sur l’environnement cible ; ces limites ne sont pas contournées par le filtrage visuel.

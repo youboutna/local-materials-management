@@ -30,4 +30,5 @@
 - [ ] Préparer le calendrier projet direct avec tâches, ressources, inspections, paiements, dépenses et recettes
 - [ ] Préparer les parcours consommation quotidienne et métré de plans avec comparaison planifié/réel
 - [ ] Préparer le CRUD des infrastructures GIS dans les zones projet après revue du schéma réseau
+- [ ] Séparer le SIG dans un schéma infra faiblement couplé au BTP ; prévoir buffers, analyses spatiales et comptages des ouvrages présents/réalisés
 - [ ] Valider le plan puis exécuter les lots et leurs tests de non-régression
