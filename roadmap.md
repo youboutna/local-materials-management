@@ -26,3 +26,8 @@
 - [x] P0 : procédure dist → Docker indépendante de l’infrastructure existante, contrôles HTTP et retour arrière livrés
 - [x] Fournisseur Twilio relié, accès applicatif vérifié HTTP 200, port SMS et résultats testés, fonction déployée
 - [ ] Envoyer puis vérifier la livraison SMS — bloqué : compte Twilio sans numéro actif et saisie expéditeur refusée
+- [ ] Auditer et unifier les canaux de communication via CommunicationService et les fournisseurs configurés
+- [ ] Préparer le calendrier projet direct avec tâches, ressources, inspections, paiements, dépenses et recettes
+- [ ] Préparer les parcours consommation quotidienne et métré de plans avec comparaison planifié/réel
+- [ ] Préparer le CRUD des infrastructures GIS dans les zones projet après revue du schéma réseau
+- [ ] Valider le plan puis exécuter les lots et leurs tests de non-régression
