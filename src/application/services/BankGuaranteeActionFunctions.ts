@@ -336,11 +336,15 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
     `;
 
     for (const target of communicationTargets) {
+      const contact = await communicationService.resolveRecipient(target.id);
+      if (action.actionType === 'email' && !contact.email) throw new Error('Recipient email is missing');
+      if (['sms','call'].includes(action.actionType) && !contact.phone) throw new Error('Recipient phone is missing');
+      if (action.actionType === 'call' && !contact.id) throw new Error('Call requires a linked user');
       switch (action.actionType) {
         case 'email':
           if (target.email) {
             communicationService.requireSuccess(await communicationService.sendEmail({
-              to: target.email,
+              to: contact.email,
               subject: `[URGENT] ${action.title} - Garantie Bancaire`,
               message: contextualMessage,
               priority: action.priority,
@@ -362,7 +366,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
           if (target.phone) {
             const smsMessage = `[GARANTIE BANCAIRE] ${action.title}: ${action.message}. Projet: ${action.metadata?.project?.title || action.projectId}`;
             communicationService.requireSuccess(await communicationService.sendSMS({
-              to: target.phone,
+              to: contact.phone,
               message: smsMessage,
               priority: action.priority,
               actionType: action.actionType,
@@ -378,8 +382,8 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
         case 'call':
           if (target.phone) {
             communicationService.requireSuccess(await communicationService.scheduleCall({
-              recipientId: target.id,
-              recipientPhone: target.phone,
+              recipientId: contact.id,
+              recipientPhone: contact.phone,
               subject: `[URGENT] Garantie Bancaire - ${action.title}`,
               message: contextualMessage,
               priority: action.priority,
@@ -396,8 +400,8 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
       }
 
       // Send tracking notification
-      await NotificationService.createNotification({
-        recipientId: target.id,
+      if (contact.id) await communicationService.sendNotification({
+        recipientId: contact.id,
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,
         type: 'bank_guarantee_trigger' as any,

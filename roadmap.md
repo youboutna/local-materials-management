@@ -26,9 +26,12 @@
 - [x] P0 : procédure dist → Docker indépendante de l’infrastructure existante, contrôles HTTP et retour arrière livrés
 - [x] Fournisseur Twilio relié, accès applicatif vérifié HTTP 200, port SMS et résultats testés, fonction déployée
 - [ ] Envoyer puis vérifier la livraison SMS — bloqué : compte Twilio sans numéro actif et saisie expéditeur refusée
-- [ ] Auditer et unifier les canaux de communication via CommunicationService et les fournisseurs configurés
-- [ ] Préparer le calendrier projet direct avec tâches, ressources, inspections, paiements, dépenses et recettes
-- [ ] Préparer les parcours consommation quotidienne et métré de plans avec comparaison planifié/réel
-- [ ] Préparer le CRUD des infrastructures GIS dans les zones projet après revue du schéma réseau
-- [ ] Séparer le SIG dans un schéma infra faiblement couplé au BTP ; prévoir buffers, analyses spatiales et comptages des ouvrages présents/réalisés
-- [ ] Valider le plan puis exécuter les lots et leurs tests de non-régression
+- [x] Corriger les communications locales fictives, destinataires UUID, références fournisseur et résultats ignorés ; façade WhatsApp et liens Meet/Teams
+- [x] Ajouter calendrier projet direct jour/mois/année, sélection serveur autorisée, détails tâche/phase/inspection/paiement et journaux consommation/dépenses/recettes
+- [x] Séparer SIG infra et BTP via port, PostGIS métrique, buffers multi-zones et cercles, CRUD ouvrages et réalisation avec inspection justificative
+- [ ] Recette CRUD calendrier/SIG/portails avec compte réel — bloqué : Supabase externe sans session de test injectable
+- [ ] Métré géométrique des plans, calibration, mesures persistées et comparaison planifié/réel — nécessite le lot de mesure contrôlée, non livré ; le calculateur existant reste accessible
+- [ ] Réconciliation comptable dépenses/recettes avec paiements et consommation cumulée — non livrée ; journaux distincts pour éviter un total trompeur
+- [ ] Recette planificateurs et tous canaux réels — bloqué : expéditeur SMS absent, WhatsApp lien seulement, appels programmés uniquement, serveur cible inaccessible
+- [x] Tests ciblés calendrier/communication/configuration release passants ; compilation contrôlée
+- [ ] Audit sécurité antérieur : 125 signalements préexistants, notamment politiques et fonctions — audit dédié requis avant production
