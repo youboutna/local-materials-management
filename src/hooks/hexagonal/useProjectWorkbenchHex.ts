@@ -18,12 +18,14 @@ export function useWorkbenchCalendarActions(projectId: string) {
 }
 export function useWorkbenchProjects() { return useQuery({ queryKey: ['workbench-projects'], queryFn: () => getProjectWorkbenchService().projects() }); }
 export function useProjectWorkbench(projectId: string) { return useQuery({ queryKey: ['project-workbench', projectId], queryFn: () => getProjectWorkbenchService().load(projectId), enabled: Boolean(projectId) }); }
+export function useWorkbenchFinance(projectId: string) { return useQuery({ queryKey: ['workbench-finance', projectId], queryFn: () => getProjectWorkbenchService().finance(projectId), enabled: Boolean(projectId) }); }
 export function useWorkbenchOperations(projectId: string) {
   const client = useQueryClient();
-  const invalidate = () => client.invalidateQueries({ queryKey: ['project-workbench', projectId] });
+  const invalidate = () => Promise.all([client.invalidateQueries({ queryKey: ['project-workbench', projectId] }),client.invalidateQueries({queryKey:['workbench-finance',projectId]}),client.invalidateQueries({queryKey:['project-financials',projectId]})]);
   const save = useMutation({ mutationFn: async (input: SaveProjectOperationDTO) => { const result = await getProjectWorkbenchService().saveOperation(input); await invalidate(); return result; } });
   const remove = useMutation({ mutationFn: async (id: string) => { await getProjectWorkbenchService().deleteOperation(projectId, id); await invalidate(); } });
-  return { saveOperation: save.mutateAsync, deleteOperation: remove.mutateAsync, isPending: save.isPending || remove.isPending, error: save.error || remove.error };
+  const transition = useMutation({mutationFn: async (input:{id:string;status:'validated'|'cancelled'}) => { await getProjectWorkbenchService().transitionOperation(projectId,input.id,input.status); await invalidate(); }});
+  return { saveOperation: save.mutateAsync, deleteOperation: remove.mutateAsync, transitionOperation:transition.mutateAsync, isPending: save.isPending || remove.isPending || transition.isPending, error: save.error || remove.error || transition.error };
 }
 export function useInfrastructureWorkbench(projectId: string) {
   const service = getProjectWorkbenchService();

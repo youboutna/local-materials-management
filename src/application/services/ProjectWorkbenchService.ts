@@ -6,6 +6,11 @@ import type { SpatialZoneDTO, InfrastructureRealizationDTO, SaveAssetTypeDTO, Im
 import { getProjectService } from './ProjectService';
 import { SupabaseProjectWorkbenchAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter';
 import { format, isValid, parseISO, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { getDecompteService } from './DecompteService';
+import { ProjectFinancialsService } from './ProjectFinancialsService';
+import { ProjectMetricsOrchestrator } from './ProjectMetricsOrchestrator';
+import { DEFAULT_OPERATION_POLICY } from '@/config/referentials/projects/operation-policy.referential';
 export class ProjectWorkbenchService {
   constructor(private readonly repository: IProjectWorkbenchRepository = new SupabaseProjectWorkbenchAdapter()) {}
   projects() { return this.repository.projects(); }
@@ -39,9 +44,34 @@ export class ProjectWorkbenchService {
   }
   async saveOperation(input: SaveProjectOperationDTO) {
     if (!input.label.trim() || !isValid(parseISO(input.occurredOn)) || !Number.isFinite(input.amount) || input.amount < 0 || !Number.isFinite(input.quantity) || input.quantity < 0 || !input.unit.trim() || !input.currency.trim()) throw new Error('Invalid operation');
+    if (input.contextCode && !DEFAULT_OPERATION_POLICY.contexts.includes(input.contextCode)) throw new Error('Unknown operation context');
+    if(input.status === 'validated' && (!input.contextCode || input.contextCode === 'unreconciled')) throw new Error('Select an operation context');
     return this.repository.saveOperation(input);
   }
   deleteOperation(projectId: string, id: string) { return this.repository.deleteOperation(projectId, id); }
+  transitionOperation(projectId: string, id: string, status: 'validated' | 'cancelled') { return this.repository.transitionOperation(projectId,id,status); }
+  async finance(projectId: string) {
+    if (!(await this.projects()).some(project => project.id === projectId)) throw new Error('Project access denied');
+    const [project, collections, scope] = await Promise.all([
+      getProjectService().getProjectWithDetails(projectId),
+      Promise.all((['dqe','supplier_bid','invoice'] as const).map(source => boqRepository.list({source,projectId}))),
+      getDecompteService().getProjectFinancials(projectId),
+    ]);
+    if (!project) throw new Error('Project not found');
+    const lines = [...new Map(collections.flat().map((line,index) => [line.id ?? `draft:${index}`,line])).values()];
+    const financials = ProjectFinancialsService.build({scope:'project',entityId:projectId,currency:project.currency,declaredBudget:project.budget ?? 0,lines,decomptes:scope.decomptes,payments:scope.payments});
+    const metrics = ProjectMetricsOrchestrator.compute({project,phases:project.phases,financials});
+    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics};
+  }
+  static operationTotals(entries: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[], currency: string) {
+    const totals = new Map<string,number>();
+    for (const entry of entries) {
+      if(entry.status !== 'validated' || entry.currency !== currency || entry.kind !== 'consumption') continue;
+      const key = `${entry.resourceFamily ?? ''}:${entry.unit}`;
+      totals.set(key,(totals.get(key) ?? 0) + entry.quantity);
+    }
+    return [...totals].map(([key,quantity]) => ({family:key.split(':')[0],unit:key.slice(key.indexOf(':')+1),quantity}));
+  }
   async deleteCalendarEntry(projectId: string, kind: ProjectCalendarEventDTO['kind'], id: string) {
     const data = await this.load(projectId);
     if (!data.canManage || !data.events.some(event => event.kind === kind && event.entityId === id)) throw new Error('Project access denied');
