@@ -37,7 +37,6 @@ import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
 import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
 import { RiskTransformer } from '@/dtos/transforms/RiskTransformer';
 import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
-import { InspectionTransformer } from '@/dtos/transforms/InspectionTransformer';
 
 // Import location service and types
 import { LocationService } from './LocationService';
@@ -606,7 +605,7 @@ export class ProjectService {
         risks,
         payments,
         expenses: payments.filter((payment) => payment.status === 'paid'),
-        inspections: (data.inspections || []).map(inspection => inspection instanceof Object && 'toPlainObject' in inspection ? InspectionTransformer.toDTO(inspection) : inspection) as InspectionDTO[],
+        inspections: data.inspections || [],
         documents: data.documents || [],
         bankGuarantees: data.bankGuarantees || [],
         insuranceCertificates: data.insuranceCertificates || [],

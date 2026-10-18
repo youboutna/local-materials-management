@@ -19,3 +19,5 @@
 - Reuse GeocodingService for address resolution and a spatial-analysis port for metric PostGIS operations; geocoding approximations must not determine authoritative project coverage counts.
 - Compose calendar data through ProjectWorkbenchService and its repository port, with server-authorized project selection; dated operational entries must stay distinct from payment aliases to prevent double counting.
 - Keep privileged workbench access helpers in the unexposed workbench_private schema behind invoker API wrappers; never grant anonymous execution.
+- Hydrate project-related collections into their declared entities or DTOs in the repository adapter before aggregation; raw database rows must never reach domain-to-DTO serializers.
+- Reuse the existing task, phase, inspection, payment and BOQ services for workbench actions, retaining original entity IDs independently from dated calendar-event IDs to avoid duplicate business records.

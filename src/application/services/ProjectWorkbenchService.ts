@@ -22,8 +22,8 @@ export class ProjectWorkbenchService {
     const events: ProjectCalendarEventDTO[] = [];
     const add = (id: string, title: string, kind: ProjectCalendarEventDTO['kind'], href: string, dates: Partial<Record<ProjectCalendarEventDTO['dateKind'], string>>, phaseId?: string) => {
       const entries = Object.entries(dates).filter(([, date]) => date && isValid(parseISO(date)));
-      if (!entries.length) events.push({ id, title, kind, href, dateKind: 'scheduled', phaseId });
-      for (const [dateKind, date] of entries) events.push({ id: `${kind}:${id}:${dateKind}`, title, kind, href, dateKind: dateKind as ProjectCalendarEventDTO['dateKind'], date: date ? format(parseISO(date), 'yyyy-MM-dd') : undefined, phaseId });
+      if (!entries.length) events.push({ id: `${kind}:${id}:undated`, entityId: id, title, kind, href, dateKind: 'scheduled', phaseId });
+      for (const [dateKind, date] of entries) events.push({ id: `${kind}:${id}:${dateKind}`, entityId: id, title, kind, href, dateKind: dateKind as ProjectCalendarEventDTO['dateKind'], date: date ? format(parseISO(date), 'yyyy-MM-dd') : undefined, phaseId });
     };
     for (const phase of project.phases || []) add(phase.id, phase.name, 'phase', `/projects/${project.id}/phases/${phase.id}`, { start: phase.startDate, end: phase.endDate }, phase.id);
     for (const task of project.tasks || []) if (!task.projectId || task.projectId === project.id) add(task.id, task.title, 'task', `/tasks/${task.id}`, { start: task.startDate, end: task.endDate, due: task.dueDate, actual: task.completedAt }, task.phaseId);
@@ -42,6 +42,15 @@ export class ProjectWorkbenchService {
     return this.repository.saveOperation(input);
   }
   deleteOperation(projectId: string, id: string) { return this.repository.deleteOperation(projectId, id); }
+  async deleteCalendarEntry(projectId: string, kind: ProjectCalendarEventDTO['kind'], id: string) {
+    const data = await this.load(projectId);
+    if (!data.canManage || !data.events.some(event => event.kind === kind && event.entityId === id)) throw new Error('Project access denied');
+    if (kind === 'task') { const { getTaskAssignmentService } = await import('./TaskAssignmentService'); await getTaskAssignmentService().delete(id); }
+    else if (kind === 'phase') { const { getPhaseService } = await import('./PhaseService'); await getPhaseService().deletePhase(id); }
+    else if (kind === 'inspection') { const { getInspectionService } = await import('./InspectionService'); await getInspectionService().deleteInspection(id); }
+    else if (kind === 'payment') { const { getPaymentService } = await import('./PaymentService'); await getPaymentService().deletePayment(id); }
+    else throw new Error('Unsupported calendar entry');
+  }
   assets(projectId: string) { return this.repository.assets(projectId); }
   saveAsset(input: SaveInfrastructureDTO) { if (!input.name.trim()) throw new Error('Infrastructure name is required'); return this.repository.saveAsset(input); }
   deleteAsset(projectId: string, id: string) { return this.repository.deleteAsset(projectId, id); }
