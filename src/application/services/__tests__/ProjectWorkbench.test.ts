@@ -15,4 +15,5 @@ describe('Project calendar dates and scope', () => {
     expect(ProjectWorkbenchService.events(project).map(event => [event.dateKind,event.date])).toEqual([['scheduled','2026-10-01'],['actual','2026-10-04']]);
   });
   it('rejects negative daily consumption without persistence', async () => { const repository = { saveOperation:vi.fn() } as unknown as IProjectWorkbenchRepository; await expect(new ProjectWorkbenchService(repository).saveOperation({projectId:'p',kind:'consumption',occurredOn:'2026-10-18',label:'Fuel',quantity:-1,amount:10,unit:'L',currency:'MRU'})).rejects.toThrow(); expect(repository.saveOperation).not.toHaveBeenCalled(); });
+  it('does not mark an asset completed without inspection evidence', () => { const repository = { saveRealization:vi.fn() } as unknown as IProjectWorkbenchRepository; expect(() => new ProjectWorkbenchService(repository).saveRealization({projectId:'p',assetId:'a',realization:'completed',completedOn:'2026-10-18'})).toThrow('inspection'); expect(repository.saveRealization).not.toHaveBeenCalled(); });
 });
