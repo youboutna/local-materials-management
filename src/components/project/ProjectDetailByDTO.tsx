@@ -1338,7 +1338,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         <TabsContent value="tasks" className="mt-6">
           {(() => {
             const status = String((project as any)?.status || '').toLowerCase();
-            const defaultExecTab = status.includes('inspection') ? 'inspections' : 'tasks-exec';
+            const requestedExecution = searchParams.get('execution');
+            const defaultExecTab = requestedExecution === 'inspections' || requestedExecution === 'payments-exec' ? requestedExecution : status.includes('inspection') ? 'inspections' : 'tasks-exec';
             return (
               <Tabs defaultValue={defaultExecTab} className="space-y-4">
                 <WorkspaceTabsList variant="underline">
