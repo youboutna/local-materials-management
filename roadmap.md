@@ -44,4 +44,5 @@
 - [ ] Compléter et fiabiliser les actions ajouter/modifier/supprimer des onglets calendrier, opérations, métré et SIG
 - [ ] Vérifier les changements par tests ciblés et aperçu ; recette connectée soumise à la disponibilité d’une session externe
 - [x] SIG infra : modèle réseau ouvert (domaines, types d'ouvrages, supports, ouvrages, réalisations), import GeoJSON en masse, CRUD complet, analyse tampon filtrée par projet
+- [x] Tracé carte + table attributaire + aperçu import GeoJSON ; testé en base avec la boucle 33 kV (annulé)
 - [ ] Recette connectée du module SIG dans l'aperçu (bloquée : session Supabase externe non injectable)
