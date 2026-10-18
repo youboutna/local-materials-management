@@ -51,3 +51,40 @@ export class TwilioSmsProvider implements SmsProvider {
     return { success: true, messageId: result.sid, status: result.status };
   }
 }
+
+// GatewayAPI (EU) via the connector gateway. Sender is an alphanumeric name (max 11) or a number.
+export class GatewayApiSmsProvider implements SmsProvider {
+  constructor(private env: SmsEnvironment, private http: typeof fetch = fetch) {}
+  async send(request: SmsRequest): Promise<SmsResult> {
+    const apiKey = this.env('LOVABLE_API_KEY');
+    const connectionKey = this.env('GATEWAYAPI_API_KEY');
+    const sender = this.env('GATEWAYAPI_SENDER') || 'Hadratech';
+    if (!apiKey || !connectionKey) return { success: false, error: 'SMS_PROVIDER_NOT_CONFIGURED' };
+    if (!/^([A-Za-z0-9 ]{1,11}|\+?[1-9]\d{3,14})$/.test(sender)) return { success: false, error: 'Invalid SMS sender configuration' };
+    const response = await this.http('https://connector-gateway.lovable.dev/gatewayapi/mobile/single', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'X-Connection-Api-Key': connectionKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: sender.replace(/^\+/, ''), recipient: Number(request.to.slice(1)), message: request.message }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const responseBody = await response.text();
+    if (!response.ok) {
+      console.error(`GatewayAPI request failed [${response.status}]: ${responseBody}`);
+      return { success: false, providerStatus: response.status, error: 'GatewayAPI rejected SMS', details: responseBody };
+    }
+    let result: { msg_id?: string };
+    try { result = JSON.parse(responseBody); }
+    catch { return { success: false, providerStatus: response.status, error: 'Invalid GatewayAPI response' }; }
+    if (!result.msg_id) return { success: false, providerStatus: response.status, error: 'GatewayAPI did not accept this SMS', details: responseBody };
+    // 202 = accepted for sending, not proof of delivery.
+    return { success: true, messageId: result.msg_id, status: 'accepted' };
+  }
+}
+
+// SMS_PROVIDER=twilio|gatewayapi forces a provider; otherwise GatewayAPI is used when linked.
+export function createSmsProvider(env: SmsEnvironment, http: typeof fetch = fetch): SmsProvider {
+  const choice = env('SMS_PROVIDER')?.toLowerCase();
+  if (choice === 'twilio') return new TwilioSmsProvider(env, http);
+  if (choice === 'gatewayapi' || env('GATEWAYAPI_API_KEY')) return new GatewayApiSmsProvider(env, http);
+  return new TwilioSmsProvider(env, http);
+}

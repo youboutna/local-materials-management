@@ -37,3 +37,16 @@ describe('SMS provider outcomes', () => {
     expect(http).not.toHaveBeenCalled();
   });
 });
+import { createSmsProvider, GatewayApiSmsProvider } from '../../../../supabase/functions/_shared/SmsProvider';
+describe('GatewayAPI SMS provider', () => {
+  const env = (k: string) => ({ LOVABLE_API_KEY: 'l', GATEWAYAPI_API_KEY: 'g' } as Record<string, string>)[k];
+  it('sends the number without + and reports accepted, not delivered', async () => {
+    const http = vi.fn().mockResolvedValue(new Response('{"msg_id":"01ABC"}', { status: 202 }));
+    expect(await new GatewayApiSmsProvider(env, http).send({ to: '+22212345678', message: 'Hi' })).toEqual({ success: true, messageId: '01ABC', status: 'accepted' });
+    expect(JSON.parse(http.mock.calls[0][1].body)).toMatchObject({ recipient: 22212345678, sender: 'Hadratech' });
+  });
+  it('is chosen when linked, unless SMS_PROVIDER=twilio', () => {
+    expect(createSmsProvider(env)).toBeInstanceOf(GatewayApiSmsProvider);
+    expect(createSmsProvider(k => k === 'SMS_PROVIDER' ? 'twilio' : env(k))).not.toBeInstanceOf(GatewayApiSmsProvider);
+  });
+});

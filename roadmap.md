@@ -25,7 +25,8 @@
 - [x] P0 : configuration publique externe validée, montage lecture seule, paramètres sans secrets et synchronisation .env désactivée
 - [x] P0 : procédure dist → Docker indépendante de l’infrastructure existante, contrôles HTTP et retour arrière livrés
 - [x] Fournisseur Twilio relié, accès applicatif vérifié HTTP 200, port SMS et résultats testés, fonction déployée
-- [ ] Envoyer puis vérifier la livraison SMS — bloqué : compte Twilio sans numéro actif et saisie expéditeur refusée
+- [x] SMS via GatewayAPI (prioritaire si relié ; Twilio forçable)
+- [ ] Envoyer un SMS réel de test — en attente d’un numéro destinataire
 - [x] Corriger les communications locales fictives, destinataires UUID, références fournisseur et résultats ignorés ; façade WhatsApp et liens Meet/Teams
 - [x] Ajouter calendrier projet direct jour/mois/année, sélection serveur autorisée, détails tâche/phase/inspection/paiement et journaux consommation/dépenses/recettes
 - [x] Séparer SIG infra et BTP via port, PostGIS métrique, buffers multi-zones et cercles, CRUD ouvrages et réalisation avec inspection justificative
@@ -38,5 +39,4 @@
 - [ ] Vérifier l’ouverture connectée du calendrier : aperçu signé-out resté sur Chargement ; aucun parcours CRUD réel validé
 - [x] Renforcer release Docker : refus tags mutables/existants, lancement sans reconstruction, comparaison worker servi et tests de scripts
 - [x] Vérifier Twilio actuellement : HTTP 200, aucun numéro ni Messaging Service ; tester configuration et erreurs SMS jusqu’à l’adapter
-- [ ] Activer expéditeur Twilio puis configurer TWILIO_FROM_NUMBER ou Messaging Service et valider livraison réelle — bloqué : aucun expéditeur actif
 - [ ] Démarrer et tester l’image réelle sur le serveur Docker — bloqué : Docker/daemon et accès serveur absents ici ; tests de scripts simulés seulement
