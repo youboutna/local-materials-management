@@ -1,5 +1,11 @@
 {
   "workbench.title": "تقويم ومتابعة المشروع",
+  "workbench.notes": "ملاحظات",
+  "workbench.retry": "إعادة المحاولة",
+  "workbench.add_task": "إضافة مهمة",
+  "workbench.add_inspection": "إضافة تفتيش",
+  "workbench.manage_phases": "إدارة المراحل",
+  "workbench.manage_payments": "إدارة الدفعات",
   "workbench.confirm_realization": "اعتماد الإنجاز",
   "workbench.calendar": "تقويم المشاريع",
   "workbench.consumption": "الاستهلاك",

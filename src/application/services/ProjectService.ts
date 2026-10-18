@@ -605,7 +605,7 @@ export class ProjectService {
         risks,
         payments,
         expenses: payments.filter((payment) => payment.status === 'paid'),
-        inspections: data.inspections as InspectionDTO[] || [],
+        inspections: data.inspections || [],
         documents: data.documents || [],
         bankGuarantees: data.bankGuarantees || [],
         insuranceCertificates: data.insuranceCertificates || [],

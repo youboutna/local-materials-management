@@ -408,17 +408,20 @@ export class PaymentTransformer implements EntityToDTOMapper<Payment, PaymentDTO
   }
 
   static toEntityFromDatabaseRow(row: Record<string, unknown>): Payment {
-    return Payment.create({
-      id: row.id as string,
-      projectRef: row.project_id ? { id: row.project_id as string } : null,
-      phaseRef: row.phase_id ? { id: row.phase_id as string } : null,
-      inspectionRef: row.inspection_id ? { id: row.inspection_id as string } : null,
-      amount: Number(row.amount),
-      paymentMethod: row.payment_method as PaymentMethod,
-      contractorName: row.contractor_name as string,
-      contractorContact: row.contractor_contact as string,
-      progressAtPayment: Number(row.progress_at_payment) || 0
-    });
+    const text = (key: string): string | null => typeof row[key] === 'string' ? row[key] as string : null;
+    return new Payment(
+      String(row.id), text('project_id') ? { id: String(row.project_id) } : null,
+      text('phase_id') ? { id: String(row.phase_id) } : null,
+      text('inspection_id') ? { id: String(row.inspection_id) } : null,
+      Number(row.amount) || 0, text('payment_date') || '',
+      (text('payment_method') || 'bank_transfer') as PaymentMethod,
+      (text('status') || 'pending') as PaymentStatus,
+      Number(row.progress_at_payment) || 0, text('transaction_id'), text('contractor_id'),
+      text('contractor_name') || '', text('contractor_contact') || '',
+      text('bank_name'), text('account_number'), text('check_number'), text('mobile_number'),
+      text('mobile_operator'), text('receiver_name'), [],
+      text('created_at') || '', text('updated_at') || '', text('created_by'), text('notes'),
+    );
   }
   /**
    * Transform Payment entity to PaymentDTO with project context

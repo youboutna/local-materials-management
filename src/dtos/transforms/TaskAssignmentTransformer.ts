@@ -9,6 +9,7 @@
  */
 
 import { TaskAssignment } from '@/domain/entities/TaskAssignment';
+import { parsePersistedDate } from './shared/dateSerialization';
 import {
   CreateTaskAssignmentDTO,
   TaskAssignmentDTO,
@@ -268,10 +269,10 @@ export class TaskAssignmentTransformer {
 
       actionType,
 
-      startDate: row.start_date ? new Date(row.start_date as string) : undefined,
-      endDate: row.end_date ? new Date(row.end_date as string) : undefined,
-      dueDate: row.due_date ? new Date(row.due_date as string) : undefined,
-      completedAt: row.completed_at ? new Date(row.completed_at as string) : undefined,
+      startDate: parsePersistedDate(row.start_date),
+      endDate: parsePersistedDate(row.end_date),
+      dueDate: parsePersistedDate(row.due_date),
+      completedAt: parsePersistedDate(row.completed_at),
 
       estimatedDuration: (row.estimated_duration as number) ?? undefined,
       actualDuration: (row.actual_duration as number) ?? undefined,
@@ -292,8 +293,8 @@ export class TaskAssignmentTransformer {
 
       notes: (row.notes as string) ?? undefined,
 
-      createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
-      updatedAt: row.updated_at ? new Date(row.updated_at as string) : new Date(),
+      createdAt: parsePersistedDate(row.created_at) ?? new Date(),
+      updatedAt: parsePersistedDate(row.updated_at) ?? new Date(),
     };
 
     return TaskAssignment.create(

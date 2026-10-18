@@ -1,5 +1,11 @@
 {
   "workbench.title": "Project calendar and tracking",
+  "workbench.notes": "Notes",
+  "workbench.retry": "Retry",
+  "workbench.add_task": "Add task",
+  "workbench.add_inspection": "Add inspection",
+  "workbench.manage_phases": "Manage phases",
+  "workbench.manage_payments": "Manage payments",
   "workbench.confirm_realization": "Validate completion",
   "workbench.calendar": "Project calendar",
   "workbench.consumption": "Consumption",

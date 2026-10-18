@@ -1,5 +1,11 @@
 {
   "workbench.title": "Calendrier et suivi projet",
+  "workbench.notes": "Notes",
+  "workbench.retry": "Réessayer",
+  "workbench.add_task": "Ajouter une tâche",
+  "workbench.add_inspection": "Ajouter une inspection",
+  "workbench.manage_phases": "Gérer les phases",
+  "workbench.manage_payments": "Gérer les paiements",
   "workbench.confirm_realization": "Valider la réalisation",
   "workbench.calendar": "Calendrier projets",
   "workbench.consumption": "Consommations",

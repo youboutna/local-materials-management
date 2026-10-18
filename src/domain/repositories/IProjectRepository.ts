@@ -5,6 +5,12 @@
  */
 
 import { Project } from '../entities/Project';
+import type { Phase } from '../entities/Phase';
+import type { TaskAssignment } from '../entities/TaskAssignment';
+import type { Risk } from '../entities/Risk';
+import type { Payment } from '../entities/Payment';
+import type { InspectionDTO } from '@/dtos/entities/InspectionDTO';
+import type { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 
 export interface ProjectSummary {
   id: string;
@@ -19,12 +25,12 @@ export interface ProjectSummary {
 
 export interface ProjectWithRelatedData {
   project: Project | null;
-  phases: any[];
-  tasks: any[];
-  risks: any[];
-  inspections: any[];
-  payments: any[];
-  documents: any[];
+  phases: Phase[];
+  tasks: TaskAssignment[];
+  risks: Risk[];
+  inspections: InspectionDTO[];
+  payments: Payment[];
+  documents: DocumentDTO[];
   bankGuarantees: any[];
   insuranceCertificates: any[];
   /** Sous-objets additionnels hydratés pour le détail / l'édition */
