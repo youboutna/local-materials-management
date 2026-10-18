@@ -335,6 +335,7 @@ DÉTAILS GARANTIE BANCAIRE:
 PROJET: ${action.metadata?.project?.title || action.projectId}
     `;
 
+    if (!communicationTargets.length) throw new Error('Communication recipients are required');
     for (const target of communicationTargets) {
       const contact = await communicationService.resolveRecipient(target.id);
       if (action.actionType === 'email' && !contact.email) throw new Error('Recipient email is missing');
@@ -342,7 +343,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
       if (action.actionType === 'call' && !contact.id) throw new Error('Call requires a linked user');
       switch (action.actionType) {
         case 'email':
-          if (target.email) {
+          if (contact.email) {
             communicationService.requireSuccess(await communicationService.sendEmail({
               to: contact.email,
               subject: `[URGENT] ${action.title} - Garantie Bancaire`,
@@ -363,7 +364,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
           break;
 
         case 'sms':
-          if (target.phone) {
+          if (contact.phone) {
             const smsMessage = `[GARANTIE BANCAIRE] ${action.title}: ${action.message}. Projet: ${action.metadata?.project?.title || action.projectId}`;
             communicationService.requireSuccess(await communicationService.sendSMS({
               to: contact.phone,
@@ -380,7 +381,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
           break;
 
         case 'call':
-          if (target.phone) {
+          if (contact.phone) {
             communicationService.requireSuccess(await communicationService.scheduleCall({
               recipientId: contact.id,
               recipientPhone: contact.phone,
