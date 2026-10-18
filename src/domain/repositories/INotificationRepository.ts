@@ -102,7 +102,7 @@ export interface INotificationRepository {
   /**
    * Send SMS
    */
-  sendSMS(data: SMSData): Promise<{ error: Error | null }>;
+  sendSMS(data: SMSData): Promise<{ error: Error | null; reference?: string; status?: string }>;
 
   /**
    * Schedule call

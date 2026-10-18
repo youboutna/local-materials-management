@@ -109,16 +109,13 @@ export class LocalNotificationAdapter implements INotificationRepository {
   }
 
   async sendEmail(_data: EmailData) {
-    console.info('[LocalNotificationAdapter] email (dev)', _data);
-    return { error: null };
+    return { error: new Error('Email delivery is unavailable in local mode') };
   }
   async sendSMS(_data: SMSData) {
-    console.info('[LocalNotificationAdapter] sms (dev)', _data);
-    return { error: null };
+    return { error: new Error('SMS delivery is unavailable in local mode') };
   }
   async scheduleCall(_data: CallData) {
-    console.info('[LocalNotificationAdapter] call (dev)', _data);
-    return { error: null };
+    return { error: new Error('Call scheduling is unavailable in local mode') };
   }
   async getUnreadCount(userId: string) {
     const count = load().filter((n) => n.recipientId === userId && !n.read).length;
