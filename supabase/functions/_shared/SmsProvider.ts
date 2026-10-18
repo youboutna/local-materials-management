@@ -1,5 +1,5 @@
 export interface SmsRequest { to: string; message: string }
-export interface SmsResult { success: boolean; messageId?: string; status?: string; error?: string; providerStatus?: number }
+export interface SmsResult { success: boolean; messageId?: string; status?: string; error?: string; providerStatus?: number; details?: string }
 export interface SmsProvider { send(request: SmsRequest): Promise<SmsResult> }
 export type SmsEnvironment = (name: string) => string | undefined;
 
@@ -26,7 +26,8 @@ export class TwilioSmsProvider implements SmsProvider {
     const from = this.env('TWILIO_FROM_NUMBER');
     const service = this.env('TWILIO_MESSAGING_SERVICE_SID');
     if (!apiKey || !connectionKey || (!from && !service)) return { success: false, error: 'SMS_PROVIDER_NOT_CONFIGURED' };
-    if (from && !/^\+[1-9]\d{7,14}$/.test(from)) return { success: false, error: 'Invalid SMS sender configuration' };
+    if (service && !/^MG[0-9a-f]{32}$/i.test(service)) return { success: false, error: 'Invalid messaging service configuration' };
+    if (!service && from && !/^\+[1-9]\d{7,14}$/.test(from)) return { success: false, error: 'Invalid SMS sender configuration' };
     const body = new URLSearchParams({ To: request.to, Body: request.message });
     if (service) body.set('MessagingServiceSid', service);
     else if (from) body.set('From', from);
@@ -35,8 +36,14 @@ export class TwilioSmsProvider implements SmsProvider {
       headers: { Authorization: `Bearer ${apiKey}`, 'X-Connection-Api-Key': connectionKey, 'Content-Type': 'application/x-www-form-urlencoded' },
       body, signal: AbortSignal.timeout(20000),
     });
-    const result = await response.json().catch(() => ({})) as { sid?: string; status?: string; message?: string; error_code?: number; code?: number };
-    if (!response.ok) return { success: false, providerStatus: response.status, error: `Twilio rejected SMS${result.code ? ` (code ${result.code})` : ''}` };
+    const responseBody = await response.text();
+    if (!response.ok) {
+      console.error(`Twilio request failed [${response.status}]: ${responseBody}`);
+      return { success: false, providerStatus: response.status, error: 'Twilio rejected SMS', details: responseBody };
+    }
+    let result: { sid?: string; status?: string; error_code?: number };
+    try { result = JSON.parse(responseBody); }
+    catch { return { success: false, providerStatus: response.status, error: 'Invalid Twilio response' }; }
     if (!result.sid || !result.status || result.error_code || !(SMS_POLICY.acceptedStatuses as readonly string[]).includes(result.status)) {
       return { success: false, error: 'Twilio did not accept this SMS', providerStatus: response.status };
     }
