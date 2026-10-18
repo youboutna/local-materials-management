@@ -8,6 +8,8 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 
 **Principe directeur :** tout comportement métier est paramétrable par référentiels, jamais codé en dur. Le planning fourni est un cas illustratif, pas un modèle obligatoire. Phases, durées, profils, charges, circuits, seuils et obligations varient selon métier, réglementation, entité et projet.
 
+**Réutilisation avant création :** une nouvelle page ou un nouveau parcours est d’abord une autre présentation/composition des mêmes données et actions. Aucun nouveau moteur, workflow, module ou stockage concurrent pour une capacité existante. Étendre seulement les contrats ou capacités réellement manquants, avec justification explicite.
+
 ## 1. Sources métier et rapprochement
 
 - Réutiliser les lignes DQE/devis/contrats/factures dans `btp.boq_lines`, les décomptes dans `btp.progress_invoices`, les règlements dans `btp.payments` et les services correspondants.
@@ -39,6 +41,11 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 
 ## 4. Calculs canoniques et calendrier
 
+- Inventorier les outils actifs avant modification : Gantt, PERT, WBS/phases/tâches/jalons, calendrier, ressources, suivi-évaluation, PTBA/PPM/PED/TBI, rapports et circuits documentaires. Associer chaque besoin à son outil, service, DTO et source existants ; repérer les composants de compatibilité plutôt que les dupliquer.
+- **Gantt :** conserver le pipeline `ProjectMetricsOrchestrator` → `GanttModel` → `ProjectGanttTimeline` ; `GanttChart` reste une enveloppe de compatibilité. L’aperçu de planning et les pages projet utilisent ce rendu et ce calcul, pas un second Gantt.
+- **PERT :** conserver `PertService`, exposé par `ProjectMetricsOrchestrator`, et `UnifiedPERTAnalysis` ; `PERTDiagram` reste une enveloppe. Alimenter les dépendances et estimations dans les contrats existants ; aucun moteur PERT/chemin critique parallèle.
+- Composer calendrier, Gantt, PERT, WBS, ressources et indicateurs à partir du même projet/phase/tâche et des mêmes filtres. Une action modifie l’entité d’origine puis rafraîchit toutes ses présentations, sans créer de copie propre à une vue.
+- Réutiliser sélecteurs, formulaires, actions CRUD, workflows, exports et rapports existants. Ne créer une présentation ciblée que si la composition/extension de l’existant ne suffit pas ; pas de menu ni page faisant doublon.
 - Brancher les synthèses sur `ProjectFinancialsService`, `DecompteService`, `ProjectResourceAggregatorService` et `ProjectMetricsOrchestrator` plutôt que des sommes locales dans les écrans.
 - Corriger montants validés nuls, statuts de règlements, affectations partielles et sources historiques ; ne pas masquer les erreurs par un bilan vide.
 - L’agrégateur de ressources distingue affectation, livraison et consommation effective et évite de compter une même ligne planifiée depuis plusieurs sources.
@@ -48,13 +55,13 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 
 ## 5. Génération/import de plannings génériques
 
-- Ajouter « Planning » à l’import existant : collage de texte/tableaux ou formats structurés existants, sélection du référentiel et aperçu éditable. Prévoir mapping des colonnes/sections inconnues ; signaler l’information non interprétée, sans promettre une compréhension parfaite de tout texte.
+- Étendre l’import et la génération existants pour le collage de texte/tableaux, la sélection du référentiel et le mapping des sections inconnues. Composer l’aperçu éditable avec les vues WBS, Gantt, PERT et ressources existantes ; pas de nouvel espace de planification autonome ni de parseur concurrent pour un format déjà supporté. Signaler l’information non interprétée.
 - Couvrir un nombre variable de phases, tâches, ressources et périodes sans noms ni formats propres à l’exemple. Générer depuis un référentiel ou importer un planning existant ; ne pas remplacer les données importées par un modèle implicite.
 - Demander date d’ancrage, titre/référence, organisation, devise et paramètres manquants dans l’aperçu. Tarifs/budgets non inventés ; écarts avec le référentiel signalés, jamais corrigés silencieusement.
 - Résoudre dates absolues/relatives, dépendances, chevauchements, calendriers ouvrés, périodicité et étapes post-réception selon données et référentiel. Dates de phase et jalons restent distinctes.
 - Générer missions, tâches, jalons, livrables et liens avec références stables ; aucune répartition artificielle de charges entre tâches.
-- Persister allocations par ressource et période dans une structure dédiée. Unités, capacité, conversion jours/heures/hommes-mois, seuils de surcharge et convention des périodes sont configurables ; les informations absentes restent inconnues.
-- Gouvernance configurable : instances, rôles, participants, cadences et événements déclencheurs ; pas de COPIL/COTEC obligatoires pour tous les métiers ni d’invitations fictives.
+- Réutiliser/étendre les affectations de ressources pour les allocations par période. Unités, capacité, conversions et seuils sont configurables ; informations absentes inconnues. Ajouter une structure dédiée seulement si l’existant ne représente pas ce fait métier, jamais une copie pour Gantt/calendrier.
+- Gouvernance configurable via tâches/jalons, rôles et calendriers existants : instances, participants, cadences et déclencheurs ; pas de nouveau module de réunions par défaut, de COPIL/COTEC imposés ni d’invitations fictives.
 - Risques et assurance qualité : importer/générer catégories, évaluations, responsables, mitigations, contrôles, preuves et délais selon le référentiel applicable. Aucune norme ou fréquence de l’exemple imposée globalement ; les exigences ne valent pas preuve de conformité.
 - Conserver source, référentiel/version et rapport créé/réutilisé/rejeté. Aperçu, correction, validation, création/reprise et lecture retour couvrent toutes les sections reconnues.
 - **Cas illustratif de recette uniquement :** conserver les huit phases, chevauchements, livrables S8/S12, accompagnement 60 jours, six experts/352 JH, base 22, réunions, sept risques, délai 10 jours et contrôle 10 % du document fourni. Ces valeurs restent données de test/import, jamais constantes métier.
@@ -72,7 +79,7 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 
 - Respecter `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REFERENTIELS.md` et les critères de `docs/task-plan.md` : UI → Transformer → DTO → Service → domaine/port → adapter → base, puis lecture retour.
 - Entités immuables avec interface/fabrique ; DTO camelCase, mapping snake_case dans l’adapter, imports client dynamiques ; aucun Supabase dans React ni React dans les services.
-- Ajouter seulement les tables/liens manquants : observations, allocations, encaissements/affectations, traçabilité d’import ; jamais des copies de documents ou ressources.
+- Pour chaque besoin, documenter « réutiliser », « étendre » ou « absent » avec preuve. Ajouter un port/service/table uniquement pour un fait métier absent ; jamais pour matérialiser une nouvelle vue. Évaluer observations, allocations, encaissements/affectations et traçabilité d’import sans présumer de nouvelles tables.
 - Vérifier les colonnes et droits de la base réelle avant migration ; appliquer migrations explicites, grants, RLS et validation serveur des références et transitions. Garder `btp` métier et `infra` SIG séparés ; `.env` intact.
 - Réutiliser `ProjectWorkflowService` pour les cas d’usage projet et les services de sous-objets. Ajouter une unité de travail transactionnelle ou une reprise persistée avec compensation contrôlée pour éviter les créations partielles et doublons sur réessai.
 - Générer les UUID en base ; utiliser les références externes pour la correspondance/import idempotent. Une erreur ne déclenche pas la suppression de données préexistantes.
@@ -84,6 +91,7 @@ Périmètre : tous les manquements de l’audit précédent. Les autres chantier
 - Tests métier : absence de double comptage, achats vs stock, réception vs utilisation, quantités partielles, unités, monnaies, HT/TVA/TTC, règlements partiels, avoirs, rapprochement historique et permissions de références.
 - Tests génériques : plusieurs métiers/configurations avec phases, durées, unités, capacités et cadences différentes ; versionnement, composition, conflits, obligations et changement de référentiel sans modification du moteur. Le document fourni est un cas de recette avec ses valeurs exactes, pas le seul modèle testé.
 - Tests de conversion, repositories/services, transactions/reprises et réimport : un second essai ne crée pas de doublons ; une erreur est visible et récupérable.
+- Tests de composition/régression : une modification de tâche, phase, date, dépendance ou montant se retrouve dans calendrier, Gantt, PERT, ressources, indicateurs et rapports concernés. Vérifier mêmes identifiants/sources et calculs canoniques ; aucune écriture supplémentaire provoquée par l’ouverture d’une vue.
 - Exécuter les suites existantes concernées et les nouveaux tests ; vérifier la compilation automatique puis les parcours visibles sur plusieurs largeurs.
 - Recette autorisée sur plusieurs référentiels : génération/import, lecture retour des phases/allocations/risques/qualité, consommation liée, dépense validée, règlement partiel et encaissement ; vérifier vues et métriques. Tester volumes et pagination sans limite arbitraire issue de l’exemple.
 - Supabase externe sans session injectable : tester ce qui est accessible sans contourner l’authentification ; la recette privée restera bloquée sans accès autorisé.
