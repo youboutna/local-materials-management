@@ -6576,5 +6576,20 @@
   "workbench.preview_import": "Preview",
   "workbench.confirm_import": "Confirm import",
   "workbench.unknown_type": "unknown type",
-  "workbench.geometry_mismatch": "geometry mismatch"
+  "workbench.geometry_mismatch": "geometry mismatch",
+  "workbench.ph_buffer": "e.g. 500 (meters)",
+  "workbench.ph_feature_name": "e.g. Maghama MV substation",
+  "workbench.ph_structure_type": "e.g. pole, vault, duct",
+  "workbench.ph_structure_name": "e.g. Pole P-012",
+  "workbench.ph_type_property": "e.g. asset_type_code",
+  "workbench.ph_code": "e.g. mv_substation (lowercase, digits, _)",
+  "workbench.ph_domain": "e.g. electricity, water, telecom",
+  "workbench.ph_domain_label": "e.g. Sanitation",
+  "workbench.ph_label_fr": "e.g. Poste MT",
+  "workbench.ph_label_ar": "مثال: محطة متوسطة الجهد",
+  "workbench.ph_label_en": "e.g. MV substation",
+  "workbench.ph_asset_group": "e.g. substation, line, device",
+  "workbench.ph_attribute": "e.g. voltage_level",
+  "workbench.ph_value": "e.g. 33 kV or [\"Gorgol\"]",
+  "workbench.ph_select": "Choose…"
 }

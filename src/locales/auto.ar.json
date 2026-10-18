@@ -6575,5 +6575,20 @@
   "workbench.preview_import": "معاينة",
   "workbench.confirm_import": "تأكيد الاستيراد",
   "workbench.unknown_type": "نوع غير معروف",
-  "workbench.geometry_mismatch": "هندسة غير متوافقة"
+  "workbench.geometry_mismatch": "هندسة غير متوافقة",
+  "workbench.ph_buffer": "مثال: 500 (متر)",
+  "workbench.ph_feature_name": "مثال: محطة مغامة",
+  "workbench.ph_structure_type": "مثال: عمود، غرفة، قناة",
+  "workbench.ph_structure_name": "مثال: عمود P-012",
+  "workbench.ph_type_property": "مثال: asset_type_code",
+  "workbench.ph_code": "مثال: mv_substation (أحرف صغيرة، أرقام، _)",
+  "workbench.ph_domain": "مثال: electricity، water، telecom",
+  "workbench.ph_domain_label": "مثال: الصرف الصحي",
+  "workbench.ph_label_fr": "مثال: Poste MT",
+  "workbench.ph_label_ar": "مثال: محطة متوسطة الجهد",
+  "workbench.ph_label_en": "مثال: MV substation",
+  "workbench.ph_asset_group": "مثال: substation، line، device",
+  "workbench.ph_attribute": "مثال: voltage_level",
+  "workbench.ph_value": "مثال: 33 kV أو [\"Gorgol\"]",
+  "workbench.ph_select": "اختر…"
 }
