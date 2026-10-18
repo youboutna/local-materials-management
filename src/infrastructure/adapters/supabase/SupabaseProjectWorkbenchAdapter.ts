@@ -2,6 +2,7 @@ import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProject
 import { ProjectWorkbenchTransformer as T } from '@/dtos/transforms/ProjectWorkbenchTransformer';
 import type { SaveProjectOperationDTO, SaveInfrastructureDTO, InfrastructureAnalysisDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { Geometry } from 'geojson';
+import type { SpatialZoneDTO, InfrastructureRealizationDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { SupabaseClient } from '@supabase/supabase-js';
 export class SupabaseProjectWorkbenchAdapter implements IProjectWorkbenchRepository {
   private async client(): Promise<SupabaseClient> { const { supabase } = await import('@/integrations/supabase/client'); return supabase; }
@@ -12,5 +13,6 @@ export class SupabaseProjectWorkbenchAdapter implements IProjectWorkbenchReposit
   async assets(projectId: string) { const client = await this.client(); const { data, error } = await client.rpc('infra_asset_list', { p_project_id: projectId }); if (error) throw error; return (data || []).map(T.asset); }
   async saveAsset(input: SaveInfrastructureDTO) { const client = await this.client(); const { data, error } = await client.rpc('infra_asset_save', { p_project_id: input.projectId, p_name: input.name, p_asset_type: input.assetType, p_status: input.status, p_geojson: input.geometry, p_asset_id: input.id || null }); if (error) throw error; return String(data); }
   async deleteAsset(projectId: string, id: string) { const client = await this.client(); const { error } = await client.rpc('infra_asset_delete', { p_project_id: projectId, p_asset_id: id }); if (error) throw error; }
-  async analyze(projectId: string, geometry: Geometry, bufferMeters: number): Promise<InfrastructureAnalysisDTO> { const client = await this.client(); const { data, error } = await client.rpc('infra_zone_analysis', { p_project_id: projectId, p_zone: geometry, p_buffer_meters: bufferMeters }); if (error) throw error; return data as InfrastructureAnalysisDTO; }
+  async analyze(projectId: string, geometry: SpatialZoneDTO, bufferMeters: number): Promise<InfrastructureAnalysisDTO> { const client = await this.client(); const { data, error } = await client.rpc('infra_zone_analysis', { p_project_id: projectId, p_zone: geometry, p_buffer_meters: bufferMeters }); if (error) throw error; return data as InfrastructureAnalysisDTO; }
+  async saveRealization(input: InfrastructureRealizationDTO) { const client = await this.client(); const { data, error } = await client.rpc('infra_realization_save', { p_project_id: input.projectId, p_asset_id: input.assetId, p_realization: input.realization, p_inspection_id: input.inspectionId || null, p_completed_on: input.completedOn || null, p_phase_id: input.phaseId || null }); if (error) throw error; return String(data); }
 }
