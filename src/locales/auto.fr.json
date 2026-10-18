@@ -6573,5 +6573,20 @@
   "workbench.preview_import": "Prévisualiser",
   "workbench.confirm_import": "Confirmer l’import",
   "workbench.unknown_type": "type inconnu",
-  "workbench.geometry_mismatch": "géométrie incompatible"
+  "workbench.geometry_mismatch": "géométrie incompatible",
+  "workbench.ph_buffer": "Ex. : 500 (mètres)",
+  "workbench.ph_feature_name": "Ex. : Poste MT Maghama",
+  "workbench.ph_structure_type": "Ex. : pole, vault, duct",
+  "workbench.ph_structure_name": "Ex. : Poteau P-012",
+  "workbench.ph_type_property": "Ex. : asset_type_code",
+  "workbench.ph_code": "Ex. : poste_mt (minuscules, chiffres, _)",
+  "workbench.ph_domain": "Ex. : electricity, water, telecom",
+  "workbench.ph_domain_label": "Ex. : Assainissement",
+  "workbench.ph_label_fr": "Ex. : Poste MT",
+  "workbench.ph_label_ar": "مثال: محطة متوسطة الجهد",
+  "workbench.ph_label_en": "Ex. : MV substation",
+  "workbench.ph_asset_group": "Ex. : substation, line, device",
+  "workbench.ph_attribute": "Ex. : voltage_level",
+  "workbench.ph_value": "Ex. : 33 kV ou [\"Gorgol\"]",
+  "workbench.ph_select": "Choisir…"
 }
