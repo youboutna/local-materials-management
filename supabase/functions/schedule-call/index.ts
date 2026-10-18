@@ -41,7 +41,6 @@ serve(async (request) => {
     }
 
     const callTask = {
-      id: `call-${crypto.randomUUID()}`,
       recipient_id: body.recipientId,
       recipient_phone: body.recipientPhone,
       subject: body.subject,
@@ -64,7 +63,7 @@ serve(async (request) => {
       recipient_id: body.recipientId,
       title: `Appel programmé: ${body.subject}`,
       message: `Un appel est programmé concernant: ${body.message}. Vous serez contacté au ${body.recipientPhone}`,
-      type: "task_assigned",
+      type: "task_assignment",
       metadata: {
         ...body.metadata,
         call_scheduled: true,
@@ -72,9 +71,9 @@ serve(async (request) => {
         scheduled_for: callTask.scheduled_for,
       },
     });
-    if (notificationError) throw notificationError;
+    if (notificationError) console.error('Call persisted but tracking notification failed');
 
-    return jsonResponse({ success: true, scheduledCall, message: "Call scheduled successfully" });
+    return jsonResponse({ success: true, callId: scheduledCall.id, status: 'scheduled', notificationPersisted: !notificationError });
   } catch (error) {
     console.error("Error in schedule-call function:", error);
     return jsonResponse({ error: error instanceof Error ? error.message : "Unknown error" }, 500);

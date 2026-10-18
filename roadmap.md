@@ -35,3 +35,4 @@
 - [ ] Recette planificateurs et tous canaux réels — bloqué : expéditeur SMS absent, WhatsApp lien seulement, appels programmés uniquement, serveur cible inaccessible
 - [x] Tests ciblés calendrier/communication/configuration release passants ; compilation contrôlée
 - [ ] Audit sécurité antérieur : 125 signalements préexistants, notamment politiques et fonctions — audit dédié requis avant production
+- [ ] Vérifier l’ouverture connectée du calendrier : aperçu signé-out resté sur Chargement ; aucun parcours CRUD réel validé

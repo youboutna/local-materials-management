@@ -26,7 +26,7 @@ export class ProjectWorkbenchService {
       for (const [dateKind, date] of entries) events.push({ id: `${kind}:${id}:${dateKind}`, title, kind, href, dateKind: dateKind as ProjectCalendarEventDTO['dateKind'], date: date ? format(parseISO(date), 'yyyy-MM-dd') : undefined, phaseId });
     };
     for (const phase of project.phases || []) add(phase.id, phase.name, 'phase', `/projects/${project.id}/phases/${phase.id}`, { start: phase.startDate, end: phase.endDate }, phase.id);
-    for (const task of project.tasks || []) if (!task.projectId || task.projectId === project.id) add(task.id, task.title, 'task', `/tasks/${task.id}`, { start: task.startDate, due: task.dueDate, actual: task.completedAt }, task.phaseId);
+    for (const task of project.tasks || []) if (!task.projectId || task.projectId === project.id) add(task.id, task.title, 'task', `/tasks/${task.id}`, { start: task.startDate, end: task.endDate, due: task.dueDate, actual: task.completedAt }, task.phaseId);
     for (const inspection of project.inspections || []) if (!inspection.projectId || inspection.projectId === project.id) add(inspection.id, inspection.title, 'inspection', `/inspections/${inspection.id}`, { scheduled: inspection.scheduledDate, actual: inspection.actualDate }, inspection.phaseId);
     for (const payment of project.payments || []) if (payment.projectId === project.id) add(payment.id, payment.contractorName, 'payment', `/payments/${payment.id}`, { payment: payment.paymentDate || payment.date }, payment.phaseId);
     return events;
