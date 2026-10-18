@@ -346,7 +346,7 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       project: projectResult.data ? ProjectTransformer.fromSupabase(projectResult.data as Record<string, unknown>) : null,
       phases: (phasesResult.data || []).map(row => PhaseTransformer.fromDB(row)),
       tasks: TaskAssignmentTransformer.fromRepositoryList(tasksResult.data || []),
-      risks: (risksResult.data || []).map(row => riskFromRow(row)),
+      risks: (risksResult.data || []).map(row => riskFromRow({ category: null, contingency_plan: null, costs: null, timeline_impact: null, review_date: null, ...row })),
       inspections: (inspectionsResult.data || []).map(row => InspectionTransformer.fromDatabaseRow(row)),
       payments: (paymentsResult.data || []).map(row => PaymentTransformer.toEntityFromDatabaseRow(row)),
       documents: (documentsResult.data || []).map(row => DocumentTransformer.toDTO(row)),
@@ -395,8 +395,8 @@ export class SupabaseProjectAdapter implements IProjectRepository {
     const phases = related.phases;
     if (phases.length === 0) return 0;
 
-    const totalProgress = phases.reduce((sum: number, phase: Record<string, unknown>) =>
-      sum + ((phase.progress as number) || 0), 0
+    const totalProgress = phases.reduce((sum, phase) =>
+      sum + (phase.progress || 0), 0
     );
     const averageProgress = totalProgress / phases.length;
     const roundedProgress = Math.round(averageProgress);
