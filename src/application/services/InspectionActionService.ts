@@ -232,12 +232,12 @@ const executeInspectionHierarchyNotification = async (action: InspectionControlA
 
 const executeInspectionCommunication = async (action: InspectionControlAction): Promise<void> => {
   try {
-    // Get employee details for communication
-    const { data: employees } = await btpClient.from('employees')
-      .select('id, full_name, email, phone')
-      .in('id', action.recipientIds);
-
-    for (const employee of employees || []) {
+    if (!action.recipientIds.length) throw new Error('Communication recipients are required');
+    const employees = await Promise.all(action.recipientIds.map(id => communicationService.resolveRecipient(id)));
+    for (const employee of employees) {
+      if (action.actionType === 'email' && !employee.email) throw new Error('Recipient email is missing');
+      if (['sms','call'].includes(action.actionType) && !employee.phone) throw new Error('Recipient phone is missing');
+      if (action.actionType === 'call' && !employee.id) throw new Error('Call requires a linked user');
       switch (action.actionType) {
         case 'email':
           if (employee.email) {
@@ -285,8 +285,8 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
           break;
       }
 
-      // Still send notification for tracking
-      await NotificationService.createNotification({
+      // Track only accepted sends for linked users.
+      if (employee.id) await communicationService.sendNotification({
         recipientId: employee.id ?? "",
         title: `📢 ${action.title}`,
         message: `Communication ${action.actionType}: ${action.message}`,

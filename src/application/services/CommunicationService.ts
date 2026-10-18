@@ -114,9 +114,12 @@ export class CommunicationService {
   }
 
   static async resolveRecipient(recipientId: string): Promise<{ id: string; email: string; phone: string }> {
-    const user = await getUserService().getUserById(recipientId);
-    if (!user) throw new Error('Destinataire introuvable');
-    return { id: user.id, email: user.email || '', phone: user.phone || '' };
+    const user = await getUserService().getUserById(recipientId).catch(() => null);
+    if (user) return { id: user.id, email: user.email || '', phone: user.phone || '' };
+    const { getEmployeeService } = await import('./EmployeeService');
+    const employee = await getEmployeeService().getEmployeeById(recipientId);
+    if (!employee) throw new Error('Destinataire introuvable');
+    return { id: employee.userId || '', email: employee.email || '', phone: employee.phone || '' };
   }
 
   static async assignTask(payload: AssignTaskPayload): Promise<CommunicationResult> {
