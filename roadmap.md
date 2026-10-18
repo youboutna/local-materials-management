@@ -50,5 +50,6 @@
 - [ ] Brancher les synthèses sur les services financiers, ressources et métriques existants ; distinguer consommé, engagé, dépensé, payé, facturé et encaissé
 - [ ] Générer/importer des plannings génériques pilotés par référentiels métier versionnés, avec aperçu éditable, dates relatives, chevauchements, tâches/jalons, livrables, gouvernance, risques/PAQ et allocations par période ; le planning fourni sert uniquement de cas illustratif
 - [ ] Configurer les comportements par réglementation et entité (ETER, SOMELEC, etc.) via référentiels, sans règles spécifiques codées en dur ni réécriture du moteur
+- [ ] Réutiliser Gantt, PERT, WBS, calendrier, indicateurs, rapports et workflows existants ; composer leurs données pour les nouvelles présentations, sans moteurs, modules ou tables concurrents
 - [ ] Garantir persistance, idempotence, reprise sur erreur, droits serveur et traductions fr/ar/en des nouveaux parcours
 - [ ] Tester règles, conversions, intégrations et parcours visibles ; consigner chaque blocage de recette sans clôture fictive
