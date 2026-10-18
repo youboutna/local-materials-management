@@ -39,10 +39,13 @@ export PUBLIC_CONFIG_FILE=/etc/hadratech/config.js
 export APP_IMAGE_TAG=release-20261017-1
 export APP_COMPOSE_PROJECT=hadratech-frontend
 export APP_PORT=8088
+node --test scripts/public-config.test.mjs scripts/release-frontend.test.mjs
 bash scripts/release-frontend.sh
 ```
 
 The release uses `--env-file /dev/null`: it does not load the repository's `.env`. It validates config before Docker, runs `config -q` without printing expanded secrets, packages dist, and starts **only** the app. This frontend-only Compose project runs on the same Docker host as existing backend containers without changing them. The browser calls the configured public gateway, not a Docker service hostname.
+
+Existing image tags and mutable `latest`/`local` tags are rejected to preserve rollback. Startup uses `--no-build` after the explicit build. Acceptance compares the served PDF worker byte-for-byte with this release. The release-script tests use a simulated Docker executable; they do not prove container startup.
 
 Place your existing HTTPS reverse proxy in front of `127.0.0.1:8088`. If the proxy runs inside Docker, attach the app to that proxy's existing network with an operator-managed override and route to `app:80`; container-local localhost does not reach the host app. Do not expose Studio, database or storage admin consoles publicly. Configure Supabase `SITE_URL`/redirect allowlist for the frontend domain separately.
 
@@ -73,6 +76,8 @@ On a reviewed target, take a backup, reconcile migration history and explicitly 
 ## SMS
 
 Twilio connection credentials were verified with a read-only request (HTTP 200). That account currently has no active phone number. `send-sms-notification` now uses a server provider port, validates E.164 recipients and checks Twilio acceptance plus message reference. Paid SMS calls require an active admin/super_admin/director/manager role on the server. `queued`/`accepted` is not proof of delivery to the handset.
+
+Rechecked on 2026-10-18: no incoming phone numbers and no Messaging Services. Activate an approved SMS-capable number in Twilio Console → Phone Numbers → Manage → Buy a number, or configure an approved sender in a Messaging Service with a populated sender pool. Account/trial restrictions and destination-country requirements still apply. Do not enter a personal recipient number as the sender. Provider rejections now preserve their status and details rather than reporting a generic success or hiding the cause.
 
 Purchase/approve an SMS-capable sender in Twilio, enable SMS Pumping Protection and restrict SMS Geo Permissions to destination countries. Configure `TWILIO_FROM_NUMBER` (or `TWILIO_MESSAGING_SERVICE_SID`) server-side; the sender form was declined, so no real send was attempted. On your self-hosted edge runtime, supply `TWILIO_API_KEY` (the connector key), `LOVABLE_API_KEY` and the sender securely; they are not included in dist or an exported source checkout. Connector gateway mode remains required for this connection.
 

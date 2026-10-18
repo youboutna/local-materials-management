@@ -16,4 +16,6 @@ WORKER="$(ls "$ROOT"/dist/assets/pdf.worker*.mjs 2>/dev/null | head -n 1)"
 [[ -n "$WORKER" ]] || { echo 'PDF worker missing from dist.' >&2; exit 1; }
 curl --fail --silent --show-error -D "$TMP/worker-headers" "$BASE/assets/$(basename "$WORKER")" -o /dev/null
 grep -qi 'content-type:.*application/javascript' "$TMP/worker-headers"
+curl --fail --silent --show-error "$BASE/assets/$(basename "$WORKER")" > "$TMP/worker.mjs"
+cmp -s "$WORKER" "$TMP/worker.mjs" || { echo 'Served PDF worker differs from this release.' >&2; exit 1; }
 echo 'Health, SPA routing, runtime config, asset 404 and PDF worker MIME verified.'
