@@ -71,6 +71,7 @@ export interface DecomptePaymentDTO {
   paymentMethod: string | null;
   transactionId: string | null;
   receiverName: string | null;
+  status?: string | null;
 }
 
 /** Synthèse financière canonique d'un projet ou d'une phase. */
