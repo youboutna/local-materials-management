@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ProjectWorkbenchTransformer as T } from '../ProjectWorkbenchTransformer';
+import { ProjectWorkbenchTransformer as T } from '@/dtos/transforms/ProjectWorkbenchTransformer';
 
 describe('Infra GeoJSON rules', () => {
   it('takes the asset type from feature properties, else the default type', () => {
