@@ -40,3 +40,6 @@
 - [x] Renforcer release Docker : refus tags mutables/existants, lancement sans reconstruction, comparaison worker servi et tests de scripts
 - [x] Vérifier Twilio actuellement : HTTP 200, aucun numéro ni Messaging Service ; tester configuration et erreurs SMS jusqu’à l’adapter
 - [ ] Démarrer et tester l’image réelle sur le serveur Docker — bloqué : Docker/daemon et accès serveur absents ici ; tests de scripts simulés seulement
+- [ ] Corriger la conversion des dates des détails projet et tester le projet importé sans dates techniques
+- [ ] Compléter et fiabiliser les actions ajouter/modifier/supprimer des onglets calendrier, opérations, métré et SIG
+- [ ] Vérifier les changements par tests ciblés et aperçu ; recette connectée soumise à la disponibilité d’une session externe
