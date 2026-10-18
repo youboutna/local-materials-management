@@ -1,5 +1,6 @@
 {
   "workbench.title": "تقويم ومتابعة المشروع",
+  "workbench.confirm_realization": "اعتماد الإنجاز",
   "workbench.calendar": "تقويم المشاريع",
   "workbench.consumption": "الاستهلاك",
   "workbench.expense": "النفقات",

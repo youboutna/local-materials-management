@@ -1,5 +1,6 @@
 {
   "workbench.title": "Calendrier et suivi projet",
+  "workbench.confirm_realization": "Valider la réalisation",
   "workbench.calendar": "Calendrier projets",
   "workbench.consumption": "Consommations",
   "workbench.expense": "Dépenses",

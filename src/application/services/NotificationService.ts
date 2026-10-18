@@ -18,7 +18,6 @@ import {
 } from '@/dtos/entities/NotificationDTO';
 import { normalizeNotificationType } from '@/config/referentials/notifications/notification-types.referential';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { CommunicationService } from '@/application/services/CommunicationService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export class NotificationService {

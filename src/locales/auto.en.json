@@ -1,5 +1,6 @@
 {
   "workbench.title": "Project calendar and tracking",
+  "workbench.confirm_realization": "Validate completion",
   "workbench.calendar": "Project calendar",
   "workbench.consumption": "Consumption",
   "workbench.expense": "Expenses",

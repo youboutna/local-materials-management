@@ -1,4 +1,6 @@
-import type { Geometry } from 'geojson';
+import type { Geometry, FeatureCollection } from 'geojson';
+export type SpatialZoneDTO = Geometry | FeatureCollection;
+export interface InfrastructureRealizationDTO { projectId: string; assetId: string; realization: 'planned' | 'partial' | 'completed'; inspectionId?: string; completedOn?: string; phaseId?: string }
 export type WorkbenchView = 'calendar' | 'consumption' | 'expense' | 'revenue' | 'plans' | 'infrastructure';
 export type CalendarPeriod = 'day' | 'month' | 'year';
 export interface WorkbenchProjectDTO { id: string; title: string; reference?: string; canManage: boolean }
