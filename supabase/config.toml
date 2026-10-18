@@ -15,7 +15,7 @@ project_id = "hadratech-gpi-local"
 [api]
 # ⚠️ Port CLI (dev). En self-hosted Docker, Kong expose le 8000.
 port = 8000
-schemas = ["public", "btp"]
+schemas = ["public", "btp", "infra"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 

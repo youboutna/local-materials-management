@@ -18,6 +18,7 @@ import {
 import { TaskStatus, TaskPriority } from '@/dtos/entities/TaskAssignmentDTO';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { CommunicationService } from './CommunicationService';
 
 /**
  * Event-driven Action Types
@@ -170,24 +171,9 @@ export class EnhancedActionService {
    * Handle "Programmer un appel" action
    */
   private async handleScheduleCall(actionEvent: ActionEvent): Promise<void> {
-    console.log(`📞 Scheduling call: ${actionEvent.title}`);
-    
-    if (actionEvent.assigneeId) {
-      // Send call notification
-      await this.notificationService.createNotification({
-        recipientId: actionEvent.assigneeId || '',
-        title: 'Appel planifié',
-        message: `Veuillez appeler concernant: ${actionEvent.description}`,
-        type: 'info',
-        metadata: {
-          actionId: actionEvent.id,
-          projectId: actionEvent.projectId,
-          scheduledFor: actionEvent.scheduledFor
-        }
-      });
-
-      console.log('✅ Call scheduled successfully');
-    }
+    if (!actionEvent.assigneeId) throw new Error('Call recipient is required');
+    const contact = await CommunicationService.resolveRecipient(actionEvent.assigneeId);
+    CommunicationService.requireSuccess(await CommunicationService.scheduleCall({ recipientId: contact.id, recipientPhone: contact.phone, subject: actionEvent.title, message: actionEvent.description, scheduledFor: actionEvent.scheduledFor, metadata: { actionId: actionEvent.id, projectId: actionEvent.projectId } }));
   }
 
   /**
@@ -382,10 +368,19 @@ export class EnhancedActionService {
   private async handleScheduleMeeting(actionEvent: ActionEvent): Promise<void> {
     console.log(`📅 Scheduling meeting: ${actionEvent.title}`);
     
+    if (!actionEvent.scheduledFor || !Number.isFinite(Date.parse(actionEvent.scheduledFor))) throw new Error('Meeting date is required');
+    const meetingUrl = actionEvent.metadata?.meetingUrl;
+    const channel = actionEvent.metadata?.meetingChannel;
+    let validatedUrl: string | undefined;
+    if (meetingUrl) {
+      if (typeof meetingUrl !== 'string' || (channel !== 'google_meet' && channel !== 'microsoft_teams')) throw new Error('Invalid meeting link');
+      validatedUrl = CommunicationService.requireSuccess(CommunicationService.prepareMeetingLink(channel, meetingUrl)).url;
+    }
     const recipients = actionEvent.recipients || [actionEvent.assigneeId].filter(Boolean) as string[];
+    if (!recipients.length) throw new Error('Meeting recipients are required');
     
     for (const recipientId of recipients) {
-      await this.notificationService.createNotification({
+      await CommunicationService.sendNotification({
         recipientId: recipientId || '',
         title: 'Réunion planifiée',
         message: `Réunion "${actionEvent.title}" planifiée pour ${actionEvent.scheduledFor || 'à déterminer'}`,
@@ -395,6 +390,7 @@ export class EnhancedActionService {
           actionId: actionEvent.id,
           projectId: actionEvent.projectId,
           scheduledFor: actionEvent.scheduledFor
+          , meetingUrl: validatedUrl
         }
       });
     }
