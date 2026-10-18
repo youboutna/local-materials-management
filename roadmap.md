@@ -46,3 +46,8 @@
 - [x] SIG infra : modèle réseau ouvert (domaines, types d'ouvrages, supports, ouvrages, réalisations), import GeoJSON en masse, CRUD complet, analyse tampon filtrée par projet
 - [x] Tracé carte + table attributaire + aperçu import GeoJSON ; testé en base avec la boucle 33 kV (annulé)
 - [ ] Recette connectée du module SIG dans l'aperçu (bloquée : session Supabase externe non injectable)
+- [ ] Unifier Consommations/Dépenses/Recettes avec les sources métier existantes, le choix des lignes/documents et les circuits selon contexte ; conserver et rapprocher les saisies historiques sans doubles comptages
+- [ ] Brancher les synthèses sur les services financiers, ressources et métriques existants ; distinguer consommé, engagé, dépensé, payé, facturé et encaissé
+- [ ] Générer un projet depuis le planning fourni avec aperçu éditable, dates relatives, chevauchements, tâches/jalons, livrables, gouvernance, risques/PAQ et charges mensuelles par expert
+- [ ] Garantir persistance, idempotence, reprise sur erreur, droits serveur et traductions fr/ar/en des nouveaux parcours
+- [ ] Tester règles, conversions, intégrations et parcours visibles ; consigner chaque blocage de recette sans clôture fictive
