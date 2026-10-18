@@ -5028,41 +5028,117 @@ export type Database = {
         Args: { template_id: string }
         Returns: undefined
       }
-      infra_asset_delete: {
-        Args: { p_asset_id: string; p_project_id: string }
-        Returns: undefined
+      infra_asset_type_save: {
+        Args: {
+          p_asset_group?: string
+          p_asset_type?: string
+          p_code: string
+          p_domain_code: string
+          p_domain_label_fr?: string
+          p_geometry_kind: string
+          p_label_ar?: string
+          p_label_en?: string
+          p_label_fr: string
+        }
+        Returns: string
       }
-      infra_asset_list: {
-        Args: { p_project_id: string }
+      infra_asset_types: {
+        Args: { p_domain?: string }
         Returns: {
+          asset_group: string
           asset_type: string
-          geojson: Json
-          id: string
-          name: string
-          project_id: string
-          properties: Json
-          status: string
+          code: string
+          domain_code: string
+          geometry_kind: string
+          icon: string
+          label_ar: string
+          label_en: string
+          label_fr: string
         }[]
       }
-      infra_asset_save: {
+      infra_domains: {
+        Args: never
+        Returns: {
+          code: string
+          label_ar: string
+          label_en: string
+          label_fr: string
+        }[]
+      }
+      infra_feature_delete: {
+        Args: { p_feature_id: string; p_project_id: string }
+        Returns: undefined
+      }
+      infra_feature_import: {
+        Args: { p_features: Json; p_project_id: string }
+        Returns: Json
+      }
+      infra_feature_list: {
+        Args: { p_project_id: string }
+        Returns: {
+          asset_type_code: string
+          completed_on: string
+          geojson: Json
+          id: string
+          inspection_id: string
+          name: string
+          phase_id: string
+          project_id: string
+          properties: Json
+          realization: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      infra_feature_save: {
         Args: {
-          p_asset_id?: string
-          p_asset_type: string
+          p_asset_type_code: string
+          p_feature_id?: string
           p_geojson: Json
           p_name: string
+          p_parent_feature_id?: string
           p_project_id: string
+          p_properties?: Json
           p_status?: string
+          p_structure_id?: string
         }
         Returns: string
       }
       infra_realization_save: {
         Args: {
-          p_asset_id: string
           p_completed_on?: string
+          p_feature_id: string
           p_inspection_id?: string
           p_phase_id?: string
           p_project_id: string
           p_realization: string
+        }
+        Returns: string
+      }
+      infra_structure_delete: {
+        Args: { p_project_id: string; p_structure_id: string }
+        Returns: undefined
+      }
+      infra_structure_list: {
+        Args: { p_project_id: string }
+        Returns: {
+          geojson: Json
+          id: string
+          name: string
+          project_id: string
+          properties: Json
+          structure_type: string
+          updated_at: string
+        }[]
+      }
+      infra_structure_save: {
+        Args: {
+          p_geojson: Json
+          p_name: string
+          p_project_id: string
+          p_properties?: Json
+          p_structure_id?: string
+          p_structure_type: string
         }
         Returns: string
       }

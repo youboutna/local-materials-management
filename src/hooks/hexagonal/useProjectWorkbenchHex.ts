@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getProjectWorkbenchService } from '@/application/services/ProjectWorkbenchService';
 import type { SaveProjectOperationDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
-import type { SpatialZoneDTO, SaveInfrastructureDTO, InfrastructureRealizationDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
+import type { SpatialZoneDTO, SaveInfrastructureDTO, InfrastructureRealizationDTO, ImportFeatureItemDTO, SaveInfraStructureDTO, SaveAssetTypeDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { ProjectCalendarEventDTO, } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { CreateTaskAssignmentDTO, UpdateTaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
@@ -28,9 +28,18 @@ export function useWorkbenchOperations(projectId: string) {
 export function useInfrastructureWorkbench(projectId: string) {
   const service = getProjectWorkbenchService();
   const query = useQuery({ queryKey: ['infra-assets',projectId], queryFn: () => service.assets(projectId), enabled: Boolean(projectId) });
-  return { assets: query.data || [], error: query.error, isLoading: query.isLoading, refresh: query.refetch,
+  const structures = useQuery({ queryKey: ['infra-structures',projectId], queryFn: () => service.structures(projectId), enabled: Boolean(projectId) });
+  const types = useQuery({ queryKey: ['infra-asset-types'], queryFn: () => service.assetTypes() });
+  const domains = useQuery({ queryKey: ['infra-domains'], queryFn: () => service.domains() });
+  const refresh = async () => { await Promise.all([query.refetch(), structures.refetch(), types.refetch(), domains.refetch()]); };
+  return { assets: query.data || [], structures: structures.data || [], assetTypes: types.data || [], domains: domains.data || [],
+    error: query.error || structures.error || types.error || domains.error, isLoading: query.isLoading, refresh,
     saveAsset: (input: SaveInfrastructureDTO) => service.saveAsset(input),
+    importAssets: (items: ImportFeatureItemDTO[]) => service.importAssets(projectId, items),
     deleteAsset: (id: string) => service.deleteAsset(projectId,id),
+    saveStructure: (input: SaveInfraStructureDTO) => service.saveStructure(input),
+    deleteStructure: (id: string) => service.deleteStructure(projectId,id),
+    saveAssetType: (input: SaveAssetTypeDTO) => service.saveAssetType(input),
     analyze: (zone: SpatialZoneDTO,buffer: number) => service.analyze(projectId,zone,buffer),
     saveRealization: (input: InfrastructureRealizationDTO) => service.saveRealization(input) };
 }

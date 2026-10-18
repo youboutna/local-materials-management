@@ -2,7 +2,7 @@ import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProject
 import type { ProjectCalendarEventDTO, CalendarPeriod, SaveProjectOperationDTO, SaveInfrastructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import type { Geometry } from 'geojson';
-import type { SpatialZoneDTO, InfrastructureRealizationDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
+import type { SpatialZoneDTO, InfrastructureRealizationDTO, SaveAssetTypeDTO, ImportFeatureItemDTO, SaveInfraStructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import { getProjectService } from './ProjectService';
 import { SupabaseProjectWorkbenchAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter';
 import { format, isValid, parseISO, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
@@ -51,10 +51,25 @@ export class ProjectWorkbenchService {
     else if (kind === 'payment') { const { getPaymentService } = await import('./PaymentService'); await getPaymentService().deletePayment(id); }
     else throw new Error('Unsupported calendar entry');
   }
+  domains() { return this.repository.domains(); }
+  assetTypes(domain?: string) { return this.repository.assetTypes(domain); }
+  saveAssetType(input: SaveAssetTypeDTO) {
+    if (!/^[a-z0-9_]+$/.test(input.code)) throw new Error('Asset type code must use lowercase letters, digits and underscores');
+    if (!input.domainCode.trim() || !input.labelFr.trim()) throw new Error('Domain and label are required');
+    return this.repository.saveAssetType({ ...input, labelFr: input.labelFr.trim() });
+  }
   assets(projectId: string) { return this.repository.assets(projectId); }
-  saveAsset(input: SaveInfrastructureDTO) { if (!input.name.trim()) throw new Error('Infrastructure name is required'); return this.repository.saveAsset(input); }
+  saveAsset(input: SaveInfrastructureDTO) { if (!input.name.trim()) throw new Error('Infrastructure name is required'); if (!input.assetTypeCode) throw new Error('Asset type is required'); return this.repository.saveAsset(input); }
+  importAssets(projectId: string, items: ImportFeatureItemDTO[]) {
+    if (!items.length) throw new Error('GeoJSON contains no feature');
+    if (items.length > 5000) throw new Error('Too many features (max 5000)');
+    return this.repository.importAssets(projectId, items);
+  }
   deleteAsset(projectId: string, id: string) { return this.repository.deleteAsset(projectId, id); }
-  analyze(projectId: string, geometry: SpatialZoneDTO, buffer: number) { if (!Number.isFinite(buffer) || buffer < 0) throw new Error('Invalid buffer'); return this.repository.analyze(projectId, geometry, buffer); }
+  structures(projectId: string) { return this.repository.structures(projectId); }
+  saveStructure(input: SaveInfraStructureDTO) { if (!input.structureType.trim()) throw new Error('Structure type is required'); return this.repository.saveStructure(input); }
+  deleteStructure(projectId: string, id: string) { return this.repository.deleteStructure(projectId, id); }
+  analyze(projectId: string, geometry: SpatialZoneDTO, buffer: number) { if (!Number.isFinite(buffer) || buffer < 0 || buffer > 100000) throw new Error('Invalid buffer'); return this.repository.analyze(projectId, geometry, buffer); }
   saveRealization(input: InfrastructureRealizationDTO) { if (input.realization === 'completed' && (!input.inspectionId || !input.completedOn)) throw new Error('Completion requires project inspection and date'); return this.repository.saveRealization(input); }
 }
 const service = new ProjectWorkbenchService();
