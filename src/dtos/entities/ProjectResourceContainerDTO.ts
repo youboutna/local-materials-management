@@ -81,5 +81,7 @@ export interface ProjectResourceAggregationInput {
    * consomme de la ressource (humaine par défaut, matériau/équipement selon `type`).
    */
   executedTasks?: Array<Record<string, unknown>>;
+  /** Authoritative dated observations; assignments/deliveries alone are not usage. */
+  consumptions?: Array<Record<string, unknown>>;
 }
 

@@ -53,8 +53,8 @@ export function normalizeResourceFamily(raw: unknown): ResourceFamily {
   return 'material';
 }
 
-const makeKey = (family: ResourceFamily, name: string, materialId?: string) =>
-  `${family}::${materialId ?? name.toLowerCase()}`;
+const makeKey = (family: ResourceFamily, name: string, materialId?: string, unit?: string, phaseId?: string) =>
+  `${family}::${materialId ?? name.toLowerCase()}::${unit ?? ''}::${phaseId ?? ''}`;
 
 class Accumulator {
   private readonly lines = new Map<string, ResourceLineDTO>();
@@ -72,7 +72,7 @@ class Accumulator {
     actualQuantity?: number;
     actualCost?: number;
   }): void {
-    const key = makeKey(partial.family, partial.name, partial.materialId);
+    const key = makeKey(partial.family, partial.name, partial.materialId, partial.unit, partial.phaseId);
     const existing = this.lines.get(key);
     if (existing) {
       existing.plannedQuantity += partial.plannedQuantity ?? 0;
@@ -133,6 +133,13 @@ export class ProjectResourceAggregatorService {
   aggregate(input: ProjectResourceAggregationInput): ProjectResourceContainerDTO {
     const acc = new Accumulator();
     const phases = (input.phases ?? []) as Row[];
+    const plannedIds = new Set<string>();
+    const addLine = (line: Row, phaseId?: string, phaseName?: string) => {
+      const id = str(line.id);
+      if(id && plannedIds.has(id)) return;
+      if(id) plannedIds.add(id);
+      this.addPlannedBoqLine(acc,line,phaseId,phaseName);
+    };
 
     // 1. PLANIFICATION — lignes DQE portées par les phases
     for (const phase of phases) {
@@ -141,7 +148,7 @@ export class ProjectResourceAggregatorService {
 
       const dqeLines = (Array.isArray(phase.dqeLines) ? phase.dqeLines : []) as Row[];
       for (const line of dqeLines) {
-        this.addPlannedBoqLine(acc, line, phaseId, phaseName);
+        addLine(line, phaseId, phaseName);
       }
 
       // Matériaux déclarés au niveau phase
@@ -186,15 +193,15 @@ export class ProjectResourceAggregatorService {
     // 2. PLANIFICATION — lignes DQE au niveau projet
     for (const line of (input.boqLines ?? []) as Row[]) {
       const phaseId = str(line.phaseId);
-      const phaseName = phases.find((p) => str(p.id) === phaseId)
-        ? str(phases.find((p) => str(p.id) === phaseId)!.name)
-        : undefined;
-      this.addPlannedBoqLine(acc, line, phaseId, phaseName);
+      const phaseName = str(phases.find((p) => str(p.id) === phaseId)?.name);
+      addLine(line, phaseId, phaseName);
     }
 
     // 3. EXÉCUTION — ressources affectées / consommées
     for (const resource of (input.executedResources ?? []) as Row[]) {
-      const quantity = num(resource.quantity) || 1;
+      // Allocated quantity is a plan; only explicit actual usage is evidence.
+      if(resource.quantityUsed == null) continue;
+      const quantity = num(resource.quantityUsed);
       const unitCost = num(resource.costPerUnit ?? resource.cost_per_unit ?? resource.costPerHour);
       const total = num(resource.totalCost ?? resource.total_cost) || quantity * unitCost;
       acc.add({
@@ -210,7 +217,8 @@ export class ProjectResourceAggregatorService {
 
     // 4. EXÉCUTION — matériaux livrés / consommés
     for (const material of (input.executedMaterials ?? []) as Row[]) {
-      const quantity = num(material.quantityUsed ?? material.quantity_used ?? material.quantity);
+      if(material.quantityUsed == null) continue;
+      const quantity = num(material.quantityUsed);
       const unitCost = num(material.unitPrice ?? material.unit_price ?? material.pricePerUnit);
       const total = num(material.totalCost ?? material.total_cost) || quantity * unitCost;
       acc.add({
@@ -231,15 +239,12 @@ export class ProjectResourceAggregatorService {
       // Seules les tâches engagées consomment de la ressource.
       if (status === 'cancelled' || status === 'pending') continue;
 
-      const progress = status === 'completed' ? 1 : Math.min(1, Math.max(0, num(task.progress) / 100));
-      if (progress <= 0) continue;
-
-      const quantity = num(task.quantity);
-      const duration = num(task.estimatedDuration ?? task.actualDuration);
+      if(task.actualQuantity == null && task.actualDuration == null) continue;
+      const quantity = num(task.actualQuantity);
+      const duration = num(task.actualDuration);
       const dailyRate = num(task.dailyRate);
-      const declaredCost = num(task.actualCost) || num(task.estimatedCost);
-      const cost = declaredCost > 0 ? declaredCost * progress : duration * dailyRate * progress;
-      const consumedQuantity = (quantity || duration || 1) * progress;
+      const cost = task.actualCost == null ? duration * dailyRate : num(task.actualCost);
+      const consumedQuantity = task.actualQuantity == null ? duration : quantity;
 
       const family = normalizeResourceFamily(
         task.type === 'material' || task.type === 'equipment' ? task.type : 'human',
@@ -255,8 +260,14 @@ export class ProjectResourceAggregatorService {
         actualCost: cost,
       });
     }
-
-
+    const consumedIds = new Set<string>();
+    for(const consumption of input.consumptions ?? []) {
+      if(consumption.status !== 'validated') continue;
+      const id = str(consumption.id);
+      if(id && consumedIds.has(id)) continue;
+      if(id) consumedIds.add(id);
+      acc.add({family:normalizeResourceFamily(consumption.resourceFamily),name:str(consumption.label) ?? 'Ressource',unit:str(consumption.unit),origin:'execution',phaseId:str(consumption.phaseId),materialId:str(consumption.materialId),actualQuantity:num(consumption.quantity),actualCost:num(consumption.amount)});
+    }
     const lines = acc.finalize();
     const human = buildBucket('human', lines);
     const materials = buildBucket('material', lines);
