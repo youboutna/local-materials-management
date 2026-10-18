@@ -81,7 +81,7 @@ function toTen(value: number): number {
   return Math.max(1, Math.min(10, Math.round((value || 0) * 10)));
 }
 
-function toDomain(row: RiskRow): Risk {
+export function toDomain(row: RiskRow): Risk {
   const probability = toUnit(row.probability_numeric ?? row.probability);
   const impact = toUnit(row.impact_numeric ?? row.impact);
   const details: RiskDetails = {

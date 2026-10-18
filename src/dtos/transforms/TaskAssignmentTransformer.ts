@@ -9,6 +9,7 @@
  */
 
 import { TaskAssignment } from '@/domain/entities/TaskAssignment';
+import { parsePersistedDate } from './shared/dateSerialization';
 import {
   CreateTaskAssignmentDTO,
   TaskAssignmentDTO,

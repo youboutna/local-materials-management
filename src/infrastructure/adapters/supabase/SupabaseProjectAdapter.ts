@@ -9,6 +9,12 @@ import { Project } from '@/domain/entities/Project';
 import { IProjectRepository, ProjectSummary, ProjectWithRelatedData } from '@/domain/repositories/IProjectRepository';
 import type { BtpTablesInsert, BtpTablesUpdate } from '@/integrations/supabase/btp-types';
 import { ProjectTransformer } from '@/dtos/transforms/ProjectTransformer';
+import { PhaseTransformer } from '@/dtos/transforms/PhaseTransformer';
+import { TaskAssignmentTransformer } from '@/dtos/transforms/TaskAssignmentTransformer';
+import { PaymentTransformer } from '@/dtos/transforms/PaymentTransformer';
+import { InspectionTransformer } from '@/dtos/transforms/InspectionTransformer';
+import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
+import { toDomain as riskFromRow } from './SupabaseRiskAdapter';
 
 /**
  * Normalize project status values to the strict set accepted by the
@@ -260,6 +266,14 @@ export class SupabaseProjectAdapter implements IProjectRepository {
       supabase.from('project_materials').select('*').eq('project_id', id),
     ]);
 
+    // Never silently replace a denied/failed collection with an empty success.
+    for (const result of [projectResult, phasesResult, tasksResult, risksResult, inspectionsResult, paymentsResult, documentsResult, bankGuaranteesResult, insuranceResult, milestonesResult, stakeholdersResult, resourcesResult, materialsResult]) {
+      if (result.error) {
+        if (result === projectResult && result.error.code === 'PGRST116') return empty;
+        throw result.error;
+      }
+    }
+
     const milestones = (milestonesResult.data || []).map((row: Record<string, any>) => ({
       id: row.id,
       projectId: row.project_id,
@@ -330,12 +344,12 @@ export class SupabaseProjectAdapter implements IProjectRepository {
 
     return {
       project: projectResult.data ? ProjectTransformer.fromSupabase(projectResult.data as Record<string, unknown>) : null,
-      phases: phasesResult.data || [],
-      tasks: tasksResult.data || [],
-      risks: risksResult.data || [],
-      inspections: inspectionsResult.data || [],
-      payments: paymentsResult.data || [],
-      documents: documentsResult.data || [],
+      phases: (phasesResult.data || []).map(row => PhaseTransformer.fromDB(row)),
+      tasks: TaskAssignmentTransformer.fromRepositoryList(tasksResult.data || []),
+      risks: (risksResult.data || []).map(row => riskFromRow(row)),
+      inspections: (inspectionsResult.data || []).map(row => InspectionTransformer.fromDatabaseRow(row)),
+      payments: (paymentsResult.data || []).map(row => PaymentTransformer.toEntityFromDatabaseRow(row)),
+      documents: (documentsResult.data || []).map(row => DocumentTransformer.toDTO(row)),
       bankGuarantees: bankGuaranteesResult.data || [],
       insuranceCertificates: insuranceResult.data || [],
       milestones,

@@ -9,8 +9,31 @@ import { Inspection, InspectionStatus as DomainInspectionStatus } from '@/domain
 import { InspectionDTO, CreateInspectionDTO, UpdateInspectionDTO, InspectionType, InspectionPriority, InspectionStatus } from '@/dtos/entities/InspectionDTO';
 import { DocumentTransformer } from '@/dtos/transforms/DocumentTransformer';
 import { EntityToDTOMapper, ValidationResult } from '@/dtos/transforms/shared';
+import { parsePersistedDate } from './shared/dateSerialization';
 
 export class InspectionTransformer {
+  static fromDatabaseRow(row: Record<string, unknown>): InspectionDTO {
+    const status = Inspection.mapStringToStatus(String(row.status || 'pending'));
+    const actual = row.actual_date || row.completed_at;
+    const scheduled = row.scheduled_date || row.date;
+    const entity = Inspection.create({
+      id: String(row.id), projectId: String(row.project_id || ''),
+      phaseId: typeof row.phase_id === 'string' ? row.phase_id : undefined,
+      date: String(actual || scheduled || ''), status,
+      inspector: { id: String(row.inspector || ''), name: String(row.inspector_name || ''), agency: '', type: 'employee' },
+      progressAtInspection: Number(row.progress_at_inspection) || 0,
+      comments: typeof row.comments === 'string' ? row.comments : undefined,
+    });
+    return {
+      ...this.toDTO(entity),
+      title: String(row.title || row.name || `Inspection ${row.id}`),
+      scheduledDate: parsePersistedDate(scheduled)?.toISOString(),
+      actualDate: parsePersistedDate(actual)?.toISOString(),
+      createdAt: parsePersistedDate(row.created_at)?.toISOString() || entity.createdAt.toISOString(),
+      updatedAt: parsePersistedDate(row.updated_at)?.toISOString() || entity.updatedAt.toISOString(),
+      documents: Array.isArray(row.documents) ? row.documents.filter((id): id is string => typeof id === 'string') : [],
+    };
+  }
   /**
    * Batch: DTOs → Domain Entities
    */
