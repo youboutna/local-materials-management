@@ -19,6 +19,7 @@ export function useWorkbenchCalendarActions(projectId: string) {
 export function useWorkbenchProjects() { return useQuery({ queryKey: ['workbench-projects'], queryFn: () => getProjectWorkbenchService().projects() }); }
 export function useProjectWorkbench(projectId: string) { return useQuery({ queryKey: ['project-workbench', projectId], queryFn: () => getProjectWorkbenchService().load(projectId), enabled: Boolean(projectId) }); }
 export function useWorkbenchFinance(projectId: string) { return useQuery({ queryKey: ['workbench-finance', projectId], queryFn: () => getProjectWorkbenchService().finance(projectId), enabled: Boolean(projectId) }); }
+export function useOperationContexts(projectId: string) { return useQuery({ queryKey: ['operation-contexts',projectId],queryFn:()=>getProjectWorkbenchService().operationContexts(projectId),enabled:Boolean(projectId) }); }
 export function useWorkbenchOperations(projectId: string) {
   const client = useQueryClient();
   const invalidate = () => Promise.all([client.invalidateQueries({ queryKey: ['project-workbench', projectId] }),client.invalidateQueries({queryKey:['workbench-finance',projectId]}),client.invalidateQueries({queryKey:['project-financials',projectId]})]);

@@ -92,7 +92,7 @@ export class ProjectImportTemplateService {
         const explicit=deliverable.match(milestone);
         phase.milestones=[{title:deliverable,name:deliverable,targetDate:explicit?dateAt(Number(explicit[1])*mapping.daysPerWeek-1):phase.endDate,externalRef:`${ref}:delivery`}];
       }
-      phase.tasks=(phase.description ?? '').split(',').map(title=>title.trim()).filter(Boolean).map((title,taskIndex)=>({id:`${ref}:task:${taskIndex}`,title,startDate:phase.startDate,endDate:phase.endDate,metadata:{sourceLine:index+1}}));
+      phase.tasks=(phase.description ?? '').split(',').map(title=>title.trim()).filter(Boolean).map((title,taskIndex)=>({id:`${ref}:task:${taskIndex}`,title,startDate:phase.startDate,endDate:phase.endDate}));
       project.phases?.push(phase);
     }
     const delivery=(project.phases ?? []).map(p=>p.endDate).filter((d):d is string=>Boolean(d)).sort().at(-1);

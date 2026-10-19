@@ -10,7 +10,8 @@ import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRep
 import { getDecompteService } from './DecompteService';
 import { ProjectFinancialsService } from './ProjectFinancialsService';
 import { ProjectMetricsOrchestrator } from './ProjectMetricsOrchestrator';
-import { DEFAULT_OPERATION_POLICY } from '@/config/referentials/projects/operation-policy.referential';
+import { getReferentialItemService } from './ReferentialItemService';
+import { getProjectResourceAggregatorService } from './ProjectResourceAggregatorService';
 export class ProjectWorkbenchService {
   constructor(private readonly repository: IProjectWorkbenchRepository = new SupabaseProjectWorkbenchAdapter()) {}
   projects() { return this.repository.projects(); }
@@ -44,25 +45,26 @@ export class ProjectWorkbenchService {
   }
   async saveOperation(input: SaveProjectOperationDTO) {
     if (!input.label.trim() || !isValid(parseISO(input.occurredOn)) || !Number.isFinite(input.amount) || input.amount < 0 || !Number.isFinite(input.quantity) || input.quantity < 0 || !input.unit.trim() || !input.currency.trim()) throw new Error('Invalid operation');
-    if (input.contextCode && !DEFAULT_OPERATION_POLICY.contexts.includes(input.contextCode)) throw new Error('Unknown operation context');
-    if(input.status === 'validated' && (!input.contextCode || input.contextCode === 'unreconciled')) throw new Error('Select an operation context');
     return this.repository.saveOperation(input);
   }
   deleteOperation(projectId: string, id: string) { return this.repository.deleteOperation(projectId, id); }
   transitionOperation(projectId: string, id: string, status: 'validated' | 'cancelled') { return this.repository.transitionOperation(projectId,id,status); }
   async finance(projectId: string) {
     if (!(await this.projects()).some(project => project.id === projectId)) throw new Error('Project access denied');
-    const [project, collections, scope] = await Promise.all([
+    const [project, collections, scope, operations] = await Promise.all([
       getProjectService().getProjectWithDetails(projectId),
       Promise.all((['dqe','supplier_bid','invoice'] as const).map(source => boqRepository.list({source,projectId}))),
       getDecompteService().getProjectFinancials(projectId),
+      this.repository.operations(projectId),
     ]);
     if (!project) throw new Error('Project not found');
     const lines = [...new Map(collections.flat().map((line,index) => [line.id ?? `draft:${index}`,line])).values()];
     const financials = ProjectFinancialsService.build({scope:'project',entityId:projectId,currency:project.currency,declaredBudget:project.budget ?? 0,lines,decomptes:scope.decomptes,payments:scope.payments});
     const metrics = ProjectMetricsOrchestrator.compute({project,phases:project.phases,financials});
-    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics};
+    const resources=getProjectResourceAggregatorService().aggregate({projectId,phases:project.phases,boqLines:lines.filter(line=>line.source==='dqe'),consumptions:operations.filter(entry=>entry.kind==='consumption')});
+    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,allocatedResources:project.resources ?? []};
   }
+  operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }
   static operationTotals(entries: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[], currency: string) {
     const totals = new Map<string,number>();
     for (const entry of entries) {

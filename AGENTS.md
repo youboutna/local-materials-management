@@ -21,3 +21,6 @@
 - Keep privileged workbench access helpers in the unexposed workbench_private schema behind invoker API wrappers; never grant anonymous execution.
 - Hydrate project-related collections into their declared entities or DTOs in the repository adapter before aggregation; raw database rows must never reach domain-to-DTO serializers.
 - Reuse the existing task, phase, inspection, payment and BOQ services for workbench actions, retaining original entity IDs independently from dated calendar-event IDs to avoid duplicate business records.
+- Compose workbench financial/resource summaries and planning previews through canonical financial, resource and metrics services plus existing Gantt/PERT views; projections must not create competing calculations or records.
+- Store operation context rules in referential_items and evaluate them on the server; stable source identifiers, request keys and finalized-row protections prevent disconnected declarations and duplicate retries.
+- Extend ProjectImportTemplateService for controlled mapped planning previews and pass prepared datasets to the existing importer; preserve and report unmapped source sections rather than inventing their interpretation.
