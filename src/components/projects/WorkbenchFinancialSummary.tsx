@@ -16,6 +16,7 @@ export function WorkbenchFinancialSummary({projectId,view}:{projectId:string;vie
   const {financials,metrics,decomptes,payments}=query.data;
   const money=(value:number)=>`${value.toLocaleString(language)} ${financials.currency}`;
   if(view==='calendar') return <details className="border-y border-border py-3"><summary className="cursor-pointer font-medium">{t('workbench.planning_analysis')}</summary><div className="space-y-5 pt-4"><ProjectGanttTimeline gantt={metrics.gantt} /><UnifiedPERTAnalysis pert={metrics.pert} referenceDurationDays={metrics.referenceDurationDays} /></div></details>;
+  if(view==='consumption') return <div className="divide-y divide-border">{[query.data.resources.human,query.data.resources.materials,query.data.resources.equipment].flatMap(bucket=>bucket.lines).map(line=><div key={line.key} className="grid gap-2 py-3 sm:grid-cols-3"><span className="font-medium">{line.name}</span><span>{t('workbench.planned')}: {line.plannedQuantity} {line.unit}</span><span>{t('workbench.actual')}: {line.actualQuantity} {line.unit}</span></div>)}</div>;
   if(view!=='expense' && view!=='revenue') return null;
   if(view==='revenue') return <div className="border-y border-border py-4"><p className="text-sm text-muted-foreground">{t('workbench.revenue_unreconciled')}</p><Button asChild variant="outline" className="mt-3"><Link to={`/dqe/list?projectId=${projectId}`}>{t('workbench.documents')}</Link></Button></div>;
   return <section className="space-y-4">
