@@ -9,6 +9,43 @@ DROP TABLE IF EXISTS infra.assets;
 CREATE SCHEMA IF NOT EXISTS infra;
 GRANT USAGE ON SCHEMA infra TO authenticated, service_role;
 
+-- ---------------------------------------------------------------------------
+-- Ensure public.has_role(uuid, text) exists (required by domains_admin and
+-- asset_types_admin policies below). Idempotent: no-op if already present.
+-- ---------------------------------------------------------------------------
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = 'has_role'
+      AND pg_get_function_identity_arguments(p.oid) = 'uuid, text'
+  ) THEN
+    EXECUTE $fn$
+      CREATE FUNCTION public.has_role(p_user_id uuid, p_role text)
+      RETURNS boolean
+      LANGUAGE sql
+      STABLE
+      SECURITY DEFINER
+      SET search_path = public
+      AS $body$
+        SELECT EXISTS (
+          SELECT 1
+          FROM public.user_roles ur
+          WHERE ur.user_id = p_user_id
+            AND ur.role_name = p_role
+            AND ur.status = 'active'
+            AND (ur.expires_at IS NULL OR ur.expires_at > now())
+        );
+      $body$;
+    $fn$;
+    EXECUTE 'REVOKE ALL ON FUNCTION public.has_role(uuid, text) FROM PUBLIC, anon';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.has_role(uuid, text) TO authenticated, service_role';
+  END IF;
+END $$;
+-- ---------------------------------------------------------------------------
+
 CREATE TABLE infra.domains (
   code text PRIMARY KEY CHECK (length(trim(code)) > 0),
   label_fr text NOT NULL, label_ar text, label_en text, description text,
