@@ -61,7 +61,7 @@ export class ProjectWorkbenchService {
     const lines = [...new Map(collections.flat().map((line,index) => [line.id ?? `draft:${index}`,line])).values()];
     const financials = ProjectFinancialsService.build({scope:'project',entityId:projectId,currency:project.currency,declaredBudget:project.budget ?? 0,lines,decomptes:scope.decomptes,payments:scope.payments});
     const metrics = ProjectMetricsOrchestrator.compute({project,phases:project.phases,financials});
-    const resources=getProjectResourceAggregatorService().aggregate({projectId,phases:project.phases,boqLines:lines.filter(line=>line.source==='dqe'),consumptions:operations.filter(entry=>entry.kind==='consumption')});
+    const resources=getProjectResourceAggregatorService().aggregate({projectId,phases:project.phases.map(phase=>({...phase})),boqLines:lines.filter(line=>line.source==='dqe').map(line=>({...line})),consumptions:operations.filter(entry=>entry.kind==='consumption').map(entry=>({...entry}))});
     return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,allocatedResources:project.resources ?? []};
   }
   operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }

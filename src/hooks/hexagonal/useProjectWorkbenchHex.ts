@@ -22,7 +22,7 @@ export function useWorkbenchFinance(projectId: string) { return useQuery({ query
 export function useOperationContexts(projectId: string) { return useQuery({ queryKey: ['operation-contexts',projectId],queryFn:()=>getProjectWorkbenchService().operationContexts(projectId),enabled:Boolean(projectId) }); }
 export function useWorkbenchOperations(projectId: string) {
   const client = useQueryClient();
-  const invalidate = () => Promise.all([client.invalidateQueries({ queryKey: ['project-workbench', projectId] }),client.invalidateQueries({queryKey:['workbench-finance',projectId]}),client.invalidateQueries({queryKey:['project-financials',projectId]})]);
+  const invalidate = () => Promise.all([client.invalidateQueries({ queryKey: ['project-workbench', projectId] }),client.invalidateQueries({queryKey:['workbench-finance',projectId]}),client.invalidateQueries({queryKey:['project-financials']})]);
   const save = useMutation({ mutationFn: async (input: SaveProjectOperationDTO) => { const result = await getProjectWorkbenchService().saveOperation(input); await invalidate(); return result; } });
   const remove = useMutation({ mutationFn: async (id: string) => { await getProjectWorkbenchService().deleteOperation(projectId, id); await invalidate(); } });
   const transition = useMutation({mutationFn: async (input:{id:string;status:'validated'|'cancelled'}) => { await getProjectWorkbenchService().transitionOperation(projectId,input.id,input.status); await invalidate(); }});
