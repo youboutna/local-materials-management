@@ -59,6 +59,17 @@ export function AppLayout({
     }
     return false;
   });
+  // Largeur étirable de la sidebar (persistée), bornée pour garder la place du contenu
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const stored = Number(localStorage.getItem("sidebar-width"));
+      if (Number.isFinite(stored) && stored >= SIDEBAR_MIN_WIDTH && stored <= SIDEBAR_MAX_WIDTH) {
+        return stored;
+      }
+    }
+    return SIDEBAR_DEFAULT_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const shouldShowSidebar =
