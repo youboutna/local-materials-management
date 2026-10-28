@@ -144,6 +144,9 @@ export function AppLayout({
         <ContextualSidebar
           collapsed={sidebarCollapsed}
           onToggle={toggleSidebar}
+          width={sidebarWidth}
+          onResizeStart={startResize}
+          onResizeReset={resetSidebarWidth}
           className="fixed left-0 top-16 bottom-0 z-30"
         />
       )}
@@ -152,10 +155,16 @@ export function AppLayout({
       <main
         id="main-content"
         className={cn(
-          "flex-1 min-w-0 transition-all duration-300",
-          shouldShowSidebar && !isMobile && (sidebarCollapsed ? "ml-16" : "ml-64"),
+          "flex-1 min-w-0",
+          !isResizing && "transition-all duration-300",
+          shouldShowSidebar && !isMobile && sidebarCollapsed && "ml-16",
           contentClassName,
         )}
+        style={
+          shouldShowSidebar && !isMobile && !sidebarCollapsed
+            ? { marginLeft: sidebarWidth }
+            : undefined
+        }
         role="main"
       >
         {/* En-tête de page */}

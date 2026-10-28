@@ -57,6 +57,12 @@ interface ContextualSidebarProps {
   className?: string;
   collapsed?: boolean;
   onToggle?: () => void;
+  /** Largeur courante en px quand la sidebar est déployée (étirable) */
+  width?: number;
+  /** Début du glisser sur la poignée de redimensionnement */
+  onResizeStart?: (event: React.PointerEvent) => void;
+  /** Double-clic sur la poignée : retour à la largeur par défaut */
+  onResizeReset?: () => void;
 }
 
 const navigationItems: NavItem[] = [
