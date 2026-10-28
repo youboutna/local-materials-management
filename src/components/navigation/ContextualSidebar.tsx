@@ -309,16 +309,29 @@ function NavItemComponent({
   );
 }
 
-export function ContextualSidebar({ className, collapsed = false, onToggle }: ContextualSidebarProps) {
+export function ContextualSidebar({ className, collapsed = false, onToggle, width, onResizeStart, onResizeReset }: ContextualSidebarProps) {
   return (
     <aside
       className={cn(
-        "flex flex-col border-r bg-card h-full transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
+        "relative flex flex-col border-r bg-card h-full transition-all duration-300",
+        collapsed && "w-16",
         className,
       )}
+      style={!collapsed && width ? { width } : undefined}
       aria-label="Navigation contextuelle"
     >
+      {/* Poignée d'étirement : glisser pour ajuster, double-clic pour réinitialiser */}
+      {!collapsed && onResizeStart && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Redimensionner la barre latérale"
+          title="Glisser pour ajuster la largeur · double-clic pour réinitialiser"
+          className="absolute top-0 right-0 z-10 h-full w-1.5 cursor-col-resize touch-none hover:bg-primary/30 active:bg-primary/50 transition-colors"
+          onPointerDown={onResizeStart}
+          onDoubleClick={onResizeReset}
+        />
+      )}
       <ScrollArea className="flex-1 py-4">
         <nav className="space-y-1 px-2">
           {navigationItems.map((item, index) => (
