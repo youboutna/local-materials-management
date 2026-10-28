@@ -47,7 +47,8 @@
 - [x] Tracé carte + table attributaire + aperçu import GeoJSON ; testé en base avec la boucle 33 kV (annulé)
 - [ ] Recette connectée du module SIG dans l'aperçu (bloquée : session Supabase externe non injectable)
 - [ ] Unifier Consommations/Dépenses/Recettes avec les sources métier existantes, le choix des lignes/documents et les circuits selon contexte ; conserver et rapprocher les saisies historiques sans doubles comptages
-- [ ] Brancher les synthèses sur les services financiers, ressources et métriques existants ; distinguer consommé, engagé, dépensé, payé, facturé et encaissé
+- [x] Brancher les synthèses sur les services financiers, ressources et métriques existants ; distinguer consommé, engagé, dépensé, payé, facturé et encaissé
+- [x] Règles de contexte des déclarations en référentiel base (version figée à la validation, unité et quantité plafonnées par la ligne source)
 - [ ] Générer/importer des plannings génériques pilotés par référentiels métier versionnés, avec aperçu éditable, dates relatives, chevauchements, tâches/jalons, livrables, gouvernance, risques/PAQ et allocations par période ; le planning fourni sert uniquement de cas illustratif
 - [ ] Configurer les comportements par réglementation et entité (ETER, SOMELEC, etc.) via référentiels, sans règles spécifiques codées en dur ni réécriture du moteur
 - [ ] Réutiliser Gantt, PERT, WBS, calendrier, indicateurs, rapports et workflows existants ; composer leurs données pour les nouvelles présentations, sans moteurs, modules ou tables concurrents
