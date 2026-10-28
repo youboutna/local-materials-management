@@ -40,8 +40,9 @@
 - [x] Renforcer release Docker : refus tags mutables/existants, lancement sans reconstruction, comparaison worker servi et tests de scripts
 - [x] Vérifier Twilio actuellement : HTTP 200, aucun numéro ni Messaging Service ; tester configuration et erreurs SMS jusqu’à l’adapter
 - [ ] Démarrer et tester l’image réelle sur le serveur Docker — bloqué : Docker/daemon et accès serveur absents ici ; tests de scripts simulés seulement
-- [ ] Corriger la conversion des dates des détails projet et tester le projet importé sans dates techniques
-- [ ] Compléter et fiabiliser les actions ajouter/modifier/supprimer des onglets calendrier, opérations, métré et SIG
+- [x] Corriger la conversion des dates des détails projet (transformateurs tâches/inspections tolérants aux dates absentes)
+- [x] Compléter et fiabiliser les actions ajouter/modifier/supprimer des onglets calendrier, opérations, métré et SIG
+- [x] Sidebar gauche navigable, repliable et étirable (glisser 208–480 px, double-clic réinitialise, largeur persistée)
 - [ ] Vérifier les changements par tests ciblés et aperçu ; recette connectée soumise à la disponibilité d’une session externe
 - [x] SIG infra : modèle réseau ouvert (domaines, types d'ouvrages, supports, ouvrages, réalisations), import GeoJSON en masse, CRUD complet, analyse tampon filtrée par projet
 - [x] Tracé carte + table attributaire + aperçu import GeoJSON ; testé en base avec la boucle 33 kV (annulé)

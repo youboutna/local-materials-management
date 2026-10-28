@@ -27,6 +27,11 @@ interface AppLayoutProps {
   actions?: React.ReactNode;
 }
 
+// Bornes de largeur de la sidebar étirable (px)
+const SIDEBAR_MIN_WIDTH = 208;
+const SIDEBAR_DEFAULT_WIDTH = 256;
+const SIDEBAR_MAX_WIDTH = 480;
+
 // Routes où la sidebar est masquée (pages publiques plein écran)
 const noSidebarRoutes = [
   "/",
@@ -59,6 +64,17 @@ export function AppLayout({
     }
     return false;
   });
+  // Largeur étirable de la sidebar (persistée), bornée pour garder la place du contenu
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const stored = Number(localStorage.getItem("sidebar-width"));
+      if (Number.isFinite(stored) && stored >= SIDEBAR_MIN_WIDTH && stored <= SIDEBAR_MAX_WIDTH) {
+        return stored;
+      }
+    }
+    return SIDEBAR_DEFAULT_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const shouldShowSidebar =
@@ -69,6 +85,37 @@ export function AppLayout({
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", String(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-width", String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  // Glisser pour étirer la sidebar ; le suivi se fait sur window pour rester fluide
+  const startResize = useCallback(
+    (event: React.PointerEvent) => {
+      event.preventDefault();
+      const startX = event.clientX;
+      const startWidth = sidebarWidth;
+      setIsResizing(true);
+      const onMove = (moveEvent: PointerEvent) => {
+        const next = startWidth + (moveEvent.clientX - startX);
+        setSidebarWidth(Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, next)));
+      };
+      const onUp = () => {
+        setIsResizing(false);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [sidebarWidth],
+  );
+
+  const resetSidebarWidth = useCallback(
+    () => setSidebarWidth(SIDEBAR_DEFAULT_WIDTH),
+    [],
+  );
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -97,6 +144,9 @@ export function AppLayout({
         <ContextualSidebar
           collapsed={sidebarCollapsed}
           onToggle={toggleSidebar}
+          width={sidebarWidth}
+          onResizeStart={startResize}
+          onResizeReset={resetSidebarWidth}
           className="fixed left-0 top-16 bottom-0 z-30"
         />
       )}
@@ -105,10 +155,16 @@ export function AppLayout({
       <main
         id="main-content"
         className={cn(
-          "flex-1 min-w-0 transition-all duration-300",
-          shouldShowSidebar && !isMobile && (sidebarCollapsed ? "ml-16" : "ml-64"),
+          "flex-1 min-w-0",
+          !isResizing && "transition-all duration-300",
+          shouldShowSidebar && !isMobile && sidebarCollapsed && "ml-16",
           contentClassName,
         )}
+        style={
+          shouldShowSidebar && !isMobile && !sidebarCollapsed
+            ? { marginLeft: sidebarWidth }
+            : undefined
+        }
         role="main"
       >
         {/* En-tête de page */}
