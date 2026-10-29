@@ -14,6 +14,8 @@ import {
   isDecompteValidated,
   type DecomptePaymentDTO,
   type DecompteFinancialSummaryDTO,
+  type DecompteReconciliationDTO,
+  type DecompteReconciliationState,
   type DecompteRecordDTO,
 } from '@/dtos/entities/DecompteRecordDTO';
 import type {
