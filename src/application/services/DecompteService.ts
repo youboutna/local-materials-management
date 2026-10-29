@@ -14,6 +14,8 @@ import {
   isDecompteValidated,
   type DecomptePaymentDTO,
   type DecompteFinancialSummaryDTO,
+  type DecompteReconciliationDTO,
+  type DecompteReconciliationState,
   type DecompteRecordDTO,
 } from '@/dtos/entities/DecompteRecordDTO';
 import type {
@@ -154,6 +156,48 @@ export class DecompteService {
     // Les paiements sont la source de vérité dès qu'ils existent ; sinon on
     // retombe sur les décomptes soldés (données historiques sans transaction).
     return payments.length > 0 ? fromPayments : fromDecomptes;
+  }
+
+  // ---------- Rapprochement décomptes ↔ règlements (composition, sans table) ----------
+
+  /**
+   * Rapproche chaque décompte de ses règlements comptabilisables et isole les
+   * paiements non affectés. Aucune écriture : pure lecture des sources canoniques.
+   */
+  static reconcile(
+    decomptes: DecompteRecordDTO[],
+    payments: DecomptePaymentDTO[] = [],
+    policy: OperationPolicy = DEFAULT_OPERATION_POLICY,
+  ): DecompteReconciliationDTO {
+    const countable = (payments ?? []).filter(
+      p => !policy.excludedPaymentStatuses.includes(String(p.status ?? '').toLowerCase()),
+    );
+    const list = (decomptes ?? []).filter(Boolean);
+    const knownIds = new Set(list.map(d => d.id));
+    const unallocatedPayments = countable.filter(p => !p.decompteId || !knownIds.has(p.decompteId));
+    const lines = list.map(d => {
+      const due = d.validatedAmount ?? d.amount ?? 0;
+      const linked = countable
+        .filter(p => p.decompteId === d.id)
+        .reduce((sum, p) => sum + (p.amount ?? 0), 0);
+      // Historique sans transaction : un décompte soldé vaut règlement complet.
+      const effectivePaid = linked > 0 ? linked : (isDecomptePaid(d) ? (d.paidAmount ?? due) : 0);
+      const validated = isDecompteValidated(d);
+      const remainingAmount = validated ? Math.max(0, due - effectivePaid) : 0;
+      const state: DecompteReconciliationState = !validated
+        ? 'not_validated'
+        : remainingAmount <= 0 && (effectivePaid > 0 || due <= 0)
+          ? 'settled'
+          : effectivePaid > 0
+            ? 'partial'
+            : 'unpaid';
+      return { decompte: d, paidAmount: effectivePaid, remainingAmount, state };
+    });
+    return {
+      lines,
+      unallocatedPayments,
+      unallocatedAmount: unallocatedPayments.reduce((sum, p) => sum + (p.amount ?? 0), 0),
+    };
   }
 
   static buildSummary(

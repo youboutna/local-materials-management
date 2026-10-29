@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import ProjectGanttTimeline from '@/components/project/ProjectGanttTimeline';
 import UnifiedPERTAnalysis from '@/components/project/UnifiedPERTAnalysis';
+import { DecompteService } from '@/application/services/DecompteService';
 import type { WorkbenchView } from '@/dtos/entities/ProjectWorkbenchDTO';
 
 /** Presentation only; values and planning models come from canonical services. */
