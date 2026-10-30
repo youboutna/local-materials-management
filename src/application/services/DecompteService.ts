@@ -147,15 +147,9 @@ export class DecompteService {
     payments: DecomptePaymentDTO[] = [],
     policy: OperationPolicy = DEFAULT_OPERATION_POLICY,
   ): number {
-    const fromPayments = (payments ?? [])
-      .filter(p => !policy.excludedPaymentStatuses.includes(String(p.status ?? '').toLowerCase()))
-      .reduce((sum, p) => sum + (p.amount ?? 0), 0);
-    const fromDecomptes = (decomptes ?? [])
-      .filter(isDecomptePaid)
-      .reduce((sum, d) => sum + (d.paidAmount ?? d.validatedAmount ?? d.amount ?? 0), 0);
-    // Les paiements sont la source de vérité dès qu'ils existent ; sinon on
-    // retombe sur les décomptes soldés (données historiques sans transaction).
-    return payments.length > 0 ? fromPayments : fromDecomptes;
+    const reconciliation = DecompteService.reconcile(decomptes, payments, policy);
+    return reconciliation.lines.reduce((sum, line) => sum + line.paidAmount, 0)
+      + reconciliation.unallocatedAmount;
   }
 
   // ---------- Rapprochement décomptes ↔ règlements (composition, sans table) ----------
@@ -169,10 +163,11 @@ export class DecompteService {
     payments: DecomptePaymentDTO[] = [],
     policy: OperationPolicy = DEFAULT_OPERATION_POLICY,
   ): DecompteReconciliationDTO {
-    const countable = (payments ?? []).filter(
+    const uniquePayments = [...new Map((payments ?? []).map(p => [p.id, p])).values()];
+    const countable = uniquePayments.filter(
       p => !policy.excludedPaymentStatuses.includes(String(p.status ?? '').toLowerCase()),
     );
-    const list = (decomptes ?? []).filter(Boolean);
+    const list = [...new Map((decomptes ?? []).filter(Boolean).map(d => [d.id, d])).values()];
     const knownIds = new Set(list.map(d => d.id));
     const unallocatedPayments = countable.filter(p => !p.decompteId || !knownIds.has(p.decompteId));
     const lines = list.map(d => {
@@ -181,7 +176,7 @@ export class DecompteService {
         .filter(p => p.decompteId === d.id)
         .reduce((sum, p) => sum + (p.amount ?? 0), 0);
       // Historique sans transaction : un décompte soldé vaut règlement complet.
-      const effectivePaid = linked > 0 ? linked : (isDecomptePaid(d) ? (d.paidAmount ?? due) : 0);
+      const effectivePaid = uniquePayments.length > 0 ? linked : (isDecomptePaid(d) ? (d.paidAmount ?? due) : 0);
       const validated = isDecompteValidated(d);
       const remainingAmount = validated ? Math.max(0, due - effectivePaid) : 0;
       const state: DecompteReconciliationState = !validated
@@ -208,13 +203,14 @@ export class DecompteService {
     const list = (decomptes ?? []).filter(Boolean);
     const decomptedValidated = DecompteService.sumValidated(list);
     const paid = DecompteService.sumPaid(list, payments);
+    const reconciliation = DecompteService.reconcile(list, payments);
     const initialBudget = options.initialBudget ?? 0;
 
     return {
       initialBudget,
       decomptedValidated,
       paid,
-      remainingToPay: Math.max(decomptedValidated - paid, 0),
+      remainingToPay: reconciliation.lines.reduce((sum, line) => sum + line.remainingAmount, 0),
       budgetRemaining: initialBudget - decomptedValidated,
       engaged: options.engaged ?? 0,
       validatedCount: list.filter(isDecompteValidated).length,

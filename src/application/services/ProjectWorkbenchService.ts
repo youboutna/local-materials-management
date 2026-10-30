@@ -7,7 +7,7 @@ import { getProjectService } from './ProjectService';
 import { SupabaseProjectWorkbenchAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter';
 import { format, isValid, parseISO, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
-import { getDecompteService } from './DecompteService';
+import { DecompteService, getDecompteService } from './DecompteService';
 import { ProjectFinancialsService } from './ProjectFinancialsService';
 import { ProjectMetricsOrchestrator } from './ProjectMetricsOrchestrator';
 import { getReferentialItemService } from './ReferentialItemService';
@@ -62,7 +62,8 @@ export class ProjectWorkbenchService {
     const financials = ProjectFinancialsService.build({scope:'project',entityId:projectId,currency:project.currency,declaredBudget:project.budget ?? 0,lines,decomptes:scope.decomptes,payments:scope.payments});
     const metrics = ProjectMetricsOrchestrator.compute({project,phases:project.phases,financials});
     const resources=getProjectResourceAggregatorService().aggregate({projectId,phases:project.phases.map(phase=>({...phase})),boqLines:lines.filter(line=>line.source==='dqe').map(line=>({...line})),consumptions:operations.filter(entry=>entry.kind==='consumption').map(entry=>({...entry}))});
-    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,allocatedResources:project.resources ?? []};
+    const reconciliation = DecompteService.reconcile(scope.decomptes, scope.payments);
+    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,reconciliation,allocatedResources:project.resources ?? []};
   }
   operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }
   static operationTotals(entries: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[], currency: string) {

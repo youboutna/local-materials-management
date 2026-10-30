@@ -6642,5 +6642,12 @@
   "workbench.status_cancelled": "ملغى",
   "workbench.status_submitted": "مقدم",
   "workbench.status_paid": "مدفوع",
-  "workbench.status_rejected": "مرفوض"
+  "workbench.status_rejected": "مرفوض",
+  "workbench.reconciliation": "مطابقة الكشوف والمدفوعات",
+  "workbench.recon_settled": "مسدد",
+  "workbench.recon_partial": "مسدد جزئياً",
+  "workbench.recon_unpaid": "غير مسدد",
+  "workbench.recon_not_validated": "غير معتمد",
+  "workbench.recon_remaining": "المتبقي للسداد",
+  "workbench.recon_unallocated": "مدفوعات غير مخصصة"
 }

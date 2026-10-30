@@ -32,7 +32,7 @@
 - [x] Séparer SIG infra et BTP via port, PostGIS métrique, buffers multi-zones et cercles, CRUD ouvrages et réalisation avec inspection justificative
 - [ ] Recette CRUD calendrier/SIG/portails avec compte réel — bloqué : Supabase externe sans session de test injectable
 - [ ] Métré géométrique des plans, calibration, mesures persistées et comparaison planifié/réel — nécessite le lot de mesure contrôlée, non livré ; le calculateur existant reste accessible
-- [ ] Réconciliation comptable dépenses/recettes avec paiements et consommation cumulée — non livrée ; journaux distincts pour éviter un total trompeur
+- [ ] Finalisation : rapprochement dépenses/règlements, recettes et métré géométrique ; tests et contrôles des parcours existants
 - [ ] Recette planificateurs et tous canaux réels — bloqué : expéditeur SMS absent, WhatsApp lien seulement, appels programmés uniquement, serveur cible inaccessible
 - [x] Tests ciblés calendrier/communication/configuration release passants ; compilation contrôlée
 - [ ] Audit sécurité antérieur : 125 signalements préexistants, notamment politiques et fonctions — audit dédié requis avant production

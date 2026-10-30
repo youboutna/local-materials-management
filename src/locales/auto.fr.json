@@ -6640,5 +6640,12 @@
   "workbench.status_cancelled": "Annulé",
   "workbench.status_submitted": "Soumis",
   "workbench.status_paid": "Payé",
-  "workbench.status_rejected": "Rejeté"
+  "workbench.status_rejected": "Rejeté",
+  "workbench.reconciliation": "Rapprochement décomptes et règlements",
+  "workbench.recon_settled": "Soldé",
+  "workbench.recon_partial": "Partiellement réglé",
+  "workbench.recon_unpaid": "Non réglé",
+  "workbench.recon_not_validated": "Non validé",
+  "workbench.recon_remaining": "Reste à régler",
+  "workbench.recon_unallocated": "Règlements non affectés"
 }
