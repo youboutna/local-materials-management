@@ -6643,5 +6643,12 @@
   "workbench.status_cancelled": "Cancelled",
   "workbench.status_submitted": "Submitted",
   "workbench.status_paid": "Paid",
-  "workbench.status_rejected": "Rejected"
+  "workbench.status_rejected": "Rejected",
+  "workbench.reconciliation": "Invoice and payment reconciliation",
+  "workbench.recon_settled": "Settled",
+  "workbench.recon_partial": "Partially settled",
+  "workbench.recon_unpaid": "Unpaid",
+  "workbench.recon_not_validated": "Not validated",
+  "workbench.recon_remaining": "Outstanding amount",
+  "workbench.recon_unallocated": "Unallocated payments"
 }
