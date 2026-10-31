@@ -63,3 +63,4 @@
 - [ ] Finaliser les deux plans par composition des parcours de pilotage : navigation projet intuitive, contextes opérationnels cohérents et planning générique ; traiter les données jointes comme illustrations, sans compteurs imposés.
 - [x] Corriger le doublon montré : import unique de documents via UnifiedBoqParser, revue des plans dans le même import, retrait du calculateur isolé et source visible sur les lignes DQE ; 23 tests ciblés passants.
 - [ ] Corriger l'extraction incomplète DQE_NDB : le contrôle navigateur du parseur commun ne prépare que 3 lignes ; recette de l'écran connecté toujours bloquée par la session externe.
+- [ ] Retirer le parcours métré concurrent : calculs internes à la saisie DQE et à l'import unifié, routés selon les patterns et testés.
