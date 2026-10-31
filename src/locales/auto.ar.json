@@ -1,4 +1,8 @@
 {
+  "dqe.import_document": "استيراد مستند",
+  "dqe.line.source": "المصدر",
+  "dqe.source.manual": "إدخال يدوي",
+  "workbench.incompatible_source": "السطر المحدد لا يتوافق مع السياق المختار.",
   "planning.pasted": "التخطيط من جدول ملصق",
   "planning.title": "عنوان المشروع",
   "planning.reference": "مرجع المشروع",

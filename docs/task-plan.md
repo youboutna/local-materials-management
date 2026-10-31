@@ -933,3 +933,12 @@ Pour configurer l'origine publique de production (exemple : `https://app.hadrate
 - Suite globale et lint complet : non verts ; démarrage Docker et délivrabilité des communications restent dépendants de l'environnement cible et des fournisseurs.
 
 Le plan consolidé reste **NO GO** tant que ces critères sont ouverts ; les chiffres contradictoires du brief ne doivent jamais être obtenus par altération des données ou assouplissement artificiel des tests.
+
+### Correction demandée — import et chiffrage uniques
+
+- Retrait du calculateur avancé isolé de la page Métré et plans, ainsi que du bouton et du hook d'import de plans séparés. La saisie manuelle et le calcul métré restent dans le workspace BOQ existant.
+- Un bouton « Importer un document » : PDF, Excel, CSV, JSON. `UnifiedBoqParser` route les PDF sans lignes de tableau exploitables vers le reader de plans texte/OCR ; la revue contrôlée des dimensions se fait dans le même import et prépare les mêmes lignes.
+- La source documentaire et la formule sont affichées sur chaque ligne ; archive GED partagée, pas de double archive du plan.
+- 23 tests ciblés passants, lint des fichiers du raccordement passé, build observé sans erreur à 10:16:11 UTC.
+- Contrôle navigateur du parseur commun sans persistance : STR détecté comme plan (41 repères, aucune mesure confirmée) ; DQE_NDB détecté comme tableau mais seulement 3 lignes préparées. L'extraction exhaustive de ce DQE reste un défaut ouvert, sans imposer les compteurs illustratifs.
+- Recette visuelle connectée de l'écran complet non effectuée : Supabase externe sans session injectable. Les autres critères ouverts ne sont pas clôturés par cette correction.

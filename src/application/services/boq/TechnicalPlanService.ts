@@ -14,7 +14,7 @@ export class TechnicalPlanService {
   constructor(private readonly reader?: ITechnicalPlanReader) {}
 
   async parse(file: File): Promise<TechnicalPlanDTO> {
-    if (!file.name.toLowerCase().endsWith('.pdf')) throw new Error('Only PDF plans are supported');
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) throw new Error('Only PDF plans are supported');
     const hash = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
     const sha256 = Array.from(new Uint8Array(hash), (value) => value.toString(16).padStart(2, '0')).join('');
     const cached = this.cache.get(sha256);

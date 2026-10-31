@@ -105,7 +105,7 @@ function alignItemsToBands(items: PdfItem[], bands: Cell[]): string[] {
 
 export class PdfBoqParser implements IDocumentParser {
   supports(file: File): boolean {
-    return file.name.toLowerCase().endsWith('.pdf');
+    return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
   }
 
   async parse(file: File): Promise<ParseResult> {
