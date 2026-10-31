@@ -355,7 +355,7 @@ export function BoqImportDialog(props: Props) {
   }, [wbsEnrichedDtos]);
   const fmt = (n: number) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Math.round(n));
 
-  const maxStep = parseResult ? 4 : 1;
+  const maxStep = parseResult ? (parseResult.technicalPlan && !dtos.length ? 2 : 4) : 1;
   const stepLabels = [
     'Sélectionnez votre fichier',
     'Vérifiez la correspondance des colonnes',
