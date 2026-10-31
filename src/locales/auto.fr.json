@@ -1,4 +1,8 @@
 {
+  "dqe.import_document": "Importer un document",
+  "dqe.line.source": "Source",
+  "dqe.source.manual": "Saisie manuelle",
+  "workbench.incompatible_source": "La ligne sélectionnée ne correspond pas au contexte choisi.",
   "planning.pasted": "Planning à partir d’un tableau collé",
   "planning.title": "Titre du projet",
   "planning.reference": "Référence du projet",

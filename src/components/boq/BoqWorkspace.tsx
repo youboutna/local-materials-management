@@ -26,7 +26,6 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowRightCircle, Calculator, ChevronDown, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, RefreshCw, Settings2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
-import { TechnicalPlanImport } from './TechnicalPlanImport';
 import { BoqLineTable } from './BoqLineTable';
 import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
 import { QuickAddLineDialog } from './QuickAddLineDialog';
@@ -1134,22 +1133,16 @@ export function BoqWorkspace({
             defaultReferentialCode={effectiveReferential}
             fiscalProfileCode={fiscalCode}
             contextItems={documentContextItems}
-            title={importLabel ?? labels.import}
+            title={t('dqe.import_document')}
             trigger={
               <Button size="sm" variant="outline" disabled={locked}>
-                <FileSpreadsheet className="h-4 w-4 mr-1" />{importLabel ?? labels.import}
+                <FileSpreadsheet className="h-4 w-4 mr-1" />{t('dqe.import_document')}
               </Button>
             }
             variant="inline"
             commitOnSubmit={false}
             onParsed={handleParsedImport}
           />
-
-          {projectId && mode === 'planning' && <TechnicalPlanImport
-            context={{ source, contextId, phaseId: wbsDefault.phaseId ?? undefined }}
-            disabled={locked}
-            onPrepared={handleParsedImport}
-          />}
 
           {/* Recharge les lignes persistées (utile après un import ou un transfert externe). */}
           <Button

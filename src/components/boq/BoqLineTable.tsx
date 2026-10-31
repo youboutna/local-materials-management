@@ -297,6 +297,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                 <div><dt className="text-muted-foreground">{t('metering.net')}</dt><dd>{metering.netQuantity.toLocaleString()} {l.unit}</dd></div>
               </dl>
               <p className="mb-2 break-words text-xs text-muted-foreground">{metering.formula}</p>
+              <p className="mb-2 break-words text-xs"><span className="text-muted-foreground">{t('dqe.line.source')}: </span>{typeof l.metadata?.provenance === 'object' && l.metadata.provenance !== null && 'fileName' in l.metadata.provenance && typeof l.metadata.provenance.fileName === 'string' ? l.metadata.provenance.fileName : t('dqe.source.manual')}</p>
               {metering.materials.length > 0 && <div className="mb-3 flex flex-wrap gap-3 text-xs">
                 {metering.materials.map((material) => <span key={material.code}>{material.labels[language === 'ar' || language === 'en' ? language : 'fr']}: {material.quantity.toLocaleString()} {material.unit}</span>)}
               </div>}
