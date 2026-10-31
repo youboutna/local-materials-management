@@ -2,6 +2,14 @@
 
 ## Plan de Migration et d'Implémentation
 
+### Import PTBA illustratif — 31/10/2026
+- Le parcours d’import projet reconnaît les tableaux PTBA Excel et ouvre une revue configurable : toutes les feuilles, codes, libellés, quantités, unités, montants documentaires, responsables et associés. Échelle monétaire et budget projet sont explicitement confirmés ; aucun cumul automatique de sous-totaux.
+- Lecture Word complète via Mammoth, sans limite de 50 pages. Sources originales archivées via DocumentService ; valeurs/formules/formatages/fusions/financements/périodes et sections non interprétées conservés dans les données personnalisées de la première phase. Provenance de chaque activité dans ses métadonnées ; description projet lisible, pas de JSON visible.
+- Les lignes sans code restent à compléter et conservées, les totaux ne deviennent pas des tâches. Quantités textuelles et écarts quantité × prix sont préservés. Aucun calendrier déduit de cases vides, aucun responsable source remplacé par l’importateur. Identité stable par feuille/ligne pour ne pas fusionner deux activités de même nom.
+- Reprise du pipeline existant et suppression de la conversion UI morte qui inventait une phase et 80 % du budget. CSV analysé avec le lecteur CSV existant, y compris champs cités ; succès complet non annoncé lorsque sous-objets ou archivage échouent. Correction de la fin projet pour inclure le suivi après livraison.
+- Contrôle sans persistance sur les deux fichiers joints dans Chromium : six feuilles (72/92/107/25/170/20 lignes), Word complet de 226 098 caractères, données source identiques après sérialisation, 335 tâches proposées, 77 lignes non interprétées et 72 points de revue. Ces compteurs sont des observations de cet exemple, pas des règles métier.
+- Validation ciblée : 21 tests passants et lint ciblé sans erreur. Recette connectée/persistance/permissions et archive GED réelle non vérifiées : Supabase externe sans session injectable. La hiérarchie arbitraire, les allocations de financement/périodes et les lignes sans code sont conservées comme preuves, pas prétendues opérationnelles ; leur mapping complet reste ouvert dans roadmap.md.
+
 ### Correction DQE — 31/10/2026
 - Le métré avancé est interne à l'ajout/modification d'une ligne DQE ou à l'import unique ; aucun bouton de calcul autonome ni onglet calculateur dans l'estimateur.
 - `BoqManualLineTransformer` prépare la saisie ; `UnifiedBoqParser.fromManual` utilise `MeterService.enrich`, comme les sources PDF/Excel/CSV/JSON et les dimensions de plans revues.
