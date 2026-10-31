@@ -64,3 +64,4 @@
 - [x] Corriger le doublon montré : import unique de documents via UnifiedBoqParser, revue des plans dans le même import, retrait du calculateur isolé et source visible sur les lignes DQE ; 23 tests ciblés passants.
 - [ ] Corriger l'extraction incomplète DQE_NDB : le contrôle navigateur du parseur commun ne prépare que 3 lignes ; recette de l'écran connecté toujours bloquée par la session externe.
 - [x] Retirer le parcours métré concurrent : bouton autonome et onglet calculateur supprimés ; saisie assistée via le même enrichissement que l'import ; patterns référentiels et conservation des quantités saisies vérifiés par 31 tests. Recette connectée bloquée par Supabase externe.
+- [ ] Harmoniser les pages projets, phases, création/édition/import et calendrier/opérations : contexte compact, navigation unique, données centrales et réglages secondaires repliés ; conserver services, droits et calculs existants.
