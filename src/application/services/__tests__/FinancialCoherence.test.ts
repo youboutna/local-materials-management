@@ -43,3 +43,4 @@ describe('Canonical financial sources',()=>{
     const line={id:'q',source:'dqe',contextId:'p',documentType:'devis',businessStatus:'not_accepted',quantity:1,unitPrice:100,designation:'Work',unit:'u'} as BoqLineDTO;
     expect(ProjectFinancialsService.build({scope:'project',entityId:'p',currency:'MRU',declaredBudget:100,lines:[line],decomptes:[],payments:[]}).engaged).toBe(0);
   });
+});
