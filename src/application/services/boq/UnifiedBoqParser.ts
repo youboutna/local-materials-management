@@ -110,6 +110,14 @@ export class UnifiedBoqParser {
     })));
   }
 
+  /** Manual DQE entry uses the same enrichment as imported documents. */
+  static fromManual(lines: MeterInputDTO[]): MeterInputDTO[] {
+    return MeterService.enrich(lines.map((line, index) => ({
+      ...line,
+      provenance: { format: line.sourceType === 'avance' ? 'calculator' : 'manual', rowIndex: index + 1 },
+    })));
+  }
+
   async parseAndMeter(file: File, ctx: ToMeterInputsContext): Promise<MeterInputDTO[]> {
     const parsed = await this.parse(file);
     return this.toMeterInputs(parsed, parsed.autoMapping, ctx);

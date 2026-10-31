@@ -2,6 +2,12 @@
 
 ## Plan de Migration et d'Implémentation
 
+### Correction DQE — 31/10/2026
+- Le métré avancé est interne à l'ajout/modification d'une ligne DQE ou à l'import unique ; aucun bouton de calcul autonome ni onglet calculateur dans l'estimateur.
+- `BoqManualLineTransformer` prépare la saisie ; `UnifiedBoqParser.fromManual` utilise `MeterService.enrich`, comme les sources PDF/Excel/CSV/JSON et les dimensions de plans revues.
+- Routage des types reconnus par le référentiel ; types inconnus conservés en calcul simple. Les quantités explicitement saisies restent conservées ; les calculs dimensionnels conservent formule, ouvertures et provenance.
+- Validation : 31 tests ciblés passants ; contrôle connecté non disponible avec Supabase externe.
+
 ### Système de Gestion Intégrée des Projets d'Infrastructure
 
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)  

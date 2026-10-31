@@ -11,7 +11,7 @@ import type { MeterInputDTO, MeterResultDTO } from '@/dtos/boq/MeterInputDTO';
 import { MaterialsEstimator } from './MaterialsEstimator';
 import { DEFAULT_METERING_POLICY, type MeteringPolicy } from '@/config/referentials/boq/metering-policy.referential';
 import { activeDimensions, formulaLabel, unitForElementType } from '@/config/referentials/boq/formulas.referential';
-import type { ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
+import { detectElementType, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 
 
 export type MeterMode = 'basic' | 'advanced';
@@ -33,8 +33,7 @@ export interface MeterAnomaly {
 export class MeterService {
   /** Determine mode from element type — `basic_calculator` = saisie rapide. */
   static resolveMode(elementType?: string | null): MeterMode {
-    if (!elementType || elementType === 'basic_calculator') return 'basic';
-    return 'advanced';
+    return elementType && getElementType(elementType as ElementTypeCode) ? 'advanced' : 'basic';
   }
 
   /** Unité attendue (verrouillée) pour un type d'ouvrage — référentiel. */
@@ -126,11 +125,12 @@ export class MeterService {
 
   /** Single line computation — routes to Basic or Advanced engine. */
   static compute(input: MeterInputDTO): MeterComputationResult {
-    const mode = MeterService.resolveMode(input.elementType);
+    const elementType = input.elementType ?? detectElementType(input.designation);
+    const mode = MeterService.resolveMode(elementType);
     if (mode === 'advanced') {
       const advanced = computeAdvancedMeter({
         designation: input.designation,
-        elementType: input.elementType as ElementTypeCode | null | undefined,
+        elementType,
         length: input.length,
         width: input.width,
         height: input.height,
@@ -155,9 +155,10 @@ export class MeterService {
   /** Same engine for every source; explicit imported quantities remain authoritative. */
   static enrich(dtos: readonly MeterInputDTO[], policy: MeteringPolicy = DEFAULT_METERING_POLICY): MeterInputDTO[] {
     return dtos.map((input) => {
-      const advanced = computeAdvancedMeter(input);
+      const elementType = input.elementType ?? detectElementType(input.designation);
+      const advanced = computeAdvancedMeter({ ...input, elementType });
       const geometric = input.provenance?.format === 'calculator' || input.provenance?.format === 'plan' || input.quantity <= 0;
-      const quantity = geometric && MeterService.resolveMode(input.elementType) === 'advanced'
+      const quantity = geometric && MeterService.resolveMode(elementType) === 'advanced'
         ? advanced.netQuantity : BoqCalculatorService.computeQuantity(input);
       const result: MeterResultDTO = {
         grossQuantity: geometric ? advanced.grossQuantity : quantity,
