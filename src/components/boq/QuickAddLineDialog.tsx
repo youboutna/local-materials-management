@@ -131,7 +131,7 @@ export function QuickAddLineDialog({
     });
     setDetections(found);
     if (patch.unit && !touchedUnit.current) setUnit(patch.unit);
-    if (patch.quantity != null) setQuantity(patch.quantity);
+    // Quantity comes only from MeterService, including opening deductions.
     if (patch.unitPrice != null && !touchedPrice.current) setUnitPrice(patch.unitPrice);
     if (patch.resourceType) setResourceType(patch.resourceType);
     if (patch.accountCode && !touchedAccount.current) setAccountCode(patch.accountCode);
@@ -235,7 +235,7 @@ export function QuickAddLineDialog({
       openings: openings.length ? openings : undefined,
       deductOpenings,
       note: note.trim() || null,
-      sourceType: 'rapide',
+      sourceType: !touchedQty.current && metre.unit && metre.quantity > 0 ? 'avance' : 'rapide',
     });
     reset();
     if (!keepOpen) onOpenChange(false);

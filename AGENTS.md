@@ -26,5 +26,6 @@
 - Extend ProjectImportTemplateService for controlled mapped planning previews and pass prepared datasets to the existing importer; preserve and report unmapped source sections rather than inventing their interpretation.
 - Enrich every BOQ ingestion source through MeterService and injectable metering policies; keep explicit source quantities and audited price corrections instead of silently replacing documentary evidence.
 - UnifiedBoqParser owns document source routing, including technical PDF reader/OCR and reviewed dimensions; all inputs use MeterService and the same import dialog, with sources archived through DocumentService and no competing calculator or storage table.
+- Manual BOQ lines use UnifiedBoqParser.fromManual and the existing assisted-line form; calculator access is line-scoped, never a separate workspace, so source quantities and metering provenance share the import pipeline.
 - Route BOQ document hooks and quantity-calculator persistence through BoqDocumentService with an injectable repository port; lazy adapter resolution keeps provider dependencies out of presentation code.
 - Run browser application tests through Vitest and release-script tests through Node's test runner; separate discovery avoids bundling Node built-ins into jsdom.
