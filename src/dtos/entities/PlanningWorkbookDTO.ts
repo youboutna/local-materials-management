@@ -35,6 +35,7 @@ export interface PlanningWorkbookInputDTO {
   reference: string;
   startDate: string;
   currency: string;
+  budget: number;
   referentialCode: string;
   mapping: PlanningWorkbookMappingDTO;
 }

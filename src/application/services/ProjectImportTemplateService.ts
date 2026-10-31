@@ -110,6 +110,7 @@ export class ProjectImportTemplateService {
 
   previewWorkbook(input: PlanningWorkbookInputDTO): PlanningWorkbookPreviewDTO {
     if (!input.title.trim() || !input.reference.trim() || !isValid(parseISO(input.startDate))) throw new Error('Title, reference and valid start date are required');
+    if (!Number.isFinite(input.budget) || input.budget < 0) throw new Error('A reviewed non-negative project budget is required');
     const { source, mapping } = input;
     if (!Number.isFinite(mapping.amountMultiplier) || mapping.amountMultiplier <= 0) throw new Error('Invalid monetary scale');
     for (const [key, value] of Object.entries(mapping)) if (key.endsWith('Column') && (!Number.isInteger(value) || Number(value) < 0)) throw new Error('Invalid column');
@@ -154,7 +155,7 @@ export class ProjectImportTemplateService {
     // Existing phase custom data preserves evidence without dumping JSON into
     // the user-facing project description. The original binary also goes to GED.
     phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
-    const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
+    const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
     return { project, source, rows, warnings };
   }
   /** Controlled table import, not an inference engine for arbitrary prose. */

@@ -1,4 +1,5 @@
 {
+  "planning.budget": "Confirmed project budget (without summing subtotals)",
   "planning.workbook": "Annual work plan and budget",
   "planning.sheets": "sheets",
   "planning.amountMultiplier": "Amount scale (1: units, 1000: thousands)",

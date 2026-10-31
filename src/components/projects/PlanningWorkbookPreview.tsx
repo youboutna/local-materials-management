@@ -21,6 +21,7 @@ export function PlanningWorkbookPreview({ source, referentialCode, onPrepared, o
   const [reference, setReference] = useState('');
   const [date, setDate] = useState('');
   const [currency, setCurrency] = useState('MRU');
+  const [budget, setBudget] = useState('');
   const [mapping, setMapping] = useState({ ...DEFAULT_WORKBOOK_MAPPING });
   const [narrative, setNarrative] = useState('');
   const [preview, setPreview] = useState<PlanningWorkbookPreviewDTO>();
@@ -39,6 +40,7 @@ export function PlanningWorkbookPreview({ source, referentialCode, onPrepared, o
       {([{ key: 'title', value: title, set: setTitle }, { key: 'reference', value: reference, set: setReference }, { key: 'currency', value: currency, set: setCurrency }] as const).map(field => <div key={field.key}><Label htmlFor={`ptba-${field.key}`}>{t(`planning.${field.key}`)}</Label><Input id={`ptba-${field.key}`} placeholder={t(`planning.${field.key}`)} value={field.value} onChange={event => { field.set(event.target.value); reset(); }} /></div>)}
       <div><Label htmlFor="ptba-date">{t('planning.anchor')}</Label><Input id="ptba-date" type="date" value={date} onChange={event => { setDate(event.target.value); reset(); }} /></div>
       <div><Label htmlFor="ptba-scale">{t('planning.amountMultiplier')}</Label><Input id="ptba-scale" type="number" min="0" value={mapping.amountMultiplier} onChange={event => { setMapping({ ...mapping, amountMultiplier: Number(event.target.value) }); reset(); }} /></div>
+      <div><Label htmlFor="ptba-budget">{t('planning.budget')} ({currency})</Label><Input id="ptba-budget" type="number" min="0" placeholder={t('planning.budget')} value={budget} onChange={event => { setBudget(event.target.value); reset(); }} /></div>
       <div><Label htmlFor="ptba-narrative" className="flex items-center gap-2"><Paperclip className="h-4 w-4" />{t('planning.narrative')}</Label><Input id="ptba-narrative" type="file" accept=".docx" disabled={reading} onChange={async event => {
         const file = event.target.files?.[0]; if (!file) return;
         setReading(true); setError(''); reset();
@@ -46,9 +48,9 @@ export function PlanningWorkbookPreview({ source, referentialCode, onPrepared, o
       }} /></div>
     </div>
     <details><summary className="cursor-pointer">{t('planning.mapping')}</summary><div className="grid gap-3 pt-3 sm:grid-cols-3">{(Object.keys(DEFAULT_WORKBOOK_MAPPING) as Array<keyof typeof DEFAULT_WORKBOOK_MAPPING>).filter(key => key !== 'amountMultiplier').map(key => <div key={key}><Label htmlFor={`ptba-${key}`}>{t(`planning.${key}`)}</Label><Input id={`ptba-${key}`} type={typeof mapping[key] === 'number' ? 'number' : 'text'} min="0" value={mapping[key]} onChange={event => { setMapping({ ...mapping, [key]: typeof mapping[key] === 'number' ? Number(event.target.value) : event.target.value }); reset(); }} /></div>)}</div></details>
-    <Button variant="outline" disabled={reading} onClick={() => {
+    <Button variant="outline" disabled={reading || !budget.trim()} onClick={() => {
       setError(''); setReviewed(false);
-      try { setPreview(projectImportTemplateService.previewWorkbook({ source: { ...source, narrative }, title, reference, startDate: date, currency, referentialCode, mapping })); } catch (cause) { setError(cause instanceof Error ? cause.message : t('common.error')); }
+      try { setPreview(projectImportTemplateService.previewWorkbook({ source: { ...source, narrative }, title, reference, startDate: date, currency, budget: Number(budget), referentialCode, mapping })); } catch (cause) { setError(cause instanceof Error ? cause.message : t('common.error')); }
     }}><Eye className="mr-2 h-4 w-4" />{t('planning.preview')}</Button>
     {error && <p role="alert" className="text-destructive">{error}</p>}
     {preview && <>

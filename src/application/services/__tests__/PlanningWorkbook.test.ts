@@ -22,7 +22,7 @@ function input(): PlanningWorkbookInputDTO {
   XLSX.utils.book_append_sheet(workbook, sheet, 'C3');
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([[null, 'Activités'], ['4-1-1-1-', 'Identification', 'UCP/INAP', 'Consultants', 'étude', 1, 1200, 1200]]), 'C4');
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([['COMPOSANTES', 'Total'], ['C3', 2697.21]]), ' RECAPCOMPOSANTE');
-  return { source: { ...PlanningWorkbookReader.fromBuffer(XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }), 'example.xlsx'), narrative: 'Coût estimatif : 10 800 000 MRU' }, title: 'Programme', reference: 'PTBA-EXAMPLE', startDate: '2024-01-01', currency: 'MRU', referentialCode: 'CUSTOM_STANDARD', mapping: { ...DEFAULT_WORKBOOK_MAPPING, amountMultiplier: 1000 } };
+  return { source: { ...PlanningWorkbookReader.fromBuffer(XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }), 'example.xlsx'), narrative: 'Coût estimatif : 10 800 000 MRU' }, title: 'Programme', reference: 'PTBA-EXAMPLE', startDate: '2024-01-01', currency: 'MRU', budget: 2697210, referentialCode: 'CUSTOM_STANDARD', mapping: { ...DEFAULT_WORKBOOK_MAPPING, amountMultiplier: 1000 } };
 }
 describe('Controlled PTBA import, evidence preserved', () => {
   it('retains every sheet, raw formula, merged range and full narrative', () => {
@@ -58,7 +58,7 @@ describe('Controlled PTBA import, evidence preserved', () => {
     expect(preview.source.sheets[0].rows[6][5].value).toBe('FF');
     expect(preview.project.phases?.[0].tasks?.[0]).toMatchObject({ assigneeName: 'UCP', metadata: { planningSource: { associates: 'DDFA/OP/OIS', path: ['3', '1', '1', '3', '2'] } } });
     expect(preview.project.phases?.every(phase => phase.startDate === undefined && phase.endDate === undefined)).toBe(true);
-    expect(preview.project.budget).toBeUndefined();
+    expect(preview.project.budget).toBe(2697210);
   });
   it('rejects an invalid monetary scale', () => {
     const source = input(); source.mapping.amountMultiplier = 0;
