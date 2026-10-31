@@ -95,7 +95,8 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
         </div>
       )}
 
-      <div className="grid gap-3 md:grid-cols-4">
+      <details className="border-t pt-2"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">{t("workspace.fiscal_settings")}</summary>
+      <div className="grid gap-3 pt-3 md:grid-cols-4">
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground"><T k="auto.fiscalcompliancepanel.nif_fournisseur" fallback="NIF fournisseur" /></Label>
           <Input
@@ -163,7 +164,7 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
         </div>
       </div>
 
-      {issues.length === 0 ? (
+      {lines.length === 0 ? null : issues.length === 0 ? (
         <Alert className="border-primary/40">
           <BadgeCheck className="h-4 w-4" />
           <AlertTitle className="text-sm">Charge déductible — conforme {FISCAL_REFERENCE.labels[lang]}</AlertTitle>
@@ -185,6 +186,7 @@ export const FiscalCompliancePanel: React.FC<Props> = ({
           </AlertDescription>
         </Alert>
       )}
+      </details>
     </div>
   );
 };

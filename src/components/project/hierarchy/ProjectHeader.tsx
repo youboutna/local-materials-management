@@ -134,29 +134,12 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* Breadcrumb hiérarchique */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/projects")}
-          className="h-auto p-0 text-xs hover:bg-transparent hover:text-foreground"
-        >
-          <Building className="h-3.5 w-3.5 mr-1" />
-          <span><T k="auto.projectheader.projets" fallback="Projets" /></span>
-        </Button>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-foreground truncate max-w-[280px]">
-          {project.title}
-        </span>
-      </div>
-
       {/* Header principal — une seule bande compacte */}
-      <div className="rounded-lg border bg-card">
+      <div className="border-b bg-background">
         <div className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="truncate text-lg font-semibold tracking-tight lg:text-xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="break-words text-lg font-semibold">
                 {project.title}
               </h1>
               <Badge
