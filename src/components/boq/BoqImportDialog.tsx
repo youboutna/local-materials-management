@@ -43,6 +43,7 @@ import { DocumentEnvelopePanel } from './DocumentEnvelopePanel';
 import { CoherencePanel, FiscalRecapPanel, MetreRecapPanel } from './ImportRecapPanels';
 import { ReconciliationPanel } from './ReconciliationPanel';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { TechnicalPlanReview } from './TechnicalPlanReview';
 
 interface Props {
   source: BoqSource;
@@ -111,7 +112,7 @@ export function BoqImportDialog(props: Props) {
   const [budgetDecision, setBudgetDecision] = useState<EdbBudgetDecision>('KEEP_DISCREPANCY');
   const resolvedProjectId = projectId ?? (source === 'quantity_takeoff' || source === 'dqe' ? contextId : undefined);
   const refOptions = useMemo(() => getReferentialOptions(), []);
-  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, commit, setDtos, numberFormat, applyNumberFormat, reset } =
+  const { parseResult, mapping, applyMapping, dtos, isBusy, error, parseFile, reviewPlan, commit, setDtos, numberFormat, applyNumberFormat, reset } =
     useBoqImport({ source, contextId, phaseId, referentialCode, fiscalProfileCode });
   const { toast } = useToast();
   const setOpen = (v: boolean) => {
@@ -558,7 +559,7 @@ export function BoqImportDialog(props: Props) {
               />
             </section>
 
-            <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />
+            {parseResult.technicalPlan ? <TechnicalPlanReview key={parseResult.technicalPlan.sha256} plan={parseResult.technicalPlan} disabled={isBusy} onReviewed={async elements => { await reviewPlan(elements); setStep(3); }} /> : <ImportMappingWizard parseResult={parseResult} mapping={mapping} onChange={applyMapping} />}
               </CollapsibleContent>
             </Collapsible>
           </>
