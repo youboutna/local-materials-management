@@ -19,7 +19,7 @@
   "planning.unmapped": "Uninterpreted lines to complete",
   "planning.prepare": "Prepare for existing import",
   "workbench.planned": "Planned",
-  "workbench.actual": "Validated consumption",
+  "workbench.actual": "Completed",
   "workbench.title": "Project calendar and tracking",
   "workbench.notes": "Notes",
   "workbench.retry": "Retry",
@@ -56,7 +56,6 @@
   "workbench.end": "Planned end",
   "workbench.due": "Due",
   "workbench.scheduled": "Scheduled",
-  "workbench.actual": "Completed",
   "workbench.recorded": "Recorded",
   "workbench.label": "Description",
   "workbench.date": "Date",
@@ -85,7 +84,6 @@
   "workbench.building": "Building",
   "workbench.telecom": "Telecommunications",
   "workbench.other": "Other",
-  "workbench.planned": "Planned",
   "workbench.in_progress": "In progress",
   "workbench.existing": "Existing",
   "workbench.completed": "Completed",
@@ -6650,5 +6648,10 @@
   "workbench.recon_unpaid": "Unpaid",
   "workbench.recon_not_validated": "Not validated",
   "workbench.recon_remaining": "Outstanding amount",
-  "workbench.recon_unallocated": "Unallocated payments"
+  "workbench.recon_unallocated": "Unallocated payments",
+  "workbench.revenue_reconciliation": "Customer invoices / receipts reconciliation",
+  "workbench.revenue_no_invoice": "No customer invoice for this project.",
+  "workbench.revenue_invoiced": "Invoiced",
+  "workbench.revenue_received": "Received",
+  "workbench.revenue_unallocated": "Unallocated receipts"
 }

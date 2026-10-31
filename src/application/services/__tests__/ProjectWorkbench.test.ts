@@ -1,3 +1,4 @@
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('../ProjectService', () => ({ getProjectService: () => ({ getProjectWithDetails: vi.fn() }) }));
 vi.mock('@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter', () => ({ SupabaseProjectWorkbenchAdapter: class {} }));
@@ -16,4 +17,12 @@ describe('Project calendar dates and scope', () => {
   });
   it('rejects negative daily consumption without persistence', async () => { const repository = { saveOperation:vi.fn() } as unknown as IProjectWorkbenchRepository; await expect(new ProjectWorkbenchService(repository).saveOperation({projectId:'p',kind:'consumption',occurredOn:'2026-10-18',label:'Fuel',quantity:-1,amount:10,unit:'L',currency:'MRU'})).rejects.toThrow(); expect(repository.saveOperation).not.toHaveBeenCalled(); });
   it('does not mark an asset completed without inspection evidence', () => { const repository = { saveRealization:vi.fn() } as unknown as IProjectWorkbenchRepository; expect(() => new ProjectWorkbenchService(repository).saveRealization({projectId:'p',assetId:'a',realization:'completed',completedOn:'2026-10-18'})).toThrow('inspection'); expect(repository.saveRealization).not.toHaveBeenCalled(); });
+});describe('Revenue reconciliation',()=>{
+  it('matches validated receipts to customer invoices and isolates unallocated ones',()=>{
+    const inv=[{id:'i1',source:'invoice',contextId:'p',designation:'F1',unit:'u',quantity:1,totalHt:100}] as BoqLineDTO[];
+    const ops=[{id:'r1',kind:'revenue',status:'validated',amount:60,sourceLineId:'i1'},{id:'r2',kind:'revenue',status:'draft',amount:40,sourceLineId:'i1'},{id:'r3',kind:'revenue',status:'validated',amount:25}] as never;
+    const r=ProjectWorkbenchService.reconcileRevenue(inv,ops);
+    expect(r.lines[0]).toMatchObject({receivedAmount:60,remainingAmount:40,state:'partial'});
+    expect(r.unallocatedAmount).toBe(25);
+  });
 });

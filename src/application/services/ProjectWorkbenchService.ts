@@ -63,7 +63,22 @@ export class ProjectWorkbenchService {
     const metrics = ProjectMetricsOrchestrator.compute({project,phases:project.phases,financials});
     const resources=getProjectResourceAggregatorService().aggregate({projectId,phases:project.phases.map(phase=>({...phase})),boqLines:lines.filter(line=>line.source==='dqe').map(line=>({...line})),consumptions:operations.filter(entry=>entry.kind==='consumption').map(entry=>({...entry}))});
     const reconciliation = DecompteService.reconcile(scope.decomptes, scope.payments);
-    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,reconciliation,allocatedResources:project.resources ?? []};
+    const revenueReconciliation = ProjectWorkbenchService.reconcileRevenue(lines.filter(line => line.source === 'invoice'), operations);
+    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,reconciliation,revenueReconciliation,allocatedResources:project.resources ?? []};
+  }
+  /** Customer invoices vs validated revenue receipts linked by sourceLineId; supplier payments never count as revenue. */
+  static reconcileRevenue(invoices: import('@/dtos/boq/BoqLineDTO').BoqLineDTO[], operations: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[]) {
+    const receipts = [...new Map(operations.filter(op => op.kind === 'revenue' && op.status === 'validated').map(op => [op.id, op])).values()];
+    const lines = invoices.filter(line => line.id).map(invoice => {
+      const invoicedAmount = Number(invoice.totalHt ?? invoice.quantity * (invoice.unitPrice ?? 0)) || 0;
+      const receivedAmount = receipts.filter(op => op.sourceLineId === invoice.id).reduce((sum, op) => sum + op.amount, 0);
+      const remainingAmount = Math.max(0, invoicedAmount - receivedAmount);
+      const state = receivedAmount <= 0 ? 'unpaid' : remainingAmount > 0 ? 'partial' : 'settled';
+      return { invoiceId: invoice.id as string, designation: invoice.designation, invoicedAmount, receivedAmount, remainingAmount, state: state as 'settled' | 'partial' | 'unpaid' };
+    });
+    const ids = new Set(lines.map(line => line.invoiceId));
+    const unallocated = receipts.filter(op => !op.sourceLineId || !ids.has(op.sourceLineId));
+    return { lines, unallocatedReceipts: unallocated, unallocatedAmount: unallocated.reduce((sum, op) => sum + op.amount, 0) };
   }
   operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }
   static operationTotals(entries: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[], currency: string) {
