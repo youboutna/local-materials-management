@@ -58,6 +58,56 @@ export interface ReferentialOption {
 // =============================================================================
 
 export class ProjectImportTemplateService {
+  async readWorkbook(file: File) {
+    const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
+    return PlanningWorkbookReader.read(file);
+  }
+
+  async readNarrative(file: File): Promise<string> {
+    const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
+    return PlanningWorkbookReader.narrative(file);
+  }
+
+  isPlanningWorkbook(source: PlanningWorkbookInputDTO['source']): boolean {
+    return source.sheets.some(sheet => sheet.rows.slice(0, 5).some(row => row.some(cell => /^(libellé|activités)$/i.test(String(cell.value ?? '').trim()))));
+  }
+
+  async readProjectDataset(file: File): Promise<unknown> {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const { readFileAsText, readFileAsArrayBuffer } = await import('@/infrastructure/parsers/IProjectFileParser');
+    if (extension === 'json') return JSON.parse(await readFileAsText(file));
+    if (extension === 'csv') {
+      const Papa = await import('papaparse');
+      const result = Papa.default.parse<Record<string, unknown>>(await readFileAsText(file), { header: true, skipEmptyLines: true });
+      if (result.errors.length) throw new Error(result.errors.map(error => error.message).join('; '));
+      return result.data;
+    }
+    if (extension === 'xlsx' || extension === 'xls') {
+      const source = await this.readWorkbook(file);
+      if (this.isPlanningWorkbook(source)) throw new Error('Planning workbook requires mapping review');
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.read(await readFileAsArrayBuffer(file), { type: 'array' });
+      // Every worksheet is retained; metadata/foreign sheets are not mislabelled as projects.
+      const projects = workbook.SheetNames.flatMap(name => XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[name]));
+      return { projects: projects.map(project => ({ ...project, description: project.description ?? JSON.stringify({ planningSource: source }) })) };
+    }
+    throw new Error('Unsupported project document');
+  }
+
+  async archiveSources(projectId: string, files: File[]): Promise<void> {
+    const { getDocumentService } = await import('./DocumentService');
+    const documents = getDocumentService();
+    const existing = await documents.getProjectDocuments(projectId);
+    for (const file of files) {
+      const { readFileAsArrayBuffer } = await import('@/infrastructure/parsers/IProjectFileParser');
+      const digest = await crypto.subtle.digest('SHA-256', await readFileAsArrayBuffer(file));
+      const hash = Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, '0')).join('');
+      if (existing.some(document => document.metadata?.sourceHash === hash)) continue;
+      const saved = await documents.createDocument({ title: file.name, file, projectId, documentType: 'supporting_document', isInternalOnly: true, metadata: { sourceHash: hash, source: 'project_import' } });
+      existing.push(saved);
+    }
+  }
+
   previewWorkbook(input: PlanningWorkbookInputDTO): PlanningWorkbookPreviewDTO {
     if (!input.title.trim() || !input.reference.trim() || !isValid(parseISO(input.startDate))) throw new Error('Title, reference and valid start date are required');
     const { source, mapping } = input;
@@ -154,7 +204,7 @@ export class ProjectImportTemplateService {
       for(const item of phase.milestones ?? []) if(!item.targetDate) item.targetDate=phase.endDate;
     }
     if(!project.phases?.length) throw new Error('No schedule row matched the selected mapping');
-    project.endDate=delivery;
+    project.endDate=project.phases.map(phase=>phase.endDate).filter((date):date is string=>Boolean(date)).sort().at(-1);
     for(const phase of project.phases) for(const item of phase.milestones ?? []) {
       if(item.targetDate && phase.endDate && item.targetDate>phase.endDate) warnings.push(`${phase.name}: ${item.title} (${item.targetDate}) > ${phase.endDate}`);
     }

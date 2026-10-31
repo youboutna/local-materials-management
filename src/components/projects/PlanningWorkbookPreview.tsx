@@ -10,10 +10,11 @@ import { DEFAULT_WORKBOOK_MAPPING } from '@/config/referentials/projects/plannin
 import type { PlanningWorkbookDTO, PlanningWorkbookPreviewDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 import { Eye, Check, Paperclip } from 'lucide-react';
 
-export function PlanningWorkbookPreview({ source, referentialCode, onPrepared }: {
+export function PlanningWorkbookPreview({ source, referentialCode, onPrepared, onSource }: {
   source: PlanningWorkbookDTO;
   referentialCode: string;
   onPrepared: (file: File) => void;
+  onSource: (file: File) => void;
 }) {
   const { t } = useLanguage();
   const [title, setTitle] = useState('');
@@ -41,7 +42,7 @@ export function PlanningWorkbookPreview({ source, referentialCode, onPrepared }:
       <div><Label htmlFor="ptba-narrative" className="flex items-center gap-2"><Paperclip className="h-4 w-4" />{t('planning.narrative')}</Label><Input id="ptba-narrative" type="file" accept=".docx" disabled={reading} onChange={async event => {
         const file = event.target.files?.[0]; if (!file) return;
         setReading(true); setError(''); reset();
-        try { setNarrative(await projectImportTemplateService.readNarrative(file)); } catch (cause) { setError(cause instanceof Error ? cause.message : t('common.error')); } finally { setReading(false); }
+        try { setNarrative(await projectImportTemplateService.readNarrative(file)); onSource(file); } catch (cause) { setNarrative(''); setError(cause instanceof Error ? cause.message : t('common.error')); } finally { setReading(false); }
       }} /></div>
     </div>
     <details><summary className="cursor-pointer">{t('planning.mapping')}</summary><div className="grid gap-3 pt-3 sm:grid-cols-3">{(Object.keys(DEFAULT_WORKBOOK_MAPPING) as Array<keyof typeof DEFAULT_WORKBOOK_MAPPING>).filter(key => key !== 'amountMultiplier').map(key => <div key={key}><Label htmlFor={`ptba-${key}`}>{t(`planning.${key}`)}</Label><Input id={`ptba-${key}`} type={typeof mapping[key] === 'number' ? 'number' : 'text'} min="0" value={mapping[key]} onChange={event => { setMapping({ ...mapping, [key]: typeof mapping[key] === 'number' ? Number(event.target.value) : event.target.value }); reset(); }} /></div>)}</div></details>

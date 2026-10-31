@@ -1799,15 +1799,19 @@ export class ProjectImportExportService {
     const existingTasks = validPhaseId
       ? await this.taskAssignmentService.getByPhase(validPhaseId)
       : await this.taskAssignmentService.getByProject(projectId);
-    const existingTask = existingTasks.find((candidate) => candidate.title === name);
+    const existingTask = existingTasks.find((candidate) => task.id
+      ? candidate.id === task.id || candidate.metadata?.importId === task.id || candidate.metadata?.externalRef === task.id
+      : candidate.title === name);
 
     const resolved = this.resolveTaskAssignees(task.assignedTo, suppliers, employees);
 
     let assigneeName = task.assigneeName || task.assignedName || resolved.names[0];
     let assigneeEmail = task.assigneeEmail || task.AssignedEmail || resolved.emails[0];
 
-    if (!assigneeName && this.currentUserName) assigneeName = this.currentUserName;
-    if (!assigneeEmail && this.currentUserEmail) assigneeEmail = this.currentUserEmail;
+    if (!task.metadata?.planningSource) {
+      if (!assigneeName && this.currentUserName) assigneeName = this.currentUserName;
+      if (!assigneeEmail && this.currentUserEmail) assigneeEmail = this.currentUserEmail;
+    }
 
     const assignees = resolved.ids;
     const assigneeType = resolved.source;
