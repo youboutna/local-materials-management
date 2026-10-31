@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
 import { TechnicalPlanService } from '@/application/services/boq/TechnicalPlanService';
-import { PdfTechnicalPlanReader } from '@/infrastructure/adapters/PdfTechnicalPlanReader';
 import type { TechnicalPlanDTO, TechnicalPlanElementDTO } from '@/dtos/boq/TechnicalPlanDTO';
 import type { ToMeterInputsContext } from '@/application/services/boq/UnifiedBoqParser';
 
 export function useTechnicalPlan() {
-  const service = useMemo(() => new TechnicalPlanService(new PdfTechnicalPlanReader()), []);
+  const service = useMemo(() => new TechnicalPlanService(), []);
   const [plan, setPlan] = useState<TechnicalPlanDTO | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isPending, setPending] = useState(false);

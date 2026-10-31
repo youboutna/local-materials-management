@@ -27,3 +27,4 @@
 - Enrich every BOQ ingestion source through MeterService and injectable metering policies; keep explicit source quantities and audited price corrections instead of silently replacing documentary evidence.
 - Read technical PDF plans through a reader port, require reviewed complete dimensions before the MeterService bridge, and archive sources through DocumentService; plans must not introduce a competing calculator or storage table.
 - Route BOQ document hooks and quantity-calculator persistence through BoqDocumentService with an injectable repository port; lazy adapter resolution keeps provider dependencies out of presentation code.
+- Run browser application tests through Vitest and release-script tests through Node's test runner; separate discovery avoids bundling Node built-ins into jsdom.

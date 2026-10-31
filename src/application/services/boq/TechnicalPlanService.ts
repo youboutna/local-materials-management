@@ -11,7 +11,7 @@ import { getAuthService } from '../AuthService';
 /** Review-first bridge. A section or OCR label alone never authorizes a quantity. */
 export class TechnicalPlanService {
   private readonly cache = new Map<string, TechnicalPlanDTO>();
-  constructor(private readonly reader: ITechnicalPlanReader) {}
+  constructor(private readonly reader?: ITechnicalPlanReader) {}
 
   async parse(file: File): Promise<TechnicalPlanDTO> {
     if (!file.name.toLowerCase().endsWith('.pdf')) throw new Error('Only PDF plans are supported');
@@ -19,7 +19,8 @@ export class TechnicalPlanService {
     const sha256 = Array.from(new Uint8Array(hash), (value) => value.toString(16).padStart(2, '0')).join('');
     const cached = this.cache.get(sha256);
     if (cached) return structuredClone({ ...cached, fileName: file.name });
-    const result = TechnicalPlanService.extract(await this.reader.read(file), file.name, sha256);
+    const reader = this.reader ?? new (await import('@/infrastructure/adapters/PdfTechnicalPlanReader')).PdfTechnicalPlanReader();
+    const result = TechnicalPlanService.extract(await reader.read(file), file.name, sha256);
     this.cache.set(sha256, structuredClone(result));
     return result;
   }
