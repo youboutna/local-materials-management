@@ -6,8 +6,10 @@
  * Pure TS (hexagonal) — pas de React, pas de Supabase.
  */
 import { BoqCalculatorService, type BoqLineTotals } from './BoqCalculatorService';
-import { computeAdvancedMeter, applyAdvancedMeter, type AdvancedMeterResult } from './AdvancedMeterEngine';
-import type { MeterInputDTO } from '@/dtos/boq/MeterInputDTO';
+import { computeAdvancedMeter, type AdvancedMeterResult } from './AdvancedMeterEngine';
+import type { MeterInputDTO, MeterResultDTO } from '@/dtos/boq/MeterInputDTO';
+import { MaterialsEstimator } from './MaterialsEstimator';
+import { DEFAULT_METERING_POLICY, type MeteringPolicy } from '@/config/referentials/boq/metering-policy.referential';
 import { activeDimensions, formulaLabel, unitForElementType } from '@/config/referentials/boq/formulas.referential';
 import type { ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
 
@@ -92,7 +94,7 @@ export class MeterService {
       width?: number | null;
       height?: number | null;
     },
-    tolerance = 0.005,
+    tolerance = DEFAULT_METERING_POLICY.relativeQuantityTolerance,
   ): MeterAnomaly[] {
     const out: MeterAnomaly[] = [];
     const qty = Number(line.quantity ?? 0);
@@ -100,7 +102,7 @@ export class MeterService {
     const declared = Number(line.totalHt ?? 0);
     if (qty > 0 && pu > 0 && declared > 0) {
       const expected = qty * pu + Number(line.fees ?? 0);
-      if (Math.abs(expected - declared) > Math.max(1, declared * tolerance)) {
+      if (Math.abs(expected - declared) > DEFAULT_METERING_POLICY.absolutePriceTolerance) {
         out.push({
           code: 'line_total_mismatch',
           message: `⚠ Montant incohérent : Qté × PU = ${expected.toLocaleString('fr-FR')} vs Total HT déclaré ${declared.toLocaleString('fr-FR')}`,
@@ -147,12 +149,26 @@ export class MeterService {
 
   /** Batch normalization of parsed DTOs — used by UnifiedBoqParser. */
   static normalize(dtos: MeterInputDTO[]): MeterInputDTO[] {
-    return dtos.map((d) => {
-      const mode = MeterService.resolveMode(d.elementType);
-      if (mode === 'advanced') {
-        return { ...d, quantity: applyAdvancedMeter(d) };
-      }
-      return { ...d, quantity: BoqCalculatorService.computeQuantity(d) };
+    return MeterService.enrich(dtos);
+  }
+
+  /** Same engine for every source; explicit imported quantities remain authoritative. */
+  static enrich(dtos: readonly MeterInputDTO[], policy: MeteringPolicy = DEFAULT_METERING_POLICY): MeterInputDTO[] {
+    return dtos.map((input) => {
+      const advanced = computeAdvancedMeter(input);
+      const geometric = input.provenance?.format === 'calculator' || input.provenance?.format === 'plan' || input.quantity <= 0;
+      const quantity = geometric && MeterService.resolveMode(input.elementType) === 'advanced'
+        ? advanced.netQuantity : BoqCalculatorService.computeQuantity(input);
+      const result: MeterResultDTO = {
+        grossQuantity: geometric ? advanced.grossQuantity : quantity,
+        openingsArea: geometric ? advanced.openingsArea : 0,
+        netQuantity: quantity, deducted: geometric && advanced.deducted,
+        formula: geometric ? advanced.formula : String(quantity),
+        materials: MaterialsEstimator.estimate(advanced.elementType, quantity, policy),
+        policyCode: policy.code, policyVersion: policy.version,
+      };
+      return { ...input, quantity, metadata: { ...input.metadata, metering: result,
+        ...(input.provenance ? { provenance: input.provenance } : {}) } };
     });
   }
 }

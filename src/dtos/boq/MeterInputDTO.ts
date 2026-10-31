@@ -8,13 +8,34 @@
  */
 import type { BoqLineDTO } from './BoqLineDTO';
 
-export type MeterInputSourceFormat = 'pdf' | 'xlsx' | 'xls' | 'csv' | 'json' | 'calculator';
+export type MeterInputSourceFormat = 'pdf' | 'xlsx' | 'xls' | 'csv' | 'json' | 'calculator' | 'plan';
 
 export interface MeterInputProvenance {
   format: MeterInputSourceFormat;
   fileName?: string;
   rowIndex?: number;
   page?: number;
+  fileSha256?: string;
+  documentId?: string;
+  rawLabel?: string;
+}
+
+export interface MaterialEstimateDTO {
+  code: string;
+  labels: { fr: string; en: string; ar: string };
+  quantity: number;
+  unit: string;
+}
+
+export interface MeterResultDTO {
+  grossQuantity: number;
+  openingsArea: number;
+  netQuantity: number;
+  deducted: boolean;
+  formula: string;
+  materials: MaterialEstimateDTO[];
+  policyCode: string;
+  policyVersion: string;
 }
 
 /** Ouverture (porte / fenêtre) exprimée en mètres. */
