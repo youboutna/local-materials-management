@@ -47,10 +47,10 @@ export class TechnicalPlanService {
         if (!prefix) continue;
         const unit = match[5] as keyof typeof TECHNICAL_PLAN_POLICY.units | undefined;
         const factor = unit ? TECHNICAL_PLAN_POLICY.units[unit] : undefined;
-        if (!factor) result.warnings.push({ code: 'ambiguous_unit', page: page.page });
         const ref = `${prefix}${match[2]}`;
         // Repeated labels on a drawing do not prove an element count.
         if (result.elements.some((element) => element.page === page.page && element.ref === ref && element.rawLabel === match[0])) continue;
+        if (!factor && !result.warnings.some((warning) => warning.code === 'ambiguous_unit' && warning.page === page.page)) result.warnings.push({ code: 'ambiguous_unit', page: page.page });
         result.elements.push({ ref, page: page.page, rawLabel: match[0],
           elementType: TECHNICAL_PLAN_POLICY.elementPrefixes[prefix],
           width: factor ? Number(match[3].replace(',', '.')) * factor : undefined,
