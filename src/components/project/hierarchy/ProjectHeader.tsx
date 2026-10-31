@@ -119,17 +119,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     return `${diff}j restants`;
   };
 
-  const getDelayColor = (): "success" | "warning" | "destructive" | "info" => {
-    if (!project.endDate) return "muted" as any;
-    if (project.progress >= 95) return "success";
-    const end = new Date(project.endDate);
-    const now = new Date();
-    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff < 0) return "destructive";
-    if (diff <= 7) return "warning";
-    return "success";
-  };
-
   const statusConfig = getStatusConfig(project.status);
 
   return (

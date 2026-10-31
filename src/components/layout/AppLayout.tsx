@@ -173,7 +173,7 @@ export function AppLayout({
             <BrandBandsBackground />
 
             <div className="container-responsive py-3">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-4 min-w-0">
                   {shouldShowSidebar && !isMobile && (
                     <Button
@@ -215,7 +215,7 @@ export function AppLayout({
                 </div>
 
                 {actions && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex max-w-full flex-wrap items-center gap-2">
                     {actions}
                   </div>
                 )}
