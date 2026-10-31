@@ -124,6 +124,7 @@ export interface ProjectImportRow {
   clientName?: string;
   donorOrganization?: string;
   areaSqm?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportPhase {
@@ -160,6 +161,7 @@ export interface ProjectImportPhase {
   milestones?: ProjectImportMilestone[];
   tasks?: ProjectImportTask[];
   dqeLines?: BoqLineDTO[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportMilestone {
@@ -222,6 +224,7 @@ export interface ProjectImportTask {
   requiresEngineerApproval?: boolean;
   actionType?: string;
   action_type?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportStakeholder {
@@ -1521,8 +1524,8 @@ export class ProjectImportExportService {
           endDate: phase.endDate,
           estimatedDuration,
           customPhaseData: phase.dqeMapping
-            ? { dqeMapping: phase.dqeMapping, phaseCode: phaseCode }
-            : { phaseCode: phaseCode },
+            ? { ...phase.metadata, dqeMapping: phase.dqeMapping, phaseCode: phaseCode }
+            : { ...phase.metadata, phaseCode: phaseCode },
           estimatedCost: phase.estimatedCost,
           actualCost: phase.actualCost,
           budget: phase.budget,
@@ -1857,6 +1860,7 @@ export class ProjectImportExportService {
           : undefined),
       actualHours: task.actualHours,
       metadata: {
+        ...task.metadata,
         assignedBy: this.currentUserId,
         assignedTo: assignees,
         assigneeType,

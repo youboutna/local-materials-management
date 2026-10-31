@@ -18,6 +18,7 @@ import {
 } from '@/config/referentials';
 import type { PlanningPreviewDTO, PlanningPreviewInputDTO } from '@/dtos/entities/PlanningPreviewDTO';
 import { addDays,format,isValid,parseISO } from 'date-fns';
+import type { PlanningWorkbookInputDTO, PlanningWorkbookPreviewDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 
 // =============================================================================
 // TYPES
@@ -57,6 +58,54 @@ export interface ReferentialOption {
 // =============================================================================
 
 export class ProjectImportTemplateService {
+  previewWorkbook(input: PlanningWorkbookInputDTO): PlanningWorkbookPreviewDTO {
+    if (!input.title.trim() || !input.reference.trim() || !isValid(parseISO(input.startDate))) throw new Error('Title, reference and valid start date are required');
+    const { source, mapping } = input;
+    if (!Number.isFinite(mapping.amountMultiplier) || mapping.amountMultiplier <= 0) throw new Error('Invalid monetary scale');
+    for (const [key, value] of Object.entries(mapping)) if (key.endsWith('Column') && (!Number.isInteger(value) || Number(value) < 0)) throw new Error('Invalid column');
+    const codePattern = new RegExp(mapping.codePattern);
+    const totalPattern = new RegExp(mapping.totalPattern, 'i');
+    const rows: PlanningWorkbookPreviewDTO['rows'] = [];
+    const warnings: PlanningWorkbookPreviewDTO['warnings'] = [];
+    const phases: NonNullable<PlanningWorkbookPreviewDTO['project']['phases']> = [];
+    for (const sheet of source.sheets) {
+      const cellText = (r: number, c: number) => String(sheet.rows[r]?.[c]?.value ?? '').trim();
+      const numeric = (r: number, c: number): number | undefined => {
+        const value = sheet.rows[r]?.[c]?.value;
+        if (value === null || value === undefined || value === '') return undefined;
+        const number = typeof value === 'number' ? value : Number(String(value).replace(/[\s\u00a0\u202f]/g, '').replace(',', '.'));
+        return Number.isFinite(number) ? number : undefined;
+      };
+      const candidates = sheet.rows.map((_, index) => ({ index, code: cellText(index, mapping.codeColumn).replace(/[.\-]+$/, '').replace(/-/g, '.'), title: cellText(index, mapping.titleColumn) }));
+      const seen = new Set<string>();
+      const phase: NonNullable<typeof phases>[number] = { code: sheet.name, name: sheet.name, externalRef: `${input.reference}:sheet:${sheet.name}`, order: phases.length, tasks: [], metadata: { planningSource: { filename: source.filename, sheet: sheet.name } } };
+      for (const { index, code, title } of candidates) {
+        if (!sheet.rows[index].some(cell => cell.value !== null || cell.formula || cell.style)) continue;
+        const validCode = codePattern.test(cellText(index, mapping.codeColumn));
+        const responsible = cellText(index, mapping.responsibleColumn);
+        const quantity = numeric(index, mapping.quantityColumn);
+        const unitPrice = numeric(index, mapping.unitPriceColumn);
+        const sourceAmount = numeric(index, mapping.amountColumn);
+        const unit = cellText(index, mapping.unitColumn);
+        const hasChildren = validCode && candidates.some(other => other.index !== index && other.code.startsWith(`${code}.`));
+        const kind = !validCode || !title || totalPattern.test(title) ? 'unmapped' : hasChildren && quantity === undefined && !unit && !responsible ? 'group' : 'task';
+        rows.push({ sheet: sheet.name, row: index + 1, code: cellText(index, mapping.codeColumn), title, responsible, quantity, unit, sourceAmount, amount: sourceAmount === undefined ? undefined : sourceAmount * mapping.amountMultiplier, kind });
+        if (kind === 'unmapped') { if (title && quantity !== undefined) warnings.push({ code: 'missing_code', sheet: sheet.name, row: index + 1 }); continue; }
+        if (seen.has(code)) warnings.push({ code: 'duplicate_code', sheet: sheet.name, row: index + 1 });
+        seen.add(code);
+        if (quantity !== undefined && unitPrice !== undefined && sourceAmount !== undefined && Math.abs(quantity * unitPrice - sourceAmount) > Number.EPSILON * Math.max(1, Math.abs(sourceAmount), Math.abs(quantity * unitPrice)) * 16) warnings.push({ code: 'arithmetic_difference', sheet: sheet.name, row: index + 1 });
+        // Stable source row identity avoids collapsing repeated documentary codes.
+        if (kind === 'task') phase.tasks?.push({ id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${cellText(index, mapping.codeColumn)} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: cellText(index, mapping.codeColumn), path: code.split('.'), associates: cellText(index, mapping.associatesColumn), quantity, unit, unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount: sourceAmount === undefined ? undefined : sourceAmount * mapping.amountMultiplier, cells: sheet.rows[index] } } });
+      }
+      if (phase.tasks?.length) phases.push(phase);
+      warnings.push({ code: 'period_review', sheet: sheet.name, row: 1 });
+    }
+    if (!phases.length) throw new Error('No activity matched the selected mapping');
+    // Original values, formulas, styles, totals and unmatched sections survive in
+    // the persisted description; budgets/periods are never inferred from subtotals or colours.
+    const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, referentialCode: input.referentialCode, phases, description: JSON.stringify({ planningSource: source, mapping }), metadata: { planningSource: source, mapping } };
+    return { project, source, rows, warnings };
+  }
   /** Controlled table import, not an inference engine for arbitrary prose. */
   previewPlanning(input: PlanningPreviewInputDTO): PlanningPreviewDTO {
     const anchor=parseISO(input.startDate);
