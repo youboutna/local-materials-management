@@ -19,7 +19,7 @@
   "planning.unmapped": "Lignes non interprétées à compléter",
   "planning.prepare": "Préparer pour l’import existant",
   "workbench.planned": "Planifié",
-  "workbench.actual": "Consommé validé",
+  "workbench.actual": "Réalisé",
   "workbench.title": "Calendrier et suivi projet",
   "workbench.notes": "Notes",
   "workbench.retry": "Réessayer",
@@ -56,7 +56,6 @@
   "workbench.end": "Fin prévue",
   "workbench.due": "Échéance",
   "workbench.scheduled": "Programmé",
-  "workbench.actual": "Réalisé",
   "workbench.recorded": "Constaté",
   "workbench.label": "Désignation",
   "workbench.date": "Date",
@@ -85,7 +84,6 @@
   "workbench.building": "Bâtiment",
   "workbench.telecom": "Télécommunications",
   "workbench.other": "Autre",
-  "workbench.planned": "Planifié",
   "workbench.in_progress": "En cours",
   "workbench.existing": "Existant",
   "workbench.completed": "Achevé",
@@ -6647,5 +6645,10 @@
   "workbench.recon_unpaid": "Non réglé",
   "workbench.recon_not_validated": "Non validé",
   "workbench.recon_remaining": "Reste à régler",
-  "workbench.recon_unallocated": "Règlements non affectés"
+  "workbench.recon_unallocated": "Règlements non affectés",
+  "workbench.revenue_reconciliation": "Rapprochement factures clients / encaissements",
+  "workbench.revenue_no_invoice": "Aucune facture client pour ce projet.",
+  "workbench.revenue_invoiced": "Facturé",
+  "workbench.revenue_received": "Encaissé",
+  "workbench.revenue_unallocated": "Encaissements non affectés"
 }

@@ -18,8 +18,8 @@
   "planning.phase": "المرحلة",
   "planning.unmapped": "أسطر غير مفسرة تحتاج الاستكمال",
   "planning.prepare": "تجهيز للاستيراد الحالي",
-  "workbench.planned": "المخطط",
-  "workbench.actual": "الاستهلاك المعتمد",
+  "workbench.planned": "مخطط",
+  "workbench.actual": "منجز",
   "workbench.title": "تقويم ومتابعة المشروع",
   "workbench.notes": "ملاحظات",
   "workbench.retry": "إعادة المحاولة",
@@ -56,7 +56,6 @@
   "workbench.end": "النهاية المخططة",
   "workbench.due": "الاستحقاق",
   "workbench.scheduled": "مجدول",
-  "workbench.actual": "منجز",
   "workbench.recorded": "مسجل",
   "workbench.label": "الوصف",
   "workbench.date": "التاريخ",
@@ -85,7 +84,6 @@
   "workbench.building": "مبنى",
   "workbench.telecom": "اتصالات",
   "workbench.other": "أخرى",
-  "workbench.planned": "مخطط",
   "workbench.in_progress": "قيد التنفيذ",
   "workbench.existing": "موجود",
   "workbench.completed": "مكتمل",
@@ -6649,5 +6647,10 @@
   "workbench.recon_unpaid": "غير مسدد",
   "workbench.recon_not_validated": "غير معتمد",
   "workbench.recon_remaining": "المتبقي للسداد",
-  "workbench.recon_unallocated": "مدفوعات غير مخصصة"
+  "workbench.recon_unallocated": "مدفوعات غير مخصصة",
+  "workbench.revenue_reconciliation": "مطابقة فواتير العملاء / المقبوضات",
+  "workbench.revenue_no_invoice": "لا توجد فاتورة عميل لهذا المشروع.",
+  "workbench.revenue_invoiced": "المفوتر",
+  "workbench.revenue_received": "المقبوض",
+  "workbench.revenue_unallocated": "مقبوضات غير مخصصة"
 }

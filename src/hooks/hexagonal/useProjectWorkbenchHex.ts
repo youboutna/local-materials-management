@@ -7,7 +7,7 @@ import type { CreateTaskAssignmentDTO, UpdateTaskAssignmentDTO } from '@/dtos/en
 import { getTaskAssignmentService } from '@/application/services/TaskAssignmentService';
 export function useWorkbenchCalendarActions(projectId: string) {
   const client = useQueryClient();
-  const refresh = async () => { await Promise.all([client.invalidateQueries({ queryKey: ['project-workbench',projectId] }), client.invalidateQueries({ queryKey: ['task-assignments-hex'] }), client.invalidateQueries({ queryKey: ['projects'] })]); };
+  const refresh = async () => { await Promise.all([client.invalidateQueries({ queryKey: ['project-workbench',projectId] }), client.invalidateQueries({ queryKey: ['task-assignments-hex'] }), client.invalidateQueries({ queryKey: ['projects'] }), client.invalidateQueries({ queryKey: ['workbench-finance',projectId] }), client.invalidateQueries({ queryKey: ['project-financials'] })]); };
   const save = useMutation({ mutationFn: async (input: { id?: string; data: CreateTaskAssignmentDTO | UpdateTaskAssignmentDTO }) => {
     const taskService = getTaskAssignmentService();
     const result = input.id ? await taskService.update(input.id,input.data) : await taskService.create(input.data as CreateTaskAssignmentDTO);
