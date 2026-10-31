@@ -1146,7 +1146,7 @@ export function BoqWorkspace({
           />
 
           {projectId && mode === 'planning' && <TechnicalPlanImport
-            context={{ source, contextId, phaseId: phaseId ?? undefined }}
+            context={{ source, contextId, phaseId: wbsDefault.phaseId ?? undefined }}
             disabled={locked}
             onPrepared={handleParsedImport}
           />}
