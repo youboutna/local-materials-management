@@ -17,13 +17,11 @@
  */
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRightCircle, Calculator, ChevronDown, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, RefreshCw, Settings2, Trash2 } from 'lucide-react';
+import { ArrowRightCircle, ChevronDown, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, RefreshCw, Settings2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
 import { BoqLineTable } from './BoqLineTable';
@@ -37,21 +35,16 @@ import { DocumentContextSummary, type DocumentContextItem } from './DocumentCont
 
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
-import { MeterService } from '@/application/services/boq/MeterService';
 import { loadProjectWbs, isActivePhaseStatus, type ProjectWbsPhase } from '@/application/services/boq/ProjectWbsLoader';
 import { tenderToPlanningService } from '@/application/services/TenderToPlanningService';
 import type { ReferentialType } from '@/config/referentials';
 import { getReferentialOptions, getPhasesForReferential } from '@/config/referentials';
 
 import { BOQ_FISCAL_PROFILES, getFiscalProfile, getFiscalProfileLabel } from '@/config/referentials/boq/default-values.referential';
-import { resolveLineTax } from '@/config/referentials/boq/tax-regimes.referential';
 import { TaxService } from '@/application/services/TaxService';
 import { formatCurrency } from '@/utils/phaseDisplayHelpers';
-import { ELEMENT_TYPES, getElementType, type ElementTypeCode } from '@/config/referentials/boq/element-types.referential';
-import { DQE_UNIT_CODES } from '@/config/referentials/boq/unit-catalog.referential';
-import { getRecommendationItems } from '@/config/referentials/boq/recommendations.referential';
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
-import type { BoqResourceType, BoqSource, BoqStatus } from '@/domain/entities/boq/BoqLine';
+import type { BoqSource, BoqStatus } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import { useMaterialsHex } from '@/hooks/hexagonal/useMaterialsHex';
@@ -61,22 +54,12 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { useOwnerOrganization } from '@/hooks/useOwnerOrganization';
 
 import type { StakeholderOption } from './BoqLineTable';
-import { getEnumOptions } from '@/config/referentials/i18n/enum-labels.referential';
 import { useI18n } from '@/hooks/useI18n';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { i18nService } from '@/application/services/I18nService';
 import { T } from '@/components/i18n/T';
-import { useLanguage } from '@/contexts/LanguageContext';
-
-type ManualCategory = 'material' | 'labour' | 'equipment' | 'overhead';
-const catToResource = (c: ManualCategory): BoqResourceType =>
-  c === 'labour' ? 'labor' : c === 'equipment' ? 'equipment' : 'material';
-const UNITS = DQE_UNIT_CODES;
-const LABOUR_TIME_UNITS = new Set(['h', 'j', 'hj', 'homme/jour']);
-
 
 export type BoqWorkspaceMode = 'planning' | 'bid' | 'invoice';
 
@@ -106,7 +89,7 @@ const LABELS: Record<BoqWorkspaceMode, { import: string; empty: string; docPrefi
 export function BoqWorkspace({
   source, contextId, projectId, projectName, mode,
   referentialCode, estimateId,
-  emptyLabel, importLabel, documentId,
+  emptyLabel, documentId,
 }: Props) {
   const { translateTerm, t, language: lang } = useI18n();
   const doc = useBoqDocument({ source, contextId, projectId, documentId });
@@ -150,7 +133,6 @@ export function BoqWorkspace({
 
 
   // ---- Saisie manuelle inline (alignée sur TenderEstimatorForm) --------------
-  const [openManual, setOpenManual] = useState(false);
   const [openImport, setOpenImport] = useState(false);
   const [linePageSize, setLinePageSize] = useState(10);
   const { materials } = useMaterialsHex();
@@ -160,16 +142,6 @@ export function BoqWorkspace({
     supplierNif: null, supplierNifStatus: 'unknown', paymentMethod: 'virement', hasNormalizedInvoice: false,
   });
 
-  const [overheadPct, setOverheadPct] = useState<number>(0);
-  const [category, setCategory] = useState<ManualCategory>('material');
-  const [materialId, setMaterialId] = useState<string>('');
-  const [depotId, setDepotId] = useState<string>('');
-  const [elementType, setElementType] = useState<ElementTypeCode>('generic');
-  /** Ouvertures à déduire (référentiel element-types : `deductOpenings`). */
-  const [openings, setOpenings] = useState<{ count: number; width: number; height: number }>({ count: 0, width: 0, height: 0 });
-  /** Génère une ligne article par recommandation du référentiel. */
-  const [autoRecs, setAutoRecs] = useState(false);
-  const [wbs, setWbs] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [wbsDefault, setWbsDefault] = useState<WbsValue>({ phaseId: null, milestoneId: null, taskId: null });
   const [projectPhases, setProjectPhases] = useState<ProjectWbsPhase[]>([]);
   /** Périmètre WBS du document (multi-options), persisté avec les préférences. */
@@ -271,14 +243,10 @@ export function BoqWorkspace({
     [defaultStakeholder],
   );
 
-  const [form, setForm] = useState<Partial<BoqLineDTO> & { length?: number; width?: number; height?: number }>({
-    designation: '', unit: 'u', quantity: 1, unitPrice: 0,
-  });
-
   const fiscalProfileOptions = useMemo(
     () => {
       const serviceProfiles = TaxService.listAvailableProfiles(
-        { category, designation: form.designation ?? '', elementType },
+        {},
         fiscalCode,
         getFiscalProfile(fiscalCode),
         lang,
@@ -292,7 +260,7 @@ export function BoqWorkspace({
       }));
       return list.sort((a, b) => Number(b.recommended) - Number(a.recommended) || a.label.localeCompare(b.label));
     },
-    [category, form.designation, elementType, fiscalCode, lang],
+    [fiscalCode, lang],
   );
 
   useEffect(() => {
@@ -342,97 +310,7 @@ export function BoqWorkspace({
   useEffect(() => {
     if (!contextWbs) return;
     setWbsDefault((prev) => (prev.phaseId ? prev : { ...contextWbs }));
-    setWbs((prev) => (prev.phaseId ? prev : { ...contextWbs }));
   }, [contextWbs]);
-
-  // Groupe les articles par dépôt (utilise material.warehouse / depot / location si dispo)
-  const depots = useMemo(() => {
-    const map = new Map<string, { id: string; label: string }>();
-    for (const m of materials) {
-      const mm = m as unknown as { warehouseId?: string; warehouseName?: string; depot?: string; location?: string };
-      const id = mm.warehouseId || mm.depot || mm.location || 'default';
-      const label = mm.warehouseName || mm.depot || mm.location || 'Dépôt principal';
-      if (!map.has(id)) map.set(id, { id, label });
-    }
-    return Array.from(map.values());
-  }, [materials]);
-  const filteredMaterials = useMemo(() => {
-    if (!depotId) return materials;
-    return materials.filter((m) => {
-      const mm = m as unknown as { warehouseId?: string; depot?: string; location?: string };
-      return (mm.warehouseId || mm.depot || mm.location || 'default') === depotId;
-    });
-  }, [materials, depotId]);
-
-  const resetForm = () => {
-    setForm({ designation: '', unit: 'u', quantity: 1, unitPrice: 0 });
-    setMaterialId(''); setCategory('material'); setElementType('generic');
-    setOpenings({ count: 0, width: 0, height: 0 });
-    setAutoRecs(false);
-    // Réapplique le WBS par défaut (fallback contexte de saisie)
-    setWbs({ ...wbsDefault });
-  };
-
-  const onPickMaterial = (id: string) => {
-    setMaterialId(id);
-    const m = materials.find((x) => x.id === id);
-    if (m) {
-      setForm((f) => ({
-        ...f,
-        designation: m.name,
-        unit: m.unit || f.unit || 'u',
-        unitPrice: m.pricePerUnit ?? f.unitPrice ?? 0,
-      }));
-    }
-  };
-
-  // RH rule: main-d'œuvre + unité temps (h/j) → arithmétique simple, PAS de métré volumique
-  const isLabourTime = category === 'labour' && LABOUR_TIME_UNITS.has(String(form.unit ?? '').toLowerCase());
-  const elDef = getElementType(elementType);
-  const useAdvanced = !isLabourTime && elementType !== 'generic' && !!elDef;
-  /** Unité imposée par le référentiel du type d'ouvrage (verrouillée dans l'UI). */
-  const lockedUnit = useAdvanced ? MeterService.unitFor(elementType) : null;
-  const effectiveUnit = lockedUnit ?? form.unit ?? 'u';
-
-  /** Ouvertures effectives (référentiel `element-types.deductOpenings`). */
-  const effectiveOpenings = useMemo(() => (
-    elDef?.deductOpenings && openings.count > 0 && openings.width > 0 && openings.height > 0
-      ? [{ width: openings.width, height: openings.height, count: openings.count }]
-      : undefined
-  ), [elDef, openings]);
-
-  /** Recommandations du référentiel pour le type d'ouvrage courant. */
-  const recommendations = useMemo(() => (useAdvanced ? getRecommendationItems(elementType) : []), [useAdvanced, elementType]);
-
-  // Dynamic quantity — recomputed from L/W/H + element type (or user-entered on generic/RH)
-  const computedQuantity = useMemo(() => {
-    if (!useAdvanced) return Number(form.quantity) || 0;
-    const r = MeterService.compute({
-      source, contextId,
-      designation: form.designation ?? '',
-      elementType,
-      unit: effectiveUnit,
-      length: form.length ?? null,
-      width: form.width ?? null,
-      height: form.height ?? null,
-      quantity: 0,
-      unitPrice: form.unitPrice ?? 0,
-      openings: effectiveOpenings,
-    });
-    return r.quantity;
-  }, [useAdvanced, elementType, form.length, form.width, form.height, form.quantity, form.unit, form.designation, form.unitPrice, source, contextId, effectiveOpenings]);
-
-
-  const manualPreview = useMemo(() => {
-    const pu = Number(form.unitPrice) || 0;
-    const htBase = computedQuantity * pu;
-    const ht = htBase * (1 + (Number(overheadPct) || 0) / 100);
-    const profile = getFiscalProfile(fiscalCode);
-    const tax = TaxService.resolve({ category, designation: form.designation, elementType, totalHt: ht }, profile);
-    const tva = tax.vatAmount;
-    const ras = tax.rasAmount;
-    return { ht, tva, ttc: tax.totalTtc, ras, qty: computedQuantity, regimeLabel: tax.regimeLabel };
-  }, [computedQuantity, form.unitPrice, fiscalCode, overheadPct, category, form.designation, elementType]);
 
   // ---- Tampon local (batch) : « Ajouter » n'écrit PAS en DB.
   //      La persistance atomique se fait via « Enregistrer le DQE » (bulkCreate).
@@ -457,86 +335,6 @@ export function BoqWorkspace({
     setDraftLines(doc.lines);
     setBaselineLines(doc.lines);
   }, [docKey, doc.lines, dirty, source]);
-
-
-  const handleCreate = () => {
-    if (!form.designation?.trim()) {
-      toast({ title: t('auto.boqworkspace.designation_requise'), variant: 'destructive' });
-      return;
-    }
-    const profile = getFiscalProfile(fiscalCode);
-    // Fiscalité résolue une seule fois (régime + imputation PCM) pour la ligne saisie.
-    const manualTax = TaxService.resolve({
-      category,
-      designation: form.designation,
-      elementType,
-      supplierNif: defaultSupplierNif,
-      supplierNifStatus: defaultSupplierNif ? 'unknown' : 'unknown',
-    }, profile);
-    const overheadNote = (Number(overheadPct) || 0) > 0 ? `Frais généraux ${overheadPct}%` : null;
-    const effectivePu = (Number(form.unitPrice) || 0) * (1 + (Number(overheadPct) || 0) / 100);
-    const effectiveWbs: WbsValue = {
-      phaseId: wbs.phaseId ?? wbsDefault.phaseId ?? null,
-      milestoneId: wbs.milestoneId ?? wbsDefault.milestoneId ?? null,
-      taskId: wbs.taskId ?? wbsDefault.taskId ?? null,
-    };
-    const draft: BoqLineDTO = {
-      source, contextId,
-      documentId: documentId ?? null,
-      designation: form.designation!,
-      elementType: useAdvanced ? elementType : null,
-      unit: effectiveUnit,
-      length: useAdvanced ? (form.length ?? null) : null,
-      width: useAdvanced ? (form.width ?? null) : null,
-      height: useAdvanced ? (form.height ?? null) : null,
-      quantity: computedQuantity,
-      unitPrice: effectivePu,
-      totalHt: computedQuantity * effectivePu,
-      rasRate: manualTax.rasRate,
-      fees: 0,
-      resourceType: catToResource(category),
-      materialId: materialId || null,
-      phaseId: effectiveWbs.phaseId,
-      milestoneId: effectiveWbs.milestoneId,
-      taskId: effectiveWbs.taskId,
-      vatRate: manualTax.vatRate,
-      taxRegimeCode: manualTax.regimeCode,
-      accountCode: manualTax.accountCode,
-      supplierNif: defaultSupplierNif,
-      supplierNifStatus: defaultSupplierNif ? 'unknown' : 'unknown',
-      note: [
-        category === 'overhead' ? 'Frais généraux' : null,
-        overheadNote,
-        effectiveOpenings ? `Ouvertures déduites : ${openings.count} × ${openings.width}×${openings.height} m` : null,
-      ].filter(Boolean).join(' • ') || null,
-      sourceType: useAdvanced ? 'avance' : 'rapide',
-      metadata: defaultLineMetadata,
-      status: 'draft',
-    };
-
-    // Recommandations du référentiel → 1 ligne article par recommandation.
-    const recoDrafts: BoqLineDTO[] = (autoRecs ? recommendations : []).map((rec) => ({
-      ...draft,
-      designation: `${draft.designation} — ${rec.label}`,
-      elementType: null,
-      length: null, width: null, height: null,
-      unit: rec.unit ?? draft.unit,
-      quantity: rec.quantity ?? 1,
-      totalHt: (rec.quantity ?? 1) * effectivePu,
-      note: ['Recommandation', overheadNote].filter(Boolean).join(' • '),
-      sourceType: 'avance',
-    }));
-    setDraftLines((prev) => [...prev, draft, ...recoDrafts]);
-    setDirty(true);
-    resetForm();
-    setOpenManual(false);
-    toast({
-      title: t('auto.boqworkspace.ligne_ajoutee_au_brouillon'),
-      description: recoDrafts.length
-        ? `1 ligne + ${recoDrafts.length} recommandation(s). Cliquez « Enregistrer le DQE » pour persister.`
-        : 'Cliquez « Enregistrer le DQE » pour persister.',
-    });
-  };
 
 
   const saveDraftLines = async (silent = false): Promise<boolean> => {
@@ -620,7 +418,7 @@ export function BoqWorkspace({
       if (!(e.ctrlKey || e.metaKey)) return;
       const key = e.key.toLowerCase();
       if (e.shiftKey && key === 'a') { if (!locked) { e.preventDefault(); setQuickAddOpen(true); } return; }
-      if (e.shiftKey && key === 'm') { if (!locked) { e.preventDefault(); setOpenManual(true); } return; }
+      if (e.shiftKey && key === 'm') { if (!locked) { e.preventDefault(); setQuickAddOpen(true); } return; }
       if (e.shiftKey && key === 'i') { if (!locked) { e.preventDefault(); setOpenImport(true); } return; }
       if (!e.shiftKey && key === 's') { if (!locked) { e.preventDefault(); void saveDraftLines(false); } return; }
       if (!e.shiftKey && e.key === 'Enter') {
@@ -637,11 +435,11 @@ export function BoqWorkspace({
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   /** Matériaux du projet exposés au moteur de suggestion. */
   const autofillMaterials = useMemo<AutofillMaterial[]>(
-    () => filteredMaterials.map((m) => {
+    () => materials.map((m) => {
       const mm = m as unknown as { id: string; name: string; unit?: string | null; pricePerUnit?: number | null; unitPrice?: number | null; category?: string | null };
       return { id: mm.id, name: mm.name, unit: mm.unit ?? null, unitPrice: mm.pricePerUnit ?? mm.unitPrice ?? null, category: mm.category ?? null };
     }),
-    [filteredMaterials],
+    [materials],
   );
 
   const addAssistedLine = (patch: Partial<BoqLineDTO>) => {
@@ -896,233 +694,6 @@ export function BoqWorkspace({
             />
             <Button size="sm" variant="ghost" onClick={addEmptyRow} disabled={locked}><T k="dqe.lines.add_empty" fallback="Ligne vide" /></Button>
 
-
-          <Dialog open={openManual} onOpenChange={setOpenManual}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" disabled={locked}><Calculator className="h-4 w-4 mr-1" /><T k="auto.boqworkspace.calcul_metre" fallback="Calcul métré" /></Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>{t('dqe.action.takeoff')}</DialogTitle>
-                <DialogDescription><T k="auto.boqworkspace.calculez_les_quantites_puis_ajoutez_les_lignes_o" fallback="Calculez les quantités puis ajoutez les lignes obtenues au document courant." /></DialogDescription>
-              </DialogHeader>
-              <DocumentContextSummary items={documentContextItems} />
-              <div className="grid grid-cols-6 gap-3">
-                <div className="col-span-3">
-                  <Label><T k="auto.boqworkspace.categorie" fallback="Catégorie" /></Label>
-                  <Select value={category} onValueChange={(v) => setCategory(v as ManualCategory)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {getEnumOptions('ResourceType', lang).map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-3">
-                  <Label><T k="auto.boqworkspace.profil_fiscal" fallback="Profil fiscal" /></Label>
-                  <Select value={fiscalCode} onValueChange={(v) => { setFiscalCode(v); writePrefs({ fiscalCode: v }); }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {fiscalProfileOptions.map((p) => (
-                        <SelectItem key={p.code} value={p.code}>
-                           {p.label} ({t('dqe.fiscal.vat')} {(p.vatRate * 100).toLocaleString(lang === 'ar' ? 'ar-MR' : lang === 'en' ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 })}%){p.recommended ? ' · recommandé' : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {category === 'material' && materials.length > 0 && (
-                  <>
-                    {depots.length > 1 && (
-                      <div className="col-span-3">
-                        <Label><T k="auto.boqworkspace.depot" fallback="Dépôt" /></Label>
-                        <Select value={depotId || '__all__'} onValueChange={(v) => { setDepotId(v === '__all__' ? '' : v); setMaterialId(''); }}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent className="max-h-64">
-                            <SelectItem value="__all__">— Tous les dépôts —</SelectItem>
-                            {depots.map((d) => <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    <div className={depots.length > 1 ? 'col-span-3' : 'col-span-6'}>
-                      <Label>Article {depotId ? '(dépôt filtré)' : '(du dépôt, optionnel)'}</Label>
-                      <Select value={materialId || '__none__'} onValueChange={(v) => (v === '__none__' ? setMaterialId('') : onPickMaterial(v))}>
-                        <SelectTrigger><SelectValue placeholder={t('auto.boqworkspace.selectionner_un_article_auto_remplit_designation')} /></SelectTrigger>
-                        <SelectContent className="max-h-64">
-                          <SelectItem value="__none__">— Saisie libre —</SelectItem>
-                          {filteredMaterials.slice(0, 200).map((m) => (
-                            <SelectItem key={m.id} value={m.id}>
-                              {m.name}{m.unit ? ` · ${i18nService.translateUnit(m.unit)}` : ''}{m.pricePerUnit ? ` · ${formatCurrency(m.pricePerUnit)}` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
-                )}
-
-                <div className="col-span-6">
-                  <Label><T k="auto.boqworkspace.designation" fallback="Désignation" /></Label>
-                  <Input value={form.designation ?? ''} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
-                </div>
-
-                {/* Classification WBS projet (Phase → Jalon → Tâche) — dynamique */}
-                <div className="col-span-6">
-                  <Label className="text-xs text-muted-foreground">
-                    {translateTerm('wbs_classification')} {projectPhases.length > 0 ? '(phases du projet)' : '(référentiel)'}
-                  </Label>
-                  <WbsSelector
-                    value={wbs}
-                    onChange={setWbs}
-                    phases={availablePhases}
-                    scope={wbsScope}
-                    locked={wbsLocked}
-                    referentialCode={effectiveReferential}
-                  />
-                </div>
-
-                {/* Type d'élément — pilote le moteur de métré dynamique (inline, pas de modal) */}
-                {!isLabourTime && (
-                  <div className="col-span-3">
-                    <Label><T k="auto.boqworkspace.type_d_ouvrage_metre" fallback="Type d'ouvrage (métré)" /></Label>
-                    <Select value={elementType} onValueChange={(v) => setElementType(v as ElementTypeCode)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="generic">— Saisie directe —</SelectItem>
-                        {ELEMENT_TYPES.map((e) => (
-                          <SelectItem key={e.code} value={e.code}>{e.label} ({e.defaultUnit})</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                {isLabourTime && (
-                  <div className="col-span-3 text-xs text-muted-foreground self-end pb-2">
-                    Main-d'œuvre au temps → quantité saisie directement (pas de métré volumique).
-                  </div>
-                )}
-
-                <div className="col-span-1">
-                  <Label><T k="auto.boqworkspace.unite" fallback="Unité" /></Label>
-                  <Select value={effectiveUnit} disabled={!!lockedUnit} onValueChange={(v) => setForm({ ...form, unit: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Array.from(new Set([...(lockedUnit ? [lockedUnit] : []), ...UNITS])).map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2">
-                  <Label>{useAdvanced ? 'Quantité (calculée)' : 'Quantité'}</Label>
-                  <Input
-                    type="number"
-                    value={useAdvanced ? computedQuantity.toFixed(2) : (form.quantity ?? 0)}
-                    onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
-                    readOnly={useAdvanced}
-                    className={useAdvanced ? 'bg-muted' : ''}
-                  />
-                </div>
-
-                {/* Dimensions L/W/H — visibles selon le référentiel element-types */}
-                {useAdvanced && elDef && (
-                  <>
-                    {elDef.dimensions.length && (
-                      <div className="col-span-2">
-                        <Label><T k="auto.boqworkspace.longueur_m" fallback="Longueur (m)" /></Label>
-                        <Input type="number" value={form.length ?? ''} onChange={(e) => setForm({ ...form, length: Number(e.target.value) })} />
-                      </div>
-                    )}
-                    {elDef.dimensions.width && (
-                      <div className="col-span-2">
-                        <Label><T k="auto.boqworkspace.largeur_m" fallback="Largeur (m)" /></Label>
-                        <Input type="number" value={form.width ?? ''} onChange={(e) => setForm({ ...form, width: Number(e.target.value) })} />
-                      </div>
-                    )}
-                    {elDef.dimensions.height && (
-                      <div className="col-span-2">
-                        <Label><T k="auto.boqworkspace.hauteur_m" fallback="Hauteur (m)" /></Label>
-                        <Input type="number" value={form.height ?? ''} onChange={(e) => setForm({ ...form, height: Number(e.target.value) })} />
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Ouvertures à déduire — piloté par le référentiel element-types */}
-                {useAdvanced && elDef?.deductOpenings && (
-                  <>
-                    <div className="col-span-2">
-                      <Label><T k="auto.boqworkspace.ouvertures_nb" fallback="Ouvertures (nb)" /></Label>
-                      <Input type="number" min={0} value={openings.count || ''} onChange={(e) => setOpenings({ ...openings, count: Number(e.target.value) || 0 })} />
-                    </div>
-                    <div className="col-span-2">
-                      <Label><T k="auto.boqworkspace.ouverture_larg_m" fallback="Ouverture larg. (m)" /></Label>
-                      <Input type="number" min={0} step={0.01} value={openings.width || ''} onChange={(e) => setOpenings({ ...openings, width: Number(e.target.value) || 0 })} />
-                    </div>
-                    <div className="col-span-2">
-                      <Label><T k="auto.boqworkspace.ouverture_haut_m" fallback="Ouverture haut. (m)" /></Label>
-                      <Input type="number" min={0} step={0.01} value={openings.height || ''} onChange={(e) => setOpenings({ ...openings, height: Number(e.target.value) || 0 })} />
-                    </div>
-                  </>
-                )}
-
-
-
-                <div className="col-span-1">
-                  <Label><T k="auto.boqworkspace.pu_mru" fallback="PU (MRU)" /></Label>
-                  <Input type="number" value={form.unitPrice ?? 0} onChange={(e) => setForm({ ...form, unitPrice: Number(e.target.value) })} />
-                </div>
-                <div className="col-span-2">
-                  <Label><T k="auto.boqworkspace.frais_generaux" fallback="Frais généraux (%)" /></Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    step={0.5}
-                    value={overheadPct}
-                    onChange={(e) => setOverheadPct(Number(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-
-              {/* Recommandations métier (référentiel) pour le type d'ouvrage */}
-              {recommendations.length > 0 && (
-                <div className="mt-3 rounded-md border border-dashed p-3">
-                  <label className="flex items-start gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="mt-1 h-4 w-4"
-                      checked={autoRecs}
-                      onChange={(e) => setAutoRecs(e.target.checked)}
-                    />
-                    <span>
-                      Générer une ligne article par recommandation ({recommendations.length}) — PU / unité de la ligne principale
-                      <span className="mt-1 block text-xs text-muted-foreground">
-                        {recommendations.map((r) => r.label).join(' • ')}
-                      </span>
-                    </span>
-                  </label>
-                </div>
-              )}
-
-
-
-              <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm grid grid-cols-5 gap-2">
-                <div><T k="auto.boqworkspace.qte" fallback="Qté :" /> <span className="font-semibold">{manualPreview.qty.toFixed(2)}</span></div>
-                <div>{t('dqe.fiscal.ht')} <span className="font-semibold">{manualPreview.ht.toLocaleString('fr-FR')}</span></div>
-                <div><T k="auto.boqworkspace.tva" fallback="TVA :" /> <span className="font-semibold">{manualPreview.tva.toLocaleString('fr-FR')}</span></div>
-                <div><T k="auto.boqworkspace.ras" fallback="RAS :" /> <span className="font-semibold">{manualPreview.ras.toLocaleString('fr-FR')}</span></div>
-                <div><T k="auto.boqworkspace.ttc" fallback="TTC :" /> <span className="font-bold text-primary">{manualPreview.ttc.toLocaleString('fr-FR')}</span></div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpenManual(false)}><T k="auto.boqworkspace.annuler" fallback="Annuler" /></Button>
-                <Button onClick={handleCreate} disabled={doc.isPending}>
-                  {doc.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}{t('dqe.action.add')}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
 
           <BoqImportDialog
             open={openImport}
