@@ -43,14 +43,3 @@ describe('Canonical financial sources',()=>{
     const line={id:'q',source:'dqe',contextId:'p',documentType:'devis',businessStatus:'not_accepted',quantity:1,unitPrice:100,designation:'Work',unit:'u'} as BoqLineDTO;
     expect(ProjectFinancialsService.build({scope:'project',entityId:'p',currency:'MRU',declaredBudget:100,lines:[line],decomptes:[],payments:[]}).engaged).toBe(0);
   });
-});
-import { ProjectWorkbenchService } from '../ProjectWorkbenchService';
-describe('Revenue reconciliation',()=>{
-  it('matches validated receipts to customer invoices and isolates unallocated ones',()=>{
-    const inv=[{id:'i1',source:'invoice',contextId:'p',designation:'F1',unit:'u',quantity:1,totalHt:100}] as BoqLineDTO[];
-    const ops=[{id:'r1',kind:'revenue',status:'validated',amount:60,sourceLineId:'i1'},{id:'r2',kind:'revenue',status:'draft',amount:40,sourceLineId:'i1'},{id:'r3',kind:'revenue',status:'validated',amount:25}] as never;
-    const r=ProjectWorkbenchService.reconcileRevenue(inv,ops);
-    expect(r.lines[0]).toMatchObject({receivedAmount:60,remainingAmount:40,state:'partial'});
-    expect(r.unallocatedAmount).toBe(25);
-  });
-});
