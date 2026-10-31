@@ -56,3 +56,4 @@
 - [ ] Réutiliser Gantt, PERT, WBS, calendrier, indicateurs, rapports et workflows existants ; composer leurs données pour les nouvelles présentations, sans moteurs, modules ou tables concurrents
 - [ ] Garantir persistance, idempotence, reprise sur erreur, droits serveur et traductions fr/ar/en des nouveaux parcours
 - [ ] Tester règles, conversions, intégrations et parcours visibles ; consigner chaque blocage de recette sans clôture fictive
+- [ ] Exécuter le plan consolidé joint : enrichissement du métré, pipeline commun, contrôles de cohérence, présentation des avertissements, extraction assistée des plans et liaison GED → métré → DQE ; vérifier les données réelles avant toute clôture.
