@@ -4,6 +4,15 @@ import { TechnicalPlanService } from '../TechnicalPlanService';
 const page = { page: 1, source: 'ocr' as const, confidence: 95, text: 'Planche 04\nPhase DE\nDate Juin 2026\nEchelle 1/100\nP1 20x60 cm\nP2 20x30 cm\nP3 20x50 cm\nP4 20x40 cm' };
 
 describe('Controlled technical plan bridge', () => {
+  it('recognizes longrines and keeps repeated labels distinct from counts', () => {
+    const plan = TechnicalPlanService.extract([{ ...page, text: 'P1 20x40\nP1 20x40\nLng1 20x60 cm' }], 'STR.pdf', 'hash');
+    expect(plan.elements).toHaveLength(2);
+    expect(plan.elements[0].elementType).toBe('concrete_column');
+    expect(plan.elements[0].count).toBe(1);
+    expect(plan.elements[1].elementType).toBe('concrete_beam');
+    expect(plan.elements[1].height).toBe(0.6);
+    expect(plan.warnings.filter((warning) => warning.code === 'ambiguous_unit')).toHaveLength(1);
+  });
   it('extracts P1-P4 sections in metres but never confirms them automatically', () => {
     const plan = TechnicalPlanService.extract([page], 'STR.pdf', 'hash');
     expect(plan.elements).toHaveLength(4);

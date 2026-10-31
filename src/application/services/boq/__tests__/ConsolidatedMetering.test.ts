@@ -43,4 +43,10 @@ describe('Consolidated metering policy', () => {
   it('compares the illustrative 12000 and 20000 source prices', () => {
     expect(BoqConsistencyService.compare([{ ...base, code: '2-1.3', unitPrice: 12000 }], [{ ...base, code: '2-1.3', unitPrice: 20000 }])[0]?.delta).toBe(8000);
   });
+  it('retains the real PDF masonry discrepancy instead of forcing a warning count', () => {
+    const issues = BoqConsistencyService.inspect([{ ...base, code: '2-1.3', quantity: 821, unitPrice: 2000, totalHt: 1642500 }]);
+    expect(issues[0].expected).toBe(1642000);
+    expect(issues[0].delta).toBe(500);
+    expect(() => BoqConsistencyService.assertReady([{ ...base, code: '2-1.3', quantity: 821, unitPrice: 2000, totalHt: 1642500 }])).toThrow('unresolved');
+  });
 });
