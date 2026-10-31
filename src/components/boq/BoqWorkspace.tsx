@@ -546,12 +546,46 @@ export function BoqWorkspace({
   return (
     <div className="space-y-4">
       <section className="space-y-0">
-        <div className="grid gap-3 border-b p-3 md:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.2fr)_minmax(180px,0.8fr)_auto] md:items-end">
+        <div className="grid gap-3 border-b p-3 sm:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div className="min-w-0 space-y-1">
             <div className="text-[11px] font-medium uppercase text-muted-foreground"><T k="auto.boqworkspace.document" fallback="Document" /></div>
             <div className="truncate text-base font-semibold">{labels.docPrefix.toUpperCase()} · {docRef}</div>
           </div>
-          <div className="min-w-0 space-y-1">
+          <div className="flex md:justify-end">
+            <Button
+              onClick={() => saveDraftLines(false)}
+              disabled={locked || (pendingCount === 0 && !dirty) || finalizing || doc.isPending}
+              title={
+                transmittedInfo
+                  ? t('dqe.locked_transmitted')
+                  : signatureInfo
+                    ? t('dqe.locked_signed')
+                    : pendingCount === 0 && !dirty
+                      ? t('dqe.save_hint_no_pending')
+                      : undefined
+              }
+            >
+              {finalizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck2 className="mr-2 h-4 w-4" />}
+              {t('dqe.action.save')}{pendingCount > 0 ? ` (${pendingCount})` : ''}
+            </Button>
+          </div>
+        </div>
+
+        <Collapsible open={showDocumentSettings} onOpenChange={setShowDocumentSettings}>
+          <div className="flex min-h-10 items-center justify-between gap-2 border-b bg-muted/20 px-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <Settings2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <span className="truncate text-xs font-semibold"><T k="auto.boqworkspace.configuration_document" fallback="Configuration du document" /></span>
+              <span className="truncate text-[11px] text-muted-foreground"><T k="auto.boqworkspace.wbs_fiscal_responsable" fallback="Périmètre WBS, classification et responsable" /></span>
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={showDocumentSettings ? 'Réduire la configuration' : 'Développer la configuration'}>
+                <ChevronDown className={`h-4 w-4 transition-transform ${showDocumentSettings ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="border-b px-3 py-3">
+            <div className="grid gap-3 sm:grid-cols-2 mb-3">          <div className="min-w-0 space-y-1">
             <Label className="text-[11px] text-muted-foreground">{t('referential.label')}</Label>
             {referentialLocked ? (
               <div
@@ -596,40 +630,7 @@ export function BoqWorkspace({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex md:justify-end">
-            <Button
-              onClick={() => saveDraftLines(false)}
-              disabled={locked || (pendingCount === 0 && !dirty) || finalizing || doc.isPending}
-              title={
-                transmittedInfo
-                  ? t('dqe.locked_transmitted')
-                  : signatureInfo
-                    ? t('dqe.locked_signed')
-                    : pendingCount === 0 && !dirty
-                      ? t('dqe.save_hint_no_pending')
-                      : undefined
-              }
-            >
-              {finalizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck2 className="mr-2 h-4 w-4" />}
-              {t('dqe.action.save')}{pendingCount > 0 ? ` (${pendingCount})` : ''}
-            </Button>
-          </div>
-        </div>
-
-        <Collapsible open={showDocumentSettings} onOpenChange={setShowDocumentSettings}>
-          <div className="flex min-h-10 items-center justify-between gap-2 border-b bg-muted/20 px-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <Settings2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <span className="truncate text-xs font-semibold"><T k="auto.boqworkspace.configuration_document" fallback="Configuration du document" /></span>
-              <span className="truncate text-[11px] text-muted-foreground"><T k="auto.boqworkspace.wbs_fiscal_responsable" fallback="Périmètre WBS, classification et responsable" /></span>
-            </div>
-            <CollapsibleTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={showDocumentSettings ? 'Réduire la configuration' : 'Développer la configuration'}>
-                <ChevronDown className={`h-4 w-4 transition-transform ${showDocumentSettings ? 'rotate-180' : ''}`} aria-hidden="true" />
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent className="border-b px-3 py-3">
+</div>
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,1fr)]">
               <div className="min-w-0 space-y-1">
                 <Label className="text-[11px] text-muted-foreground"><T k="auto.boqworkspace.perimetre_du_document" fallback="Périmètre du document" /></Label>
@@ -761,6 +762,25 @@ export function BoqWorkspace({
         </div>
       </div>
 
+      <div className="p-4">
+      {doc.isLoading ? (
+        <div className="text-sm text-muted-foreground">Chargement…</div>
+      ) : (
+        <BoqLineTable
+          lines={displayedLines}
+          emptyLabel={emptyLabel ?? labels.empty}
+          editable={!locked}
+          referentialCode={effectiveReferential}
+          phases={applyWbsScope(availablePhases, wbsScope)}
+          stakeholders={stakeholders}
+          onChange={handlePatch}
+          onRemove={handleRemove}
+          pageSize={linePageSize}
+          newRowsAt="start"
+        />
+      )}
+      </div>
+
       {/* Aperçu fiscal temps réel + contrôles de conformité LFR 2026 (avant génération) */}
       <FiscalCompliancePanel
         lines={displayedLines}
@@ -783,24 +803,6 @@ export function BoqWorkspace({
       />
 
 
-      <div className="p-4">
-      {doc.isLoading ? (
-        <div className="text-sm text-muted-foreground">Chargement…</div>
-      ) : (
-        <BoqLineTable
-          lines={displayedLines}
-          emptyLabel={emptyLabel ?? labels.empty}
-          editable={!locked}
-          referentialCode={effectiveReferential}
-          phases={applyWbsScope(availablePhases, wbsScope)}
-          stakeholders={stakeholders}
-          onChange={handlePatch}
-          onRemove={handleRemove}
-          pageSize={linePageSize}
-          newRowsAt="start"
-        />
-      )}
-      </div>
 
       {/* Journal de traçabilité — persistance / signature / transmission.
           Ces badges ne polluent plus l'en-tête : ils sont regroupés ici. */}

@@ -1,6 +1,7 @@
 /**
  * ProjectImport — page d'import/export projets.
  */
+import { AppLayout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectImporter2025 from "@/components/projects/ProjectImporter2025";
@@ -31,19 +32,7 @@ const ProjectImport = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-14 space-y-6">
-      <div className="flex items-center space-x-3 mb-6">
-        <FileSpreadsheet className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl font-bold">
-            {t("projects.importExport.title")}
-          </h1>
-          <p className="text-muted-foreground">
-            {t("projects.importExport.description")}
-          </p>
-        </div>
-      </div>
-
+    <AppLayout pageTitle={t("projects.importExport.title")}><div className="min-w-0 space-y-3">
       <Tabs defaultValue="file-import" className="w-full">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
           <TabsTrigger value="file-import" className="flex items-center gap-2">
@@ -173,7 +162,7 @@ const ProjectImport = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </div></AppLayout>
   );
 };
 

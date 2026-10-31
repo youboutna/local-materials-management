@@ -6689,5 +6689,8 @@
   "plans.type.roofing": "Couverture",
   "metering.gross": "Quantité brute",
   "metering.openings": "Ouvertures",
-  "metering.net": "Quantité nette"
+  "metering.net": "Quantité nette",
+  "workspace.contracts": "Contrats",
+  "workspace.actions": "Actions",
+  "workspace.fiscal_settings": "Fiscalité et contrôles"
 }

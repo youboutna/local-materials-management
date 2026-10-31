@@ -309,7 +309,6 @@ const ProjectEdit = () => {
   return (
     <AppLayout
       pageTitle={t("projects.edit.title")}
-      pageDescription={t('project_edit.description', { title: formData?.projectData?.title || '' })}
       actions={
         <div className="flex items-center gap-3">
           {/* Progression */}
@@ -383,7 +382,7 @@ const ProjectEdit = () => {
         )}
 
         {/* Main Workflow */}
-        <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
+        <div className="min-w-0">
           <ProjectCreationWorkflow
             mode="edit"
             projectId={id}

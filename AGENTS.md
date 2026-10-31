@@ -29,3 +29,4 @@
 - Manual BOQ lines use UnifiedBoqParser.fromManual and the existing assisted-line form; calculator access is line-scoped, never a separate workspace, so source quantities and metering provenance share the import pipeline.
 - Route BOQ document hooks and quantity-calculator persistence through BoqDocumentService with an injectable repository port; lazy adapter resolution keeps provider dependencies out of presentation code.
 - Run browser application tests through Vitest and release-script tests through Node's test runner; separate discovery avoids bundling Node built-ins into jsdom.
+- Project detail owns one URL-driven tab navigation; phase and workbench BOQ views compose the existing DqeWorkspace, so opening a presentation never creates derived takeoff records.

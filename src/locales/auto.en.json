@@ -6692,5 +6692,8 @@
   "plans.type.roofing": "Roofing",
   "metering.gross": "Gross quantity",
   "metering.openings": "Openings",
-  "metering.net": "Net quantity"
+  "metering.net": "Net quantity",
+  "workspace.contracts": "Contracts",
+  "workspace.actions": "Actions",
+  "workspace.fiscal_settings": "Tax settings and checks"
 }

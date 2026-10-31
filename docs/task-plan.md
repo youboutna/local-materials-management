@@ -8,6 +8,14 @@
 - Routage des types reconnus par le référentiel ; types inconnus conservés en calcul simple. Les quantités explicitement saisies restent conservées ; les calculs dimensionnels conservent formule, ouvertures et provenance.
 - Validation : 31 tests ciblés passants ; contrôle connecté non disponible avec Supabase externe.
 
+### Harmonisation des espaces projet — 31/10/2026
+- Navigation projet unique, synchronisée avec `?tab=` ; contrats et ressources restent accessibles sans barre d'onglets concurrente.
+- Phases : contexte réduit, tableaux et vues de travail avant les résumés secondaires ; modification rapide repliée.
+- Calendrier, création/édition et import : suppression des titres et encadrements doublonnés ; opérations en tableau avec actions existantes.
+- DQE projet, phase, workflow et calendrier utilisent le même espace documentaire ; onglet Lignes ouvert par défaut, réglages et contrôles fiscaux secondaires, aucun métré créé à l'ouverture.
+- SIG : carte plus grande et formulaire de réalisation replié tant qu'aucun ouvrage n'est sélectionné.
+- Vérification : 29 tests ciblés passants et compilation OK. Le navigateur reste sur Chargement sans session externe ; recette visuelle connectée et CRUD non validés. Le lint étendu signale encore des `any` préexistants dans ProjectDetailByDTO ; les autres pages contrôlées n'ont pas d'erreur lint.
+
 ### Système de Gestion Intégrée des Projets d'Infrastructure
 
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)  
