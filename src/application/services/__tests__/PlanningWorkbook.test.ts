@@ -27,12 +27,13 @@ function input(): PlanningWorkbookInputDTO {
 describe('Controlled PTBA import, evidence preserved', () => {
   it('retains every sheet, raw formula, merged range and full narrative', () => {
     const source = input(); const preview = service.previewWorkbook(source);
-    const saved = JSON.parse(preview.project.description ?? '{}');
-    expect(saved.planningSource).toEqual(source.source);
-    expect(saved.planningSource.sheets.map((sheet: { name: string }) => sheet.name)).toEqual(['C3', 'C4', ' RECAPCOMPOSANTE']);
-    expect(saved.planningSource.sheets[0].rows[2][7].formula).toBe('F6*G3*0.33');
-    expect(saved.planningSource.sheets[0].merges).toEqual(['B2:D2']);
-    expect(saved.planningSource.narrative).toBe('Coût estimatif : 10 800 000 MRU');
+    const saved = JSON.parse(JSON.stringify(preview.project.phases?.[0].metadata)).planningWorkbook;
+    expect(saved).toEqual(source.source);
+    expect(saved.sheets.map((sheet: { name: string }) => sheet.name)).toEqual(['C3', 'C4', ' RECAPCOMPOSANTE']);
+    expect(saved.sheets[0].rows[2][7].formula).toBe('F6*G3*0.33');
+    expect(saved.sheets[0].merges).toEqual(['B2:D2']);
+    expect(saved.narrative).toBe('Coût estimatif : 10 800 000 MRU');
+    expect(preview.project.description).toBe(source.source.narrative);
   });
   it('keeps documentary amount and scale without substituting quantity times price', () => {
     const preview = service.previewWorkbook(input());

@@ -151,9 +151,10 @@ export class ProjectImportTemplateService {
       warnings.push({ code: 'period_review', sheet: sheet.name, row: 1 });
     }
     if (!phases.length) throw new Error('No activity matched the selected mapping');
-    // Original values, formulas, styles, totals and unmatched sections survive in
-    // the persisted description; budgets/periods are never inferred from subtotals or colours.
-    const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, referentialCode: input.referentialCode, phases, description: JSON.stringify({ planningSource: source, mapping }), metadata: { planningSource: source, mapping } };
+    // Existing phase custom data preserves evidence without dumping JSON into
+    // the user-facing project description. The original binary also goes to GED.
+    phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
+    const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
     return { project, source, rows, warnings };
   }
   /** Controlled table import, not an inference engine for arbitrary prose. */

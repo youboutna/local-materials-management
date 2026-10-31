@@ -110,7 +110,7 @@ export default function ProjectFileImporter({
   };
 
   const handleImport = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || workbook || reading || importing) return;
 
     setImporting(true);
     setImportProgress(0);
@@ -148,7 +148,7 @@ export default function ProjectFileImporter({
       );
       const totalProcessed = importResult.imported;
       const message = `${totalProcessed} ${t("projects.import.projectsImported")}` +
-        (importResult.failed > 0 ? ` (${importResult.failed} ${t("projects.import.errors")})` : "");
+        (errors.length > 0 ? ` (${errors.length} ${t("projects.import.errors")})` : "");
 
       const result: ImportResult = {
         success: totalProcessed > 0 && importResult.failed === 0 && errors.length === 0,
@@ -223,7 +223,7 @@ export default function ProjectFileImporter({
   return (
     <section className="min-w-0 space-y-4">
         {workbook && <PlanningWorkbookPreview key={workbook.filename} source={workbook} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setImportResult(null); }} />}
-        <PlanningImportPreview referentialCode={templateReferential} onPrepared={file=>{setSelectedFile(file);setImportResult(null);}} />
+        <PlanningImportPreview referentialCode={templateReferential} onPrepared={file=>{setSelectedFile(file);setWorkbook(undefined);setSourceFiles([]);setImportResult(null);}} />
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
