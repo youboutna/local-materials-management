@@ -6685,5 +6685,8 @@
   "plans.type.wooden_door": "Wooden door",
   "plans.type.window": "Window",
   "plans.type.painting": "Painting",
-  "plans.type.roofing": "Roofing"
+  "plans.type.roofing": "Roofing",
+  "metering.gross": "Gross quantity",
+  "metering.openings": "Openings",
+  "metering.net": "Net quantity"
 }

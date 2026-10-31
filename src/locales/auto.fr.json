@@ -6682,5 +6682,8 @@
   "plans.type.wooden_door": "Porte bois",
   "plans.type.window": "Fenêtre",
   "plans.type.painting": "Peinture",
-  "plans.type.roofing": "Couverture"
+  "plans.type.roofing": "Couverture",
+  "metering.gross": "Quantité brute",
+  "metering.openings": "Ouvertures",
+  "metering.net": "Quantité nette"
 }

@@ -171,4 +171,20 @@ export class MeterService {
         ...(input.provenance ? { provenance: input.provenance } : {}) } };
     });
   }
+
+  static summary(line: MeterInputDTO, policy: MeteringPolicy = DEFAULT_METERING_POLICY): MeterResultDTO {
+    const advanced = computeAdvancedMeter(line);
+    const quantity = line.quantity;
+    const count = typeof line.metadata?.planElementCount === 'number' ? line.metadata.planElementCount : 1;
+    const hasGeometry = advanced.grossQuantity > 0;
+    return {
+      grossQuantity: hasGeometry ? advanced.grossQuantity * count : quantity,
+      openingsArea: hasGeometry ? advanced.openingsArea * count : 0,
+      netQuantity: quantity,
+      deducted: hasGeometry && advanced.deducted,
+      formula: hasGeometry ? `${advanced.formula}${count !== 1 ? ` × ${count}` : ''}` : String(quantity),
+      materials: MaterialsEstimator.estimate(advanced.elementType, quantity, policy),
+      policyCode: policy.code, policyVersion: policy.version,
+    };
+  }
 }

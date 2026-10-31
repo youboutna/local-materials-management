@@ -6684,5 +6684,8 @@
   "plans.type.wooden_door": "باب خشبي",
   "plans.type.window": "نافذة",
   "plans.type.painting": "طلاء",
-  "plans.type.roofing": "تغطية سقف"
+  "plans.type.roofing": "تغطية سقف",
+  "metering.gross": "الكمية الإجمالية",
+  "metering.openings": "الفتحات",
+  "metering.net": "الكمية الصافية"
 }
