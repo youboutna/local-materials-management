@@ -78,7 +78,7 @@ export class ProjectImportTemplateService {
     if (extension === 'json') return JSON.parse(await readFileAsText(file));
     if (extension === 'csv') {
       const Papa = await import('papaparse');
-      const result = Papa.default.parse<Record<string, unknown>>(await readFileAsText(file), { header: true, skipEmptyLines: true });
+      const result = Papa.default.parse(await readFileAsText(file), { header: true, skipEmptyLines: true }) as { data: Record<string, unknown>[]; errors: Array<{ message: string }> };
       if (result.errors.length) throw new Error(result.errors.map(error => error.message).join('; '));
       return result.data;
     }
@@ -126,7 +126,7 @@ export class ProjectImportTemplateService {
         const number = typeof value === 'number' ? value : Number(String(value).replace(/[\s\u00a0\u202f]/g, '').replace(',', '.'));
         return Number.isFinite(number) ? number : undefined;
       };
-      const candidates = sheet.rows.map((_, index) => ({ index, code: cellText(index, mapping.codeColumn).replace(/[.\-]+$/, '').replace(/-/g, '.'), title: cellText(index, mapping.titleColumn) }));
+      const candidates = sheet.rows.map((_, index) => ({ index, code: cellText(index, mapping.codeColumn).replace(/[.-]+$/, '').replace(/-/g, '.'), title: cellText(index, mapping.titleColumn) }));
       const seen = new Set<string>();
       const phase: NonNullable<typeof phases>[number] = { code: sheet.name, name: sheet.name, externalRef: `${input.reference}:sheet:${sheet.name}`, order: phases.length, tasks: [], metadata: { planningSource: { filename: source.filename, sheet: sheet.name } } };
       for (const { index, code, title } of candidates) {
