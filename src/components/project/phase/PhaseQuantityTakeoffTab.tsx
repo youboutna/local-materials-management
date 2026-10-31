@@ -2,7 +2,7 @@
  * PhaseQuantityTakeoffTab
  * Onglet Métré / DQE d'une phase. Les métrés sont calculés automatiquement
  * (ressources + moteur de métré) et affichés comme lignes DQE dans
- * `QuantityTakeoffs` : aucune liste séparée ni action dupliquée ici.
+ * `DqeWorkspace` : aucune liste séparée ni création automatique à l'affichage.
  */
 
 import React from 'react';
@@ -15,9 +15,7 @@ interface PhaseQuantityTakeoffTabProps {
 }
 
 const PhaseQuantityTakeoffTab: React.FC<PhaseQuantityTakeoffTabProps> = ({
-  phaseId,
   projectId,
-  phaseName,
 }) => (
   <ProjectDqeTab projectId={projectId} />
 );

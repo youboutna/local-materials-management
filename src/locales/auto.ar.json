@@ -6691,5 +6691,8 @@
   "plans.type.roofing": "تغطية سقف",
   "metering.gross": "الكمية الإجمالية",
   "metering.openings": "الفتحات",
-  "metering.net": "الكمية الصافية"
+  "metering.net": "الكمية الصافية",
+  "workspace.contracts": "العقود",
+  "workspace.actions": "الإجراءات",
+  "workspace.fiscal_settings": "الضرائب والتحقق"
 }
