@@ -61,4 +61,5 @@
 - [x] Frontière CRUD BOQ : hook document, calculateur et estimateur passent par BoqDocumentService ; données inconnues i18n conservées et assertions fiscales alignées sans changement de taux.
 - [ ] Clôture GO du plan consolidé — bloquée par recette connectée externe, données PDF/JSON contradictoires et 12 tests globaux en échec (providers et scans i18n) ; migration legacy, calibration graphique/IFC et indexation inter-session restent à implémenter.
 - [ ] Finaliser les deux plans par composition des parcours de pilotage : navigation projet intuitive, contextes opérationnels cohérents et planning générique ; traiter les données jointes comme illustrations, sans compteurs imposés.
-- [ ] Corriger le doublon montré : import unique de documents via UnifiedBoqParser, revue des plans dans le même import, retrait du calculateur isolé et source visible sur les lignes DQE.
+- [x] Corriger le doublon montré : import unique de documents via UnifiedBoqParser, revue des plans dans le même import, retrait du calculateur isolé et source visible sur les lignes DQE ; 23 tests ciblés passants.
+- [ ] Corriger l'extraction incomplète DQE_NDB : le contrôle navigateur du parseur commun ne prépare que 3 lignes ; recette de l'écran connecté toujours bloquée par la session externe.

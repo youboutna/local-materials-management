@@ -48,7 +48,7 @@ Le repository `SupabaseBoqRepository` cible `btp.boq_lines`, avec `line_type` di
 
 - PDF/Excel/CSV/JSON : `UnifiedBoqParser.parseAndMeter()` ou `parse()` puis `toMeterInputs()` pour permettre le mapping contrôlé → `MeterService.enrich()`.
 - Calculateur : `UnifiedBoqParser.fromCalculator()` ; la migration complète des calculs legacy reste ouverte, ne pas annoncer leur suppression.
-- Plans PDF : port `ITechnicalPlanReader`, adapter PDF.js/OCR → `TechnicalPlanService` → dimensions complètes explicitement confirmées → `MeterService` → brouillon du workspace existant. Aucun enregistrement automatique des lignes.
+- Plans PDF : `UnifiedBoqParser` détecte l'absence de lignes tabulaires exploitables et appelle le port `ITechnicalPlanReader` / PDF.js/OCR. La revue des dimensions est une étape du même `BoqImportDialog`, puis les `MeterInputDTO` utilisent `MeterService` et le même brouillon du workspace. Aucun bouton, hook d'import ou calculateur de plan séparé.
 - La GED est réutilisée via `DocumentService` pour les plans et les fichiers source DQE ; pas de table ou de bucket parallèle. Cache d'extraction par SHA-256 en mémoire, recherche du document déjà archivé par métadonnées.
 - La quantité source explicite est conservée. Brut, ouvertures, net, formule et estimations de matériaux sont des métadonnées dérivées par le service commun. Les coefficients sont injectables via le référentiel de métré, et ne constituent pas une norme universelle.
 - `BoqConsistencyService` contrôle quantité × prix + frais contre le total source, conserve le prix original après réconciliation et bloque la demande de validation en présence de corrections non revues. La revue est invalidée si les valeurs changent.
