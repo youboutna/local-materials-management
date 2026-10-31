@@ -6,9 +6,7 @@
  */
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Calculator } from 'lucide-react';
-import QuantityTakeoffs from '@/components/project/QuantityTakeoffs';
+import ProjectDqeTab from '@/components/project/ProjectDqeTab';
 
 interface PhaseQuantityTakeoffTabProps {
   phaseId: string;
@@ -21,18 +19,7 @@ const PhaseQuantityTakeoffTab: React.FC<PhaseQuantityTakeoffTabProps> = ({
   projectId,
   phaseName,
 }) => (
-  <div className="space-y-3">
-    <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-      <Calculator className="h-4 w-4 text-primary" />
-      Métré &amp; DQE
-      {phaseName && (
-        <Badge variant="outline" className="max-w-full truncate">
-          Contexte : {phaseName}
-        </Badge>
-      )}
-    </div>
-    <QuantityTakeoffs projectId={projectId} phaseId={phaseId} />
-  </div>
+  <ProjectDqeTab projectId={projectId} />
 );
 
 export default PhaseQuantityTakeoffTab;
