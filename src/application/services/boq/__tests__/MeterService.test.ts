@@ -3,6 +3,11 @@ import { MeterService } from '../MeterService';
 import type { MeterInputDTO } from '@/dtos/boq/MeterInputDTO';
 
 describe('MeterService', () => {
+  it.each(['generic', 'unknown_pattern'])('keeps unmatched pattern %s in the basic engine', (elementType) => {
+    const result = MeterService.compute({ source: 'dqe', contextId: 'p1', designation: 'Article', elementType, unit: 'u', quantity: 7, unitPrice: 10 });
+    expect(result.mode).toBe('basic');
+    expect(result.quantity).toBe(7);
+  });
   it('routes basic elements through the calculator', () => {
     const dto: MeterInputDTO = {
       source: 'quantity_takeoff', contextId: 'p1', designation: 'Saisie rapide',

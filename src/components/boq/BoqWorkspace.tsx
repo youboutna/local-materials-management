@@ -35,6 +35,8 @@ import { DocumentContextSummary, type DocumentContextItem } from './DocumentCont
 
 
 import { BoqCalculatorService } from '@/application/services/boq/BoqCalculatorService';
+import { UnifiedBoqParser } from '@/application/services/boq/UnifiedBoqParser';
+import { BoqManualLineTransformer } from '@/dtos/transforms/BoqManualLineTransformer';
 import { loadProjectWbs, isActivePhaseStatus, type ProjectWbsPhase } from '@/application/services/boq/ProjectWbsLoader';
 import { tenderToPlanningService } from '@/application/services/TenderToPlanningService';
 import type { ReferentialType } from '@/config/referentials';
@@ -444,23 +446,16 @@ export function BoqWorkspace({
 
   const addAssistedLine = (patch: Partial<BoqLineDTO>) => {
     const clientRowId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
-    setDraftLines((prev) => [{
+    const input = BoqManualLineTransformer.formToMeterInput(patch, {
       source, contextId,
       documentId: documentId ?? null,
-      designation: '',
-      unit: 'u',
-      quantity: 0,
-      unitPrice: 0,
-      totalHt: 0,
-      resourceType: 'material',
       phaseId: wbsDefault.phaseId ?? null,
       milestoneId: wbsDefault.milestoneId ?? null,
       taskId: wbsDefault.taskId ?? null,
-      sourceType: 'rapide',
-      ...patch,
-      metadata: { ...(defaultLineMetadata ?? {}), ...(patch.metadata ?? {}), clientRowId },
-      status: 'draft' as const,
-    } as BoqLineDTO, ...prev]);
+      metadata: { ...defaultLineMetadata, clientRowId },
+    });
+    const lines = UnifiedBoqParser.fromManual([input]);
+    setDraftLines((prev) => [...lines, ...prev]);
     setDirty(true);
   };
 
