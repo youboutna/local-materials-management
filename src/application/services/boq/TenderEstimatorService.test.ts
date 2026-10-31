@@ -15,7 +15,8 @@ describe('TenderEstimatorService', () => {
     expect(s.byCategory.equipment.totalHt).toBe(5_000);
     expect(s.totals.totalHt).toBe(25_000);
     expect(s.totals.totalTva).toBeCloseTo(4_000);
-    expect(s.totals.totalTtc).toBeCloseTo(29_000);
+    expect(s.totals.withholding).toBeCloseTo(600);
+    expect(s.totals.totalTtc).toBeCloseTo(28_400);
   });
 
   it('maps estimator lines to BoqLineDTO with source=tender_estimate', () => {
