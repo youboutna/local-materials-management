@@ -399,7 +399,7 @@ export function resolveReferentialLabel(
     return (
       resolveAnyEnumLabel(code, language) ??
       resolveAnyEnumLabel(normalizeReferentialCode(code), language) ??
-      humanizeReferentialCode(code)
+      code
     );
   }
   return entry[language] || entry.fr;

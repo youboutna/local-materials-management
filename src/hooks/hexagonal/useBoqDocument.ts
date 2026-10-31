@@ -3,9 +3,11 @@
  * exposes create/bulkCreate/update/delete mutations.
  */
 import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { getBoqDocumentService } from '@/application/services/boq/BoqDocumentService';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+
+const boqRepository = getBoqDocumentService();
 
 export function useBoqDocument(filter: BoqLineFilter) {
   const qc = useQueryClient();

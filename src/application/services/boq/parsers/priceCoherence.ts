@@ -6,6 +6,7 @@
  *
  * Pure TS — aucune dépendance React / Supabase.
  */
+import { DEFAULT_METERING_POLICY } from '@/config/referentials/boq/metering-policy.referential';
 
 export interface PriceReconcileInput {
   quantity: number;
@@ -26,7 +27,7 @@ export interface PriceReconcileResult {
 
 /** Recalcule P.U. / montant de façon cohérente et signale la correction. */
 export function reconcileLinePrice(input: PriceReconcileInput): PriceReconcileResult {
-  const tolerance = input.tolerance ?? 1;
+  const tolerance = input.tolerance ?? DEFAULT_METERING_POLICY.absolutePriceTolerance;
   const quantity = Number.isFinite(input.quantity) ? input.quantity : 0;
   const pu = input.unitPrice ?? null;
   const total = input.totalHt ?? null;

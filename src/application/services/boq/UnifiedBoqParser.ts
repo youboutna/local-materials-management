@@ -13,6 +13,7 @@ import { BoqImportOrchestrator, type ImportMapping } from './BoqImportOrchestrat
 import type { ParseResult } from './parsers/IDocumentParser';
 import type { NumberFormatMode } from './parsers/numberParsing';
 import type { EdbPayload } from './parsers/JsonBoqParser';
+import { MeterService } from './MeterService';
 
 export interface UnifiedParseResult extends ParseResult {
   format: MeterInputSourceFormat;
@@ -67,24 +68,29 @@ export class UnifiedBoqParser {
       parties: parsed.parties ?? null,
     });
 
-    return dtos.map((dto, idx) => ({
+    return MeterService.enrich(dtos.map((dto, idx) => ({
       ...dto,
       provenance: {
         format: parsed.format,
         fileName: parsed.fileName,
         rowIndex: idx + 1,
       },
-    }));
+    })));
   }
 
   static fromCalculator(
     lines: Omit<MeterInputDTO, 'provenance'>[],
     fileName = 'AdvancedQuantityCalculator',
   ): MeterInputDTO[] {
-    return lines.map((l, idx) => ({
+    return MeterService.enrich(lines.map((l, idx) => ({
       ...l,
       provenance: { format: 'calculator', fileName, rowIndex: idx + 1 },
-    }));
+    })));
+  }
+
+  async parseAndMeter(file: File, ctx: ToMeterInputsContext): Promise<MeterInputDTO[]> {
+    const parsed = await this.parse(file);
+    return this.toMeterInputs(parsed, parsed.autoMapping, ctx);
   }
 }
 

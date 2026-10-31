@@ -6,7 +6,7 @@ describe('MeterService', () => {
   it('routes basic elements through the calculator', () => {
     const dto: MeterInputDTO = {
       source: 'quantity_takeoff', contextId: 'p1', designation: 'Saisie rapide',
-      elementType: 'basic_calculator', unit: 'unité', quantity: 3, unitPrice: 10, vatRate: 0.2,
+      elementType: 'basic_calculator', unit: 'unité', quantity: 3, unitPrice: 10, vatRate: 0.2, rasRate: 0,
     };
     const r = MeterService.compute(dto);
     expect(r.mode).toBe('basic');

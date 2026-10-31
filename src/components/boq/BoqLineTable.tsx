@@ -70,7 +70,7 @@ const stakeholderOf = (l: BoqLineDTO) =>
   (l.metadata as { stakeholder?: { id?: string; name?: string; type?: string } } | null)?.stakeholder ?? null;
 
 export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions, newRowsAt = 'end' }: Props) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [page, setPage] = useState(0);
   const [metreIndex, setMetreIndex] = useState<number | null>(null);
@@ -266,6 +266,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
         )}
         {pageRows.map((l, idx) => {
           const i = start + idx;
+          const metering = MeterService.summary(l);
           return (
             <section key={rowKey(l, i)} className="min-w-0 border-b py-4 first:border-t">
               <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
@@ -290,6 +291,15 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                   <span className="break-words">{a.message}</span>
                 </p>
               ))}
+              <dl className="mb-3 grid grid-cols-3 gap-2 text-xs">
+                <div><dt className="text-muted-foreground">{t('metering.gross')}</dt><dd>{metering.grossQuantity.toLocaleString()} {l.unit}</dd></div>
+                <div><dt className="text-muted-foreground">{t('metering.openings')}</dt><dd>{metering.openingsArea.toLocaleString()} m²</dd></div>
+                <div><dt className="text-muted-foreground">{t('metering.net')}</dt><dd>{metering.netQuantity.toLocaleString()} {l.unit}</dd></div>
+              </dl>
+              <p className="mb-2 break-words text-xs text-muted-foreground">{metering.formula}</p>
+              {metering.materials.length > 0 && <div className="mb-3 flex flex-wrap gap-3 text-xs">
+                {metering.materials.map((material) => <span key={material.code}>{material.labels[language === 'ar' || language === 'en' ? language : 'fr']}: {material.quantity.toLocaleString()} {material.unit}</span>)}
+              </div>}
               <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {columns.map((c) => (
                   <div key={c.id} className={c.id === 'designation' ? 'min-w-0 sm:col-span-2 lg:col-span-3 2xl:col-span-4' : 'min-w-0'}>

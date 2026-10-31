@@ -3,9 +3,9 @@
  * dans le Document Hub (catégorie « boq »), avec traçabilité vers les lignes
  * importées. TypeScript pur : aucune dépendance React.
  */
-import { getStorageService } from '@/application/services/StorageService';
 import { getAuthService } from '@/application/services/AuthService';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import { getDocumentService } from '@/application/services/DocumentService';
+import { normalizeDocumentType } from '@/dtos/entities/DocumentDTO';
 
 export interface PersistBoqSourceInput {
   file: File;
@@ -22,8 +22,6 @@ export interface PersistBoqSourceInput {
   lineCount?: number;
 }
 
-const BUCKET = 'documents';
-
 export class BoqSourceDocumentService {
   /**
    * Téléverse le fichier importé puis crée la fiche document liée au BOQ.
@@ -31,28 +29,17 @@ export class BoqSourceDocumentService {
    */
   static async persist(input: PersistBoqSourceInput): Promise<boolean> {
     try {
-      const safeName = input.file.name.replace(/[^\w.\-]+/g, '_');
-      const scope = input.projectId ? `projects/${input.projectId}` : `boq/${input.source}`;
-      const path = `${scope}/boq/${Date.now()}_${safeName}`;
-
-      const storage = getStorageService();
-      await storage.uploadFile({ bucket: BUCKET, path, file: input.file });
-      const fileUrl = storage.getPublicUrl({ bucket: BUCKET, path });
-
       const user = await getAuthService().getCurrentUser();
-      await RepositoryFactory.getDocumentRepository().insertRaw({
+      await getDocumentService().createDocument({
         title: input.title?.trim() || `DQE — ${input.file.name}`,
         description: `Fichier source de l'import DQE (${input.lineCount ?? 0} ligne(s)).`,
-        file_url: fileUrl,
-        file_name: input.file.name,
-        mime_type: input.file.type || null,
-        file_size: input.file.size,
-        document_type: input.category ?? 'boq',
-        uploaded_by: user?.id ?? null,
-        ...(input.projectId ? { project_id: input.projectId } : {}),
-        ...(input.phaseId ? { phase_id: input.phaseId } : {}),
-        ...(input.tenderId ? { tender_id: input.tenderId } : {}),
+        file: input.file,
+        documentType: normalizeDocumentType(input.category ?? 'boq'),
+        uploadedBy: user?.id ?? null,
+        projectId: input.projectId,
+        phaseId: input.phaseId,
         metadata: {
+          ...(input.tenderId ? { tenderId: input.tenderId } : {}),
           boq_context_id: input.contextId,
           boq_source: input.source,
           boq_line_count: input.lineCount ?? 0,

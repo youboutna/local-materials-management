@@ -10,6 +10,7 @@
  */
 import { NUMBER_FORMAT_OPTIONS, type NumberFormatMode } from '@/application/services/boq/parsers/numberParsing';
 import { BoqValidatorService } from '@/application/services/boq/BoqValidatorService';
+import { BoqConsistencyService } from '@/application/services/boq/BoqConsistencyService';
 import { mergeDimensions } from '@/application/services/boq/parsers/dimensionExtraction';
 import { EdbValidationService } from '@/application/services/boq/EdbValidationService';
 import { loadProjectWbs } from '@/application/services/boq/ProjectWbsLoader';
@@ -155,6 +156,7 @@ export function BoqImportDialog(props: Props) {
   }, [dtos, wbs, isAltReferential, phaseMapping]);
 
   const issues = useMemo(() => validateLines(wbsEnrichedDtos), [wbsEnrichedDtos]);
+  const priceIssues = useMemo(() => BoqConsistencyService.inspect(wbsEnrichedDtos), [wbsEnrichedDtos]);
 
   /** Assistance import : confrontation aux catalogues (matériaux, RH, fournisseurs,
    *  organisations, projets, phases) + diagnostics ligne par ligne. */
@@ -288,6 +290,7 @@ export function BoqImportDialog(props: Props) {
       return;
     }
     try {
+      BoqConsistencyService.assertReady(wbsEnrichedDtos);
       let lines = wbsEnrichedDtos.map((line) => ({ ...line }));
       let decisionNote: string | null = null;
       let newProjectBudget: number | null = null;
@@ -563,6 +566,11 @@ export function BoqImportDialog(props: Props) {
 
         {parseResult && step === 3 && (
           <>
+            {priceIssues.length > 0 && <section className="border-l-2 border-destructive pl-3 text-sm">
+              <h4 className="font-medium">{t('metering.price_issues')}</h4>
+              <ul className="my-2 text-xs">{priceIssues.map((issue) => <li key={issue.index}>#{issue.code} · {issue.expected.toLocaleString()} ≠ {issue.actual.toLocaleString()} · Δ {issue.delta.toLocaleString()}</li>)}</ul>
+              <Button variant="outline" size="sm" onClick={() => setDtos(BoqConsistencyService.review(wbsEnrichedDtos))}>{t('metering.review_corrections')}</Button>
+            </section>}
             <p className="text-xs text-muted-foreground">
               {wbsEnrichedDtos.length} ligne(s) · {issues.length} à corriger
             </p>
