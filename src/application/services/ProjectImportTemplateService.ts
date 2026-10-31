@@ -18,6 +18,7 @@ import {
 } from '@/config/referentials';
 import type { PlanningPreviewDTO, PlanningPreviewInputDTO } from '@/dtos/entities/PlanningPreviewDTO';
 import { addDays,format,isValid,parseISO } from 'date-fns';
+import type { PlanningWorkbookInputDTO, PlanningWorkbookPreviewDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 
 // =============================================================================
 // TYPES
@@ -57,6 +58,106 @@ export interface ReferentialOption {
 // =============================================================================
 
 export class ProjectImportTemplateService {
+  async readWorkbook(file: File) {
+    const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
+    return PlanningWorkbookReader.read(file);
+  }
+
+  async readNarrative(file: File): Promise<string> {
+    const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
+    return PlanningWorkbookReader.narrative(file);
+  }
+
+  isPlanningWorkbook(source: PlanningWorkbookInputDTO['source']): boolean {
+    return source.sheets.some(sheet => sheet.rows.slice(0, 5).some(row => row.some(cell => /^(libellé|activités)$/i.test(String(cell.value ?? '').trim()))));
+  }
+
+  async readProjectDataset(file: File): Promise<unknown> {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const { readFileAsText, readFileAsArrayBuffer } = await import('@/infrastructure/parsers/IProjectFileParser');
+    if (extension === 'json') return JSON.parse(await readFileAsText(file));
+    if (extension === 'csv') {
+      const Papa = await import('papaparse');
+      const result = Papa.default.parse(await readFileAsText(file), { header: true, skipEmptyLines: true }) as { data: Record<string, unknown>[]; errors: Array<{ message: string }> };
+      if (result.errors.length) throw new Error(result.errors.map(error => error.message).join('; '));
+      return result.data;
+    }
+    if (extension === 'xlsx' || extension === 'xls') {
+      const source = await this.readWorkbook(file);
+      if (this.isPlanningWorkbook(source)) throw new Error('Planning workbook requires mapping review');
+      const XLSX = await import('xlsx');
+      const workbook = XLSX.read(await readFileAsArrayBuffer(file), { type: 'array' });
+      // Every worksheet is retained; metadata/foreign sheets are not mislabelled as projects.
+      const projects = workbook.SheetNames.flatMap(name => XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[name]));
+      return { projects: projects.map(project => ({ ...project, description: project.description ?? JSON.stringify({ planningSource: source }) })) };
+    }
+    throw new Error('Unsupported project document');
+  }
+
+  async archiveSources(projectId: string, files: File[]): Promise<void> {
+    const { getDocumentService } = await import('./DocumentService');
+    const documents = getDocumentService();
+    const existing = await documents.getProjectDocuments(projectId);
+    for (const file of files) {
+      const { readFileAsArrayBuffer } = await import('@/infrastructure/parsers/IProjectFileParser');
+      const digest = await crypto.subtle.digest('SHA-256', await readFileAsArrayBuffer(file));
+      const hash = Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, '0')).join('');
+      if (existing.some(document => document.metadata?.sourceHash === hash)) continue;
+      const saved = await documents.createDocument({ title: file.name, file, projectId, documentType: 'supporting_document', isInternalOnly: true, metadata: { sourceHash: hash, source: 'project_import' } });
+      existing.push(saved);
+    }
+  }
+
+  previewWorkbook(input: PlanningWorkbookInputDTO): PlanningWorkbookPreviewDTO {
+    if (!input.title.trim() || !input.reference.trim() || !isValid(parseISO(input.startDate))) throw new Error('Title, reference and valid start date are required');
+    if (!Number.isFinite(input.budget) || input.budget < 0) throw new Error('A reviewed non-negative project budget is required');
+    const { source, mapping } = input;
+    if (!Number.isFinite(mapping.amountMultiplier) || mapping.amountMultiplier <= 0) throw new Error('Invalid monetary scale');
+    for (const [key, value] of Object.entries(mapping)) if (key.endsWith('Column') && (!Number.isInteger(value) || Number(value) < 0)) throw new Error('Invalid column');
+    const codePattern = new RegExp(mapping.codePattern);
+    const totalPattern = new RegExp(mapping.totalPattern, 'i');
+    const rows: PlanningWorkbookPreviewDTO['rows'] = [];
+    const warnings: PlanningWorkbookPreviewDTO['warnings'] = [];
+    const phases: NonNullable<PlanningWorkbookPreviewDTO['project']['phases']> = [];
+    for (const sheet of source.sheets) {
+      const cellText = (r: number, c: number) => String(sheet.rows[r]?.[c]?.value ?? '').trim();
+      const numeric = (r: number, c: number): number | undefined => {
+        const value = sheet.rows[r]?.[c]?.value;
+        if (value === null || value === undefined || value === '') return undefined;
+        const number = typeof value === 'number' ? value : Number(String(value).replace(/[\s\u00a0\u202f]/g, '').replace(',', '.'));
+        return Number.isFinite(number) ? number : undefined;
+      };
+      const candidates = sheet.rows.map((_, index) => ({ index, code: cellText(index, mapping.codeColumn).replace(/[.-]+$/, '').replace(/-/g, '.'), title: cellText(index, mapping.titleColumn) }));
+      const seen = new Set<string>();
+      const phase: NonNullable<typeof phases>[number] = { code: sheet.name, name: sheet.name, externalRef: `${input.reference}:sheet:${sheet.name}`, order: phases.length, tasks: [], metadata: { planningSource: { filename: source.filename, sheet: sheet.name } } };
+      for (const { index, code, title } of candidates) {
+        if (!sheet.rows[index].some(cell => cell.value !== null || cell.formula || cell.style)) continue;
+        const validCode = codePattern.test(cellText(index, mapping.codeColumn));
+        const responsible = cellText(index, mapping.responsibleColumn);
+        const quantity = numeric(index, mapping.quantityColumn);
+        const unitPrice = numeric(index, mapping.unitPriceColumn);
+        const sourceAmount = numeric(index, mapping.amountColumn);
+        const unit = cellText(index, mapping.unitColumn);
+        const hasChildren = validCode && candidates.some(other => other.index !== index && other.code.startsWith(`${code}.`));
+        const kind = !validCode || !title || totalPattern.test(title) ? 'unmapped' : hasChildren && quantity === undefined && !unit && !responsible ? 'group' : 'task';
+        rows.push({ sheet: sheet.name, row: index + 1, code: cellText(index, mapping.codeColumn), title, responsible, quantity, unit, sourceAmount, amount: sourceAmount === undefined ? undefined : sourceAmount * mapping.amountMultiplier, kind });
+        if (kind === 'unmapped') { if (title && quantity !== undefined) warnings.push({ code: 'missing_code', sheet: sheet.name, row: index + 1 }); continue; }
+        if (seen.has(code)) warnings.push({ code: 'duplicate_code', sheet: sheet.name, row: index + 1 });
+        seen.add(code);
+        if (quantity !== undefined && unitPrice !== undefined && sourceAmount !== undefined && Math.abs(quantity * unitPrice - sourceAmount) > Number.EPSILON * Math.max(1, Math.abs(sourceAmount), Math.abs(quantity * unitPrice)) * 16) warnings.push({ code: 'arithmetic_difference', sheet: sheet.name, row: index + 1 });
+        // Stable source row identity avoids collapsing repeated documentary codes.
+        if (kind === 'task') phase.tasks?.push({ id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${cellText(index, mapping.codeColumn)} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: cellText(index, mapping.codeColumn), path: code.split('.'), associates: cellText(index, mapping.associatesColumn), quantity, unit, unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount: sourceAmount === undefined ? undefined : sourceAmount * mapping.amountMultiplier, cells: sheet.rows[index] } } });
+      }
+      if (phase.tasks?.length) phases.push(phase);
+      warnings.push({ code: 'period_review', sheet: sheet.name, row: 1 });
+    }
+    if (!phases.length) throw new Error('No activity matched the selected mapping');
+    // Existing phase custom data preserves evidence without dumping JSON into
+    // the user-facing project description. The original binary also goes to GED.
+    phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
+    const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
+    return { project, source, rows, warnings };
+  }
   /** Controlled table import, not an inference engine for arbitrary prose. */
   previewPlanning(input: PlanningPreviewInputDTO): PlanningPreviewDTO {
     const anchor=parseISO(input.startDate);
@@ -105,7 +206,7 @@ export class ProjectImportTemplateService {
       for(const item of phase.milestones ?? []) if(!item.targetDate) item.targetDate=phase.endDate;
     }
     if(!project.phases?.length) throw new Error('No schedule row matched the selected mapping');
-    project.endDate=delivery;
+    project.endDate=project.phases.map(phase=>phase.endDate).filter((date):date is string=>Boolean(date)).sort().at(-1);
     for(const phase of project.phases) for(const item of phase.milestones ?? []) {
       if(item.targetDate && phase.endDate && item.targetDate>phase.endDate) warnings.push(`${phase.name}: ${item.title} (${item.targetDate}) > ${phase.endDate}`);
     }

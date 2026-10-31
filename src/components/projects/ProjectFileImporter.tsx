@@ -1,4 +1,3 @@
-import { ProjectService, getProjectService} from '@/application/services/ProjectService';
 import { ProjectImportExportService } from '@/application/services/ProjectImportExportService';
 import {
   projectImportTemplateService,
@@ -8,13 +7,11 @@ import type { ReferentialType } from '@/config/referentials';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CreateProjectDTO } from "@/dtos/entities/ProjectDTO";
 import { ImportOptions, ImportResult } from "@/dtos/entities/ProjectReportDTO";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -27,24 +24,12 @@ import {
     X,
 } from "lucide-react";
 import React, { useMemo, useRef, useState } from "react";
-import * as XLSX from "xlsx";
 import { T } from '@/components/i18n/T';
 import { PlanningImportPreview } from '@/components/projects/PlanningImportPreview';
+import { PlanningWorkbookPreview } from '@/components/projects/PlanningWorkbookPreview';
+import type { PlanningWorkbookDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 
 type ImportMode = "create" | "update" | "patch";
-
-// Local type for import form data - extends CreateProjectDTO with import-specific fields
-interface ImportProjectData extends Partial<CreateProjectDTO> {
-  id?: string;
-  phases?: any[];
-  plannedPhases?: any[];
-  status?: any;
-  progress?: number;
-  thumbnail?: string;
-  environmentalImpact?: string;
-  sustainabilityScore?: number;
-  [key: string]: any; // Allow any additional properties for flexibility
-}
 
 const IMPORT_OPTIONS: ImportOptions = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -63,6 +48,9 @@ interface ProjectFileImporterProps {
 export default function ProjectFileImporter({
   onImportComplete,
 }: ProjectFileImporterProps) {
+  const [workbook, setWorkbook] = useState<PlanningWorkbookDTO>();
+  const [reading, setReading] = useState(false);
+  const [sourceFiles, setSourceFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
@@ -78,10 +66,6 @@ export default function ProjectFileImporter({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const projectService = useMemo(
-    () => getProjectService(),
-    [],
-  );
   const projectImportService = useMemo(
     () => ProjectImportExportService.default(),
     [],
@@ -98,264 +82,35 @@ export default function ProjectFileImporter({
   const validateFile = (file: File): string | null => {
     if (IMPORT_OPTIONS.maxFileSize && file.size > IMPORT_OPTIONS.maxFileSize) {
       return `${t("projects.import.fileTooLarge")} ${formatFileSize(
-        IMPORT_OPTIONS.maxFileSize!
+        IMPORT_OPTIONS.maxFileSize
       )}`;
     }
 
-    if (IMPORT_OPTIONS.allowedFormats && !IMPORT_OPTIONS.allowedFormats.includes(file.type)) {
+    if (IMPORT_OPTIONS.allowedFormats && !IMPORT_OPTIONS.allowedFormats.includes(file.type) && !/\.(xlsx|xls|json|csv)$/i.test(file.name)) {
       return t("projects.import.unsupportedFormat");
     }
 
     return null;
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const validationError = validateFile(file);
-    if (validationError) {
-      toast({
-        title: t("projects.import.invalidFile"),
-        description: validationError,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSelectedFile(file);
-    setImportResult(null);
-  };
-
-  const parseExcelFile = async (file: File): Promise<any[]> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: "array" });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
-          resolve(jsonData);
-        } catch (error) {
-          reject(new Error(t("projects.import.excelReadError")));
-        }
-      };
-      reader.onerror = () =>
-        reject(new Error(t("projects.import.fileReadError")));
-      reader.readAsArrayBuffer(file);
-    });
-  };
-
-  const parseJsonFile = async (file: File): Promise<any> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const data = JSON.parse(content);
-          // Preserve dataset envelopes so organizations, suppliers and
-          // projects are imported together by the application service.
-          resolve(data);
-        } catch (error) {
-          reject(new Error(t("projects.import.invalidJson")));
-        }
-      };
-      reader.readAsText(file);
-    });
-  };
-
-  const parseCsvFile = async (file: File): Promise<any[]> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const lines = content.split("\n");
-          const headers = lines[0].split(",").map((h) => h.trim());
-
-          const data = lines
-            .slice(1)
-            .filter((line) => line.trim())
-            .map((line) => {
-              const values = line.split(",");
-              const obj: any = {};
-              headers.forEach((header, index) => {
-                obj[header] = values[index]?.trim() || "";
-              });
-              return obj;
-            });
-
-          resolve(data);
-        } catch (error) {
-          reject(new Error(t("projects.import.csvReadError")));
-        }
-      };
-      reader.readAsText(file);
-    });
-  };
-
-  const parseFile = async (file: File): Promise<any> => {
-    switch (file.type) {
-      case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-      case "application/vnd.ms-excel":
-        return parseExcelFile(file);
-      case "application/json":
-        return parseJsonFile(file);
-      case "text/csv":
-        return parseCsvFile(file);
-      default:
-        throw new Error(t("projects.import.unsupportedFormat"));
-    }
-  };
-
-  const transformToProjectData = (item: any): ImportProjectData => {
-    // Map des statuts vers les valeurs autorisées (use domain ProjectStatus enum values)
-    const statusMap: { [key: string]: string } = {
-      "en construction": "en cours",
-      "en clôture": "en cours",
-      "en conception": "en attente",
-      "planifié": "planifié",
-      "en cours": "en cours",
-      "en attente": "en attente",
-      "enCours": "en cours",
-      "enAttente": "en attente",
-    };
-
-    const rawStatus = item.status || "en cours";
-    const mappedStatus = statusMap[rawStatus.toLowerCase()] || "en cours";
-    const progress = item.progress ? Math.round(parseFloat(item.progress)) : 0;
-
-    // Génération automatique des phases compatibles avec PhaseData
-    const generatePhases = (projectItem: any): any[] => {
-      const phases: any[] = [];
-
-      // Déterminer le type de phase basé sur le statut
-      let phaseType = "construction";
-      let phaseStatus: "not_started" | "in_progress" | "completed" | "delayed" =
-        "not_started";
-
-      const statusLower = mappedStatus.toLowerCase();
-      if (statusLower.includes("attente") || statusLower === "planifié") {
-        phaseType = "planning";
-        phaseStatus = "not_started";
-      } else if (statusLower.includes("cours") || statusLower.includes("construction")) {
-        phaseType = "construction";
-        phaseStatus = progress > 0 ? "in_progress" : "not_started";
-      } else if (statusLower.includes("inspection")) {
-        phaseType = "inspection";
-        phaseStatus = "in_progress";
-      } else if (statusLower.includes("terminé") || statusLower.includes("clôture")) {
-        phaseType = "closure";
-        phaseStatus = "completed";
+    if (validationError) { toast({ title: t("projects.import.invalidFile"), description: validationError, variant: "destructive" }); return; }
+    setSelectedFile(file); setImportResult(null); setImportDetails(null); setWorkbook(undefined); setSourceFiles([file]); setReading(true);
+    try {
+      if (/\.(xlsx|xls)$/i.test(file.name)) {
+        const source = await projectImportTemplateService.readWorkbook(file);
+        if (projectImportTemplateService.isPlanningWorkbook(source)) setWorkbook(source);
       }
-
-      // Calculer la durée estimée (en jours)
-      const startDate = new Date(projectItem.startDate);
-      const endDate = new Date(projectItem.endDate);
-      const estimatedDuration = Math.max(
-        1,
-        Math.ceil(
-          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-        )
-      );
-
-      // Créer la phase principale
-      const mainPhase = {
-        id: `imported-phase-${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(2, 9)}`,
-        title: projectItem.title || "Phase Principale",
-        description:
-          projectItem.description ||
-          `Phase automatiquement générée pour l'importation`,
-        startDate: projectItem.startDate,
-        endDate: projectItem.endDate,
-        estimatedDuration: estimatedDuration,
-        status: phaseStatus,
-        budget: projectItem.budget ? projectItem.budget * 0.8 : 0,
-        actualCost: 0,
-        progress: progress,
-        materials: [],
-        humanResources: [],
-        suppliers: [],
-        location: projectItem.location || "",
-        notes: `Phase générée automatiquement lors de l'importation. Statut: ${mappedStatus}, Progression: ${progress}%`,
-      };
-
-      phases.push(mainPhase);
-      return phases;
-    };
-
-    const generatedPhases = generatePhases(item);
-    console.log(`📊 Phases générées pour ${item.title}:`, generatedPhases);
-    
-    // Build the import project data with required fields
-    const title = item.title || item.nom || item.name || t("projects.import.defaultTitle");
-    
-    return {
-      title,
-      description: item.description || item.desc || "",
-      location: item.location || item.lieu || item.localisation || "",
-      budget: parseFloat(item.budget || item.cout || item.montant || "0"),
-      startDate:
-        item.startDate ||
-        item.dateDebut ||
-        item.start_date ||
-        new Date().toISOString().split("T")[0],
-      endDate: item.endDate || item.dateFin || item.end_date,
-      teamSize: parseInt(item.teamSize || item.equipe || item.team_size || "1"),
-
-      // Extended fields
-      financingSource: item.financingSource || item.sourceFinancement,
-      marketType: item.marketType || item.typeMarche,
-      selectionMode: item.selectionMode || item.modeSelection,
-      launchDate: item.launchDate || item.dateLancement,
-      attributionDate: item.attributionDate || item.dateAttribution,
-      projectReference: item.projectReference || item.reference,
-      mainContractor: item.mainContractor || item.contractor,
-      allowsInitialPayment: item.allowsInitialPayment || false,
-      initialPaymentPercentage: parseFloat(
-        item.initialPaymentPercentage || "0"
-      ),
-
-      // Classification fields
-      category: item.category || item.categorie,
-      subCategory: item.subCategory || item.sousCategorie,
-      priorityLevel: item.priorityLevel || item.niveauPriorite,
-      riskLevel: item.riskLevel || item.niveauRisque,
-      environmentalImpact:
-        item.environmentalImpact || item.impactEnvironnemental,
-      sustainabilityScore: item.sustainabilityScore
-        ? parseFloat(item.sustainabilityScore)
-        : undefined,
-
-      // Additional data (cast to ProjectStatus after validation)
-      status: mappedStatus as any,
-      progress: progress,
-      thumbnail: item.thumbnail,
-
-      // Related entities (will be processed separately)
-      milestones: item?.milestones,
-      documents: item?.documents,
-      stakeholders: item?.stakeholders,
-      inspections: item?.inspections,
-      risks: item?.risks,
-      tasks: item?.tasks,
-      payments: item?.payments,
-
-      // PHASES GÉNÉRÉES AUTOMATIQUEMENT - compatibles avec PhaseData
-      phases: generatedPhases,
-      plannedPhases: generatedPhases,
-
-      constructionMilestones: item?.constructionMilestones,
-      expenses: item?.expenses,
-      resources: item?.resources,
-    };
+    } catch (cause) {
+      toast({ title: t('projects.import.error'), description: cause instanceof Error ? cause.message : t('common.error'), variant: 'destructive' });
+    } finally { setReading(false); }
   };
+
   const handleImport = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || workbook || reading || importing) return;
 
     setImporting(true);
     setImportProgress(0);
@@ -364,15 +119,8 @@ export default function ProjectFileImporter({
       // Parse file
       console.log("Starting file parsing...");
       setImportProgress(25);
-      const rawData = await parseFile(selectedFile);
-      const parsedProjectCount = Array.isArray(rawData)
-        ? rawData.length
-        : Array.isArray(rawData?.projects)
-          ? rawData.projects.length
-          : 0;
-      console.log("File parsed successfully, projects:", parsedProjectCount);
-
-      if (!rawData || rawData.length === 0) {
+      const rawData = await projectImportTemplateService.readProjectDataset(selectedFile);
+      if (!rawData || (Array.isArray(rawData) && rawData.length === 0)) {
         throw new Error(t("projects.import.noData"));
       }
 
@@ -390,16 +138,20 @@ export default function ProjectFileImporter({
       const importResult = await projectImportService.importDataset(dataset, {
         mode: serviceMode,
         continueOnError: true,
-      } as never);
+      });
+      if (importResult.createdIds.length === 1 && sourceFiles.length) {
+        try { await projectImportTemplateService.archiveSources(importResult.createdIds[0], sourceFiles); }
+        catch (cause) { importResult.errors.push({ row: 0, title: t('planning.source'), message: cause instanceof Error ? cause.message : t('common.error') }); }
+      }
       const errors = importResult.errors.map(
         (error) => `${t("projects.import.line")} ${error.row}: ${error.message}`,
       );
       const totalProcessed = importResult.imported;
       const message = `${totalProcessed} ${t("projects.import.projectsImported")}` +
-        (importResult.failed > 0 ? ` (${importResult.failed} ${t("projects.import.errors")})` : "");
+        (errors.length > 0 ? ` (${errors.length} ${t("projects.import.errors")})` : "");
 
       const result: ImportResult = {
-        success: totalProcessed > 0,
+        success: totalProcessed > 0 && importResult.failed === 0 && errors.length === 0,
         message,
         importedCount: totalProcessed,
         imported: totalProcessed,
@@ -443,6 +195,8 @@ export default function ProjectFileImporter({
   };
 
   const clearSelection = () => {
+    setWorkbook(undefined);
+    setSourceFiles([]);
     setSelectedFile(null);
     setImportResult(null);
     setImportDetails(null);
@@ -467,15 +221,9 @@ export default function ProjectFileImporter({
 
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5" />
-          {t("projects.import.fileImport")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <PlanningImportPreview referentialCode={templateReferential} onPrepared={file=>{setSelectedFile(file);setImportResult(null);}} />
+    <section className="min-w-0 space-y-4">
+        {workbook && <PlanningWorkbookPreview key={workbook.filename} source={workbook} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setImportResult(null); }} />}
+        <PlanningImportPreview referentialCode={templateReferential} onPrepared={file=>{setSelectedFile(file);setWorkbook(undefined);setSourceFiles([]);setImportResult(null);}} />
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -494,7 +242,7 @@ export default function ProjectFileImporter({
             <RadioGroup
               value={importMode}
               onValueChange={(value) => setImportMode(value as ImportMode)}
-              className="flex gap-4"
+              className="flex flex-wrap gap-4"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="create" id="mode-create" />
@@ -533,7 +281,7 @@ export default function ProjectFileImporter({
                   value={templateReferential}
                   onValueChange={(v) => setTemplateReferential(v as ReferentialType)}
                 >
-                  <SelectTrigger className="w-[280px]">
+                  <SelectTrigger className="w-full sm:w-[280px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -592,6 +340,7 @@ export default function ProjectFileImporter({
                   type="file"
                   className="sr-only"
                   accept=".xlsx,.xls,.json,.csv"
+                  disabled={reading || importing}
                   onChange={handleFileSelect}
                 />
               </label>
@@ -686,7 +435,7 @@ export default function ProjectFileImporter({
         <div className="flex gap-2">
           <Button
             onClick={handleImport}
-            disabled={!selectedFile || importing}
+            disabled={!selectedFile || importing || reading || !!workbook}
             className="flex-1"
           >
             {importing
@@ -703,7 +452,6 @@ export default function ProjectFileImporter({
             </Button>
           )}
         </div>
-      </CardContent>
-    </Card>
+    </section>
   );
 }

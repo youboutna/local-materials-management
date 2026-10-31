@@ -24,11 +24,8 @@ const ProjectImport = () => {
     queryClient.invalidateQueries({ queryKey: ["projects-hex"] });
     const successCount = (result as { successCount?: number; imported?: number })?.successCount
       ?? (result as { imported?: number })?.imported;
-    toast.success(
-      successCount != null
-        ? `Import terminé : ${successCount} projet(s) importé(s)`
-        : "Import terminé avec succès"
-    );
+    if (result.success && !result.failed && !result.errors?.length) toast.success(`${t('projects.import.success')} · ${successCount ?? result.importedCount ?? 0}`);
+    else toast.warning(result.message || t('projects.import.error'));
   };
 
   return (
@@ -54,43 +51,7 @@ const ProjectImport = () => {
         </TabsList>
 
         <TabsContent value="file-import" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Upload className="h-5 w-5 mr-2" />
-                {t("projects.import.fileImport")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                {t("projects.import.fileImportDescription")}
-              </p>
-
-              <div className="bg-primary/10 dark:bg-blue-950/30 border border-primary/30 dark:border-blue-800 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                  {t("projects.import.importantInfo")}:
-                </h3>
-                <ul className="text-sm text-primary dark:text-blue-200 space-y-1">
-                  <li>
-                    • {t("projects.import.supportedFormats")}: Excel (.xlsx,
-                    .xls), JSON (.json), CSV (.csv)
-                  </li>
-                  <li>• {t("projects.import.maxSize")}: 10 MB</li>
-                  <li>
-                    • {t("projects.import.requiredColumns")}: title,
-                    description, location
-                  </li>
-                  <li>
-                    • {t("projects.import.optionalColumns")}: budget, startDate,
-                    endDate, teamSize, coordinates, phases, tasks, inspections,
-                    risks, payments
-                  </li>
-                </ul>
-              </div>
-
-              <ProjectFileImporter onImportComplete={handleImportComplete} />
-            </CardContent>
-          </Card>
+          <ProjectFileImporter onImportComplete={handleImportComplete} />
         </TabsContent>
 
         <TabsContent value="advanced" className="space-y-4">

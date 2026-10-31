@@ -124,6 +124,7 @@ export interface ProjectImportRow {
   clientName?: string;
   donorOrganization?: string;
   areaSqm?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportPhase {
@@ -160,6 +161,7 @@ export interface ProjectImportPhase {
   milestones?: ProjectImportMilestone[];
   tasks?: ProjectImportTask[];
   dqeLines?: BoqLineDTO[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportMilestone {
@@ -222,6 +224,7 @@ export interface ProjectImportTask {
   requiresEngineerApproval?: boolean;
   actionType?: string;
   action_type?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportStakeholder {
@@ -1521,8 +1524,8 @@ export class ProjectImportExportService {
           endDate: phase.endDate,
           estimatedDuration,
           customPhaseData: phase.dqeMapping
-            ? { dqeMapping: phase.dqeMapping, phaseCode: phaseCode }
-            : { phaseCode: phaseCode },
+            ? { ...phase.metadata, dqeMapping: phase.dqeMapping, phaseCode: phaseCode }
+            : { ...phase.metadata, phaseCode: phaseCode },
           estimatedCost: phase.estimatedCost,
           actualCost: phase.actualCost,
           budget: phase.budget,
@@ -1796,15 +1799,19 @@ export class ProjectImportExportService {
     const existingTasks = validPhaseId
       ? await this.taskAssignmentService.getByPhase(validPhaseId)
       : await this.taskAssignmentService.getByProject(projectId);
-    const existingTask = existingTasks.find((candidate) => candidate.title === name);
+    const existingTask = existingTasks.find((candidate) => task.id
+      ? candidate.id === task.id || candidate.metadata?.importId === task.id || candidate.metadata?.externalRef === task.id
+      : candidate.title === name);
 
     const resolved = this.resolveTaskAssignees(task.assignedTo, suppliers, employees);
 
     let assigneeName = task.assigneeName || task.assignedName || resolved.names[0];
     let assigneeEmail = task.assigneeEmail || task.AssignedEmail || resolved.emails[0];
 
-    if (!assigneeName && this.currentUserName) assigneeName = this.currentUserName;
-    if (!assigneeEmail && this.currentUserEmail) assigneeEmail = this.currentUserEmail;
+    if (!task.metadata?.planningSource) {
+      if (!assigneeName && this.currentUserName) assigneeName = this.currentUserName;
+      if (!assigneeEmail && this.currentUserEmail) assigneeEmail = this.currentUserEmail;
+    }
 
     const assignees = resolved.ids;
     const assigneeType = resolved.source;
@@ -1857,6 +1864,7 @@ export class ProjectImportExportService {
           : undefined),
       actualHours: task.actualHours,
       metadata: {
+        ...task.metadata,
         assignedBy: this.currentUserId,
         assignedTo: assignees,
         assigneeType,
