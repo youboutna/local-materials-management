@@ -43,11 +43,15 @@ export class TechnicalPlanService {
       if (page.source === 'ocr' && page.confidence < TECHNICAL_PLAN_POLICY.minimumOcrConfidence) result.warnings.push({ code: 'ocr_low_confidence', page: page.page });
       const pattern = new RegExp(TECHNICAL_PLAN_PATTERNS.section);
       for (const match of page.text.matchAll(pattern)) {
-        const prefix = match[1] as keyof typeof TECHNICAL_PLAN_POLICY.elementPrefixes;
+        const prefix = Object.keys(TECHNICAL_PLAN_POLICY.elementPrefixes).find((key) => key.toLowerCase() === match[1].toLowerCase()) as keyof typeof TECHNICAL_PLAN_POLICY.elementPrefixes | undefined;
+        if (!prefix) continue;
         const unit = match[5] as keyof typeof TECHNICAL_PLAN_POLICY.units | undefined;
         const factor = unit ? TECHNICAL_PLAN_POLICY.units[unit] : undefined;
         if (!factor) result.warnings.push({ code: 'ambiguous_unit', page: page.page });
-        result.elements.push({ ref: `${match[1]}${match[2]}`, page: page.page, rawLabel: match[0],
+        const ref = `${prefix}${match[2]}`;
+        // Repeated labels on a drawing do not prove an element count.
+        if (result.elements.some((element) => element.page === page.page && element.ref === ref && element.rawLabel === match[0])) continue;
+        result.elements.push({ ref, page: page.page, rawLabel: match[0],
           elementType: TECHNICAL_PLAN_POLICY.elementPrefixes[prefix],
           width: factor ? Number(match[3].replace(',', '.')) * factor : undefined,
           height: factor ? Number(match[4].replace(',', '.')) * factor : undefined,

@@ -14,11 +14,11 @@ describe('Controlled technical plan bridge', () => {
   });
   it('requires a missing beam length before creating BOQ drafts', () => {
     const plan = TechnicalPlanService.extract([page], 'STR.pdf', 'hash');
-    expect(() => TechnicalPlanService.toMeterInputs(plan, plan.elements.map((element) => ({ ...element, confirmed: true })), { source: 'dqe', contextId: 'p' })).toThrow('Missing length');
+    expect(() => TechnicalPlanService.toMeterInputs(plan, plan.elements.map((element) => ({ ...element, elementType: 'concrete_beam', confirmed: true })), { source: 'dqe', contextId: 'p' })).toThrow('Missing length');
   });
   it('uses the canonical meter with count and document provenance', () => {
     const plan = TechnicalPlanService.extract([page], 'STR.pdf', 'hash');
-    const lines = TechnicalPlanService.toMeterInputs(plan, [{ ...plan.elements[0], length: 5, count: 2, confirmed: true }], { source: 'dqe', contextId: 'p', phaseId: 'phase' }, 'doc');
+    const lines = TechnicalPlanService.toMeterInputs(plan, [{ ...plan.elements[0], elementType: 'concrete_beam', length: 5, count: 2, confirmed: true }], { source: 'dqe', contextId: 'p', phaseId: 'phase' }, 'doc');
     expect(lines[0].quantity).toBeCloseTo(1.2);
     expect(lines[0].phaseId).toBe('phase');
     expect(lines[0].provenance?.documentId).toBe('doc');

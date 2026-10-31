@@ -4,7 +4,7 @@ export const TECHNICAL_PLAN_PATTERNS = {
   planche: /(?:Planche|PLANCHE|Pl)\s*[:.]?\s*([\w-]+)/i,
   phase: /Phase\s*[:.]?\s*([\w-]+)/i,
   date: /Date\s*[:.]?\s*([^\n]+)/i,
-  section: /\b([PS]|Lg)\s*(\d+)\b[^\n]*?(\d+(?:[,.]\d+)?)\s*[xX×]\s*(\d+(?:[,.]\d+)?)\s*(cm|mm|m)?\b/gi,
+  section: /\b([PS]|Lg|Lng)\s*(\d+)\b\s*[:=-]?\s*(\d+(?:[,.]\d+)?)\s*[xX×]\s*(\d+(?:[,.]\d+)?)\s*(cm|mm|m)?\b/gi,
 };
 
 export const TECHNICAL_PLAN_POLICY = {
@@ -12,5 +12,5 @@ export const TECHNICAL_PLAN_POLICY = {
   renderScale: 1.5,
   maximumPages: 50,
   units: { m: 1, cm: 0.01, mm: 0.001 },
-  elementPrefixes: { P: 'concrete_beam', S: 'concrete_footing', Lg: 'concrete_beam' },
+  elementPrefixes: { P: 'concrete_column', S: 'concrete_footing', Lg: 'concrete_beam', Lng: 'concrete_beam' },
 } as const;
