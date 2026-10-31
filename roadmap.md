@@ -66,3 +66,5 @@
 - [x] Retirer le parcours métré concurrent : bouton autonome et onglet calculateur supprimés ; saisie assistée via le même enrichissement que l'import ; patterns référentiels et conservation des quantités saisies vérifiés par 31 tests. Recette connectée bloquée par Supabase externe.
 - [x] Harmoniser projets, phases, création/édition/import et calendrier/opérations : navigation projet unique pilotée par URL, opérations en tableau, DQE partagé ouvert sur les lignes, réglages fiscaux repliés et carte agrandie ; 29 tests ciblés passent.
 - [ ] Vérifier visuellement les pages harmonisées et leurs CRUD en session réelle — bloqué : Supabase externe sans session injectable ; navigateur resté sur Chargement, pas de validation connectée.
+- [ ] Fiabiliser l’import/saisie des programmes PTBA illustratifs : feuilles Excel complètes, hiérarchie, budgets, responsables, périodes et conservation des données non mappées ; réutiliser l’import projet et les vues existantes.
+- [ ] Vérifier les fichiers PTBA joints par tests de conversion sans perte et documenter les limites de persistance et de recette connectée.
