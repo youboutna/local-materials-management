@@ -56,4 +56,7 @@
 - [ ] Réutiliser Gantt, PERT, WBS, calendrier, indicateurs, rapports et workflows existants ; composer leurs données pour les nouvelles présentations, sans moteurs, modules ou tables concurrents
 - [ ] Garantir persistance, idempotence, reprise sur erreur, droits serveur et traductions fr/ar/en des nouveaux parcours
 - [ ] Tester règles, conversions, intégrations et parcours visibles ; consigner chaque blocage de recette sans clôture fictive
-- [ ] Exécuter le plan consolidé joint : enrichissement du métré, pipeline commun, contrôles de cohérence, présentation des avertissements, extraction assistée des plans et liaison GED → métré → DQE ; vérifier les données réelles avant toute clôture.
+- [x] Plan consolidé : enrichissement commun du métré, coefficients injectables, contrôles des prix source, revue des corrections, affichage brut/ouvertures/net/formule/matériaux et archivage source via DocumentService.
+- [x] Plans PDF : extraction texte/OCR, SHA-256, revue des dimensions et préparation de brouillons DQE ; vrai STR lu dans Chromium (8 pages, 41 repères, aucun confirmé).
+- [x] Frontière CRUD BOQ : hook document, calculateur et estimateur passent par BoqDocumentService ; données inconnues i18n conservées et assertions fiscales alignées sans changement de taux.
+- [ ] Clôture GO du plan consolidé — bloquée par recette connectée externe, données PDF/JSON contradictoires et 12 tests globaux en échec (providers et scans i18n) ; migration legacy, calibration graphique/IFC et indexation inter-session restent à implémenter.
