@@ -55,7 +55,9 @@ import { resolveProjectLocationLabel } from '@/utils/projectLocationLabel';
 
 
 const PhaseDetail: React.FC = () => {
-  const { projectId, phaseId } = useParams<{ projectId: string; phaseId: string }>();
+  const params = useParams<{ projectId: string; phaseId: string }>();
+  const projectId = params.projectId ?? "";
+  const phaseId = params.phaseId ?? "";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   useLanguage();
@@ -258,14 +260,9 @@ const PhaseDetail: React.FC = () => {
   return (
     <AppLayout
       pageTitle={title}
-      pageDescription={[
-        (project as unknown as { title?: string } | null | undefined)?.title,
-        stageMeta.label,
-      ]
-        .filter(Boolean)
-        .join(' · ')}
+
     >
-      <div className="container mx-auto px-4 py-4 space-y-4">
+      <div className="min-w-0 space-y-3">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -278,10 +275,7 @@ const PhaseDetail: React.FC = () => {
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" /> <T k="auto.phasedetail.retour" fallback="Retour" />
             </Button>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{title}</h1>
-              {description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{description}</p>}
-            </div>
+
           </div>
           {/* Barre d'actions unifiée (une seule zone d'actions pour la phase) */}
           <div className="flex flex-wrap items-center gap-2">
@@ -406,7 +400,187 @@ const PhaseDetail: React.FC = () => {
           </Card>
         </div>
 
-        {/* Résumés liés (tâches, paiements, documents, équipe, inspections) */}
+        {/* Lifecycle stage tabs */}
+        <Tabs value={defaultStageTab} onValueChange={onStageChange} className="space-y-3">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
+            <TabsTrigger value="planification" className="flex items-center gap-2">
+              <Compass className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.planification" fallback="Planification" /></span>
+            </TabsTrigger>
+            <TabsTrigger value="execution" className="flex items-center gap-2">
+              <HardHat className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.execution" fallback="Exécution" /></span>
+            </TabsTrigger>
+            <TabsTrigger value="controle" className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.controle" fallback="Contrôle" /></span>
+            </TabsTrigger>
+            <TabsTrigger value="cloture" className="flex items-center gap-2">
+              <Flag className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.cloture" fallback="Clôture" /></span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Planification: étapes/tâches, métré DQE, planning, jalons, ressources */}
+          <TabsContent value="planification" className="space-y-3">
+            {/* Mode 1 : édition/sauvegarde partielle de l'onglet Planification */}
+            <details className="border-b pb-2"><summary className="cursor-pointer text-sm text-muted-foreground"><T k="auto.phasedetail.edition_rapide" fallback="Édition rapide" /></summary>            <PhasePlanningQuickEdit
+              value={editDraft}
+              isSaving={isUpdatingPhase}
+              disabled={isClosed}
+              onSave={handlePartialSave}
+            /></details>
+            <Tabs value={planTab} onValueChange={setPlanTab} className="space-y-4">
+              <WorkspaceTabsList variant="underline">
+                <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" /><T k="auto.phasedetail.etapes" fallback="Étapes" /></TabsTrigger>
+                <TabsTrigger value="tasks"><T k="auto.phasedetail.taches" fallback="Tâches" /></TabsTrigger>
+                <TabsTrigger value="metre"><Calculator className="h-3 w-3 mr-1" />Métré & DQE</TabsTrigger>
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" /><T k="auto.phasedetail.ressources" fallback="Ressources" /></TabsTrigger>
+                <TabsTrigger value="stakeholders"><Building2 className="h-3 w-3 mr-1" /><T k="auto.phasedetail.intervenants" fallback="Intervenants" /></TabsTrigger>
+                <TabsTrigger value="gantt"><T k="auto.phasedetail.gantt" fallback="Gantt" /></TabsTrigger>
+                <TabsTrigger value="pert"><T k="auto.phasedetail.pert" fallback="PERT" /></TabsTrigger>
+                <TabsTrigger value="critical"><T k="auto.phasedetail.chemin_critique" fallback="Chemin critique" /></TabsTrigger>
+                <TabsTrigger value="milestones"><Target className="h-3 w-3 mr-1" /><T k="auto.phasedetail.jalons" fallback="Jalons" /></TabsTrigger>
+                <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" /><T k="auto.phasedetail.equipe" fallback="Équipe" /></TabsTrigger>
+              </WorkspaceTabsList>
+              <TabsContent value="steps">
+                <PhaseStepsManager
+                  steps={steps}
+                  onAddStep={(step) => addStep(step as Omit<PhaseStepDTO, 'id'>)}
+                  onUpdateStep={(stepId, updates) => updateStep(stepId, updates)}
+                  onDeleteStep={(stepId) => deleteStep(stepId)}
+                  onAddTask={(stepId, task) => addTask(stepId, task as Omit<PhaseTaskDTO, 'id'>)}
+                  onUpdateTask={(stepId, taskId, updates) => updateTask(stepId, taskId, updates)}
+                  onDeleteTask={(stepId, taskId) => deleteTask(stepId, taskId)}
+                  isUpdating={isUpdating}
+                  projectId={projectId}
+                  phaseId={phaseId}
+                />
+              </TabsContent>
+              <TabsContent value="tasks"><PhaseTasks phaseId={phaseId} projectId={projectId} /></TabsContent>
+              <TabsContent value="metre">
+                <PhaseQuantityTakeoffTab phaseId={phaseId} projectId={projectId} phaseName={title} />
+              </TabsContent>
+              <TabsContent value="resources">
+                <PhaseResourcesTab
+                  phaseId={phaseId}
+                  projectId={projectId}
+                  onOpenTeam={() => setPlanTab('team')}
+                />
+              </TabsContent>
+              <TabsContent value="stakeholders">
+                <PhaseStakeholdersTab projectId={projectId} phaseId={phaseId} />
+              </TabsContent>
+              <TabsContent value="gantt">
+                <GanttChart
+                  projectId={projectId}
+                  phaseId={phaseId}
+                  projectData={{
+                    id: projectId,
+                    startDate,
+                    endDate,
+                    phases: [{
+                      id: phaseId,
+                      name: title,
+                      startDate,
+                      endDate,
+                      progress,
+                      budget,
+                      actualCost: vm.actualCost,
+                      status: vm.status,
+                    }],
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="pert"><PERTDiagram projectId={projectId} phaseId={phaseId} /></TabsContent>
+              <TabsContent value="critical"><CriticalPathView projectId={projectId} phaseId={phaseId} /></TabsContent>
+              <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId} projectId={projectId} /></TabsContent>
+              <TabsContent value="team">
+                <PhaseTeamTab phaseId={phaseId} projectId={projectId} declaredBudget={budget} />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          {/* Exécution: ressources consommées, finances, livrables, échéances */}
+          <TabsContent value="execution" className="space-y-3">
+            <Tabs defaultValue="resources" className="space-y-4">
+              <WorkspaceTabsList variant="underline">
+                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" /><T k="auto.phasedetail.ressources" fallback="Ressources" /></TabsTrigger>
+                <TabsTrigger value="finances"><Wallet className="h-3 w-3 mr-1" /><T k="auto.phasedetail.finances" fallback="Finances" /></TabsTrigger>
+                <TabsTrigger value="documents"><FileText className="h-3 w-3 mr-1" /><T k="auto.phasedetail.livrables" fallback="Livrables" /></TabsTrigger>
+                <TabsTrigger value="payments"><CreditCard className="h-3 w-3 mr-1" /><T k="auto.phasedetail.echeances" fallback="Échéances" /></TabsTrigger>
+              </WorkspaceTabsList>
+              <TabsContent value="resources">
+                <PhaseResourcesTab phaseId={phaseId} projectId={projectId} />
+              </TabsContent>
+              <TabsContent value="finances">
+                <PhaseFinancesTab
+                  phase={phase as unknown as PhaseDTO}
+                  projectId={projectId}
+                  phaseId={phaseId}
+                />
+              </TabsContent>
+              <TabsContent value="documents"><PhaseDocuments phaseId={phaseId} projectId={projectId} /></TabsContent>
+              <TabsContent value="payments" className="space-y-4">
+                <DecompteTrackingPanel
+                  scope="phase"
+                  entityId={phaseId}
+                  initialBudget={phaseAggregate.totalPlanned > 0 ? phaseAggregate.totalPlanned : budget}
+                  engaged={phaseAggregate.totalEngaged}
+                />
+                <PhasePayments phaseId={phaseId} projectId={projectId} phaseName={title} phaseBudget={budget} />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+
+          {/* Contrôle: inspections + conformité */}
+          <TabsContent value="controle" className="space-y-3">
+            <PhaseInspections phaseId={phaseId} projectId={projectId} />
+          </TabsContent>
+
+          {/* Clôture: réception, archives */}
+          <TabsContent value="cloture" className="space-y-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Flag className="h-5 w-5" /> <T k="auto.phasedetail.cloture_de_la_phase" fallback="Clôture de la phase" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {!completion.canComplete && (
+                  <div className="flex items-start gap-2 p-3 bg-warning/10 dark:bg-amber-950/30 border border-warning/30 dark:border-amber-900 rounded-md text-sm">
+                    <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        <T k="auto.phasedetail.cloture_conditions" fallback="Conditions de clôture non réunies" /> ({formatPercent2(progress)})
+                      </p>
+                      <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                        {completion.reasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                      </ul>
+                      {progressResult.derivedValue != null && progressResult.isDivergent && (
+                        <Button size="sm" variant="outline" onClick={handleAlignProgress} disabled={isUpdatingPhase}>
+                          <T k="auto.phasedetail.aligner_progression" fallback="Aligner la progression" /> ({progressResult.derivedValue}%)
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <PhaseDocuments phaseId={phaseId} projectId={projectId} />
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={handleClosePhase}
+                    disabled={isClosed || isUpdatingPhase}
+                    aria-label="Clôturer la phase"
+                  >
+                    <Flag className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {isClosed ? 'Phase clôturée' : isUpdatingPhase ? 'Clôture en cours…' : 'Clôturer la phase'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <details className="border-t py-3"><summary className="cursor-pointer text-sm font-medium"><T k="auto.phasedetail.resume" fallback="Résumé" /></summary><div className="space-y-3 pt-3">        {/* Résumés liés (tâches, paiements, documents, équipe, inspections) */}
         <Card>
           <CardContent className="py-3 px-4 flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-muted-foreground mr-1">
@@ -471,191 +645,13 @@ const PhaseDetail: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Lifecycle stage tabs */}
-        <Tabs value={defaultStageTab} onValueChange={onStageChange} className="space-y-6">
-          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
-            <TabsTrigger value="planification" className="flex items-center gap-2">
-              <Compass className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.planification" fallback="Planification" /></span>
-            </TabsTrigger>
-            <TabsTrigger value="execution" className="flex items-center gap-2">
-              <HardHat className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.execution" fallback="Exécution" /></span>
-            </TabsTrigger>
-            <TabsTrigger value="controle" className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.controle" fallback="Contrôle" /></span>
-            </TabsTrigger>
-            <TabsTrigger value="cloture" className="flex items-center gap-2">
-              <Flag className="h-4 w-4" /> <span className="hidden sm:inline"><T k="auto.phasedetail.cloture" fallback="Clôture" /></span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Planification: étapes/tâches, métré DQE, planning, jalons, ressources */}
-          <TabsContent value="planification" className="space-y-6">
-            {/* Mode 1 : édition/sauvegarde partielle de l'onglet Planification */}
-            <PhasePlanningQuickEdit
-              value={editDraft}
-              isSaving={isUpdatingPhase}
-              disabled={isClosed}
-              onSave={handlePartialSave}
-            />
-            <Tabs value={planTab} onValueChange={setPlanTab} className="space-y-4">
-              <WorkspaceTabsList variant="underline">
-                <TabsTrigger value="steps"><Layers className="h-3 w-3 mr-1" /><T k="auto.phasedetail.etapes" fallback="Étapes" /></TabsTrigger>
-                <TabsTrigger value="tasks"><T k="auto.phasedetail.taches" fallback="Tâches" /></TabsTrigger>
-                <TabsTrigger value="metre"><Calculator className="h-3 w-3 mr-1" />Métré & DQE</TabsTrigger>
-                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" /><T k="auto.phasedetail.ressources" fallback="Ressources" /></TabsTrigger>
-                <TabsTrigger value="stakeholders"><Building2 className="h-3 w-3 mr-1" /><T k="auto.phasedetail.intervenants" fallback="Intervenants" /></TabsTrigger>
-                <TabsTrigger value="gantt"><T k="auto.phasedetail.gantt" fallback="Gantt" /></TabsTrigger>
-                <TabsTrigger value="pert"><T k="auto.phasedetail.pert" fallback="PERT" /></TabsTrigger>
-                <TabsTrigger value="critical"><T k="auto.phasedetail.chemin_critique" fallback="Chemin critique" /></TabsTrigger>
-                <TabsTrigger value="milestones"><Target className="h-3 w-3 mr-1" /><T k="auto.phasedetail.jalons" fallback="Jalons" /></TabsTrigger>
-                <TabsTrigger value="team"><Users className="h-3 w-3 mr-1" /><T k="auto.phasedetail.equipe" fallback="Équipe" /></TabsTrigger>
-              </WorkspaceTabsList>
-              <TabsContent value="steps">
-                <PhaseStepsManager
-                  steps={steps}
-                  onAddStep={(step) => addStep(step as Omit<PhaseStepDTO, 'id'>)}
-                  onUpdateStep={(stepId, updates) => updateStep(stepId, updates)}
-                  onDeleteStep={(stepId) => deleteStep(stepId)}
-                  onAddTask={(stepId, task) => addTask(stepId, task as Omit<PhaseTaskDTO, 'id'>)}
-                  onUpdateTask={(stepId, taskId, updates) => updateTask(stepId, taskId, updates)}
-                  onDeleteTask={(stepId, taskId) => deleteTask(stepId, taskId)}
-                  isUpdating={isUpdating}
-                  projectId={projectId!}
-                  phaseId={phaseId!}
-                />
-              </TabsContent>
-              <TabsContent value="tasks"><PhaseTasks phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="metre">
-                <PhaseQuantityTakeoffTab phaseId={phaseId!} projectId={projectId!} phaseName={title} />
-              </TabsContent>
-              <TabsContent value="resources">
-                <PhaseResourcesTab
-                  phaseId={phaseId!}
-                  projectId={projectId!}
-                  onOpenTeam={() => setPlanTab('team')}
-                />
-              </TabsContent>
-              <TabsContent value="stakeholders">
-                <PhaseStakeholdersTab projectId={projectId!} phaseId={phaseId!} />
-              </TabsContent>
-              <TabsContent value="gantt">
-                <GanttChart
-                  projectId={projectId!}
-                  phaseId={phaseId}
-                  projectData={{
-                    id: projectId,
-                    startDate,
-                    endDate,
-                    phases: [{
-                      id: phaseId,
-                      name: title,
-                      startDate,
-                      endDate,
-                      progress,
-                      budget,
-                      actualCost: vm.actualCost,
-                      status: vm.status,
-                    }],
-                  }}
-                />
-              </TabsContent>
-              <TabsContent value="pert"><PERTDiagram projectId={projectId!} phaseId={phaseId} /></TabsContent>
-              <TabsContent value="critical"><CriticalPathView projectId={projectId!} phaseId={phaseId} /></TabsContent>
-              <TabsContent value="milestones"><PhaseMilestones phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="team">
-                <PhaseTeamTab phaseId={phaseId!} projectId={projectId!} declaredBudget={budget} />
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
-
-          {/* Exécution: ressources consommées, finances, livrables, échéances */}
-          <TabsContent value="execution" className="space-y-6">
-            <Tabs defaultValue="resources" className="space-y-4">
-              <WorkspaceTabsList variant="underline">
-                <TabsTrigger value="resources"><Package className="h-3 w-3 mr-1" /><T k="auto.phasedetail.ressources" fallback="Ressources" /></TabsTrigger>
-                <TabsTrigger value="finances"><Wallet className="h-3 w-3 mr-1" /><T k="auto.phasedetail.finances" fallback="Finances" /></TabsTrigger>
-                <TabsTrigger value="documents"><FileText className="h-3 w-3 mr-1" /><T k="auto.phasedetail.livrables" fallback="Livrables" /></TabsTrigger>
-                <TabsTrigger value="payments"><CreditCard className="h-3 w-3 mr-1" /><T k="auto.phasedetail.echeances" fallback="Échéances" /></TabsTrigger>
-              </WorkspaceTabsList>
-              <TabsContent value="resources">
-                <PhaseResourcesTab phaseId={phaseId!} projectId={projectId!} />
-              </TabsContent>
-              <TabsContent value="finances">
-                <PhaseFinancesTab
-                  phase={phase as unknown as PhaseDTO}
-                  projectId={projectId!}
-                  phaseId={phaseId!}
-                />
-              </TabsContent>
-              <TabsContent value="documents"><PhaseDocuments phaseId={phaseId!} projectId={projectId!} /></TabsContent>
-              <TabsContent value="payments" className="space-y-4">
-                <DecompteTrackingPanel
-                  scope="phase"
-                  entityId={phaseId}
-                  initialBudget={phaseAggregate.totalPlanned > 0 ? phaseAggregate.totalPlanned : budget}
-                  engaged={phaseAggregate.totalEngaged}
-                />
-                <PhasePayments phaseId={phaseId!} projectId={projectId!} phaseName={title} phaseBudget={budget} />
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
-
-
-          {/* Contrôle: inspections + conformité */}
-          <TabsContent value="controle" className="space-y-6">
-            <PhaseInspections phaseId={phaseId!} projectId={projectId!} />
-          </TabsContent>
-
-          {/* Clôture: réception, archives */}
-          <TabsContent value="cloture" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Flag className="h-5 w-5" /> <T k="auto.phasedetail.cloture_de_la_phase" fallback="Clôture de la phase" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {!completion.canComplete && (
-                  <div className="flex items-start gap-2 p-3 bg-warning/10 dark:bg-amber-950/30 border border-warning/30 dark:border-amber-900 rounded-md text-sm">
-                    <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="font-medium">
-                        <T k="auto.phasedetail.cloture_conditions" fallback="Conditions de clôture non réunies" /> ({formatPercent2(progress)})
-                      </p>
-                      <ul className="list-disc pl-4 text-xs text-muted-foreground">
-                        {completion.reasons.map((reason) => (
-                          <li key={reason}>{reason}</li>
-                        ))}
-                      </ul>
-                      {progressResult.derivedValue != null && progressResult.isDivergent && (
-                        <Button size="sm" variant="outline" onClick={handleAlignProgress} disabled={isUpdatingPhase}>
-                          <T k="auto.phasedetail.aligner_progression" fallback="Aligner la progression" /> ({progressResult.derivedValue}%)
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-                <PhaseDocuments phaseId={phaseId!} projectId={projectId!} />
-                <div className="flex justify-end pt-2">
-                  <Button
-                    onClick={handleClosePhase}
-                    disabled={isClosed || isUpdatingPhase}
-                    aria-label="Clôturer la phase"
-                  >
-                    <Flag className="h-4 w-4 mr-2" aria-hidden="true" />
-                    {isClosed ? 'Phase clôturée' : isUpdatingPhase ? 'Clôture en cours…' : 'Clôturer la phase'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+</div></details>
 
         <PhaseEditWorkflowDialog
           isOpen={isWorkflowEditing}
           onOpenChange={setIsWorkflowEditing}
-          projectId={projectId!}
-          phaseId={phaseId!}
+          projectId={projectId}
+          phaseId={phaseId}
           value={editDraft}
           isSaving={isUpdatingPhase}
           summary={{

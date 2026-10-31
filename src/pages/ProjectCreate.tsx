@@ -175,7 +175,6 @@ const ProjectCreate = () => {
   return (
     <AppLayout
       pageTitle={t("project_create.title")}
-      pageDescription={t('project_create.workflow_description')}
       actions={
         <div className="flex items-center gap-3">
           {/* Progression */}
@@ -232,7 +231,7 @@ const ProjectCreate = () => {
         )}
 
         {/* Main Workflow */}
-        <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
+        <div className="min-w-0">
           <ProjectCreationWorkflow
             mode="create"
             currentStep={currentStep}
