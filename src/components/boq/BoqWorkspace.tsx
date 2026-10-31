@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowRightCircle, Calculator, ChevronDown, FileCheck2, FileSpreadsheet, Loader2, Lock, Plus, RefreshCw, Settings2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BoqImportDialog } from './BoqImportDialog';
+import { TechnicalPlanImport } from './TechnicalPlanImport';
 import { BoqLineTable } from './BoqLineTable';
 import { FiscalCompliancePanel, type FiscalComplianceValue } from './FiscalCompliancePanel';
 import { QuickAddLineDialog } from './QuickAddLineDialog';
@@ -1143,6 +1144,12 @@ export function BoqWorkspace({
             commitOnSubmit={false}
             onParsed={handleParsedImport}
           />
+
+          {projectId && mode === 'planning' && <TechnicalPlanImport
+            context={{ source, contextId, phaseId: phaseId ?? undefined }}
+            disabled={locked}
+            onPrepared={handleParsedImport}
+          />}
 
           {/* Recharge les lignes persistées (utile après un import ou un transfert externe). */}
           <Button

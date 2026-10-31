@@ -24,3 +24,5 @@
 - Compose workbench financial/resource summaries and planning previews through canonical financial, resource and metrics services plus existing Gantt/PERT views; projections must not create competing calculations or records.
 - Store operation context rules in referential_items and evaluate them on the server; stable source identifiers, request keys and finalized-row protections prevent disconnected declarations and duplicate retries.
 - Extend ProjectImportTemplateService for controlled mapped planning previews and pass prepared datasets to the existing importer; preserve and report unmapped source sections rather than inventing their interpretation.
+- Enrich every BOQ ingestion source through MeterService and injectable metering policies; keep explicit source quantities and audited price corrections instead of silently replacing documentary evidence.
+- Read technical PDF plans through a reader port, require reviewed complete dimensions before the MeterService bridge, and archive sources through DocumentService; plans must not introduce a competing calculator or storage table.
