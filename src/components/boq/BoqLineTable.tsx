@@ -70,7 +70,7 @@ const stakeholderOf = (l: BoqLineDTO) =>
   (l.metadata as { stakeholder?: { id?: string; name?: string; type?: string } } | null)?.stakeholder ?? null;
 
 export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, importez ou calculez des lignes.', editable = false, referentialCode, phases: phasesOverride, stakeholders = [], onChange, onRemove, pageSize = 10, onPageSizeChange, pageSizeOptions, newRowsAt = 'end' }: Props) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [page, setPage] = useState(0);
   const [metreIndex, setMetreIndex] = useState<number | null>(null);

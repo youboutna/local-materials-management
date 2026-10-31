@@ -81,8 +81,8 @@ export class TechnicalPlanService {
     return MeterService.enrich(inputs).map((line, index) => {
       const element = elements.filter((item) => item.confirmed)[index];
       // Count is applied once to the final per-element quantity, not to dimensions.
-      return { ...line, quantity: line.quantity * element.count, metadata: { ...line.metadata,
-        meteringPerElement: line.metadata?.metering, metering: undefined } };
+      const aggregated = { ...line, quantity: line.quantity * element.count };
+      return { ...aggregated, metadata: { ...line.metadata, metering: MeterService.summary(aggregated) } };
     });
   }
 
@@ -95,7 +95,7 @@ export class TechnicalPlanService {
     if (!user) throw new Error('Sign in to archive a plan');
     const document = await documents.createDocument({ title: file.name, documentType: 'plan', file,
       projectId: ctx.contextId, phaseId: ctx.phaseId, uploadedBy: user.id,
-      metadata: { planSha256: plan.sha256, technicalPlan: plan, extractionReviewed: false } });
+      metadata: { planSha256: plan.sha256, technicalPlan: plan, extractionReviewed: plan.elements.some((element) => element.confirmed) } });
     return document.id;
   }
 }
