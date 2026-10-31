@@ -12,6 +12,8 @@ import { ProjectFinancialsService } from './ProjectFinancialsService';
 import { ProjectMetricsOrchestrator } from './ProjectMetricsOrchestrator';
 import { getReferentialItemService } from './ReferentialItemService';
 import { getProjectResourceAggregatorService } from './ProjectResourceAggregatorService';
+import type { ReferentialItemDTO } from '@/dtos/entities/ReferentialItemDTO';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 export class ProjectWorkbenchService {
   constructor(private readonly repository: IProjectWorkbenchRepository = new SupabaseProjectWorkbenchAdapter()) {}
   projects() { return this.repository.projects(); }
@@ -81,6 +83,17 @@ export class ProjectWorkbenchService {
     return { lines, unallocatedReceipts: unallocated, unallocatedAmount: unallocated.reduce((sum, op) => sum + op.amount, 0) };
   }
   operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }
+  /** Presentation projection of server-owned context metadata, never a replacement for authorization. */
+  static eligibleOperationLines(lines: readonly BoqLineDTO[], context: ReferentialItemDTO | undefined, input: Pick<SaveProjectOperationDTO, 'kind' | 'phaseId'>): BoqLineDTO[] {
+    if (!context?.isActive) return [];
+    const policy = context.metadata;
+    if (Array.isArray(policy.kinds) && !policy.kinds.includes(input.kind)) return [];
+    return lines.filter(line => Boolean(line.id)
+      && (!input.phaseId || !line.phaseId || line.phaseId === input.phaseId)
+      && (!Array.isArray(policy.sources) || policy.sources.includes(line.source))
+      && (!Array.isArray(policy.documentTypes) || policy.documentTypes.includes(line.documentType ?? line.dqeType))
+      && (!Array.isArray(policy.resourceFamilies) || policy.resourceFamilies.includes(line.resourceType)));
+  }
   static operationTotals(entries: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[], currency: string) {
     const totals = new Map<string,number>();
     for (const entry of entries) {

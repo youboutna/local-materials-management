@@ -7,6 +7,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWorkbenchOperations, useWorkbenchFinance, useOperationContexts } from '@/hooks/hexagonal/useProjectWorkbenchHex';
 import { ProjectWorkbenchTransformer } from '@/dtos/transforms/ProjectWorkbenchTransformer';
+import { ProjectWorkbenchService } from '@/application/services/ProjectWorkbenchService';
 import type { ProjectOperationDTO, SaveProjectOperationDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import type { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
@@ -19,12 +20,23 @@ export function ProjectOperationEditor({ projectId, currency, date, kind, phases
   const [error, setError] = useState('');
   const { saveOperation, isPending } = useWorkbenchOperations(projectId);
   const update = (patch: Partial<SaveProjectOperationDTO>) => setForm(value => ({ ...value, ...patch }));
+  const availableContexts = [...new Map((contexts.data ?? []).filter(item => item.isActive && (!Array.isArray(item.metadata.kinds) || item.metadata.kinds.includes(kind))).map(item => [item.code, item])).values()];
+  const context = availableContexts.find(item => item.code === form.contextCode);
+  const eligibleLines = ProjectWorkbenchService.eligibleOperationLines(finance.data?.lines ?? [], context, form);
+  const invalidSource = Boolean(form.sourceLineId && !eligibleLines.some(line => line.id === form.sourceLineId));
+  const missingLinks = !context || invalidSource || (context.metadata.requiresLine === true && !form.sourceLineId) || (context.metadata.requiresResource === true && !form.resourceId);
+  const changeContext = (contextCode: string) => {
+    const next = availableContexts.find(item => item.code === contextCode);
+    const eligible = ProjectWorkbenchService.eligibleOperationLines(finance.data?.lines ?? [], next, form);
+    update({ contextCode, sourceLineId: eligible.some(line => line.id === form.sourceLineId) ? form.sourceLineId : undefined,
+      perspective: next?.metadata.perspective === 'contractor' || next?.metadata.perspective === 'owner' ? next.metadata.perspective : form.perspective });
+  };
   return <form className="border-y border-border py-5 space-y-4" onSubmit={async event => { event.preventDefault(); setError(''); try { await saveOperation(ProjectWorkbenchTransformer.formToOperation(form)); onClose(); } catch (e) { setError(e instanceof Error ? e.message : t('common.error')); } }}>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div><Label>{t('workbench.context')}</Label><Select value={form.contextCode || 'unreconciled'} onValueChange={contextCode => update({contextCode})}><SelectTrigger aria-label={t('workbench.context')}><SelectValue placeholder={t('workbench.ph_select')} /></SelectTrigger><SelectContent>{[...new Map((contexts.data??[]).filter(item=>!Array.isArray(item.metadata.kinds)||item.metadata.kinds.includes(kind)).map(item=>[item.code,item])).values()].map(item => <SelectItem key={item.id} value={item.code}>{language==='ar'?item.labelAr||item.labelFr:language==='en'?item.labelEn||item.labelFr:item.labelFr}</SelectItem>)}</SelectContent></Select></div>
+      <div><Label>{t('workbench.context')}</Label><Select value={form.contextCode || 'unreconciled'} onValueChange={changeContext}><SelectTrigger aria-label={t('workbench.context')}><SelectValue placeholder={t('workbench.ph_select')} /></SelectTrigger><SelectContent>{availableContexts.map(item => <SelectItem key={item.id} value={item.code}>{language==='ar'?item.labelAr||item.labelFr:language==='en'?item.labelEn||item.labelFr:item.labelFr}</SelectItem>)}</SelectContent></Select></div>
       <div><Label>{t('workbench.resources')}</Label><Select value={form.resourceId||'none'} onValueChange={resourceId=>update({resourceId:resourceId==='none'?undefined:resourceId})}><SelectTrigger aria-label={t('workbench.resources')}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">{t('workbench.no_source')}</SelectItem>{finance.data?.allocatedResources.map(item=><SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></div>
       <div><Label>{t('workbench.perspective')}</Label><Select value={form.perspective || 'owner'} onValueChange={perspective => update({perspective:perspective as 'owner'|'contractor'})}><SelectTrigger aria-label={t('workbench.perspective')}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="owner">{t('workbench.owner')}</SelectItem><SelectItem value="contractor">{t('workbench.contractor')}</SelectItem></SelectContent></Select></div>
-      <div className="sm:col-span-2"><Label>{t('workbench.source_line')}</Label><Select value={form.sourceLineId || 'none'} onValueChange={id => { const line=finance.data?.lines.find(item => item.id===id); update({sourceLineId:line?.id,phaseId:line?.phaseId ?? form.phaseId,taskId:line?.taskId ?? undefined,unit:line?.unit ?? form.unit,label:form.label || line?.designation || ''}); }}><SelectTrigger aria-label={t('workbench.source_line')}><SelectValue placeholder={t('workbench.ph_select')} /></SelectTrigger><SelectContent><SelectItem value="none">{t('workbench.no_source')}</SelectItem>{finance.data?.lines.filter(line => line.id && (!form.phaseId || !line.phaseId || line.phaseId===form.phaseId)).map(line => <SelectItem key={line.id} value={line.id || ''}>{line.documentType || line.dqeType || line.source} · {line.designation} · {line.quantity} {line.unit}</SelectItem>)}</SelectContent></Select></div>
+      <div className="sm:col-span-2"><Label>{t('workbench.source_line')}{context?.metadata.requiresLine === true ? ' *' : ''}</Label><Select value={form.sourceLineId || 'none'} onValueChange={id => { const line=eligibleLines.find(item => item.id===id); update({sourceLineId:line?.id,phaseId:line?.phaseId ?? form.phaseId,taskId:line?.taskId ?? undefined,unit:line?.unit ?? form.unit,label:form.label || line?.designation || ''}); }}><SelectTrigger aria-label={t('workbench.source_line')}><SelectValue placeholder={t('workbench.ph_select')} /></SelectTrigger><SelectContent><SelectItem value="none">{t('workbench.no_source')}</SelectItem>{eligibleLines.map(line => <SelectItem key={line.id} value={line.id || ''}>{line.documentType || line.dqeType || line.source} · {line.designation} · {line.quantity} {line.unit}</SelectItem>)}</SelectContent></Select></div>
       <div className="sm:col-span-2"><Label>{t('workbench.linked_decompte')}</Label><Select value={form.decompteId || 'none'} onValueChange={id => update({decompteId:id==='none'?undefined:id})}><SelectTrigger aria-label={t('workbench.linked_decompte')}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">{t('workbench.no_source')}</SelectItem>{finance.data?.decomptes.map(item => <SelectItem key={item.id} value={item.id}>{item.decompteNumber} · {item.validatedAmount.toLocaleString()} {currency}</SelectItem>)}</SelectContent></Select></div>
       <div><Label htmlFor="operation-label">{t('workbench.label')}</Label><Input id="operation-label" required value={form.label} onChange={e => update({ label: e.target.value })} /></div>
       <div><Label htmlFor="operation-date">{t('workbench.date')}</Label><Input id="operation-date" type="date" required value={form.occurredOn} onChange={e => update({ occurredOn: e.target.value })} /></div>
@@ -38,8 +50,9 @@ export function ProjectOperationEditor({ projectId, currency, date, kind, phases
     </div>
     {finance.error && <p role="alert" className="text-destructive">{finance.error.message}</p>}
     {contexts.error && <p role="alert" className="text-destructive">{contexts.error.message}</p>}
+    {invalidSource && <p role="alert" className="text-destructive">{t('workbench.incompatible_source')}</p>}
     <div><Label htmlFor="operation-notes">{t('workbench.notes')}</Label><Textarea id="operation-notes" value={form.notes || ''} onChange={e => update({ notes: e.target.value })} /></div>
     {error && <p role="alert" className="text-destructive">{error}</p>}
-    <div className="flex gap-2"><Button type="submit" disabled={isPending}><Save className="h-4 w-4 mr-2" />{t('common.save')}</Button><Button type="button" variant="outline" disabled={isPending} onClick={onClose}><X className="h-4 w-4 mr-2" />{t('common.cancel')}</Button></div>
+    <div className="flex gap-2"><Button type="submit" disabled={isPending || contexts.isLoading || finance.isLoading || Boolean(missingLinks)}><Save className="h-4 w-4 mr-2" />{t('common.save')}</Button><Button type="button" variant="outline" disabled={isPending} onClick={onClose}><X className="h-4 w-4 mr-2" />{t('common.cancel')}</Button></div>
   </form>;
 }
