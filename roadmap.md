@@ -60,3 +60,4 @@
 - [x] Plans PDF : extraction texte/OCR, SHA-256, revue des dimensions et préparation de brouillons DQE ; vrai STR lu dans Chromium (8 pages, 41 repères, aucun confirmé).
 - [x] Frontière CRUD BOQ : hook document, calculateur et estimateur passent par BoqDocumentService ; données inconnues i18n conservées et assertions fiscales alignées sans changement de taux.
 - [ ] Clôture GO du plan consolidé — bloquée par recette connectée externe, données PDF/JSON contradictoires et 12 tests globaux en échec (providers et scans i18n) ; migration legacy, calibration graphique/IFC et indexation inter-session restent à implémenter.
+- [ ] Finaliser les deux plans par composition des parcours de pilotage : navigation projet intuitive, contextes opérationnels cohérents et planning générique ; traiter les données jointes comme illustrations, sans compteurs imposés.
