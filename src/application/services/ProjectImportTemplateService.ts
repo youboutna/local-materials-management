@@ -18,7 +18,8 @@ import {
 } from '@/config/referentials';
 import type { PlanningPreviewDTO, PlanningPreviewInputDTO } from '@/dtos/entities/PlanningPreviewDTO';
 import { addDays,format,isValid,parseISO } from 'date-fns';
-import type { PlanningWorkbookInputDTO, PlanningWorkbookPreviewDTO } from '@/dtos/entities/PlanningWorkbookDTO';
+import type { PlanningWorkbookInputDTO, PlanningWorkbookPreviewDTO, PlanningWorkbookSuggestionDTO } from '@/dtos/entities/PlanningWorkbookDTO';
+import { DEFAULT_WORKBOOK_MAPPING } from '@/config/referentials/projects/planning-import.referential';
 
 // =============================================================================
 // TYPES
@@ -108,55 +109,131 @@ export class ProjectImportTemplateService {
     }
   }
 
+  /** Reviewable defaults read from the workbook itself (recap title, scale, total). */
+  suggestWorkbookDefaults(source: PlanningWorkbookInputDTO['source'], mapping = DEFAULT_WORKBOOK_MAPPING): PlanningWorkbookSuggestionDTO {
+    const summaryPattern = new RegExp(mapping.summarySheetPattern, 'i');
+    const componentPattern = new RegExp(mapping.componentPattern, 'i');
+    const thousands = new RegExp(mapping.thousandsPattern, 'i');
+    const text = (value: unknown) => String(value ?? '').replace(/\u00a0/g, ' ').trim();
+    const components: Record<string, string> = {};
+    let title: string | undefined; let budget: number | undefined;
+    const scaled = source.sheets.some(sheet => sheet.rows.slice(0, Math.max(mapping.headerRows, 5)).some(row => row.some(cell => thousands.test(text(cell.value)))));
+    for (const sheet of source.sheets.filter(item => summaryPattern.test(item.name))) {
+      for (const row of sheet.rows) {
+        const first = text(row.find(cell => text(cell.value))?.value);
+        if (!first) continue;
+        title ??= first;
+        const match = first.match(componentPattern);
+        if (match) components[match[1]] = first;
+        if (budget === undefined && /^total/i.test(first)) { const value = row.find(cell => typeof cell.value === 'number')?.value; if (typeof value === 'number') budget = value; }
+      }
+    }
+    const amountMultiplier = scaled ? 1000 : undefined;
+    return { title, amountMultiplier, budget: budget === undefined ? undefined : budget * (amountMultiplier ?? 1), components };
+  }
+
   previewWorkbook(input: PlanningWorkbookInputDTO): PlanningWorkbookPreviewDTO {
     if (!input.title.trim() || !input.reference.trim() || !isValid(parseISO(input.startDate))) throw new Error('Title, reference and valid start date are required');
     if (!Number.isFinite(input.budget) || input.budget < 0) throw new Error('A reviewed non-negative project budget is required');
-    const { source, mapping } = input;
+    const source = input.source;
+    const mapping = { ...DEFAULT_WORKBOOK_MAPPING, ...input.mapping };
     if (!Number.isFinite(mapping.amountMultiplier) || mapping.amountMultiplier <= 0) throw new Error('Invalid monetary scale');
-    for (const [key, value] of Object.entries(mapping)) if (key.endsWith('Column') && (!Number.isInteger(value) || Number(value) < 0)) throw new Error('Invalid column');
+    for (const [key, value] of Object.entries(mapping)) if ((key.endsWith('Column') || key.endsWith('Depth') || key === 'headerRows') && (!Number.isInteger(value) || Number(value) < 0)) throw new Error('Invalid column');
     const codePattern = new RegExp(mapping.codePattern);
     const totalPattern = new RegExp(mapping.totalPattern, 'i');
+    const titleCodePattern = new RegExp(mapping.titleCodePattern);
+    const groupPattern = new RegExp(mapping.financingGroupPattern, 'i');
+    const periodPattern = new RegExp(mapping.periodPattern);
+    const summaryPattern = new RegExp(mapping.summarySheetPattern, 'i');
+    const componentPattern = new RegExp(mapping.componentPattern, 'i');
+    const recap = this.suggestWorkbookDefaults(source, mapping);
     const rows: PlanningWorkbookPreviewDTO['rows'] = [];
     const warnings: PlanningWorkbookPreviewDTO['warnings'] = [];
+    const summary: PlanningWorkbookPreviewDTO['summary'] = [];
     const phases: NonNullable<PlanningWorkbookPreviewDTO['project']['phases']> = [];
+    const scale = (value: number) => value * mapping.amountMultiplier;
     for (const sheet of source.sheets) {
-      const cellText = (r: number, c: number) => String(sheet.rows[r]?.[c]?.value ?? '').trim();
+      // Recap sheets are evidence for title/budget/labels; their totals are not activities.
+      if (summaryPattern.test(sheet.name)) continue;
+      const cellText = (r: number, c: number) => String(sheet.rows[r]?.[c]?.value ?? '').replace(/\u00a0/g, ' ').trim();
       const numeric = (r: number, c: number): number | undefined => {
         const value = sheet.rows[r]?.[c]?.value;
         if (value === null || value === undefined || value === '') return undefined;
         const number = typeof value === 'number' ? value : Number(String(value).replace(/[\s\u00a0\u202f]/g, '').replace(',', '.'));
         return Number.isFinite(number) ? number : undefined;
       };
-      const candidates = sheet.rows.map((_, index) => ({ index, code: cellText(index, mapping.codeColumn).replace(/[.-]+$/, '').replace(/-/g, '.'), title: cellText(index, mapping.titleColumn) }));
+      const candidates = sheet.rows.map((_, index) => {
+        const raw = cellText(index, mapping.codeColumn); const title = cellText(index, mapping.titleColumn);
+        const fromTitle = !raw ? title.match(titleCodePattern)?.[1] : undefined;
+        return { index, raw: raw || fromTitle || '', code: (raw || fromTitle || '').replace(/[.-]+$/, '').replace(/-/g, '.'), title, validCode: codePattern.test(raw) || Boolean(fromTitle) };
+      });
+      const firstCoded = candidates.find(item => item.validCode)?.index ?? sheet.rows.length;
+      const headerEnd = Math.min(firstCoded, mapping.headerRows);
+      // Financing columns are discovered from headers, never from a fixed donor list.
+      const financingColumns: Array<{ column: number; source: string }> = [];
+      const width = Math.max(0, ...sheet.rows.map(row => row.length));
+      for (let column = mapping.amountColumn + 1; column < width; column++) {
+        let label = '';
+        for (let r = 0; r < headerEnd; r++) { const value = cellText(r, column); if (value && !groupPattern.test(value)) label = value; }
+        if (label && !periodPattern.test(label)) financingColumns.push({ column, source: label });
+      }
+      const number = sheet.name.match(/\d+/)?.[0];
+      const uncodedComponent = candidates.find(item => !item.raw && componentPattern.test(item.title))?.title;
+      const phaseName = (number && recap.components[number]) || uncodedComponent || sheet.name;
       const seen = new Set<string>();
-      const phase: NonNullable<typeof phases>[number] = { code: sheet.name, name: sheet.name, externalRef: `${input.reference}:sheet:${sheet.name}`, order: phases.length, tasks: [], metadata: { planningSource: { filename: source.filename, sheet: sheet.name } } };
-      for (const { index, code, title } of candidates) {
+      const subComponents = new Map<string, { title: string; externalRef: string }>();
+      const titles = new Map(candidates.filter(item => item.validCode).map(item => [item.code, item.title]));
+      const phase: NonNullable<typeof phases>[number] = { code: sheet.name.trim(), name: phaseName, externalRef: `${input.reference}:sheet:${sheet.name}`, order: phases.length, tasks: [], milestones: [], metadata: { planningSource: { filename: source.filename, sheet: sheet.name, financingColumns } } };
+      const phaseFinancing: Record<string, number> = {};
+      let phaseAmount = 0;
+      for (const { index, raw, code, title, validCode } of candidates) {
         if (!sheet.rows[index].some(cell => cell.value !== null || cell.formula || cell.style)) continue;
-        const validCode = codePattern.test(cellText(index, mapping.codeColumn));
         const responsible = cellText(index, mapping.responsibleColumn);
         const quantity = numeric(index, mapping.quantityColumn);
         const unitPrice = numeric(index, mapping.unitPriceColumn);
         const sourceAmount = numeric(index, mapping.amountColumn);
         const unit = cellText(index, mapping.unitColumn);
+        const path = code.split('.');
         const hasChildren = validCode && candidates.some(other => other.index !== index && other.code.startsWith(`${code}.`));
-        const kind = !validCode || !title || totalPattern.test(title) ? 'unmapped' : hasChildren && quantity === undefined && !unit && !responsible ? 'group' : 'task';
-        rows.push({ sheet: sheet.name, row: index + 1, code: cellText(index, mapping.codeColumn), title, responsible, quantity, unit, sourceAmount, amount: sourceAmount === undefined ? undefined : sourceAmount * mapping.amountMultiplier, kind });
+        const kind = !validCode || !title || totalPattern.test(title) ? 'unmapped' : path.length <= mapping.subComponentDepth || (hasChildren && quantity === undefined && !unit && !responsible) ? 'group' : 'task';
+        const subCode = path.length >= mapping.subComponentDepth ? path.slice(0, mapping.subComponentDepth).join('.') : undefined;
+        const financing = kind === 'task' ? financingColumns.flatMap(({ column, source: name }) => { const value = numeric(index, column); return value ? [{ source: name, column, sourceAmount: value, amount: scale(value) }] : []; }) : undefined;
+        rows.push({ sheet: sheet.name, row: index + 1, code: raw, title, responsible, quantity, unit, sourceAmount, amount: sourceAmount === undefined ? undefined : scale(sourceAmount), subComponent: subCode, financing, kind });
         if (kind === 'unmapped') { if (title && quantity !== undefined) warnings.push({ code: 'missing_code', sheet: sheet.name, row: index + 1 }); continue; }
         if (seen.has(code)) warnings.push({ code: 'duplicate_code', sheet: sheet.name, row: index + 1 });
         seen.add(code);
         if (quantity !== undefined && unitPrice !== undefined && sourceAmount !== undefined && Math.abs(quantity * unitPrice - sourceAmount) > Number.EPSILON * Math.max(1, Math.abs(sourceAmount), Math.abs(quantity * unitPrice)) * 16) warnings.push({ code: 'arithmetic_difference', sheet: sheet.name, row: index + 1 });
+        if (kind !== 'task') continue;
+        // Sub-components become phase milestones, created from the code even when the row order is broken.
+        let milestoneRef: string | undefined;
+        if (subCode) {
+          if (!subComponents.has(subCode)) subComponents.set(subCode, { title: titles.get(subCode) ?? subCode, externalRef: `${input.reference}:${sheet.name}:sub:${subCode}` });
+          milestoneRef = subComponents.get(subCode)!.externalRef;
+        }
+        const groups = path.slice(mapping.subComponentDepth, -1).map((_, i) => path.slice(0, mapping.subComponentDepth + i + 1).join('.')).map(group => ({ code: group, title: titles.get(group) ?? '' }));
+        const plannedAmount = sourceAmount === undefined ? undefined : scale(sourceAmount);
+        phaseAmount += plannedAmount ?? 0;
+        for (const share of financing ?? []) phaseFinancing[share.source] = (phaseFinancing[share.source] ?? 0) + share.amount;
         // Stable source row identity avoids collapsing repeated documentary codes.
-        if (kind === 'task') phase.tasks?.push({ id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${cellText(index, mapping.codeColumn)} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: cellText(index, mapping.codeColumn), path: code.split('.'), associates: cellText(index, mapping.associatesColumn), quantity, unit, unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount: sourceAmount === undefined ? undefined : sourceAmount * mapping.amountMultiplier, cells: sheet.rows[index] } } });
+        phase.tasks?.push({ id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${raw} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: raw, path, associates: cellText(index, mapping.associatesColumn), quantity, quantityText: quantity === undefined ? cellText(index, mapping.quantityColumn) || undefined : undefined, unit, unitPrice: unitPrice === undefined ? undefined : scale(unitPrice), sourceUnitPrice: unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount, subComponent: subCode ? { code: subCode, title: subComponents.get(subCode)?.title, milestoneRef } : undefined, groups, financingSources: financing, cells: sheet.rows[index] } } });
       }
-      if (phase.tasks?.length) phases.push(phase);
+      phase.milestones = [...subComponents.entries()].map(([code, item], order) => ({ externalRef: item.externalRef, title: `${code} · ${item.title}`, name: item.title, order, metadata: { planningSource: { sheet: sheet.name, code } } }));
+      if (phase.tasks?.length) {
+        phase.budget = phaseAmount; phase.estimatedCost = phaseAmount;
+        phase.metadata = { ...phase.metadata, financingTotals: phaseFinancing };
+        phases.push(phase);
+        summary.push({ sheet: sheet.name, phase: phaseName, subComponents: subComponents.size, tasks: phase.tasks.length, amount: phaseAmount, financing: phaseFinancing });
+      }
       warnings.push({ code: 'period_review', sheet: sheet.name, row: 1 });
     }
     if (!phases.length) throw new Error('No activity matched the selected mapping');
+    const imported = summary.reduce((total, item) => total + item.amount, 0);
+    if (recap.budget !== undefined && Math.abs(recap.budget / (recap.amountMultiplier ?? 1) * mapping.amountMultiplier - imported) > 1) warnings.push({ code: 'recap_difference', sheet: source.sheets.find(sheet => summaryPattern.test(sheet.name))?.name ?? '', row: 1 });
     // Existing phase custom data preserves evidence without dumping JSON into
     // the user-facing project description. The original binary also goes to GED.
     phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
     const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
-    return { project, source, rows, warnings };
+    return { project, source, rows, summary, warnings };
   }
   /** Controlled table import, not an inference engine for arbitrary prose. */
   previewPlanning(input: PlanningPreviewInputDTO): PlanningPreviewDTO {

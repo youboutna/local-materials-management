@@ -9,7 +9,7 @@ export class PlanningWorkbookReader {
   }
 
   static fromBuffer(buffer: ArrayBuffer, filename: string): PlanningWorkbookDTO {
-    const workbook = XLSX.read(buffer, { type: 'array', cellStyles: true, cellFormula: true, cellNF: true });
+    const workbook = XLSX.read(buffer, { type: 'array', cellStyles: true, cellFormula: true, cellNF: true, cellDates: true });
     return { filename, sheets: workbook.SheetNames.map(name => {
       const sheet = workbook.Sheets[name];
       if (!sheet?.['!ref']) return { name, rows: [], merges: [] };

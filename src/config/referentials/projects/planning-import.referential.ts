@@ -6,6 +6,13 @@ export const DEFAULT_WORKBOOK_MAPPING: PlanningWorkbookMappingDTO = {
   unitColumn: 4, quantityColumn: 5, unitPriceColumn: 6, amountColumn: 7,
   amountMultiplier: 1, codePattern: '^\\d+(?:[.\\-]\\d+)+[.\\-]?$',
   totalPattern: '^(?:total|sous[- ]?total|grand total)\\b',
+  subComponentDepth: 2, headerRows: 3,
+  titleCodePattern: '^(\\d+(?:\\.\\d+)+)\\.?\\s',
+  financingGroupPattern: 'source\\s+de\\s+financement|^total$',
+  periodPattern: '^(?:T\\d|[A-Z])$',
+  thousandsPattern: 'mill',
+  summarySheetPattern: '^\\s*r[ée]cap',
+  componentPattern: '^\\s*composante\\s*(\\d+)',
 };
 /** Import vocabulary is configurable; this is only a French table mapping preset. */
 export const DEFAULT_PLANNING_MAPPING: PlanningTextMappingDTO = {

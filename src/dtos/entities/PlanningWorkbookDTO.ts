@@ -28,7 +28,25 @@ export interface PlanningWorkbookMappingDTO {
   amountMultiplier: number;
   codePattern: string;
   totalPattern: string;
+  /** Code depth mapped to a phase sub-component (milestone), e.g. 2 for 1.1. */
+  subComponentDepth: number;
+  /** Leading rows scanned for column headers (financing sources, scale). */
+  headerRows: number;
+  /** Uncoded titles carrying their own code, e.g. "5.1. Sous composante". */
+  titleCodePattern: string;
+  /** Header labels that group financing columns without being a source. */
+  financingGroupPattern: string;
+  /** Header labels of period columns (quarters, months), never financing. */
+  periodPattern: string;
+  /** Header text indicating amounts expressed in thousands. */
+  thousandsPattern: string;
+  /** Sheets used as recap/summary evidence rather than phases. */
+  summarySheetPattern: string;
+  /** Recap label identifying a component and its number. */
+  componentPattern: string;
 }
+export interface PlanningFinancingShareDTO { source: string; column: number; sourceAmount: number; amount: number }
+export interface PlanningWorkbookSuggestionDTO { title?: string; amountMultiplier?: number; budget?: number; components: Record<string, string> }
 export interface PlanningWorkbookInputDTO {
   source: PlanningWorkbookDTO;
   title: string;
@@ -52,7 +70,10 @@ export interface PlanningWorkbookPreviewDTO {
     unit: string;
     sourceAmount?: number;
     amount?: number;
+    subComponent?: string;
+    financing?: PlanningFinancingShareDTO[];
     kind: 'group' | 'task' | 'unmapped';
   }>;
-  warnings: Array<{ code: 'missing_code' | 'duplicate_code' | 'arithmetic_difference' | 'period_review'; sheet: string; row: number }>;
+  summary: Array<{ sheet: string; phase: string; subComponents: number; tasks: number; amount: number; financing: Record<string, number> }>;
+  warnings: Array<{ code: 'missing_code' | 'recap_difference' | 'duplicate_code' | 'arithmetic_difference' | 'period_review'; sheet: string; row: number }>;
 }
