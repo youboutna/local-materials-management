@@ -49,7 +49,7 @@ describe('Controlled PTBA import, evidence preserved', () => {
   it('retains missing codes and totals as evidence, not extra tasks', () => {
     const preview = service.previewWorkbook(input());
     expect(preview.rows.find(row => row.title === 'Mission sans code')?.kind).toBe('unmapped');
-    expect(preview.rows.find(row => row.title === 'Total composante')?.kind).toBe('unmapped');
+    expect(preview.rows.find(row => row.title === 'Total composante')?.kind).toBe('structural');
     expect(preview.project.phases?.flatMap(phase => phase.tasks ?? []).some(task => task.title === 'Total composante')).toBe(false);
     expect(preview.warnings).toContainEqual({ code: 'missing_code', sheet: 'C3', row: 5 });
   });
