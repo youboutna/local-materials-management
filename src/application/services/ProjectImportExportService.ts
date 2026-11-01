@@ -68,6 +68,8 @@ export interface ImportOptions {
   validateOnly?: boolean;
   preserveRelations?: boolean;
   batchSize?: number;
+  /** Streamed counters while relations are saved (throttled). */
+  onProgress?: (details: { phases: number; milestones: number; tasks: number; dqeLines: number; stakeholders: number }) => void;
   ignoredFields?: string[];
   employeeResolution?: 'email' | 'externalRef' | 'both';
   supplierResolution?: 'name' | 'externalRef' | 'both';
@@ -341,6 +343,25 @@ export class ProjectImportExportService {
   private authService: AuthService;
   private currentUserId?: string;
   private readonly phaseIdsCache = new Map<string, Set<string>>();
+  private progressListener?: ImportOptions['onProgress'];
+  private lastProgressAt = 0;
+
+  /** Throttled progress stream so the UI moves during long saves. */
+  private emitProgress(details: ProjectImportResult['details']): void {
+    const now = Date.now();
+    if (!this.progressListener || now - this.lastProgressAt < 250) return;
+    this.lastProgressAt = now;
+    this.progressListener({ ...details });
+  }
+
+  /** Runs async work with bounded concurrency (shared rate budget, no request storms). */
+  private async runPool<T>(items: T[], worker: (item: T) => Promise<void>, size = 6): Promise<void> {
+    let next = 0;
+    const lanes = Array.from({ length: Math.min(size, items.length) }, async () => {
+      while (next < items.length) await worker(items[next++]);
+    });
+    await Promise.all(lanes);
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly taskCache = new Map<string, any[]>();
   private currentUserName?: string;
@@ -1469,9 +1490,11 @@ export class ProjectImportExportService {
       }
     }
 
+    // One phase listing per project import; created phases are tracked through phaseIdMap.
+    let projectPhases: Awaited<ReturnType<typeof this.phaseService.getPhasesByProject>> | undefined;
     for (const phase of row.phases ?? []) {
       try {
-        const existingPhases = await this.phaseService.getPhasesByProject(projectId);
+        const existingPhases = (projectPhases ??= await this.phaseService.getPhasesByProject(projectId));
 
         const existingPhase =
           existingPhases.find((candidate) => {
@@ -1581,19 +1604,18 @@ export class ProjectImportExportService {
         }
 
         try {
-          for (const task of phase.tasks ?? []) {
-            const resolvedTitle = this.resolveTaskTitle(task);
-            if (!resolvedTitle) continue;
-
-            await this.upsertTask(
-              projectId,
-              createdPhase.id,
-              task,
-              details,
-              suppliers,
-              employees,
-            );
+          // Warm caches once, then save tasks through a bounded pool (no per-task listing).
+          const phaseIds = this.phaseIdsCache.get(projectId) ?? new Set<string>();
+          phaseIds.add(createdPhase.id);
+          this.phaseIdsCache.set(projectId, phaseIds);
+          const phaseTaskKey = `phase:${createdPhase.id}`;
+          if (!this.taskCache.has(phaseTaskKey)) {
+            this.taskCache.set(phaseTaskKey, await this.taskAssignmentService.getByPhase(createdPhase.id));
           }
+          const phaseTasks = (phase.tasks ?? []).filter((task) => this.resolveTaskTitle(task));
+          await this.runPool(phaseTasks, (task) =>
+            this.upsertTask(projectId, createdPhase.id, task, details, suppliers, employees),
+          );
         } catch (err) {
           this.reportRelationIssue(
             `[importRelations] Phase tasks failed for phase ${createdPhase.id}:`,
@@ -1693,6 +1715,8 @@ export class ProjectImportExportService {
 
     try {
       let fallbackDqePhaseId: string | undefined;
+      // Grouped per phase: one existing-lines listing per phase instead of one per line.
+      const byPhase = new Map<string, Array<Record<string, unknown>>>();
       for (const line of row.dqeLines ?? []) {
         let targetPhaseId: string | undefined;
         if (line.phaseId) {
@@ -1715,7 +1739,10 @@ export class ProjectImportExportService {
           contextId: projectId,
           phaseId: targetPhaseId,
         };
-        await this.upsertDqeLines(projectId, targetPhaseId, [dqeLine], details);
+        byPhase.set(targetPhaseId, [...(byPhase.get(targetPhaseId) ?? []), dqeLine]);
+      }
+      for (const [targetPhaseId, lines] of byPhase) {
+        await this.upsertDqeLines(projectId, targetPhaseId, lines, details);
       }
     } catch (err) {
       this.reportRelationIssue('[importRelations] Project DQE failed:', err);
@@ -1786,7 +1813,12 @@ export class ProjectImportExportService {
     employees?: Map<string, string>,
   ): Promise<void> {
     const resolvedTitle = this.resolveTaskTitle(task);
-    const name = resolvedTitle ?? 'Tâche importée';
+    const fullName = resolvedTitle ?? 'Tâche importée';
+    // task_assignments.title is varchar(255): keep the full wording in the description.
+    const name = fullName.length > 255 ? `${fullName.slice(0, 254)}…` : fullName;
+    if (name !== fullName && !task.description?.includes(fullName)) {
+      task = { ...task, description: task.description ? `${task.description}\n${fullName}` : fullName };
+    }
 
     // Per-run caches: one phase listing per project and one task listing per
     // phase, instead of several requests for each imported task.
@@ -1904,6 +1936,7 @@ export class ProjectImportExportService {
         if (created) existingTasks.push(created as (typeof existingTasks)[number]);
       }
       details.tasks += 1;
+      this.emitProgress(details);
     } catch (err) {
       const classification = this.classifyError(err);
 
@@ -1943,7 +1976,8 @@ export class ProjectImportExportService {
       phaseId: phaseId || undefined,
     });
 
-    for (const dqeLine of dqeLines) {
+    // Bounded parallel writes: one listing per phase, then a small pool of saves.
+    await this.runPool(dqeLines, async (dqeLine) => {
       const categoryCode = (dqeLine.category ?? dqeLine.dqeCategory) as string | undefined;
       const dqeCategory = categoryCode ? getDQECategory(categoryCode) : undefined;
       const dqeType = normalizeDQEType(dqeLine.dqeType as string | undefined);
@@ -2039,9 +2073,10 @@ export class ProjectImportExportService {
       } catch (err) {
         this.reportRelationIssue(`[upsertDqeLines] Échec pour "${boqData.code}":`, err);
       }
-    }
+    });
 
     if (count) details.dqeLines += dqeLines.length;
+    this.emitProgress(details);
   }
 
   // ===========================================================================
