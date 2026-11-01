@@ -26,6 +26,11 @@ export const DEFAULT_WORKBOOK_MAPPING: PlanningWorkbookMappingDTO = {
     amount: '^(?:p\\.?\\s?t\\b.*|montant.*|prix total.*|co[ûu]t total.*)$',
   },
   actorSeparatorPattern: '\\s*(?:/|,|;|\\+|\\bet\\b)\\s*',
+  actorClassification: [
+    { entityType: 'supplier', namePattern: 'consult|bureau\\s*d.?[ée]tudes?|^BE$|entreprise|fournisseur|prestataire|cabinet|op[ée]rateur' },
+    { entityType: 'employee', namePattern: '^(?:UCP|UGP|UGP?\\b.*|coordonn|RSE|RSS|RAF|RPM|RSSE|SSE|S&E|expert|sp[ée]cialiste|charg[ée]|comptable|assistant|point\\s*focal|responsable)' },
+    { entityType: 'community', namePattern: 'communaut|b[ée]n[ée]ficiaire|coop[ée]rative|^OP$|groupement|m[ée]nages?|population|femmes|jeunes', communityType: 'communautes_locales' },
+  ],
 };
 /** Import vocabulary is configurable; this is only a French table mapping preset. */
 export const DEFAULT_PLANNING_MAPPING: PlanningTextMappingDTO = {

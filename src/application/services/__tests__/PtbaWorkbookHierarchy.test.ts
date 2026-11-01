@@ -86,13 +86,16 @@ describe('generic detection: DQE lines, actors, columns', () => {
     expect(line).toMatchObject({ unit: 'personne', quantity: 1, unitPrice: 1_000_000, totalHt: 1_000_000 });
     expect((line.metadata as { importTaskRef: string }).importTaskRef).toBe('PTBA-2024:C1:row:5');
   });
-  it('splits responsible/associates into distinct stakeholders backed by organizations', () => {
-    const project = preview.project as { stakeholders?: Array<{ organizationId: string; roleDescription: string }>; organizations?: Array<{ id: string; name: string }> };
-    const names = project.organizations!.map(item => item.name);
-    expect(names).toContain('UCP');
-    expect(names).toContain('INAP');
-    expect(new Set(names).size).toBe(names.length);
-    expect(project.stakeholders!.every(item => project.organizations!.some(org => org.id === item.organizationId))).toBe(true);
+  it('classifies stakeholders by semantics: staff, suppliers, communities, organizations', () => {
+    type SH = { stakeholderEntityType: string; organizationId?: string; supplierId?: string; employeeId?: string; roleDescription: string };
+    const project = preview.project as { stakeholders?: SH[]; organizations?: Array<{ id: string; name: string }> };
+    const kind = (name: string) => project.stakeholders!.find(item => item.roleDescription === name)?.stakeholderEntityType;
+    expect(kind('UCP')).toBe('employee');
+    expect(kind('INAP')).toBe('organization');
+    expect(project.stakeholders!.filter(item => /consult/i.test(item.roleDescription)).every(item => item.stakeholderEntityType === 'supplier' && item.supplierId)).toBe(true);
+    const orgs = project.stakeholders!.filter(item => item.stakeholderEntityType === 'organization');
+    expect(orgs.every(item => project.organizations!.some(org => org.id === item.organizationId))).toBe(true);
+    expect(project.organizations!.some(org => org.name === 'UCP')).toBe(false);
   });
   it('detects columns from headers in sheets whose layout differs (C4 « Activités », C5 PU)', () => {
     const c5 = phase('C5').tasks!.find(item => (item.metadata?.planningSource as { code: string }).code === '5.1.1.1')!;
