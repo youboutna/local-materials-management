@@ -214,8 +214,9 @@ export default function ProjectFileImporter({
   };
 
   const downloadTemplate = () => {
+    if (!canDownloadTemplate) return;
     const { content, mimeType, filename } = projectImportTemplateService.serialize(
-      templateFormat,
+      fileFormat as TemplateFormat,
       { referentialCode: templateReferential, language: "fr", withRelations: true },
     );
     const blob = new Blob([content], { type: mimeType });
@@ -286,7 +287,7 @@ export default function ProjectFileImporter({
                 <Label className="text-xs text-muted-foreground">{t('referential.project')}</Label>
                 <Select
                   value={templateReferential}
-                  onValueChange={(v) => setTemplateReferential(v as ReferentialType)}
+                  onValueChange={(v) => { setTemplateReferential(v as ReferentialType); clearSelection(); }}
                 >
                   <SelectTrigger className="w-full sm:w-[280px]">
                     <SelectValue />
@@ -303,21 +304,23 @@ export default function ProjectFileImporter({
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground"><T k="auto.projectfileimporter.format" fallback="Format" /></Label>
                 <Select
-                  value={templateFormat}
-                  onValueChange={(v) => setTemplateFormat(v as TemplateFormat)}
+                  value={fileFormat}
+                  onValueChange={(v) => { setTemplateFormat(v as ImportFileFormat); clearSelection(); }}
                 >
                   <SelectTrigger className="w-[160px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="json"><T k="auto.projectfileimporter.json_complet" fallback="JSON (complet)" /></SelectItem>
-                    <SelectItem value="csv"><T k="auto.projectfileimporter.csv_a_plat" fallback="CSV (à plat)" /></SelectItem>
+                    {activeProfile.formats.includes('json') && <SelectItem value="json"><T k="auto.projectfileimporter.json_complet" fallback="JSON (complet)" /></SelectItem>}
+                    {activeProfile.formats.includes('csv') && <SelectItem value="csv"><T k="auto.projectfileimporter.csv_a_plat" fallback="CSV (à plat)" /></SelectItem>}
+                    {activeProfile.formats.includes('excel') && <SelectItem value="excel"><T k="auto.projectfileimporter.excel" fallback="Excel (.xlsx, .xls)" /></SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
               <Button
                 variant="outline"
                 onClick={downloadTemplate}
+                disabled={!canDownloadTemplate}
                 className="flex items-center gap-2"
               >
                 <Download className="h-4 w-4" />
