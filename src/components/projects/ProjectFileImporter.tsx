@@ -49,10 +49,6 @@ export default function ProjectFileImporter({
   onImportComplete,
 }: ProjectFileImporterProps) {
   const [workbook, setWorkbook] = useState<Extract<ParsedImport, { kind: 'hierarchical_workbook' }>>();
-  const importProfiles = useMemo(() => projectImportTemplateService.listImportProfiles('fr'), []);
-  const [profileCode, setProfileCode] = useState(importProfiles[0]?.value ?? 'CUSTOM_STANDARD');
-  const profileFormats = importProfiles.find(item => item.value === profileCode)?.formats ?? ['json'];
-  const [fileFormat, setFileFormat] = useState<ImportFileFormat>(profileFormats[0]);
   const [reading, setReading] = useState(false);
   const [sourceFiles, setSourceFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -62,12 +58,17 @@ export default function ProjectFileImporter({
   const [importDetails, setImportDetails] = useState<Record<string, number> | null>(null);
   const [workbookPrepared, setWorkbookPrepared] = useState(false);
   const [importMode, setImportMode] = useState<ImportMode>("create");
+  // The existing "Télécharger un modèle" block drives both the template and the import parser.
   const [templateReferential, setTemplateReferential] = useState<ReferentialType>("CUSTOM_STANDARD");
-  const [templateFormat, setTemplateFormat] = useState<TemplateFormat>("json");
+  const [templateFormat, setTemplateFormat] = useState<ImportFileFormat>("json");
   const referentialOptions = useMemo(
     () => projectImportTemplateService.listReferentials("fr"),
     [],
   );
+  const activeProfile = projectImportTemplateService.resolveImportProfile(templateReferential);
+  const profileCode = activeProfile.code;
+  const fileFormat: ImportFileFormat = activeProfile.formats.includes(templateFormat) ? templateFormat : activeProfile.formats[0];
+  const canDownloadTemplate = activeProfile.kind === 'dataset' && fileFormat !== 'excel';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -213,8 +214,9 @@ export default function ProjectFileImporter({
   };
 
   const downloadTemplate = () => {
+    if (!canDownloadTemplate) return;
     const { content, mimeType, filename } = projectImportTemplateService.serialize(
-      templateFormat,
+      fileFormat as TemplateFormat,
       { referentialCode: templateReferential, language: "fr", withRelations: true },
     );
     const blob = new Blob([content], { type: mimeType });
@@ -229,22 +231,6 @@ export default function ProjectFileImporter({
 
   return (
     <section className="min-w-0 space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label htmlFor="import-profile">{t('projects.import.profile')}</Label>
-            <Select value={profileCode} onValueChange={value => { const formats = importProfiles.find(item => item.value === value)?.formats ?? ['json']; setProfileCode(value); setFileFormat(formats[0]); clearSelection(); }}>
-              <SelectTrigger id="import-profile"><SelectValue /></SelectTrigger>
-              <SelectContent>{importProfiles.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="import-format">{t('projects.import.fileFormat')}</Label>
-            <Select value={fileFormat} onValueChange={value => { setFileFormat(value as ImportFileFormat); clearSelection(); }}>
-              <SelectTrigger id="import-format"><SelectValue /></SelectTrigger>
-              <SelectContent>{profileFormats.map(format => <SelectItem key={format} value={format}>{t(`projects.import.format.${format}`)}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-        </div>
         {workbook && <PlanningWorkbookPreview key={workbook.source.filename} source={workbook.source} mapping={workbook.profile.mapping} defaults={workbook.defaults} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setWorkbookPrepared(true); setImportResult(null); }} />}
         <Alert>
           <AlertTriangle className="h-4 w-4" />
@@ -301,7 +287,7 @@ export default function ProjectFileImporter({
                 <Label className="text-xs text-muted-foreground">{t('referential.project')}</Label>
                 <Select
                   value={templateReferential}
-                  onValueChange={(v) => setTemplateReferential(v as ReferentialType)}
+                  onValueChange={(v) => { setTemplateReferential(v as ReferentialType); clearSelection(); }}
                 >
                   <SelectTrigger className="w-full sm:w-[280px]">
                     <SelectValue />
@@ -318,21 +304,23 @@ export default function ProjectFileImporter({
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground"><T k="auto.projectfileimporter.format" fallback="Format" /></Label>
                 <Select
-                  value={templateFormat}
-                  onValueChange={(v) => setTemplateFormat(v as TemplateFormat)}
+                  value={fileFormat}
+                  onValueChange={(v) => { setTemplateFormat(v as ImportFileFormat); clearSelection(); }}
                 >
                   <SelectTrigger className="w-[160px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="json"><T k="auto.projectfileimporter.json_complet" fallback="JSON (complet)" /></SelectItem>
-                    <SelectItem value="csv"><T k="auto.projectfileimporter.csv_a_plat" fallback="CSV (à plat)" /></SelectItem>
+                    {activeProfile.formats.includes('json') && <SelectItem value="json"><T k="auto.projectfileimporter.json_complet" fallback="JSON (complet)" /></SelectItem>}
+                    {activeProfile.formats.includes('csv') && <SelectItem value="csv"><T k="auto.projectfileimporter.csv_a_plat" fallback="CSV (à plat)" /></SelectItem>}
+                    {activeProfile.formats.includes('excel') && <SelectItem value="excel"><T k="auto.projectfileimporter.excel" fallback="Excel (.xlsx, .xls)" /></SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
               <Button
                 variant="outline"
                 onClick={downloadTemplate}
+                disabled={!canDownloadTemplate}
                 className="flex items-center gap-2"
               >
                 <Download className="h-4 w-4" />

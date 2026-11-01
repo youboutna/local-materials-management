@@ -325,15 +325,26 @@ export class ProjectImportTemplateService {
   // ---------------------------------------------------------------------------
 
   listReferentials(language: TemplateLanguage = 'fr'): ReferentialOption[] {
+    let options: ReferentialOption[] = [];
     try {
-      const referentials = getAllReferentials();
-      return referentials.map((ref) => ({
+      options = getAllReferentials().map((ref) => ({
         value: ref.code,
         label: this.resolveLabel(ref.name, language) || ref.code,
       }));
     } catch {
-      return [];
+      options = [];
     }
+    // Workbook import profiles (e.g. World Bank PTBA) are referentials of the same selector.
+    const profiles = IMPORT_PROFILES
+      .filter(profile => profile.kind === 'hierarchical_workbook' && !options.some(option => option.value === profile.code))
+      .map(profile => ({ value: profile.code, label: profile.label[language] }));
+    return [...options, ...profiles];
+  }
+
+  /** Import profile applied for the referential chosen in the existing template block. */
+  resolveImportProfile(referentialCode: string): { code: string; formats: readonly ImportFileFormat[]; kind: 'dataset' | 'hierarchical_workbook' } {
+    const profile = IMPORT_PROFILES.find(item => item.code === referentialCode) ?? getImportProfile('CUSTOM_STANDARD');
+    return { code: profile.code, formats: profile.formats, kind: profile.kind };
   }
 
   // ---------------------------------------------------------------------------
