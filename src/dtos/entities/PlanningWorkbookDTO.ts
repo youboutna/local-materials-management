@@ -19,6 +19,10 @@ export interface PlanningWorkbookDTO {
 }
 export interface PlanningWorkbookMappingDTO {
   codeColumn: number;
+  /** Header synonyms (regex, case-insensitive) per field; when a sheet header matches, the detected column overrides the preset index. */
+  columnSynonyms?: Partial<Record<'code' | 'title' | 'responsible' | 'associates' | 'unit' | 'quantity' | 'unitPrice' | 'amount', string>>;
+  /** Separator between several actors in one responsible/associates cell. */
+  actorSeparatorPattern?: string;
   titleColumn: number;
   responsibleColumn: number;
   associatesColumn: number;
