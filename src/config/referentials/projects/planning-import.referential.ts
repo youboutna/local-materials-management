@@ -15,6 +15,17 @@ export const DEFAULT_WORKBOOK_MAPPING: PlanningWorkbookMappingDTO = {
   componentPattern: '^\\s*composante\\s*(\\d+)',
   headerTitlePattern: '^(?:libell[ée]|activit[ée]s?|d[ée]signation|[IVX]+\\.\\s.+)$',
   arithmeticTolerance: 0.005,
+  columnSynonyms: {
+    code: '^(?:codes?|n[°o]|r[ée]f(?:[ée]rence)?|item)$',
+    title: '^(?:libell[ée]s?|activit[ée]s?|d[ée]signations?|description|t[âa]ches?|intitul[ée])$',
+    responsible: '^(?:responsables?|resp\\.?|pilote|ma[îi]tre d.ouvrage)$',
+    associates: '^(?:associ[ée]s?|partenaires?|intervenants?|parties prenantes)$',
+    unit: '^(?:unit[ée]s?|u)$',
+    quantity: '^(?:qt[ée]s?|quantit[ée]s?|nombre|nb)$',
+    unitPrice: '^(?:p\\.?\\s?u\\b.*|prix unitaire.*)$',
+    amount: '^(?:p\\.?\\s?t\\b.*|montant.*|prix total.*|co[ûu]t total.*)$',
+  },
+  actorSeparatorPattern: '\\s*(?:/|,|;|\\+|\\bet\\b)\\s*',
 };
 /** Import vocabulary is configurable; this is only a French table mapping preset. */
 export const DEFAULT_PLANNING_MAPPING: PlanningTextMappingDTO = {

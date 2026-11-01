@@ -78,3 +78,24 @@ describe('alignment with the project JSON template', () => {
     console.log(JSON.stringify(preview.warnings.reduce((a: Record<string, number>, w) => ({ ...a, [w.code]: (a[w.code] ?? 0) + 1 }), {})));
   });
 });
+
+describe('generic detection: DQE lines, actors, columns', () => {
+  it('links each costed activity to one DQE line of the same phase', () => {
+    const lines = (phase('C1') as { dqeLines?: Array<Record<string, unknown>> }).dqeLines!;
+    const line = lines.find(item => item.btpCode === '1.1.1.1')!;
+    expect(line).toMatchObject({ unit: 'personne', quantity: 1, unitPrice: 1_000_000, totalHt: 1_000_000 });
+    expect((line.metadata as { importTaskRef: string }).importTaskRef).toBe('PTBA-2024:C1:row:5');
+  });
+  it('splits responsible/associates into distinct stakeholders backed by organizations', () => {
+    const project = preview.project as { stakeholders?: Array<{ organizationId: string; roleDescription: string }>; organizations?: Array<{ id: string; name: string }> };
+    const names = project.organizations!.map(item => item.name);
+    expect(names).toContain('UCP');
+    expect(names).toContain('INAP');
+    expect(new Set(names).size).toBe(names.length);
+    expect(project.stakeholders!.every(item => project.organizations!.some(org => org.id === item.organizationId))).toBe(true);
+  });
+  it('detects columns from headers in sheets whose layout differs (C4 « Activités », C5 PU)', () => {
+    const c5 = phase('C5').tasks!.find(item => (item.metadata?.planningSource as { code: string }).code === '5.1.1.1')!;
+    expect(c5.metadata!.planningSource).toMatchObject({ quantity: 40, sourceUnitPrice: 60, sourceAmount: 2400 });
+  });
+});

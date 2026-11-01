@@ -128,7 +128,7 @@ export default function ProjectFileImporter({
       // Same profile entry point; workbook profiles are converted by the service with values read from the file.
       const parsed = workbook ?? await projectImportTemplateService.parseWithProfile(selectedFile, profileCode, fileFormat);
       const rawData = parsed.kind === 'hierarchical_workbook'
-        ? { projects: projectImportTemplateService.workbookToDataset(parsed, templateReferential).projects }
+        ? (({ projects, organizations }) => ({ projects, organizations }))(projectImportTemplateService.workbookToDataset(parsed, templateReferential))
         : parsed.dataset;
       if (!rawData || (Array.isArray(rawData) && rawData.length === 0)) {
         throw new Error(t("projects.import.noData"));
