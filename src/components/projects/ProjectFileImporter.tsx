@@ -230,7 +230,6 @@ export default function ProjectFileImporter({
 
   return (
     <section className="min-w-0 space-y-4">
-        {workbook && <PlanningWorkbookPreview key={workbook.source.filename} source={workbook.source} mapping={workbook.profile.mapping} defaults={workbook.defaults} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setWorkbookPrepared(true); setImportResult(null); }} />}
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -441,10 +440,11 @@ export default function ProjectFileImporter({
           </Alert>
         )}
 
+        {workbook && <details><summary className="cursor-pointer text-sm">{t('planning.workbook')}</summary> <PlanningWorkbookPreview key={workbook.source.filename} source={workbook.source} mapping={workbook.profile.mapping} defaults={workbook.defaults} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setWorkbookPrepared(true); setImportResult(null); }} /></details>}
         <div className="flex gap-2">
           <Button
             onClick={handleImport}
-            disabled={!selectedFile || importing || reading || !!workbook}
+            disabled={!selectedFile || importing || reading}
             className="flex-1"
           >
             {importing
