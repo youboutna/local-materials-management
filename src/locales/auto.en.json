@@ -25,7 +25,6 @@
   "dqe.line.source": "Source",
   "dqe.source.manual": "Manual entry",
   "workbench.incompatible_source": "The selected line does not match the chosen context.",
-  "planning.pasted": "Planning from a pasted table",
   "planning.title": "Project title",
   "planning.reference": "Project reference",
   "planning.anchor": "Start date",
