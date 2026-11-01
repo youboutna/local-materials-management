@@ -123,7 +123,7 @@ export default function ProjectFileImporter({
       console.log("Starting file parsing...");
       setImportProgress(25);
       // Workbook profiles were reviewed and converted to a JSON dataset; datasets go through the same profile entry point.
-      const parsed = await projectImportTemplateService.parseWithProfile(selectedFile, /\.json$/i.test(selectedFile.name) && workbookPrepared ? 'CUSTOM_STANDARD' : profileCode, workbookPrepared ? 'json' : fileFormat);
+      const parsed = await projectImportTemplateService.parseWithProfile(selectedFile, workbookPrepared ? 'CUSTOM_STANDARD' : profileCode, workbookPrepared ? 'json' : fileFormat);
       if (parsed.kind !== 'dataset') throw new Error(t('planning.reviewRequired'));
       const rawData = parsed.dataset;
       if (!rawData || (Array.isArray(rawData) && rawData.length === 0)) {

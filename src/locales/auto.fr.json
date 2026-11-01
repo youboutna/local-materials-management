@@ -6714,5 +6714,15 @@
   "metering.net": "Quantité nette",
   "workspace.contracts": "Contrats",
   "workspace.actions": "Actions",
-  "workspace.fiscal_settings": "Fiscalité et contrôles"
+  "workspace.fiscal_settings": "Fiscalité et contrôles",
+  "projects.import.profile": "Référentiel d'import",
+  "projects.import.fileFormat": "Format du fichier",
+  "projects.import.format.excel": "Excel (.xlsx, .xls)",
+  "projects.import.format.json": "JSON",
+  "projects.import.format.csv": "CSV",
+  "planning.reviewRequired": "Vérifiez l'aperçu du classeur avant d'importer",
+  "planning.component": "Composante",
+  "planning.subComponents": "Sous-composantes",
+  "planning.tasks": "Activités",
+  "planning.financing": "Financements"
 }
