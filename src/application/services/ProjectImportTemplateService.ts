@@ -165,7 +165,7 @@ export class ProjectImportTemplateService {
    * Direct import path for a workbook profile: values read from the workbook
    * (title, scale, budget) are applied; missing identity falls back to the file name and today.
    */
-  workbookToDataset(parsed: Extract<ParsedImport, { kind: 'hierarchical_workbook' }>, referentialCode: string, today = new Date()): { projects: unknown[]; preview: PlanningWorkbookPreviewDTO } {
+  workbookToDataset(parsed: Extract<ParsedImport, { kind: 'hierarchical_workbook' }>, referentialCode: string, today = new Date()): { projects: unknown[]; organizations: unknown[]; preview: PlanningWorkbookPreviewDTO } {
     const base = parsed.source.filename.replace(/\.[^.]+$/, '').trim();
     const reference = base.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40).toUpperCase() || 'PTBA';
     const mapping = { ...(parsed.profile.mapping ?? DEFAULT_WORKBOOK_MAPPING), ...(parsed.defaults.amountMultiplier ? { amountMultiplier: parsed.defaults.amountMultiplier } : {}) };
@@ -175,7 +175,8 @@ export class ProjectImportTemplateService {
       budget: parsed.defaults.budget ?? 0, referentialCode, mapping,
       templateDefaults: parsed.profile.templateDefaults,
     });
-    return { projects: [preview.project], preview };
+    const { organizations, ...project } = preview.project as typeof preview.project & { organizations?: unknown[] };
+    return { projects: [project], organizations: organizations ?? [], preview };
   }
 
   previewWorkbook(input: PlanningWorkbookInputDTO): PlanningWorkbookPreviewDTO {
@@ -200,6 +201,14 @@ export class ProjectImportTemplateService {
     const summary: PlanningWorkbookPreviewDTO['summary'] = [];
     const phases: NonNullable<PlanningWorkbookPreviewDTO['project']['phases']> = [];
     const scale = (value: number) => value * mapping.amountMultiplier;
+    // Actors (responsible/associates) are collected generically and become organizations + project stakeholders.
+    const actors = new Map<string, { name: string; roles: Set<string> }>();
+    const actorSeparator = new RegExp(mapping.actorSeparatorPattern ?? '\\s*[/,;]\\s*', 'i');
+    const slug = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toUpperCase();
+    const collectActors = (text: string, role: string) => text.split(actorSeparator).map(name => name.trim()).filter(name => name.length > 1).forEach(name => {
+      const key = slug(name); if (!key) return;
+      const actor = actors.get(key) ?? { name, roles: new Set<string>() }; actor.roles.add(role); actors.set(key, actor);
+    });
     for (const sheet of source.sheets) {
       // Recap sheets are evidence for title/budget/labels; their totals are not activities.
       if (summaryPattern.test(sheet.name)) continue;
@@ -277,7 +286,15 @@ export class ProjectImportTemplateService {
         phaseAmount += plannedAmount ?? 0;
         for (const share of financing ?? []) phaseFinancing[share.source] = (phaseFinancing[share.source] ?? 0) + share.amount;
         // Stable source row identity avoids collapsing repeated documentary codes.
-        phase.tasks?.push({ ...td.task, id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${raw} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: raw, path, associates: cellText(index, cols.associates), quantity, quantityText: quantity === undefined ? cellText(index, cols.quantity) || undefined : undefined, unit, unitPrice: unitPrice === undefined ? undefined : scale(unitPrice), sourceUnitPrice: unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount, subComponent: subCode ? { code: subCode, title: subComponents.get(subCode)?.title, milestoneRef } : undefined, groups, financingSources: financing, cells: sheet.rows[index] } } });
+        const associates = cellText(index, cols.associates);
+        collectActors(responsible, 'responsable'); collectActors(associates, 'associe');
+        // Costed activities also feed the DQE of the same phase (one line ↔ one phase), linked to the task by its source id.
+        const taskRef = `${input.reference}:${sheet.name}:row:${index + 1}`;
+        if (quantity !== undefined || plannedAmount !== undefined) {
+          const linePrice = unitPrice === undefined ? (plannedAmount !== undefined && quantity ? plannedAmount / quantity : undefined) : scale(unitPrice);
+          (phase as { dqeLines?: unknown[] }).dqeLines = [...((phase as { dqeLines?: unknown[] }).dqeLines ?? []), { source: 'dqe', contextId: '', designation: title, unit: unit || 'u', quantity: quantity ?? 1, unitPrice: linePrice ?? null, totalHt: plannedAmount ?? null, btpCode: raw, sourceType: 'import', note: `${sheet.name} · ligne ${index + 1}`, metadata: { importTaskRef: taskRef, planningSource: { sheet: sheet.name, row: index + 1, code: raw } } }];
+        }
+        phase.tasks?.push({ ...td.task, id: taskRef, title, description: `${raw} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: raw, path, associates: cellText(index, cols.associates), quantity, quantityText: quantity === undefined ? cellText(index, cols.quantity) || undefined : undefined, unit, unitPrice: unitPrice === undefined ? undefined : scale(unitPrice), sourceUnitPrice: unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount, subComponent: subCode ? { code: subCode, title: subComponents.get(subCode)?.title, milestoneRef } : undefined, groups, financingSources: financing, cells: sheet.rows[index] } } });
       }
       phase.milestones = [...subComponents.entries()].map(([code, item], order) => ({ ...td.milestone, externalRef: item.externalRef, title: `${code} · ${item.title}`, name: item.title, order, metadata: { planningSource: { sheet: sheet.name, code } } }));
       if (phase.tasks?.length) {
@@ -294,7 +311,9 @@ export class ProjectImportTemplateService {
     // Existing phase custom data preserves evidence without dumping JSON into
     // the user-facing project description. The original binary also goes to GED.
     phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
-    const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping }, ...(td.interventionZone ? { interventionZones: [td.interventionZone] } : {}) };
+    const organizations = [...actors.entries()].map(([key, actor]) => ({ id: `ORG-${key}`, name: actor.name, type: 'autre' }));
+    const stakeholders = [...actors.entries()].map(([key, actor]) => ({ externalRef: `${input.reference.trim()}:SH:${key}`, stakeholderEntityType: 'organization' as const, organizationId: `ORG-${key}`, role: actor.roles.has('responsable') ? 'responsable' : 'associe', roleDescription: actor.name, isPrimary: false }));
+    const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, stakeholders, organizations, title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping }, ...(td.interventionZone ? { interventionZones: [td.interventionZone] } : {}) };
     return { project, source, rows, summary, warnings };
   }
   /** Controlled table import, not an inference engine for arbitrary prose. */
