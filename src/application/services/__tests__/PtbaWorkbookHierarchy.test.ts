@@ -75,6 +75,6 @@ describe('alignment with the project JSON template', () => {
     expect(phase.tasks[0]).toMatchObject({ status: 'pending', priority: 'medium', progress: 0 });
     const unmapped = preview.rows.filter(r => r.kind === 'unmapped').map(r => r.title);
     expect(unmapped.some(t => /^libell|^total/i.test(t))).toBe(false);
-    console.log('unmapped', unmapped.length, 'warnings', preview.warnings.length, 'tasks', preview.summary.reduce((a, s) => a + s.tasks, 0));
+    console.log(JSON.stringify(preview.warnings.reduce((a: Record<string, number>, w) => ({ ...a, [w.code]: (a[w.code] ?? 0) + 1 }), {})));
   });
 });
