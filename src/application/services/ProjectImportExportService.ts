@@ -1841,11 +1841,10 @@ export class ProjectImportExportService {
 
     const actionType = this.resolveActionType(task);
 
+    // task_assignments has no external_ref column: existing tasks are matched
+    // above through metadata.importId/externalRef, so no database lookup here.
     const { id: resolvedTaskId, externalRef: resolvedTaskExternalRef } =
-      await this.resolveIdAndExternalRef(task.id, task.id, {
-        table: 'task_assignments',
-        checkExists: true,
-      });
+      await this.resolveIdAndExternalRef(task.id, task.id);
 
     const taskData: Partial<CreateTaskAssignmentDTO> & {
       id?: string;
@@ -1895,10 +1894,11 @@ export class ProjectImportExportService {
           `updateTask ${existingTask.id}`,
         );
       } else {
-        await this.retryWithBackoff(
+        const created = await this.retryWithBackoff(
           () => this.taskAssignmentService.create(taskData as CreateTaskAssignmentDTO),
           `createTask ${name}`,
         );
+        if (created) existingTasks.push(created as (typeof existingTasks)[number]);
       }
       details.tasks += 1;
     } catch (err) {
