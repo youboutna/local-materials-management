@@ -145,9 +145,13 @@ export default function ProjectFileImporter({
           : importMode === "update"
             ? "upsert"
             : "partial_update";
+      // Expected work = tasks + DQE lines read from the file; the bar follows saved counts.
+      const expected = Math.max(1, (dataset.projects ?? []).reduce((total: number, project: { phases?: Array<{ tasks?: unknown[]; dqeLines?: unknown[] }> }) =>
+        total + (project.phases ?? []).reduce((sum, phase) => sum + (phase.tasks?.length ?? 0) + (phase.dqeLines?.length ?? 0), 0), 0));
       const importResult = await projectImportService.importDataset(dataset, {
         mode: serviceMode,
         continueOnError: true,
+        onProgress: (done) => setImportProgress(Math.min(95, 50 + Math.round(((done.tasks + done.dqeLines) / expected) * 45))),
       });
       if (importResult.createdIds.length === 1 && sourceFiles.length) {
         try { await projectImportTemplateService.archiveSources(importResult.createdIds[0], sourceFiles); }

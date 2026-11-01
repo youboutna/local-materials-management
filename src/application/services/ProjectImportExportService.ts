@@ -2426,6 +2426,8 @@ export class ProjectImportExportService {
   ): Promise<ProjectImportResult> {
     this.phaseIdsCache.clear();
     this.taskCache.clear();
+    this.progressListener = options.onProgress;
+    this.lastProgressAt = 0;
     const result: ProjectImportResult = {
       total: rows.length,
       imported: 0,
