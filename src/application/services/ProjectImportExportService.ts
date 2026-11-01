@@ -340,6 +340,9 @@ export interface ProjectImportEmployee {
 export class ProjectImportExportService {
   private authService: AuthService;
   private currentUserId?: string;
+  private readonly phaseIdsCache = new Map<string, Set<string>>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly taskCache = new Map<string, any[]>();
   private currentUserName?: string;
   private currentUserEmail?: string;
   private employeeService: ReturnType<typeof getEmployeeService>;
@@ -1785,20 +1788,31 @@ export class ProjectImportExportService {
     const resolvedTitle = this.resolveTaskTitle(task);
     const name = resolvedTitle ?? 'Tâche importée';
 
+    // Per-run caches: one phase listing per project and one task listing per
+    // phase, instead of several requests for each imported task.
     let validPhaseId: string | undefined;
     if (phaseId && this.isUUID(phaseId)) {
       try {
-        const freshPhases = await this.phaseService.getPhasesByProject(projectId);
-        const exists = freshPhases.some((p) => p.id === phaseId);
-        if (exists) validPhaseId = phaseId;
+        let phaseIds = this.phaseIdsCache.get(projectId);
+        if (!phaseIds || !phaseIds.has(phaseId)) {
+          const freshPhases = await this.phaseService.getPhasesByProject(projectId);
+          phaseIds = new Set(freshPhases.map((p) => p.id));
+          this.phaseIdsCache.set(projectId, phaseIds);
+        }
+        if (phaseIds.has(phaseId)) validPhaseId = phaseId;
       } catch {
         /* ignore */
       }
     }
 
-    const existingTasks = validPhaseId
-      ? await this.taskAssignmentService.getByPhase(validPhaseId)
-      : await this.taskAssignmentService.getByProject(projectId);
+    const taskCacheKey = validPhaseId ? `phase:${validPhaseId}` : `project:${projectId}`;
+    let existingTasks = this.taskCache.get(taskCacheKey);
+    if (!existingTasks) {
+      existingTasks = validPhaseId
+        ? await this.taskAssignmentService.getByPhase(validPhaseId)
+        : await this.taskAssignmentService.getByProject(projectId);
+      this.taskCache.set(taskCacheKey, existingTasks);
+    }
     const existingTask = existingTasks.find((candidate) => task.id
       ? candidate.id === task.id || candidate.metadata?.importId === task.id || candidate.metadata?.externalRef === task.id
       : candidate.title === name);
@@ -1830,11 +1844,10 @@ export class ProjectImportExportService {
 
     const actionType = this.resolveActionType(task);
 
+    // task_assignments has no external_ref column: existing tasks are matched
+    // above through metadata.importId/externalRef, so no database lookup here.
     const { id: resolvedTaskId, externalRef: resolvedTaskExternalRef } =
-      await this.resolveIdAndExternalRef(task.id, task.id, {
-        table: 'task_assignments',
-        checkExists: true,
-      });
+      await this.resolveIdAndExternalRef(task.id, task.id);
 
     const taskData: Partial<CreateTaskAssignmentDTO> & {
       id?: string;
@@ -1884,10 +1897,11 @@ export class ProjectImportExportService {
           `updateTask ${existingTask.id}`,
         );
       } else {
-        await this.retryWithBackoff(
+        const created = await this.retryWithBackoff(
           () => this.taskAssignmentService.create(taskData as CreateTaskAssignmentDTO),
           `createTask ${name}`,
         );
+        if (created) existingTasks.push(created as (typeof existingTasks)[number]);
       }
       details.tasks += 1;
     } catch (err) {
@@ -2375,6 +2389,8 @@ export class ProjectImportExportService {
     } = {},
     options: ImportOptions = {},
   ): Promise<ProjectImportResult> {
+    this.phaseIdsCache.clear();
+    this.taskCache.clear();
     const result: ProjectImportResult = {
       total: rows.length,
       imported: 0,
