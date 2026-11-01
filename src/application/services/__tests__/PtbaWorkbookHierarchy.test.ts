@@ -59,6 +59,6 @@ describe('direct import button path', () => {
     if (parsed.kind !== 'hierarchical_workbook') throw new Error('expected workbook');
     const { projects, preview } = svc.workbookToDataset(parsed, 'WORLD_BANK_PTBA', new Date('2026-11-01'));
     expect(projects).toHaveLength(1);
-    expect(preview.summary.phases).toBe(5);
+    expect(preview.summary).toHaveLength(5);
   });
 });
