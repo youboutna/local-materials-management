@@ -44,6 +44,17 @@ export interface PlanningWorkbookMappingDTO {
   summarySheetPattern: string;
   /** Recap label identifying a component and its number. */
   componentPattern: string;
+  /** Uncoded header/section rows (e.g. "Libellé", "I. Investment Costs") kept as structure, not as data to complete. */
+  headerTitlePattern: string;
+  /** Relative tolerance for quantity × unit price vs source amount (0.005 = 0.5 %). */
+  arithmeticTolerance: number;
+}
+/** Default field values aligned with the project JSON template (phase/task/project). */
+export interface PlanningTemplateDefaultsDTO {
+  project?: Record<string, string | number | boolean>;
+  phase?: Record<string, string | number | boolean>;
+  task?: Record<string, string | number | boolean>;
+  milestone?: Record<string, string | number | boolean>;
 }
 export interface PlanningFinancingShareDTO { source: string; column: number; sourceAmount: number; amount: number }
 export interface PlanningWorkbookSuggestionDTO { title?: string; amountMultiplier?: number; budget?: number; components: Record<string, string> }
@@ -56,6 +67,7 @@ export interface PlanningWorkbookInputDTO {
   budget: number;
   referentialCode: string;
   mapping: PlanningWorkbookMappingDTO;
+  templateDefaults?: PlanningTemplateDefaultsDTO;
 }
 export interface PlanningWorkbookPreviewDTO {
   project: ProjectImportRow;
@@ -72,7 +84,7 @@ export interface PlanningWorkbookPreviewDTO {
     amount?: number;
     subComponent?: string;
     financing?: PlanningFinancingShareDTO[];
-    kind: 'group' | 'task' | 'unmapped';
+    kind: 'group' | 'task' | 'structural' | 'unmapped';
   }>;
   summary: Array<{ sheet: string; phase: string; subComponents: number; tasks: number; amount: number; financing: Record<string, number> }>;
   warnings: Array<{ code: 'missing_code' | 'recap_difference' | 'duplicate_code' | 'arithmetic_difference' | 'period_review'; sheet: string; row: number }>;

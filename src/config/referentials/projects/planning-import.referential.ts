@@ -13,6 +13,8 @@ export const DEFAULT_WORKBOOK_MAPPING: PlanningWorkbookMappingDTO = {
   thousandsPattern: 'mill',
   summarySheetPattern: '^\\s*r[ée]cap',
   componentPattern: '^\\s*composante\\s*(\\d+)',
+  headerTitlePattern: '^(?:libell[ée]|activit[ée]s?|d[ée]signation|[IVX]+\\.\\s.+)$',
+  arithmeticTolerance: 0.005,
 };
 /** Import vocabulary is configurable; this is only a French table mapping preset. */
 export const DEFAULT_PLANNING_MAPPING: PlanningTextMappingDTO = {
