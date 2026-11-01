@@ -23,6 +23,8 @@ export interface PlanningWorkbookMappingDTO {
   columnSynonyms?: Partial<Record<'code' | 'title' | 'responsible' | 'associates' | 'unit' | 'quantity' | 'unitPrice' | 'amount', string>>;
   /** Separator between several actors in one responsible/associates cell. */
   actorSeparatorPattern?: string;
+  /** Ordered semantic rules: first matching rule decides the stakeholder kind; unmatched actors stay organizations. */
+  actorClassification?: Array<{ entityType: 'employee' | 'supplier' | 'community' | 'organization'; namePattern: string; taskPattern?: string; communityType?: string }>;
   titleColumn: number;
   responsibleColumn: number;
   associatesColumn: number;

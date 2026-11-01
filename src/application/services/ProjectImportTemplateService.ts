@@ -202,12 +202,12 @@ export class ProjectImportTemplateService {
     const phases: NonNullable<PlanningWorkbookPreviewDTO['project']['phases']> = [];
     const scale = (value: number) => value * mapping.amountMultiplier;
     // Actors (responsible/associates) are collected generically and become organizations + project stakeholders.
-    const actors = new Map<string, { name: string; roles: Set<string> }>();
+    const actors = new Map<string, { name: string; roles: Set<string>; tasks: string[] }>();
     const actorSeparator = new RegExp(mapping.actorSeparatorPattern ?? '\\s*[/,;]\\s*', 'i');
     const slug = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toUpperCase();
-    const collectActors = (text: string, role: string) => text.split(actorSeparator).map(name => name.trim()).filter(name => name.length > 1).forEach(name => {
+    const collectActors = (text: string, role: string, taskTitle = '') => text.split(actorSeparator).map(name => name.trim()).filter(name => name.length > 1).forEach(name => {
       const key = slug(name).replace(/S$/, ''); if (!key) return;
-      const actor = actors.get(key) ?? { name, roles: new Set<string>() }; actor.roles.add(role); actors.set(key, actor);
+      const actor = actors.get(key) ?? { name, roles: new Set<string>(), tasks: [] }; actor.roles.add(role); if (taskTitle) actor.tasks.push(taskTitle); actors.set(key, actor);
     });
     for (const sheet of source.sheets) {
       // Recap sheets are evidence for title/budget/labels; their totals are not activities.
@@ -311,8 +311,20 @@ export class ProjectImportTemplateService {
     // Existing phase custom data preserves evidence without dumping JSON into
     // the user-facing project description. The original binary also goes to GED.
     phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
-    const organizations = [...actors.entries()].map(([key, actor]) => ({ id: `ORG-${key}`, name: actor.name, type: 'autre' }));
-    const stakeholders = [...actors.entries()].map(([key, actor]) => ({ externalRef: `${input.reference.trim()}:SH:${key}`, stakeholderEntityType: 'organization' as const, organizationId: `ORG-${key}`, role: actor.roles.has('responsable') ? 'responsable' : 'associe', roleDescription: actor.name, isPrimary: false }));
+    // Stakeholder kind follows the referential semantics of the name and the tasks it is responsible for.
+    const rules = (mapping.actorClassification ?? []).map(rule => ({ ...rule, name: new RegExp(rule.namePattern, 'i'), task: rule.taskPattern ? new RegExp(rule.taskPattern, 'i') : undefined }));
+    const classify = (actor: { name: string; tasks: string[] }) => rules.find(rule => rule.name.test(actor.name) && (!rule.task || actor.tasks.some(title => rule.task!.test(title)))) ?? { entityType: 'organization' as const, communityType: undefined };
+    const reference = input.reference.trim();
+    const organizations: Array<{ id: string; name: string; type: string }> = [];
+    const stakeholders = [...actors.entries()].map(([key, actor]) => {
+      const rule = classify(actor);
+      const base = { externalRef: `${reference}:SH:${key}`, stakeholderEntityType: rule.entityType, role: actor.roles.has('responsable') ? 'responsable' : 'associe', roleDescription: actor.name, isPrimary: false };
+      if (rule.entityType === 'supplier') return { ...base, supplierId: `SUP-${key}` };
+      if (rule.entityType === 'employee') return { ...base, employeeId: `EMP-${key}` };
+      if (rule.entityType === 'community') return { ...base, communityType: rule.communityType ?? 'communautes_locales' };
+      organizations.push({ id: `ORG-${key}`, name: actor.name, type: 'autre' });
+      return { ...base, organizationId: `ORG-${key}` };
+    });
     const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, stakeholders, ...({ organizations } as object), title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping }, ...(td.interventionZone ? { interventionZones: [td.interventionZone] } : {}) };
     return { project, source, rows, summary, warnings };
   }
