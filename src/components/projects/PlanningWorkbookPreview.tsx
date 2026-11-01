@@ -7,22 +7,26 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { projectImportTemplateService } from '@/application/services/ProjectImportTemplateService';
 import { DEFAULT_WORKBOOK_MAPPING } from '@/config/referentials/projects/planning-import.referential';
-import type { PlanningWorkbookDTO, PlanningWorkbookPreviewDTO } from '@/dtos/entities/PlanningWorkbookDTO';
+import type { PlanningWorkbookDTO, PlanningWorkbookMappingDTO, PlanningWorkbookPreviewDTO, PlanningWorkbookSuggestionDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 import { Eye, Check, Paperclip } from 'lucide-react';
 
-export function PlanningWorkbookPreview({ source, referentialCode, onPrepared, onSource }: {
+export function PlanningWorkbookPreview({ source, referentialCode, mapping: profileMapping = DEFAULT_WORKBOOK_MAPPING, defaults, onPrepared, onSource }: {
   source: PlanningWorkbookDTO;
+  /** Mapping rules of the selected import profile (referential). */
+  mapping?: PlanningWorkbookMappingDTO;
+  /** Values read from the workbook itself, always editable before preview. */
+  defaults?: PlanningWorkbookSuggestionDTO;
   referentialCode: string;
   onPrepared: (file: File) => void;
   onSource: (file: File) => void;
 }) {
   const { t } = useLanguage();
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(defaults?.title ?? '');
   const [reference, setReference] = useState('');
   const [date, setDate] = useState('');
   const [currency, setCurrency] = useState('MRU');
-  const [budget, setBudget] = useState('');
-  const [mapping, setMapping] = useState({ ...DEFAULT_WORKBOOK_MAPPING });
+  const [budget, setBudget] = useState(defaults?.budget !== undefined ? String(defaults.budget) : '');
+  const [mapping, setMapping] = useState({ ...profileMapping, ...(defaults?.amountMultiplier ? { amountMultiplier: defaults.amountMultiplier } : {}) });
   const [narrative, setNarrative] = useState('');
   const [preview, setPreview] = useState<PlanningWorkbookPreviewDTO>();
   const [reviewed, setReviewed] = useState(false);
@@ -54,6 +58,7 @@ export function PlanningWorkbookPreview({ source, referentialCode, onPrepared, o
     }}><Eye className="mr-2 h-4 w-4" />{t('planning.preview')}</Button>
     {error && <p role="alert" className="text-destructive">{error}</p>}
     {preview && <>
+      <div className="max-h-64 overflow-auto"><Table><TableHeader><TableRow><TableHead>{t('planning.component')}</TableHead><TableHead>{t('planning.subComponents')}</TableHead><TableHead>{t('planning.tasks')}</TableHead><TableHead>{t('planning.amountColumn')} ({currency})</TableHead><TableHead>{t('planning.financing')}</TableHead></TableRow></TableHeader><TableBody>{(preview.project.phases ?? []).map(phase => { const line = preview.summary.find(item => item.sheet === phase.code); return <TableRow key={phase.code}><TableCell className="min-w-48 whitespace-normal">{phase.name}</TableCell><TableCell>{phase.milestones?.length ?? 0}</TableCell><TableCell>{phase.tasks?.length ?? 0}</TableCell><TableCell>{line?.amount?.toLocaleString() ?? '—'}</TableCell><TableCell className="whitespace-normal text-xs">{line ? Object.entries(line.financing).map(([key, value]) => `${key}: ${Number(value).toLocaleString()}`).join(' · ') : '—'}</TableCell></TableRow>; })}</TableBody></Table></div>
       <div className="max-h-96 overflow-auto"><Table><TableHeader><TableRow><TableHead>{t('planning.sourceRow')}</TableHead><TableHead>{t('planning.codeColumn')}</TableHead><TableHead>{t('planning.title')}</TableHead><TableHead>{t('planning.responsibleColumn')}</TableHead><TableHead>{t('planning.quantityColumn')}</TableHead><TableHead>{t('planning.amountColumn')} ({currency})</TableHead></TableRow></TableHeader><TableBody>{preview.rows.filter(row => row.kind !== 'unmapped').map(row => <TableRow key={`${row.sheet}:${row.row}`}><TableCell>{row.sheet}:{row.row}</TableCell><TableCell>{row.code}</TableCell><TableCell className="min-w-48 whitespace-normal break-words">{row.title}</TableCell><TableCell>{row.responsible || '—'}</TableCell><TableCell>{row.quantity ?? '—'} {row.unit}</TableCell><TableCell>{row.amount?.toLocaleString() ?? '—'}</TableCell></TableRow>)}</TableBody></Table></div>
       <details open={preview.warnings.length > 0}><summary className="cursor-pointer">{t('planning.review')} ({preview.warnings.length})</summary><div className="max-h-48 overflow-auto text-sm">{preview.warnings.map((warning, index) => <p key={index} className="py-1 text-destructive">{warning.sheet}:{warning.row} · {t(`planning.warning.${warning.code}`)}</p>)}</div></details>
       <details><summary className="cursor-pointer">{t('planning.unmapped')} ({preview.rows.filter(row => row.kind === 'unmapped').length})</summary><div className="max-h-48 overflow-auto text-sm">{preview.rows.filter(row => row.kind === 'unmapped').map(row => <p key={`${row.sheet}:${row.row}`}>{row.sheet}:{row.row} · {row.code} {row.title} {row.sourceAmount ?? ''}</p>)}</div></details>

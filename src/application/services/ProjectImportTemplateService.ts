@@ -115,12 +115,11 @@ export class ProjectImportTemplateService {
       return result.data;
     }
     if (extension === 'xlsx' || extension === 'xls') {
-      const source = await this.readWorkbook(file);
       const XLSX = await import('xlsx');
       const workbook = XLSX.read(await readFileAsArrayBuffer(file), { type: 'array' });
       // Every worksheet is retained; metadata/foreign sheets are not mislabelled as projects.
       const projects = workbook.SheetNames.flatMap(name => XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[name]));
-      return { projects: projects.map(project => ({ ...project, description: project.description ?? JSON.stringify({ planningSource: source }) })) };
+      return { projects };
     }
     throw new Error('Unsupported project document');
   }
