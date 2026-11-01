@@ -340,6 +340,9 @@ export interface ProjectImportEmployee {
 export class ProjectImportExportService {
   private authService: AuthService;
   private currentUserId?: string;
+  private readonly phaseIdsCache = new Map<string, Set<string>>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly taskCache = new Map<string, any[]>();
   private currentUserName?: string;
   private currentUserEmail?: string;
   private employeeService: ReturnType<typeof getEmployeeService>;
@@ -2386,6 +2389,8 @@ export class ProjectImportExportService {
     } = {},
     options: ImportOptions = {},
   ): Promise<ProjectImportResult> {
+    this.phaseIdsCache.clear();
+    this.taskCache.clear();
     const result: ProjectImportResult = {
       total: rows.length,
       imported: 0,
