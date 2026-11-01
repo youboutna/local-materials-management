@@ -25,9 +25,9 @@ import {
 } from "lucide-react";
 import React, { useMemo, useRef, useState } from "react";
 import { T } from '@/components/i18n/T';
-import { PlanningImportPreview } from '@/components/projects/PlanningImportPreview';
 import { PlanningWorkbookPreview } from '@/components/projects/PlanningWorkbookPreview';
-import type { PlanningWorkbookDTO } from '@/dtos/entities/PlanningWorkbookDTO';
+import type { ParsedImport } from '@/application/services/ProjectImportTemplateService';
+import type { ImportFileFormat } from '@/config/referentials/projects/import-profiles.referential';
 
 type ImportMode = "create" | "update" | "patch";
 
@@ -48,7 +48,11 @@ interface ProjectFileImporterProps {
 export default function ProjectFileImporter({
   onImportComplete,
 }: ProjectFileImporterProps) {
-  const [workbook, setWorkbook] = useState<PlanningWorkbookDTO>();
+  const [workbook, setWorkbook] = useState<Extract<ParsedImport, { kind: 'hierarchical_workbook' }>>();
+  const importProfiles = useMemo(() => projectImportTemplateService.listImportProfiles('fr'), []);
+  const [profileCode, setProfileCode] = useState(importProfiles[0]?.value ?? 'CUSTOM_STANDARD');
+  const profileFormats = importProfiles.find(item => item.value === profileCode)?.formats ?? ['json'];
+  const [fileFormat, setFileFormat] = useState<ImportFileFormat>(profileFormats[0]);
   const [reading, setReading] = useState(false);
   const [sourceFiles, setSourceFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -56,6 +60,7 @@ export default function ProjectFileImporter({
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importDetails, setImportDetails] = useState<Record<string, number> | null>(null);
+  const [workbookPrepared, setWorkbookPrepared] = useState(false);
   const [importMode, setImportMode] = useState<ImportMode>("create");
   const [templateReferential, setTemplateReferential] = useState<ReferentialType>("CUSTOM_STANDARD");
   const [templateFormat, setTemplateFormat] = useState<TemplateFormat>("json");
@@ -98,12 +103,10 @@ export default function ProjectFileImporter({
     if (!file) return;
     const validationError = validateFile(file);
     if (validationError) { toast({ title: t("projects.import.invalidFile"), description: validationError, variant: "destructive" }); return; }
-    setSelectedFile(file); setImportResult(null); setImportDetails(null); setWorkbook(undefined); setSourceFiles([file]); setReading(true);
+    setSelectedFile(file); setImportResult(null); setImportDetails(null); setWorkbook(undefined); setWorkbookPrepared(false); setSourceFiles([file]); setReading(true);
     try {
-      if (/\.(xlsx|xls)$/i.test(file.name)) {
-        const source = await projectImportTemplateService.readWorkbook(file);
-        if (projectImportTemplateService.isPlanningWorkbook(source)) setWorkbook(source);
-      }
+      const parsed = await projectImportTemplateService.parseWithProfile(file, profileCode, fileFormat);
+      if (parsed.kind === 'hierarchical_workbook') setWorkbook(parsed);
     } catch (cause) {
       toast({ title: t('projects.import.error'), description: cause instanceof Error ? cause.message : t('common.error'), variant: 'destructive' });
     } finally { setReading(false); }
@@ -119,7 +122,10 @@ export default function ProjectFileImporter({
       // Parse file
       console.log("Starting file parsing...");
       setImportProgress(25);
-      const rawData = await projectImportTemplateService.readProjectDataset(selectedFile);
+      // Workbook profiles were reviewed and converted to a JSON dataset; datasets go through the same profile entry point.
+      const parsed = await projectImportTemplateService.parseWithProfile(selectedFile, workbookPrepared ? 'CUSTOM_STANDARD' : profileCode, workbookPrepared ? 'json' : fileFormat);
+      if (parsed.kind !== 'dataset') throw new Error(t('planning.reviewRequired'));
+      const rawData = parsed.dataset;
       if (!rawData || (Array.isArray(rawData) && rawData.length === 0)) {
         throw new Error(t("projects.import.noData"));
       }
@@ -196,6 +202,7 @@ export default function ProjectFileImporter({
 
   const clearSelection = () => {
     setWorkbook(undefined);
+    setWorkbookPrepared(false);
     setSourceFiles([]);
     setSelectedFile(null);
     setImportResult(null);
@@ -222,8 +229,23 @@ export default function ProjectFileImporter({
 
   return (
     <section className="min-w-0 space-y-4">
-        {workbook && <PlanningWorkbookPreview key={workbook.filename} source={workbook} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setImportResult(null); }} />}
-        <PlanningImportPreview referentialCode={templateReferential} onPrepared={file=>{setSelectedFile(file);setWorkbook(undefined);setSourceFiles([]);setImportResult(null);}} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="import-profile">{t('projects.import.profile')}</Label>
+            <Select value={profileCode} onValueChange={value => { const formats = importProfiles.find(item => item.value === value)?.formats ?? ['json']; setProfileCode(value); setFileFormat(formats[0]); clearSelection(); }}>
+              <SelectTrigger id="import-profile"><SelectValue /></SelectTrigger>
+              <SelectContent>{importProfiles.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="import-format">{t('projects.import.fileFormat')}</Label>
+            <Select value={fileFormat} onValueChange={value => { setFileFormat(value as ImportFileFormat); clearSelection(); }}>
+              <SelectTrigger id="import-format"><SelectValue /></SelectTrigger>
+              <SelectContent>{profileFormats.map(format => <SelectItem key={format} value={format}>{t(`projects.import.format.${format}`)}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+        {workbook && <PlanningWorkbookPreview key={workbook.source.filename} source={workbook.source} mapping={workbook.profile.mapping} defaults={workbook.defaults} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setWorkbookPrepared(true); setImportResult(null); }} />}
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -339,7 +361,7 @@ export default function ProjectFileImporter({
                   name="file-upload"
                   type="file"
                   className="sr-only"
-                  accept=".xlsx,.xls,.json,.csv"
+                  accept={projectImportTemplateService.acceptFor(fileFormat)}
                   disabled={reading || importing}
                   onChange={handleFileSelect}
                 />

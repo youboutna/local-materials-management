@@ -6716,5 +6716,15 @@
   "metering.net": "الكمية الصافية",
   "workspace.contracts": "العقود",
   "workspace.actions": "الإجراءات",
-  "workspace.fiscal_settings": "الضرائب والتحقق"
+  "workspace.fiscal_settings": "الضرائب والتحقق",
+  "projects.import.profile": "مرجع الاستيراد",
+  "projects.import.fileFormat": "صيغة الملف",
+  "projects.import.format.excel": "إكسل (.xlsx, .xls)",
+  "projects.import.format.json": "JSON",
+  "projects.import.format.csv": "CSV",
+  "planning.reviewRequired": "راجع معاينة المصنف قبل الاستيراد",
+  "planning.component": "المكون",
+  "planning.subComponents": "المكونات الفرعية",
+  "planning.tasks": "الأنشطة",
+  "planning.financing": "التمويل"
 }
