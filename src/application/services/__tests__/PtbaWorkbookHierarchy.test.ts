@@ -50,3 +50,15 @@ describe('PTBA workbook hierarchy (Composante → Sous-composante → Activité)
     expect(c2.amount).toBeGreaterThan(0);
   });
 });
+
+describe('direct import button path', () => {
+  it('converts the World Bank workbook into one project dataset without manual review', async () => {
+    const { ProjectImportTemplateService: Svc } = await import('../ProjectImportTemplateService');
+    const svc = new Svc();
+    const parsed = await svc.parseWithProfile(new File([buffer], 'ptba.xlsx'), 'WORLD_BANK_PTBA', 'excel');
+    if (parsed.kind !== 'hierarchical_workbook') throw new Error('expected workbook');
+    const { projects, preview } = svc.workbookToDataset(parsed, 'WORLD_BANK_PTBA', new Date('2026-11-01'));
+    expect(projects).toHaveLength(1);
+    expect(preview.summary).toHaveLength(5);
+  });
+});
