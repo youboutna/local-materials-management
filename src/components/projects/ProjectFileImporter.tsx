@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import React, { useMemo, useRef, useState } from "react";
 import { T } from '@/components/i18n/T';
-import { PlanningWorkbookPreview } from '@/components/projects/PlanningWorkbookPreview';
 import type { ParsedImport } from '@/application/services/ProjectImportTemplateService';
 import type { ImportFileFormat } from '@/config/referentials/projects/import-profiles.referential';
 
@@ -56,7 +55,7 @@ export default function ProjectFileImporter({
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importDetails, setImportDetails] = useState<Record<string, number> | null>(null);
-  const [workbookPrepared, setWorkbookPrepared] = useState(false);
+  const [analysis, setAnalysis] = useState<{ phases: number; tasks: number; warnings: number } | null>(null);
   const [importMode, setImportMode] = useState<ImportMode>("create");
   // The existing "Télécharger un modèle" block drives both the template and the import parser.
   const [templateReferential, setTemplateReferential] = useState<ReferentialType>("CUSTOM_STANDARD");
@@ -104,10 +103,15 @@ export default function ProjectFileImporter({
     if (!file) return;
     const validationError = validateFile(file);
     if (validationError) { toast({ title: t("projects.import.invalidFile"), description: validationError, variant: "destructive" }); return; }
-    setSelectedFile(file); setImportResult(null); setImportDetails(null); setWorkbook(undefined); setWorkbookPrepared(false); setSourceFiles([file]); setReading(true);
+    setSelectedFile(file); setImportResult(null); setImportDetails(null); setWorkbook(undefined); setAnalysis(null); setSourceFiles([file]); setReading(true);
     try {
       const parsed = await projectImportTemplateService.parseWithProfile(file, profileCode, fileFormat);
-      if (parsed.kind === 'hierarchical_workbook') setWorkbook(parsed);
+      if (parsed.kind === 'hierarchical_workbook') {
+        setWorkbook(parsed);
+        // Dry-run: same mapping as the final import, nothing written.
+        const { preview } = projectImportTemplateService.workbookToDataset(parsed, templateReferential);
+        setAnalysis({ phases: preview.summary.length, tasks: preview.summary.reduce((total, item) => total + item.tasks, 0), warnings: preview.warnings.length });
+      }
     } catch (cause) {
       toast({ title: t('projects.import.error'), description: cause instanceof Error ? cause.message : t('common.error'), variant: 'destructive' });
     } finally { setReading(false); }
@@ -122,7 +126,7 @@ export default function ProjectFileImporter({
     try {
       setImportProgress(25);
       // Same profile entry point; workbook profiles are converted by the service with values read from the file.
-      const parsed = workbook ?? await projectImportTemplateService.parseWithProfile(selectedFile, workbookPrepared ? 'CUSTOM_STANDARD' : profileCode, workbookPrepared ? 'json' : fileFormat);
+      const parsed = workbook ?? await projectImportTemplateService.parseWithProfile(selectedFile, profileCode, fileFormat);
       const rawData = parsed.kind === 'hierarchical_workbook'
         ? { projects: projectImportTemplateService.workbookToDataset(parsed, templateReferential).projects }
         : parsed.dataset;
@@ -202,7 +206,7 @@ export default function ProjectFileImporter({
 
   const clearSelection = () => {
     setWorkbook(undefined);
-    setWorkbookPrepared(false);
+    setAnalysis(null);
     setSourceFiles([]);
     setSelectedFile(null);
     setImportResult(null);
@@ -440,7 +444,7 @@ export default function ProjectFileImporter({
           </Alert>
         )}
 
-        {workbook && <details><summary className="cursor-pointer text-sm">{t('planning.workbook')}</summary> <PlanningWorkbookPreview key={workbook.source.filename} source={workbook.source} mapping={workbook.profile.mapping} defaults={workbook.defaults} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setWorkbookPrepared(true); setImportResult(null); }} /></details>}
+        {analysis && <p role="status" className="text-sm text-muted-foreground">{t('projects.import.analysisSummary').replace('{phases}', String(analysis.phases)).replace('{tasks}', String(analysis.tasks)).replace('{warnings}', String(analysis.warnings))}</p>}
         <div className="flex gap-2">
           <Button
             onClick={handleImport}
