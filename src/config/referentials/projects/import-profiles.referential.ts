@@ -1,5 +1,6 @@
 import type { PlanningTemplateDefaultsDTO, PlanningWorkbookMappingDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 import { DEFAULT_WORKBOOK_MAPPING } from './planning-import.referential';
+import { MAURITANIA_DEFAULT_INTERVENTION_ZONE } from '../geo/mauritania-boundary.referential';
 
 /**
  * Import profiles = business mapping rules applied by ONE generic importer.

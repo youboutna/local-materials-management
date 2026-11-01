@@ -410,7 +410,7 @@ export class ProjectImportTemplateService {
       projectReference: 'PRJ-XXXX-001',
       title: this.resolveLabel(referential?.name, language) ?? 'Projet exemple — à remplacer',
       description: this.resolveLabel(referential?.description, language) ?? 'Description du projet',
-      location: 'Localisation à préciser',
+      location: 'Nouakchott',
       status: 'en attente',
       progress: 0,
       budget: 0,
