@@ -287,7 +287,7 @@ export class ProjectImportTemplateService {
         for (const share of financing ?? []) phaseFinancing[share.source] = (phaseFinancing[share.source] ?? 0) + share.amount;
         // Stable source row identity avoids collapsing repeated documentary codes.
         const associates = cellText(index, cols.associates);
-        collectActors(responsible, 'responsable'); collectActors(associates, 'associe');
+        collectActors(responsible, 'responsable', title); collectActors(associates, 'associe', title);
         // Costed activities also feed the DQE of the same phase (one line ↔ one phase), linked to the task by its source id.
         const taskRef = `${input.reference}:${sheet.name}:row:${index + 1}`;
         if (quantity !== undefined || plannedAmount !== undefined) {

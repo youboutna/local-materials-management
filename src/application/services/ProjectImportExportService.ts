@@ -2122,7 +2122,7 @@ export class ProjectImportExportService {
 
     try {
       supplierId = await this.ensureEntityExists('supplier', stakeholder.supplierId, {
-        projectId, role: stakeholder.role, organizations, suppliers, employees,
+        projectId, role: stakeholder.role, name: stakeholder.roleDescription, organizations, suppliers, employees,
       });
     } catch (err) {
       console.warn(`[upsertStakeholder] supplier non résolu pour ${externalRef}:`, err);
@@ -2130,7 +2130,7 @@ export class ProjectImportExportService {
 
     try {
       employeeId = await this.ensureEntityExists('employee', stakeholder.employeeId, {
-        projectId, role: stakeholder.role, organizations, suppliers, employees,
+        projectId, role: stakeholder.role, name: stakeholder.roleDescription, organizations, suppliers, employees,
       });
     } catch (err) {
       console.warn(`[upsertStakeholder] employee non résolu pour ${externalRef}:`, err);
