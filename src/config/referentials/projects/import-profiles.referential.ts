@@ -44,7 +44,7 @@ export const IMPORT_PROFILES: readonly ImportProfile[] = [
     mapping: { ...DEFAULT_WORKBOOK_MAPPING },
     // Same field vocabulary as the project JSON template (template_<referential>_fr.json).
     templateDefaults: {
-      project: { status: 'en attente', progress: 0, teamSize: 1, location: '' },
+      project: { status: 'en attente', progress: 0, teamSize: 1, location: 'Localisation à préciser' },
       phase: { status: 'not_started', progress: 0 },
       task: { status: 'pending', priority: 'medium', progress: 0, requiresInspection: false, requiresEngineerApproval: false },
       milestone: { status: 'pending' },
