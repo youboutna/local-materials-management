@@ -1785,20 +1785,31 @@ export class ProjectImportExportService {
     const resolvedTitle = this.resolveTaskTitle(task);
     const name = resolvedTitle ?? 'Tâche importée';
 
+    // Per-run caches: one phase listing per project and one task listing per
+    // phase, instead of several requests for each imported task.
     let validPhaseId: string | undefined;
     if (phaseId && this.isUUID(phaseId)) {
       try {
-        const freshPhases = await this.phaseService.getPhasesByProject(projectId);
-        const exists = freshPhases.some((p) => p.id === phaseId);
-        if (exists) validPhaseId = phaseId;
+        let phaseIds = this.phaseIdsCache.get(projectId);
+        if (!phaseIds || !phaseIds.has(phaseId)) {
+          const freshPhases = await this.phaseService.getPhasesByProject(projectId);
+          phaseIds = new Set(freshPhases.map((p) => p.id));
+          this.phaseIdsCache.set(projectId, phaseIds);
+        }
+        if (phaseIds.has(phaseId)) validPhaseId = phaseId;
       } catch {
         /* ignore */
       }
     }
 
-    const existingTasks = validPhaseId
-      ? await this.taskAssignmentService.getByPhase(validPhaseId)
-      : await this.taskAssignmentService.getByProject(projectId);
+    const taskCacheKey = validPhaseId ? `phase:${validPhaseId}` : `project:${projectId}`;
+    let existingTasks = this.taskCache.get(taskCacheKey);
+    if (!existingTasks) {
+      existingTasks = validPhaseId
+        ? await this.taskAssignmentService.getByPhase(validPhaseId)
+        : await this.taskAssignmentService.getByProject(projectId);
+      this.taskCache.set(taskCacheKey, existingTasks);
+    }
     const existingTask = existingTasks.find((candidate) => task.id
       ? candidate.id === task.id || candidate.metadata?.importId === task.id || candidate.metadata?.externalRef === task.id
       : candidate.title === name);
