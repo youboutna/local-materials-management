@@ -49,10 +49,6 @@ export default function ProjectFileImporter({
   onImportComplete,
 }: ProjectFileImporterProps) {
   const [workbook, setWorkbook] = useState<Extract<ParsedImport, { kind: 'hierarchical_workbook' }>>();
-  const importProfiles = useMemo(() => projectImportTemplateService.listImportProfiles('fr'), []);
-  const [profileCode, setProfileCode] = useState(importProfiles[0]?.value ?? 'CUSTOM_STANDARD');
-  const profileFormats = importProfiles.find(item => item.value === profileCode)?.formats ?? ['json'];
-  const [fileFormat, setFileFormat] = useState<ImportFileFormat>(profileFormats[0]);
   const [reading, setReading] = useState(false);
   const [sourceFiles, setSourceFiles] = useState<File[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -62,12 +58,17 @@ export default function ProjectFileImporter({
   const [importDetails, setImportDetails] = useState<Record<string, number> | null>(null);
   const [workbookPrepared, setWorkbookPrepared] = useState(false);
   const [importMode, setImportMode] = useState<ImportMode>("create");
+  // The existing "Télécharger un modèle" block drives both the template and the import parser.
   const [templateReferential, setTemplateReferential] = useState<ReferentialType>("CUSTOM_STANDARD");
-  const [templateFormat, setTemplateFormat] = useState<TemplateFormat>("json");
+  const [templateFormat, setTemplateFormat] = useState<ImportFileFormat>("json");
   const referentialOptions = useMemo(
     () => projectImportTemplateService.listReferentials("fr"),
     [],
   );
+  const activeProfile = projectImportTemplateService.resolveImportProfile(templateReferential);
+  const profileCode = activeProfile.code;
+  const fileFormat: ImportFileFormat = activeProfile.formats.includes(templateFormat) ? templateFormat : activeProfile.formats[0];
+  const canDownloadTemplate = activeProfile.kind === 'dataset' && fileFormat !== 'excel';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -229,22 +230,6 @@ export default function ProjectFileImporter({
 
   return (
     <section className="min-w-0 space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label htmlFor="import-profile">{t('projects.import.profile')}</Label>
-            <Select value={profileCode} onValueChange={value => { const formats = importProfiles.find(item => item.value === value)?.formats ?? ['json']; setProfileCode(value); setFileFormat(formats[0]); clearSelection(); }}>
-              <SelectTrigger id="import-profile"><SelectValue /></SelectTrigger>
-              <SelectContent>{importProfiles.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="import-format">{t('projects.import.fileFormat')}</Label>
-            <Select value={fileFormat} onValueChange={value => { setFileFormat(value as ImportFileFormat); clearSelection(); }}>
-              <SelectTrigger id="import-format"><SelectValue /></SelectTrigger>
-              <SelectContent>{profileFormats.map(format => <SelectItem key={format} value={format}>{t(`projects.import.format.${format}`)}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-        </div>
         {workbook && <PlanningWorkbookPreview key={workbook.source.filename} source={workbook.source} mapping={workbook.profile.mapping} defaults={workbook.defaults} referentialCode={templateReferential} onSource={file => setSourceFiles(files => [...files.filter(source => source.name !== file.name), file])} onPrepared={file => { setSelectedFile(file); setWorkbook(undefined); setWorkbookPrepared(true); setImportResult(null); }} />}
         <Alert>
           <AlertTriangle className="h-4 w-4" />
