@@ -2426,12 +2426,24 @@ export class ProjectImportExportService {
 
       try {
         const externalRef = this.getExternalRef(row);
-        const existing = this.findExistingProject(
+        let existing = this.findExistingProject(
           existingProjects,
           externalRef,
           row.projectReference || row.reference,
           row.title,
         );
+        // The project list may be incomplete (pagination, failed listing):
+        // check the unique external reference directly so a re-import updates
+        // the stored project instead of colliding with it.
+        if (!existing && externalRef) {
+          const resolved = await this.resolveIdAndExternalRef(undefined, externalRef, {
+            table: 'projects',
+            checkExists: true,
+          });
+          if (resolved.existsInDb && resolved.existingId) {
+            existing = { id: resolved.existingId, title: row.title, externalRef } as unknown as ProjectDTO;
+          }
+        }
         const rowMode = row.importMode || mode;
         const operation = this.determineOperation(existing, rowMode);
 

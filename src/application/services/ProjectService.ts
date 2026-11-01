@@ -113,8 +113,14 @@ export class ProjectService {
       return ProjectTransformer.toDTO(project);
     } catch (error) {
       if (error instanceof ValidationError) throw error;
+      const detail = error instanceof Error
+        ? error.message
+        : (error && typeof error === 'object'
+          ? [(error as { message?: string }).message, (error as { details?: string }).details, (error as { code?: string }).code ? `(${(error as { code?: string }).code})` : '']
+              .filter(Boolean).join(' ')
+          : '') || 'Unknown error';
       throw new ProjectServiceError(
-        `Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to create project: ${detail}`,
         'CREATE_ERROR'
       );
     }
