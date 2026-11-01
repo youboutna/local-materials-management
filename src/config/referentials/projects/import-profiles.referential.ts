@@ -39,7 +39,7 @@ export const IMPORT_PROFILES: readonly ImportProfile[] = [
     // Composante (sheet) → phase; sous-composante 1.1 → milestone (step container); activité → task.
     hierarchy: ['phase', 'milestone', 'task'],
     // Column A = code, B = label, H = amount in thousands (scale suggested from the header, reviewed by operator).
-    mapping: { ...DEFAULT_WORKBOOK_MAPPING, headerRows: 4 },
+    mapping: { ...DEFAULT_WORKBOOK_MAPPING },
   },
 ];
 

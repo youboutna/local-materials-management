@@ -20,6 +20,12 @@ import type { PlanningPreviewDTO, PlanningPreviewInputDTO } from '@/dtos/entitie
 import { addDays,format,isValid,parseISO } from 'date-fns';
 import type { PlanningWorkbookInputDTO, PlanningWorkbookPreviewDTO, PlanningWorkbookSuggestionDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 import { DEFAULT_WORKBOOK_MAPPING } from '@/config/referentials/projects/planning-import.referential';
+import { IMPORT_FORMAT_EXTENSIONS, IMPORT_PROFILES, getImportProfile, type ImportFileFormat, type ImportProfile } from '@/config/referentials/projects/import-profiles.referential';
+import type { PlanningWorkbookDTO } from '@/dtos/entities/PlanningWorkbookDTO';
+
+export type ParsedImport =
+  | { kind: 'dataset'; dataset: unknown }
+  | { kind: 'hierarchical_workbook'; profile: ImportProfile; source: PlanningWorkbookDTO; defaults: PlanningWorkbookSuggestionDTO };
 
 // =============================================================================
 // TYPES
@@ -69,6 +75,31 @@ export class ProjectImportTemplateService {
     return PlanningWorkbookReader.narrative(file);
   }
 
+  listImportProfiles(language: TemplateLanguage = 'fr'): Array<{ value: string; label: string; formats: readonly ImportFileFormat[] }> {
+    return IMPORT_PROFILES.map(profile => ({ value: profile.code, label: profile.label[language], formats: profile.formats }));
+  }
+
+  acceptFor(format: ImportFileFormat): string {
+    return IMPORT_FORMAT_EXTENSIONS[format].map(extension => `.${extension}`).join(',');
+  }
+
+  /**
+   * Single generic entry point: the file is read without assumption, then the
+   * selected profile (referential) decides how its rows are interpreted.
+   */
+  async parseWithProfile(file: File, profileCode: string, format: ImportFileFormat): Promise<ParsedImport> {
+    const profile = getImportProfile(profileCode);
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!profile.formats.includes(format)) throw new Error(`Format ${format} not supported by ${profile.code}`);
+    if (!IMPORT_FORMAT_EXTENSIONS[format].includes(extension)) throw new Error(`File .${extension} does not match format ${format}`);
+    if (profile.kind === 'hierarchical_workbook') {
+      const source = await this.readWorkbook(file);
+      const mapping = profile.mapping ?? DEFAULT_WORKBOOK_MAPPING;
+      return { kind: 'hierarchical_workbook', profile, source, defaults: this.suggestWorkbookDefaults(source, mapping) };
+    }
+    return { kind: 'dataset', dataset: await this.readProjectDataset(file) };
+  }
+
   isPlanningWorkbook(source: PlanningWorkbookInputDTO['source']): boolean {
     return source.sheets.some(sheet => sheet.rows.slice(0, 5).some(row => row.some(cell => /^(libellé|activités)$/i.test(String(cell.value ?? '').trim()))));
   }
@@ -85,7 +116,6 @@ export class ProjectImportTemplateService {
     }
     if (extension === 'xlsx' || extension === 'xls') {
       const source = await this.readWorkbook(file);
-      if (this.isPlanningWorkbook(source)) throw new Error('Planning workbook requires mapping review');
       const XLSX = await import('xlsx');
       const workbook = XLSX.read(await readFileAsArrayBuffer(file), { type: 'array' });
       // Every worksheet is retained; metadata/foreign sheets are not mislabelled as projects.
