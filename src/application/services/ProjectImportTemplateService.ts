@@ -206,7 +206,7 @@ export class ProjectImportTemplateService {
     const actorSeparator = new RegExp(mapping.actorSeparatorPattern ?? '\\s*[/,;]\\s*', 'i');
     const slug = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toUpperCase();
     const collectActors = (text: string, role: string) => text.split(actorSeparator).map(name => name.trim()).filter(name => name.length > 1).forEach(name => {
-      const key = slug(name); if (!key) return;
+      const key = slug(name).replace(/S$/, ''); if (!key) return;
       const actor = actors.get(key) ?? { name, roles: new Set<string>() }; actor.roles.add(role); actors.set(key, actor);
     });
     for (const sheet of source.sheets) {
