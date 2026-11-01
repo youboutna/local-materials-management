@@ -282,7 +282,7 @@ export class ProjectImportTemplateService {
     // Existing phase custom data preserves evidence without dumping JSON into
     // the user-facing project description. The original binary also goes to GED.
     phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
-    const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
+    const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping }, ...(td.interventionZone ? { interventionZones: [td.interventionZone] } : {}) };
     return { project, source, rows, summary, warnings };
   }
   /** Controlled table import, not an inference engine for arbitrary prose. */
@@ -410,7 +410,7 @@ export class ProjectImportTemplateService {
       projectReference: 'PRJ-XXXX-001',
       title: this.resolveLabel(referential?.name, language) ?? 'Projet exemple — à remplacer',
       description: this.resolveLabel(referential?.description, language) ?? 'Description du projet',
-      location: 'Localisation à préciser',
+      location: 'Nouakchott',
       status: 'en attente',
       progress: 0,
       budget: 0,

@@ -1,4 +1,5 @@
 import type { ProjectImportRow } from '@/application/services/ProjectImportExportService';
+import type { InterventionZoneDTO } from './InterventionZoneDTO';
 
 export interface PlanningSourceCellDTO {
   value: string | number | boolean | null;
@@ -55,6 +56,8 @@ export interface PlanningTemplateDefaultsDTO {
   phase?: Record<string, string | number | boolean>;
   task?: Record<string, string | number | boolean>;
   milestone?: Record<string, string | number | boolean>;
+  /** Zone d'intervention appliquée quand la source n'en fournit aucune (ex. contour national). */
+  interventionZone?: InterventionZoneDTO;
 }
 export interface PlanningFinancingShareDTO { source: string; column: number; sourceAmount: number; amount: number }
 export interface PlanningWorkbookSuggestionDTO { title?: string; amountMultiplier?: number; budget?: number; components: Record<string, string> }

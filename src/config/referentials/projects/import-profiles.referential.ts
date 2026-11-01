@@ -1,5 +1,6 @@
 import type { PlanningTemplateDefaultsDTO, PlanningWorkbookMappingDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 import { DEFAULT_WORKBOOK_MAPPING } from './planning-import.referential';
+import { MAURITANIA_DEFAULT_INTERVENTION_ZONE } from '../geo/mauritania-boundary.referential';
 
 /**
  * Import profiles = business mapping rules applied by ONE generic importer.
@@ -44,10 +45,12 @@ export const IMPORT_PROFILES: readonly ImportProfile[] = [
     mapping: { ...DEFAULT_WORKBOOK_MAPPING },
     // Same field vocabulary as the project JSON template (template_<referential>_fr.json).
     templateDefaults: {
-      project: { status: 'en attente', progress: 0, teamSize: 1, location: 'Localisation à préciser' },
+      project: { status: 'en attente', progress: 0, teamSize: 1, location: 'Nouakchott' },
       phase: { status: 'not_started', progress: 0 },
       task: { status: 'pending', priority: 'medium', progress: 0, requiresInspection: false, requiresEngineerApproval: false },
       milestone: { status: 'pending' },
+      // Source sans géométrie : zone par défaut = contour national (référentiel geo), adresse Nouakchott.
+      interventionZone: MAURITANIA_DEFAULT_INTERVENTION_ZONE,
     },
   },
 ];
