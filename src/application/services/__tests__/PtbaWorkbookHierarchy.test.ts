@@ -12,6 +12,18 @@ const defaults = service.suggestWorkbookDefaults(source);
 const preview = service.previewWorkbook({ source, title: defaults.title ?? '', reference: 'PTBA-2024', startDate: '2024-01-01', currency: 'MRU', budget: defaults.budget ?? 0, referentialCode: 'CUSTOM_STANDARD', mapping: { ...DEFAULT_WORKBOOK_MAPPING, amountMultiplier: defaults.amountMultiplier ?? 1 } });
 const phase = (sheet: string) => preview.project.phases!.find(item => item.code === sheet)!;
 
+describe('one importer, profile-driven', () => {
+  it('reads the PTBA workbook with WORLD_BANK_PTBA and a JSON dataset with CUSTOM_STANDARD', async () => {
+    const excel = new File([buffer], 'ptba.xlsx');
+    const parsed = await service.parseWithProfile(excel, 'WORLD_BANK_PTBA', 'excel');
+    expect(parsed.kind).toBe('hierarchical_workbook');
+    const json = new File([JSON.stringify({ projects: [{ title: 'P' }] })], 'p.json', { type: 'application/json' });
+    const dataset = await service.parseWithProfile(json, 'CUSTOM_STANDARD', 'json');
+    expect(dataset).toEqual({ kind: 'dataset', dataset: { projects: [{ title: 'P' }] } });
+    await expect(service.parseWithProfile(json, 'WORLD_BANK_PTBA', 'json')).rejects.toThrow();
+  });
+});
+
 describe('PTBA workbook hierarchy (Composante → Sous-composante → Activité)', () => {
   it('suggests title, thousands scale and budget from the recap sheet', () => {
     expect(defaults.title).toBe('PRAPS-II MAURITANIE IDA D0796 MR / IDA 7180');
