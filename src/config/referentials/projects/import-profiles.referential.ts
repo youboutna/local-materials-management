@@ -1,4 +1,4 @@
-import type { PlanningWorkbookMappingDTO } from '@/dtos/entities/PlanningWorkbookDTO';
+import type { PlanningTemplateDefaultsDTO, PlanningWorkbookMappingDTO } from '@/dtos/entities/PlanningWorkbookDTO';
 import { DEFAULT_WORKBOOK_MAPPING } from './planning-import.referential';
 
 /**
@@ -18,6 +18,8 @@ export interface ImportProfile {
   /** Level 1 (sheet/component), level 2 (sub-component), level 3 (activity). */
   readonly hierarchy?: readonly [ImportHierarchyTarget, ImportHierarchyTarget, ImportHierarchyTarget];
   readonly mapping?: PlanningWorkbookMappingDTO;
+  /** Field defaults matching the exported project JSON template. */
+  readonly templateDefaults?: PlanningTemplateDefaultsDTO;
 }
 
 export const IMPORT_FORMAT_EXTENSIONS: Record<ImportFileFormat, readonly string[]> = {
@@ -40,6 +42,13 @@ export const IMPORT_PROFILES: readonly ImportProfile[] = [
     hierarchy: ['phase', 'milestone', 'task'],
     // Column A = code, B = label, H = amount in thousands (scale suggested from the header, reviewed by operator).
     mapping: { ...DEFAULT_WORKBOOK_MAPPING },
+    // Same field vocabulary as the project JSON template (template_<referential>_fr.json).
+    templateDefaults: {
+      project: { status: 'en attente', progress: 0, teamSize: 1, location: '' },
+      phase: { status: 'not_started', progress: 0 },
+      task: { status: 'pending', priority: 'medium', progress: 0, requiresInspection: false, requiresEngineerApproval: false },
+      milestone: { status: 'pending' },
+    },
   },
 ];
 

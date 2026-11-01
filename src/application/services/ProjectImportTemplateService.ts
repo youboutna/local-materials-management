@@ -173,6 +173,7 @@ export class ProjectImportTemplateService {
       source: parsed.source, title: parsed.defaults.title || base, reference,
       startDate: today.toISOString().slice(0, 10), currency: 'MRU',
       budget: parsed.defaults.budget ?? 0, referentialCode, mapping,
+      templateDefaults: parsed.profile.templateDefaults,
     });
     return { projects: [preview.project], preview };
   }
@@ -191,6 +192,8 @@ export class ProjectImportTemplateService {
     const periodPattern = new RegExp(mapping.periodPattern);
     const summaryPattern = new RegExp(mapping.summarySheetPattern, 'i');
     const componentPattern = new RegExp(mapping.componentPattern, 'i');
+    const headerTitlePattern = new RegExp(mapping.headerTitlePattern, 'i');
+    const td = input.templateDefaults ?? {};
     const recap = this.suggestWorkbookDefaults(source, mapping);
     const rows: PlanningWorkbookPreviewDTO['rows'] = [];
     const warnings: PlanningWorkbookPreviewDTO['warnings'] = [];
@@ -228,7 +231,7 @@ export class ProjectImportTemplateService {
       const seen = new Set<string>();
       const subComponents = new Map<string, { title: string; externalRef: string }>();
       const titles = new Map(candidates.filter(item => item.validCode).map(item => [item.code, item.title]));
-      const phase: NonNullable<typeof phases>[number] = { code: sheet.name.trim(), name: phaseName, externalRef: `${input.reference}:sheet:${sheet.name}`, order: phases.length, tasks: [], milestones: [], metadata: { planningSource: { filename: source.filename, sheet: sheet.name, financingColumns } } };
+      const phase: NonNullable<typeof phases>[number] = { ...td.phase, code: sheet.name.trim(), name: phaseName, externalRef: `${input.reference}:sheet:${sheet.name}`, order: phases.length, tasks: [], milestones: [], metadata: { planningSource: { filename: source.filename, sheet: sheet.name, financingColumns } } };
       const phaseFinancing: Record<string, number> = {};
       let phaseAmount = 0;
       for (const { index, raw, code, title, validCode } of candidates) {
@@ -240,14 +243,16 @@ export class ProjectImportTemplateService {
         const unit = cellText(index, mapping.unitColumn);
         const path = code.split('.');
         const hasChildren = validCode && candidates.some(other => other.index !== index && other.code.startsWith(`${code}.`));
-        const kind = !validCode || !title || totalPattern.test(title) ? 'unmapped' : path.length <= mapping.subComponentDepth || (hasChildren && quantity === undefined && !unit && !responsible) ? 'group' : 'task';
+        const structural = (!validCode && (!title || headerTitlePattern.test(title) || totalPattern.test(title) || totalPattern.test(raw))) || (validCode && totalPattern.test(title));
+        const kind = structural ? 'structural' : !validCode || !title ? 'unmapped' : path.length <= mapping.subComponentDepth || (hasChildren && quantity === undefined && !unit && !responsible) ? 'group' : 'task';
         const subCode = path.length >= mapping.subComponentDepth ? path.slice(0, mapping.subComponentDepth).join('.') : undefined;
         const financing = kind === 'task' ? financingColumns.flatMap(({ column, source: name }) => { const value = numeric(index, column); return value ? [{ source: name, column, sourceAmount: value, amount: scale(value) }] : []; }) : undefined;
         rows.push({ sheet: sheet.name, row: index + 1, code: raw, title, responsible, quantity, unit, sourceAmount, amount: sourceAmount === undefined ? undefined : scale(sourceAmount), subComponent: subCode, financing, kind });
+        if (kind === 'structural') continue;
         if (kind === 'unmapped') { if (title && quantity !== undefined) warnings.push({ code: 'missing_code', sheet: sheet.name, row: index + 1 }); continue; }
         if (seen.has(code)) warnings.push({ code: 'duplicate_code', sheet: sheet.name, row: index + 1 });
         seen.add(code);
-        if (quantity !== undefined && unitPrice !== undefined && sourceAmount !== undefined && Math.abs(quantity * unitPrice - sourceAmount) > Number.EPSILON * Math.max(1, Math.abs(sourceAmount), Math.abs(quantity * unitPrice)) * 16) warnings.push({ code: 'arithmetic_difference', sheet: sheet.name, row: index + 1 });
+        if (quantity !== undefined && unitPrice !== undefined && sourceAmount !== undefined && Math.abs(quantity * unitPrice - sourceAmount) > Math.max(Number.EPSILON * 16, mapping.arithmeticTolerance) * Math.max(1, Math.abs(sourceAmount), Math.abs(quantity * unitPrice))) warnings.push({ code: 'arithmetic_difference', sheet: sheet.name, row: index + 1 });
         if (kind !== 'task') continue;
         // Sub-components become phase milestones, created from the code even when the row order is broken.
         let milestoneRef: string | undefined;
@@ -260,9 +265,9 @@ export class ProjectImportTemplateService {
         phaseAmount += plannedAmount ?? 0;
         for (const share of financing ?? []) phaseFinancing[share.source] = (phaseFinancing[share.source] ?? 0) + share.amount;
         // Stable source row identity avoids collapsing repeated documentary codes.
-        phase.tasks?.push({ id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${raw} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: raw, path, associates: cellText(index, mapping.associatesColumn), quantity, quantityText: quantity === undefined ? cellText(index, mapping.quantityColumn) || undefined : undefined, unit, unitPrice: unitPrice === undefined ? undefined : scale(unitPrice), sourceUnitPrice: unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount, subComponent: subCode ? { code: subCode, title: subComponents.get(subCode)?.title, milestoneRef } : undefined, groups, financingSources: financing, cells: sheet.rows[index] } } });
+        phase.tasks?.push({ ...td.task, id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${raw} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: raw, path, associates: cellText(index, mapping.associatesColumn), quantity, quantityText: quantity === undefined ? cellText(index, mapping.quantityColumn) || undefined : undefined, unit, unitPrice: unitPrice === undefined ? undefined : scale(unitPrice), sourceUnitPrice: unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount, subComponent: subCode ? { code: subCode, title: subComponents.get(subCode)?.title, milestoneRef } : undefined, groups, financingSources: financing, cells: sheet.rows[index] } } });
       }
-      phase.milestones = [...subComponents.entries()].map(([code, item], order) => ({ externalRef: item.externalRef, title: `${code} · ${item.title}`, name: item.title, order, metadata: { planningSource: { sheet: sheet.name, code } } }));
+      phase.milestones = [...subComponents.entries()].map(([code, item], order) => ({ ...td.milestone, externalRef: item.externalRef, title: `${code} · ${item.title}`, name: item.title, order, metadata: { planningSource: { sheet: sheet.name, code } } }));
       if (phase.tasks?.length) {
         phase.budget = phaseAmount; phase.estimatedCost = phaseAmount;
         phase.metadata = { ...phase.metadata, financingTotals: phaseFinancing };
@@ -277,7 +282,7 @@ export class ProjectImportTemplateService {
     // Existing phase custom data preserves evidence without dumping JSON into
     // the user-facing project description. The original binary also goes to GED.
     phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
-    const project: PlanningWorkbookPreviewDTO['project'] = { title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
+    const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping } };
     return { project, source, rows, summary, warnings };
   }
   /** Controlled table import, not an inference engine for arbitrary prose. */
