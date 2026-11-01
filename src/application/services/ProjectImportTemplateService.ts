@@ -313,7 +313,7 @@ export class ProjectImportTemplateService {
     phases[0].metadata = { ...phases[0].metadata, planningWorkbook: source, planningMapping: mapping };
     const organizations = [...actors.entries()].map(([key, actor]) => ({ id: `ORG-${key}`, name: actor.name, type: 'autre' }));
     const stakeholders = [...actors.entries()].map(([key, actor]) => ({ externalRef: `${input.reference.trim()}:SH:${key}`, stakeholderEntityType: 'organization' as const, organizationId: `ORG-${key}`, role: actor.roles.has('responsable') ? 'responsable' : 'associe', roleDescription: actor.name, isPrimary: false }));
-    const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, stakeholders, organizations, title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping }, ...(td.interventionZone ? { interventionZones: [td.interventionZone] } : {}) };
+    const project: PlanningWorkbookPreviewDTO['project'] = { ...td.project, stakeholders, ...({ organizations } as object), title: input.title.trim(), externalRef: input.reference.trim(), projectReference: input.reference.trim(), startDate: input.startDate, currency: input.currency, budget: input.budget, referentialCode: input.referentialCode, phases, description: source.narrative ?? '', metadata: { planningSource: source, mapping }, ...(td.interventionZone ? { interventionZones: [td.interventionZone] } : {}) };
     return { project, source, rows, summary, warnings };
   }
   /** Controlled table import, not an inference engine for arbitrary prose. */
