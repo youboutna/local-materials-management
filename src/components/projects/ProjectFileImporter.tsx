@@ -146,7 +146,8 @@ export default function ProjectFileImporter({
             ? "upsert"
             : "partial_update";
       // Expected work = tasks + DQE lines read from the file; the bar follows saved counts.
-      const expected = Math.max(1, (dataset.projects ?? []).reduce((total: number, project: { phases?: Array<{ tasks?: unknown[]; dqeLines?: unknown[] }> }) =>
+      type ProgressProject = { phases?: Array<{ tasks?: unknown[]; dqeLines?: unknown[] }> };
+      const expected = Math.max(1, (((dataset as { projects?: ProgressProject[] }).projects) ?? []).reduce((total: number, project: ProgressProject) =>
         total + (project.phases ?? []).reduce((sum, phase) => sum + (phase.tasks?.length ?? 0) + (phase.dqeLines?.length ?? 0), 0), 0));
       const importResult = await projectImportService.importDataset(dataset, {
         mode: serviceMode,
