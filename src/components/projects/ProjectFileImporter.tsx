@@ -114,19 +114,18 @@ export default function ProjectFileImporter({
   };
 
   const handleImport = async () => {
-    if (!selectedFile || workbook || reading || importing) return;
+    if (!selectedFile || reading || importing) return;
 
     setImporting(true);
     setImportProgress(0);
 
     try {
-      // Parse file
-      console.log("Starting file parsing...");
       setImportProgress(25);
-      // Workbook profiles were reviewed and converted to a JSON dataset; datasets go through the same profile entry point.
-      const parsed = await projectImportTemplateService.parseWithProfile(selectedFile, workbookPrepared ? 'CUSTOM_STANDARD' : profileCode, workbookPrepared ? 'json' : fileFormat);
-      if (parsed.kind !== 'dataset') throw new Error(t('planning.reviewRequired'));
-      const rawData = parsed.dataset;
+      // Same profile entry point; workbook profiles are converted by the service with values read from the file.
+      const parsed = workbook ?? await projectImportTemplateService.parseWithProfile(selectedFile, workbookPrepared ? 'CUSTOM_STANDARD' : profileCode, workbookPrepared ? 'json' : fileFormat);
+      const rawData = parsed.kind === 'hierarchical_workbook'
+        ? { projects: projectImportTemplateService.workbookToDataset(parsed, templateReferential).projects }
+        : parsed.dataset;
       if (!rawData || (Array.isArray(rawData) && rawData.length === 0)) {
         throw new Error(t("projects.import.noData"));
       }

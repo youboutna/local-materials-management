@@ -161,6 +161,22 @@ export class ProjectImportTemplateService {
     return { title, amountMultiplier, budget: budget === undefined ? undefined : budget * (amountMultiplier ?? 1), components };
   }
 
+  /**
+   * Direct import path for a workbook profile: values read from the workbook
+   * (title, scale, budget) are applied; missing identity falls back to the file name and today.
+   */
+  workbookToDataset(parsed: Extract<ParsedImport, { kind: 'hierarchical_workbook' }>, referentialCode: string, today = new Date()): { projects: unknown[]; preview: PlanningWorkbookPreviewDTO } {
+    const base = parsed.source.filename.replace(/\.[^.]+$/, '').trim();
+    const reference = base.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40).toUpperCase() || 'PTBA';
+    const mapping = { ...(parsed.profile.mapping ?? DEFAULT_WORKBOOK_MAPPING), ...(parsed.defaults.amountMultiplier ? { amountMultiplier: parsed.defaults.amountMultiplier } : {}) };
+    const preview = this.previewWorkbook({
+      source: parsed.source, title: parsed.defaults.title || base, reference,
+      startDate: today.toISOString().slice(0, 10), currency: 'MRU',
+      budget: parsed.defaults.budget ?? 0, referentialCode, mapping,
+    });
+    return { projects: [preview.project], preview };
+  }
+
   previewWorkbook(input: PlanningWorkbookInputDTO): PlanningWorkbookPreviewDTO {
     if (!input.title.trim() || !input.reference.trim() || !isValid(parseISO(input.startDate))) throw new Error('Title, reference and valid start date are required');
     if (!Number.isFinite(input.budget) || input.budget < 0) throw new Error('A reviewed non-negative project budget is required');
