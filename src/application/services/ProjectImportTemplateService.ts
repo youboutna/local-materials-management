@@ -210,8 +210,20 @@ export class ProjectImportTemplateService {
         const number = typeof value === 'number' ? value : Number(String(value).replace(/[\s\u00a0\u202f]/g, '').replace(',', '.'));
         return Number.isFinite(number) ? number : undefined;
       };
+      // Columns are detected per sheet from header synonyms (referential); the preset indexes are only a fallback.
+      const cols = { code: mapping.codeColumn, title: mapping.titleColumn, responsible: mapping.responsibleColumn, associates: mapping.associatesColumn, unit: mapping.unitColumn, quantity: mapping.quantityColumn, unitPrice: mapping.unitPriceColumn, amount: mapping.amountColumn };
+      const detected = new Set<string>();
+      for (let r = 0; r < Math.min(sheet.rows.length, mapping.headerRows + 2); r++) {
+        (sheet.rows[r] ?? []).forEach((_, c) => {
+          const label = cellText(r, c).toLowerCase().replace(/\s+/g, ' ');
+          if (!label) return;
+          for (const [field, pattern] of Object.entries(mapping.columnSynonyms ?? {})) {
+            if (pattern && !detected.has(field) && new RegExp(pattern, 'i').test(label)) { (cols as Record<string, number>)[field] = c; detected.add(field); break; }
+          }
+        });
+      }
       const candidates = sheet.rows.map((_, index) => {
-        const raw = cellText(index, mapping.codeColumn); const title = cellText(index, mapping.titleColumn);
+        const raw = cellText(index, cols.code); const title = cellText(index, cols.title);
         const fromTitle = !raw ? title.match(titleCodePattern)?.[1] : undefined;
         return { index, raw: raw || fromTitle || '', code: (raw || fromTitle || '').replace(/[.-]+$/, '').replace(/-/g, '.'), title, validCode: codePattern.test(raw) || Boolean(fromTitle) };
       });
@@ -220,7 +232,7 @@ export class ProjectImportTemplateService {
       // Financing columns are discovered from headers, never from a fixed donor list.
       const financingColumns: Array<{ column: number; source: string }> = [];
       const width = Math.max(0, ...sheet.rows.map(row => row.length));
-      for (let column = mapping.amountColumn + 1; column < width; column++) {
+      for (let column = cols.amount + 1; column < width; column++) {
         let label = '';
         for (let r = 0; r < headerEnd; r++) { const value = cellText(r, column); if (value && !groupPattern.test(value)) label = value; }
         if (label && !periodPattern.test(label)) financingColumns.push({ column, source: label });
@@ -236,11 +248,11 @@ export class ProjectImportTemplateService {
       let phaseAmount = 0;
       for (const { index, raw, code, title, validCode } of candidates) {
         if (!sheet.rows[index].some(cell => cell.value !== null || cell.formula || cell.style)) continue;
-        const responsible = cellText(index, mapping.responsibleColumn);
-        const quantity = numeric(index, mapping.quantityColumn);
-        const unitPrice = numeric(index, mapping.unitPriceColumn);
-        const sourceAmount = numeric(index, mapping.amountColumn);
-        const unit = cellText(index, mapping.unitColumn);
+        const responsible = cellText(index, cols.responsible);
+        const quantity = numeric(index, cols.quantity);
+        const unitPrice = numeric(index, cols.unitPrice);
+        const sourceAmount = numeric(index, cols.amount);
+        const unit = cellText(index, cols.unit);
         const path = code.split('.');
         const hasChildren = validCode && candidates.some(other => other.index !== index && other.code.startsWith(`${code}.`));
         const structural = (!validCode && (!title || headerTitlePattern.test(title) || totalPattern.test(title) || totalPattern.test(raw))) || (validCode && totalPattern.test(title));
@@ -265,7 +277,7 @@ export class ProjectImportTemplateService {
         phaseAmount += plannedAmount ?? 0;
         for (const share of financing ?? []) phaseFinancing[share.source] = (phaseFinancing[share.source] ?? 0) + share.amount;
         // Stable source row identity avoids collapsing repeated documentary codes.
-        phase.tasks?.push({ ...td.task, id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${raw} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: raw, path, associates: cellText(index, mapping.associatesColumn), quantity, quantityText: quantity === undefined ? cellText(index, mapping.quantityColumn) || undefined : undefined, unit, unitPrice: unitPrice === undefined ? undefined : scale(unitPrice), sourceUnitPrice: unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount, subComponent: subCode ? { code: subCode, title: subComponents.get(subCode)?.title, milestoneRef } : undefined, groups, financingSources: financing, cells: sheet.rows[index] } } });
+        phase.tasks?.push({ ...td.task, id: `${input.reference}:${sheet.name}:row:${index + 1}`, title, description: `${raw} · ${title}`, assigneeName: responsible || undefined, metadata: { planningSource: { filename: source.filename, sheet: sheet.name, row: index + 1, code: raw, path, associates: cellText(index, cols.associates), quantity, quantityText: quantity === undefined ? cellText(index, cols.quantity) || undefined : undefined, unit, unitPrice: unitPrice === undefined ? undefined : scale(unitPrice), sourceUnitPrice: unitPrice, sourceAmount, amountMultiplier: mapping.amountMultiplier, plannedAmount, subComponent: subCode ? { code: subCode, title: subComponents.get(subCode)?.title, milestoneRef } : undefined, groups, financingSources: financing, cells: sheet.rows[index] } } });
       }
       phase.milestones = [...subComponents.entries()].map(([code, item], order) => ({ ...td.milestone, externalRef: item.externalRef, title: `${code} · ${item.title}`, name: item.title, order, metadata: { planningSource: { sheet: sheet.name, code } } }));
       if (phase.tasks?.length) {
