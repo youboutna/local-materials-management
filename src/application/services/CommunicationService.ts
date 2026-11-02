@@ -5,8 +5,7 @@
  */
 
 import { NotificationService } from './NotificationService';
-import { notificationGatewayAdapter } from '@/infrastructure/adapters/supabase/NotificationGatewayAdapter';
-import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import type { CommunicationProviders } from '@/domain/interfaces/CommunicationProviders';
 import { getUserService } from './UserService';
 import type { CreateNotificationRequestDTO } from '@/dtos/entities/NotificationDTO';
 
@@ -83,7 +82,25 @@ const isUuid = (value: string): boolean => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 };
 
+let injectedProviders: Partial<CommunicationProviders> = {};
+let defaultProviders: Promise<CommunicationProviders> | null = null;
+
 export class CommunicationService {
+  /** Injection des adapters (tests, autre fournisseur). */
+  static configure(providers: Partial<CommunicationProviders>): void {
+    injectedProviders = { ...injectedProviders, ...providers };
+  }
+
+  static resetProviders(): void { injectedProviders = {}; }
+
+  private static async provider<K extends keyof CommunicationProviders>(key: K): Promise<CommunicationProviders[K]> {
+    const injected = injectedProviders[key];
+    if (injected) return injected as CommunicationProviders[K];
+    defaultProviders ??= import('@/infrastructure/adapters/communication/EdgeFunctionCommunicationAdapters')
+      .then(m => m.createDefaultCommunicationProviders());
+    return (await defaultProviders)[key];
+  }
+
   static async sendNotification(payload: CreateNotificationRequestDTO): Promise<CommunicationResult> {
     const notification = await NotificationService.createNotification(payload);
     return { success: true, channel: 'notification', reference: notification.id, status: 'persisted' };
@@ -172,11 +189,7 @@ export class CommunicationService {
     // 2. Envoi côté serveur (Edge Function) : jamais d'appel direct au provider
     //    depuis le navigateur (CORS + clé API exposée).
     try {
-      const { data, error } = await notificationGatewayAdapter.invokeFunction<{
-        success?: boolean;
-        messageId?: string;
-        error?: string;
-      }>('send-email-notification', {
+      const result = await (await this.provider('email')).send({
         to,
         subject: payload.subject,
         message: payload.message,
@@ -187,18 +200,15 @@ export class CommunicationService {
         actionType: payload.actionType,
         metadata: payload.metadata,
       });
-
-
-      if (error || !data?.success) {
-        const details = error?.message || data?.error || 'Unknown edge function error';
-        console.error('[CommunicationService] sendEmail failed:', details);
+      if (!result.success) {
+        console.error('[CommunicationService] sendEmail failed:', result.error);
         return { success: false, channel: 'email' };
       }
 
-      console.log('[CommunicationService] Email sent via edge function', {
+      console.log('[CommunicationService] Email accepted by provider', {
         recipientCount: Array.isArray(payload.to) ? payload.to.length : 1,
       });
-      return { success: true, channel: 'email', reference: data.messageId, status: 'accepted' };
+      return { success: true, channel: 'email', reference: result.reference, status: 'accepted' };
     } catch (error) {
       console.error('[CommunicationService] sendEmail error:', error);
       return { success: false, channel: 'email' };
@@ -230,24 +240,13 @@ export class CommunicationService {
     }
 
     try {
-      const repo = RepositoryFactory.getNotificationRepository();
-      if (repo && typeof repo.sendSMS === 'function') {
-        const { error, reference, status } = await repo.sendSMS({
-          to,
-          message: payload.message,
-        });
-        if (error) return { success: false, channel: 'sms' };
-        return { success: true, channel: 'sms', reference, status: 'accepted' };
-      } else {
-        console.warn('[CommunicationService] sendSMS not implemented by repository');
-        return { success: false, channel: 'sms' };
-      }
+      const result = await (await this.provider('sms')).send({ to, message: payload.message });
+      if (!result.success) return { success: false, channel: 'sms' };
+      return { success: true, channel: 'sms', reference: result.reference, status: 'accepted' };
     } catch (error) {
       console.error('CommunicationService.sendSMS: exception', error);
       return { success: false, channel: 'sms' };
     }
-
-    return { success: true, channel: 'sms' };
   }
 
   static async scheduleCall(payload: ScheduleCallPayload): Promise<CommunicationResult> {
@@ -256,18 +255,17 @@ export class CommunicationService {
       return { success: false, channel: 'call' };
     }
     try {
-      const result = await notificationGatewayAdapter.invokeFunction<{ success?: boolean; callId?: string }>('schedule-call', {
+      const result = await (await this.provider('call')).schedule({
         ...payload,
         priority: payload.priority ?? 'medium',
         actionType: payload.actionType ?? 'follow_up',
       });
-      if (result.error || !result.data?.success) return { success: false, channel: 'call' };
-      return { success: true, channel: 'call', status: 'scheduled', reference: result.data.callId };
+      if (!result.success) return { success: false, channel: 'call' };
+      return { success: true, channel: 'call', status: 'scheduled', reference: result.reference };
     } catch (error) {
       console.error('CommunicationService.scheduleCall: exception', error);
       return { success: false, channel: 'call' };
     }
-    return { success: true, channel: 'call' };
   }
 
   static async sendMail(payload: Omit<SendEmailPayload, 'to'> & { to: string }): Promise<CommunicationResult> {
