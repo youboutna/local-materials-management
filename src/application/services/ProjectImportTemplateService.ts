@@ -70,6 +70,42 @@ export class ProjectImportTemplateService {
     return PlanningWorkbookReader.read(file);
   }
 
+  /**
+   * Blank hierarchical workbook template generated from the profile mapping
+   * (column positions, header vocabulary), so it round-trips through readWorkbook.
+   */
+  async buildWorkbookTemplate(profileCode: string): Promise<{ content: ArrayBuffer; filename: string; mimeType: string }> {
+    const profile = getImportProfile(profileCode);
+    const mapping = profile.mapping ?? DEFAULT_WORKBOOK_MAPPING;
+    const XLSX = await import('xlsx');
+    const width = Math.max(mapping.codeColumn, mapping.titleColumn, mapping.responsibleColumn, mapping.associatesColumn,
+      mapping.unitColumn, mapping.quantityColumn, mapping.unitPriceColumn, mapping.amountColumn) + 1;
+    const row = (cells: Partial<Record<keyof typeof mapping, string | number>>) => {
+      const out: Array<string | number> = Array(width).fill('');
+      for (const [key, value] of Object.entries(cells)) {
+        const idx = mapping[key as keyof typeof mapping];
+        if (typeof idx === 'number' && value !== undefined) out[idx] = value;
+      }
+      return out;
+    };
+    const header = row({ codeColumn: 'Code', titleColumn: 'Libellé', responsibleColumn: 'Responsable', associatesColumn: 'Associés',
+      unitColumn: 'Unité', quantityColumn: 'Qté', unitPriceColumn: 'PU-MRU milliers', amountColumn: 'PT-MRU milliers' });
+    const wb = XLSX.utils.book_new();
+    const recap = [['Récapitulatif'], [''], ['Composante', 'Montant (MRU milliers)'], ['Composante 1', 0]];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(recap), 'Récap');
+    const sheet = [
+      ['Composante 1 : <intitulé de la composante>'], [''], header,
+      row({ codeColumn: '1.1', titleColumn: '<Sous-composante>' }),
+      row({ codeColumn: '1.1.1', titleColumn: '<Activité>', responsibleColumn: '<Responsable>', associatesColumn: '<Associé 1>/<Associé 2>',
+        unitColumn: '<Unité>', quantityColumn: 0, unitPriceColumn: 0, amountColumn: 0 }),
+      row({ titleColumn: 'Total sous composante 1.1', amountColumn: 0 }),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheet), 'C1');
+    const content = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+    return { content, filename: `modele_${profile.code.toLowerCase()}.xlsx`,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
+  }
+
   async readNarrative(file: File): Promise<string> {
     const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
     return PlanningWorkbookReader.narrative(file);

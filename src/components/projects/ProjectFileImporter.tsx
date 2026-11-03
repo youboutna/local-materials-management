@@ -67,7 +67,7 @@ export default function ProjectFileImporter({
   const activeProfile = projectImportTemplateService.resolveImportProfile(templateReferential);
   const profileCode = activeProfile.code;
   const fileFormat: ImportFileFormat = activeProfile.formats.includes(templateFormat) ? templateFormat : activeProfile.formats[0];
-  const canDownloadTemplate = activeProfile.kind === 'dataset' && fileFormat !== 'excel';
+  const canDownloadTemplate = activeProfile.kind === 'hierarchical_workbook' || fileFormat !== 'excel';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -221,12 +221,14 @@ export default function ProjectFileImporter({
     }
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
     if (!canDownloadTemplate) return;
-    const { content, mimeType, filename } = projectImportTemplateService.serialize(
-      fileFormat as TemplateFormat,
-      { referentialCode: templateReferential, language: "fr", withRelations: true },
-    );
+    const { content, mimeType, filename } = activeProfile.kind === 'hierarchical_workbook'
+      ? await projectImportTemplateService.buildWorkbookTemplate(profileCode)
+      : projectImportTemplateService.serialize(
+          fileFormat as TemplateFormat,
+          { referentialCode: templateReferential, language: "fr", withRelations: true },
+        );
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

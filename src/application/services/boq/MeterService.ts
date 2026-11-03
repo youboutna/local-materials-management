@@ -152,6 +152,25 @@ export class MeterService {
     return MeterService.enrich(dtos);
   }
 
+  /**
+   * Chunked variant for large BOQs: same engine as enrich(), yielding to the
+   * event loop between chunks so the screen stays responsive.
+   */
+  static async enrichInChunks(
+    dtos: readonly MeterInputDTO[],
+    policy: MeteringPolicy = DEFAULT_METERING_POLICY,
+    chunkSize = 200,
+    onProgress?: (done: number, total: number) => void,
+  ): Promise<MeterInputDTO[]> {
+    const out: MeterInputDTO[] = [];
+    for (let i = 0; i < dtos.length; i += chunkSize) {
+      out.push(...MeterService.enrich(dtos.slice(i, i + chunkSize), policy));
+      onProgress?.(out.length, dtos.length);
+      if (i + chunkSize < dtos.length) await new Promise<void>(resolve => setTimeout(resolve, 0));
+    }
+    return out;
+  }
+
   /** Same engine for every source; explicit imported quantities remain authoritative. */
   static enrich(dtos: readonly MeterInputDTO[], policy: MeteringPolicy = DEFAULT_METERING_POLICY): MeterInputDTO[] {
     return dtos.map((input) => {
