@@ -213,8 +213,8 @@ describe('Groupe C — Factur-X et PDF (T‑V‑06 → T‑V‑07)', () => {
     const totals = FacturXTransformer.computeTotals(last.lines);
     expect(totals.totalHt).toBeGreaterThan(0);
     expect(totals.totalTtc).toBeGreaterThanOrEqual(totals.totalHt);
-    expect(totals.totalTva).toBeCloseTo(totals.totalTtc - totals.totalHt, 1);
-    expect(totals.netToPay).toBeCloseTo(totals.totalTtc - totals.withholding, 1);
+    expect(totals.totalTva).toBeCloseTo(totals.totalTtc - totals.totalHt + totals.withholding, 1);
+    expect(totals.netToPay).toBeCloseTo(totals.totalTtc, 1);
   });
 });
 

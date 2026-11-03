@@ -31,6 +31,7 @@ import {
   resolveInvoiceDocumentType,
 } from '@/config/referentials/invoices/invoice-document-types.referential';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+import { BoqConsistencyService } from './BoqConsistencyService';
 
 export interface DispatchResult {
   linesConsidered: number;
@@ -295,6 +296,7 @@ export class BoqDispatchService {
   ): Promise<ValidationRequestResult> {
     if (!projectId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
 
+    BoqConsistencyService.assertReady(lines);
     const total = BoqDispatchService.sum(lines);
     const budget = Number(remainingBudget ?? 0);
     const discrepancy = budget > 0 ? total - budget : 0;

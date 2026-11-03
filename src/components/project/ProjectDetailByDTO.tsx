@@ -86,6 +86,7 @@ import ProjectCheckpointsDashboard from "./ProjectCheckpointsDashboard";
 import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { useI18n } from '@/hooks/useI18n';
 import { T } from '@/components/i18n/T';
+import ContractList from "@/components/contracts/ContractList";
 import { DecompteTrackingPanel } from '@/components/project/finance/DecompteTrackingPanel';
 // ============================================================================
 // INTERFACES (uniquement pour les props du composant)
@@ -124,7 +125,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   // ============ Hooks et état ============
   const { projectId: routeProjectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { translateTerm } = useI18n();
   const projectId = propProjectId || routeProjectId;
   const [selectedReferential, setSelectedReferential] = useState<ReferentialType | null>(null);
@@ -132,9 +133,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
   const [phases, setPhases] = useState<PhaseDTO[]>([]);
   const [referentialOptions, setReferentialOptions] = useState<{ value: string; label: string; description?: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get("tab") || "overview";
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab") || "overview";
+  const activeTab = requestedTab === "finance" ? "financial" : requestedTab === "info" ? "overview" : requestedTab;
+  const setActiveTab = (value: string) => setSearchParams(current => { const next = new URLSearchParams(current); next.set("tab", value); return next; });
   const queryClient = useQueryClient();
   
   // ============ Services ============
@@ -893,7 +895,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
   // ============ Rendu principal ============
   return (
-    <div className="container mx-auto py-3 space-y-3">
+    <div className="min-w-0 space-y-3">
 
       {/* Header */}
       <ProjectHeader
@@ -922,17 +924,19 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         className="space-y-4"
       >
         {/* Barre unifiée : navigation (défilement horizontal) + actions rapports */}
-        <div className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <TabsList className="h-9 flex-1 justify-start gap-1 overflow-x-auto rounded-none bg-transparent p-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 border-b bg-background">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-none bg-transparent p-0">
             {projectTabsDef.map((tab) => (
               <TabsTrigger
                 key={tab.uiValue}
                 value={tab.uiValue}
                 className="shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:text-sm"
               >
-                {tab.label.fr}
+                {tab.label[language] || tab.label.fr}
               </TabsTrigger>
             ))}
+            <TabsTrigger value="resources">{t("workbench.resources")}</TabsTrigger>
+            <TabsTrigger value="contrats">{t("workspace.contracts")}</TabsTrigger>
           </TabsList>
 
         </div>
@@ -1055,7 +1059,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
 
         {/* ===== FINANCIAL ===== */}
-        <TabsContent value="financial" className="mt-6">
+        <TabsContent value="financial" className="mt-3">
           {/* Doctrine : dépensé = décomptes validés (jamais lignes DQE / tâches) */}
           <DecompteTrackingPanel
             scope="project"
@@ -1082,7 +1086,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
 
 
           {/* Échéancier de paiements */}
-          <Card className="mt-6">
+          <Card className="mt-3">
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
@@ -1161,7 +1165,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         {/* ===== PHASES ===== */}
-        <TabsContent value="phases" className="mt-6">
+        <TabsContent value="phases" className="mt-3">
           <Tabs defaultValue="wbs" className="space-y-4">
             <WorkspaceTabsList variant="underline">
               <TabsTrigger value="wbs" className="text-xs sm:text-sm">Phases ({translateTerm('wbs_short')})</TabsTrigger>
@@ -1169,7 +1173,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               <TabsTrigger value="milestones" className="text-xs sm:text-sm"><T k="auto.projectdetailbydto.jalons" fallback="Jalons" /></TabsTrigger>
             </WorkspaceTabsList>
 
-            <TabsContent value="wbs" className="mt-6">
+            <TabsContent value="wbs" className="mt-3">
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -1249,7 +1253,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </DialogUI>
             </TabsContent>
 
-            <TabsContent value="planning" className="mt-6">
+            <TabsContent value="planning" className="mt-3">
               <ProjectBudgetTracking projectId={projectId!} projectBudget={project?.budget ?? null} />
               <div className="mt-4">
                 <PlanningVarianceView projectId={projectId!} />
@@ -1289,7 +1293,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
               </Tabs>
             </TabsContent>
 
-            <TabsContent value="milestones" className="mt-6">
+            <TabsContent value="milestones" className="mt-3">
               <Tabs defaultValue="timeline" className="space-y-4">
                 <WorkspaceTabsList variant="underline">
                   <TabsTrigger value="timeline">Timeline & Liste</TabsTrigger>
@@ -1330,12 +1334,12 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         {/* ===== DQE ===== */}
-        <TabsContent value="dqe" className="mt-6">
+        <TabsContent value="dqe" className="mt-3">
           <ProjectDqeTab projectId={projectId!} projectName={project?.title} referentialCode={project?.referentialCode} />
         </TabsContent>
 
         {/* ===== TASKS ===== */}
-        <TabsContent value="tasks" className="mt-6">
+        <TabsContent value="tasks" className="mt-3">
           {(() => {
             const status = String((project as any)?.status || '').toLowerCase();
             const requestedExecution = searchParams.get('execution');
@@ -1422,7 +1426,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         {/* ===== MONITORING ===== */}
-        <TabsContent value="monitoring" className="mt-6">
+        <TabsContent value="monitoring" className="mt-3">
           {/* Dashboard Monitoring — source unique : ProjectMetricsOrchestrator */}
           <ProjectMetricsPanel
             project={project as any}
@@ -1433,7 +1437,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
             risks={((projectDetail as any)?.risks ?? []) as any[]}
           />
 
-          <div className="mt-6" />
+          <div className="mt-3" />
           <EnhancedRiskManager projectId={projectId!} phases={computedPhases as any} />
           
           {/* KPI : plus aucun calcul inline ici — ProjectMetricsPanel (ci-dessus)
@@ -1457,7 +1461,7 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         </TabsContent>
 
         {/* ===== COMPLIANCE ===== */}
-        <TabsContent value="compliance" className="mt-6">
+        <TabsContent value="compliance" className="mt-3">
           <div className="space-y-4">
             <Card>
               <CardHeader>
@@ -1587,8 +1591,10 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
           </div>
         </TabsContent>
 
+        <TabsContent value="contrats" className="mt-3"><ContractList projectId={projectId} title={t("workspace.contracts")} /></TabsContent>
+
         {/* ===== RESSOURCES ===== */}
-        <TabsContent value="resources" className="mt-6">
+        <TabsContent value="resources" className="mt-3">
           <ProjectResourcesContainer
             projectId={projectId!}
             phases={computedPhases as any}

@@ -14,7 +14,7 @@ interface Props {
   resetSignal?: number;
 }
 
-export function ImportDropzone({ onFile, accept = '.pdf,.xlsx,.xls,.csv', disabled, resetSignal = 0 }: Props) {
+export function ImportDropzone({ onFile, accept = '.pdf,.xlsx,.xls,.csv,.json', disabled, resetSignal = 0 }: Props) {
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function ImportDropzone({ onFile, accept = '.pdf,.xlsx,.xls,.csv', disabl
       onDrop={(e) => {
         e.preventDefault();
         const f = e.dataTransfer.files?.[0];
-        if (f) onFile(f);
+        if (f && !disabled) onFile(f);
       }}
       onDragOver={(e) => e.preventDefault()}
       className="rounded-md border-2 border-dashed p-6 text-center bg-muted/30"
@@ -35,13 +35,14 @@ export function ImportDropzone({ onFile, accept = '.pdf,.xlsx,.xls,.csv', disabl
         ref={ref}
         type="file"
         accept={accept}
+        disabled={disabled}
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
           if (f) onFile(f);
         }}
       />
-      <p className="text-sm text-muted-foreground mb-3">Déposez PDF / Excel / CSV ou</p>
+      <p className="text-sm text-muted-foreground mb-3">PDF / Excel / CSV / JSON</p>
       <Button type="button" variant="outline" disabled={disabled} onClick={() => ref.current?.click()}>
         <Upload className="h-4 w-4 mr-2" /> <T k="auto.importdropzone.selectionner_un_fichier" fallback="Sélectionner un fichier" />
       </Button>

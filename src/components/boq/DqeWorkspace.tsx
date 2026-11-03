@@ -13,7 +13,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
  */
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { BoqWorkspace, type BoqWorkspaceMode } from './BoqWorkspace';
@@ -235,8 +234,8 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
   // ------------------------------------------------------------- Vue Liste
   if (!selectedDocumentId) {
     return (
-      <Card className="overflow-hidden">
-        <CardContent className="p-4">
+      <section className="min-w-0">
+        <div>
           <BoqDocumentList
             source={ctx.source}
             contextId={ctx.contextId}
@@ -246,8 +245,8 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             onOpen={(id) => selectDocument(id)}
             onCreate={(id) => selectDocument(id)}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     );
   }
 
@@ -264,8 +263,8 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
 
   return (
     <div className="space-y-4">
-      <Card className="overflow-hidden">
-        <CardHeader className="flex flex-col gap-2 border-b bg-muted/20 py-3">
+      <section className="min-w-0">
+        <header className="flex flex-col gap-2 border-b py-3">
           {/* Zone 1 — retour + titre du document · Zone 2 — barre de progression compacte. */}
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => selectDocument(null)}>
@@ -360,10 +359,10 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
             )}
 
           />
-        </CardHeader>
+        </header>
 
 
-        <CardContent className="p-0">
+        <div>
           <DqeTabs
             documentId={selectedDocumentId}
             projectId={props.projectId ?? ctx.contextId}
@@ -405,8 +404,8 @@ export const DqeWorkspace: React.FC<Props> = (props) => {
               )
             ) : undefined}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 };

@@ -28,6 +28,7 @@ import { detectMetre } from './parsers/metreDetection';
 import { analyzeLineCoherence } from './parsers/lineCoherence';
 
 export interface ImportMapping {
+  code?: string;
   designation?: string;
   unit?: string;
   quantity?: string;
@@ -54,6 +55,7 @@ export interface ImportMapping {
  * ou anglais (« Description », « Qty ») est mappé sans configuration.
  */
 const FUZZY: Record<keyof ImportMapping, RegExp[]> = {
+  code: [/^code$/i, /^r[eé]f[eé]rence$/i, /^ref\.?$/i, /^n[°o]$/i, /الرمز/],
   designation: [/design/i, /libell/i, /descrip/i, /d[eé]signation/i, /article/i, /prestation/i, /البيان|الوصف|التعيين/],
   unit: [/^unit/i, /unit[eé]/i, /^u\.?$/i, /^um$/i, /الوحدة/],
   quantity: [/quant/i, /qt[eé]/i, /^qty$/i, /^q$/i, /nombre/i, /الكمية|العدد/],
@@ -99,6 +101,7 @@ export class BoqImportOrchestrator {
     const map: ImportMapping = {};
     const used = new Set<string>();
     const order: (keyof ImportMapping)[] = [
+      'code',
       'designation',
       'unit',
       'quantity',
@@ -322,6 +325,7 @@ export class BoqImportOrchestrator {
       });
 
       const dto: BoqLineDTO = {
+        code: mapping.code ? String(get(mapping.code) ?? '').trim() || null : null,
         source: ctx.source,
         contextId: ctx.contextId,
         designation: designation || elementCode || 'Ligne',

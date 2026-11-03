@@ -98,4 +98,23 @@ export interface DecompteFinancialSummaryDTO {
 export const isDecompteValidated = (d: DecompteRecordDTO): boolean =>
   d.status === 'validated' || d.status === 'paid';
 
+/** État de rapprochement d'un décompte face à ses règlements. */
+export type DecompteReconciliationState = 'settled' | 'partial' | 'unpaid' | 'not_validated';
+
+export interface DecompteReconciliationLineDTO {
+  decompte: DecompteRecordDTO;
+  /** Réglé comptabilisable rattaché (ou montant soldé historique). */
+  paidAmount: number;
+  /** Reste à régler sur le montant validé. */
+  remainingAmount: number;
+  state: DecompteReconciliationState;
+}
+
+export interface DecompteReconciliationDTO {
+  lines: DecompteReconciliationLineDTO[];
+  /** Règlements comptabilisables sans décompte rattaché connu. */
+  unallocatedPayments: DecomptePaymentDTO[];
+  unallocatedAmount: number;
+}
+
 export const isDecomptePaid = (d: DecompteRecordDTO): boolean => d.status === 'paid';

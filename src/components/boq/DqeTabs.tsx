@@ -46,7 +46,7 @@ export const DqeTabs: React.FC<DqeTabsProps> = ({
   comparison, budget,
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('summary');
+  const [activeTab, setActiveTab] = useState('lines');
   const calculatedTotals = useMemo(() => totals ?? BoqCalculatorService.aggregate(lines), [lines, totals]);
   const evaluatedControls = useMemo(() => controls ?? BoqControlsService.evaluate(lines), [controls, lines]);
   const failedControls = evaluatedControls.filter((control) => !control.passed).length;
@@ -65,9 +65,9 @@ export const DqeTabs: React.FC<DqeTabsProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="overflow-x-auto px-2 sm:px-4">
-          <TabsList className="h-12 w-max min-w-full justify-start gap-0 bg-transparent p-0">
+      <div className="border-b bg-background">
+        <div className="px-2 sm:px-4">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-0 bg-transparent p-0">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (

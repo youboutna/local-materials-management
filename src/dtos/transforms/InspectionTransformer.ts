@@ -96,8 +96,8 @@ export class InspectionTransformer {
       qualityRating: undefined, // Not available in entity
       documents: entity.documents?.map(doc => doc.id) || [], // DTO expects string[] of document IDs
       attachments: [], // Not available in entity
-      createdAt: entity.createdAt.toISOString(), // Convert Date to string
-      updatedAt: entity.updatedAt.toISOString(), // Convert Date to string
+      createdAt: (parsePersistedDate(entity.createdAt) ?? new Date()).toISOString(), // Convert Date to string
+      updatedAt: (parsePersistedDate(entity.updatedAt) ?? new Date()).toISOString(), // Convert Date to string
     };
   }
 

@@ -7,11 +7,13 @@ import { getProjectService } from './ProjectService';
 import { SupabaseProjectWorkbenchAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter';
 import { format, isValid, parseISO, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
-import { getDecompteService } from './DecompteService';
+import { DecompteService, getDecompteService } from './DecompteService';
 import { ProjectFinancialsService } from './ProjectFinancialsService';
 import { ProjectMetricsOrchestrator } from './ProjectMetricsOrchestrator';
 import { getReferentialItemService } from './ReferentialItemService';
 import { getProjectResourceAggregatorService } from './ProjectResourceAggregatorService';
+import type { ReferentialItemDTO } from '@/dtos/entities/ReferentialItemDTO';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 export class ProjectWorkbenchService {
   constructor(private readonly repository: IProjectWorkbenchRepository = new SupabaseProjectWorkbenchAdapter()) {}
   projects() { return this.repository.projects(); }
@@ -62,9 +64,36 @@ export class ProjectWorkbenchService {
     const financials = ProjectFinancialsService.build({scope:'project',entityId:projectId,currency:project.currency,declaredBudget:project.budget ?? 0,lines,decomptes:scope.decomptes,payments:scope.payments});
     const metrics = ProjectMetricsOrchestrator.compute({project,phases:project.phases,financials});
     const resources=getProjectResourceAggregatorService().aggregate({projectId,phases:project.phases.map(phase=>({...phase})),boqLines:lines.filter(line=>line.source==='dqe').map(line=>({...line})),consumptions:operations.filter(entry=>entry.kind==='consumption').map(entry=>({...entry}))});
-    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,allocatedResources:project.resources ?? []};
+    const reconciliation = DecompteService.reconcile(scope.decomptes, scope.payments);
+    const revenueReconciliation = ProjectWorkbenchService.reconcileRevenue(lines.filter(line => line.source === 'invoice'), operations);
+    return {lines,decomptes:scope.decomptes,payments:scope.payments,financials,metrics,resources,reconciliation,revenueReconciliation,allocatedResources:project.resources ?? []};
+  }
+  /** Customer invoices vs validated revenue receipts linked by sourceLineId; supplier payments never count as revenue. */
+  static reconcileRevenue(invoices: import('@/dtos/boq/BoqLineDTO').BoqLineDTO[], operations: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[]) {
+    const receipts = [...new Map(operations.filter(op => op.kind === 'revenue' && op.status === 'validated').map(op => [op.id, op])).values()];
+    const lines = invoices.filter(line => line.id).map(invoice => {
+      const invoicedAmount = Number(invoice.totalHt ?? invoice.quantity * (invoice.unitPrice ?? 0)) || 0;
+      const receivedAmount = receipts.filter(op => op.sourceLineId === invoice.id).reduce((sum, op) => sum + op.amount, 0);
+      const remainingAmount = Math.max(0, invoicedAmount - receivedAmount);
+      const state = receivedAmount <= 0 ? 'unpaid' : remainingAmount > 0 ? 'partial' : 'settled';
+      return { invoiceId: invoice.id as string, designation: invoice.designation, invoicedAmount, receivedAmount, remainingAmount, state: state as 'settled' | 'partial' | 'unpaid' };
+    });
+    const ids = new Set(lines.map(line => line.invoiceId));
+    const unallocated = receipts.filter(op => !op.sourceLineId || !ids.has(op.sourceLineId));
+    return { lines, unallocatedReceipts: unallocated, unallocatedAmount: unallocated.reduce((sum, op) => sum + op.amount, 0) };
   }
   operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }
+  /** Presentation projection of server-owned context metadata, never a replacement for authorization. */
+  static eligibleOperationLines(lines: readonly BoqLineDTO[], context: ReferentialItemDTO | undefined, input: Pick<SaveProjectOperationDTO, 'kind' | 'phaseId'>): BoqLineDTO[] {
+    if (!context?.isActive) return [];
+    const policy = context.metadata;
+    if (Array.isArray(policy.kinds) && !policy.kinds.includes(input.kind)) return [];
+    return lines.filter(line => Boolean(line.id)
+      && (!input.phaseId || !line.phaseId || line.phaseId === input.phaseId)
+      && (!Array.isArray(policy.sources) || policy.sources.includes(line.source))
+      && (!Array.isArray(policy.documentTypes) || policy.documentTypes.includes(line.documentType ?? line.dqeType))
+      && (!Array.isArray(policy.resourceFamilies) || policy.resourceFamilies.includes(line.resourceType)));
+  }
   static operationTotals(entries: import('@/dtos/entities/ProjectWorkbenchDTO').ProjectOperationDTO[], currency: string) {
     const totals = new Map<string,number>();
     for (const entry of entries) {

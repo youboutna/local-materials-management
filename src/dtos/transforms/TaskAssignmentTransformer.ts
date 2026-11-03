@@ -98,8 +98,10 @@ export class TaskAssignmentTransformer {
       metadata: entity.metadata,
       dependencies: entity.dependencies,
       notes: entity.notes,
-      createdAt: entity.createdAt.toISOString(),
-      updatedAt: entity.updatedAt.toISOString(),
+      // Tolérant : une entrée non hydratée (date string ou absente) ne doit
+      // jamais faire échouer toute la fiche projet.
+      createdAt: (parsePersistedDate(entity.createdAt) ?? new Date()).toISOString(),
+      updatedAt: (parsePersistedDate(entity.updatedAt) ?? new Date()).toISOString(),
     };
   }
 

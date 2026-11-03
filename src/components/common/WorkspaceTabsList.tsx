@@ -24,7 +24,7 @@ export const WorkspaceTabsList: React.FC<WorkspaceTabsListProps> = ({
     className={cn(
       variant === 'segmented'
         ? 'flex h-auto w-full flex-wrap justify-start gap-1'
-        : 'flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-transparent p-0',
+        : 'flex h-auto w-full flex-wrap justify-start gap-1 rounded-none border-b bg-transparent p-0',
       className,
     )}
   >

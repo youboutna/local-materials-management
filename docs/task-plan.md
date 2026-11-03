@@ -2,6 +2,28 @@
 
 ## Plan de Migration et d'Implémentation
 
+### Import PTBA illustratif — 31/10/2026
+- Le parcours d’import projet reconnaît les tableaux PTBA Excel et ouvre une revue configurable : toutes les feuilles, codes, libellés, quantités, unités, montants documentaires, responsables et associés. Échelle monétaire et budget projet sont explicitement confirmés ; aucun cumul automatique de sous-totaux.
+- Lecture Word complète via Mammoth, sans limite de 50 pages. Sources originales archivées via DocumentService ; valeurs/formules/formatages/fusions/financements/périodes et sections non interprétées conservés dans les données personnalisées de la première phase. Provenance de chaque activité dans ses métadonnées ; description projet lisible, pas de JSON visible.
+- Les lignes sans code restent à compléter et conservées, les totaux ne deviennent pas des tâches. Quantités textuelles et écarts quantité × prix sont préservés. Aucun calendrier déduit de cases vides, aucun responsable source remplacé par l’importateur. Identité stable par feuille/ligne pour ne pas fusionner deux activités de même nom.
+- Reprise du pipeline existant et suppression de la conversion UI morte qui inventait une phase et 80 % du budget. CSV analysé avec le lecteur CSV existant, y compris champs cités ; succès complet non annoncé lorsque sous-objets ou archivage échouent. Correction de la fin projet pour inclure le suivi après livraison.
+- Contrôle sans persistance sur les deux fichiers joints dans Chromium : six feuilles (72/92/107/25/170/20 lignes), Word complet de 226 098 caractères, données source identiques après sérialisation, 335 tâches proposées, 77 lignes non interprétées et 72 points de revue. Ces compteurs sont des observations de cet exemple, pas des règles métier.
+- Validation ciblée : 21 tests passants et lint ciblé sans erreur. Recette connectée/persistance/permissions et archive GED réelle non vérifiées : Supabase externe sans session injectable. La hiérarchie arbitraire, les allocations de financement/périodes et les lignes sans code sont conservées comme preuves, pas prétendues opérationnelles ; leur mapping complet reste ouvert dans roadmap.md.
+
+### Correction DQE — 31/10/2026
+- Le métré avancé est interne à l'ajout/modification d'une ligne DQE ou à l'import unique ; aucun bouton de calcul autonome ni onglet calculateur dans l'estimateur.
+- `BoqManualLineTransformer` prépare la saisie ; `UnifiedBoqParser.fromManual` utilise `MeterService.enrich`, comme les sources PDF/Excel/CSV/JSON et les dimensions de plans revues.
+- Routage des types reconnus par le référentiel ; types inconnus conservés en calcul simple. Les quantités explicitement saisies restent conservées ; les calculs dimensionnels conservent formule, ouvertures et provenance.
+- Validation : 31 tests ciblés passants ; contrôle connecté non disponible avec Supabase externe.
+
+### Harmonisation des espaces projet — 31/10/2026
+- Navigation projet unique, synchronisée avec `?tab=` ; contrats et ressources restent accessibles sans barre d'onglets concurrente.
+- Phases : contexte réduit, tableaux et vues de travail avant les résumés secondaires ; modification rapide repliée.
+- Calendrier, création/édition et import : suppression des titres et encadrements doublonnés ; opérations en tableau avec actions existantes.
+- DQE projet, phase, workflow et calendrier utilisent le même espace documentaire ; onglet Lignes ouvert par défaut, réglages et contrôles fiscaux secondaires, aucun métré créé à l'ouverture.
+- SIG : carte plus grande et formulaire de réalisation replié tant qu'aucun ouvrage n'est sélectionné.
+- Vérification : 29 tests ciblés passants et compilation OK. Le navigateur reste sur Chargement sans session externe ; recette visuelle connectée et CRUD non validés. Le lint étendu signale encore des `any` préexistants dans ProjectDetailByDTO ; les autres pages contrôlées n'ont pas d'erreur lint.
+
 ### Système de Gestion Intégrée des Projets d'Infrastructure
 
 **Projet** : HadraTech-GPI (Infrastructure Réseau, bâtiment, géolocalisé)  
@@ -903,3 +925,42 @@ Configuration de déploiement requise pour les fonctions newsletter : `NEWSLETTE
 `NEWSLETTER_SITE_URL` et `NEWSLETTER_CRON_SECRET` sont déclarés dans `.env.example` et `.env.development` pour le lancement local des Edge Functions ; le secret de développement est laissé vide afin d'être généré/configuré localement. En production, les valeurs doivent être configurées comme secrets Edge Functions et dans le planificateur, pas dans une variable `VITE_*`. Supabase fournit `SUPABASE_URL`, `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY` au runtime Edge ; ne pas copier la clé service-role dans le bundle frontend.
 
 Pour configurer l'origine publique de production (exemple : `https://app.hadratech.com`) : `npx supabase secrets set NEWSLETTER_SITE_URL=https://app.hadratech.com`. Le code accepte aussi `SITE_URL` comme repli ; `NEWSLETTER_SITE_URL` reste préférable si `SITE_URL` désigne une autre origine.
+
+## 2026-10-31 — Plan consolidé métré / plans : preuves et écarts
+
+### Livré et contrôlé
+
+- `MeterService` enrichit les imports et calculs partagés : quantité source conservée, brut/ouvertures/net, formule, estimations de matériaux avec politique injectable.
+- `BoqConsistencyService` conserve les erreurs du prix original, exige une revue explicite des corrections et invalide celle-ci lorsque les montants changent ; garde-fou dans la demande de validation DQE.
+- Import assisté des plans PDF : reader port PDF.js/OCR, SHA-256, cartouches et repères indicatifs, saisie/révision des dimensions, confirmation manuelle, pont vers le métré et brouillons du workspace existant. Archivage des plans et fichiers source DQE via `DocumentService` avec les garanties GED partagées.
+- `BoqDocumentService` sert les actions du hook BOQ, l'envoi du calculateur et l'estimateur ; plus d'import direct de leur adapter Supabase dans ces points de présentation.
+- Documentation architecture et BOQ v3.3 actualisée ; tests des scripts Node séparés de la découverte Vitest. Données inconnues préservées telles quelles par i18n ; aucune modification des taux fiscaux.
+- 56 tests ciblés passants ; scripts release/configuration : 6 tests Node passants. Dernière suite globale : **463 tests passants, 12 échecs, 78 fichiers dont 2 en échec**. Les échecs restants concernent `RepositoryFactory.providers.test.ts` et `I18nNoRawCodes.test.ts`.
+- Dernier build observé : **2026-10-31 10:00:57 UTC, build OK**. Lint des nouveaux services, import plan et hooks touchés : passé ; calculateur historique : 32 erreurs `any` et un avertissement ; workspace/table : quatre avertissements de dépendances React.
+
+### Contrôle des pièces réelles
+
+- DQE PDF : 7 pages, total imprimé **7 350 213 MRU**, section 2 **3 555 972 MRU**.
+- JSON fourni : **61 lignes**, somme déclarée **11 289 176 MRU**, budget projet distinct **7 126 605 MRU**. Les 62 lignes et le total unique attendus dans le brief ne correspondent pas au fichier fourni.
+- `2-1.3` : PDF **821 × 2 000**, total imprimé **1 642 500** (écart arithmétique **500**) ; JSON **82 × 20 000** pour le même montant déclaré. Aucune correction silencieuse ni quantité commune forcée.
+- Écarts supplémentaires : `2-1.5` **83 × 2 100 ≠ 173 880**, `2-4.2.1` **411 × 100 ≠ 41 112**, `2-5.1` écart **465**, `2-9.1` écart **42**. Le nombre « exactement deux warnings » n'est pas un critère démontré.
+- Plan structurel réel exécuté avec l'adapter dans Chromium : **8 pages**, **4 texte + 4 OCR**, **41 repères indicatifs**, **0 confirmé**. Les unités manquantes restent ambiguës ; les repères répétés ne sont pas comptés automatiquement. P = poteau, Lg/Lng = poutre/longrine, S = semelle.
+- Aperçu `/dqe/list` ouvert sans erreur de page, mais resté sur le chargement public : ce n'est pas une recette du dialogue ou des CRUD connectés.
+
+### NO GO — critères encore ouverts
+
+- Recette connectée GED → lignes DQE → sauvegarde → validation, CRUD calendrier/opérations/SIG et portails : Supabase externe sans session de test injectable ; droits et persistance serveur non validés ici.
+- Mesure graphique calibrée sur PDF, extraction fiable des salles/ferraillage, IFC, indexation/reprise du cache entre sessions et migration complète de `calculateAdvancedQuantities` : non terminés.
+- Règles de planning génériques, filtrage contextuel complet des documents de consommation et autres tâches ouvertes de `roadmap.md` : ne sont pas clôturés par ce lot.
+- Suite globale et lint complet : non verts ; démarrage Docker et délivrabilité des communications restent dépendants de l'environnement cible et des fournisseurs.
+
+Le plan consolidé reste **NO GO** tant que ces critères sont ouverts ; les chiffres contradictoires du brief ne doivent jamais être obtenus par altération des données ou assouplissement artificiel des tests.
+
+### Correction demandée — import et chiffrage uniques
+
+- Retrait du calculateur avancé isolé de la page Métré et plans, ainsi que du bouton et du hook d'import de plans séparés. La saisie manuelle et le calcul métré restent dans le workspace BOQ existant.
+- Un bouton « Importer un document » : PDF, Excel, CSV, JSON. `UnifiedBoqParser` route les PDF sans lignes de tableau exploitables vers le reader de plans texte/OCR ; la revue contrôlée des dimensions se fait dans le même import et prépare les mêmes lignes.
+- La source documentaire et la formule sont affichées sur chaque ligne ; archive GED partagée, pas de double archive du plan.
+- 23 tests ciblés passants, lint des fichiers du raccordement passé, build observé sans erreur à 10:16:11 UTC.
+- Contrôle navigateur du parseur commun sans persistance : STR détecté comme plan (41 repères, aucune mesure confirmée) ; DQE_NDB détecté comme tableau mais seulement 3 lignes préparées. L'extraction exhaustive de ce DQE reste un défaut ouvert, sans imposer les compteurs illustratifs.
+- Recette visuelle connectée de l'écran complet non effectuée : Supabase externe sans session injectable. Les autres critères ouverts ne sont pas clôturés par cette correction.

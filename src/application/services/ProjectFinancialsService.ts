@@ -122,7 +122,8 @@ export class ProjectFinancialsService {
     }
 
     const spent = round2(DecompteService.sumValidated(decomptes ?? []));
-    const paid = round2(DecompteService.sumPaid(decomptes ?? [], payments ?? []));
+    const paid = round2(DecompteService.sumPaid(decomptes ?? [], payments ?? [], policy));
+    const reconciliation = DecompteService.reconcile(decomptes ?? [], payments ?? [], policy);
     const validatedCount = (decomptes ?? []).filter((d) =>
       ['validated', 'paid'].includes(d.status),
     ).length;
@@ -139,7 +140,7 @@ export class ProjectFinancialsService {
       engaged: round2(engaged),
       spent,
       paid,
-      remainingToPay: round2(Math.max(0, spent - paid)),
+      remainingToPay: round2(reconciliation.lines.reduce((sum, line) => sum + line.remainingAmount, 0)),
       remaining: round2(budgetTotal - spent),
       consumptionRate: budgetTotal > 0 ? round2((spent / budgetTotal) * 100) : 0,
       engagementRate: budgetTotal > 0 ? round2((engaged / budgetTotal) * 100) : 0,

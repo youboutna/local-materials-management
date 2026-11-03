@@ -68,6 +68,8 @@ export interface ImportOptions {
   validateOnly?: boolean;
   preserveRelations?: boolean;
   batchSize?: number;
+  /** Streamed counters while relations are saved (throttled). */
+  onProgress?: (details: { phases: number; milestones: number; tasks: number; dqeLines: number; stakeholders: number }) => void;
   ignoredFields?: string[];
   employeeResolution?: 'email' | 'externalRef' | 'both';
   supplierResolution?: 'name' | 'externalRef' | 'both';
@@ -124,6 +126,7 @@ export interface ProjectImportRow {
   clientName?: string;
   donorOrganization?: string;
   areaSqm?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportPhase {
@@ -160,6 +163,7 @@ export interface ProjectImportPhase {
   milestones?: ProjectImportMilestone[];
   tasks?: ProjectImportTask[];
   dqeLines?: BoqLineDTO[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportMilestone {
@@ -222,6 +226,7 @@ export interface ProjectImportTask {
   requiresEngineerApproval?: boolean;
   actionType?: string;
   action_type?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ProjectImportStakeholder {
@@ -337,6 +342,28 @@ export interface ProjectImportEmployee {
 export class ProjectImportExportService {
   private authService: AuthService;
   private currentUserId?: string;
+  private readonly phaseIdsCache = new Map<string, Set<string>>();
+  private progressListener?: ImportOptions['onProgress'];
+  private lastProgressAt = 0;
+
+  /** Throttled progress stream so the UI moves during long saves. */
+  private emitProgress(details: ProjectImportResult['details']): void {
+    const now = Date.now();
+    if (!this.progressListener || now - this.lastProgressAt < 250) return;
+    this.lastProgressAt = now;
+    this.progressListener({ ...details });
+  }
+
+  /** Runs async work with bounded concurrency (shared rate budget, no request storms). */
+  private async runPool<T>(items: T[], worker: (item: T) => Promise<void>, size = 6): Promise<void> {
+    let next = 0;
+    const lanes = Array.from({ length: Math.min(size, items.length) }, async () => {
+      while (next < items.length) await worker(items[next++]);
+    });
+    await Promise.all(lanes);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly taskCache = new Map<string, any[]>();
   private currentUserName?: string;
   private currentUserEmail?: string;
   private employeeService: ReturnType<typeof getEmployeeService>;
@@ -1463,9 +1490,11 @@ export class ProjectImportExportService {
       }
     }
 
+    // One phase listing per project import; created phases are tracked through phaseIdMap.
+    let projectPhases: Awaited<ReturnType<typeof this.phaseService.getPhasesByProject>> | undefined;
     for (const phase of row.phases ?? []) {
       try {
-        const existingPhases = await this.phaseService.getPhasesByProject(projectId);
+        const existingPhases = (projectPhases ??= await this.phaseService.getPhasesByProject(projectId));
 
         const existingPhase =
           existingPhases.find((candidate) => {
@@ -1521,8 +1550,8 @@ export class ProjectImportExportService {
           endDate: phase.endDate,
           estimatedDuration,
           customPhaseData: phase.dqeMapping
-            ? { dqeMapping: phase.dqeMapping, phaseCode: phaseCode }
-            : { phaseCode: phaseCode },
+            ? { ...phase.metadata, dqeMapping: phase.dqeMapping, phaseCode: phaseCode }
+            : { ...phase.metadata, phaseCode: phaseCode },
           estimatedCost: phase.estimatedCost,
           actualCost: phase.actualCost,
           budget: phase.budget,
@@ -1575,19 +1604,18 @@ export class ProjectImportExportService {
         }
 
         try {
-          for (const task of phase.tasks ?? []) {
-            const resolvedTitle = this.resolveTaskTitle(task);
-            if (!resolvedTitle) continue;
-
-            await this.upsertTask(
-              projectId,
-              createdPhase.id,
-              task,
-              details,
-              suppliers,
-              employees,
-            );
+          // Warm caches once, then save tasks through a bounded pool (no per-task listing).
+          const phaseIds = this.phaseIdsCache.get(projectId) ?? new Set<string>();
+          phaseIds.add(createdPhase.id);
+          this.phaseIdsCache.set(projectId, phaseIds);
+          const phaseTaskKey = `phase:${createdPhase.id}`;
+          if (!this.taskCache.has(phaseTaskKey)) {
+            this.taskCache.set(phaseTaskKey, await this.taskAssignmentService.getByPhase(createdPhase.id));
           }
+          const phaseTasks = (phase.tasks ?? []).filter((task) => this.resolveTaskTitle(task));
+          await this.runPool(phaseTasks, (task) =>
+            this.upsertTask(projectId, createdPhase.id, task, details, suppliers, employees),
+          );
         } catch (err) {
           this.reportRelationIssue(
             `[importRelations] Phase tasks failed for phase ${createdPhase.id}:`,
@@ -1687,6 +1715,8 @@ export class ProjectImportExportService {
 
     try {
       let fallbackDqePhaseId: string | undefined;
+      // Grouped per phase: one existing-lines listing per phase instead of one per line.
+      const byPhase = new Map<string, Array<Record<string, unknown>>>();
       for (const line of row.dqeLines ?? []) {
         let targetPhaseId: string | undefined;
         if (line.phaseId) {
@@ -1709,7 +1739,10 @@ export class ProjectImportExportService {
           contextId: projectId,
           phaseId: targetPhaseId,
         };
-        await this.upsertDqeLines(projectId, targetPhaseId, [dqeLine], details);
+        byPhase.set(targetPhaseId, [...(byPhase.get(targetPhaseId) ?? []), dqeLine]);
+      }
+      for (const [targetPhaseId, lines] of byPhase) {
+        await this.upsertDqeLines(projectId, targetPhaseId, lines, details);
       }
     } catch (err) {
       this.reportRelationIssue('[importRelations] Project DQE failed:', err);
@@ -1780,31 +1813,51 @@ export class ProjectImportExportService {
     employees?: Map<string, string>,
   ): Promise<void> {
     const resolvedTitle = this.resolveTaskTitle(task);
-    const name = resolvedTitle ?? 'Tâche importée';
+    const fullName = resolvedTitle ?? 'Tâche importée';
+    // task_assignments.title is varchar(255): keep the full wording in the description.
+    const name = fullName.length > 255 ? `${fullName.slice(0, 254)}…` : fullName;
+    if (name !== fullName && !task.description?.includes(fullName)) {
+      task = { ...task, description: task.description ? `${task.description}\n${fullName}` : fullName };
+    }
 
+    // Per-run caches: one phase listing per project and one task listing per
+    // phase, instead of several requests for each imported task.
     let validPhaseId: string | undefined;
     if (phaseId && this.isUUID(phaseId)) {
       try {
-        const freshPhases = await this.phaseService.getPhasesByProject(projectId);
-        const exists = freshPhases.some((p) => p.id === phaseId);
-        if (exists) validPhaseId = phaseId;
+        let phaseIds = this.phaseIdsCache.get(projectId);
+        if (!phaseIds || !phaseIds.has(phaseId)) {
+          const freshPhases = await this.phaseService.getPhasesByProject(projectId);
+          phaseIds = new Set(freshPhases.map((p) => p.id));
+          this.phaseIdsCache.set(projectId, phaseIds);
+        }
+        if (phaseIds.has(phaseId)) validPhaseId = phaseId;
       } catch {
         /* ignore */
       }
     }
 
-    const existingTasks = validPhaseId
-      ? await this.taskAssignmentService.getByPhase(validPhaseId)
-      : await this.taskAssignmentService.getByProject(projectId);
-    const existingTask = existingTasks.find((candidate) => candidate.title === name);
+    const taskCacheKey = validPhaseId ? `phase:${validPhaseId}` : `project:${projectId}`;
+    let existingTasks = this.taskCache.get(taskCacheKey);
+    if (!existingTasks) {
+      existingTasks = validPhaseId
+        ? await this.taskAssignmentService.getByPhase(validPhaseId)
+        : await this.taskAssignmentService.getByProject(projectId);
+      this.taskCache.set(taskCacheKey, existingTasks);
+    }
+    const existingTask = existingTasks.find((candidate) => task.id
+      ? candidate.id === task.id || candidate.metadata?.importId === task.id || candidate.metadata?.externalRef === task.id
+      : candidate.title === name);
 
     const resolved = this.resolveTaskAssignees(task.assignedTo, suppliers, employees);
 
     let assigneeName = task.assigneeName || task.assignedName || resolved.names[0];
     let assigneeEmail = task.assigneeEmail || task.AssignedEmail || resolved.emails[0];
 
-    if (!assigneeName && this.currentUserName) assigneeName = this.currentUserName;
-    if (!assigneeEmail && this.currentUserEmail) assigneeEmail = this.currentUserEmail;
+    if (!task.metadata?.planningSource) {
+      if (!assigneeName && this.currentUserName) assigneeName = this.currentUserName;
+      if (!assigneeEmail && this.currentUserEmail) assigneeEmail = this.currentUserEmail;
+    }
 
     const assignees = resolved.ids;
     const assigneeType = resolved.source;
@@ -1823,11 +1876,10 @@ export class ProjectImportExportService {
 
     const actionType = this.resolveActionType(task);
 
+    // task_assignments has no external_ref column: existing tasks are matched
+    // above through metadata.importId/externalRef, so no database lookup here.
     const { id: resolvedTaskId, externalRef: resolvedTaskExternalRef } =
-      await this.resolveIdAndExternalRef(task.id, task.id, {
-        table: 'task_assignments',
-        checkExists: true,
-      });
+      await this.resolveIdAndExternalRef(task.id, task.id);
 
     const taskData: Partial<CreateTaskAssignmentDTO> & {
       id?: string;
@@ -1857,6 +1909,7 @@ export class ProjectImportExportService {
           : undefined),
       actualHours: task.actualHours,
       metadata: {
+        ...task.metadata,
         assignedBy: this.currentUserId,
         assignedTo: assignees,
         assigneeType,
@@ -1876,12 +1929,14 @@ export class ProjectImportExportService {
           `updateTask ${existingTask.id}`,
         );
       } else {
-        await this.retryWithBackoff(
+        const created = await this.retryWithBackoff(
           () => this.taskAssignmentService.create(taskData as CreateTaskAssignmentDTO),
           `createTask ${name}`,
         );
+        if (created) existingTasks.push(created as (typeof existingTasks)[number]);
       }
       details.tasks += 1;
+      this.emitProgress(details);
     } catch (err) {
       const classification = this.classifyError(err);
 
@@ -1921,7 +1976,8 @@ export class ProjectImportExportService {
       phaseId: phaseId || undefined,
     });
 
-    for (const dqeLine of dqeLines) {
+    // Bounded parallel writes: one listing per phase, then a small pool of saves.
+    await this.runPool(dqeLines, async (dqeLine) => {
       const categoryCode = (dqeLine.category ?? dqeLine.dqeCategory) as string | undefined;
       const dqeCategory = categoryCode ? getDQECategory(categoryCode) : undefined;
       const dqeType = normalizeDQEType(dqeLine.dqeType as string | undefined);
@@ -2017,9 +2073,10 @@ export class ProjectImportExportService {
       } catch (err) {
         this.reportRelationIssue(`[upsertDqeLines] Échec pour "${boqData.code}":`, err);
       }
-    }
+    });
 
     if (count) details.dqeLines += dqeLines.length;
+    this.emitProgress(details);
   }
 
   // ===========================================================================
@@ -2065,7 +2122,7 @@ export class ProjectImportExportService {
 
     try {
       supplierId = await this.ensureEntityExists('supplier', stakeholder.supplierId, {
-        projectId, role: stakeholder.role, organizations, suppliers, employees,
+        projectId, role: stakeholder.role, name: stakeholder.roleDescription, organizations, suppliers, employees,
       });
     } catch (err) {
       console.warn(`[upsertStakeholder] supplier non résolu pour ${externalRef}:`, err);
@@ -2073,7 +2130,7 @@ export class ProjectImportExportService {
 
     try {
       employeeId = await this.ensureEntityExists('employee', stakeholder.employeeId, {
-        projectId, role: stakeholder.role, organizations, suppliers, employees,
+        projectId, role: stakeholder.role, name: stakeholder.roleDescription, organizations, suppliers, employees,
       });
     } catch (err) {
       console.warn(`[upsertStakeholder] employee non résolu pour ${externalRef}:`, err);
@@ -2367,6 +2424,10 @@ export class ProjectImportExportService {
     } = {},
     options: ImportOptions = {},
   ): Promise<ProjectImportResult> {
+    this.phaseIdsCache.clear();
+    this.taskCache.clear();
+    this.progressListener = options.onProgress;
+    this.lastProgressAt = 0;
     const result: ProjectImportResult = {
       total: rows.length,
       imported: 0,
@@ -2418,12 +2479,24 @@ export class ProjectImportExportService {
 
       try {
         const externalRef = this.getExternalRef(row);
-        const existing = this.findExistingProject(
+        let existing = this.findExistingProject(
           existingProjects,
           externalRef,
           row.projectReference || row.reference,
           row.title,
         );
+        // The project list may be incomplete (pagination, failed listing):
+        // check the unique external reference directly so a re-import updates
+        // the stored project instead of colliding with it.
+        if (!existing && externalRef) {
+          const resolved = await this.resolveIdAndExternalRef(undefined, externalRef, {
+            table: 'projects',
+            checkExists: true,
+          });
+          if (resolved.existsInDb && resolved.existingId) {
+            existing = { id: resolved.existingId, title: row.title, externalRef } as unknown as ProjectDTO;
+          }
+        }
         const rowMode = row.importMode || mode;
         const operation = this.determineOperation(existing, rowMode);
 

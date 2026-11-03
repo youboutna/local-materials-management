@@ -9,7 +9,8 @@ import type { NumberFormatMode } from '@/application/services/boq/parsers/number
 import type { ReferentialType } from '@/config/referentials';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { getBoqDocumentService } from '@/application/services/boq/BoqDocumentService';
+import type { TechnicalPlanElementDTO } from '@/dtos/boq/TechnicalPlanDTO';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseId?: string; referentialCode?: ReferentialType; fiscalProfileCode?: string }) {
@@ -57,6 +58,20 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, next, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat }));
   }, [parseResult, ctx, numberFormat]);
 
+  const reviewPlan = async (elements: readonly TechnicalPlanElementDTO[]) => {
+    if (!parseResult || !sourceFile.current) throw new Error('No document selected');
+    const run = parseRun.current;
+    setBusy(true); setError(null);
+    try {
+      const lines = await unifiedBoqParser.reviewPlan(parseResult, elements, sourceFile.current, ctx);
+      if (run === parseRun.current) setDtos(lines);
+      return lines;
+    } catch (cause) {
+      if (run === parseRun.current) setError(cause instanceof Error ? cause.message : String(cause));
+      throw cause;
+    } finally { if (run === parseRun.current) setBusy(false); }
+  };
+
   /** Rejoue le mapping courant avec une autre convention numérique. */
   const applyNumberFormat = useCallback((next: NumberFormatMode) => {
     setNumberFormat(next);
@@ -67,10 +82,10 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     if (!lines.length) return [];
     setBusy(true); setError(null);
     try {
-      const persisted = await boqRepository.bulkCreate(lines);
+      const persisted = await getBoqDocumentService().bulkCreate(lines);
       // Traçabilité : le fichier source rejoint le Document Hub (catégorie BOQ)
       // et reste téléchargeable depuis le document DQE.
-      if (sourceFile.current) {
+      if (sourceFile.current && !parseResult?.technicalPlan) {
         await BoqSourceDocumentService.persist({
           file: sourceFile.current,
           contextId: ctx.contextId,
@@ -89,7 +104,7 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
       setError(msg);
       throw new Error(msg);
     } finally { setBusy(false); }
-  }, [dtos, ctx]);
+  }, [dtos, ctx, parseResult]);
 
   // Re-classify existing rows when the project referential changes.
   useEffect(() => {
@@ -97,5 +112,5 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx.referentialCode]);
 
-  return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, commit, setDtos, numberFormat, applyNumberFormat, reset };
+  return { parseResult, mapping, dtos, isBusy, error, parseFile, applyMapping, reviewPlan, commit, setDtos, numberFormat, applyNumberFormat, reset };
 }

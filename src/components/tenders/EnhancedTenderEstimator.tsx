@@ -14,9 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { Calculator, Upload, Plus, Trash2, FileText, Save, TrendingUp, DollarSign, Clock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentStorage } from '@/hooks/useDocumentStorage';
-import AdvancedQuantityCalculator from '@/components/project/AdvancedQuantityCalculator';
 import TenderEstimatorForm from '@/components/tenders/TenderEstimatorForm';
-import { calculateAdvancedQuantities } from '@/utils/btpCalculations';
 import { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';
 import type { TenderEstimatorLineInput, TenderCategory } from '@/application/services/boq/TenderEstimatorService';
 import {
@@ -213,9 +211,8 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
               <TabsTrigger value="workflow"><T k="auto.enhancedtenderestimator.workflow" fallback="Workflow" /></TabsTrigger>
-              <TabsTrigger value="calculator"><T k="auto.enhancedtenderestimator.calculateur" fallback="Calculateur" /></TabsTrigger>
               <TabsTrigger value="devis"><T k="auto.enhancedtenderestimator.devis" fallback="Devis" /></TabsTrigger>
               <TabsTrigger value="templates"><T k="auto.enhancedtenderestimator.templates" fallback="Templates" /></TabsTrigger>
               <TabsTrigger value="analysis"><T k="auto.enhancedtenderestimator.analyse" fallback="Analyse" /></TabsTrigger>
@@ -288,17 +285,6 @@ const EnhancedTenderEstimator = ({ tenderId, projectId }: EnhancedTenderEstimato
                       </Card>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="calculator" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle><T k="auto.enhancedtenderestimator.calculateur_quantitatif_integre" fallback="Calculateur Quantitatif Intégré" /></CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <AdvancedQuantityCalculator />
                 </CardContent>
               </Card>
             </TabsContent>

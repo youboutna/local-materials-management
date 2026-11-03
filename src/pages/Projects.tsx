@@ -138,7 +138,8 @@ const Projects: React.FC = () => {
     return projects
       .filter((project) => Boolean(getProjectCoordinates(project)))
       .map((project) => {
-        const coords = getProjectCoordinates(project)!;
+        const coords = getProjectCoordinates(project);
+        if (!coords) return null;
         return {
         id: project.id,
         name: project.title,
@@ -151,7 +152,7 @@ const Projects: React.FC = () => {
         endDate: project.endDate,
         interventionZone: (project as { interventionZone?: import('@/dtos/entities/InterventionZoneDTO').InterventionZoneDTO }).interventionZone,
         };
-      });
+      }).filter((location): location is NonNullable<typeof location> => location !== null);
 
   }, [projects]);
 
@@ -209,7 +210,6 @@ const Projects: React.FC = () => {
     <AppLayout
       showBreadcrumb
       pageTitle={t("nav.projects")}
-      pageDescription={`${filteredProjects.length} projets`}
       actions={
         <Button asChild>
           <Link to="/projects/create">

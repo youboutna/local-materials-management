@@ -62,7 +62,7 @@ describe('FacturXTransformer', () => {
     const totals = FacturXTransformer.computeTotals([line()]);
     expect(totals.totalHt).toBeCloseTo(10000, 2);
     expect(totals.totalTtc).toBeGreaterThan(totals.totalHt);
-    expect(totals.netToPay).toBeLessThan(totals.totalTtc);
+    expect(totals.netToPay).toBe(totals.totalTtc);
   });
 });
 

@@ -17,7 +17,7 @@ import type { BoqResourceType } from "@/domain/entities/boq/BoqLine";
 import type { BoqLineDTO } from "@/dtos/boq/BoqLineDTO";
 import { useCreateQuantityTakeoff, useMaterialsForTakeoff } from "@/hooks/hexagonal/useQuantityTakeoffHex";
 import { toast } from "@/hooks/use-toast";
-import { boqRepository } from "@/infrastructure/adapters/supabase/SupabaseBoqRepository";
+import { getBoqDocumentService } from "@/application/services/boq/BoqDocumentService";
 import { calculateAdvancedQuantities } from "@/utils/btpCalculations";
 import { getRecommendationItems } from "@/utils/recommendations";
 import { CalculationParams, CalculationResult, elementTypes, InvoiceLine, mapToElementType, Opening, STANDARD_OPENINGS } from "@/utils/types";
@@ -457,7 +457,7 @@ const AdvancedQuantityCalculator: React.FC<AdvancedQuantityCalculatorProps> = ({
     setSendingBoq(true);
     try {
       const lines = calculations.map(buildBoqDto);
-      await boqRepository.bulkCreate(lines);
+      await getBoqDocumentService().bulkCreate(lines);
       window.dispatchEvent(new CustomEvent('boq-imported', { detail: { source: 'quantity_takeoff', projectId, count: lines.length } }));
       toast({ title: "Envoyé vers le BOQ", description: `${lines.length} ligne(s) ajoutée(s) aux Métrés du projet.` });
       onPersisted?.();

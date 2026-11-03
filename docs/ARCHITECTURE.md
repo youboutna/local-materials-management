@@ -123,6 +123,14 @@ src/hooks/
 
 ## 🔗 **Flux de Données**
 
+### Métré, plans et sources documentaires
+
+Les imports BOQ passent par `UnifiedBoqParser` et `MeterService`, avec règles et coefficients injectables depuis les référentiels. Les quantités explicitement présentes dans la source ne sont pas remplacées silencieusement par une interprétation géométrique.
+
+La lecture des plans repose sur `ITechnicalPlanReader` et un adapter PDF.js/OCR résolu au moment de l'exécution. `TechnicalPlanService` exige la confirmation des dimensions avant de préparer des lignes dans le workspace DQE existant. L'archive passe par `DocumentService`, qui conserve ses garanties de nettoyage et de rollback ; aucune table de plans concurrente n'est ajoutée.
+
+Les hooks du document BOQ et l'envoi du calculateur appellent `BoqDocumentService`, qui délègue au port `IBoqRepository`. La migration du calculateur historique et les contrôles connectés ne sont pas déclarés terminés sans preuve.
+
 ### **1. Lecture (Query)**
 ```
 UI Component → useMaterialsHex() → MaterialService → IMaterialRepository → SupabaseMaterialAdapter → Supabase

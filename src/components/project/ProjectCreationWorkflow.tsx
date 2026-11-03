@@ -30,7 +30,7 @@ import { useSearchParams } from "react-router-dom";
 import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
-import QuantityTakeoffs from "./QuantityTakeoffs";
+import ProjectDqeTab from "./ProjectDqeTab";
 import EnhancedComplianceStep from "./steps/EnhancedComplianceStep";
 import EnhancedRiskAnalysisStep from "./steps/EnhancedRiskAnalysisStep";
 import StakeholdersTeamStep from "./steps/StakeholdersTeamStep";
@@ -573,7 +573,7 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
               }}
             />
             {(formData?.projectId || workflowState?.projectId) ? (
-              <QuantityTakeoffs
+              <ProjectDqeTab
                 projectId={(formData?.projectId || workflowState?.projectId) as string}
               />
             ) : (

@@ -32,7 +32,8 @@
 - [x] Séparer SIG infra et BTP via port, PostGIS métrique, buffers multi-zones et cercles, CRUD ouvrages et réalisation avec inspection justificative
 - [ ] Recette CRUD calendrier/SIG/portails avec compte réel — bloqué : Supabase externe sans session de test injectable
 - [ ] Métré géométrique des plans, calibration, mesures persistées et comparaison planifié/réel — nécessite le lot de mesure contrôlée, non livré ; le calculateur existant reste accessible
-- [ ] Réconciliation comptable dépenses/recettes avec paiements et consommation cumulée — non livrée ; journaux distincts pour éviter un total trompeur
+- [x] Rapprochement dépenses/règlements et factures clients/encaissements (tests passants)
+- [ ] Métré géométrique des plans PDF/IFC — lot non livré
 - [ ] Recette planificateurs et tous canaux réels — bloqué : expéditeur SMS absent, WhatsApp lien seulement, appels programmés uniquement, serveur cible inaccessible
 - [x] Tests ciblés calendrier/communication/configuration release passants ; compilation contrôlée
 - [ ] Audit sécurité antérieur : 125 signalements préexistants, notamment politiques et fonctions — audit dédié requis avant production
@@ -40,16 +41,31 @@
 - [x] Renforcer release Docker : refus tags mutables/existants, lancement sans reconstruction, comparaison worker servi et tests de scripts
 - [x] Vérifier Twilio actuellement : HTTP 200, aucun numéro ni Messaging Service ; tester configuration et erreurs SMS jusqu’à l’adapter
 - [ ] Démarrer et tester l’image réelle sur le serveur Docker — bloqué : Docker/daemon et accès serveur absents ici ; tests de scripts simulés seulement
-- [ ] Corriger la conversion des dates des détails projet et tester le projet importé sans dates techniques
-- [ ] Compléter et fiabiliser les actions ajouter/modifier/supprimer des onglets calendrier, opérations, métré et SIG
+- [x] Corriger la conversion des dates des détails projet (transformateurs tâches/inspections tolérants aux dates absentes)
+- [x] Compléter et fiabiliser les actions ajouter/modifier/supprimer des onglets calendrier, opérations, métré et SIG
+- [x] Sidebar gauche navigable, repliable et étirable (glisser 208–480 px, double-clic réinitialise, largeur persistée)
 - [ ] Vérifier les changements par tests ciblés et aperçu ; recette connectée soumise à la disponibilité d’une session externe
 - [x] SIG infra : modèle réseau ouvert (domaines, types d'ouvrages, supports, ouvrages, réalisations), import GeoJSON en masse, CRUD complet, analyse tampon filtrée par projet
 - [x] Tracé carte + table attributaire + aperçu import GeoJSON ; testé en base avec la boucle 33 kV (annulé)
 - [ ] Recette connectée du module SIG dans l'aperçu (bloquée : session Supabase externe non injectable)
 - [ ] Unifier Consommations/Dépenses/Recettes avec les sources métier existantes, le choix des lignes/documents et les circuits selon contexte ; conserver et rapprocher les saisies historiques sans doubles comptages
-- [ ] Brancher les synthèses sur les services financiers, ressources et métriques existants ; distinguer consommé, engagé, dépensé, payé, facturé et encaissé
+- [x] Brancher les synthèses sur les services financiers, ressources et métriques existants ; distinguer consommé, engagé, dépensé, payé, facturé et encaissé
+- [x] Règles de contexte des déclarations en référentiel base (version figée à la validation, unité et quantité plafonnées par la ligne source)
 - [ ] Générer/importer des plannings génériques pilotés par référentiels métier versionnés, avec aperçu éditable, dates relatives, chevauchements, tâches/jalons, livrables, gouvernance, risques/PAQ et allocations par période ; le planning fourni sert uniquement de cas illustratif
 - [ ] Configurer les comportements par réglementation et entité (ETER, SOMELEC, etc.) via référentiels, sans règles spécifiques codées en dur ni réécriture du moteur
 - [ ] Réutiliser Gantt, PERT, WBS, calendrier, indicateurs, rapports et workflows existants ; composer leurs données pour les nouvelles présentations, sans moteurs, modules ou tables concurrents
 - [ ] Garantir persistance, idempotence, reprise sur erreur, droits serveur et traductions fr/ar/en des nouveaux parcours
 - [ ] Tester règles, conversions, intégrations et parcours visibles ; consigner chaque blocage de recette sans clôture fictive
+- [x] Plan consolidé : enrichissement commun du métré, coefficients injectables, contrôles des prix source, revue des corrections, affichage brut/ouvertures/net/formule/matériaux et archivage source via DocumentService.
+- [x] Plans PDF : extraction texte/OCR, SHA-256, revue des dimensions et préparation de brouillons DQE ; vrai STR lu dans Chromium (8 pages, 41 repères, aucun confirmé).
+- [x] Frontière CRUD BOQ : hook document, calculateur et estimateur passent par BoqDocumentService ; données inconnues i18n conservées et assertions fiscales alignées sans changement de taux.
+- [ ] Clôture GO du plan consolidé — bloquée par recette connectée externe, données PDF/JSON contradictoires et 12 tests globaux en échec (providers et scans i18n) ; migration legacy, calibration graphique/IFC et indexation inter-session restent à implémenter.
+- [ ] Finaliser les deux plans par composition des parcours de pilotage : navigation projet intuitive, contextes opérationnels cohérents et planning générique ; traiter les données jointes comme illustrations, sans compteurs imposés.
+- [x] Corriger le doublon montré : import unique de documents via UnifiedBoqParser, revue des plans dans le même import, retrait du calculateur isolé et source visible sur les lignes DQE ; 23 tests ciblés passants.
+- [ ] Corriger l'extraction incomplète DQE_NDB : le contrôle navigateur du parseur commun ne prépare que 3 lignes ; recette de l'écran connecté toujours bloquée par la session externe.
+- [x] Retirer le parcours métré concurrent : bouton autonome et onglet calculateur supprimés ; saisie assistée via le même enrichissement que l'import ; patterns référentiels et conservation des quantités saisies vérifiés par 31 tests. Recette connectée bloquée par Supabase externe.
+- [x] Harmoniser projets, phases, création/édition/import et calendrier/opérations : navigation projet unique pilotée par URL, opérations en tableau, DQE partagé ouvert sur les lignes, réglages fiscaux repliés et carte agrandie ; 29 tests ciblés passent.
+- [ ] Vérifier visuellement les pages harmonisées et leurs CRUD en session réelle — bloqué : Supabase externe sans session injectable ; navigateur resté sur Chargement, pas de validation connectée.
+- [x] Ajouter revue PTBA dans l’import existant : toutes les feuilles Excel, Word complet, échelle/budget confirmés, codes et provenance, écarts et sections non interprétées conservés ; 21 tests et contrôle des deux fichiers réels sans persistance.
+- [ ] Rendre opérationnels les mappings PTBA complets : hiérarchie arbitraire dans les vues existantes, allocations de financement/périodes, reprise des lignes sans code et export métier complet ; conservation documentaire livrée, mappings métier non terminés.
+- [ ] Vérifier import PTBA → sauvegarde → lecture retour → GED → réimport en session réelle — bloqué : Supabase externe sans session injectable ; seuls extraction et contrats locaux vérifiés.
