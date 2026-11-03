@@ -9,7 +9,7 @@ describe('PTBA template + chunked metering', () => {
     const file = new File([new Uint8Array(content)], 'modele.xlsx');
     const parsed = await svc.parseWithProfile(file, 'WORLD_BANK_PTBA', 'excel');
     expect(parsed.kind).toBe('hierarchical_workbook');
-    const ds = svc.workbookToDataset(parsed as never, 'WORLD_BANK_PTBA', '2026-11-03') as any;
+    const ds = svc.workbookToDataset(parsed as never, 'WORLD_BANK_PTBA', new Date('2026-11-03')) as any;
     const tasks = ds.projects[0].phases.flatMap((p: any) => p.tasks ?? []);
     expect(tasks.length).toBe(1);
   });
