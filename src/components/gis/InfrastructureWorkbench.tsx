@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { FeatureCollection } from 'geojson';
-import { useInfrastructureWorkbench } from '@/hooks/hexagonal/useProjectWorkbenchHex';
+import { useInfrastructureWorkbench } from '@/hooks/hexagonal/useInfrastructureWorkbenchHex';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

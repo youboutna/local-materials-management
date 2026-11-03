@@ -138,6 +138,14 @@ export type { TaskAssignmentProps } from './TaskAssignment';
 export type { Workspace } from './Workspace';
 
 // ============================================================================
+// INFRASTRUCTURE ENTITIES (Utility Network)
+// ============================================================================
+
+export { AssetType } from './AssetType';
+export { NetworkFeature } from './NetworkFeature';
+export { Structure } from './Structure';
+
+// ============================================================================
 // LEGACY COMPATIBILITY EXPORTS
 // ============================================================================
 

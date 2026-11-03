@@ -91,6 +91,7 @@ import type { INewsletterSubscriberRepository } from '@/domain/repositories/INew
 import type { INewsletterCampaignRepository } from '@/domain/repositories/INewsletterCampaignRepository';
 import type { INewsletterSubscriptionGateway } from '@/domain/repositories/INewsletterSubscriptionGateway';
 import type { INewsletterCampaignDispatcher } from '@/domain/repositories/INewsletterCampaignDispatcher';
+import type { IInfraRepository } from '@/domain/repositories/IInfraRepository';
 
 // ================================================================
 // 3. IMPORTS – SUPABASE ADAPTERS
@@ -165,6 +166,7 @@ import { SupabaseNewsletterSubscriberAdapter } from '@/infrastructure/adapters/s
 import { SupabaseNewsletterCampaignAdapter } from '@/infrastructure/adapters/supabase/SupabaseNewsletterCampaignAdapter';
 import { SupabaseNewsletterSubscriptionGateway } from '@/infrastructure/adapters/supabase/SupabaseNewsletterSubscriptionGateway';
 import { SupabaseNewsletterCampaignDispatcher } from '@/infrastructure/adapters/supabase/SupabaseNewsletterCampaignDispatcher';
+import { SupabaseInfraAdapter } from '@/infrastructure/adapters/supabase/SupabaseInfraAdapter';
 
 // ================================================================
 // 4. IMPORTS – AUTH ADAPTERS
@@ -289,6 +291,7 @@ interface RepositoryRegistry {
   newsletterCampaign?: INewsletterCampaignRepository;
   newsletterSubscriptionGateway?: INewsletterSubscriptionGateway;
   newsletterCampaignDispatcher?: INewsletterCampaignDispatcher;
+  infra?: IInfraRepository;
 }
 
 const registry: RepositoryRegistry = {};
@@ -829,6 +832,16 @@ export class RepositoryFactory {
     if (registry.realtime) return registry.realtime;
     registry.realtime = new SupabaseRealtimeAdapter();
     return registry.realtime;
+  }
+
+  // ================================================================
+  // INFRASTRUCTURE (Utility Network)
+  // ================================================================
+
+  static getInfraRepository(): IInfraRepository {
+    if (registry.infra) return registry.infra;
+    registry.infra = new SupabaseInfraAdapter();
+    return registry.infra;
   }
 
   // ================================================================
