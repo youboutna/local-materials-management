@@ -184,8 +184,13 @@ export function useAuthHex(): UseAuthHexResult {
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: Partial<UserDTO>) => {
       try {
-        // AuthService doesn't have updateProfile method yet
-        console.log('Profile update not yet implemented:', profileData);
+        if (!user?.id) throw new Error('Not authenticated');
+        const { getUserService } = await import('@/application/services/UserService');
+        await getUserService().updateProfile(user.id, {
+          fullName: profileData.fullName,
+          phone: profileData.phone,
+          avatar: profileData.avatarUrl,
+        });
         return null;
       } catch (error) {
         console.error('Error updating profile:', error);

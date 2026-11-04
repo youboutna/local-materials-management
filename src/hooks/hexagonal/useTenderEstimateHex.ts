@@ -114,9 +114,9 @@ export function useCreateInvoiceHex(tenderId: string) {
 
   return useMutation({
     mutationFn: async () => {
-      // Placeholder - invoice creation from estimate not yet implemented
-      console.warn('createInvoiceFromEstimate not yet implemented');
-      return { success: true };
+      // Aucune génération de facture depuis une estimation n'existe côté service :
+      // on refuse explicitement au lieu d'annoncer un succès.
+      throw new Error("La création de facture depuis l'estimation n'est pas disponible");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['parsed-invoices', tenderId] });

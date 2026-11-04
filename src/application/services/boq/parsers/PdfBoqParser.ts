@@ -156,6 +156,8 @@ export class PdfBoqParser implements IDocumentParser {
 
     const cellRows: Cell[][] = [];
     const itemRows: PdfItem[][] = [];
+    /** Page d'origine de chaque ligne physique (en-têtes répétés par page). */
+    const rowPage: number[] = [];
     let rowsAcc: string[][] = [];
     const warnings: string[] = [];
     /** Reconstruction alternative pour les tableaux à cellules repliées. */
@@ -192,6 +194,7 @@ export class PdfBoqParser implements IDocumentParser {
         if (cells.length) {
           cellRows.push(cells);
           itemRows.push(row);
+          rowPage.push(p);
         }
       }
 
@@ -265,7 +268,21 @@ export class PdfBoqParser implements IDocumentParser {
           .map((r) => alignItemsToBands(itemRows[r] ?? [], bands))
           .reduce((acc, row) => row.map((cell, i) => `${acc[i] ?? ''} ${cell}`.trim()), Array.from({ length: bands.length }, () => ''));
         bestGroup.slice(1).forEach((r) => headerFragmentRows.add(r));
-        rowsAcc = cellRows.map((cells, index) => alignItemsToBands(itemRows[index] ?? [], bands));
+        // Un en-tête répété plus loin (autre page, autre tableau : « Quatité /
+        // Prix Unitaire TTC / Total TTC ») redéfinit les colonnes à partir de lui.
+        let activeBands = bands;
+        rowsAcc = cellRows.map((cells, index) => {
+          const pageStart = rowPage.indexOf(rowPage[index]);
+          if (index > bestGroup[bestGroup.length - 1] && rowPage[index] !== rowPage[bestGroup[0]]
+            && index - pageStart < 6 && looksHeader(cells.map((c) => c.text)) >= 3) {
+            const block = [index - 1, index, index + 1]
+              .filter((r) => r >= 0 && r < cellRows.length && !cellRows[r].some((c) => /\d{3}/.test(c.text)))
+              .map((r) => itemRows[r] ?? []);
+            const local = headerBandsFromItems(block);
+            if (local.length >= Math.max(4, bands.length)) activeBands = local;
+          }
+          return alignItemsToBands(itemRows[index] ?? [], activeBands);
+        });
         rowsAcc[bandHeaderIdx] = mergedHeader;
       } else {
         rowsAcc = cellRows.map((cells) => cells.map((c) => c.text));
@@ -336,8 +353,38 @@ export class PdfBoqParser implements IDocumentParser {
       unit: findCol(/^unit[eé]?$/i),
       quantity: findCol(/qu?antit[eé]|^qt[eé]?$|^qty$/i),
       unitPrice: findCol(/prix.*unit|^p\.?\s*u\.?|^pu\b/i),
-      total: findCol(/montant|^total/i),
+      total: findCol(/montant|^total|prix\s*total|total\s*(?:ttc|ht)/i),
     };
+
+    // Cellules centrées verticalement : le montant est imprimé sur une ligne
+    // physique et quantité / P.U. sur la suivante (libellé sur 2-3 lignes).
+    // Ces fragments forment UN seul enregistrement : on les fusionne avant la
+    // lecture des lignes pour ne créer ni ligne sans prix ni ligne en double.
+    {
+      const idx = (name?: string) => (name ? baseColumns.indexOf(name) : -1);
+      const [qI, puI, tI] = [idx(canonical.quantity), idx(canonical.unitPrice), idx(canonical.total)];
+      const num = (v: unknown) => /\d/.test(String(v ?? ''));
+      const filled = (row: string[], i: number) => i >= 0 && String(row[i] ?? '').trim() !== '';
+      if (qI >= 0 && puI >= 0 && tI >= 0) {
+        for (let i = 0; i < rowsAcc.length; i++) {
+          const row = rowsAcc[i];
+          if (!num(row[tI]) || filled(row, qI) || filled(row, puI)) continue;
+          for (let j = i + 1; j <= i + 3 && j < rowsAcc.length; j++) {
+            const next = rowsAcc[j];
+            if (num(next[tI])) break;
+            if (num(next[qI]) && filled(next, puI)) {
+              for (let k = i + 1; k <= j; k++) {
+                rowsAcc[k].forEach((cell, c) => {
+                  if (String(cell ?? '').trim()) row[c] = row[c] ? `${row[c]} ${cell}`.trim() : cell;
+                });
+                rowsAcc[k] = rowsAcc[k].map(() => '');
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
 
     // En-tête administratif (Expéditeur → fournisseur / Destinataire → organisation).
     const parties = extractDocumentParties(rowsAcc, headerIdx >= 0 ? headerIdx : undefined);

@@ -8,6 +8,7 @@
 - [x] Pages de test et import de projets codés en dur supprimés.
 - [ ] ~145 erreurs masquées restantes hors services, ~300 méthodes à journaux seuls (voir `docs/AUDIT_IMPLEMENTATION.md`).
 - [x] Lot A (communications), Lot B (calcul DQE par paquets branché à l'import), Lot D (import PTBA + modèle).
+- [~] Lot C (04/11, suite) : en-tête de page, cellules centrées et sous-totaux traités ; DQE client de test : 98 lignes, total lu à ~95 % du récapitulatif des sections présentes, 21 écarts P.U. tracés. Plans (masse, toiture, menuiseries) non exploités.
 - [~] Lot C : en-têtes de tableau PDF répartis sur plusieurs lignes reconnus génériquement (titres de groupe ignorés). Essai local sur un DQE client : 3 → 121 lignes, section second œuvre exacte, écarts quantité × P.U. tracés. Restent : libellés repliés en électricité (lignes de suite comptées à part, un montant aberrant), sous-totaux de chapitre lus comme lignes, plans (masse, toiture, menuiseries) non exploités.
 - Données client jointes : tests locaux uniquement, jamais versionnées ni envoyées à un service externe.
 - [ ] Tests : à relancer après cette passe (demande utilisateur : tests ensuite).
