@@ -11,7 +11,7 @@ export type ImportReferenceTable = string;
 
 export interface IImportReferenceRepository {
   findOne(table: ImportReferenceTable, columns: string, column: string, value: string): Promise<ImportQueryOutcome<Record<string, any>>>;
-  insertReturning(table: ImportReferenceTable, row: Record<string, unknown>): Promise<ImportQueryOutcome<Record<string, any>>>;
+  insertReturning(table: ImportReferenceTable, row: Record<string, unknown>): Promise<{ data: any; error: ImportQueryError | null }>;
   insert(table: ImportReferenceTable, row: Record<string, unknown>): Promise<ImportQueryOutcome<null>>;
   updateById(table: ImportReferenceTable, id: string, row: Record<string, unknown>): Promise<ImportQueryOutcome<null>>;
 }

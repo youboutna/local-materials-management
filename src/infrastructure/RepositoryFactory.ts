@@ -111,8 +111,6 @@ import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/
 import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
 import { getReferentialItemAdapter } from '@/infrastructure/adapters/supabase/SupabaseReferentialItemAdapter';
 import { SupabaseTenderSubmissionEvaluationAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionEvaluationAdapter';
-import { SupabaseDataClientProvider } from '@/infrastructure/adapters/supabase/SupabaseDataClientProvider';
-import type { IDataClientProvider } from '@/domain/repositories/IDataClientProvider';
 import { SupabaseTenderCatalogAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderCatalogAdapter';
 import type { ITenderCatalogRepository } from '@/domain/repositories/ITenderCatalogRepository';
 import { SupabaseControlActionContextAdapter } from '@/infrastructure/adapters/supabase/SupabaseControlActionContextAdapter';
@@ -331,7 +329,6 @@ const lazyPorts: {
   projectWorkbench?: SupabaseProjectWorkbenchAdapter;
   derivedAlert?: SupabaseDerivedAlertAdapter;
   monitoringAlert?: SupabaseMonitoringAlertAdapter;
-  dataClient?: IDataClientProvider;
   tenderCatalog?: ITenderCatalogRepository;
   controlActionContext?: IControlActionContextRepository;
   importReference?: IImportReferenceRepository;
@@ -822,11 +819,6 @@ export class RepositoryFactory {
 
   static getProjectCheckpointSourceRepository(): IProjectCheckpointSourceRepository {
     return (lazyPorts.projectCheckpointSource ??= new SupabaseProjectCheckpointSourceAdapter());
-  }
-
-  /** Client de données par schéma pour les services sans port dédié (transitoire). */
-  static getDataClientProvider(): IDataClientProvider {
-    return (lazyPorts.dataClient ??= new SupabaseDataClientProvider());
   }
 
   static getTenderCatalogRepository(): ITenderCatalogRepository {
