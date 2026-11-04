@@ -44,8 +44,7 @@ export function InfrastructureWorkbench({ project, canManage }: { project: Proje
 
   const zones = project.interventionZones || [];
   const zoneGeometry = GeoJsonZoneCodec.toFeatureCollection(zones);
-  const first = zones[0]?.coordinates?.[0];
-  const center: [number, number] = first ? [first.lat, first.lng] : [18.0735, -15.9582];
+  const { center, zoom: mapZoom } = ProjectWorkbenchTransformer.mapCenter(project);
   const selectedKind = typeByCode.get(typeCode)?.geometryKind;
 
   const action = async (work: () => Promise<unknown>, done?: string) => {
@@ -78,7 +77,7 @@ export function InfrastructureWorkbench({ project, canManage }: { project: Proje
 
     {analysis && <div className="flex flex-wrap gap-8 border-y border-border py-4">{([['present', analysis.presentCount], ['realized', analysis.completedCount], ['length', Number(analysis.intersectedLengthMeters || 0).toFixed(2)]] as const).map(([key, value]) => <div key={key}><p className="text-sm text-muted-foreground">{t(`workbench.${key}`)}</p><p className="text-2xl font-semibold tabular-nums">{value}</p></div>)}</div>}
 
-    <div className="h-[min(65vh,640px)] min-h-[360px] overflow-hidden border border-border"><MapContainer center={center} zoom={13} className="h-full w-full">
+    <div className="h-[min(65vh,640px)] min-h-[360px] overflow-hidden border border-border"><MapContainer center={center} zoom={mapZoom} className="h-full w-full">
       <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {zones.length > 0 && <GeoJSON key={JSON.stringify(zoneGeometry)} data={zoneGeometry as FeatureCollection} style={{ color: 'hsl(var(--primary))', weight: 2, fillOpacity: 0.05 }} />}
       {infra.structures.map(structure => <GeoJSON key={`s:${structure.id}:${structure.updatedAt}`} data={structure.geometry} style={{ color: 'hsl(var(--muted-foreground))', dashArray: '4' }} eventHandlers={{ click: () => canManage && openStructure(structure) }} />)}
