@@ -1,3 +1,4 @@
+import type { ReferentialType } from '@/config/referentials';
 /**
  * Construction Phase Hook (Hexagonal Architecture)
  * Template → Object → DTO flow implementation
@@ -261,6 +262,13 @@ export function useConstructionPhaseHex(projectId?: string) {
     deleteConstructionPhase,
     getProgressSummary,
     createPhaseFromTemplate,
+    createPhasesFromReferential: async (referentialCode: ReferentialType) => {
+      if (!projectId) throw new Error('Project ID is required');
+      const { getPhaseService } = await import('@/application/services/PhaseService');
+      const created = await getPhaseService().createConstructionPhasesFromReferential(projectId, referentialCode);
+      await loadProjectPhases();
+      return created;
+    },
     
     // Computed values
     phasesCount: phases.length,

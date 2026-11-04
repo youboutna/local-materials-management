@@ -46,7 +46,8 @@ export function ConstructionPhaseWithSteps({
 
   const handleCreatePhasesFromReferential = async (refCode: ReferentialType) => {
     try {
-      await constructionPhaseHook.createPhaseFromTemplate(refCode as never);
+      const created = await constructionPhaseHook.createPhasesFromReferential(refCode);
+      toast({ title: "Succès", description: `${created.length} phase(s) créée(s) depuis le référentiel ${refCode}` });
     } catch (error) {
       toast({ title: "Erreur", description: t('auto.constructionphasewithsteps.echec_de_creation_des_phases'), variant: 'destructive' });
     }

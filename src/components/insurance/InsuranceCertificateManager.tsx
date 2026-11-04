@@ -84,13 +84,12 @@ const InsuranceCertificateManager = () => {
       const { CommunicationService } = await import('@/application/services/CommunicationService');
       let sent = 0;
       for (const alert of alerts) {
-        const recipientId = (alert as unknown as { contractorId?: string; recipientId?: string }).recipientId
-          ?? (alert as unknown as { contractorId?: string }).contractorId;
+        const recipientId = alert.contractorId;
         if (!recipientId) continue;
         CommunicationService.requireSuccess(await CommunicationService.sendNotification({
           recipientId,
           title: "Alerte assurance",
-          message: (alert as unknown as { message?: string }).message ?? '',
+          message: alert.message,
           type: 'warning',
           priority: 'high',
         }));
