@@ -215,6 +215,9 @@ import { SupabaseInfraAdapter } from '@/infrastructure/adapters/supabase/Supabas
 import { GoTrueAuthAdapter } from '@/infrastructure/adapters/auth/GoTrueAuthAdapter';
 import { KeycloakAuthAdapter } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
 import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapter';
+import { LocalProjectWorkbenchAdapter } from '@/infrastructure/adapters/local/LocalProjectWorkbenchAdapter';
+import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProjectWorkbenchRepository';
+import type { IWorkbenchContextSource } from '@/domain/repositories/IWorkbenchContextSource';
 
 // ================================================================
 // 5. IMPORTS – LOCAL ADAPTERS
@@ -868,8 +871,20 @@ export class RepositoryFactory {
     return (lazyPorts.paymentInitiation ??= new SupabasePaymentInitiationAdapter());
   }
 
-  static getProjectWorkbenchRepository(): SupabaseProjectWorkbenchAdapter {
+  /** Espace projet : adapter local si VITE_DATA_PROVIDER=local (déploiement > profil > défaut), sinon Supabase. */
+  static getProjectWorkbenchRepository(): IProjectWorkbenchRepository {
+    if (resolveData() === 'local') return RepositoryFactory.localWorkbench();
     return (lazyPorts.projectWorkbench ??= new SupabaseProjectWorkbenchAdapter());
+  }
+
+  /** Source de contexte autonome du fournisseur de données ; null = composition canonique par les services. */
+  static getWorkbenchContextSource(): IWorkbenchContextSource | null {
+    return resolveData() === 'local' ? RepositoryFactory.localWorkbench() : null;
+  }
+
+  private static localWorkbenchInstance?: LocalProjectWorkbenchAdapter;
+  private static localWorkbench(): LocalProjectWorkbenchAdapter {
+    return (RepositoryFactory.localWorkbenchInstance ??= new LocalProjectWorkbenchAdapter());
   }
 
   static getMonitoringAlertRepository(): SupabaseMonitoringAlertAdapter {

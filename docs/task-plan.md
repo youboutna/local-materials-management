@@ -991,3 +991,8 @@ Le plan consolidé reste **NO GO** tant que ces critères sont ouverts ; les chi
 - 23 tests ciblés passants, lint des fichiers du raccordement passé, build observé sans erreur à 10:16:11 UTC.
 - Contrôle navigateur du parseur commun sans persistance : STR détecté comme plan (41 repères, aucune mesure confirmée) ; DQE_NDB détecté comme tableau mais seulement 3 lignes préparées. L'extraction exhaustive de ce DQE reste un défaut ouvert, sans imposer les compteurs illustratifs.
 - Recette visuelle connectée de l'écran complet non effectuée : Supabase externe sans session injectable. Les autres critères ouverts ne sont pas clôturés par cette correction.
+
+## Registre des écarts
+
+- [ ] Dette avant GO final : environ 70 accès données de RepositoryFactory restent liés à Supabase quel que soit VITE_DATA_PROVIDER. Seuls auth, stockage, alertes, notifications, OAuth et l'espace projet (calendrier, consommations, dépenses, recettes) ont une version locale. En mode local, l'en-tête, les organisations, rôles et listes de projets appellent encore la base réelle (20 requêtes observées le 04/11).
+- [x] 04/11 : espace projet en mode local (LocalProjectWorkbenchAdapter + port IWorkbenchContextSource) ; essai écran : consommation et dépense liées au DQE, préremplissage, alerte puis étiquette « Dépassement », enregistrement sans appel à la base pour ces données. SIG indisponible en local (erreur explicite).
