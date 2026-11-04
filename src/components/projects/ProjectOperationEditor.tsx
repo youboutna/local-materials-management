@@ -8,7 +8,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useWorkbenchOperations, useWorkbenchFinance, useOperationContexts } from '@/hooks/hexagonal/useProjectWorkbenchHex';
 import { ProjectWorkbenchTransformer } from '@/dtos/transforms/ProjectWorkbenchTransformer';
-import { ProjectWorkbenchService } from '@/application/services/ProjectWorkbenchService';
+import { ProjectWorkbenchService, OperationValidationError } from '@/application/services/ProjectWorkbenchService';
 import type { ProjectOperationDTO, SaveProjectOperationDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import type { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
@@ -35,7 +35,7 @@ export function ProjectOperationEditor({ projectId, currency, date, kind, phases
     update({ contextCode, sourceLineId: eligible.some(line => line.id === form.sourceLineId) ? form.sourceLineId : undefined,
       perspective: next?.metadata.perspective === 'contractor' || next?.metadata.perspective === 'owner' ? next.metadata.perspective : form.perspective });
   };
-  return <form className="border-y border-border py-5 space-y-4" onSubmit={async event => { event.preventDefault(); setError(''); try { await saveOperation(ProjectWorkbenchTransformer.formToOperation(form)); onClose(); } catch (e) { setError(e instanceof Error ? e.message : t('common.error')); } }}>
+  return <form className="border-y border-border py-5 space-y-4" onSubmit={async event => { event.preventDefault(); setError(''); try { await saveOperation(ProjectWorkbenchTransformer.formToOperation(form)); onClose(); } catch (e) { setError(e instanceof OperationValidationError ? t(e.message) : e instanceof Error ? e.message : t('common.error')); } }}>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div><Label>{t('workbench.context')}</Label><Select value={form.contextCode || 'unreconciled'} onValueChange={changeContext}><SelectTrigger aria-label={t('workbench.context')}><SelectValue placeholder={t('workbench.ph_select')} /></SelectTrigger><SelectContent>{availableContexts.map(item => <SelectItem key={item.id} value={item.code}>{language==='ar'?item.labelAr||item.labelFr:language==='en'?item.labelEn||item.labelFr:item.labelFr}</SelectItem>)}</SelectContent></Select></div>
       <div><Label>{t('workbench.resources')}</Label><Select value={form.resourceId||'none'} onValueChange={resourceId=>update({resourceId:resourceId==='none'?undefined:resourceId})}><SelectTrigger aria-label={t('workbench.resources')}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">{t('workbench.no_source')}</SelectItem>{finance.data?.allocatedResources.map(item=><SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></div>
