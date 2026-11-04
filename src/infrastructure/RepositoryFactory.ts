@@ -1109,11 +1109,6 @@ export class RepositoryFactory {
     return m.createDefaultCommunicationProviders();
   }
 
-  static async getNotificationGateway() {
-    const { notificationGatewayAdapter } = await import('@/infrastructure/adapters/supabase/NotificationGatewayAdapter');
-    return notificationGatewayAdapter;
-  }
-
   static async getBoqRepositoryLazy(): Promise<IBoqRepository> {
     const { boqRepository } = await import('@/infrastructure/adapters/supabase/SupabaseBoqRepository');
     return boqRepository;

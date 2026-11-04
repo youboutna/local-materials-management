@@ -35,7 +35,7 @@ let instance: AlertsProcessorService | null = null;
 
 export async function getAlertsProcessorService(): Promise<AlertsProcessorService> {
   if (!instance) {
-    const notificationGatewayAdapter = await RepositoryFactory.getNotificationGateway();
+    const notificationGatewayAdapter = RepositoryFactory.getNotificationGateway();
     instance = new AlertsProcessorService({
       async run(options) {
         const { data, error } = await notificationGatewayAdapter.invokeFunction<Record<string, unknown>>(
