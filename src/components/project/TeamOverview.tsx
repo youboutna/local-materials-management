@@ -1,207 +1,111 @@
-import { resolvePhaseLabel } from '@/utils/entityLabels';
-import React, { useState } from 'react';
+/**
+ * TeamOverview — onglet « Affectations ».
+ *
+ * Lecture seule des ressources planifiées. Toute nouvelle ressource naît d'une
+ * ligne DQE : le bouton renvoie vers l'onglet DQE, où la ligne est validée puis
+ * transférée (BoqDispatchService -> BoqResourcePropagationService) qui la
+ * répartit par type (matériaux, main d'œuvre, équipements).
+ * Les ressources saisies hors DQE restent affichées, marquées « Hors DQE ».
+ */
+import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from '@/hooks/use-toast';
-import { Plus, Users, Clock, DollarSign, Settings, User, Wrench, Package, AlertCircle } from 'lucide-react';
+import { Plus, User, Wrench, Package, AlertCircle } from 'lucide-react';
 import { useProjectResourcesCrudHex } from '@/hooks/hexagonal/useProjectResourcesCrudHex';
 import { useProjectPhasesForTasks } from '@/hooks/hexagonal/useEnhancedTasksHex';
-
-import { TranslatedStatus } from '@/components/i18n/TranslatedBadges';
 import { T } from '@/components/i18n/T';
-import { useLanguage } from '@/contexts/LanguageContext';
+
+interface ResourceView {
+  id?: string;
+  name?: string;
+  type?: string;
+  notes?: string | null;
+  unit?: string | null;
+  quantity?: number | null;
+  costPerUnit?: number | null;
+  cost_per_unit?: number | null;
+}
+
 interface TeamOverviewProps {
-  resources?: any[];
-  setResources?: (resources: any[]) => void;
+  resources?: ResourceView[];
+  setResources?: (resources: ResourceView[]) => void;
   projectId: string;
-  phases?: any[];
+  phases?: unknown[];
 }
 
-interface ProjectResource {
-  id: string;
-  project_id: string;
-  name: string;
-  type: string;
-  allocation_date: string | null;
-  cost_per_unit: number | null;
-  quantity: number | null;
-  total_cost: number | null;
-  unit: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+/** Une ressource issue du DQE porte la référence « DQE <code> » posée par la propagation. */
+export const isFromDqe = (resource: ResourceView): boolean =>
+  /^DQE\b/.test(String(resource.notes ?? '').trim());
 
-interface ProjectPhase {
-  id: string;
-  phase_name: string;
-  status: string;
-  construction_phase?: string;
-}
+const ResourceSection: React.FC<{
+  icon: React.ReactNode;
+  titleKey: string;
+  title: string;
+  emptyKey: string;
+  empty: string;
+  items: ResourceView[];
+}> = ({ icon, titleKey, title, emptyKey, empty, items }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        {icon}
+        <T k={titleKey} fallback={title} /> ({items.length})
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      {items.length === 0 ? (
+        <p className="text-muted-foreground text-center py-4"><T k={emptyKey} fallback={empty} /></p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((resource, index) => {
+            const fromDqe = isFromDqe(resource);
+            const unitCost = resource.costPerUnit ?? resource.cost_per_unit ?? 0;
+            return (
+              <div key={resource.id ?? index} className="p-3 border rounded-lg">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="font-medium">{resource.name}</h4>
+                  <Badge variant={fromDqe ? 'secondary' : 'destructive'}>
+                    {fromDqe
+                      ? <T k="auto.teamoverview.origine_dqe" fallback="DQE" />
+                      : <T k="auto.teamoverview.hors_dqe" fallback="Hors DQE" />}
+                  </Badge>
+                </div>
+                {resource.notes && <p className="text-sm text-muted-foreground">{resource.notes}</p>}
+                <div className="flex justify-between items-center mt-2">
+                  <Badge variant="outline">{unitCost} MRU/{resource.unit || '—'}</Badge>
+                  <span className="text-xs text-muted-foreground">
+                    <T k="auto.teamoverview.qte" fallback="Qté" />: {resource.quantity ?? 0}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
 
-interface ResourceFormData {
-  name: string;
-  type: string;
-  notes: string;
-  costPerUnit: string;
-  quantity: string;
-  unit: string;
-  phaseId: string;
-  applyToAllPhases: boolean;
-  selectedPhases?: string[];
-}
+const TeamOverview: React.FC<TeamOverviewProps> = ({ resources: propResources, projectId, phases: propPhases }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { resources: fetchedResources, isLoading } = useProjectResourcesCrudHex(projectId, !propResources);
+  const { data: fetchedPhases = [] } = useProjectPhasesForTasks(projectId);
 
-const TeamOverview: React.FC<TeamOverviewProps> = ({
-  resources: propResources,
-  setResources: propSetResources,
-  projectId,
-  phases: propPhases
-}) => {
-  const { t } = useLanguage();
-  const [isCreating, setIsCreating] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<ResourceFormData>({
-    name: '',
-    type: '',
-    notes: '',
-    costPerUnit: '',
-    quantity: '1',
-    unit: '',
-    phaseId: '',
-    applyToAllPhases: false,
-    selectedPhases: [],
-  });
+  const currentResources = (propResources || fetchedResources || []) as ResourceView[];
+  const currentPhases = propPhases || fetchedPhases || [];
 
-
-  // Hexagonal: hook -> service -> adapter -> DB
-  const {
-    resources: fetchedResources,
-    isLoading,
-    createResources,
-    deleteResource,
-  } = useProjectResourcesCrudHex(projectId, !propResources);
-
-  // Use props or fallback to fetched data
-  const currentResources = propResources || fetchedResources || [];
-
-  // Fetch project phases via hexagonal hook (required for resource creation)
-  const { data: phases = [] } = useProjectPhasesForTasks(projectId);
-
-  // Use props or fallback to fetched data
-  const currentPhases = propPhases || phases || [];
-  console.log('📋 Current phases in TeamOverview:', currentPhases);
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      type: '',
-      notes: '',
-      costPerUnit: '',
-      quantity: '1',
-      unit: '',
-      phaseId: '',
-      applyToAllPhases: false,
-      selectedPhases: [],
-    });
+  const openDqe = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', 'dqe');
+    setSearchParams(next);
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Le nom de la ressource est requis.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.applyToAllPhases && !formData.phaseId) {
-      toast({
-        title: "Erreur",
-        description: "Vous devez sélectionner une phase ou appliquer à toutes les phases.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const resourcesToCreate: any[] = [];
-
-      if (formData.applyToAllPhases) {
-        // Create resource for each phase
-        currentPhases.forEach(phase => {
-          resourcesToCreate.push({
-            project_id: projectId,
-            name: `${formData.name} - ${phase.phase_name}`,
-            type: formData.type,
-            notes: formData.notes,
-            cost_per_unit: formData.costPerUnit ? parseFloat(formData.costPerUnit) : null,
-            quantity: formData.quantity ? parseInt(formData.quantity) : 1,
-            unit: formData.unit
-          });
-        });
-      } else {
-        // Create single resource for selected phase
-        resourcesToCreate.push({
-          project_id: projectId,
-          name: formData.name,
-          type: formData.type,
-          notes: formData.notes,
-          cost_per_unit: formData.costPerUnit ? parseFloat(formData.costPerUnit) : null,
-          quantity: formData.quantity ? parseInt(formData.quantity) : 1,
-          unit: formData.unit
-        });
-      }
-
-      if (resourcesToCreate.length > 0) {
-        await createResources(
-          resourcesToCreate.map(r => ({
-            projectId: r.project_id,
-            name: r.name,
-            type: r.type,
-            notes: r.notes ?? null,
-            costPerUnit: r.cost_per_unit ?? null,
-            quantity: r.quantity ?? null,
-            unit: r.unit ?? null,
-          }))
-        );
-
-        setIsCreating(false);
-        resetForm();
-
-        toast({
-          title: "Ressource créée",
-          description: `${resourcesToCreate.length} ressource(s) créée(s) avec succès.`,
-        });
-      }
-    } catch (error) {
-      console.error('Error creating resource:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la ressource.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Group resources by type
-  const humanResources = currentResources.filter(r => r.type === 'human');
-  const equipmentResources = currentResources.filter(r => r.type === 'equipment');
-  const materialResources = currentResources.filter(r => r.type === 'material');
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -209,317 +113,50 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
   if (currentPhases.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-semibold text-foreground"><T k="auto.teamoverview.aucune_phase_trouvee" fallback="Aucune phase trouvée" /></h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Vous devez d'abord créer des phases pour ce projet avant de pouvoir ajouter des ressources.
-            </p>
-          </div>
+        <CardContent className="p-6 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-2 text-sm font-semibold text-foreground">
+            <T k="auto.teamoverview.aucune_phase_trouvee" fallback="Aucune phase trouvée" />
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            <T k="auto.teamoverview.creer_phases_avant" fallback="Créez d'abord les phases du projet, puis ajoutez les ressources dans le DQE." />
+          </p>
         </CardContent>
       </Card>
     );
   }
 
+  const byType = (type: string) => currentResources.filter((r) => r.type === type);
+  const outsideDqe = currentResources.filter((r) => !isFromDqe(r)).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h3 className="text-lg font-semibold"><T k="auto.teamoverview.equipe_et_ressources_delegation_publique" fallback="Équipe et ressources (délégation publique)" /></h3>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <User className="h-3 w-3" />
-              {humanResources.length} Employés
-            </span>
-            <span className="flex items-center gap-1">
-              <Wrench className="h-3 w-3" />
-              {equipmentResources.length} Équipements
-            </span>
-            <span className="flex items-center gap-1">
-              <Package className="h-3 w-3" />
-              {materialResources.length} Matériaux
-            </span>
-          </div>
+          <h3 className="text-lg font-semibold">
+            <T k="auto.teamoverview.equipe_et_ressources_delegation_publique" fallback="Équipe et ressources (délégation publique)" />
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            <T k="auto.teamoverview.ressources_via_dqe" fallback="Les ressources sont ajoutées dans le DQE, puis réparties par type après validation." />
+          </p>
+          {outsideDqe > 0 && (
+            <p className="text-sm text-destructive">
+              {outsideDqe} <T k="auto.teamoverview.ressources_hors_dqe" fallback="ressource(s) saisie(s) hors DQE" />
+            </p>
+          )}
         </div>
-
-        <Dialog open={isCreating} onOpenChange={setIsCreating}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={() => resetForm()}>
-              <Plus className="h-4 w-4 mr-2" />
-              <T k="auto.teamoverview.nouvelle_ressource" fallback="Nouvelle ressource" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingId ? 'Modifier la ressource' : 'Créer une nouvelle ressource'}
-              </DialogTitle>
-            </DialogHeader>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="resourceName"><T k="auto.teamoverview.nom_de_la_ressource" fallback="Nom de la ressource" /></Label>
-                  <Input
-                    id="resourceName"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={t('auto.teamoverview.nom_de_la_ressource')}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="resourceType"><T k="auto.teamoverview.type" fallback="Type" /></Label>
-                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('auto.teamoverview.selectionner_un_type')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="human"><T k="auto.teamoverview.ressource_humaine" fallback="Ressource humaine" /></SelectItem>
-                      <SelectItem value="equipment"><T k="auto.teamoverview.equipement" fallback="Équipement" /></SelectItem>
-                      <SelectItem value="material"><T k="auto.teamoverview.materiel" fallback="Matériel" /></SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="applyToAllPhases"
-                    checked={formData.applyToAllPhases}
-                    onCheckedChange={(checked) => setFormData({ ...formData, applyToAllPhases: checked as boolean })}
-                  />
-                  <Label htmlFor="applyToAllPhases"><T k="auto.teamoverview.appliquer_a_toutes_les_phases" fallback="Appliquer à toutes les phases" /></Label>
-                </div>
-
-                {!formData.applyToAllPhases && (
-                  <div>
-                    <Label htmlFor="phaseSelect"><T k="auto.teamoverview.selectionner_une_ou_plusieurs_phases" fallback="Sélectionner une ou plusieurs phases" /></Label>
-                    <div className="border rounded-md p-3 max-h-48 overflow-y-auto bg-background">
-                      {currentPhases.length === 0 ? (
-                        <p className="text-sm text-muted-foreground"><T k="auto.teamoverview.aucune_phase_disponible" fallback="Aucune phase disponible" /></p>
-                      ) : (
-                        <div className="space-y-2">
-                          {currentPhases.map((phase) => (
-                            <div key={phase.id} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`phase-${phase.id}`}
-                                checked={formData.selectedPhases?.includes(phase.id) || false}
-                                onChange={(e) => {
-                                  const selectedPhases = formData.selectedPhases || [];
-                                  if (e.target.checked) {
-                                    setFormData({
-                                      ...formData,
-                                      selectedPhases: [...selectedPhases, phase.id],
-                                      phaseId: phase.id // Keep single selection for backward compatibility
-                                    });
-                                  } else {
-                                    setFormData({
-                                      ...formData,
-                                      selectedPhases: selectedPhases.filter(id => id !== phase.id),
-                                      phaseId: selectedPhases.filter(id => id !== phase.id)[0] || ''
-                                    });
-                                  }
-                                }}
-                                className="rounded border-border"
-                              />
-                              <label htmlFor={`phase-${phase.id}`} className="text-sm font-medium cursor-pointer flex-1">
-                                <span className="text-foreground dark:text-gray-100">
-                                  {resolvePhaseLabel(phase as any)}
-                                </span>
-                                {phase.construction_phase && (
-                                  <span className="text-xs text-muted-foreground ml-2 block">
-                                    ({phase.construction_phase})
-                                  </span>
-                                )}
-                                {phase.status && (
-                                  <span className="text-xs text-success ml-2">
-                                    [<TranslatedStatus code={phase.status} />]
-                                  </span>
-                                )}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    {currentPhases.length === 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        <T k="auto.teamoverview.aucune_phase_trouvee_creez_d_abord_des_phases_da" fallback="Aucune phase trouvée. Créez d'abord des phases dans l'onglet Phases." />
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="notes">Notes/Description</Label>
-                <Input
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder={t('auto.teamoverview.notes_ou_description')}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="costPerUnit"><T k="auto.teamoverview.cout_par_unite_mru" fallback="Coût par unité (MRU)" /></Label>
-                  <Input
-                    id="costPerUnit"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.costPerUnit}
-                    onChange={(e) => setFormData({ ...formData, costPerUnit: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="quantity"><T k="auto.teamoverview.quantite" fallback="Quantité" /></Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="1"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                    placeholder="1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="unit"><T k="auto.teamoverview.unite" fallback="Unité" /></Label>
-                  <Input
-                    id="unit"
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    placeholder="pièce, m2, kg..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                  <T k="auto.teamoverview.annuler" fallback="Annuler" />
-                </Button>
-                <Button type="submit">
-                  {editingId ? 'Mettre à jour' : 'Créer'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" onClick={openDqe}>
+          <Plus className="h-4 w-4 mr-2" />
+          <T k="auto.teamoverview.ajouter_via_dqe" fallback="Ajouter via le DQE" />
+        </Button>
       </div>
 
-      {/* Human Resources */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Ressources humaines ({humanResources.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {humanResources.map((resource, index) => (
-              <div key={index} className="p-3 border rounded-lg">
-                <h4 className="font-medium">{resource.name}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {resource.notes || 'Aucune description'}
-                </p>
-                <div className="flex justify-between items-center mt-2">
-                  <Badge variant="outline">
-                    {resource.cost_per_unit || 0} MRU/{resource.unit || 'unité'}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Qté: {resource.quantity || 0}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          {humanResources.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">
-              <T k="auto.teamoverview.aucune_ressource_humaine_assignee" fallback="Aucune ressource humaine assignée" />
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Equipment Resources */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wrench className="h-5 w-5" />
-            Équipements ({equipmentResources.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {equipmentResources.map((resource, index) => (
-              <div key={index} className="p-3 border rounded-lg">
-                <h4 className="font-medium">{resource.name}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {resource.notes || 'Aucune description'}
-                </p>
-                <div className="flex justify-between items-center mt-2">
-                  <Badge variant="outline">
-                    {resource.cost_per_unit || 0} MRU/{resource.unit || 'unité'}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Qté: {resource.quantity || 0}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          {equipmentResources.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">
-              <T k="auto.teamoverview.aucun_equipement_assigne" fallback="Aucun équipement assigné" />
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Material Resources */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Matériaux ({materialResources.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {materialResources.map((resource, index) => (
-              <div key={index} className="p-3 border rounded-lg">
-                <h4 className="font-medium">{resource.name}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {resource.notes || 'Aucune description'}
-                </p>
-                <div className="flex justify-between items-center mt-2">
-                  <Badge variant="outline">
-                    {resource.cost_per_unit || 0} MRU/{resource.unit || 'unité'}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Qté: {resource.quantity || 0}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          {materialResources.length === 0 && (
-            <p className="text-muted-foreground text-center py-4">
-              <T k="auto.teamoverview.aucun_materiau_assigne" fallback="Aucun matériau assigné" />
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      <ResourceSection icon={<User className="h-5 w-5" />} titleKey="auto.teamoverview.ressources_humaines" title="Ressources humaines"
+        emptyKey="auto.teamoverview.aucune_ressource_humaine_assignee" empty="Aucune ressource humaine assignée" items={byType('human')} />
+      <ResourceSection icon={<Wrench className="h-5 w-5" />} titleKey="auto.teamoverview.equipements" title="Équipements"
+        emptyKey="auto.teamoverview.aucun_equipement_assigne" empty="Aucun équipement assigné" items={byType('equipment')} />
+      <ResourceSection icon={<Package className="h-5 w-5" />} titleKey="auto.teamoverview.materiaux" title="Matériaux"
+        emptyKey="auto.teamoverview.aucun_materiau_assigne" empty="Aucun matériau assigné" items={byType('material')} />
     </div>
   );
 };
