@@ -134,10 +134,6 @@ export class ProjectManager {
   runAllChecks(): ProjectManagerState {
     this.checkBudgetAlerts();
     this.checkTimelineAlerts();
-    this.checkQualityAlerts();
-    this.checkResourceAlerts();
-    this.checkRiskAlerts();
-    this.checkComplianceAlerts();
     
     this.state.lastCheck = new Date().toISOString();
     this.state.totalAlerts = this.alerts.length;
@@ -190,7 +186,8 @@ export class ProjectManager {
    */
   private checkBudgetAlerts(): void {
     const project = this.project;
-    const actualCost = project.actual_cost || project.actualCost || (project.budget * (project.progress / 100));
+    // Coût réel uniquement : jamais estimé à partir de l'avancement.
+    const actualCost = project.actual_cost ?? project.actualCost ?? 0;
     
     if (project.budget && actualCost) {
       const budgetUtilization = (actualCost / project.budget) * 100;
@@ -266,34 +263,6 @@ export class ProjectManager {
         });
       }
     }
-  }
-
-  /**
-   * Check quality alerts
-   */
-  private checkQualityAlerts(): void {
-    // Placeholder for quality checks
-  }
-
-  /**
-   * Check resource alerts
-   */
-  private checkResourceAlerts(): void {
-    // Placeholder for resource checks
-  }
-
-  /**
-   * Check risk alerts
-   */
-  private checkRiskAlerts(): void {
-    // Placeholder for risk checks
-  }
-
-  /**
-   * Check compliance alerts
-   */
-  private checkComplianceAlerts(): void {
-    // Placeholder for compliance checks
   }
 
   /**

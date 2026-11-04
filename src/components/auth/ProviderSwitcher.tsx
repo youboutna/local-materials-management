@@ -40,7 +40,7 @@ export function ProviderSwitcher({
 
   const [isSwitching, setIsSwitching] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>(currentProvider || 'supabase');
-  const [providerStatus, setProviderStatus] = useState<Record<string, 'available' | 'unavailable' | 'error' | 'testing'>>({
+  const [providerStatus, setProviderStatus] = useState<Record<string, 'available' | 'unavailable' | 'error' | 'testing' | 'unknown'>>({
     supabase: 'testing',
     keycloak: 'testing',
     auth0: 'testing',
@@ -83,11 +83,8 @@ export function ProviderSwitcher({
   const testProvider = async (provider: string) => {
     setProviderStatus(prev => ({ ...prev, [provider]: 'testing' }));
 
-    // Simulate provider test
-    setTimeout(() => {
-      const isAvailable = ['supabase', 'keycloak', 'auth0', 'custom'].includes(provider);
-      setProviderStatus(prev => ({ ...prev, [provider]: isAvailable ? 'available' : 'unavailable' }));
-    }, 1000);
+    // Seul le fournisseur actif est vérifié (session établie) ; les autres restent non testés.
+    setProviderStatus(prev => ({ ...prev, [provider]: provider === currentProvider ? 'available' : 'unknown' }));
   };
 
   // Test all providers on mount

@@ -85,7 +85,7 @@ export const useSupplierSubmissionsHex = (supplierId?: string) => {
     queryFn: async (): Promise<Submission[]> => {
       // Use hexagonal TenderSubmissionService
       if (!supplierId) return [];
-      const submissions = await TenderSubmissionService.getTenderSubmissions(supplierId);
+      const submissions = await TenderSubmissionService.getSubmissionsByUser(supplierId);
       return submissions.map((sub: any) => ({
         id: sub.id,
         tenderId: sub.tender_id,
@@ -104,34 +104,38 @@ export const useSupplierSubmissionsHex = (supplierId?: string) => {
 };
 
 export const useSubmissionDocumentsHex = (submissionId?: string) => {
-  // Placeholder - would use DocumentService
   return useQuery({
     queryKey: ['submission-documents', submissionId],
     queryFn: async (): Promise<SubmissionDocument[]> => {
-      console.log('Submission documents not implemented for submission:', submissionId);
-      return [];
+      const rows = await TenderSubmissionService.getSubmissionDocuments(submissionId!);
+      return rows.map((r: any) => ({
+        id: r.id,
+        submissionId: r.submission_id,
+        documentId: r.document_id,
+        category: r.category,
+        subcategory: r.subcategory ?? '',
+        document: {
+          id: r.document?.id ?? r.document_id,
+          title: r.document?.title ?? '',
+          fileName: r.document?.file_name ?? '',
+          fileUrl: r.document?.file_url ?? '',
+          fileSize: r.document?.file_size ?? 0,
+          metadata: r.document?.metadata ?? undefined,
+        },
+        uploaded_at: r.created_at,
+      }));
     },
     enabled: !!submissionId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
 export const useSubmissionStatsHex = (supplierId?: string) => {
-  // Placeholder - would use AnalyticsService
   return useQuery({
     queryKey: ['submission-stats', supplierId],
-    queryFn: async () => {
-      console.log('Submission stats not implemented for supplier:', supplierId);
-      return {
-        total: 0,
-        submitted: 0,
-        under_review: 0,
-        approved: 0,
-        rejected: 0
-      };
-    },
+    queryFn: () => TenderSubmissionService.getSubmissionStatsByUser(supplierId!),
     enabled: !!supplierId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 };
 
@@ -141,14 +145,20 @@ export const useSubmissionDocumentsList = (submissionId?: string) => {
 };
 
 export const useSubmissionActivityLogs = (submissionId?: string) => {
-  // Placeholder - would use ActivityLogService
   return useQuery({
     queryKey: ['submission-activity-logs', submissionId],
     queryFn: async (): Promise<ActivityLog[]> => {
-      console.log('Activity logs not implemented for submission:', submissionId);
-      return [];
+      const rows = await TenderSubmissionService.getSubmissionActivityLogs(submissionId!);
+      return rows.map(r => ({
+        id: r.id,
+        submissionId: r.submission_id,
+        action: r.action,
+        details: r.details ?? '',
+        created_at: r.created_at,
+        user_id: r.performed_by ?? undefined,
+      }));
     },
     enabled: !!submissionId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };

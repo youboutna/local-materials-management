@@ -102,11 +102,8 @@ export function useProjectLocationHex(
         locationAutoFill
       );
 
+      await projectService.updateLocation(projectId, enrichedLocation);
       setLocationData(enrichedLocation);
-
-      // Here you would typically call ProjectService.updateLocation()
-      // For now, we'll simulate the update
-      console.log('Updating project location:', projectId, enrichedLocation);
 
       toast.success('✅ Project location updated successfully!');
 

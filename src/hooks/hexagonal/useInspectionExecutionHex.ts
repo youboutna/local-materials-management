@@ -25,8 +25,21 @@ export function useInspectionExecutionHex() {
 
   const uploadDocumentsMutation = useMutation({
     mutationFn: async ({ inspectionId, documents }: { inspectionId: string; documents: File[] }) => {
-      // Placeholder for document upload
-      return { inspectionId, count: documents.length };
+      const { getDocumentService } = await import('@/application/services/DocumentService');
+      const service = getDocumentService();
+      const created: unknown[] = [];
+      for (const file of documents) {
+        created.push(await service.createDocument({
+          title: file.name,
+          documentType: 'inspection_report' as never,
+          inspectionId,
+          file,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+        }));
+      }
+      return { inspectionId, count: created.length };
     },
     onSuccess: () => {
       toast({ title: 'Succès', description: 'Documents téléchargés avec succès' });

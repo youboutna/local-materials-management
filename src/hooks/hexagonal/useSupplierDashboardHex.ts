@@ -101,14 +101,9 @@ export const useSupplierDocumentsHex = (userId: string | null, supplierName: str
       
       const documentService = getDocumentService();
       
-      // Get documents by phase (using userId as phaseId for now)
-      // This is a temporary solution until proper supplier document methods exist
-      let documents: any[] = [];
-      if (userId) {
-        documents = await documentService.getPhaseDocuments(userId) as any[];
-      }
-      
-      return documents || [];
+      // Documents rattachés au fournisseur (identifiant fournisseur, pas une phase).
+      if (!userId) return [];
+      return documentService.getSupplierDocuments(userId);
     },
     enabled: !!userId || !!supplierName,
   });
