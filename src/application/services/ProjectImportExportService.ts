@@ -53,7 +53,7 @@ import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
 import type { BtpDatabase } from '@/integrations/supabase/btp-types';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+const refs = () => RepositoryFactory.getImportReferenceRepository();
 
 
 // =============================================================================
@@ -510,11 +510,7 @@ export class ProjectImportExportService {
     if (trimmedId && this.isUUID(trimmedId)) {
       if (options?.checkExists && options?.table) {
         try {
-          const { data, error } = await btpDb()
-            .from(options.table)
-            .select('id')
-            .eq('id', trimmedId)
-            .maybeSingle();
+          const { data, error } = await refs().findOne(options.table, 'id', 'id', trimmedId);
 
           if (!error && data?.id) {
             return { id: trimmedId, externalRef: trimmedRef || undefined, existsInDb: true, existingId: data.id };
@@ -530,11 +526,7 @@ export class ProjectImportExportService {
     if (trimmedId) {
       if (options?.checkExists && options?.table && trimmedRef) {
         try {
-          const { data, error } = await btpDb()
-            .from(options.table)
-            .select('id')
-            .eq('external_ref', trimmedRef)
-            .maybeSingle();
+          const { data, error } = await refs().findOne(options.table, 'id', 'external_ref', trimmedRef);
 
           if (!error && data?.id) {
             return { id: data.id, externalRef: trimmedRef, existsInDb: true, existingId: data.id };
@@ -549,11 +541,7 @@ export class ProjectImportExportService {
     // Cas 3 : id absent → genuuid + externalRef = ref si fourni
     if (options?.checkExists && options?.table && trimmedRef) {
       try {
-        const { data, error } = await btpDb()
-          .from(options.table)
-          .select('id')
-          .eq('external_ref', trimmedRef)
-          .maybeSingle();
+        const { data, error } = await refs().findOne(options.table, 'id', 'external_ref', trimmedRef);
 
         if (!error && data?.id) {
           return { id: data.id, externalRef: trimmedRef, existsInDb: true, existingId: data.id };
@@ -580,11 +568,7 @@ export class ProjectImportExportService {
     if (cached) return cached;
 
     try {
-      const { data: existing, error: selectError } = await btpDb()
-        .from('organizations')
-        .select('id')
-        .eq('external_ref', orgExternalRef)
-        .maybeSingle();
+      const { data: existing, error: selectError } = await refs().findOne('organizations', 'id', 'external_ref', orgExternalRef);
 
       if (selectError && selectError.code !== 'PGRST116') {
         console.warn(`[ensureStakeholderCommunityOrg] SELECT échoué:`, selectError);
@@ -598,18 +582,14 @@ export class ProjectImportExportService {
 
       const { id: newId } = await this.resolveIdAndExternalRef(undefined, orgExternalRef);
 
-      const { data: created, error: insertError } = await btpDb()
-        .from('organizations')
-        .insert({
+      const { data: created, error: insertError } = await refs().insertReturning('organizations', {
           id: newId,
           name,
           external_ref: orgExternalRef,
           org_type: 'community',
           description: `Organisation communautaire (type: ${communityType})`,
           is_active: true,
-        } as any)
-        .select()
-        .single();
+        });
 
       if (insertError) throw insertError;
 
@@ -660,17 +640,13 @@ export class ProjectImportExportService {
 
     try {
       if (this.isUUID(trimmed)) {
-        const { data } = await btpDb().from(table).select('id').eq('id', trimmed).maybeSingle();
+        const { data } = await refs().findOne(table, 'id', 'id', trimmed);
         if (typeof data?.id === 'string') {
           map?.set(trimmed, data.id);
           return data.id;
         }
       } else {
-        const { data } = await btpDb()
-          .from(table)
-          .select('id')
-          .eq('external_ref', trimmed)
-          .maybeSingle();
+        const { data } = await refs().findOne(table, 'id', 'external_ref', trimmed);
         if (typeof data?.id === 'string') {
           map?.set(trimmed, data.id);
           return data.id;
@@ -692,17 +668,13 @@ export class ProjectImportExportService {
         await this.resolveIdAndExternalRef(undefined, trimmed);
 
       if (entityType === 'organization') {
-        const { data, error } = await btpDb()
-          .from('organizations')
-          .insert({
+        const { data, error } = await refs().insertReturning('organizations', {
             id: newId,
             name: context.name ?? trimmed,
             external_ref: resolvedExternalRef,
             org_type: 'autre',
             is_active: true,
-          } as any)
-          .select()
-          .single();
+          });
         if (error) throw error;
         map?.set(trimmed, data.id);
         console.log(`[ensureEntityExists] ✅ organization: "${trimmed}" → ${data.id}`);
@@ -710,17 +682,13 @@ export class ProjectImportExportService {
       }
 
       if (entityType === 'supplier') {
-        const { data, error } = await btpDb()
-          .from('suppliers')
-          .insert({
+        const { data, error } = await refs().insertReturning('suppliers', {
             id: newId,
             name: context.name ?? trimmed,
             email: context.email,
             external_ref: resolvedExternalRef,
             status: 'active',
-          } as any)
-          .select()
-          .single();
+          });
         if (error) throw error;
         map?.set(trimmed, data.id);
         console.log(`[ensureEntityExists] ✅ supplier: "${trimmed}" → ${data.id}`);
@@ -730,9 +698,7 @@ export class ProjectImportExportService {
       const email =
         context.email ??
         `stakeholder-${trimmed.toLowerCase().replace(/[^a-z0-9]/g, '-')}@import.local`;
-      const { data, error } = await btpDb()
-        .from('employees')
-        .insert({
+      const { data, error } = await refs().insertReturning('employees', {
           id: newId,
           employee_id: trimmed,
           email,
@@ -740,9 +706,7 @@ export class ProjectImportExportService {
           position: context.role,
           external_ref: resolvedExternalRef,
           is_active: true,
-        } as any)
-        .select()
-        .single();
+        });
       if (error) throw error;
       map?.set(trimmed, data.id);
       console.log(`[ensureEntityExists] ✅ employee: "${trimmed}" → ${data.id}`);
@@ -2211,11 +2175,7 @@ export class ProjectImportExportService {
     // ---------------------------------------------------------------------------
     try {
       // 6.1 : chercher l'existant par external_ref
-      const { data: existing, error: selectError } = await btpDb()
-        .from('project_stakeholders')
-        .select('id, external_ref')
-        .eq('external_ref', externalRef)
-        .maybeSingle();
+      const { data: existing, error: selectError } = await refs().findOne('project_stakeholders', 'id, external_ref', 'external_ref', externalRef);
 
       if (selectError && selectError.code !== 'PGRST116') {
         console.warn(`[upsertStakeholder] SELECT échoué pour ${externalRef}:`, selectError);
@@ -2223,10 +2183,7 @@ export class ProjectImportExportService {
 
       if (existing?.id) {
         // 6.2 : UPDATE — conserver l'id existant
-        const { error: updateError } = await btpDb()
-          .from('project_stakeholders')
-          .update(stakeholderData as any)
-          .eq('id', existing.id);
+        const { error: updateError } = await refs().updateById('project_stakeholders', existing.id, stakeholderData);
 
         if (updateError) throw updateError;
 
@@ -2251,9 +2208,7 @@ export class ProjectImportExportService {
           external_ref: finalExternalRef ?? externalRef,
         };
 
-        const { error: insertError } = await btpDb()
-          .from('project_stakeholders')
-          .insert(insertPayload as any);
+        const { error: insertError } = await refs().insert('project_stakeholders', insertPayload);
 
         if (insertError) throw insertError;
 
@@ -2287,25 +2242,16 @@ export class ProjectImportExportService {
             community_type: finalCommunityType ?? 'autre',
           };
 
-          const { data: existingRetry } = await btpDb()
-            .from('project_stakeholders')
-            .select('id')
-            .eq('external_ref', externalRef)
-            .maybeSingle();
+          const { data: existingRetry } = await refs().findOne('project_stakeholders', 'id', 'external_ref', externalRef);
 
           if (existingRetry?.id) {
-            await btpDb()
-              .from('project_stakeholders')
-              .update(fallbackData as any)
-              .eq('id', existingRetry.id);
+            await refs().updateById('project_stakeholders', existingRetry.id, fallbackData);
           } else {
             const { id: fallbackId } = await this.resolveIdAndExternalRef(
               undefined,
               externalRef,
             );
-            await btpDb()
-              .from('project_stakeholders')
-              .insert({ ...fallbackData, id: fallbackId } as any);
+            await refs().insert('project_stakeholders', { ...fallbackData, id: fallbackId });
           }
 
           console.log(`[upsertStakeholder] ✅ ${externalRef} → fallback community`);
