@@ -996,3 +996,10 @@ Le plan consolidé reste **NO GO** tant que ces critères sont ouverts ; les chi
 
 - [ ] Dette avant GO final : environ 70 accès données de RepositoryFactory restent liés à Supabase quel que soit VITE_DATA_PROVIDER. Seuls auth, stockage, alertes, notifications, OAuth et l'espace projet (calendrier, consommations, dépenses, recettes) ont une version locale. En mode local, l'en-tête, les organisations, rôles et listes de projets appellent encore la base réelle (20 requêtes observées le 04/11).
 - [x] 04/11 : espace projet en mode local (LocalProjectWorkbenchAdapter + port IWorkbenchContextSource) ; essai écran : consommation et dépense liées au DQE, préremplissage, alerte puis étiquette « Dépassement », enregistrement sans appel à la base pour ces données. SIG indisponible en local (erreur explicite).
+
+## 2026-11-05 — Mode local et dépassement DQE
+- Mode local validé à l'écran pour Consommations/Dépenses (saisie, préremplissage DQE, étiquette Dépassement).
+- Achat dépassant le DQE : alerter sans bloquer, aussi en base (référentiel operation_context `purchase` : limitSourceQuantity=false ; contrôle d'unité conservé).
+- SIG en mode local : LocalInfraAdapter (carte vide, écritures refusées explicitement), plus d'erreur de schéma.
+- Dette : ~70 accès données encore liés à Supabase (en-tête, organisations, rôles, liste projets…).
+- À étudier : renommer « Métré et plans » en « DQE & Métré », action « Créer une révision » d'un DQE validé, centrage carte sur le projet, regroupements du tableau Consommations.
