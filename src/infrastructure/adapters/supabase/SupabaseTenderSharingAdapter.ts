@@ -240,18 +240,7 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
 
 
       if (error) {
-        console.warn('SupabaseTenderSharingAdapter: createAccessLog failed', error);
-        // Fallback mock
-        return {
-          id: crypto.randomUUID?.() || Date.now().toString(),
-          sharingSecretId: dto.sharingSecretId,
-          accessedAt: dto.accessedAt || new Date().toISOString(),
-          ipAddress: dto.ipAddress,
-          userAgent: dto.userAgent,
-          accessedDocuments: dto.accessedDocuments,
-          actionType: dto.actionType || 'share',
-          metadata: dto.metadata,
-        };
+        throw new Error(`Failed to record tender access log: ${error.message}`);
       }
 
       return {
