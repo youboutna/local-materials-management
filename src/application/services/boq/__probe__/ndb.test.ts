@@ -9,6 +9,7 @@ it('probe', async () => { (globalThis as any).__BOQ_DEBUG__=1;
   const parsed = await new PdfBoqParser().parse(new File([new Uint8Array(b)], 'dqe.pdf', { type: 'application/pdf' }));
   const dtos = BoqImportOrchestrator.toDtos(parsed.rows, BoqImportOrchestrator.autoMap(parsed.columns), { source: 'dqe', contextId: 'p' });
   console.log('COLS', JSON.stringify(parsed.columns), 'ROWS', parsed.rows.length, 'DTOS', dtos.length, 'SUM', dtos.reduce((s,d)=>s+(d.totalHt??0),0));
+  console.log('MAP', JSON.stringify(BoqImportOrchestrator.autoMap(parsed.columns)));
   console.log('BIG', JSON.stringify(dtos.map(d=>[d.designation?.slice(0,40),d.unit,d.quantity,d.unitPrice,d.totalHt]).slice(0,121)));
 }, 60000);
 it('items', async () => {
