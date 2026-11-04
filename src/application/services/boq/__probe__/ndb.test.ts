@@ -11,3 +11,9 @@ it('probe', async () => { (globalThis as any).__BOQ_DEBUG__=1;
   console.log('COLS', JSON.stringify(parsed.columns), 'ROWS', parsed.rows.length, 'DTOS', dtos.length, 'SUM', dtos.reduce((s,d)=>s+(d.totalHt??0),0));
   console.log(JSON.stringify(parsed.rows.slice(0,8)));
 }, 60000);
+it('items', async () => {
+  const pdfjs: any = await import('pdfjs-dist');
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync('/mnt/user-uploads/DQE_NDB-4.pdf')) }).promise;
+  const c = await (await doc.getPage(3)).getTextContent();
+  console.log('ITEMS', JSON.stringify(c.items.slice(20,60).map((i:any)=>[i.str, Math.round(i.transform[4]), Math.round(i.transform[5]), Math.round(i.width)])));
+});
