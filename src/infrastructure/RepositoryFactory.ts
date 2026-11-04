@@ -34,7 +34,7 @@ import { DEV_MODE, IS_LOCAL_BYPASS } from '@/config/constants';
 
 export type AuthProviderKind = 'supabase' | 'gotrue' | 'keycloak' | 'local';
 export type DataProviderKind = 'supabase' | 'postgrest' | 'local';
-export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'local';
+export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'gcs' | 'azure' | 'ftp' | 'local';
 
 // ================================================================
 // 2. IMPORTS – INTERFACES (PORTS)
