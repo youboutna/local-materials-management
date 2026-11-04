@@ -113,6 +113,8 @@ import { getReferentialItemAdapter } from '@/infrastructure/adapters/supabase/Su
 import { SupabaseTenderSubmissionEvaluationAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionEvaluationAdapter';
 import { SupabaseDataClientProvider } from '@/infrastructure/adapters/supabase/SupabaseDataClientProvider';
 import type { IDataClientProvider } from '@/domain/repositories/IDataClientProvider';
+import { SupabaseTenderCatalogAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderCatalogAdapter';
+import type { ITenderCatalogRepository } from '@/domain/repositories/ITenderCatalogRepository';
 import { SupabaseTenderSubmissionAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionAdapter';
 import type { ITenderSubmissionRepository } from '@/domain/repositories/ITenderSubmissionRepository';
 import { SupabaseTenderLotDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderLotDocumentAdapter';
@@ -326,6 +328,7 @@ const lazyPorts: {
   derivedAlert?: SupabaseDerivedAlertAdapter;
   monitoringAlert?: SupabaseMonitoringAlertAdapter;
   dataClient?: IDataClientProvider;
+  tenderCatalog?: ITenderCatalogRepository;
   contract?: SupabaseContractAdapter;
 } = {};
 
@@ -818,6 +821,10 @@ export class RepositoryFactory {
   /** Client de données par schéma pour les services sans port dédié (transitoire). */
   static getDataClientProvider(): IDataClientProvider {
     return (lazyPorts.dataClient ??= new SupabaseDataClientProvider());
+  }
+
+  static getTenderCatalogRepository(): ITenderCatalogRepository {
+    return (lazyPorts.tenderCatalog ??= new SupabaseTenderCatalogAdapter());
   }
 
   static getBoqRepository(): IBoqRepository {

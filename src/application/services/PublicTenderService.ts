@@ -1,5 +1,4 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
 
 /**
  * PublicTenderService
@@ -35,12 +34,8 @@ export class PublicTenderService {
    * Liste des appels d'offres ouverts (published/open), accès anonyme via policy RLS.
    */
   static async getOpenTenders(): Promise<PublicTenderSummaryDTO[]> {
-    const { data, error } = await btpDb().from('tenders')
-      .select('id, title, description, status, deadline_date, publication_date, market_type, budget_max, project_reference')
-      .in('status', ['published', 'open'])
-      .order('deadline_date', { ascending: true, nullsFirst: false });
-    if (error) throw error;
-    return (data ?? []).map((t) => ({
+    const data = await RepositoryFactory.getTenderCatalogRepository().findOpenTenders(['published', 'open']);
+    return data.map((t: any) => ({
       id: t.id,
       title: t.title,
       description: t.description ?? undefined,
@@ -57,11 +52,7 @@ export class PublicTenderService {
    * Détail d'un appel d'offres public par id.
    */
   static async getTenderById(id: string): Promise<PublicTenderDetailDTO | null> {
-    const { data, error } = await btpDb().from('tenders')
-      .select('id, title, description, status, deadline_date, market_type, budget_max, project_reference')
-      .eq('id', id)
-      .maybeSingle();
-    if (error) throw error;
+    const data: any = await RepositoryFactory.getTenderCatalogRepository().findPublicTenderById(id);
     if (!data) return null;
     return {
       id: data.id,

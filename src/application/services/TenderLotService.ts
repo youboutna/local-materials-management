@@ -4,7 +4,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
  * Hexagonal service (pure TS, no React).
  */
 import { TenderLotTransformer, type TenderLotRecord } from '@/dtos/transforms/TenderLotTransformer';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+const repo = () => RepositoryFactory.getTenderCatalogRepository();
 
 
 export type { TenderLotRecord };
@@ -12,54 +12,24 @@ export type { TenderLotRecord };
 export class TenderLotService {
   async listByTender(tenderId: string): Promise<TenderLotRecord[]> {
     if (!tenderId) return [];
-    const { data, error } = await btpDb()
-      .from('tender_lots' as any)
-      .select('*')
-      .eq('tender_id', tenderId)
-      .order('number', { ascending: true });
-    if (error) throw error;
-    return (data ?? []).map((row) => TenderLotTransformer.fromRow(row));
+    return (await repo().findLotsByTender(tenderId)).map((row) => TenderLotTransformer.fromRow(row as any));
   }
 
   async create(lot: Omit<TenderLotRecord, 'id'>): Promise<TenderLotRecord> {
-    const { data, error } = await btpDb()
-      .from('tender_lots' as any)
-      .insert(TenderLotTransformer.toRow(lot))
-      .select()
-      .single();
-    if (error) throw error;
-    return TenderLotTransformer.fromRow(data);
+    return TenderLotTransformer.fromRow((await repo().insertLot(TenderLotTransformer.toRow(lot) as any)) as any);
   }
 
   async update(id: string, lot: Partial<TenderLotRecord> & { tenderId: string }): Promise<TenderLotRecord> {
-    const { data, error } = await btpDb()
-      .from('tender_lots' as any)
-      .update(TenderLotTransformer.toRow(lot))
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return TenderLotTransformer.fromRow(data);
+    return TenderLotTransformer.fromRow((await repo().updateLot(id, TenderLotTransformer.toRow(lot) as any)) as any);
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await btpDb()
-      .from('tender_lots' as any)
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+    await repo().deleteLot(id);
   }
 
   /** Transition de statut du lot (brouillon → publié → en évaluation → attribué / annulé). */
   async setStatus(id: string, status: TenderLotRecord['status']): Promise<TenderLotRecord> {
-    const { data, error } = await btpDb()
-      .from('tender_lots' as any)
-      .update({ status })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return TenderLotTransformer.fromRow(data);
+    return TenderLotTransformer.fromRow((await repo().updateLot(id, { status })) as any);
   }
 
   /** Attribue un lot à un prestataire à partir d'une soumission retenue. */
@@ -67,34 +37,20 @@ export class TenderLotService {
     id: string,
     params: { awardedTo: string; awardedSubmissionId?: string | null; awardedAmount?: number | null },
   ): Promise<TenderLotRecord> {
-    const { data, error } = await btpDb()
-      .from('tender_lots' as any)
-      .update({
-        status: 'awarded',
-        awarded_to: params.awardedTo,
-        awarded_submission_id: params.awardedSubmissionId ?? null,
-        awarded_amount: params.awardedAmount ?? null,
-        awarded_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return TenderLotTransformer.fromRow(data);
+    return TenderLotTransformer.fromRow((await repo().updateLot(id, {
+      status: 'awarded',
+      awarded_to: params.awardedTo,
+      awarded_submission_id: params.awardedSubmissionId ?? null,
+      awarded_amount: params.awardedAmount ?? null,
+      awarded_at: new Date().toISOString(),
+    })) as any);
   }
 
   /** Soumissions rattachées à un lot. */
   async listSubmissionsByLot(lotId: string): Promise<any[]> {
     if (!lotId) return [];
-    const { data, error } = await btpDb()
-      .from('tender_submissions' as any)
-      .select('*')
-      .eq('lot_id', lotId)
-      .order('submission_date', { ascending: false });
-    if (error) throw error;
-    return data ?? [];
+    return repo().findSubmissionsByLot(lotId);
   }
-
 }
 
 let instance: TenderLotService | null = null;
