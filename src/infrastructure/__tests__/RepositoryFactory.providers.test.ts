@@ -266,7 +266,12 @@ describe('profile-manager — getActiveProfileSync', () => {
   });
 
   it('respects VITE_ACTIVE_PROFILE when set', () => {
-    stubProviders({ VITE_ACTIVE_PROFILE: 'keycloak-postgrest' });
+    stubProviders({
+      VITE_ACTIVE_PROFILE: 'keycloak-postgrest',
+      VITE_AUTH_PROVIDER: undefined,
+      VITE_DATA_PROVIDER: undefined,
+      VITE_STORAGE_PROVIDER: undefined,
+    });
     invalidateProfileCache();
     const profile = getActiveProfileSync();
     expect(profile.id).toBe('keycloak-postgrest');
@@ -367,7 +372,12 @@ describe('DeploymentProfileSelector', () => {
 
 describe('app.ts — profile integration', () => {
   it('getAppConfig reads the active profile', async () => {
-    stubProviders({ VITE_ACTIVE_PROFILE: 'keycloak-postgrest' });
+    stubProviders({
+      VITE_ACTIVE_PROFILE: 'keycloak-postgrest',
+      VITE_AUTH_PROVIDER: undefined,
+      VITE_DATA_PROVIDER: undefined,
+      VITE_STORAGE_PROVIDER: undefined,
+    });
     invalidateProfileCache();
     const { getAppConfig } = await import('@/config/app');
     const cfg = getAppConfig();
@@ -380,5 +390,58 @@ describe('app.ts — profile integration', () => {
     const { getAppConfig } = await import('@/config/app');
     const cfg = getAppConfig();
     expect(['supabase', 'local']).toContain(cfg.auth.provider);
+  });
+});
+// =============================================================================
+// Priorité des fournisseurs : déploiement > profil enregistré > défaut (par service)
+// =============================================================================
+
+describe('provider precedence — deployment > saved profile > default', () => {
+  const unsetAll = { VITE_AUTH_PROVIDER: undefined, VITE_DATA_PROVIDER: undefined, VITE_STORAGE_PROVIDER: undefined };
+
+  it('env local beats profile supabase', async () => {
+    const { resolveProviderSelection } = await import('@/config/app');
+    stubProviders({ VITE_AUTH_PROVIDER: 'local' });
+    expect(resolveProviderSelection('auth', 'supabase', 'supabase')).toMatchObject({ provider: 'local', source: 'deployment' });
+  });
+
+  it('env supabase beats profile local', async () => {
+    const { resolveProviderSelection } = await import('@/config/app');
+    stubProviders({ VITE_DATA_PROVIDER: 'supabase' });
+    expect(resolveProviderSelection('data', 'local', 'local')).toMatchObject({ provider: 'supabase', source: 'deployment' });
+  });
+
+  it('env unset + profile keycloak → keycloak', async () => {
+    const { resolveProviderSelection } = await import('@/config/app');
+    stubProviders(unsetAll);
+    expect(resolveProviderSelection('auth', 'keycloak', 'supabase')).toMatchObject({ provider: 'keycloak', source: 'profile' });
+  });
+
+  it('env unset + no profile → default', async () => {
+    const { resolveProviderSelection } = await import('@/config/app');
+    stubProviders(unsetAll);
+    expect(resolveProviderSelection('storage', undefined, 'supabase')).toMatchObject({ provider: 'supabase', source: 'default' });
+  });
+
+  it('local-bypass: all three local resolve local and are reported as set by deployment', async () => {
+    const { getProviderSelections } = await import('@/config/app');
+    stubProviders({ VITE_AUTH_PROVIDER: 'local', VITE_DATA_PROVIDER: 'local', VITE_STORAGE_PROVIDER: 'local' });
+    const sel = getProviderSelections();
+    expect(sel.map((s) => s.provider)).toEqual(['local', 'local', 'local']);
+    expect(sel.map((s) => s.envVar)).toEqual(['VITE_AUTH_PROVIDER', 'VITE_DATA_PROVIDER', 'VITE_STORAGE_PROVIDER']);
+    expect(sel.every((s) => s.source === 'deployment')).toBe(true);
+  });
+
+  it('mixed: env sets auth only, profile sets data (per service)', async () => {
+    const { resolveProviderSelection } = await import('@/config/app');
+    stubProviders({ ...unsetAll, VITE_AUTH_PROVIDER: 'keycloak' });
+    expect(resolveProviderSelection('auth', 'supabase', 'supabase')).toMatchObject({ provider: 'keycloak', source: 'deployment' });
+    expect(resolveProviderSelection('data', 'postgrest', 'supabase')).toMatchObject({ provider: 'postgrest', source: 'profile' });
+  });
+
+  it('empty env var is treated as unset', async () => {
+    const { resolveProviderSelection } = await import('@/config/app');
+    stubProviders({ VITE_STORAGE_PROVIDER: '' });
+    expect(resolveProviderSelection('storage', 's3', 'supabase')).toMatchObject({ provider: 's3', source: 'profile' });
   });
 });
