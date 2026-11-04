@@ -3,7 +3,7 @@ import { UserAdministrationService } from '../UserAdministrationService';
 import type { IUserAdministrationGateway } from '@/domain/repositories/IUserAdministrationGateway';
 
 const gateway = (): IUserAdministrationGateway => ({
-  create: vi.fn(async () => ({ userId: 'u1', confirmation: { channel: 'email', sent: true } })),
+  create: vi.fn(async () => ({ userId: 'u1', confirmation: { channel: 'email' as const, sent: true } })),
   update: vi.fn(async () => ({ userId: 'u1' })),
   setActive: vi.fn(async (userId: string) => ({ userId })),
   remove: vi.fn(async (userId: string) => ({ userId })),
