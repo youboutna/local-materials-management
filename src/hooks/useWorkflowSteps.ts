@@ -28,11 +28,7 @@ export const useWorkflowSteps = (tenderId: string) => {
   const useStepDocuments = (stepId: string) => {
     return useQuery<StepDocumentDTO[]>({
       queryKey: ['step-documents', stepId],
-      queryFn: async () => {
-        // Documents are not yet available via service, return empty
-        console.warn('WorkflowStepService: getStepDocuments not yet implemented');
-        return [];
-      },
+      queryFn: () => workflowStepService.getStepDocuments(stepId),
       enabled: !!stepId
     });
   };

@@ -128,6 +128,24 @@ export class WorkflowStepService {
     }
   }
 
+  /** Documents archivés via DocumentService et rattachés à l'étape (metadata.workflow_step_id). */
+  async getStepDocuments(stepId: string): Promise<StepDocumentDTO[]> {
+    const { getDocumentService } = await import('@/application/services/DocumentService');
+    const docs = await getDocumentService().getAllDocuments();
+    return docs
+      .filter(d => d.metadata?.workflow_step_id === stepId)
+      .map(d => ({
+        id: d.id,
+        step_id: stepId,
+        document_id: d.id,
+        document_type: String(d.category ?? d.documentType ?? ''),
+        is_required: Boolean(d.metadata?.is_required),
+        status: 'pending',
+        document: { id: d.id, title: d.title, file_name: d.fileName ?? '', file_size: d.fileSize ?? 0, mime_type: d.mimeType ?? '' },
+        can_share: false,
+      } as StepDocumentDTO));
+  }
+
   async uploadStepDocument(
     stepId: string,
     uploadData: DocumentUploadDTO
