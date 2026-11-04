@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Auth Manager - Multi-Providers Coordination
  * Centralizes authentication provider switching and adapter management
@@ -14,10 +15,6 @@ import { LoginData, RegisterData, LoginCredentials, AuthUser, AuthSession } from
 
 // ✅ IMPORT des modules locaux (correction)
 import { IS_LOCAL_BYPASS } from "@/config/constants";
-import { LocalAuthAdapter } from "@/infrastructure/adapters/local/LocalAuthAdapter";
-import { SupabaseAuthAdapter as RealSupabaseAuthAdapter } from "@/infrastructure/adapters/supabase/SupabaseAuthAdapter";
-import { KeycloakAuthAdapter as RealKeycloakAuthAdapter } from "@/infrastructure/adapters/auth/KeycloakAuthAdapter";
-import { keycloakConfig } from "@/integrations/keycloak/config";
 import type { IAuthRepository as DomainAuthRepository } from "@/domain/repositories/IAuthRepository";
 
 // Use existing DTOs for AuthManager internal operations
@@ -134,23 +131,12 @@ export class AuthManager {
   private createAdapter(config: AuthManagerConfig): IAuthRepository {
     // Local/offline uniquement en mode explicite (VITE_APP_MODE=local-bypass
     // ou VITE_AUTH_PROVIDER=local). DEV_MODE ne change PAS le provider.
-    if (IS_LOCAL_BYPASS || (config.provider as string) === "local") {
-      return wrapDomainAdapter(new LocalAuthAdapter());
-    }
-
-    switch (config.provider) {
-      case "keycloak":
-        return wrapDomainAdapter(new RealKeycloakAuthAdapter({
-          url: config.url || keycloakConfig.url,
-          realm: config.realm || keycloakConfig.realm,
-          clientId: config.clientId || keycloakConfig.clientId,
-        }));
-      case "supabase":
-      case "auth0":
-      case "custom":
-      default:
-        return wrapDomainAdapter(new RealSupabaseAuthAdapter());
-    }
+    const provider = IS_LOCAL_BYPASS ? 'local' : (config.provider as string);
+    return wrapDomainAdapter(RepositoryFactory.createAuthAdapterFor(provider, {
+      url: config.url,
+      realm: config.realm,
+      clientId: config.clientId,
+    }));
   }
 
 
@@ -233,7 +219,7 @@ export class AuthManager {
   async signInWithDevUser(
     credentials: LoginCredentials,
   ): Promise<{ session: AuthManagerSession | null; error: Error | null }> {
-    if (!this.devAdapter) this.devAdapter = wrapDomainAdapter(new LocalAuthAdapter());
+    if (!this.devAdapter) this.devAdapter = wrapDomainAdapter(RepositoryFactory.createAuthAdapterFor('local'));
     return this.devAdapter.signIn(credentials);
   }
 

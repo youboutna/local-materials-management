@@ -1,7 +1,11 @@
 
 import { useState } from 'react';
 import { StorageFactory } from '@/application/services/StorageFactory';
-import { UploadResult, DownloadResult, DeleteResult } from '@/infrastructure/adapters/storage/storage/StorageProvider';
+import type { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
+
+type UploadResult = Awaited<ReturnType<IStorageProvider['uploadFile']>>;
+type DownloadResult = Awaited<ReturnType<IStorageProvider['downloadFile']>>;
+type DeleteResult = Awaited<ReturnType<IStorageProvider['deleteFile']>>;
 
 export const useDocumentStorage = () => {
   const [uploading, setUploading] = useState(false);

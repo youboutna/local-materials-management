@@ -1,10 +1,10 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Storage Factory - Hexagonal Architecture
  * Factory for creating storage providers with proper error handling
  */
 
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-import { SupabaseStorageProvider, LocalStorageProvider } from '@/infrastructure/adapters/storage';
 import { getStorageConfig } from '@/config/storage';
 import { IStorageProvider } from '@/domain/interfaces/IStorageProvider';
 /**
@@ -16,38 +16,9 @@ export class StorageFactory {
    * Create storage provider based on configuration
    */
   static createProvider(): IStorageProvider {
-    try {
-      const config = getStorageConfig();
-      
-      switch (config.provider) {
-        case 'supabase':
-          return new SupabaseStorageProvider();
-        case 'local':
-          return new LocalStorageProvider();
-        case 's3':
-          throw new AppError(
-            ErrorCode.NOT_IMPLEMENTED,
-            'S3 storage provider not yet implemented'
-          );
-        case 'azure':
-          throw new AppError(
-            ErrorCode.NOT_IMPLEMENTED,
-            'Azure storage provider not yet implemented'
-          );
-        case 'gcs':
-          throw new AppError(
-            ErrorCode.NOT_IMPLEMENTED,
-            'Google Cloud Storage provider not yet implemented'
-          );
-        default:
-          console.warn(`Unknown storage provider: ${config.provider}, falling back to supabase`);
-          return new SupabaseStorageProvider();
-      }
-    } catch (error) {
-      console.error('Error creating storage provider:', error);
-      // Fallback to supabase provider
-      return new SupabaseStorageProvider();
-    }
+    // Fournisseur résolu par la configuration (déploiement > profil > défaut) ;
+    // une configuration non prise en charge remonte une erreur, sans repli silencieux.
+    return RepositoryFactory.getStorageProvider();
   }
 
   /**
@@ -87,17 +58,8 @@ export class StorageFactory {
       const testProvider = this.createProvider();
       
       // Test basic connectivity (implementation depends on provider)
-      if (provider === 'supabase') {
-        // Test Supabase connectivity
-        const testResult = await testProvider.listFiles('test');
-        return { success: !testResult.error };
-      } else if (provider === 'local') {
-        // Test local storage connectivity
-        const testResult = await testProvider.listFiles('test');
-        return { success: !testResult.error };
-      }
-
-      return { success: true };
+      const testResult = await testProvider.listFiles('test');
+      return { success: !testResult.error };
     } catch (error) {
       console.error('Error testing storage provider connectivity:', error);
       return {

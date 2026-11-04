@@ -1086,7 +1086,7 @@ export class RepositoryFactory {
   static createAuthAdapterFor(
     provider: string,
     keycloak?: { url?: string; realm?: string; clientId?: string },
-  ): unknown {
+  ): IAuthRepository {
     if (provider === 'local') return new LocalAuthAdapterForManager();
     if (provider === 'keycloak') {
       return new KeycloakAuthAdapterForManager({

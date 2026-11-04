@@ -49,7 +49,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useDocumentStorage } from "@/hooks/useDocumentStorage";
 import { useParsedInvoicesHex, useInvoiceMutationsHex } from "@/hooks/hexagonal/useInvoicesHex";
 import { parsePdf } from "@/utils/btpCalculations";
-import type { BtpTables } from "@/integrations/supabase/btp-types";
 import { T } from '@/components/i18n/T';
 import {
   DropdownMenu,
@@ -59,7 +58,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatReference } from '@/utils/entityLabels';
 
-type SupplierNotificationRow = BtpTables<"supplier_notifications">;
+interface SupplierNotificationRow {
+  id: string;
+  notification_type: string | null;
+  metadata: Record<string, unknown> | null;
+  sent_at: string | null;
+  used_at: string | null;
+  [key: string]: unknown;
+}
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SupplierPaymentRequest from "@/components/suppliers/SupplierPaymentRequest";
