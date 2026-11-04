@@ -30,7 +30,7 @@ const ProjectImport = () => {
   return (
     <AppLayout pageTitle={t("projects.importExport.title")}><div className="min-w-0 space-y-3">
       <Tabs defaultValue="file-import" className="w-full">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
           <TabsTrigger value="file-import" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
             {t("projects.importExport.fileImport")}
