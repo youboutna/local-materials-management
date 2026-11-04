@@ -106,6 +106,7 @@ import type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
 import { boqPropagationRepository as boqPropagationSingleton } from '@/infrastructure/adapters/supabase/SupabaseBoqPropagationAdapter';
 import { SupabasePaymentInitiationAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter';
 import { SupabaseProjectWorkbenchAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter';
+import { SupabaseMonitoringAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseMonitoringAlertAdapter';
 import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseDerivedAlertAdapter';
 import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
 import { getReferentialItemAdapter } from '@/infrastructure/adapters/supabase/SupabaseReferentialItemAdapter';
@@ -321,6 +322,7 @@ const lazyPorts: {
   paymentInitiation?: SupabasePaymentInitiationAdapter;
   projectWorkbench?: SupabaseProjectWorkbenchAdapter;
   derivedAlert?: SupabaseDerivedAlertAdapter;
+  monitoringAlert?: SupabaseMonitoringAlertAdapter;
   contract?: SupabaseContractAdapter;
 } = {};
 
@@ -824,6 +826,10 @@ export class RepositoryFactory {
 
   static getProjectWorkbenchRepository(): SupabaseProjectWorkbenchAdapter {
     return (lazyPorts.projectWorkbench ??= new SupabaseProjectWorkbenchAdapter());
+  }
+
+  static getMonitoringAlertRepository(): SupabaseMonitoringAlertAdapter {
+    return (lazyPorts.monitoringAlert ??= new SupabaseMonitoringAlertAdapter());
   }
 
   static getDerivedAlertRepository(): SupabaseDerivedAlertAdapter {

@@ -21,11 +21,10 @@ import { getEscalationThresholdService } from '@/application/services/Escalation
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { getProjectService } from '@/application/services/ProjectService';
 
-import {
+import type {
     CreateMonitoringAlertDTO,
     IMonitoringAlertRepository,
     MonitoringAlertDTO,
-    SupabaseMonitoringAlertAdapter,
     UpdateMonitoringAlertDTO
 } from '@/infrastructure/adapters/supabase/SupabaseMonitoringAlertAdapter';
 
@@ -146,7 +145,7 @@ export class MonitoringAlertService {
     notificationRepository?: INotificationRepository,
     derivedRepository?: IDerivedAlertRepository,
   ) {
-    this.repository = repository || new SupabaseMonitoringAlertAdapter();
+    this.repository = repository || RepositoryFactory.getMonitoringAlertRepository();
     this.notificationRepository = notificationRepository;
     this.derivedRepository = derivedRepository;
   }
