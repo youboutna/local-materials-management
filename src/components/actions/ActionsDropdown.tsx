@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { ActionFormData, ActionFormDialog } from './ActionFormDialog';
 import { useActionRecipients } from '@/hooks/hexagonal/useActionRecipientsHex';
 import { T } from '@/components/i18n/T';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 interface ActionsDropdownProps {
   entityType: 'bank_guarantee' | 'inspection' | 'insurance' | 'payment' | 'project';
@@ -49,6 +50,7 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   className,
 }) => {
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const { t } = useLanguage();
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [selectedActionType, setSelectedActionType] = useState<ActionFormData['actionType']>('task_assignment');
@@ -158,17 +160,28 @@ export const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
     }
   };
 
-  const handlePaymentAction = async (actionData: any) => {
-    // Implement payment-specific actions
-    console.log('Payment action:', actionData);
-    // You can add payment-specific logic here
+  const runUnifiedAction = async (kind: 'payment' | 'project', actionData: any) => {
+    const { EnhancedActionServiceStatic } = await import('@/application/services/enhancedActionService');
+    const result = await EnhancedActionServiceStatic.executeAction({
+      actionType: actionData.actionType,
+      title: actionData.title,
+      message: actionData.message,
+      priority: actionData.priority,
+      assigneeId: actionData.assigneeId,
+      recipientIds: actionData.recipientIds ?? [],
+      dueDate: actionData.dueDate,
+      escalationLevel: actionData.escalationLevel,
+      entityType: kind,
+      entityId: kind === 'payment' ? actionData.paymentId : actionData.projectId,
+      projectId: actionData.projectId || undefined,
+      contractorId: actionData.contractorId || undefined,
+      createdBy: currentUser?.id,
+      metadata: actionData.metadata,
+    });
+    if (!result.success) throw new Error(result.error ?? 'Action failed');
   };
-
-  const handleProjectAction = async (actionData: any) => {
-    // Implement project-specific actions
-    console.log('Project action:', actionData);
-    // You can add project-specific logic here
-  };
+  const handlePaymentAction = (actionData: any) => runUnifiedAction('payment', actionData);
+  const handleProjectAction = (actionData: any) => runUnifiedAction('project', actionData);
 
   const getDefaultFormData = (actionType: ActionFormData['actionType']): Partial<ActionFormData> => {
     const baseDefaults = {
