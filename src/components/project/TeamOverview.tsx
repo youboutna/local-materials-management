@@ -46,7 +46,8 @@ const ResourceSection: React.FC<{
   emptyKey: string;
   empty: string;
   items: ResourceView[];
-}> = ({ icon, titleKey, title, emptyKey, empty, items }) => (
+  onOpenDqe: () => void;
+}> = ({ icon, titleKey, title, emptyKey, empty, items, onOpenDqe }) => (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -56,7 +57,12 @@ const ResourceSection: React.FC<{
     </CardHeader>
     <CardContent>
       {items.length === 0 ? (
-        <p className="text-muted-foreground text-center py-4"><T k={emptyKey} fallback={empty} /></p>
+        <div className="text-center py-4 space-y-2">
+          <p className="text-muted-foreground"><T k={emptyKey} fallback={empty} /></p>
+          <Button variant="link" size="sm" onClick={onOpenDqe}>
+            <T k="auto.teamoverview.planifier_dans_dqe" fallback="Planifier dans le DQE" />
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((resource, index) => {
@@ -152,11 +158,11 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({ resources: propResources, p
       </div>
 
       <ResourceSection icon={<User className="h-5 w-5" />} titleKey="auto.teamoverview.ressources_humaines" title="Ressources humaines"
-        emptyKey="auto.teamoverview.aucune_ressource_humaine_assignee" empty="Aucune ressource humaine assignée" items={byType('human')} />
+        emptyKey="auto.teamoverview.aucune_ressource_humaine_assignee" empty="Aucune ressource humaine assignée" items={byType('human')} onOpenDqe={openDqe} />
       <ResourceSection icon={<Wrench className="h-5 w-5" />} titleKey="auto.teamoverview.equipements" title="Équipements"
-        emptyKey="auto.teamoverview.aucun_equipement_assigne" empty="Aucun équipement assigné" items={byType('equipment')} />
+        emptyKey="auto.teamoverview.aucun_equipement_assigne" empty="Aucun équipement assigné" items={byType('equipment')} onOpenDqe={openDqe} />
       <ResourceSection icon={<Package className="h-5 w-5" />} titleKey="auto.teamoverview.materiaux" title="Matériaux"
-        emptyKey="auto.teamoverview.aucun_materiau_assigne" empty="Aucun matériau assigné" items={byType('material')} />
+        emptyKey="auto.teamoverview.aucun_materiau_assigne" empty="Aucun matériau assigné" items={byType('material')} onOpenDqe={openDqe} />
     </div>
   );
 };

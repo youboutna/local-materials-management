@@ -6746,5 +6746,6 @@
   "auto.teamoverview.ajouter_via_dqe": "Ajouter via le DQE",
   "auto.teamoverview.ressources_humaines": "Ressources humaines",
   "auto.teamoverview.equipements": "Équipements",
-  "auto.teamoverview.materiaux": "Matériaux"
+  "auto.teamoverview.materiaux": "Matériaux",
+  "auto.teamoverview.planifier_dans_dqe": "Planifier dans le DQE"
 }

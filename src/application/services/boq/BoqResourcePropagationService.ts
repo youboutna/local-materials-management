@@ -36,6 +36,12 @@ function family(line: BoqLineDTO): 'labour' | 'material' | 'other' {
   return 'other';
 }
 
+/** Famille de ressource d'une ligne DQE, partagée par la propagation et la saisie des consommations. */
+export function resourceFamilyOf(line: Pick<BoqLineDTO, 'resourceType' | 'materialId'>): 'human' | 'material' | 'equipment' {
+  const kind = family(line as BoqLineDTO);
+  return kind === 'labour' ? 'human' : kind === 'material' ? 'material' : 'equipment';
+}
+
 export class BoqResourcePropagationService {
   constructor(private readonly repository: IBoqPropagationRepository) {}
 

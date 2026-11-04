@@ -6748,5 +6748,6 @@
   "auto.teamoverview.ajouter_via_dqe": "إضافة عبر جدول الكميات",
   "auto.teamoverview.ressources_humaines": "الموارد البشرية",
   "auto.teamoverview.equipements": "المعدات",
-  "auto.teamoverview.materiaux": "المواد"
+  "auto.teamoverview.materiaux": "المواد",
+  "auto.teamoverview.planifier_dans_dqe": "التخطيط في جدول الكميات"
 }

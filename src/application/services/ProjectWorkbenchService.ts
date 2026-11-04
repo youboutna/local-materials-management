@@ -1,3 +1,4 @@
+import { resourceFamilyOf } from '@/application/services/boq/BoqResourcePropagationService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProjectWorkbenchRepository';
 import type { ProjectCalendarEventDTO, CalendarPeriod, SaveProjectOperationDTO, SaveInfrastructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
@@ -83,6 +84,19 @@ export class ProjectWorkbenchService {
   }
   operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }
   /** Presentation projection of server-owned context metadata, never a replacement for authorization. */
+  /** Pré-remplit une opération depuis la ligne DQE choisie : seuls date, montant constaté et quantité réelle restent à saisir. */
+  static prefillFromLine(line: BoqLineDTO | undefined, form: SaveProjectOperationDTO): Partial<SaveProjectOperationDTO> {
+    if (!line) return { sourceLineId: undefined };
+    return {
+      sourceLineId: line.id,
+      phaseId: line.phaseId ?? form.phaseId,
+      taskId: line.taskId ?? undefined,
+      unit: line.unit ?? form.unit,
+      label: line.designation || form.label,
+      resourceFamily: form.kind === 'consumption' ? resourceFamilyOf(line) : form.resourceFamily,
+    };
+  }
+
   static eligibleOperationLines(lines: readonly BoqLineDTO[], context: ReferentialItemDTO | undefined, input: Pick<SaveProjectOperationDTO, 'kind' | 'phaseId'>): BoqLineDTO[] {
     if (!context?.isActive) return [];
     const policy = context.metadata;
