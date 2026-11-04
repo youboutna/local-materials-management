@@ -138,7 +138,7 @@ export class WorkflowStepService {
         id: d.id,
         step_id: stepId,
         document_id: d.id,
-        document_type: String(d.category ?? d.documentType ?? ''),
+        document_type: String(d.documentType ?? ''),
         is_required: Boolean(d.metadata?.is_required),
         status: 'pending',
         document: { id: d.id, title: d.title, file_name: d.fileName ?? '', file_size: d.fileSize ?? 0, mime_type: d.mimeType ?? '' },
