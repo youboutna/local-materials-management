@@ -21,3 +21,18 @@ describe('Consommation pré-remplie depuis la ligne DQE', () => {
     expect(ProjectWorkbenchService.prefillFromLine(undefined, form)).toEqual({ sourceLineId: undefined });
   });
 });
+
+describe('Quantité DQE restante (consommations et dépenses)', () => {
+  const dqe = { id: 'l1', designation: 'x', unit: 'ml', quantity: 100 } as BoqLineDTO;
+  const op = (p: Record<string, unknown>) => ({ id: 'o', projectId: 'p', kind: 'expense', occurredOn: '', label: '', quantity: 0, unit: 'ml', amount: 0, currency: 'MRU', sourceLineId: 'l1', ...p }) as never;
+  it('déduit les opérations du même type sur la ligne', () => {
+    expect(ProjectWorkbenchService.remainingLineQuantity(dqe, [op({ id: 'a', quantity: 30 }), op({ id: 'b', quantity: 20 })], 'expense')).toBe(50);
+  });
+  it('ignore les opérations annulées, d’un autre type ou en cours d’édition', () => {
+    const ops = [op({ id: 'a', quantity: 30, status: 'cancelled' }), op({ id: 'b', quantity: 20, kind: 'consumption' }), op({ id: 'c', quantity: 40 })];
+    expect(ProjectWorkbenchService.remainingLineQuantity(dqe, ops, 'expense', 'c')).toBe(100);
+  });
+  it('ne calcule rien sans ligne DQE', () => {
+    expect(ProjectWorkbenchService.remainingLineQuantity(undefined, [], 'expense')).toBeNull();
+  });
+});

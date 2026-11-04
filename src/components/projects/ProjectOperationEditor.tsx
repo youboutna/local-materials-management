@@ -13,7 +13,7 @@ import type { ProjectOperationDTO, SaveProjectOperationDTO } from '@/dtos/entiti
 import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import type { TaskAssignmentDTO } from '@/dtos/entities/TaskAssignmentDTO';
 import { Save, X } from 'lucide-react';
-export function ProjectOperationEditor({ projectId, currency, date, kind, phases, tasks = [], existing, onClose }: { projectId: string; currency: string; date: string; kind: ProjectOperationDTO['kind']; phases: PhaseDTO[]; tasks?: TaskAssignmentDTO[]; existing?: ProjectOperationDTO; onClose: () => void }) {
+export function ProjectOperationEditor({ projectId, currency, date, kind, phases, tasks = [], existing, operations = [], onClose }: { operations?: ProjectOperationDTO[]; projectId: string; currency: string; date: string; kind: ProjectOperationDTO['kind']; phases: PhaseDTO[]; tasks?: TaskAssignmentDTO[]; existing?: ProjectOperationDTO; onClose: () => void }) {
   const { t, language } = useLanguage();
   const contexts=useOperationContexts(projectId);
   const finance = useWorkbenchFinance(projectId);
@@ -26,6 +26,9 @@ export function ProjectOperationEditor({ projectId, currency, date, kind, phases
   const eligibleLines = ProjectWorkbenchService.eligibleOperationLines(finance.data?.lines ?? [], context, form);
   const invalidSource = Boolean(form.sourceLineId && !eligibleLines.some(line => line.id === form.sourceLineId));
   const missingLinks = !context || invalidSource || (context.metadata.requiresLine === true && !form.sourceLineId) || (context.metadata.requiresResource === true && !form.resourceId);
+  const selectedLine = eligibleLines.find(line => line.id === form.sourceLineId);
+  const remaining = ProjectWorkbenchService.remainingLineQuantity(selectedLine, operations, kind, existing?.id);
+  const exceedsDqe = remaining !== null && form.quantity > remaining;
   const changeContext = (contextCode: string) => {
     const next = availableContexts.find(item => item.code === contextCode);
     const eligible = ProjectWorkbenchService.eligibleOperationLines(finance.data?.lines ?? [], next, form);
@@ -51,6 +54,7 @@ export function ProjectOperationEditor({ projectId, currency, date, kind, phases
     </div>
     {finance.error && <p role="alert" className="text-destructive">{finance.error.message}</p>}
     {contexts.error && <p role="alert" className="text-destructive">{contexts.error.message}</p>}
+    {remaining !== null && <p className={exceedsDqe ? 'text-destructive text-sm' : 'text-muted-foreground text-sm'} role={exceedsDqe ? 'alert' : undefined}>{t(exceedsDqe ? 'workbench.exceeds_dqe_remaining' : 'workbench.dqe_remaining')}: {remaining.toLocaleString(language)} <CodeLabel kind="unit" code={selectedLine?.unit} /></p>}
     {invalidSource && <p role="alert" className="text-destructive">{t('workbench.incompatible_source')}</p>}
     <div><Label htmlFor="operation-notes">{t('workbench.notes')}</Label><Textarea id="operation-notes" value={form.notes || ''} onChange={e => update({ notes: e.target.value })} /></div>
     {error && <p role="alert" className="text-destructive">{error}</p>}
