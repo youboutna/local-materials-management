@@ -40,7 +40,7 @@ export function ProviderSwitcher({
 
   const [isSwitching, setIsSwitching] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>(currentProvider || 'supabase');
-  const [providerStatus, setProviderStatus] = useState<Record<string, 'available' | 'unavailable' | 'error' | 'testing'>>({
+  const [providerStatus, setProviderStatus] = useState<Record<string, 'available' | 'unavailable' | 'error' | 'testing' | 'unknown'>>({
     supabase: 'testing',
     keycloak: 'testing',
     auth0: 'testing',
