@@ -6729,5 +6729,11 @@
   "planning.financing": "Financing",
   "auto.paymentrequestmodal.contractor_name": "Contractor *",
   "auto.paymentrequestmodal.contractor_contact": "Contractor contact *",
-  "auto.paymentrequestmodal.contractor_required": "Enter the contractor and their contact"
+  "auto.paymentrequestmodal.contractor_required": "Enter the contractor and their contact",
+  "deploymentProfile.pinned.title": "Providers set by deployment",
+  "deploymentProfile.pinned.inactive": "saved profile is inactive for this service",
+  "deploymentProfile.pinned.offline": "Offline mode (demo accounts): no network calls, the selected profile is not applied.",
+  "deploymentProfile.service.auth": "Authentication",
+  "deploymentProfile.service.data": "Data",
+  "deploymentProfile.service.storage": "Storage"
 }
