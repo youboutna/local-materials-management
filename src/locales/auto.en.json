@@ -6749,5 +6749,6 @@
   "auto.teamoverview.ajouter_via_dqe": "Add via the BOQ",
   "auto.teamoverview.ressources_humaines": "Human resources",
   "auto.teamoverview.equipements": "Equipment",
-  "auto.teamoverview.materiaux": "Materials"
+  "auto.teamoverview.materiaux": "Materials",
+  "auto.teamoverview.planifier_dans_dqe": "Plan in the BOQ"
 }
