@@ -204,7 +204,15 @@ export const useCreateTaskCommentHex = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ taskId, email, comment }: { taskId: string; email: string; comment: string }) => {
-      console.warn('Task comment creation not fully implemented');
+      // Commentaire conservé dans les notes de la tâche (aucune table de
+      // commentaires dédiée) : l'auteur et la date restent lisibles.
+      const { getTaskAssignmentService } = await import('@/application/services/TaskAssignmentService');
+      const service = getTaskAssignmentService();
+      const task = await service.getById(taskId);
+      if (!task) throw new Error('Task not found');
+      const entry = `[${new Date().toISOString()}] ${email}: ${comment}`;
+      const notes = [task.notes, entry].filter(Boolean).join('\n');
+      await service.updateTaskAssignment({ id: taskId, updates: { notes } } as never);
       return { success: true };
     },
     onSuccess: () => {
@@ -218,7 +226,15 @@ export const useCompleteTaskHex = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ taskId, projectManagerId }: { taskId: string; projectManagerId: string }) => {
-      console.warn('Task completion not fully implemented');
+      const { getTaskAssignmentService } = await import('@/application/services/TaskAssignmentService');
+      const { TaskStatus } = await import('@/dtos/entities/TaskAssignmentDTO');
+      await getTaskAssignmentService().updateTaskAssignment({ id: taskId, updates: { status: TaskStatus.COMPLETED, progress: 100 } } as never);
+      if (projectManagerId) {
+        const { CommunicationService } = await import('@/application/services/CommunicationService');
+        CommunicationService.requireSuccess(await CommunicationService.sendNotification({
+          recipientId: projectManagerId, title: 'Tâche complétée', message: `La tâche ${taskId} a été marquée terminée`, type: 'info',
+        } as never));
+      }
       return { success: true };
     },
     onSuccess: () => {
