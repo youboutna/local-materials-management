@@ -138,20 +138,33 @@ export class WorkflowStepService {
       }
       this.validateDocumentUploadData(uploadData);
 
-      // Return mock document until repository is available
+      const { getDocumentService } = await import('@/application/services/DocumentService');
+      const created = await getDocumentService().createDocument({
+        title: uploadData.title,
+        description: uploadData.description ?? null,
+        documentType: uploadData.category as never,
+        category: uploadData.category,
+        subcategory: uploadData.subcategory,
+        file: uploadData.file,
+        fileName: uploadData.file.name,
+        fileSize: uploadData.file.size,
+        mimeType: uploadData.file.type,
+        metadata: { workflow_step_id: stepId, is_required: uploadData.is_required },
+      });
+
       return {
-        id: crypto.randomUUID?.() || Date.now().toString(),
+        id: created.id,
         step_id: stepId,
-        document_id: crypto.randomUUID?.() || Date.now().toString(),
+        document_id: created.id,
         document_type: uploadData.category,
         is_required: uploadData.is_required,
         status: 'pending',
         document: {
-          id: '',
-          title: uploadData.title,
-          file_name: uploadData.file.name,
-          file_size: uploadData.file.size,
-          mime_type: uploadData.file.type
+          id: created.id,
+          title: created.title,
+          file_name: created.fileName ?? uploadData.file.name,
+          file_size: created.fileSize ?? uploadData.file.size,
+          mime_type: created.mimeType ?? uploadData.file.type
         },
         can_share: false
       };
