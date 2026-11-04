@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 // src/application/services/ProjectFileImportOrchestrator.ts
 //
 // Point d'entrée unifié pour l'import de projets depuis un fichier.
@@ -14,7 +15,6 @@ import {
   type ProjectImportResult,
 } from '@/application/services/ProjectImportExportService';
 import type { ImportResult } from '@/dtos/entities/ProjectReportDTO';
-import { ProjectFileParserFactory } from '@/infrastructure/parsers/ProjectFileParserFactory';
 
 export interface FileImportOptions extends ImportOptions {
   referentialCode?: string;
@@ -39,7 +39,7 @@ export class ProjectFileImportOrchestrator {
     options: FileImportOptions = {},
   ): Promise<FileImportOutcome> {
     // 1. Sélection du parser
-    const parser = ProjectFileParserFactory.forFile(file);
+    const parser = RepositoryFactory.getProjectFileParser(file);
 
     // 2. Parsing → ProjectImportRow[]
     const rows = await parser.parse(file, {

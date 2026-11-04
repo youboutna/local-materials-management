@@ -1,9 +1,9 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Hexagonal hook for contact form / authorization request submission
  * Delegates persistence to AuthorizationRequestAdapter (no direct Supabase calls).
  */
 import { toast } from '@/hooks/use-toast';
-import { getAuthorizationRequestRepository } from '@/infrastructure/adapters/supabase/AuthorizationRequestAdapter';
 import { useMutation } from '@tanstack/react-query';
 
 export interface ContactFormData {
@@ -21,7 +21,7 @@ export interface ContactFormData {
   description?: string;
 }
 
-const repo = getAuthorizationRequestRepository();
+const repo = RepositoryFactory.getAuthorizationRequestRepository();
 
 export const useSubmitContactFormHex = () => {
   return useMutation({

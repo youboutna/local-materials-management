@@ -1,3 +1,12 @@
+import { GeoJsonBoundaryAdapter } from '@/infrastructure/adapters/gis/GeoJsonBoundaryAdapter';
+import type { IAdministrativeBoundaryRepository } from '@/domain/repositories/IAdministrativeBoundaryRepository';
+import { UserAdminAdapter } from '@/infrastructure/adapters/supabase/UserAdminAdapter';
+import type { UserAdminRepository } from '@/application/services/UserAdminService';
+import { getAuthorizationRequestRepository as resolveAuthorizationRequestRepository } from '@/infrastructure/adapters/supabase/AuthorizationRequestAdapter';
+import type { IAuthorizationRequestRepository } from '@/domain/repositories/IAuthorizationRequestRepository';
+import { LocalStorageAdapter } from '@/infrastructure/adapters/localStorage/LocalStorageAdapter';
+import { ProjectFileParserFactory } from '@/infrastructure/parsers/ProjectFileParserFactory';
+import type { IProjectFileParser } from '@/infrastructure/parsers/IProjectFileParser';
 /**
  * Unified RepositoryFactory
  * Single switch for auth / data / storage providers.
@@ -1025,5 +1034,26 @@ export class RepositoryFactory {
     if (errors.length) {
       throw new Error(errors.join(' / '));
     }
+  }
+
+  // ---------- Ports additionnels (aucun consommateur n'instancie d'adaptateur) ----------
+  static getAdministrativeBoundaryRepository(): IAdministrativeBoundaryRepository {
+    return (lazyPorts.adminBoundary ??= new GeoJsonBoundaryAdapter()) as IAdministrativeBoundaryRepository;
+  }
+
+  static getUserAdminRepository(): UserAdminRepository {
+    return (lazyPorts.userAdmin ??= new UserAdminAdapter()) as UserAdminRepository;
+  }
+
+  static getAuthorizationRequestRepository(): IAuthorizationRequestRepository {
+    return resolveAuthorizationRequestRepository();
+  }
+
+  static getLocalKeyValueStore(prefix?: string): LocalStorageAdapter {
+    return new LocalStorageAdapter(prefix);
+  }
+
+  static getProjectFileParser(file: File): IProjectFileParser {
+    return ProjectFileParserFactory.forFile(file);
   }
 }
