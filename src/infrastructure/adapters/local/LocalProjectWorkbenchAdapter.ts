@@ -12,7 +12,7 @@ import type {
   AssetTypeDTO, InfraDomainDTO, ImportResultDTO, InfraStructureDTO,
 } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import type { PhaseDTO } from '@/dtos/entities/PhaseDTO';
+import { PhaseType, PhasePriority, type PhaseDTO } from '@/dtos/entities/PhaseDTO';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { DecomptePaymentDTO, DecompteRecordDTO } from '@/dtos/entities/DecompteRecordDTO';
@@ -25,9 +25,9 @@ const PHASE_ID = '00000000-0000-4000-8000-00000000d101';
 const now = () => new Date().toISOString();
 
 const DEMO_PHASE = {
-  id: PHASE_ID, projectId: LOCAL_DEMO_PROJECT_ID, name: 'Phase de démonstration', type: 'execution', status: 'in_progress',
-  priority: 'medium', progress: 0, startDate: '2026-01-01', endDate: '2026-12-31', createdAt: now(), updatedAt: now(),
-} as PhaseDTO;
+  id: PHASE_ID, projectId: LOCAL_DEMO_PROJECT_ID, name: 'Phase de démonstration', type: PhaseType.STRUCTURAL, status: 'in_progress',
+  priority: PhasePriority.MEDIUM, progress: 0, startDate: '2026-01-01', endDate: '2026-12-31', createdAt: now(), updatedAt: now(),
+} satisfies PhaseDTO;
 
 const demoLine = (id: string, designation: string, unit: string, quantity: number, unitPrice: number, resourceType: BoqLineDTO['resourceType']): BoqLineDTO => ({
   id, source: 'dqe', contextId: LOCAL_DEMO_PROJECT_ID, phaseId: PHASE_ID,
