@@ -6739,5 +6739,15 @@
   "plans.occurrences": "occurrences",
   "plans.surfaces": "Annotated areas (to review, no line created)",
   "plans.warning.repeated_marker": "Repeated marker: count not summed, please check",
-  "plans.warning.marker_without_dimensions": "Markers without dimensions: enter dimensions"
+  "plans.warning.marker_without_dimensions": "Markers without dimensions: enter dimensions",
+  "auto.teamoverview.origine_dqe": "BOQ",
+  "auto.teamoverview.hors_dqe": "Outside BOQ",
+  "auto.teamoverview.qte": "Qty",
+  "auto.teamoverview.creer_phases_avant": "Create the project phases first, then add resources in the BOQ.",
+  "auto.teamoverview.ressources_via_dqe": "Resources are added in the BOQ, then dispatched by type after validation.",
+  "auto.teamoverview.ressources_hors_dqe": "resource(s) entered outside the BOQ",
+  "auto.teamoverview.ajouter_via_dqe": "Add via the BOQ",
+  "auto.teamoverview.ressources_humaines": "Human resources",
+  "auto.teamoverview.equipements": "Equipment",
+  "auto.teamoverview.materiaux": "Materials"
 }

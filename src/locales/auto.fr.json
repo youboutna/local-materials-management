@@ -6736,5 +6736,15 @@
   "plans.occurrences": "apparitions",
   "plans.surfaces": "Surfaces relevées (à vérifier, aucune ligne créée)",
   "plans.warning.repeated_marker": "Repère répété : le nombre n'est pas additionné, à vérifier",
-  "plans.warning.marker_without_dimensions": "Repères sans dimensions : saisir les dimensions"
+  "plans.warning.marker_without_dimensions": "Repères sans dimensions : saisir les dimensions",
+  "auto.teamoverview.origine_dqe": "DQE",
+  "auto.teamoverview.hors_dqe": "Hors DQE",
+  "auto.teamoverview.qte": "Qté",
+  "auto.teamoverview.creer_phases_avant": "Créez d'abord les phases du projet, puis ajoutez les ressources dans le DQE.",
+  "auto.teamoverview.ressources_via_dqe": "Les ressources sont ajoutées dans le DQE, puis réparties par type après validation.",
+  "auto.teamoverview.ressources_hors_dqe": "ressource(s) saisie(s) hors DQE",
+  "auto.teamoverview.ajouter_via_dqe": "Ajouter via le DQE",
+  "auto.teamoverview.ressources_humaines": "Ressources humaines",
+  "auto.teamoverview.equipements": "Équipements",
+  "auto.teamoverview.materiaux": "Matériaux"
 }
