@@ -272,18 +272,7 @@ export class NotificationService {
         throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to mark notification as read');
       }
 
-      // Return a mock notification since the repository doesn't return the updated notification
-      return {
-        id: notificationId,
-        recipientId: 'system',
-        title: 'Notification',
-        message: 'Marked as read',
-        type: 'info',
-        read: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        priority: 'medium',
-      };
+      return this.readBack(notificationId);
     } catch (error) {
       console.error('NotificationService.markNotificationAsRead failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to mark notification as read');
@@ -295,20 +284,11 @@ export class NotificationService {
    */
   async markNotificationAsUnread(notificationId: string): Promise<NotificationDTO> {
     try {
-      // This is a placeholder since markAsUnread doesn't exist in the repository
-      console.warn('NotificationService.markNotificationAsUnread: Repository method not available');
-      
-      return {
-        id: notificationId,
-        recipientId: 'system',
-        title: 'Notification',
-        message: 'Marked as unread',
-        type: 'info',
-        read: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        priority: 'medium',
-      };
+      const result = await this.notificationRepository.markAsUnread(notificationId);
+      if (result.error) {
+        throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to mark notification as unread');
+      }
+      return this.readBack(notificationId);
     } catch (error) {
       console.error('NotificationService.markNotificationAsUnread failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to mark notification as unread');
@@ -432,6 +412,13 @@ export class NotificationService {
   /**
    * Helper method to transform notification data to DTO
    */
+  /** Reads the stored notification after a state change instead of fabricating one. */
+  private async readBack(notificationId: string): Promise<NotificationDTO> {
+    const { notification, error } = await this.notificationRepository.getNotificationById(notificationId);
+    if (error || !notification) throw new AppError(ErrorCode.NOT_FOUND, 'Notification not found after update');
+    return this.mapToDTO(notification);
+  }
+
   private mapToDTO(notification: NotificationData): NotificationDTO {
     return {
       id: notification.id,
