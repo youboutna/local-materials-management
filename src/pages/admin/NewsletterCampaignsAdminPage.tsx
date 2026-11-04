@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * NewsletterCampaignsAdminPage - Admin interface for newsletter campaign management
  * Provides CRUD operations for email campaigns
@@ -180,7 +181,7 @@ export function NewsletterCampaignsAdminPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="draft"><CodeLabel kind="status" code="draft" /></SelectItem>
             <SelectItem value="scheduled">Scheduled</SelectItem>
             <SelectItem value="sending">Sending</SelectItem>
             <SelectItem value="sent">Sent</SelectItem>
@@ -205,7 +206,7 @@ export function NewsletterCampaignsAdminPage() {
                     <CardDescription className="mt-1">{campaign.preheader}</CardDescription>
                   )}
                 </div>
-                <Badge className={getStatusColor(campaign.status)}>{campaign.status}</Badge>
+                <Badge className={getStatusColor(campaign.status)}><CodeLabel kind="status" code={campaign.status} /></Badge>
               </div>
             </CardHeader>
             <CardContent>

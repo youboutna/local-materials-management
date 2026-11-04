@@ -9,7 +9,6 @@ import {
 } from '@/dtos/entities/tender-sharing-dto';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { CommunicationService } from './CommunicationService';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
 
 
 /**
@@ -253,34 +252,9 @@ export class TenderSharingService {
     document_type?: string | null;
   }>> {
 
-    const { data: tenderRow } = await btpDb()
-      .from('tenders')
-      .select('project_id')
-      .eq('id', tenderId)
-      .single();
-
-    let query = btpDb()
-      .from('documents')
-      .select('id, title, description, file_url, document_type')
-      .eq('is_shared_with_suppliers', true);
-
-    if (tenderRow?.project_id) {
-      query = query.or(
-        `metadata->>tender_id.eq.${tenderId},project_id.eq.${tenderRow.project_id}`
-      );
-    } else {
-      query = query.eq('metadata->>tender_id', tenderId);
-    }
-
-    if (allowedDocumentIds && allowedDocumentIds.length > 0) {
-      query = query.in('id', allowedDocumentIds);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      console.warn('TenderSharingService.getSharedDocuments failed', error);
-      return [];
-    }
+    const catalog = RepositoryFactory.getTenderCatalogRepository();
+    const projectId = await catalog.findTenderProjectId(tenderId);
+    const data = await catalog.findSharedDocuments(tenderId, projectId, allowedDocumentIds);
     return (data ?? [])
       .filter((d: any) => d && d.id && d.title)
       .map((d: any) => ({

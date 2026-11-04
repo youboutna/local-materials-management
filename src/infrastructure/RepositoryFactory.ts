@@ -111,8 +111,12 @@ import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/
 import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
 import { getReferentialItemAdapter } from '@/infrastructure/adapters/supabase/SupabaseReferentialItemAdapter';
 import { SupabaseTenderSubmissionEvaluationAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionEvaluationAdapter';
-import { SupabaseDataClientProvider } from '@/infrastructure/adapters/supabase/SupabaseDataClientProvider';
-import type { IDataClientProvider } from '@/domain/repositories/IDataClientProvider';
+import { SupabaseTenderCatalogAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderCatalogAdapter';
+import type { ITenderCatalogRepository } from '@/domain/repositories/ITenderCatalogRepository';
+import { SupabaseControlActionContextAdapter } from '@/infrastructure/adapters/supabase/SupabaseControlActionContextAdapter';
+import type { IControlActionContextRepository } from '@/domain/repositories/IControlActionContextRepository';
+import { SupabaseImportReferenceAdapter } from '@/infrastructure/adapters/supabase/SupabaseImportReferenceAdapter';
+import type { IImportReferenceRepository } from '@/domain/repositories/IImportReferenceRepository';
 import { SupabaseTenderSubmissionAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionAdapter';
 import type { ITenderSubmissionRepository } from '@/domain/repositories/ITenderSubmissionRepository';
 import { SupabaseTenderLotDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderLotDocumentAdapter';
@@ -325,7 +329,9 @@ const lazyPorts: {
   projectWorkbench?: SupabaseProjectWorkbenchAdapter;
   derivedAlert?: SupabaseDerivedAlertAdapter;
   monitoringAlert?: SupabaseMonitoringAlertAdapter;
-  dataClient?: IDataClientProvider;
+  tenderCatalog?: ITenderCatalogRepository;
+  controlActionContext?: IControlActionContextRepository;
+  importReference?: IImportReferenceRepository;
   contract?: SupabaseContractAdapter;
 } = {};
 
@@ -815,9 +821,16 @@ export class RepositoryFactory {
     return (lazyPorts.projectCheckpointSource ??= new SupabaseProjectCheckpointSourceAdapter());
   }
 
-  /** Client de données par schéma pour les services sans port dédié (transitoire). */
-  static getDataClientProvider(): IDataClientProvider {
-    return (lazyPorts.dataClient ??= new SupabaseDataClientProvider());
+  static getTenderCatalogRepository(): ITenderCatalogRepository {
+    return (lazyPorts.tenderCatalog ??= new SupabaseTenderCatalogAdapter());
+  }
+
+  static getControlActionContextRepository(): IControlActionContextRepository {
+    return (lazyPorts.controlActionContext ??= new SupabaseControlActionContextAdapter());
+  }
+
+  static getImportReferenceRepository(): IImportReferenceRepository {
+    return (lazyPorts.importReference ??= new SupabaseImportReferenceAdapter());
   }
 
   static getBoqRepository(): IBoqRepository {

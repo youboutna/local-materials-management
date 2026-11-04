@@ -85,7 +85,7 @@ function envValue(key: string): string | undefined {
     const fromRuntime = runtime?.[key];
     if (fromRuntime) return fromRuntime;
   }
-  const value = (import.meta as unknown as { env?: Record<string, string> }).env?.[key];
+  const value = (import.meta.env as Record<string, string | undefined>)[key];
   return value || undefined;
 }
 

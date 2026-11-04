@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * PhaseTeamTab
  * Onglet « Équipe » d'une phase.
@@ -66,7 +67,7 @@ const PhaseTeamTab: React.FC<PhaseTeamTabProps> = ({ phaseId, projectId, declare
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{member.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{member.role}</p>
+                  <p className="truncate text-xs text-muted-foreground"><CodeLabel kind="role" code={member.role} /></p>
                 </div>
                 <div className="flex items-center gap-3">
                   {member.quantity ? (

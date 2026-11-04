@@ -36,6 +36,27 @@ export class SupabaseProjectCheckpointSourceAdapter implements IProjectCheckpoin
       .eq('project_id', projectId).in('document_type', types)
       .order('created_at', { ascending: false }));
   }
+  async findMilestones(projectId: string) {
+    return rows((await btp()).from('project_milestones').select('id, title, phase_id, order_index').eq('project_id', projectId));
+  }
+  async findTasks(projectId: string) {
+    return rows((await btp()).from('task_assignments').select('id, title, phase_id').eq('project_id', projectId));
+  }
+  async findProject(projectId: string) {
+    const { data, error } = await (await btp()).from('projects').select('*').eq('id', projectId).maybeSingle();
+    if (error) throw error;
+    return data ?? null;
+  }
+  async findTaskStatuses(projectId: string) {
+    return (await rows((await btp()).from('task_assignments').select('status').eq('project_id', projectId))).map((r) => r.status);
+  }
+  async findResourceAllocations(projectId: string) {
+    const client = await btp();
+    const resources = await rows(client.from('project_resources').select('id').eq('project_id', projectId));
+    if (resources.length === 0) return [];
+    const assignments = await rows(client.from('resource_assignments').select('allocation_percentage').in('resource_id', resources.map((r) => r.id)));
+    return assignments.map((a) => Number(a.allocation_percentage) || 0);
+  }
   async insertPaymentRequest(row: Record<string, unknown>) {
     const { error } = await (await btp()).from('payments').insert(row);
     if (error) throw error;

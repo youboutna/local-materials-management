@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 import { Link } from 'react-router-dom';
 import { useWorkbenchFinance } from '@/hooks/hexagonal/useProjectWorkbenchHex';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -16,7 +17,7 @@ export function WorkbenchFinancialSummary({projectId,view}:{projectId:string;vie
   const {financials,metrics,payments,reconciliation}=query.data;
   const money=(value:number)=>`${value.toLocaleString(language)} ${financials.currency}`;
   if(view==='calendar') return <details className="border-y border-border py-3"><summary className="cursor-pointer font-medium">{t('workbench.planning_analysis')}</summary><div className="space-y-5 pt-4"><ProjectGanttTimeline gantt={metrics.gantt} /><UnifiedPERTAnalysis pert={metrics.pert} referenceDurationDays={metrics.referenceDurationDays} /></div></details>;
-  if(view==='consumption') return <div className="divide-y divide-border">{[query.data.resources.human,query.data.resources.materials,query.data.resources.equipment].flatMap(bucket=>bucket.lines).map(line=><div key={line.id} className="grid gap-2 py-3 sm:grid-cols-3"><span className="font-medium">{line.name}</span><span>{t('workbench.planned')}: {line.plannedQuantity} {line.unit}</span><span>{t('workbench.actual')}: {line.actualQuantity} {line.unit}</span></div>)}</div>;
+  if(view==='consumption') return <div className="divide-y divide-border">{[query.data.resources.human,query.data.resources.materials,query.data.resources.equipment].flatMap(bucket=>bucket.lines).map(line=><div key={line.id} className="grid gap-2 py-3 sm:grid-cols-3"><span className="font-medium">{line.name}</span><span>{t('workbench.planned')}: {line.plannedQuantity} <CodeLabel kind="unit" code={line.unit} /></span><span>{t('workbench.actual')}: {line.actualQuantity} <CodeLabel kind="unit" code={line.unit} /></span></div>)}</div>;
   if(view!=='expense' && view!=='revenue') return null;
   if(view==='revenue') { const rev=query.data.revenueReconciliation; return <div className="space-y-3 border-y border-border py-4">
     <h3 className="font-semibold">{t('workbench.revenue_reconciliation')}</h3>

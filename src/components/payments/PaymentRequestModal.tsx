@@ -75,6 +75,8 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
   const [amount, setAmount] = useState<number>(0);
   const [progressAtPayment, setProgressAtPayment] = useState<number>(currentProgress);
   const [justification, setJustification] = useState('');
+  const [contractorName, setContractorName] = useState('');
+  const [contractorContact, setContractorContact] = useState('');
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -121,6 +123,11 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
       return;
     }
 
+    if (!contractorName.trim() || !contractorContact.trim()) {
+      toast.error(t('auto.paymentrequestmodal.contractor_required'));
+      return;
+    }
+
     if (!allRequiredDocsAvailable) {
       toast.error('Tous les documents obligatoires ne sont pas disponibles');
       return;
@@ -135,6 +142,8 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
         phaseId,
         amount,
         progressAtPayment,
+        contractorName: contractorName.trim(),
+        contractorContact: contractorContact.trim(),
       });
 
       toast.success('Demande de paiement soumise avec succès');
@@ -298,6 +307,17 @@ const PaymentRequestModal: React.FC<PaymentRequestModalProps> = ({
                     onChange={(e) => setProgressAtPayment(Math.min(100, Math.max(0, Number(e.target.value))))}
                   />
                   <Progress value={progressAtPayment} className="h-2" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label><T k="auto.paymentrequestmodal.contractor_name" fallback="Titulaire / prestataire *" /></Label>
+                  <Input value={contractorName} onChange={(e) => setContractorName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label><T k="auto.paymentrequestmodal.contractor_contact" fallback="Contact du titulaire *" /></Label>
+                  <Input value={contractorContact} onChange={(e) => setContractorContact(e.target.value)} />
                 </div>
               </div>
 

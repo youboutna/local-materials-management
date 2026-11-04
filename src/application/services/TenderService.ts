@@ -22,7 +22,6 @@ import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTrans
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { PROCUREMENT_CHAIN_REFERENTIAL } from '@/config/referentials/procurement/procurement-chain.referential';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
 
 
 /** Statuts d'AO considérés comme publiés (référentiel, jamais en dur dans l'UI). */
@@ -323,18 +322,21 @@ export interface TenderBulkImportRow {
  */
 export async function bulkInsertTenders(rows: TenderBulkImportRow[]): Promise<{ count: number; error?: string }> {
   if (rows.length === 0) return { count: 0 };
-  const { data, error } = await btpDb().from('tenders').insert(rows).select();
-  if (error) {
-    return { count: 0, error: error.message };
+  try {
+    return { count: await RepositoryFactory.getTenderCatalogRepository().insertTenders(rows as any) };
+  } catch (e) {
+    return { count: 0, error: (e as Error).message };
   }
-  return { count: data?.length || 0 };
 }
 
 /**
  * Insère un appel d'offres unique (import ligne par ligne) et retourne l'erreur éventuelle.
  */
 export async function insertTender(row: TenderBulkImportRow): Promise<{ error?: string }> {
-  const { error } = await btpDb().from('tenders').insert([row]);
-  if (error) return { error: error.message };
-  return {};
+  try {
+    await RepositoryFactory.getTenderCatalogRepository().insertTenders([row as any]);
+    return {};
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }

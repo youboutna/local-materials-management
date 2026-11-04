@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * src/components/boq/QuickAddLineDialog.tsx
  * QuickAddLineDialog — saisie confortable d'une ligne DQE :
@@ -326,7 +327,7 @@ export function QuickAddLineDialog({
                       >
                         <span className="truncate">{s.label}</span>
                         <span className="flex shrink-0 items-center gap-1">
-                          {s.unit ? <Badge variant="outline" className="text-[10px]">{s.unit}</Badge> : null}
+                          {s.unit ? <Badge variant="outline" className="text-[10px]"><CodeLabel kind="unit" code={s.unit} /></Badge> : null}
                           {s.unitPrice != null ? <span className="text-[11px] text-muted-foreground">{money(s.unitPrice)}</span> : null}
                           <Badge variant="secondary" className="text-[10px]">{s.origin}</Badge>
                         </span>

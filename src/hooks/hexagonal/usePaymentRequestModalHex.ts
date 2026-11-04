@@ -63,17 +63,20 @@ export async function submitPaymentRequestHex(params: {
   phaseId?: string;
   amount: number;
   progressAtPayment: number;
+  contractorName: string;
+  contractorContact: string;
 }) {
-  const { projectId, phaseId, amount, progressAtPayment } = params;
+  const { projectId, phaseId, amount, progressAtPayment, contractorName, contractorContact } = params;
+  if (!contractorName || !contractorContact) throw new Error('Contractor name and contact are required');
   await RepositoryFactory.getProjectCheckpointSourceRepository().insertPaymentRequest({
       project_id: projectId,
       phase_id: phaseId,
       amount,
       progress_at_payment: progressAtPayment,
       payment_date: new Date().toISOString(),
-      payment_method: 'pending',
+      payment_method: null,
       transaction_id: `REQ-${Date.now()}`,
-      contractor_name: 'Pending',
-      contractor_contact: 'Pending',
+      contractor_name: contractorName,
+      contractor_contact: contractorContact,
     });
 }
