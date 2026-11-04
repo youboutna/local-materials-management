@@ -292,18 +292,6 @@ export class BankGuaranteeActionService {
     }
   }
 
-  /**
-   * Get all templates
-   */
-  async getTemplates(): Promise<unknown[]> {
-    try {
-      console.warn('BankGuaranteeActionService.getTemplates: Template repository not available');
-      return [];
-    } catch (error) {
-      console.error('BankGuaranteeActionService.getTemplates failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch templates');
-    }
-  }
 }
 
 let bankGuaranteeActionServiceInstance: BankGuaranteeActionService | null = null;

@@ -6,6 +6,8 @@
 import { IDocumentRepository } from '@/domain/repositories/IDocumentRepository';
 import { IInspectionRepository } from '@/domain/repositories/IInspectionRepository';
 import { IProjectRepository } from '@/domain/repositories/IProjectRepository';
+import { IComplianceRepository } from '@/domain/repositories/IComplianceRepository';
+import { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { IRiskRepository } from '@/domain/repositories/IRiskRepository';
 import { DocumentDTO } from '@/dtos/entities/DocumentDTO';
 import { InspectionDTO } from '@/dtos/entities/InspectionDTO';
@@ -100,7 +102,9 @@ export class EnhancedValidationService {
     projectRepository?: IProjectRepository,
     riskRepository?: IRiskRepository,
     inspectionRepository?: IInspectionRepository,
-    documentRepository?: IDocumentRepository
+    documentRepository?: IDocumentRepository,
+    private complianceRepository: IComplianceRepository = RepositoryFactory.getComplianceRepository(),
+    private receptionRepository?: IReceptionRepository
   ) {
     this.projectRepository = projectRepository || RepositoryFactory.getProjectRepository();
     this.riskRepository = riskRepository || RepositoryFactory.getRiskRepository();
@@ -114,28 +118,15 @@ export class EnhancedValidationService {
    * Get compliance items for project
    */
   private async getComplianceItems(projectId: string): Promise<any[]> {
-    try {
-      // This would typically use a compliance repository
-      // For now, return empty array as placeholder
-      return [];
-    } catch (error) {
-      console.error('Error getting compliance items:', error);
-      throw error;
-    }
+    return this.complianceRepository.findByProject(projectId);
   }
 
   /**
-   * Get receptions for project
+   * Get receptions for project (repository injected by the workflow; none recorded otherwise).
    */
   private async getReceptions(projectId: string): Promise<any[]> {
-    try {
-      // This would typically use a reception repository
-      // For now, return empty array as placeholder
-      return [];
-    } catch (error) {
-      console.error('Error getting receptions:', error);
-      throw error;
-    }
+    if (!this.receptionRepository) return [];
+    return this.receptionRepository.findByProjectId(projectId);
   }
 
   // =================== COMPREHENSIVE PROJECT VALIDATION ===================
