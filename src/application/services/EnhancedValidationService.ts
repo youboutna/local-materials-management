@@ -771,6 +771,22 @@ export class EnhancedValidationService {
       ));
     }
 
+    // Open high-risk items that still require mitigation
+    const unmitigated = complianceItems.filter(c =>
+      c.mitigationRequired && ['high', 'critical'].includes(c.riskLevel) && !['approved', 'compliant', 'closed'].includes(c.status)
+    );
+    if (unmitigated.length > 0) {
+      issues.push(this.createIssue(
+        ValidationCategory.COMPLIANCE,
+        'high',
+        'Unmitigated High-Risk Compliance Items',
+        `${unmitigated.length} high-risk compliance items still require mitigation`,
+        'project',
+        'Open high-risk compliance items may block acceptance',
+        'Implement and document the required mitigation'
+      ));
+    }
+
     const score = Math.max(0, 100 - (issues.length * 20));
     
     return {
