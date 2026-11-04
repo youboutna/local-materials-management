@@ -2,7 +2,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+const ctx = () => RepositoryFactory.getControlActionContextRepository();
 
 
 // Destinataire technique des notifications système (traçabilité des actions).
@@ -36,26 +36,16 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
     // Fetch real project and inspection data
     const [projectData, inspectionData, projectEmployees, inspectionDocuments] = await Promise.all([
       // Get project details
-      btpDb().from('projects')
-        .select('*')
-        .eq('id', actionData.projectId)
-        .single(),
+      ctx().findRecord('project', actionData.projectId).then((data) => ({ data })),
       
       // Get inspection details
-      btpDb().from('inspections')
-        .select('*')
-        .eq('id', actionData.inspectionId)
-        .single(),
+      ctx().findRecord('inspection', actionData.inspectionId).then((data) => ({ data })),
       
       // Get project team members
-      btpDb().from('employees')
-        .select('id, full_name, email, phone, position, department')
-        .eq('is_active', true),
+      ctx().findActiveEmployees().then((data) => ({ data })),
       
       // Get inspection documents
-      btpDb().from('documents')
-        .select('*')
-        .eq('inspection_id', actionData.inspectionId)
+      ctx().findDocumentsByInspection(actionData.inspectionId).then((data) => ({ data }))
     ]);
 
     const action: InspectionControlAction = {
@@ -128,10 +118,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await btpDb().from('employees')
-        .select('id, full_name, email')
-        .eq('id', action.assigneeId)
-        .single();
+      const assignee: any = await ctx().findEmployee(action.assigneeId);
 
       if (assignee) {
         // Use the communication service to assign task
@@ -315,21 +302,7 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
 
 export const getInspectionActions = async (inspectionId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = btpDb().from('notifications')
-    .select('*')
-    .eq('type', 'system')
-    .like('metadata->entityType', 'inspection');
-
-  if (inspectionId) {
-    query.eq('metadata->entityId', inspectionId);
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching inspection actions:', error);
-    return [];
-  }
+  const data = await ctx().findActionHistory('inspection', inspectionId);
 
   return data || [];
 };

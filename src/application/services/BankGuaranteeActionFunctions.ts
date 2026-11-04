@@ -2,7 +2,7 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+const ctx = () => RepositoryFactory.getControlActionContextRepository();
 
 
 // Destinataire technique des notifications système (traçabilité des actions).
@@ -36,26 +36,16 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
     // Fetch real project data and related entities
     const [projectData, bankGuaranteeData, projectEmployees, projectSuppliers] = await Promise.all([
       // Get project details
-      btpDb().from('projects')
-        .select('*')
-        .eq('id', actionData.projectId)
-        .single(),
+      ctx().findRecord('project', actionData.projectId).then((data) => ({ data })),
       
       // Get bank guarantee details
-      btpDb().from('bank_guarantees')
-        .select('*')
-        .eq('id', actionData.bankGuaranteeId)
-        .single(),
+      ctx().findRecord('bank_guarantee', actionData.bankGuaranteeId).then((data) => ({ data })),
       
       // Get project employees
-      btpDb().from('employees')
-        .select('id, full_name, email, phone, position, department')
-        .eq('is_active', true),
+      ctx().findActiveEmployees().then((data) => ({ data })),
       
       // Get project suppliers/contractors
-      btpDb().from('suppliers')
-        .select('id, name, email, phone, contact_person')
-        .eq('is_active', true)
+      ctx().findActiveSuppliers().then((data) => ({ data }))
     ]);
 
     const action: BankGuaranteeControlAction = {
@@ -128,10 +118,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await btpDb().from('employees')
-        .select('id, full_name, email')
-        .eq('id', action.assigneeId)
-        .single();
+      const assignee: any = await ctx().findEmployee(action.assigneeId);
 
       if (assignee) {
         // Use the communication service to assign task
@@ -283,20 +270,13 @@ const executeBankGuaranteeCommunication = async (action: BankGuaranteeControlAct
     // Get real project stakeholders for communication
     const [projectEmployees, projectSuppliers, bankGuaranteeDetails] = await Promise.all([
       // Get project team members
-      btpDb().from('employees')
-        .select('id, full_name, email, phone, position, department')
-        .eq('is_active', true),
+      ctx().findActiveEmployees().then((data) => ({ data })),
       
       // Get project contractors/suppliers
-      btpDb().from('suppliers')
-        .select('id, name, email, phone, contact_person')
-        .eq('is_active', true),
+      ctx().findActiveSuppliers().then((data) => ({ data })),
       
       // Get bank guarantee details with bank information
-      btpDb().from('bank_guarantees')
-        .select('*')
-        .eq('id', action.bankGuaranteeId)
-        .single()
+      ctx().findRecord('bank_guarantee', action.bankGuaranteeId).then((data) => ({ data }))
     ]);
 
     // Determine recipients based on action context
@@ -432,21 +412,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
 
 export const getBankGuaranteeActions = async (bankGuaranteeId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = btpDb().from('notifications')
-    .select('*')
-    .eq('type', 'system')
-    .like('metadata->entityType', 'bank_guarantee');
-
-  if (bankGuaranteeId) {
-    query.eq('metadata->entityId', bankGuaranteeId);
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching bank guarantee actions:', error);
-    return [];
-  }
+  const data = await ctx().findActionHistory('bank_guarantee', bankGuaranteeId);
 
   return data || [];
 };

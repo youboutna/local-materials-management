@@ -115,6 +115,8 @@ import { SupabaseDataClientProvider } from '@/infrastructure/adapters/supabase/S
 import type { IDataClientProvider } from '@/domain/repositories/IDataClientProvider';
 import { SupabaseTenderCatalogAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderCatalogAdapter';
 import type { ITenderCatalogRepository } from '@/domain/repositories/ITenderCatalogRepository';
+import { SupabaseControlActionContextAdapter } from '@/infrastructure/adapters/supabase/SupabaseControlActionContextAdapter';
+import type { IControlActionContextRepository } from '@/domain/repositories/IControlActionContextRepository';
 import { SupabaseTenderSubmissionAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionAdapter';
 import type { ITenderSubmissionRepository } from '@/domain/repositories/ITenderSubmissionRepository';
 import { SupabaseTenderLotDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderLotDocumentAdapter';
@@ -329,6 +331,7 @@ const lazyPorts: {
   monitoringAlert?: SupabaseMonitoringAlertAdapter;
   dataClient?: IDataClientProvider;
   tenderCatalog?: ITenderCatalogRepository;
+  controlActionContext?: IControlActionContextRepository;
   contract?: SupabaseContractAdapter;
 } = {};
 
@@ -825,6 +828,10 @@ export class RepositoryFactory {
 
   static getTenderCatalogRepository(): ITenderCatalogRepository {
     return (lazyPorts.tenderCatalog ??= new SupabaseTenderCatalogAdapter());
+  }
+
+  static getControlActionContextRepository(): IControlActionContextRepository {
+    return (lazyPorts.controlActionContext ??= new SupabaseControlActionContextAdapter());
   }
 
   static getBoqRepository(): IBoqRepository {
