@@ -4,7 +4,7 @@ import { BoqImportOrchestrator } from '../BoqImportOrchestrator';
 import { PdfBoqParser } from '../parsers/PdfBoqParser';
 class Stub {}
 for (const k of ['DOMMatrix','Path2D','ImageData']) if (!(k in globalThis)) (globalThis as any)[k]=Stub;
-it('probe', async () => {
+it('probe', async () => { (globalThis as any).__BOQ_DEBUG__=1;
   const b = readFileSync('/mnt/user-uploads/DQE_NDB-4.pdf');
   const parsed = await new PdfBoqParser().parse(new File([new Uint8Array(b)], 'dqe.pdf', { type: 'application/pdf' }));
   const dtos = BoqImportOrchestrator.toDtos(parsed.rows, BoqImportOrchestrator.autoMap(parsed.columns), { source: 'dqe', contextId: 'p' });
