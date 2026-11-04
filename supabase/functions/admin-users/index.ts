@@ -40,7 +40,7 @@ function validateRoles(roles: unknown, callerRoles: string[]): string[] | string
   return unique;
 }
 
-async function syncRoles(admin: any, userId: string, roles: string[], grantedBy: string) {
+async function syncRoles(admin: any, userId: string, roles: string[]) {
   const { data: current, error } = await admin
     .from("user_roles").select("role_name, status").eq("user_id", userId);
   if (error) throw error;
@@ -56,17 +56,10 @@ async function syncRoles(admin: any, userId: string, roles: string[], grantedBy:
   }
   for (const role_name of toEnable) {
     const { error: e } = await admin.from("user_roles").upsert(
-      { user_id: userId, role_name, status: "active", expires_at: null, granted_by: grantedBy },
+      { user_id: userId, role_name, status: "active", expires_at: null },
       { onConflict: "user_id,role_name" },
     );
-    if (e) {
-      // Some deployments have no granted_by column: retry without it.
-      const { error: e2 } = await admin.from("user_roles").upsert(
-        { user_id: userId, role_name, status: "active", expires_at: null },
-        { onConflict: "user_id,role_name" },
-      );
-      if (e2) throw e2;
-    }
+    if (e) throw e;
   }
 }
 
@@ -138,7 +131,7 @@ serve(async (request) => {
           id: userId, full_name: fullName, phone, national_id: clean(body.nationalId) || null, status: "pending",
         });
         if (pErr) console.error("profile upsert failed", pErr.message);
-        await syncRoles(admin, userId, roles.length ? roles : ["viewer"], caller.id);
+        await syncRoles(admin, userId, roles.length ? roles : ["viewer"]);
         return jsonResponse({ success: true, userId, confirmation: result });
       }
       case "update": {
@@ -174,7 +167,7 @@ serve(async (request) => {
           if (userId === caller.id && !roles.some((r) => (ADMIN_ROLES as readonly string[]).includes(r))) {
             return jsonResponse({ success: false, error: "you cannot remove your own administrator role" }, 400);
           }
-          await syncRoles(admin, userId, roles, caller.id);
+          await syncRoles(admin, userId, roles);
         }
         return jsonResponse({ success: true, userId });
       }
