@@ -219,6 +219,11 @@ export class BoqImportOrchestrator {
         rawQty != null || rawTotal != null || pu != null ||
         length != null || width != null || height != null;
       const isValued = hasSourceValue;
+      // Le tableau possède des colonnes Quantité et P.U. : une ligne qui ne
+      // porte qu'un montant (ni unité, ni quantité, ni P.U.) est un titre de
+      // chapitre ou un sous-total (« EQUIPEMENTS … 157 500 »), jamais un ouvrage.
+      // Les DQE forfaitaires sans colonne Quantité restent lus comme avant.
+      if (mapping.quantity && mapping.unitPrice && rawTotal != null && rawQty == null && pu == null && !unit) continue;
       if (!designation) continue;
       // Lignes d'en-tête répétées dans le corps du document (« Désignation | Unité | Qté »).
       if (!isValued && HEADER_LIKE_RX.test(designation)) continue;
