@@ -265,7 +265,19 @@ export class PdfBoqParser implements IDocumentParser {
           .map((r) => alignItemsToBands(itemRows[r] ?? [], bands))
           .reduce((acc, row) => row.map((cell, i) => `${acc[i] ?? ''} ${cell}`.trim()), Array.from({ length: bands.length }, () => ''));
         bestGroup.slice(1).forEach((r) => headerFragmentRows.add(r));
-        rowsAcc = cellRows.map((cells, index) => alignItemsToBands(itemRows[index] ?? [], bands));
+        // Un en-tête répété plus loin (autre page, autre tableau : « Quatité /
+        // Prix Unitaire TTC / Total TTC ») redéfinit les colonnes à partir de lui.
+        let activeBands = bands;
+        rowsAcc = cellRows.map((cells, index) => {
+          if (index > bestGroup[bestGroup.length - 1] && looksHeader(cells.map((c) => c.text)) >= 3) {
+            const block = [index - 1, index, index + 1]
+              .filter((r) => r >= 0 && r < cellRows.length && !cellRows[r].some((c) => /\d{3}/.test(c.text)))
+              .map((r) => itemRows[r] ?? []);
+            const local = headerBandsFromItems(block);
+            if (local.length >= 4) activeBands = local;
+          }
+          return alignItemsToBands(itemRows[index] ?? [], activeBands);
+        });
         rowsAcc[bandHeaderIdx] = mergedHeader;
       } else {
         rowsAcc = cellRows.map((cells) => cells.map((c) => c.text));
