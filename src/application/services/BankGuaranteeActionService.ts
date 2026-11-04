@@ -208,9 +208,8 @@ export class BankGuaranteeActionService {
    */
   async getActionsByStatus(status: string): Promise<BankGuaranteeActionDTO[]> {
     try {
-      // For now, return empty array - would need to scan all guarantees
-      console.warn('BankGuaranteeActionService.getActionsByStatus: Not fully implemented');
-      return [];
+      const guarantees = await this.bankGuaranteeRepository.findAll();
+      return guarantees.flatMap(g => g.actions || []).filter(a => a.status === status);
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionsByStatus failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch actions by status');
@@ -222,9 +221,8 @@ export class BankGuaranteeActionService {
    */
   async getActionsByAssignee(userId: string): Promise<BankGuaranteeActionDTO[]> {
     try {
-      // For now, return empty array - would need to scan all guarantees
-      console.warn('BankGuaranteeActionService.getActionsByAssignee: Not fully implemented');
-      return [];
+      const guarantees = await this.bankGuaranteeRepository.findAll();
+      return guarantees.flatMap(g => g.actions || []).filter(a => a.performedBy === userId);
     } catch (error) {
       console.error('BankGuaranteeActionService.getActionsByAssignee failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch assigned actions');
@@ -250,6 +248,8 @@ export class BankGuaranteeActionService {
       const updatedAction: BankGuaranteeActionDTO = {
         ...guarantee.actions![actionIndex],
         notes: notes || guarantee.actions![actionIndex].notes,
+        status: 'completed',
+        completedAt: now,
         updatedAt: now
       };
 
@@ -271,35 +271,27 @@ export class BankGuaranteeActionService {
   async getGuaranteeActionStats(guaranteeId: string): Promise<BankGuaranteeActionStatistics> {
     try {
       const actions = await this.getActionsByGuaranteeId(guaranteeId);
+      const now = Date.now();
+      const count = (s: BankGuaranteeActionDTO['status']) => actions.filter(a => a.status === s).length;
+      const byType: Record<string, number> = {};
+      for (const a of actions) byType[a.type] = (byType[a.type] ?? 0) + 1;
       return {
         total: actions.length,
-        pending: 0,
-        inProgress: 0,
-        completed: actions.length,
-        cancelled: 0,
-        failed: 0,
-        overdue: 0,
-        byType: {},
+        pending: count('pending'),
+        inProgress: count('in_progress'),
+        completed: count('completed'),
+        cancelled: count('cancelled'),
+        failed: count('failed'),
+        overdue: actions.filter(a => a.dueDate && !['completed', 'cancelled'].includes(a.status) && new Date(a.dueDate).getTime() < now).length,
+        byType,
         byPriority: {}
-      };
+      } as BankGuaranteeActionStatistics;
     } catch (error) {
       console.error('BankGuaranteeActionService.getGuaranteeActionStats failed:', error);
       throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get action stats');
     }
   }
 
-  /**
-   * Get all templates
-   */
-  async getTemplates(): Promise<unknown[]> {
-    try {
-      console.warn('BankGuaranteeActionService.getTemplates: Template repository not available');
-      return [];
-    } catch (error) {
-      console.error('BankGuaranteeActionService.getTemplates failed:', error);
-      throw new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to fetch templates');
-    }
-  }
 }
 
 let bankGuaranteeActionServiceInstance: BankGuaranteeActionService | null = null;

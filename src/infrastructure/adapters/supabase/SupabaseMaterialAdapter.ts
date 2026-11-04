@@ -597,7 +597,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     try {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
-        console.warn('SupabaseMaterialAdapter: project_materials table not found, returning mock data');
+        console.warn('SupabaseMaterialAdapter: project_materials table not found, no project materials recorded');
         return [];
       }
 
@@ -643,19 +643,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     try {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
-        console.warn('SupabaseMaterialAdapter: project_materials table not found, returning mock');
-        return {
-          id: `mock-pm-${Date.now()}`,
-          projectId,
-          materialId,
-          quantity,
-          unit: 'unit',
-          unitPrice: 0,
-          totalPrice: 0,
-          status: 'planned',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        throw new AppError(ErrorCode.DATABASE_ERROR, 'project_materials table is not available');
       }
 
       const { data, error } = await supabase
@@ -680,8 +668,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     try {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
-        console.warn('SupabaseMaterialAdapter: project_materials table not found, remove mocked');
-        return;
+        throw new AppError(ErrorCode.DATABASE_ERROR, 'project_materials table is not available');
       }
 
       const { error } = await supabase
@@ -759,8 +746,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
     try {
       const exists = await this.projectMaterialsTableExists();
       if (!exists) {
-        console.warn('SupabaseMaterialAdapter: project_materials table not found, delete mocked');
-        return;
+        throw new AppError(ErrorCode.DATABASE_ERROR, 'project_materials table is not available');
       }
 
       const { error } = await supabase

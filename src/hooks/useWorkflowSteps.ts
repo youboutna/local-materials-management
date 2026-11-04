@@ -48,7 +48,7 @@ export const useWorkflowSteps = (tenderId: string) => {
 
   const uploadDocumentMutation = useMutation({
     mutationFn: async (data: { uploadData: DocumentUploadDTO; projectId?: string }) => {
-      return workflowStepService.uploadStepDocument(data.uploadData.category, data.uploadData);
+      return workflowStepService.uploadStepDocument(data.uploadData.step_id, data.uploadData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflow-steps', tenderId] });

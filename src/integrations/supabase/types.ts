@@ -1088,6 +1088,39 @@ export type Database = {
           },
         ]
       }
+      monitoring_dashboards: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          last_updated: string
+          refresh_interval: number
+          updated_at: string
+          user_id: string
+          widgets: Json
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          last_updated?: string
+          refresh_interval?: number
+          updated_at?: string
+          user_id: string
+          widgets?: Json
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          last_updated?: string
+          refresh_interval?: number
+          updated_at?: string
+          user_id?: string
+          widgets?: Json
+        }
+        Relationships: []
+      }
       national_depots: {
         Row: {
           address: string | null
