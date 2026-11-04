@@ -1130,4 +1130,9 @@ export class RepositoryFactory {
     if (!data?.url) throw new Error(`URL OAuth introuvable pour ${provider}`);
     return data.url;
   }
+
+  static async getUserAdministrationGateway() {
+    const { EdgeFunctionUserAdministrationAdapter } = await import('@/infrastructure/adapters/supabase/EdgeFunctionUserAdministrationAdapter');
+    return new EdgeFunctionUserAdministrationAdapter();
+  }
 }

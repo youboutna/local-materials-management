@@ -36,3 +36,4 @@
 - Application services, hooks and components obtain every repository, storage, auth and edge-function dependency from RepositoryFactory; only infrastructure adapters import provider clients, so providers can be swapped in one place.
 - Render technical codes (status, priority, unit, role…) through CodeLabel/useI18n referential translators, never raw, so the i18n guard test stays green.
 - Resolve each provider (auth, data, storage) independently as deployment variable > saved deployment profile > mode default, empty meaning unset, and show deployment-pinned providers in the profile screen; a database row must never silently override an explicit deployment choice.
+- Screens, hooks, services, domain and DTOs import infrastructure only through RepositoryFactory (including lazy loaders); the NoDirectInfrastructureImports guard test enforces it so providers stay swappable.
