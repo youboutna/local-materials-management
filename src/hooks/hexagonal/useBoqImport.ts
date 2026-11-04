@@ -45,7 +45,9 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
       setParseResult(res);
       setMapping(res.autoMapping);
       setNumberFormat(format);
-      setDtos(unifiedBoqParser.toMeterInputs(res, res.autoMapping, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat: format }));
+      const lines = await unifiedBoqParser.toMeterInputsChunked(res, res.autoMapping, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat: format });
+      if (run !== parseRun.current) return;
+      setDtos(lines);
     } catch (e) {
       if (run === parseRun.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -55,7 +57,10 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
 
   const applyMapping = useCallback((next: ImportMapping) => {
     setMapping(next);
-    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, next, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat }));
+    if (!parseResult) return;
+    const run = parseRun.current;
+    void unifiedBoqParser.toMeterInputsChunked(parseResult, next, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat })
+      .then((lines) => { if (run === parseRun.current) setDtos(lines); });
   }, [parseResult, ctx, numberFormat]);
 
   const reviewPlan = async (elements: readonly TechnicalPlanElementDTO[]) => {
@@ -75,7 +80,10 @@ export function useBoqImport(ctx: { source: BoqSource; contextId: string; phaseI
   /** Rejoue le mapping courant avec une autre convention numérique. */
   const applyNumberFormat = useCallback((next: NumberFormatMode) => {
     setNumberFormat(next);
-    if (parseResult) setDtos(unifiedBoqParser.toMeterInputs(parseResult, mapping, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat: next }));
+    if (!parseResult) return;
+    const run = parseRun.current;
+    void unifiedBoqParser.toMeterInputsChunked(parseResult, mapping, { ...ctx, fiscalProfileCode: ctx.fiscalProfileCode, numberFormat: next })
+      .then((lines) => { if (run === parseRun.current) setDtos(lines); });
   }, [parseResult, mapping, ctx]);
 
   const commit = useCallback(async (lines: BoqLineDTO[] = dtos) => {
