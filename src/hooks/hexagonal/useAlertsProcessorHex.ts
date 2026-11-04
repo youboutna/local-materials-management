@@ -1,41 +1,19 @@
 /**
- * Hexagonal hook for Alerts Processor
+ * Hexagonal hook for Alerts Processor — runs the real server-side processor.
  */
-
 import { useMutation } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
+import { getAlertsProcessorService, type AlertsProcessorRunResult } from '@/application/services/AlertsProcessorService';
 
-export interface ProcessorResult {
-  processed: number;
-  alertsGenerated: number;
-}
+export type ProcessorResult = AlertsProcessorRunResult;
 
 export function useRunAlertsProcessorHex() {
-  return useMutation({
-    mutationFn: async (): Promise<ProcessorResult> => {
-      // Placeholder - would use AlertService
-      console.log('Alerts processor not implemented yet');
-      
-      // Simulate processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      return {
-        processed: 10,
-        alertsGenerated: 3
-      };
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Traitement terminé',
-        description: `${data.processed} projets traités, ${data.alertsGenerated} alertes générées`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erreur de traitement',
-        description: 'Impossible de traiter les alertes',
-        variant: 'destructive',
-      });
-    }
+  const mutation = useMutation({
+    mutationFn: async (options: { batchSize?: number } = {}) => (await getAlertsProcessorService()).run(options),
   });
+  return {
+    runProcessor: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    error: mutation.error,
+    data: mutation.data,
+  };
 }

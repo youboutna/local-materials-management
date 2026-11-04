@@ -34,12 +34,13 @@ const KeycloakSettings = () => {
     setIsLoading(true);
     
     try {
-      // Here we would attempt to connect to Keycloak
-      // For now, we'll simulate a successful connection if all fields are filled
       if (url && realm && clientId) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        // Real check: the realm must publish its OpenID configuration.
+        const discovery = `${url.replace(/\/$/, '')}/realms/${encodeURIComponent(realm)}/.well-known/openid-configuration`;
+        const response = await fetch(discovery);
+        if (!response.ok) throw new Error(`Keycloak responded ${response.status}`);
+        const config = await response.json();
+        if (!config?.issuer) throw new Error('Invalid OpenID configuration');
         setIsConnected(true);
         toast({
           title: "Connection successful",
@@ -65,18 +66,12 @@ const KeycloakSettings = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, we would save these to environment variables or secure storage
-      // For demo purposes, we'll just show a success toast
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // In production, we would update these securely
-      // keycloakConfig.url = url;
-      // keycloakConfig.realm = realm;
-      // keycloakConfig.clientId = clientId;
-      
+      // Keycloak settings are public deployment configuration (no secret):
+      // they are applied at release time through the runtime config, never from the browser.
       toast({
-        title: "Settings saved",
-        description: "Keycloak configuration has been updated",
+        title: "Not saved",
+        description: "Keycloak settings are applied through the deployment configuration file, not from this screen.",
+        variant: "destructive",
       });
     } catch (error) {
       console.error('Error saving Keycloak settings:', error);

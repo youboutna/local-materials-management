@@ -62,7 +62,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? this.rowToEntity(data) : null;
     } catch (error) {
       console.error('Unexpected error finding tender document by ID:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -81,7 +81,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding all tender documents:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -192,7 +192,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding tender documents by project ID:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -212,7 +212,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? this.rowToEntity(data) : null;
     } catch (error) {
       console.error('Unexpected error finding tender document by document ID:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -232,7 +232,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding tender documents by category:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -252,7 +252,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding tender documents by subcategory:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -272,7 +272,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding tender documents by status:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -293,7 +293,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding required tender documents:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -314,7 +314,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding submitted tender documents:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -335,7 +335,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding pending tender documents:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -361,7 +361,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding overdue tender documents:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -382,7 +382,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       return data ? data.map(row => this.rowToEntity(row)) : [];
     } catch (error) {
       console.error('Unexpected error finding tender documents by project and category:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -527,7 +527,7 @@ export class SupabaseTenderDocumentAdapter implements ITenderDocumentRepository 
       }));
     } catch (error) {
       console.error('Unexpected error finding step documents by tender ID:', error);
-      return [];
+      throw error;
     }
   }
 

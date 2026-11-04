@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 /**
  * Location Analytics Component
  * Provides comprehensive location-based analytics for projects
@@ -74,6 +75,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
 }) => {
   const { t } = useLanguage();
   const { searchLocations, allRegions, allCities, isLoading } = useLocationHex();
+  const queryClient = useQueryClient();
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
   const [locationStats, setLocationStats] = useState<LocationStats[]>([]);
@@ -162,8 +164,7 @@ const LocationAnalytics: React.FC<LocationAnalyticsProps> = ({
   // Refresh data
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Simulate refresh delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await queryClient.invalidateQueries();
     setIsRefreshing(false);
   };
 
