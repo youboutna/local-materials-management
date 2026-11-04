@@ -165,7 +165,9 @@ export class SupabaseAuthAdapter extends BaseAuthAdapter implements IAuthReposit
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: data.redirectTo,
           data: {
+            ...(data.metadata ?? {}),
             full_name: data.fullName,
             phone: data.phone,
             national_id: data.nationalId,
