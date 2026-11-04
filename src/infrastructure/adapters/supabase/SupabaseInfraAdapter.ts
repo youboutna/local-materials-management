@@ -21,23 +21,16 @@ import type {
 } from '@/dtos/entities/InfraDTO';
 
 export class SupabaseInfraAdapter implements IInfraRepository {
-  private client: any;
-
-  constructor() {
-    // Use supabase client with infra schema
-    const { supabase } = require('@/integrations/supabase/client');
-    this.client = supabase;
-  }
-
-  // Helper to get table with schema prefix
-  private table(tableName: string) {
-    return this.client.schema('infra').from(tableName);
+  /** Client chargé dynamiquement (aucun require() : incompatible avec le bundle ESM). */
+  private async sb(): Promise<any> {
+    const { supabase } = await import('@/integrations/supabase/client');
+    return supabase;
   }
 
   // ============= DOMAINS =============
 
   async findAllDomains(): Promise<DomainDTO[]> {
-    const { data, error } = await this.table('domains')
+    const { data, error } = await (await this.sb()).schema('infra').from('domains')
       .select('*')
       .order('code');
 
@@ -46,7 +39,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   }
 
   async findDomainByCode(code: string): Promise<DomainDTO | null> {
-    const { data, error } = await this.table('domains')
+    const { data, error } = await (await this.sb()).schema('infra').from('domains')
       .select('*')
       .eq('code', code)
       .single();
@@ -61,7 +54,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   // ============= ASSET TYPES =============
 
   async findAllAssetTypes(): Promise<AssetTypeDTO[]> {
-    const { data, error } = await this.table('asset_types')
+    const { data, error } = await (await this.sb()).schema('infra').from('asset_types')
       .select('*')
       .order('code');
 
@@ -70,7 +63,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   }
 
   async findAssetTypesByDomain(domainCode: string): Promise<AssetTypeDTO[]> {
-    const { data, error } = await this.table('asset_types')
+    const { data, error } = await (await this.sb()).schema('infra').from('asset_types')
       .select('*')
       .eq('domain_code', domainCode)
       .order('code');
@@ -80,7 +73,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   }
 
   async findAssetTypeByCode(code: string): Promise<AssetTypeDTO | null> {
-    const { data, error } = await this.table('asset_types')
+    const { data, error } = await (await this.sb()).schema('infra').from('asset_types')
       .select('*')
       .eq('code', code)
       .single();
@@ -95,7 +88,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   // ============= NETWORK FEATURES =============
 
   async findFeatureById(id: string): Promise<NetworkFeature | null> {
-    const { data, error } = await this.table('network_features')
+    const { data, error } = await (await this.sb()).schema('infra').from('network_features')
       .select('*')
       .eq('id', id)
       .single();
@@ -112,7 +105,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     assetTypeCode?: string;
     projectId?: string;
   }): Promise<NetworkFeature[]> {
-    let query = this.table('network_features').select('*');
+    let query = (await this.sb()).schema('infra').from('network_features').select('*');
 
     if (filters?.domainCode) {
       query = query.eq('domain_code', filters.domainCode);
@@ -122,7 +115,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     }
     if (filters?.projectId) {
       // Join with project_asset_links
-      query = query.in('id', this.table('project_asset_links')
+      query = query.in('id', (await this.sb()).schema('infra').from('project_asset_links')
         .select('asset_globalid')
         .eq('project_id', filters.projectId)
         .eq('asset_class', 'network_feature')
@@ -141,7 +134,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     projectId?: string
   ): Promise<NetworkFeature[]> {
     // Call RPC infra_zone_analysis or use PostGIS query
-    const { data, error } = await this.client.rpc('infra_zone_analysis', {
+    const { data, error } = await (await this.sb()).rpc('infra_zone_analysis', {
       p_project_id: projectId,
       p_zone: zone,
       p_buffer_meters: bufferMeters
@@ -153,7 +146,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   async createFeature(feature: SaveFeatureDTO): Promise<NetworkFeature> {
     const dbRow = this.featureDtoToRow(feature);
-    const { data, error } = await this.table('network_features')
+    const { data, error } = await (await this.sb()).schema('infra').from('network_features')
       .insert(dbRow)
       .select()
       .single();
@@ -164,7 +157,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   async updateFeature(id: string, updates: Partial<SaveFeatureDTO>): Promise<NetworkFeature> {
     const dbRow = this.featureDtoToRow(updates);
-    const { data, error } = await this.table('network_features')
+    const { data, error } = await (await this.sb()).schema('infra').from('network_features')
       .update(dbRow)
       .eq('id', id)
       .select()
@@ -175,7 +168,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   }
 
   async deleteFeature(id: string): Promise<void> {
-    const { error } = await this.table('network_features')
+    const { error } = await (await this.sb()).schema('infra').from('network_features')
       .delete()
       .eq('id', id);
 
@@ -187,7 +180,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     features: SaveFeatureDTO[]
   ): Promise<ImportResultDTO> {
     // Call RPC infra_feature_import
-    const { data, error } = await this.client.rpc('infra_zone_analysis', {
+    const { data, error } = await (await this.sb()).rpc('infra_zone_analysis', {
       p_project_id: projectId,
       p_zone: { type: 'FeatureCollection', features: features.map(f => ({ geometry: f.geometry })) },
       p_buffer_meters: 0
@@ -204,7 +197,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   // ============= STRUCTURES =============
 
   async findStructureById(id: string): Promise<Structure | null> {
-    const { data, error } = await this.table('structures')
+    const { data, error } = await (await this.sb()).schema('infra').from('structures')
       .select('*')
       .eq('id', id)
       .single();
@@ -221,7 +214,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     assetTypeCode?: string;
     projectId?: string;
   }): Promise<Structure[]> {
-    let query = this.table('structures').select('*');
+    let query = (await this.sb()).schema('infra').from('structures').select('*');
 
     if (filters?.structureType) {
       query = query.eq('structure_type', filters.structureType);
@@ -230,7 +223,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
       query = query.eq('asset_type_code', filters.assetTypeCode);
     }
     if (filters?.projectId) {
-      query = query.in('id', this.table('project_asset_links')
+      query = query.in('id', (await this.sb()).schema('infra').from('project_asset_links')
         .select('asset_globalid')
         .eq('project_id', filters.projectId)
         .eq('asset_class', 'structure')
@@ -249,7 +242,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     projectId?: string
   ): Promise<Structure[]> {
     // Use PostGIS spatial query
-    const { data, error } = await this.table('structures')
+    const { data, error } = await (await this.sb()).schema('infra').from('structures')
       .select('*')
       .filter('geometry', 'ST_Intersects',
         `ST_Buffer(ST_GeomFromGeoJSON('${JSON.stringify(zone)}')::geography, ${bufferMeters})::geometry`
@@ -261,7 +254,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   async createStructure(structure: Partial<StructureDTO>): Promise<Structure> {
     const dbRow = this.structureDtoToRow(structure);
-    const { data, error } = await this.table('structures')
+    const { data, error } = await (await this.sb()).schema('infra').from('structures')
       .insert(dbRow)
       .select()
       .single();
@@ -272,7 +265,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   async updateStructure(id: string, updates: Partial<StructureDTO>): Promise<Structure> {
     const dbRow = this.structureDtoToRow(updates);
-    const { data, error } = await this.table('structures')
+    const { data, error } = await (await this.sb()).schema('infra').from('structures')
       .update(dbRow)
       .eq('id', id)
       .select()
@@ -283,7 +276,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
   }
 
   async deleteStructure(id: string): Promise<void> {
-    const { error } = await this.table('structures')
+    const { error } = await (await this.sb()).schema('infra').from('structures')
       .delete()
       .eq('id', id);
 
@@ -298,7 +291,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     bufferMeters: number
   ): Promise<InfrastructureAnalysisDTO> {
     // Call RPC infra_zone_analysis with full statistics
-    const { data, error } = await this.client.rpc('infra_zone_analysis', {
+    const { data, error } = await (await this.sb()).rpc('infra_zone_analysis', {
       p_project_id: projectId,
       p_zone: zone,
       p_buffer_meters: bufferMeters
@@ -312,7 +305,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   async findRealizations(projectId: string): Promise<RealizationDTO[]> {
     // Query project_asset_links with realization metadata stored in properties
-    const { data, error } = await this.table('project_asset_links')
+    const { data, error } = await (await this.sb()).schema('infra').from('project_asset_links')
       .select('*')
       .eq('project_id', projectId)
       .eq('asset_class', 'network_feature');
@@ -332,7 +325,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   async updateRealization(realization: RealizationDTO): Promise<RealizationDTO> {
     // Update realization metadata in project_asset_links properties
-    const { error } = await this.table('project_asset_links')
+    const { error } = await (await this.sb()).schema('infra').from('project_asset_links')
       .update({
         properties: {
           realization: realization.realized ? 'completed' : 'planned',
@@ -355,7 +348,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     assetGlobalid: string,
     assetClass: 'network_feature' | 'structure'
   ): Promise<void> {
-    const { error } = await this.table('project_asset_links')
+    const { error } = await (await this.sb()).schema('infra').from('project_asset_links')
       .insert({
         project_id: projectId,
         asset_globalid: assetGlobalid,
@@ -369,7 +362,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     projectId: string,
     assetGlobalid: string
   ): Promise<void> {
-    const { error } = await this.table('project_asset_links')
+    const { error } = await (await this.sb()).schema('infra').from('project_asset_links')
       .delete()
       .eq('project_id', projectId)
       .eq('asset_globalid', assetGlobalid);
@@ -382,16 +375,16 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     structures: Structure[];
   }> {
     const [featuresResult, structuresResult] = await Promise.all([
-      this.table('network_features')
+      (await this.sb()).schema('infra').from('network_features')
         .select('*')
-        .in('id', this.table('project_asset_links')
+        .in('id', (await this.sb()).schema('infra').from('project_asset_links')
           .select('asset_globalid')
           .eq('project_id', projectId)
           .eq('asset_class', 'network_feature')
         ),
-      this.table('structures')
+      (await this.sb()).schema('infra').from('structures')
         .select('*')
-        .in('id', this.table('project_asset_links')
+        .in('id', (await this.sb()).schema('infra').from('project_asset_links')
           .select('asset_globalid')
           .eq('project_id', projectId)
           .eq('asset_class', 'structure')
