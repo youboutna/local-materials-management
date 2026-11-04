@@ -27,7 +27,7 @@ export function isFiscalMetaRow(label: string): boolean {
 
 export function isSubtotalRow(label: string): boolean {
   if (!label) return false;
-  return /^(sous[-\s]?total|s\.?\s?total|total\s|grand\s*total|total\s+lot|total\s+phase|total\s+g[eé]n[eé]ral|sous[-\s]?total\s+g[eé]n[eé]ral|total\s+ht|total\s+ttc|total\s+mat[eé]riel|total\s+hr|total\s+rh|total\s+g[eé]n[eé]ral)/i.test(label);
+  return /^(sous[-\s]?total|s\.?\s?total|total(?:\s|\s*[-–:]\s*)|grand\s*total|total\s+lot|total\s+phase|total\s+g[eé]n[eé]ral|sous[-\s]?total\s+g[eé]n[eé]ral|total\s+ht|total\s+ttc|total\s+mat[eé]riel|total\s+hr|total\s+rh|total\s+g[eé]n[eé]ral)/i.test(label);
 }
 
 /**
