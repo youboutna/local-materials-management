@@ -392,8 +392,39 @@ export class AutomaticDecompteCalculator {
   }
 
   private async getPreviousDecomptes(projectId: string, phaseId?: string): Promise<AutomaticDecompteDTO[]> {
-    // This would fetch from a decompte repository when available
-    return [];
+    // Source unique : décomptes persistés (factures de progression). Brouillons et rejetés exclus.
+    const repo = RepositoryFactory.getDecompteRepository();
+    const records = phaseId ? await repo.findByPhaseId(phaseId) : await repo.findByProjectId(projectId);
+    const statusMap: Record<string, AutomaticDecompteDTO['status']> = {
+      submitted: 'submitted', validated: 'approved', paid: 'paid',
+    };
+    return records
+      .filter(r => r.status in statusMap)
+      .sort((a, b) => String(a.submittedAt ?? a.createdAt ?? '').localeCompare(String(b.submittedAt ?? b.createdAt ?? '')))
+      .map((r, index) => ({
+        id: r.id,
+        projectId: r.projectId ?? projectId,
+        phaseId: r.phaseId ?? undefined,
+        decompteNumber: index + 1,
+        decompteType: 'progress',
+        contractAmount: 0,
+        previousCumulative: 0,
+        currentPeriodAmount: r.validatedAmount || r.amount,
+        cumulativeAmount: 0,
+        retentionRate: 0,
+        retentionAmount: r.retentionAmount,
+        previousRetentionReleased: 0,
+        retentionToRelease: 0,
+        netPayable: r.validatedAmount,
+        verifiedMilestones: [],
+        lines: [],
+        progressAtDecompte: r.progressPercentage,
+        status: statusMap[r.status],
+        calculatedAt: r.createdAt ?? r.submittedAt ?? '',
+        submittedAt: r.submittedAt ?? undefined,
+        paidAt: r.paidAt ?? undefined,
+        calculationLog: [],
+      } as unknown as AutomaticDecompteDTO));
   }
 
   private async getPhaseData(phaseId: string): Promise<PhaseFinancials | null> {
