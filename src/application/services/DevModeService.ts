@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * DevModeService — pilote unique du mode de session (LOCAL DEV vs API réelle).
  *
@@ -17,7 +18,6 @@ import {
   setActiveDevRole,
   setDevModeOverride,
 } from '@/config/constants';
-import { AuthAdapterFactory } from '@/infrastructure/adapters/auth/AuthAdapterFactory';
 import { getSystemSettingsService, SystemSettingsService } from '@/application/services/SystemSettingsService';
 import type { DevModeCode, DevModeRoleOptionDTO, DevModeStateDTO } from '@/dtos/dev/DevModeDTO';
 
@@ -38,7 +38,7 @@ export class DevModeService {
   }
 
   getCurrentMode(): DevModeCode {
-    return AuthAdapterFactory.getKind() === 'local' ? 'LOCAL' : 'API';
+    return RepositoryFactory.getAuthKind() === 'local' ? 'LOCAL' : 'API';
   }
 
   getState(): DevModeStateDTO {
@@ -48,7 +48,7 @@ export class DevModeService {
       devModeEnabled: DEV_MODE,
       devModeSource: getDevModeOverride() === null ? 'ENV' : 'ADMIN',
       activeRole: mode === 'LOCAL' ? getActiveDevRole().role.toUpperCase() : null,
-      adapter: AuthAdapterFactory.getKind(),
+      adapter: RepositoryFactory.getAuthKind(),
       availableRoles: this.getAvailableRoles(),
     };
   }
@@ -60,14 +60,14 @@ export class DevModeService {
    */
   async setDevModeEnabled(enabled: boolean): Promise<void> {
     setDevModeOverride(enabled);
-    AuthAdapterFactory.reset();
+    RepositoryFactory.resetAuthAdapter();
     await this.persistState(enabled ? 'LOCAL' : 'API', enabled ? getActiveDevRole().role : null, enabled);
   }
 
   /** Retour à la valeur de configuration (.env / runtime config). */
   async resetDevModeToEnv(): Promise<void> {
     setDevModeOverride(null);
-    AuthAdapterFactory.reset();
+    RepositoryFactory.resetAuthAdapter();
   }
 
   /** Bascule vers un rôle DEV local. Retourne le profil (email/password) à authentifier. */

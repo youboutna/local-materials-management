@@ -1,10 +1,10 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Hexagonal hook for user administration
  * Provides admin-level user management through UserAdminService
  */
 import { UserAdminService } from '@/application/services/UserAdminService';
 import { toast } from '@/hooks/use-toast';
-import { UserAdminAdapter } from '@/infrastructure/adapters/supabase/UserAdminAdapter';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface UserProfile {
@@ -22,7 +22,7 @@ export interface UserProfile {
 }
 
 export const useUserProfilesHex = (userId: string | undefined, isDevelopmentMode: boolean) => {
-  const adminService = new UserAdminService(new UserAdminAdapter());
+  const adminService = new UserAdminService(RepositoryFactory.getUserAdminRepository());
   
   return useQuery({
     queryKey: ['user-profiles', userId],
@@ -64,7 +64,7 @@ export const useUserProfilesHex = (userId: string | undefined, isDevelopmentMode
 
 export const useToggleUserStatusHex = () => {
   const queryClient = useQueryClient();
-  const adminService = new UserAdminService(new UserAdminAdapter());
+  const adminService = new UserAdminService(RepositoryFactory.getUserAdminRepository());
   
   return useMutation({
     mutationFn: async ({ userId, newStatus }: { userId: string; newStatus: boolean }) => {

@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * DEV_MODE Hook Example
  * Demonstrates how to use DEV_MODE with mock data and localStorage adapter
@@ -5,14 +6,13 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DEV_CONFIG, shouldUseMockData, simulateApiDelay } from '@/config/dev';
-import { LocalStorageAdapter } from '@/infrastructure/adapters/localStorage/LocalStorageAdapter';
 import { toast } from '@/hooks/use-toast';
 
 /**
  * Generic hook for DEV_MODE operations
  */
 export function useDevModeData<T>(entityType: string, filters?: Record<string, unknown>) {
-  const localStorageAdapter = new LocalStorageAdapter();
+  const localStorageAdapter = RepositoryFactory.getLocalKeyValueStore();
   
   return useQuery({
     queryKey: ['dev-mode', entityType, filters],
@@ -32,7 +32,7 @@ export function useDevModeData<T>(entityType: string, filters?: Record<string, u
  * Mutation for creating data in DEV_MODE
  */
 export function useDevModeCreate<T>(entityType: string) {
-  const localStorageAdapter = new LocalStorageAdapter();
+  const localStorageAdapter = RepositoryFactory.getLocalKeyValueStore();
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -78,7 +78,7 @@ export function useDevModeCreate<T>(entityType: string) {
  * Mutation for updating data in DEV_MODE
  */
 export function useDevModeUpdate<T>(entityType: string) {
-  const localStorageAdapter = new LocalStorageAdapter();
+  const localStorageAdapter = RepositoryFactory.getLocalKeyValueStore();
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -114,7 +114,7 @@ export function useDevModeUpdate<T>(entityType: string) {
  * Mutation for deleting data in DEV_MODE
  */
 export function useDevModeDelete(entityType: string) {
-  const localStorageAdapter = new LocalStorageAdapter();
+  const localStorageAdapter = RepositoryFactory.getLocalKeyValueStore();
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -148,7 +148,7 @@ export function useDevModeDelete(entityType: string) {
  * Hook for DEV_MODE statistics and management
  */
 export function useDevModeManagement() {
-  const localStorageAdapter = new LocalStorageAdapter();
+  const localStorageAdapter = RepositoryFactory.getLocalKeyValueStore();
   
   const clearAllData = () => {
     localStorageAdapter.clear();

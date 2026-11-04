@@ -31,7 +31,6 @@ export { tenderToPlanningService, TenderToPlanningService } from '@/application/
 
 // Infra port
 export type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
-export { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 
 // Hooks
 export { useBoqDocument } from '@/hooks/hexagonal/useBoqDocument';

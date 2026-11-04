@@ -1,3 +1,19 @@
+import { LocalStorageConfigRepository } from '@/infrastructure/adapters/localStorage/LocalStorageConfigRepository';
+import { SupabaseConfigRepository } from '@/infrastructure/adapters/supabase/SupabaseConfigRepository';
+import { AuthAdapterFactory } from '@/infrastructure/adapters/auth/AuthAdapterFactory';
+import { LocalAuthAdapter as LocalAuthAdapterForManager } from '@/infrastructure/adapters/local/LocalAuthAdapter';
+import { SupabaseAuthAdapter as SupabaseAuthAdapterForManager } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
+import { KeycloakAuthAdapter as KeycloakAuthAdapterForManager } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
+import { keycloakConfig as keycloakEnvConfig } from '@/integrations/keycloak/config';
+import { GeoJsonBoundaryAdapter } from '@/infrastructure/adapters/gis/GeoJsonBoundaryAdapter';
+import type { IAdministrativeBoundaryRepository } from '@/domain/repositories/IAdministrativeBoundaryRepository';
+import { UserAdminAdapter } from '@/infrastructure/adapters/supabase/UserAdminAdapter';
+import type { UserAdminRepository } from '@/application/services/UserAdminService';
+import { getAuthorizationRequestRepository as resolveAuthorizationRequestRepository } from '@/infrastructure/adapters/supabase/AuthorizationRequestAdapter';
+import type { IAuthorizationRequestRepository } from '@/domain/repositories/IAuthorizationRequestRepository';
+import { LocalStorageAdapter } from '@/infrastructure/adapters/localStorage/LocalStorageAdapter';
+import { ProjectFileParserFactory } from '@/infrastructure/parsers/ProjectFileParserFactory';
+import type { IProjectFileParser } from '@/infrastructure/parsers/IProjectFileParser';
 /**
  * Unified RepositoryFactory
  * Single switch for auth / data / storage providers.
@@ -1025,5 +1041,58 @@ export class RepositoryFactory {
     if (errors.length) {
       throw new Error(errors.join(' / '));
     }
+  }
+
+  // ---------- Ports additionnels (aucun consommateur n'instancie d'adaptateur) ----------
+  static getAdministrativeBoundaryRepository(): IAdministrativeBoundaryRepository {
+    return (lazyPorts.adminBoundary ??= new GeoJsonBoundaryAdapter()) as IAdministrativeBoundaryRepository;
+  }
+
+  static getUserAdminRepository(): UserAdminRepository {
+    return (lazyPorts.userAdmin ??= new UserAdminAdapter()) as UserAdminRepository;
+  }
+
+  static getAuthorizationRequestRepository(): IAuthorizationRequestRepository {
+    return resolveAuthorizationRequestRepository();
+  }
+
+  static getLocalKeyValueStore(prefix?: string): LocalStorageAdapter {
+    return new LocalStorageAdapter(prefix);
+  }
+
+  static getProjectFileParser(file: File): IProjectFileParser {
+    return ProjectFileParserFactory.forFile(file);
+  }
+
+  /** Dépôt de configuration : local en mode hors ligne, base sinon. */
+  static getConfigRepository(localBypass: boolean) {
+    return localBypass ? new LocalStorageConfigRepository() : new SupabaseConfigRepository();
+  }
+
+  /** Réinitialise l'adaptateur d'authentification mis en cache (changement de fournisseur). */
+  static resetAuthAdapter(): void {
+    AuthAdapterFactory.reset();
+    delete registry.auth;
+  }
+
+  /** Paramètres Keycloak issus du déploiement. */
+  static getKeycloakDefaults(): { url: string; realm: string; clientId: string } {
+    return { ...keycloakEnvConfig };
+  }
+
+  /** Construit un adaptateur d'authentification pour un fournisseur donné (utilisé par AuthManager). */
+  static createAuthAdapterFor(
+    provider: string,
+    keycloak?: { url?: string; realm?: string; clientId?: string },
+  ): unknown {
+    if (provider === 'local') return new LocalAuthAdapterForManager();
+    if (provider === 'keycloak') {
+      return new KeycloakAuthAdapterForManager({
+        url: keycloak?.url || keycloakEnvConfig.url,
+        realm: keycloak?.realm || keycloakEnvConfig.realm,
+        clientId: keycloak?.clientId || keycloakEnvConfig.clientId,
+      });
+    }
+    return new SupabaseAuthAdapterForManager();
   }
 }

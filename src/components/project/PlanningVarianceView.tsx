@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 import { Download, FileText, Loader2, TrendingDown, TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
@@ -27,13 +27,13 @@ const fmtPct = (n: number) => `${(n * 100).toFixed(1)}%`;
 export function PlanningVarianceView({ projectId, groupBy = 'phaseId' }: Props) {
   const { data: planned = [], isLoading: pLoading } = useQuery({
     queryKey: ['boq-planned', projectId],
-    queryFn: () => boqRepository.list({ source: 'quantity_takeoff', contextId: projectId, projectId }),
+    queryFn: () => RepositoryFactory.getBoqRepository().list({ source: 'quantity_takeoff', contextId: projectId, projectId }),
     enabled: !!projectId,
   });
 
   const { data: actual = [], isLoading: aLoading } = useQuery({
     queryKey: ['boq-actual', projectId],
-    queryFn: () => boqRepository.list({ source: 'supplier_bid', projectId }),
+    queryFn: () => RepositoryFactory.getBoqRepository().list({ source: 'supplier_bid', projectId }),
     enabled: !!projectId,
   });
 

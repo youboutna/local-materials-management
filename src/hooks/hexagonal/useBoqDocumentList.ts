@@ -5,7 +5,7 @@
  * on réutilise le repository hexagonal.
  */
 import type { BoqDocumentSummary, BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 
@@ -66,7 +66,7 @@ export function useBoqDocumentList(filter: Omit<BoqLineFilter, 'documentId'>) {
 
   const query = useQuery({
     queryKey: key,
-    queryFn: () => boqRepository.list(filter),
+    queryFn: () => RepositoryFactory.getBoqRepository().list(filter),
     enabled: Boolean(filter.contextId || filter.projectId || filter.estimateId),
   });
 

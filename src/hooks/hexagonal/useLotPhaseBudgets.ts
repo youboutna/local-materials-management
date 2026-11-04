@@ -3,10 +3,10 @@
  * automatique du montant estimé des lots d'appel d'offres.
  */
 import { LotPhaseBudgetService, type ProjectLotBudgetsDTO } from '@/application/services/tender/LotPhaseBudgetService';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { useQuery } from '@tanstack/react-query';
 
-const service = new LotPhaseBudgetService(boqRepository);
+const service = new LotPhaseBudgetService(RepositoryFactory.getBoqRepository());
 
 export function useLotPhaseBudgets(projectId?: string | null) {
   const query = useQuery<ProjectLotBudgetsDTO>({
