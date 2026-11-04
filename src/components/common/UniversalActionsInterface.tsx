@@ -23,6 +23,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import UserSelector from '@/components/selectors/UserSelector';
 import { EnhancedActionService, UnifiedActionRequest, EnhancedActionServiceStatic } from '@/application/services/enhancedActionService';
 import { T } from '@/components/i18n/T';
@@ -64,6 +65,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const { t } = useI18n();
 
@@ -120,6 +122,7 @@ const UniversalActionsInterface: React.FC<UniversalActionsInterfaceProps> = ({
         recipientIds: values.recipientIds,
         dueDate: values.dueDate,
         escalationLevel: values.escalationLevel,
+        createdBy: currentUser?.id,
         metadata: {
           entityName: contextualInfo?.entityName,
           entityDescription: contextualInfo?.entityDescription,
