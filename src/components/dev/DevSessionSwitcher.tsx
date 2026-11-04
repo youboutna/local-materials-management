@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * DevSessionSwitcher — DEV MODE badge with live role switching + real-session escape hatch.
  *
@@ -20,7 +21,6 @@ import {
 import { Check, LogOut, ShieldCheck, Wrench } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DEV_MODE, getActiveDevRole, getDevUsersSnapshot, setActiveDevRole } from '@/config/constants';
-import { AuthAdapterFactory } from '@/infrastructure/adapters/auth/AuthAdapterFactory';
 import { useHexagonalAuth } from '@/hooks/hexagonal/useHexagonalAuth';
 import { useToast } from '@/hooks/use-toast';
 import { T } from '@/components/i18n/T';
@@ -34,7 +34,7 @@ const DevSessionSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }
   const [busy, setBusy] = useState(false);
   const [activeRole, setActiveRoleState] = useState(() => getActiveDevRole().role);
 
-  const isLocalSession = DEV_MODE && AuthAdapterFactory.getKind() === 'local';
+  const isLocalSession = DEV_MODE && RepositoryFactory.getAuthKind() === 'local';
 
   const devUsers = useMemo(() => Object.entries(getDevUsersSnapshot()), []);
 

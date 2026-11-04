@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * src/application/services/ConfigService.ts
  * ConfigService — source unique du paramétrage système exposé à l'administration.
@@ -11,8 +12,6 @@ import { getAppConfig } from '@/config/app';
 import { APP_NAME, APP_VERSION, IS_LOCAL_BYPASS } from '@/config/constants';
 import { resolveSupabaseConfig } from '@/config/supabaseConfig';
 import type { ConfigEntry, IConfigRepository } from '@/domain/repositories/IConfigRepository';
-import { LocalStorageConfigRepository } from '@/infrastructure/adapters/localStorage/LocalStorageConfigRepository';
-import { SupabaseConfigRepository } from '@/infrastructure/adapters/supabase/SupabaseConfigRepository';
 import { assertSafeSetting, safeSettings } from '@/config/settings-safety';
 
 /** Fragments de nom indiquant une valeur sensible : jamais exposée dans l'UI. */
@@ -25,9 +24,7 @@ export class ConfigService {
   private readonly envDefaults: Record<string, unknown> = {};
 
   private constructor() {
-    this.repository = IS_LOCAL_BYPASS
-      ? new LocalStorageConfigRepository()
-      : new SupabaseConfigRepository();
+    this.repository = RepositoryFactory.getConfigRepository(IS_LOCAL_BYPASS);
     this.loadEnvDefaults();
   }
 

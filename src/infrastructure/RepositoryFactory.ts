@@ -1,3 +1,10 @@
+import { LocalStorageConfigRepository } from '@/infrastructure/adapters/localStorage/LocalStorageConfigRepository';
+import { SupabaseConfigRepository } from '@/infrastructure/adapters/supabase/SupabaseConfigRepository';
+import { AuthAdapterFactory } from '@/infrastructure/adapters/auth/AuthAdapterFactory';
+import { LocalAuthAdapter as LocalAuthAdapterForManager } from '@/infrastructure/adapters/local/LocalAuthAdapter';
+import { SupabaseAuthAdapter as SupabaseAuthAdapterForManager } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
+import { KeycloakAuthAdapter as KeycloakAuthAdapterForManager } from '@/infrastructure/adapters/auth/KeycloakAuthAdapter';
+import { keycloakConfig as keycloakEnvConfig } from '@/integrations/keycloak/config';
 import { GeoJsonBoundaryAdapter } from '@/infrastructure/adapters/gis/GeoJsonBoundaryAdapter';
 import type { IAdministrativeBoundaryRepository } from '@/domain/repositories/IAdministrativeBoundaryRepository';
 import { UserAdminAdapter } from '@/infrastructure/adapters/supabase/UserAdminAdapter';
@@ -1055,5 +1062,37 @@ export class RepositoryFactory {
 
   static getProjectFileParser(file: File): IProjectFileParser {
     return ProjectFileParserFactory.forFile(file);
+  }
+
+  /** Dépôt de configuration : local en mode hors ligne, base sinon. */
+  static getConfigRepository(localBypass: boolean) {
+    return localBypass ? new LocalStorageConfigRepository() : new SupabaseConfigRepository();
+  }
+
+  /** Réinitialise l'adaptateur d'authentification mis en cache (changement de fournisseur). */
+  static resetAuthAdapter(): void {
+    AuthAdapterFactory.reset();
+    delete registry.auth;
+  }
+
+  /** Paramètres Keycloak issus du déploiement. */
+  static getKeycloakDefaults(): { url: string; realm: string; clientId: string } {
+    return { ...keycloakEnvConfig };
+  }
+
+  /** Construit un adaptateur d'authentification pour un fournisseur donné (utilisé par AuthManager). */
+  static createAuthAdapterFor(
+    provider: string,
+    keycloak?: { url?: string; realm?: string; clientId?: string },
+  ): unknown {
+    if (provider === 'local') return new LocalAuthAdapterForManager();
+    if (provider === 'keycloak') {
+      return new KeycloakAuthAdapterForManager({
+        url: keycloak?.url || keycloakEnvConfig.url,
+        realm: keycloak?.realm || keycloakEnvConfig.realm,
+        clientId: keycloak?.clientId || keycloakEnvConfig.clientId,
+      });
+    }
+    return new SupabaseAuthAdapterForManager();
   }
 }
