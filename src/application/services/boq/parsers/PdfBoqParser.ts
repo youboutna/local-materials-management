@@ -156,6 +156,8 @@ export class PdfBoqParser implements IDocumentParser {
 
     const cellRows: Cell[][] = [];
     const itemRows: PdfItem[][] = [];
+    /** Page d'origine de chaque ligne physique (en-têtes répétés par page). */
+    const rowPage: number[] = [];
     let rowsAcc: string[][] = [];
     const warnings: string[] = [];
     /** Reconstruction alternative pour les tableaux à cellules repliées. */
@@ -192,6 +194,7 @@ export class PdfBoqParser implements IDocumentParser {
         if (cells.length) {
           cellRows.push(cells);
           itemRows.push(row);
+          rowPage.push(p);
         }
       }
 
@@ -269,7 +272,9 @@ export class PdfBoqParser implements IDocumentParser {
         // Prix Unitaire TTC / Total TTC ») redéfinit les colonnes à partir de lui.
         let activeBands = bands;
         rowsAcc = cellRows.map((cells, index) => {
-          if (index > bestGroup[bestGroup.length - 1] && looksHeader(cells.map((c) => c.text)) >= 3) {
+          const pageStart = rowPage.indexOf(rowPage[index]);
+          if (index > bestGroup[bestGroup.length - 1] && rowPage[index] !== rowPage[bestGroup[0]]
+            && index - pageStart < 6 && looksHeader(cells.map((c) => c.text)) >= 3) {
             const block = [index - 1, index, index + 1]
               .filter((r) => r >= 0 && r < cellRows.length && !cellRows[r].some((c) => /\d{3}/.test(c.text)))
               .map((r) => itemRows[r] ?? []);
