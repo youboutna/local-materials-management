@@ -90,7 +90,7 @@ const env = (key: string, fallback = ''): string => {
       return runtime[key];
     }
   }
-  const v = (import.meta as unknown as { env?: Record<string, string> }).env?.[key];
+  const v = (import.meta.env as Record<string, string | undefined> | undefined)?.[key];
   return v !== undefined && v !== '' ? v : fallback;
 };
 
@@ -101,7 +101,7 @@ const envOpt = (key: string): string | undefined => {
       return runtime[key];
     }
   }
-  const v = (import.meta as unknown as { env?: Record<string, string> }).env?.[key];
+  const v = (import.meta.env as Record<string, string | undefined> | undefined)?.[key];
   return v === undefined || v === '' ? undefined : v;
 };
 
