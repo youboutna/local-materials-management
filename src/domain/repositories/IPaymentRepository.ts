@@ -6,7 +6,8 @@ export interface IPaymentRepository {
   // CRUD operations
   findById(id: string): Promise<Payment | null>;
   findAll(): Promise<Payment[]>;
-  save(payment: Payment): Promise<void>;
+  /** Persists a new payment and returns the identifier stored by the database. */
+  save(payment: Payment): Promise<string | void>;
   update(id: string, data: Partial<Payment>): Promise<void>;
   delete(id: string): Promise<void>;
   

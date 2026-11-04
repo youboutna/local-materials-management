@@ -49,7 +49,7 @@ export class SupabasePaymentAdapter implements IPaymentRepository {
     return data.map(d => this.mapToEntity(d));
   }
 
-  async save(payment: Payment): Promise<void> {
+  async save(payment: Payment): Promise<string> {
     const insertData = {
       // The database generates the primary key for new payments.
       ...(payment.id ? { id: payment.id } : {}),
@@ -74,8 +74,9 @@ export class SupabasePaymentAdapter implements IPaymentRepository {
       created_by: payment.createdBy,
       notes: payment.notes,
     };
-    const { error } = await supabase.from('payments').insert(insertData);
+    const { data, error } = await supabase.from('payments').insert(insertData).select('id').single();
     if (error) throw new Error(`Failed to save payment: ${error.message}`);
+    return (data as { id: string }).id;
   }
 
   async update(id: string, data: Partial<Payment>): Promise<void> {

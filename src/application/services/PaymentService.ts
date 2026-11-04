@@ -106,30 +106,19 @@ export class PaymentService {
     // ✅ Le transformer utilise projectRef, phaseRef, inspectionRef
     const paymentEntity = PaymentTransformer.fromCreateDTOToEntity(dtoWithUser);
 
-    console.log('[PaymentService] entity created:', {
-      projectId: paymentEntity.projectRef?.id,
-      phaseId: paymentEntity.phaseRef?.id,
-      inspectionId: paymentEntity.inspectionRef?.id,
-      contractorId: paymentEntity.contractorId,
-      receiverName: paymentEntity.receiverName,
-      notes: paymentEntity.notes,
-      bankName: paymentEntity.bankName,
-      accountNumber: paymentEntity.accountNumber,
-    });
-
-    await this.paymentRepository.save(paymentEntity);
+    const storedId = (await this.paymentRepository.save(paymentEntity)) || paymentEntity.id;
 
     // Lier les documents si présents
     if (data.documentIds?.length) {
       try {
         const documentService = getDocumentService();
-        await documentService.linkDocumentsToPayment(paymentEntity.id, data.documentIds);
+        await documentService.linkDocumentsToPayment(storedId, data.documentIds);
       } catch (linkError) {
         console.warn('[PaymentService] Erreur liaison documents:', linkError);
       }
     }
 
-    return PaymentTransformer.toDTO(paymentEntity);
+    return { ...PaymentTransformer.toDTO(paymentEntity), id: storedId };
   }
 
   // ============================================================
