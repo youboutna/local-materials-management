@@ -139,7 +139,7 @@ export class InfrastructureService {
   }
 
   async deleteAsset(projectId: string, id: string): Promise<void> {
-    // For now, delegate to the existing ProjectWorkbenchService via RPC
+    // Delegate to the canonical ProjectWorkbenchService RPC.
     const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
     return getProjectWorkbenchService().deleteAsset(projectId, id);
   }
@@ -147,20 +147,20 @@ export class InfrastructureService {
   // ============= STRUCTURES =============
 
   async structures(projectId: string): Promise<InfraStructureDTO[]> {
-    // For now, delegate to the existing ProjectWorkbenchService via RPC
+    // Delegate to the canonical ProjectWorkbenchService RPC.
     // This maintains backward compatibility while we transition to the new schema
     const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
     return getProjectWorkbenchService().structures(projectId);
   }
 
   async saveStructure(input: SaveInfraStructureDTO): Promise<string> {
-    // For now, delegate to the existing ProjectWorkbenchService via RPC
+    // Delegate to the canonical ProjectWorkbenchService RPC.
     const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
     return getProjectWorkbenchService().saveStructure(input);
   }
 
   async deleteStructure(projectId: string, id: string): Promise<void> {
-    // For now, delegate to the existing ProjectWorkbenchService via RPC
+    // Delegate to the canonical ProjectWorkbenchService RPC.
     const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
     return getProjectWorkbenchService().deleteStructure(projectId, id);
   }
@@ -173,7 +173,7 @@ export class InfrastructureService {
       throw new Error('Invalid buffer (must be 0-100000 meters)');
     }
 
-    // For now, delegate to the existing ProjectWorkbenchService via RPC
+    // Delegate to the canonical ProjectWorkbenchService RPC.
     // This maintains backward compatibility while we transition to the new schema
     const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
     return getProjectWorkbenchService().analyze(projectId, geometry, bufferMeters);
@@ -182,14 +182,13 @@ export class InfrastructureService {
   // ============= REALIZATION =============
 
   async saveRealization(input: InfrastructureRealizationDTO): Promise<string> {
-    // For now, delegate to the existing ProjectWorkbenchService via RPC
+    // Delegate to the canonical ProjectWorkbenchService RPC.
     const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
     return getProjectWorkbenchService().saveRealization(input);
   }
 
   // ============= TRANSFORMERS (New Generic ↔ Existing Workbench) =============
-  // TODO: Implement transformers when RPCs are updated to support new schema columns
-  // For now, all operations delegate to existing ProjectWorkbenchService via RPC
+  // Persistence delegates to ProjectWorkbenchService RPCs, whose adapters own the row ↔ DTO mapping.
 }
 
 // Singleton instance

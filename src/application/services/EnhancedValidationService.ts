@@ -104,7 +104,7 @@ export class EnhancedValidationService {
     inspectionRepository?: IInspectionRepository,
     documentRepository?: IDocumentRepository,
     private complianceRepository: IComplianceRepository = RepositoryFactory.getComplianceRepository(),
-    private receptionRepository?: IReceptionRepository
+    private receptionRepository: IReceptionRepository = RepositoryFactory.getReceptionRepository()
   ) {
     this.projectRepository = projectRepository || RepositoryFactory.getProjectRepository();
     this.riskRepository = riskRepository || RepositoryFactory.getRiskRepository();
@@ -122,10 +122,9 @@ export class EnhancedValidationService {
   }
 
   /**
-   * Get receptions for project (repository injected by the workflow; none recorded otherwise).
+   * Get receptions for project (btp.receptions).
    */
   private async getReceptions(projectId: string): Promise<any[]> {
-    if (!this.receptionRepository) return [];
     return this.receptionRepository.findByProjectId(projectId);
   }
 

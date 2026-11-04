@@ -100,6 +100,8 @@ import type { IInfraRepository } from '@/domain/repositories/IInfraRepository';
 import { SupabaseAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseAlertAdapter';
 import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 import { SupabaseComplianceAdapter } from '@/infrastructure/adapters/supabase/SupabaseComplianceAdapter';
+import { SupabaseReceptionAdapter } from '@/infrastructure/adapters/supabase/SupabaseReceptionAdapter';
+import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { SupabaseContactMessageAdapter } from '@/infrastructure/adapters/supabase/SupabaseContactMessageAdapter';
 import { SupabaseDecompteAdapter } from '@/infrastructure/adapters/supabase/SupabaseDecompteAdapter';
 import { SupabaseDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseDocumentAdapter';
@@ -274,6 +276,7 @@ interface RepositoryRegistry {
   projectStakeholder?: IProjectStakeholderRepository;
   stakeholder?: IStakeholderRepository;
   compliance?: IComplianceRepository;
+  reception?: IReceptionRepository;
   monitoring?: IMonitoringRepository;
   workspace?: IWorkspaceRepository;
   alert?: IAlertRepository;
@@ -763,6 +766,12 @@ export class RepositoryFactory {
   // ================================================================
   // COMPLIANCE & MONITORING
   // ================================================================
+
+  static getReceptionRepository(): IReceptionRepository {
+    if (registry.reception) return registry.reception;
+    registry.reception = new SupabaseReceptionAdapter();
+    return registry.reception;
+  }
 
   static getComplianceRepository(): IComplianceRepository {
     if (registry.compliance) return registry.compliance;
