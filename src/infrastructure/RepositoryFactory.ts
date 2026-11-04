@@ -101,6 +101,12 @@ import { SupabaseAlertAdapter } from '@/infrastructure/adapters/supabase/Supabas
 import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 import { SupabaseComplianceAdapter } from '@/infrastructure/adapters/supabase/SupabaseComplianceAdapter';
 import { SupabaseReceptionAdapter } from '@/infrastructure/adapters/supabase/SupabaseReceptionAdapter';
+import { SupabaseTenderSubmissionAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionAdapter';
+import type { ITenderSubmissionRepository } from '@/domain/repositories/ITenderSubmissionRepository';
+import { SupabaseTenderLotDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderLotDocumentAdapter';
+import type { ITenderLotDocumentRepository } from '@/domain/repositories/ITenderLotDocumentRepository';
+import { SupabaseProjectCheckpointSourceAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectCheckpointSourceAdapter';
+import type { IProjectCheckpointSourceRepository } from '@/domain/repositories/IProjectCheckpointSourceRepository';
 import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { SupabaseContactMessageAdapter } from '@/infrastructure/adapters/supabase/SupabaseContactMessageAdapter';
 import { SupabaseDecompteAdapter } from '@/infrastructure/adapters/supabase/SupabaseDecompteAdapter';
@@ -298,6 +304,12 @@ interface RepositoryRegistry {
 }
 
 const registry: RepositoryRegistry = {};
+
+const lazyPorts: {
+  tenderSubmission?: ITenderSubmissionRepository;
+  tenderLotDocument?: ITenderLotDocumentRepository;
+  projectCheckpointSource?: IProjectCheckpointSourceRepository;
+} = {};
 
 // ================================================================
 // 10. REPOSITORY FACTORY
@@ -771,6 +783,18 @@ export class RepositoryFactory {
     if (registry.reception) return registry.reception;
     registry.reception = new SupabaseReceptionAdapter();
     return registry.reception;
+  }
+
+  static getTenderSubmissionRepository(): ITenderSubmissionRepository {
+    return (lazyPorts.tenderSubmission ??= new SupabaseTenderSubmissionAdapter());
+  }
+
+  static getTenderLotDocumentRepository(): ITenderLotDocumentRepository {
+    return (lazyPorts.tenderLotDocument ??= new SupabaseTenderLotDocumentAdapter());
+  }
+
+  static getProjectCheckpointSourceRepository(): IProjectCheckpointSourceRepository {
+    return (lazyPorts.projectCheckpointSource ??= new SupabaseProjectCheckpointSourceAdapter());
   }
 
   static getComplianceRepository(): IComplianceRepository {
