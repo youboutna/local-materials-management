@@ -28,6 +28,8 @@ erreurs de lecture converties en listes vides, actions qui affichent un succès 
 | 35 blocs `catch` des services applicatifs | Erreur journalisée puis `[]`/`null` renvoyé | L'erreur est relancée (affichée par l'écran via l'état d'erreur) |
 | Pages de test, import « Projets 2025 » | Projets et identifiants codés en dur importables en production | Pages et onglet supprimés |
 
+| Écrans (`src/components`) — passe UI→service | Modification d'inspection seulement journalisée ; actions paiement/projet journalisées ; création de phases et progression affichées sans appel ; « Alertes envoyées » comptait les alertes sans rien envoyer ; déploiement Keycloak simulé par minuterie | Mise à jour via `useInspectionsHex` → InspectionService ; actions via `EnhancedActionService` avec auteur réel ; phases via `PhaseService.createConstructionPhasesFromReferential` et `updateConstructionPhase` ; alertes via `CommunicationService` avec compte réel ; Keycloak : copie de la configuration, aucun faux déploiement |
+
 ## Reste à traiter (priorisé)
 1. ~145 autres blocs (hooks, adaptateurs, composants) `catch` qui renvoient `[]`/`null` sans remonter l'erreur (GeocodingService, useLocationHex, ProjectManagerProvider, MilestoneService, usePhasesHex…). Les contrôles de permission qui renvoient `false` sont volontairement conservés (refus par défaut).
 2. ~300 méthodes dont le corps se limite à des journaux console (`enhancedActionService`, `SupplierPaymentService`, `StakeholderService`) : à relire une par une.
