@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 import AlertsDashboard from "@/components/dashboard/AlertsDashboard";
 import KPIDashboardWidget from "@/components/dashboard/KPIDashboardWidget";
 import ManagementActions from "@/components/dashboard/ManagementActions";
@@ -300,7 +301,7 @@ const Dashboard: React.FC = () => {
                         <p className="text-xs text-muted-foreground truncate">{kpi.label}</p>
                         <div className="flex items-baseline gap-1">
                           <span className="text-2xl font-bold leading-tight">{kpi.value}</span>
-                          <span className="text-xs text-muted-foreground">{kpi.unit}</span>
+                          <span className="text-xs text-muted-foreground"><CodeLabel kind="unit" code={kpi.unit} /></span>
                         </div>
                       </CardContent>
                     </Card>

@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * NewsletterSubscribersAdminPage - Admin interface for newsletter subscriber management
  * Provides CRUD operations for newsletter subscribers
@@ -137,7 +138,7 @@ export function NewsletterSubscribersAdminPage() {
                     {subscriber.source && ` • Source: ${subscriber.source}`}
                   </CardDescription>
                 </div>
-                <Badge className={getStatusColor(subscriber.status)}>{subscriber.status}</Badge>
+                <Badge className={getStatusColor(subscriber.status)}><CodeLabel kind="status" code={subscriber.status} /></Badge>
               </div>
             </CardHeader>
             <CardContent>

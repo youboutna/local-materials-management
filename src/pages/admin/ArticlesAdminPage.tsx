@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * ArticlesAdminPage - Admin interface for article management
  * Provides CRUD operations for news articles
@@ -179,7 +180,7 @@ export function ArticlesAdminPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="draft"><CodeLabel kind="status" code="draft" /></SelectItem>
             <SelectItem value="published">Published</SelectItem>
             <SelectItem value="archived">Archived</SelectItem>
           </SelectContent>
@@ -200,7 +201,7 @@ export function ArticlesAdminPage() {
                   <CardTitle className="text-xl">{article.title}</CardTitle>
                   <CardDescription className="mt-2">{article.summary}</CardDescription>
                 </div>
-                <Badge className={getStatusColor(article.status)}>{article.status}</Badge>
+                <Badge className={getStatusColor(article.status)}><CodeLabel kind="status" code={article.status} /></Badge>
               </div>
             </CardHeader>
             <CardContent>

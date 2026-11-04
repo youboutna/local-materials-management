@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * ImportRecapPanels — étape « Récapitulatif » du wizard d'import DQE :
  * sous-totaux par taux de TVA (scénario 5) et métrés détectés avec leurs
@@ -92,7 +93,7 @@ export function MetreRecapPanel({ lines }: { lines: BoqLineDTO[] }) {
                 {m.recommendations.map((r) => (
                   <li key={r.code} className="flex flex-wrap items-center gap-2 text-xs">
                     <span className="text-muted-foreground">→ {r.label}</span>
-                    <span>{fmt(r.quantity)} {r.unit}</span>
+                    <span>{fmt(r.quantity)} <CodeLabel kind="unit" code={r.unit} /></span>
                     <Badge variant={PRIORITY_LABEL[r.priority]?.variant ?? 'outline'}>
                       {PRIORITY_LABEL[r.priority]?.label ?? r.priority}
                     </Badge>

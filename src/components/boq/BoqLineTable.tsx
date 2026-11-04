@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * src/components/boq/BoqLineTable.tsx
  * BoqLineTable — grille unique saisie/import alignée sur les colonnes parseur.
@@ -189,7 +190,7 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
     },
     {
       id: 'unit', label: <T k="auto.boqlinetable.unite" fallback="Unité" />,
-      cell: (l, i) => editable ? <Select value={l.unit ?? 'u'} onValueChange={(v) => patch(i, { unit: v })}><SelectTrigger className="h-8 w-full min-w-[80px]"><SelectValue /></SelectTrigger><SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select> : <>{l.unit}</>,
+      cell: (l, i) => editable ? <Select value={l.unit ?? 'u'} onValueChange={(v) => patch(i, { unit: v })}><SelectTrigger className="h-8 w-full min-w-[80px]"><SelectValue /></SelectTrigger><SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select> : <><CodeLabel kind="unit" code={l.unit} /></>,
     },
     { id: 'length', label: 'L', align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.length ?? ''} onChange={(e) => patch(i, { length: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-full min-w-[64px] text-right" /> : <>{l.length ?? '—'}</> },
     { id: 'width', label: 'l', align: 'right', cell: (l, i) => editable ? <Input type="number" value={l.width ?? ''} onChange={(e) => patch(i, { width: e.target.value === '' ? null : Number(e.target.value) })} className="h-8 w-full min-w-[64px] text-right" /> : <>{l.width ?? '—'}</> },
@@ -292,14 +293,14 @@ export function BoqLineTable({ lines, emptyLabel = 'Document vide — ajoutez, i
                 </p>
               ))}
               <dl className="mb-3 grid grid-cols-3 gap-2 text-xs">
-                <div><dt className="text-muted-foreground">{t('metering.gross')}</dt><dd>{metering.grossQuantity.toLocaleString()} {l.unit}</dd></div>
+                <div><dt className="text-muted-foreground">{t('metering.gross')}</dt><dd>{metering.grossQuantity.toLocaleString()} <CodeLabel kind="unit" code={l.unit} /></dd></div>
                 <div><dt className="text-muted-foreground">{t('metering.openings')}</dt><dd>{metering.openingsArea.toLocaleString()} m²</dd></div>
-                <div><dt className="text-muted-foreground">{t('metering.net')}</dt><dd>{metering.netQuantity.toLocaleString()} {l.unit}</dd></div>
+                <div><dt className="text-muted-foreground">{t('metering.net')}</dt><dd>{metering.netQuantity.toLocaleString()} <CodeLabel kind="unit" code={l.unit} /></dd></div>
               </dl>
               <p className="mb-2 break-words text-xs text-muted-foreground">{metering.formula}</p>
               <p className="mb-2 break-words text-xs"><span className="text-muted-foreground">{t('dqe.line.source')}: </span>{typeof l.metadata?.provenance === 'object' && l.metadata.provenance !== null && 'fileName' in l.metadata.provenance && typeof l.metadata.provenance.fileName === 'string' ? l.metadata.provenance.fileName : t('dqe.source.manual')}</p>
               {metering.materials.length > 0 && <div className="mb-3 flex flex-wrap gap-3 text-xs">
-                {metering.materials.map((material) => <span key={material.code}>{material.labels[language === 'ar' || language === 'en' ? language : 'fr']}: {material.quantity.toLocaleString()} {material.unit}</span>)}
+                {metering.materials.map((material) => <span key={material.code}>{material.labels[language === 'ar' || language === 'en' ? language : 'fr']}: {material.quantity.toLocaleString()} <CodeLabel kind="unit" code={material.unit} /></span>)}
               </div>}
               <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {columns.map((c) => (

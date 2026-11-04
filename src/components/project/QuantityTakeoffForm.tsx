@@ -1,3 +1,4 @@
+import { CodeLabel } from '@/components/common/CodeLabel';
 /**
  * QuantityTakeoffForm - Quantity calculation form
  * Now consumes the shared BOQ core (BoqCalculatorService + BoqValidatorService)
@@ -290,7 +291,7 @@ const QuantityTakeoffForm = ({ projectId, onSubmitSuccess }: QuantityTakeoffForm
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.unit && <p className="text-xs text-destructive mt-1">{fieldErrors.unit}</p>}
+            {fieldErrors.unit && <p className="text-xs text-destructive mt-1"><CodeLabel kind="unit" code={fieldErrors.unit} /></p>}
           </div>
 
           <div>
