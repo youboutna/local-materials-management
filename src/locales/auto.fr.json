@@ -6749,5 +6749,13 @@
   "auto.teamoverview.materiaux": "Matériaux",
   "auto.teamoverview.planifier_dans_dqe": "Planifier dans le DQE",
   "workbench.dqe_remaining": "Quantité DQE restante",
-  "workbench.exceeds_dqe_remaining": "Dépasse la quantité DQE restante"
+  "workbench.exceeds_dqe_remaining": "Dépasse la quantité DQE restante",
+  "workbench.overrun": "Dépassement",
+  "workbench.outside_dqe": "Hors DQE",
+  "workbench.invalid_label": "La désignation est obligatoire.",
+  "workbench.invalid_date": "La date est invalide.",
+  "workbench.invalid_quantity": "La quantité doit être un nombre positif ou nul.",
+  "workbench.invalid_unit": "L'unité est obligatoire.",
+  "workbench.invalid_amount": "Le montant doit être un nombre positif ou nul.",
+  "workbench.invalid_currency": "La devise est obligatoire."
 }

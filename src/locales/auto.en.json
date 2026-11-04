@@ -6752,5 +6752,13 @@
   "auto.teamoverview.materiaux": "Materials",
   "auto.teamoverview.planifier_dans_dqe": "Plan in the BOQ",
   "workbench.dqe_remaining": "Remaining BOQ quantity",
-  "workbench.exceeds_dqe_remaining": "Exceeds remaining BOQ quantity"
+  "workbench.exceeds_dqe_remaining": "Exceeds remaining BOQ quantity",
+  "workbench.overrun": "Overrun",
+  "workbench.outside_dqe": "Outside BOQ",
+  "workbench.invalid_label": "Description is required.",
+  "workbench.invalid_date": "Date is invalid.",
+  "workbench.invalid_quantity": "Quantity must be zero or positive.",
+  "workbench.invalid_unit": "Unit is required.",
+  "workbench.invalid_amount": "Amount must be zero or positive.",
+  "workbench.invalid_currency": "Currency is required."
 }

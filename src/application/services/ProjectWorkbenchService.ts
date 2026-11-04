@@ -14,6 +14,16 @@ import { getReferentialItemService } from './ReferentialItemService';
 import { getProjectResourceAggregatorService } from './ProjectResourceAggregatorService';
 import type { ReferentialItemDTO } from '@/dtos/entities/ReferentialItemDTO';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+export type OperationViolation = 'label' | 'date' | 'quantity' | 'unit' | 'amount' | 'currency';
+
+/** Erreur métier typée : le champ fautif est traduit par l'écran (workbench.invalid_<champ>). */
+export class OperationValidationError extends Error {
+  constructor(public readonly field: OperationViolation) {
+    super(`workbench.invalid_${field}`);
+    this.name = 'OperationValidationError';
+  }
+}
+
 export class ProjectWorkbenchService {
   constructor(private readonly repository: IProjectWorkbenchRepository = RepositoryFactory.getProjectWorkbenchRepository()) {}
   projects() { return this.repository.projects(); }
@@ -46,7 +56,8 @@ export class ProjectWorkbenchService {
     return events.filter(event => { if (!event.date) return false; const d = parseISO(event.date); return d >= start && d <= end; }).sort((a,b) => (a.date || '').localeCompare(b.date || ''));
   }
   async saveOperation(input: SaveProjectOperationDTO) {
-    if (!input.label.trim() || !isValid(parseISO(input.occurredOn)) || !Number.isFinite(input.amount) || input.amount < 0 || !Number.isFinite(input.quantity) || input.quantity < 0 || !input.unit.trim() || !input.currency.trim()) throw new Error('Invalid operation');
+    const violation = ProjectWorkbenchService.validateOperation(input);
+    if (violation) throw new OperationValidationError(violation);
     return this.repository.saveOperation(input);
   }
   deleteOperation(projectId: string, id: string) { return this.repository.deleteOperation(projectId, id); }
@@ -110,6 +121,35 @@ export class ProjectWorkbenchService {
       .filter(op => op.sourceLineId === line.id && op.kind === kind && op.status !== 'cancelled' && op.id !== excludeId)
       .reduce((sum, op) => sum + (Number(op.quantity) || 0), 0);
     return planned - used;
+  }
+
+  /** Règles d'enregistrement d'une opération ; renvoie le premier champ invalide. */
+  static validateOperation(input: SaveProjectOperationDTO): OperationViolation | null {
+    if (!input.label.trim()) return 'label';
+    if (!isValid(parseISO(input.occurredOn))) return 'date';
+    if (!Number.isFinite(input.quantity) || input.quantity < 0) return 'quantity';
+    if (!input.unit.trim()) return 'unit';
+    if (!Number.isFinite(input.amount) || input.amount < 0) return 'amount';
+    if (!input.currency.trim()) return 'currency';
+    return null;
+  }
+
+  /** Opérations dont le cumul (même type, hors annulées) dépasse la quantité de leur ligne DQE. */
+  static overrunOperationIds(lines: readonly BoqLineDTO[], operations: readonly ProjectOperationDTO[]): Set<string> {
+    const byId = new Map(lines.filter(line => line.id).map(line => [line.id as string, line]));
+    const totals = new Map<string, number>();
+    const result = new Set<string>();
+    const ordered = [...operations].filter(op => op.sourceLineId && op.status !== 'cancelled').sort((a, b) => a.occurredOn.localeCompare(b.occurredOn));
+    for (const op of ordered) {
+      const line = byId.get(op.sourceLineId as string);
+      const planned = Number(line?.quantity);
+      if (!line || !Number.isFinite(planned)) continue;
+      const key = `${op.kind}:${op.sourceLineId}`;
+      const total = (totals.get(key) ?? 0) + (Number(op.quantity) || 0);
+      totals.set(key, total);
+      if (total > planned) result.add(op.id);
+    }
+    return result;
   }
 
   static eligibleOperationLines(lines: readonly BoqLineDTO[], context: ReferentialItemDTO | undefined, input: Pick<SaveProjectOperationDTO, 'kind' | 'phaseId'>): BoqLineDTO[] {

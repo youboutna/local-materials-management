@@ -6751,5 +6751,13 @@
   "auto.teamoverview.materiaux": "المواد",
   "auto.teamoverview.planifier_dans_dqe": "التخطيط في جدول الكميات",
   "workbench.dqe_remaining": "الكمية المتبقية في جدول الكميات",
-  "workbench.exceeds_dqe_remaining": "تتجاوز الكمية المتبقية في جدول الكميات"
+  "workbench.exceeds_dqe_remaining": "تتجاوز الكمية المتبقية في جدول الكميات",
+  "workbench.overrun": "تجاوز",
+  "workbench.outside_dqe": "خارج جدول الكميات",
+  "workbench.invalid_label": "الوصف مطلوب.",
+  "workbench.invalid_date": "التاريخ غير صالح.",
+  "workbench.invalid_quantity": "يجب أن تكون الكمية صفراً أو موجبة.",
+  "workbench.invalid_unit": "الوحدة مطلوبة.",
+  "workbench.invalid_amount": "يجب أن يكون المبلغ صفراً أو موجباً.",
+  "workbench.invalid_currency": "العملة مطلوبة."
 }
