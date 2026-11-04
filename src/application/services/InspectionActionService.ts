@@ -4,7 +4,11 @@ import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
 
 // Destinataire technique des notifications système (traçabilité des actions).
-const SYSTEM_NOTIFICATION_RECIPIENT_ID = '00000000-0000-0000-0000-000000000000';
+/** Action tracking goes to the user who executed it, never to a placeholder recipient. */
+async function resolveActorId(): Promise<string | null> {
+  const { getAuthService } = await import('./AuthService');
+  return (await getAuthService().getCurrentUser())?.id ?? null;
+}
 
 export interface InspectionControlAction {
   id: string;
@@ -71,8 +75,9 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
     await executeInspectionAction(action);
 
     // Track action in notifications table
-    await NotificationService.createNotification({
-      recipientId: SYSTEM_NOTIFICATION_RECIPIENT_ID,
+    const actorId = await resolveActorId();
+    if (actorId) await NotificationService.createNotification({
+      recipientId: actorId,
       title: `Action exécutée: ${action.title}`,
       message: `Action ${action.actionType} exécutée pour inspection ${action.inspectionId}`,
       type: 'system',
