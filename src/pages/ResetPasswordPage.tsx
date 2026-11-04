@@ -1,3 +1,4 @@
+import { MIN_PASSWORD_LENGTH } from '@/application/services/UserAdministrationService';
 import { AuthService, getAuthService} from '@/application/services/AuthService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,11 +27,15 @@ const ResetPasswordPage = () => {
 
   useEffect(() => {
     const checkResetLink = async () => {
-      const accessToken = searchParams.get('access_token');
-      const refreshToken = searchParams.get('refresh_token');
-      const type = searchParams.get('type');
+      // Les liens de confirmation portent les jetons dans le fragment (#) ou la requête (?).
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const read = (key: string) => searchParams.get(key) ?? hash.get(key);
+      const accessToken = read('access_token');
+      const refreshToken = read('refresh_token');
+      const type = read('type');
+      const linkTypes = ['recovery', 'invite', 'signup', 'magiclink'];
 
-      if (type === 'recovery' && accessToken && refreshToken) {
+      if (type && linkTypes.includes(type) && accessToken && refreshToken) {
         try {
           const { error } = await authService.setSession({
             access_token: accessToken,
@@ -70,8 +75,8 @@ const ResetPasswordPage = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.');
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`);
       return;
     }
 
