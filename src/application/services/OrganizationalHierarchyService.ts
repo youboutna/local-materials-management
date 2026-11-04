@@ -1,3 +1,6 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 /**
  * Organizational Hierarchy Service - Hexagonal Architecture
  *
@@ -6,7 +9,6 @@
  * a richer org-chart repository can be wired later without changing callers.
  */
 
-import { btpClient } from '@/integrations/supabase/schema-clients';
 
 export type HierarchyLevel = 'team' | 'supervisor' | 'manager' | 'director';
 
@@ -57,7 +59,7 @@ export class OrganizationalHierarchyService {
     _projectId: string,
     criteria: FindRecipientsCriteria,
   ): Promise<HierarchyRecipient[]> {
-    const query = btpClient.from('employees')
+    const query = btpDb().from('employees')
       .select('id, full_name, email, phone, position, department')
       .eq('is_active', true);
 
@@ -91,7 +93,7 @@ export class OrganizationalHierarchyService {
 
   static async resolveByIds(ids: string[]): Promise<HierarchyRecipient[]> {
     if (ids.length === 0) return [];
-    const { data, error } = await btpClient.from('employees')
+    const { data, error } = await btpDb().from('employees')
       .select('id, full_name, email, phone, position')
       .in('id', ids);
 
@@ -119,8 +121,7 @@ export class OrganizationalHierarchyService {
    */
   static async getProjectOrganizations(projectId: string): Promise<ProjectOrganization[]> {
     if (!projectId) return [];
-    const { btpClient } = await import('@/integrations/supabase/schema-clients');
-    const { data, error } = await (btpClient as any)
+    const { data, error } = await btpDb()
       .from('project_organizations')
       .select('id, project_id, organization_id, role, is_primary, contract_amount, contract_start_date, contract_end_date, organizations:organization_id(name)')
       .eq('project_id', projectId);

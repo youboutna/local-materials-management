@@ -9,6 +9,8 @@ import {
 } from '@/dtos/entities/tender-sharing-dto';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { CommunicationService } from './CommunicationService';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 /**
  * Service for managing secure tender document sharing
@@ -250,15 +252,14 @@ export class TenderSharingService {
     file_url?: string | null;
     document_type?: string | null;
   }>> {
-    const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
 
-    const { data: tenderRow } = await supabase
+    const { data: tenderRow } = await btpDb()
       .from('tenders')
       .select('project_id')
       .eq('id', tenderId)
       .single();
 
-    let query = supabase
+    let query = btpDb()
       .from('documents')
       .select('id, title, description, file_url, document_type')
       .eq('is_shared_with_suppliers', true);

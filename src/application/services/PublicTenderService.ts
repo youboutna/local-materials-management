@@ -1,3 +1,6 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 /**
  * PublicTenderService
  * Accès aux appels d'offres publics (portail fournisseur, consultation anonyme).
@@ -32,8 +35,7 @@ export class PublicTenderService {
    * Liste des appels d'offres ouverts (published/open), accès anonyme via policy RLS.
    */
   static async getOpenTenders(): Promise<PublicTenderSummaryDTO[]> {
-    const { btpClient } = await import('@/integrations/supabase/schema-clients');
-    const { data, error } = await btpClient.from('tenders')
+    const { data, error } = await btpDb().from('tenders')
       .select('id, title, description, status, deadline_date, publication_date, market_type, budget_max, project_reference')
       .in('status', ['published', 'open'])
       .order('deadline_date', { ascending: true, nullsFirst: false });
@@ -55,8 +57,7 @@ export class PublicTenderService {
    * Détail d'un appel d'offres public par id.
    */
   static async getTenderById(id: string): Promise<PublicTenderDetailDTO | null> {
-    const { btpClient } = await import('@/integrations/supabase/schema-clients');
-    const { data, error } = await btpClient.from('tenders')
+    const { data, error } = await btpDb().from('tenders')
       .select('id, title, description, status, deadline_date, market_type, budget_max, project_reference')
       .eq('id', id)
       .maybeSingle();

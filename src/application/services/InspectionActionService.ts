@@ -1,7 +1,9 @@
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 // Destinataire technique des notifications système (traçabilité des actions).
 /** Action tracking goes to the user who executed it, never to a placeholder recipient. */
@@ -34,24 +36,24 @@ export const createInspectionAction = async (actionData: Omit<InspectionControlA
     // Fetch real project and inspection data
     const [projectData, inspectionData, projectEmployees, inspectionDocuments] = await Promise.all([
       // Get project details
-      btpClient.from('projects')
+      btpDb().from('projects')
         .select('*')
         .eq('id', actionData.projectId)
         .single(),
       
       // Get inspection details
-      btpClient.from('inspections')
+      btpDb().from('inspections')
         .select('*')
         .eq('id', actionData.inspectionId)
         .single(),
       
       // Get project team members
-      btpClient.from('employees')
+      btpDb().from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
       
       // Get inspection documents
-      btpClient.from('documents')
+      btpDb().from('documents')
         .select('*')
         .eq('inspection_id', actionData.inspectionId)
     ]);
@@ -126,7 +128,7 @@ const executeInspectionTaskAssignment = async (action: InspectionControlAction):
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await btpClient.from('employees')
+      const { data: assignee } = await btpDb().from('employees')
         .select('id, full_name, email')
         .eq('id', action.assigneeId)
         .single();
@@ -313,7 +315,7 @@ const executeInspectionCommunication = async (action: InspectionControlAction): 
 
 export const getInspectionActions = async (inspectionId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = btpClient.from('notifications')
+  const query = btpDb().from('notifications')
     .select('*')
     .eq('type', 'system')
     .like('metadata->entityType', 'inspection');

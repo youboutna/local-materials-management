@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ProjectWbsLoader — charge dynamiquement les phases/étapes/tâches réelles
  * d'un projet (btp.project_phases) et les convertit au format WbsPhase
@@ -7,6 +8,8 @@
  * l'entité Phase n'expose ni steps ni tasks (stockés dans custom_phase_data).
  */
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 interface RawStep {
   id?: string;
@@ -57,8 +60,7 @@ export const isActivePhaseStatus = (status?: string | null): boolean =>
 
 export async function loadProjectWbs(projectId: string): Promise<ProjectWbsPhase[]> {
   if (!projectId) return [];
-  const { btpClient } = await import('@/integrations/supabase/schema-clients');
-  const { data, error } = await btpClient
+  const { data, error } = await btpDb()
     .from('project_phases')
     .select('id, phase_name, status, order_index, custom_phase_data')
     .eq('project_id', projectId)
@@ -68,8 +70,8 @@ export async function loadProjectWbs(projectId: string): Promise<ProjectWbsPhase
 
   // Jalons et tâches persistés en tables (projets importés / saisis hors custom_phase_data).
   const [msRes, taskRes] = await Promise.all([
-    btpClient.from('project_milestones').select('id, title, phase_id, order_index').eq('project_id', projectId),
-    btpClient.from('task_assignments').select('id, title, phase_id').eq('project_id', projectId),
+    btpDb().from('project_milestones').select('id, title, phase_id, order_index').eq('project_id', projectId),
+    btpDb().from('task_assignments').select('id, title, phase_id').eq('project_id', projectId),
   ]);
   const dbMilestones = (msRes.data ?? []) as unknown as { id: string; title: string | null; phase_id: string | null; order_index: number | null }[];
   const dbTasks = (taskRes.data ?? []) as { id: string; title: string | null; phase_id: string | null }[];

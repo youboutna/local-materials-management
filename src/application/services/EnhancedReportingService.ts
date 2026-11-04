@@ -16,6 +16,8 @@ import { ReportCalculations } from '@/utils/reportCalculations';
 
 // ✅ IMPORT formatReference et validateEntityLabel
 import { formatReference, validateEntityLabel } from '@/utils/entityLabels';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 export class EnhancedReportingService {
   private reportingRepository = RepositoryFactory.getReportingRepository();
@@ -147,8 +149,7 @@ export class EnhancedReportingService {
 
   private static async fetchEnhancedPhases(projectId: string): Promise<EnhancedPhaseDTO[]> {
     try {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-      const { data: phasesData } = await btpClient
+      const { data: phasesData } = await btpDb()
         .from('project_phases')
         .select('*')
         .eq('project_id', projectId);

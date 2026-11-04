@@ -22,6 +22,8 @@ import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTrans
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { PROCUREMENT_CHAIN_REFERENTIAL } from '@/config/referentials/procurement/procurement-chain.referential';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 /** Statuts d'AO considérés comme publiés (référentiel, jamais en dur dans l'UI). */
 const PUBLISHED_TENDER_STATUSES: string[] = [
@@ -321,8 +323,7 @@ export interface TenderBulkImportRow {
  */
 export async function bulkInsertTenders(rows: TenderBulkImportRow[]): Promise<{ count: number; error?: string }> {
   if (rows.length === 0) return { count: 0 };
-  const { btpClient } = await import('@/integrations/supabase/schema-clients');
-  const { data, error } = await btpClient.from('tenders').insert(rows).select();
+  const { data, error } = await btpDb().from('tenders').insert(rows).select();
   if (error) {
     return { count: 0, error: error.message };
   }
@@ -333,8 +334,7 @@ export async function bulkInsertTenders(rows: TenderBulkImportRow[]): Promise<{ 
  * Insère un appel d'offres unique (import ligne par ligne) et retourne l'erreur éventuelle.
  */
 export async function insertTender(row: TenderBulkImportRow): Promise<{ error?: string }> {
-  const { btpClient } = await import('@/integrations/supabase/schema-clients');
-  const { error } = await btpClient.from('tenders').insert([row]);
+  const { error } = await btpDb().from('tenders').insert([row]);
   if (error) return { error: error.message };
   return {};
 }

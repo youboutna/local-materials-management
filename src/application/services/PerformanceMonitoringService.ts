@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Performance Monitoring Service - Hexagonal Architecture
  * Business logic for monitoring system and database performance
@@ -15,6 +16,8 @@ import {
 } from '@/dtos/entities/PerformanceMetricsDTO';
 // Direct Supabase access removed for Hexagonal Architecture
 import { AppError, ErrorCode } from '@/utils/errorHandling';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 // Event-driven interfaces for performance monitoring
 export interface EventPerformanceMetrics {
@@ -352,7 +355,7 @@ export class PerformanceMonitoringService {
 
     try {
       // Calculate task completion rate from task_assignments table
-      const { data: taskAssignments } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+      const { data: taskAssignments } = await btpDb()
         .from('task_assignments')
         .select('status')
         .eq('project_id', projectId);
@@ -364,7 +367,7 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate timeline adherence from project_phases table
-      const { data: phases } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+      const { data: phases } = await btpDb()
         .from('project_phases')
         .select('start_date, end_date, status')
         .eq('project_id', projectId);
@@ -381,12 +384,12 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate budget efficiency from payments and projects tables
-      const { data: payments } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+      const { data: payments } = await btpDb()
         .from('payments')
         .select('amount')
         .eq('project_id', projectId);
       
-      const { data: project } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+      const { data: project } = await btpDb()
         .from('projects')
         .select('budget')
         .eq('id', projectId)
@@ -400,7 +403,7 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate quality metrics from inspections table
-      const { data: inspections } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+      const { data: inspections } = await btpDb()
         .from('inspections')
         .select('status')
         .eq('project_id', projectId);
@@ -412,14 +415,14 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate resource utilization from project resources and their assignments
-      const { data: projectResources } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+      const { data: projectResources } = await btpDb()
         .from('project_resources')
         .select('id')
         .eq('project_id', projectId);
 
       if (projectResources && projectResources.length > 0) {
         const resourceIds = projectResources.map(r => r.id);
-        const { data: resourceAssignments } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+        const { data: resourceAssignments } = await btpDb()
           .from('resource_assignments')
           .select('allocation_percentage')
           .in('resource_id', resourceIds);
@@ -539,7 +542,7 @@ export class PerformanceMonitoringService {
    */
   private async getProjectResponsibleId(projectId: string): Promise<string> {
     try {
-      const { data: project } = await (await import('@/integrations/supabase/schema-clients')).btpClient
+      const { data: project } = await btpDb()
         .from('projects')
         .select('project_responsable_id, technical_manager_id, supervisor_id, created_by')
         .eq('id', projectId)

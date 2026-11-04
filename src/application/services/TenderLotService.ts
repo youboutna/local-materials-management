@@ -1,16 +1,18 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * TenderLotService - Persistence for tender lots.
  * Hexagonal service (pure TS, no React).
  */
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { TenderLotTransformer, type TenderLotRecord } from '@/dtos/transforms/TenderLotTransformer';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 export type { TenderLotRecord };
 
 export class TenderLotService {
   async listByTender(tenderId: string): Promise<TenderLotRecord[]> {
     if (!tenderId) return [];
-    const { data, error } = await supabase
+    const { data, error } = await btpDb()
       .from('tender_lots' as any)
       .select('*')
       .eq('tender_id', tenderId)
@@ -20,7 +22,7 @@ export class TenderLotService {
   }
 
   async create(lot: Omit<TenderLotRecord, 'id'>): Promise<TenderLotRecord> {
-    const { data, error } = await supabase
+    const { data, error } = await btpDb()
       .from('tender_lots' as any)
       .insert(TenderLotTransformer.toRow(lot))
       .select()
@@ -30,7 +32,7 @@ export class TenderLotService {
   }
 
   async update(id: string, lot: Partial<TenderLotRecord> & { tenderId: string }): Promise<TenderLotRecord> {
-    const { data, error } = await supabase
+    const { data, error } = await btpDb()
       .from('tender_lots' as any)
       .update(TenderLotTransformer.toRow(lot))
       .eq('id', id)
@@ -41,7 +43,7 @@ export class TenderLotService {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await btpDb()
       .from('tender_lots' as any)
       .delete()
       .eq('id', id);
@@ -50,7 +52,7 @@ export class TenderLotService {
 
   /** Transition de statut du lot (brouillon → publié → en évaluation → attribué / annulé). */
   async setStatus(id: string, status: TenderLotRecord['status']): Promise<TenderLotRecord> {
-    const { data, error } = await supabase
+    const { data, error } = await btpDb()
       .from('tender_lots' as any)
       .update({ status })
       .eq('id', id)
@@ -65,7 +67,7 @@ export class TenderLotService {
     id: string,
     params: { awardedTo: string; awardedSubmissionId?: string | null; awardedAmount?: number | null },
   ): Promise<TenderLotRecord> {
-    const { data, error } = await supabase
+    const { data, error } = await btpDb()
       .from('tender_lots' as any)
       .update({
         status: 'awarded',
@@ -84,7 +86,7 @@ export class TenderLotService {
   /** Soumissions rattachées à un lot. */
   async listSubmissionsByLot(lotId: string): Promise<any[]> {
     if (!lotId) return [];
-    const { data, error } = await supabase
+    const { data, error } = await btpDb()
       .from('tender_submissions' as any)
       .select('*')
       .eq('lot_id', lotId)

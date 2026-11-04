@@ -52,8 +52,9 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import type { BtpDatabase } from '@/integrations/supabase/btp-types';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 // =============================================================================
 // TYPES
@@ -509,7 +510,7 @@ export class ProjectImportExportService {
     if (trimmedId && this.isUUID(trimmedId)) {
       if (options?.checkExists && options?.table) {
         try {
-          const { data, error } = await supabase
+          const { data, error } = await btpDb()
             .from(options.table)
             .select('id')
             .eq('id', trimmedId)
@@ -529,7 +530,7 @@ export class ProjectImportExportService {
     if (trimmedId) {
       if (options?.checkExists && options?.table && trimmedRef) {
         try {
-          const { data, error } = await supabase
+          const { data, error } = await btpDb()
             .from(options.table)
             .select('id')
             .eq('external_ref', trimmedRef)
@@ -548,7 +549,7 @@ export class ProjectImportExportService {
     // Cas 3 : id absent → genuuid + externalRef = ref si fourni
     if (options?.checkExists && options?.table && trimmedRef) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await btpDb()
           .from(options.table)
           .select('id')
           .eq('external_ref', trimmedRef)
@@ -579,7 +580,7 @@ export class ProjectImportExportService {
     if (cached) return cached;
 
     try {
-      const { data: existing, error: selectError } = await supabase
+      const { data: existing, error: selectError } = await btpDb()
         .from('organizations')
         .select('id')
         .eq('external_ref', orgExternalRef)
@@ -597,7 +598,7 @@ export class ProjectImportExportService {
 
       const { id: newId } = await this.resolveIdAndExternalRef(undefined, orgExternalRef);
 
-      const { data: created, error: insertError } = await supabase
+      const { data: created, error: insertError } = await btpDb()
         .from('organizations')
         .insert({
           id: newId,
@@ -659,13 +660,13 @@ export class ProjectImportExportService {
 
     try {
       if (this.isUUID(trimmed)) {
-        const { data } = await supabase.from(table).select('id').eq('id', trimmed).maybeSingle();
+        const { data } = await btpDb().from(table).select('id').eq('id', trimmed).maybeSingle();
         if (typeof data?.id === 'string') {
           map?.set(trimmed, data.id);
           return data.id;
         }
       } else {
-        const { data } = await supabase
+        const { data } = await btpDb()
           .from(table)
           .select('id')
           .eq('external_ref', trimmed)
@@ -691,7 +692,7 @@ export class ProjectImportExportService {
         await this.resolveIdAndExternalRef(undefined, trimmed);
 
       if (entityType === 'organization') {
-        const { data, error } = await supabase
+        const { data, error } = await btpDb()
           .from('organizations')
           .insert({
             id: newId,
@@ -709,7 +710,7 @@ export class ProjectImportExportService {
       }
 
       if (entityType === 'supplier') {
-        const { data, error } = await supabase
+        const { data, error } = await btpDb()
           .from('suppliers')
           .insert({
             id: newId,
@@ -729,7 +730,7 @@ export class ProjectImportExportService {
       const email =
         context.email ??
         `stakeholder-${trimmed.toLowerCase().replace(/[^a-z0-9]/g, '-')}@import.local`;
-      const { data, error } = await supabase
+      const { data, error } = await btpDb()
         .from('employees')
         .insert({
           id: newId,
@@ -2210,7 +2211,7 @@ export class ProjectImportExportService {
     // ---------------------------------------------------------------------------
     try {
       // 6.1 : chercher l'existant par external_ref
-      const { data: existing, error: selectError } = await supabase
+      const { data: existing, error: selectError } = await btpDb()
         .from('project_stakeholders')
         .select('id, external_ref')
         .eq('external_ref', externalRef)
@@ -2222,7 +2223,7 @@ export class ProjectImportExportService {
 
       if (existing?.id) {
         // 6.2 : UPDATE — conserver l'id existant
-        const { error: updateError } = await supabase
+        const { error: updateError } = await btpDb()
           .from('project_stakeholders')
           .update(stakeholderData as any)
           .eq('id', existing.id);
@@ -2250,7 +2251,7 @@ export class ProjectImportExportService {
           external_ref: finalExternalRef ?? externalRef,
         };
 
-        const { error: insertError } = await supabase
+        const { error: insertError } = await btpDb()
           .from('project_stakeholders')
           .insert(insertPayload as any);
 
@@ -2286,14 +2287,14 @@ export class ProjectImportExportService {
             community_type: finalCommunityType ?? 'autre',
           };
 
-          const { data: existingRetry } = await supabase
+          const { data: existingRetry } = await btpDb()
             .from('project_stakeholders')
             .select('id')
             .eq('external_ref', externalRef)
             .maybeSingle();
 
           if (existingRetry?.id) {
-            await supabase
+            await btpDb()
               .from('project_stakeholders')
               .update(fallbackData as any)
               .eq('id', existingRetry.id);
@@ -2302,7 +2303,7 @@ export class ProjectImportExportService {
               undefined,
               externalRef,
             );
-            await supabase
+            await btpDb()
               .from('project_stakeholders')
               .insert({ ...fallbackData, id: fallbackId } as any);
           }

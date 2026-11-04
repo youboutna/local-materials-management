@@ -1,7 +1,9 @@
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 // Destinataire technique des notifications système (traçabilité des actions).
 /** Action tracking goes to the user who executed it, never to a placeholder recipient. */
@@ -34,19 +36,19 @@ export const createInsuranceAction = async (actionData: Omit<InsuranceControlAct
     // Fetch real project and insurance data
     const [projectData, insuranceData, projectEmployees] = await Promise.all([
       // Get project details
-      btpClient.from('projects')
+      btpDb().from('projects')
         .select('*')
         .eq('id', actionData.projectId)
         .single(),
       
       // Get insurance certificate details
-      btpClient.from('insurance_certificates')
+      btpDb().from('insurance_certificates')
         .select('*')
         .eq('id', actionData.insuranceId)
         .single(),
       
       // Get project team members
-      btpClient.from('employees')
+      btpDb().from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
     ]);
@@ -120,7 +122,7 @@ const executeInsuranceTaskAssignment = async (action: InsuranceControlAction): P
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await btpClient.from('employees')
+      const { data: assignee } = await btpDb().from('employees')
         .select('id, full_name, email')
         .eq('id', action.assigneeId)
         .single();
@@ -307,7 +309,7 @@ const executeInsuranceCommunication = async (action: InsuranceControlAction): Pr
 
 export const getInsuranceActions = async (insuranceId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = btpClient.from('notifications')
+  const query = btpDb().from('notifications')
     .select('*')
     .eq('type', 'system')
     .like('metadata->entityType', 'insurance');
