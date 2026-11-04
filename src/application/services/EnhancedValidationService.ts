@@ -120,7 +120,7 @@ export class EnhancedValidationService {
       return [];
     } catch (error) {
       console.error('Error getting compliance items:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -134,7 +134,7 @@ export class EnhancedValidationService {
       return [];
     } catch (error) {
       console.error('Error getting receptions:', error);
-      return [];
+      throw error;
     }
   }
 

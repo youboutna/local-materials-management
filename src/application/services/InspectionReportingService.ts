@@ -155,7 +155,7 @@ export class InspectionReportingService {
         }));
     } catch (error) {
       console.error('Error generating inspection timeline:', error);
-      return [];
+      throw error;
     }
   }
 

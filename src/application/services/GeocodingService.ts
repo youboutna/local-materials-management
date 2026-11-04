@@ -321,7 +321,7 @@ export class GeocodingService {
       return [...regions, ...cities];
     } catch (error) {
       console.error('Mauritania search failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -448,7 +448,7 @@ export class GeocodingService {
       return this.deduplicateResults(results.sort((a, b) => b.confidence - a.confidence));
     } catch (error) {
       console.error('Local geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -531,7 +531,7 @@ export class GeocodingService {
       return this.deduplicateResults(results.sort((a, b) => b.confidence - a.confidence));
     } catch (error) {
       console.error('Local reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -549,7 +549,7 @@ export class GeocodingService {
       return [];
     } catch (error) {
       console.error(`${this.provider} geocoding failed:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -565,7 +565,7 @@ export class GeocodingService {
       return [];
     } catch (error) {
       console.error(`${this.provider} reverse geocoding failed:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -704,7 +704,7 @@ export class GeocodingService {
       return [this.formatOpenStreetMapResult(data)];
     } catch (error) {
       console.error('OpenStreetMap reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -733,7 +733,7 @@ export class GeocodingService {
       return (data.results || []).map((result) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -760,7 +760,7 @@ export class GeocodingService {
       return (data.results || []).map((result) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -788,7 +788,7 @@ export class GeocodingService {
       return (data.features || []).map((feature) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -814,7 +814,7 @@ export class GeocodingService {
       return (data.features || []).map((feature) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 

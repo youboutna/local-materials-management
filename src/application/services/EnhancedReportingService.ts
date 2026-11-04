@@ -185,7 +185,7 @@ export class EnhancedReportingService {
       });
     } catch (error) {
       console.error('Error fetching enhanced phases:', error);
-      return [];
+      throw error;
     }
   }
 

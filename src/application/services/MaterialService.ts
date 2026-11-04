@@ -535,7 +535,7 @@ export class MaterialService {
       return results.length > 0 ? results[0] : null;
     } catch (error) {
       console.error('Reverse geocoding failed:', error);
-      return null;
+      throw error;
     }
   }
 

@@ -1038,7 +1038,7 @@ export class ProjectWorkflowService {
       return generated;
     } catch (error) {
       console.error('Error generating project structure:', error);
-      return [];
+      throw error;
     }
   }
 

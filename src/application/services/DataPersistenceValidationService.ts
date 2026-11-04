@@ -205,7 +205,7 @@ export class DataPersistenceValidationService {
       return results;
     } catch (error) {
       console.error('Error validating projects:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -276,7 +276,7 @@ export class DataPersistenceValidationService {
       return results;
     } catch (error) {
       console.error('Error validating phases:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -346,7 +346,7 @@ export class DataPersistenceValidationService {
       return results;
     } catch (error) {
       console.error('Error validating materials:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -406,7 +406,7 @@ export class DataPersistenceValidationService {
       return results;
     } catch (error) {
       console.error('Error validating employees:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -466,7 +466,7 @@ export class DataPersistenceValidationService {
       return results;
     } catch (error) {
       console.error('Error validating suppliers:', error);
-      return [];
+      throw error;
     }
   }
 

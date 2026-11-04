@@ -623,7 +623,7 @@ export class CheckpointActionContextService {
       return milestones;
     } catch (error) {
       console.error('CheckpointActionContextService.fetchMilestones failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -670,7 +670,7 @@ export class CheckpointActionContextService {
       });
     } catch (error) {
       console.error('CheckpointActionContextService.fetchPayments failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -690,7 +690,7 @@ export class CheckpointActionContextService {
       });
     } catch (error) {
       console.error('CheckpointActionContextService.fetchInspections failed:', error);
-      return [];
+      throw error;
     }
   }
 

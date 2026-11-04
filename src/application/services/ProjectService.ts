@@ -981,7 +981,7 @@ export class ProjectService {
       };
     } catch (error) {
       console.warn('Project geocoding failed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -1005,7 +1005,7 @@ export class ProjectService {
       };
     } catch (error) {
       console.warn('Project reverse geocoding failed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -1155,7 +1155,7 @@ export class ProjectService {
       })) as StakeholderDTO[];
     } catch (error) {
       console.error(`Failed to get stakeholders for project ${projectId}:`, error);
-      return [];
+      throw error;
     }
   }
 }

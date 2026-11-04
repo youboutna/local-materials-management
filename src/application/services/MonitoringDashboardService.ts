@@ -331,7 +331,7 @@ export class MonitoringDashboardService {
       });
     } catch (error) {
       console.error(`Failed to get overdue tasks for project ${projectId}:`, error);
-      return [];
+      throw error;
     }
   }
 
