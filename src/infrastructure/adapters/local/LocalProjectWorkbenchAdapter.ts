@@ -26,11 +26,11 @@ const now = () => new Date().toISOString();
 
 const DEMO_PHASE = {
   id: PHASE_ID, projectId: LOCAL_DEMO_PROJECT_ID, name: 'Phase de démonstration', type: 'execution', status: 'in_progress',
-  priority: 'medium', progress: 0, startDate: '2026-01-01', endDate: '2026-12-31',
+  priority: 'medium', progress: 0, startDate: '2026-01-01', endDate: '2026-12-31', createdAt: now(), updatedAt: now(),
 } as PhaseDTO;
 
 const demoLine = (id: string, designation: string, unit: string, quantity: number, unitPrice: number, resourceType: BoqLineDTO['resourceType']): BoqLineDTO => ({
-  id, source: 'dqe', contextId: LOCAL_DEMO_PROJECT_ID, projectId: LOCAL_DEMO_PROJECT_ID, phaseId: PHASE_ID,
+  id, source: 'dqe', contextId: LOCAL_DEMO_PROJECT_ID, phaseId: PHASE_ID,
   designation, unit, quantity, unitPrice, totalHt: quantity * unitPrice, resourceType, status: 'validated',
 } as BoqLineDTO);
 
@@ -100,7 +100,7 @@ export class LocalProjectWorkbenchAdapter implements IProjectWorkbenchRepository
 
   // Contexte (port IWorkbenchContextSource)
   async projectDetail(projectId: string) { return projectId === LOCAL_DEMO_PROJECT_ID ? demoProject() : null; }
-  async boqLines(projectId: string, source: BoqSource) { return DEMO_LINES.filter(line => line.projectId === projectId && line.source === source); }
+  async boqLines(projectId: string, source: BoqSource) { return DEMO_LINES.filter(line => line.contextId === projectId && line.source === source); }
   async decomptes(): Promise<{ decomptes: DecompteRecordDTO[]; payments: DecomptePaymentDTO[] }> { return { decomptes: [], payments: [] }; }
   async operationContexts() { return OPERATION_CONTEXTS; }
 
