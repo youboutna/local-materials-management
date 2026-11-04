@@ -274,7 +274,7 @@ export class PdfBoqParser implements IDocumentParser {
               .filter((r) => r >= 0 && r < cellRows.length && !cellRows[r].some((c) => /\d{3}/.test(c.text)))
               .map((r) => itemRows[r] ?? []);
             const local = headerBandsFromItems(block);
-            if (local.length >= 4) activeBands = local;
+            if (local.length >= Math.max(4, bands.length)) activeBands = local;
           }
           return alignItemsToBands(itemRows[index] ?? [], activeBands);
         });
