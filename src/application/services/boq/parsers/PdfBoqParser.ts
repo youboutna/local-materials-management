@@ -261,6 +261,7 @@ export class PdfBoqParser implements IDocumentParser {
         const bandsRow = bestGroup.reduce((a, b) => (cellRows[b].length > cellRows[a].length ? b : a), bestGroup[0]);
         const unionBands = headerBandsFromItems(bestGroup.map((r) => itemRows[r] ?? []));
         const bands = unionBands.length > cellRows[bandsRow].length ? unionBands : cellRows[bandsRow];
+        if ((globalThis as Record<string, unknown>).__BOQ_DEBUG__) console.log('BANDS', JSON.stringify(bestGroup), JSON.stringify(unionBands), JSON.stringify(bestGroup.map((r) => (itemRows[r] ?? []).map((i) => [i.str, Math.round(i.transform[4]), Math.round(i.width ?? 0)]))));
         mergedHeader = bestGroup
           .map((r) => alignItemsToBands(itemRows[r] ?? [], bands))
           .reduce((acc, row) => row.map((cell, i) => `${acc[i] ?? ''} ${cell}`.trim()), Array.from({ length: bands.length }, () => ''));
