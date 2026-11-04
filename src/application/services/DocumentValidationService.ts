@@ -414,13 +414,21 @@ export class DocumentValidationService {
   /**
    * Send notification for validation failure
    */
+  /** Validation notices go to the user who ran the validation, never to a placeholder recipient. */
+  private async resolveActorId(): Promise<string | null> {
+    const { getAuthService } = await import('./AuthService');
+    return (await getAuthService().getCurrentUser())?.id ?? null;
+  }
+
   private async sendValidationFailureNotification(
     request: DocumentValidationRequest,
     result: ValidationResult
   ): Promise<void> {
     try {
+      const actorId = await this.resolveActorId();
+      if (!actorId) return;
       await this.notificationService.createNotification({
-        recipientId: 'system',
+        recipientId: actorId,
         title: 'Échec de validation de document',
         message: `Le document ${request.documentId} a échoué la validation avec ${result.errors.length} erreur(s)`,
         type: 'warning',
@@ -449,9 +457,10 @@ export class DocumentValidationService {
       const validDocuments = Object.values(results).filter(r => r.isValid).length;
       const invalidDocuments = totalDocuments - validDocuments;
 
-      if (invalidDocuments > 0) {
+      const actorId = await this.resolveActorId();
+      if (invalidDocuments > 0 && actorId) {
         await this.notificationService.createNotification({
-          recipientId: 'system',
+          recipientId: actorId,
           title: 'Résumé de validation de documents',
           message: `${validDocuments}/${totalDocuments} documents validés avec succès. ${invalidDocuments} document(s) ont échoué.`,
           type: 'info',
