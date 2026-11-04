@@ -28,6 +28,7 @@ import {
   useCurrentUserHex,
   useSupplierSubmissionsHex as useSupplierSubmissions,
   useSubmissionDocumentsHex as useSubmissionDocumentsList,
+  useSubmissionActivityLogs,
   useRealtimeHex,
   type Submission,
   type SubmissionDocument,
@@ -49,6 +50,7 @@ const SupplierSubmissionDashboard = () => {
 
   // Fetch documents for selected submission
   const { data: submissionDocuments } = useSubmissionDocumentsList(selectedSubmission?.id);
+  const { data: activityLogs } = useSubmissionActivityLogs(selectedSubmission?.id);
 
   // Setup real-time updates using hexagonal architecture
   const realtimeOptions: UseRealtimeOptions = {
@@ -393,8 +395,7 @@ const SupplierSubmissionDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Activity Log - TODO: Implement when useSubmissionActivityLogsHex is available */}
-                    {/* {activityLogs && activityLogs.length > 0 && (
+                    {activityLogs && activityLogs.length > 0 && (
                       <div>
                         <h4 className="font-medium mb-3"><T k="auto.suppliersubmissiondashboard.historique_d_activite" fallback="Historique d'activité" /></h4>
                         <div className="space-y-2">
@@ -409,7 +410,7 @@ const SupplierSubmissionDashboard = () => {
                           ))}
                         </div>
                       </div>
-                    )} */}
+                    )}
                   </div>
                 </ScrollArea>
               ) : (

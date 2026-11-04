@@ -350,19 +350,54 @@ export class TenderSubmissionService {
     }
   }
 
-  static async getSubmissionDocuments(submissionId: string): Promise<unknown[]> {
+  /** Liens soumission→document hydratés avec le document archivé (DocumentService/documents). */
+  static async getSubmissionDocuments(submissionId: string): Promise<Array<Record<string, any>>> {
     try {
-      const { data, error } = await supabase
+      const { data: links, error } = await supabase
         .from('tender_submission_documents')
         .select('*')
         .eq('submission_id', submissionId)
-        .order('uploaded_at', { ascending: false });
+        .order('created_at', { ascending: false });
       if (error) throw error;
-      return data || [];
+      const ids = (links || []).map((l: any) => l.document_id).filter(Boolean);
+      if (ids.length === 0) return [];
+      const { data: docs, error: docError } = await (supabase as any)
+        .from('documents')
+        .select('id,title,file_name,file_url,file_size,metadata')
+        .in('id', ids);
+      if (docError) throw docError;
+      const byId = new Map((docs || []).map((d: any) => [d.id, d]));
+      return (links || []).map((l: any) => ({ ...l, document: byId.get(l.document_id) ?? null }));
     } catch (error) {
       console.error('Error getting submission documents:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération des documents');
     }
+  }
+
+  /** Soumissions déposées par un utilisateur fournisseur. */
+  static async getSubmissionsByUser(userId: string) {
+    const { data, error } = await supabase
+      .from('tender_submissions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de la récupération des soumissions: ${error.message}`);
+    return data || [];
+  }
+
+  /** Journal d'activité tracé en base (trigger log_submission_status_change). */
+  static async getSubmissionActivityLogs(submissionId: string) {
+    const { data, error } = await (supabaseClient as any).rpc('get_submission_activity_logs', { p_submission_id: submissionId });
+    if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de la récupération de l'historique: ${error.message}`);
+    return (data || []) as Array<{ id: string; submission_id: string; action: string; details: string | null; performed_by: string | null; created_at: string }>;
+  }
+
+  /** Statistiques des soumissions d'un utilisateur fournisseur. */
+  static async getSubmissionStatsByUser(userId: string) {
+    const rows = await this.getSubmissionsByUser(userId);
+    const stats = { total: rows.length, submitted: 0, under_review: 0, approved: 0, rejected: 0 };
+    rows.forEach((r: any) => { if (r.status in stats) (stats as any)[r.status]++; });
+    return stats;
   }
 
   static async updateSubmissionStatus(
