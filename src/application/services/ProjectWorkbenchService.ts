@@ -1,7 +1,7 @@
 import { resourceFamilyOf } from '@/application/services/boq/BoqResourcePropagationService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProjectWorkbenchRepository';
-import type { ProjectCalendarEventDTO, CalendarPeriod, SaveProjectOperationDTO, SaveInfrastructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
+import type { ProjectOperationDTO, ProjectCalendarEventDTO, CalendarPeriod, SaveProjectOperationDTO, SaveInfrastructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import type { Geometry } from 'geojson';
 import type { SpatialZoneDTO, InfrastructureRealizationDTO, SaveAssetTypeDTO, ImportFeatureItemDTO, SaveInfraStructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
@@ -95,6 +95,21 @@ export class ProjectWorkbenchService {
       label: line.designation || form.label,
       resourceFamily: form.kind === 'consumption' ? resourceFamilyOf(line) : form.resourceFamily,
     };
+  }
+
+  /**
+   * Quantité DQE restante pour une ligne : quantité de la ligne moins les opérations
+   * du même type déjà saisies (annulées et opération en cours d'édition exclues).
+   * Sert d'alerte ; le dépassement est signalé, jamais corrigé automatiquement.
+   */
+  static remainingLineQuantity(line: BoqLineDTO | undefined, operations: readonly ProjectOperationDTO[], kind: ProjectOperationDTO['kind'], excludeId?: string): number | null {
+    if (!line?.id) return null;
+    const planned = Number(line.quantity);
+    if (!Number.isFinite(planned)) return null;
+    const used = operations
+      .filter(op => op.sourceLineId === line.id && op.kind === kind && op.status !== 'cancelled' && op.id !== excludeId)
+      .reduce((sum, op) => sum + (Number(op.quantity) || 0), 0);
+    return planned - used;
   }
 
   static eligibleOperationLines(lines: readonly BoqLineDTO[], context: ReferentialItemDTO | undefined, input: Pick<SaveProjectOperationDTO, 'kind' | 'phaseId'>): BoqLineDTO[] {
