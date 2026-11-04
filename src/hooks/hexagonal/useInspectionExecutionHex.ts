@@ -27,7 +27,7 @@ export function useInspectionExecutionHex() {
     mutationFn: async ({ inspectionId, documents }: { inspectionId: string; documents: File[] }) => {
       const { getDocumentService } = await import('@/application/services/DocumentService');
       const service = getDocumentService();
-      const created = [];
+      const created: unknown[] = [];
       for (const file of documents) {
         created.push(await service.createDocument({
           title: file.name,
