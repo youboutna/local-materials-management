@@ -127,7 +127,7 @@ async function createBankGuaranteeAction(actionData: {
 }
 
 const BankGuaranteeMonitor: React.FC = () => {
-  const [delays, setDelays] = useState<ProjectDelay[]>([]);
+  const [delays, setDelays] = useState<(ProjectDelay & { recipientIds: string[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const { toast } = useToast();
@@ -183,8 +183,9 @@ const BankGuaranteeMonitor: React.FC = () => {
   // Alert Handlers
   // ============================================================
   const handleAcknowledgeAlert = useCallback(async (alertId: string) => {
+    if (!userId) return;
     try {
-      await acknowledgeAlert(alertId, userId || 'system-user', 'Traité depuis BankGuaranteeMonitor');
+      await acknowledgeAlert(alertId, userId, 'Traité depuis BankGuaranteeMonitor');
       await runChecks();
       toast({
         title: t('common.success'),
@@ -201,8 +202,9 @@ const BankGuaranteeMonitor: React.FC = () => {
   }, [acknowledgeAlert, runChecks, userId, toast, t]);
 
   const handleResolveAlert = useCallback(async (alertId: string) => {
+    if (!userId) return;
     try {
-      await resolveAlert(alertId, userId || 'system-user', 'Garantie traitée');
+      await resolveAlert(alertId, userId, 'Garantie traitée');
       await runChecks();
       toast({
         title: t('common.success'),
@@ -250,7 +252,7 @@ const BankGuaranteeMonitor: React.FC = () => {
   // ============================================================
   // Bank Guarantee Handlers
   // ============================================================
-  const handleTriggerBankNotification = async (delay: ProjectDelay) => {
+  const handleTriggerBankNotification = async (delay: ProjectDelay & { recipientIds: string[] }) => {
     setProcessing(delay.projectId);
     try {
       // Get real bank guarantee data from service
@@ -267,21 +269,18 @@ const BankGuaranteeMonitor: React.FC = () => {
         return;
       }
 
-      const bankName = guarantee.bankName || guarantee.issuingBank || 'bank';
       const bankGuaranteeData = {
-        projectId: delay.projectId,
-        contractorId: guarantee.contractorId || guarantee.contractorId,
-        bankLiaisonEmail: `contact@${bankName
-          .toLowerCase()
-          .replace(/\s+/g, "")}.mr`,
-        guaranteeAmount: guarantee.guaranteeAmount || guarantee.amount,
-        delayPercentage: delay.delayPercentage,
-        contractClause: "Article 15.3 - Garantie de bonne exécution",
+        guaranteeId: guarantee.id,
+        bankName: guarantee.bankName || guarantee.issuingBank || '',
+        guaranteeAmount: guarantee.guaranteeAmount || guarantee.amount || 0,
       };
 
       const result = await triggerBankGuaranteeNotification(
         delay,
-        bankGuaranteeData
+        bankGuaranteeData,
+        [...delay.recipientIds, ...(userId ? [userId] : [])],
+        `${t('bank_guarantee.bank_notified_prefix')} "${delay.projectName}"`,
+        `${delay.delayDays} ${t('bank_guarantee.days_label')} - ${delay.projectName}`,
       );
 
       toast({
@@ -321,8 +320,11 @@ const BankGuaranteeMonitor: React.FC = () => {
         return;
       }
 
-      // Use userId from hexagonal hook
-      const currentUserId = userId || "system-user";
+      if (!userId) {
+        toast({ title: t('common.error'), description: t('common.error'), variant: "destructive" });
+        return;
+      }
+      const currentUserId = userId;
 
       let title = "";
       let message = "";
