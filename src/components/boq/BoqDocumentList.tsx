@@ -17,7 +17,7 @@ import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqDocumentSummary } from '@/dtos/boq/BoqLineDTO';
 import { useBoqDocumentList } from '@/hooks/hexagonal/useBoqDocumentList';
 import { useToast } from '@/hooks/use-toast';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -163,11 +163,11 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
       if (!lineIds.length) {
         // Filet de sécurité : relecture serveur si le cache local est vide.
         const fetched = await Promise.all(
-          ids.map((documentId) => boqRepository.list({ source, contextId, projectId, documentId })),
+          ids.map((documentId) => RepositoryFactory.getBoqRepository().list({ source, contextId, projectId, documentId })),
         );
         lineIds = fetched.flat().map((l) => l.id).filter((id): id is string => Boolean(id));
       }
-      const deleted = await boqRepository.deleteMany(lineIds, source);
+      const deleted = await RepositoryFactory.getBoqRepository().deleteMany(lineIds, source);
       if (!deleted) throw new Error(t('common.delete_nothing_deleted') || 'Aucune ligne supprimée côté serveur.');
 
       window.dispatchEvent(new Event('boq-kpi-refresh'));
