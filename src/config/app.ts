@@ -90,7 +90,7 @@ const env = (key: string, fallback = ''): string => {
       return runtime[key];
     }
   }
-  const v = (import.meta as unknown as { env?: Record<string, string> }).env?.[key];
+  const v = (import.meta.env as Record<string, string | undefined> | undefined)?.[key];
   return v !== undefined && v !== '' ? v : fallback;
 };
 
@@ -101,7 +101,7 @@ const envOpt = (key: string): string | undefined => {
       return runtime[key];
     }
   }
-  const v = (import.meta as unknown as { env?: Record<string, string> }).env?.[key];
+  const v = (import.meta.env as Record<string, string | undefined> | undefined)?.[key];
   return v === undefined || v === '' ? undefined : v;
 };
 
@@ -179,6 +179,49 @@ const MODE_DEFAULTS: Record<AppMode, ModeDefaults> = {
 // Builder
 // ---------------------------------------------------------------------------
 
+export type ProviderService = 'auth' | 'data' | 'storage';
+export type ProviderSource = 'deployment' | 'profile' | 'default';
+export interface ProviderSelection {
+  service: ProviderService;
+  provider: string;
+  source: ProviderSource;
+  /** Nom de la variable de déploiement active (si source = deployment). */
+  envVar?: string;
+}
+
+const PROVIDER_ENV_VARS: Record<ProviderService, string> = {
+  auth: 'VITE_AUTH_PROVIDER',
+  data: 'VITE_DATA_PROVIDER',
+  storage: 'VITE_STORAGE_PROVIDER',
+};
+
+/**
+ * Priorité par service : variable de déploiement VITE_<SERVICE>_PROVIDER
+ * > profil de déploiement enregistré > défaut du mode. Chaîne vide = non définie.
+ */
+export function resolveProviderSelection(
+  service: ProviderService,
+  profileProvider: string | undefined,
+  defaultProvider: string,
+): ProviderSelection {
+  const envVar = PROVIDER_ENV_VARS[service];
+  const fromEnv = envOpt(envVar)?.trim();
+  if (fromEnv) return { service, provider: fromEnv, source: 'deployment', envVar };
+  if (profileProvider) return { service, provider: profileProvider, source: 'profile' };
+  return { service, provider: defaultProvider, source: 'default' };
+}
+
+/** Sources des fournisseurs actifs, pour signaler un choix imposé par le déploiement. */
+export function getProviderSelections(): ProviderSelection[] {
+  const defaults = MODE_DEFAULTS[resolveMode()];
+  const profile = getActiveProfileSync();
+  return [
+    resolveProviderSelection('auth', profile.auth.provider, defaults.auth.provider),
+    resolveProviderSelection('data', profile.data.provider, defaults.data.provider),
+    resolveProviderSelection('storage', profile.storage.provider, defaults.storage.provider),
+  ];
+}
+
 function buildConfig(): AppConfig {
   const mode = resolveMode();
   const environment = resolveEnvironment(mode);
@@ -201,7 +244,7 @@ function buildConfig(): AppConfig {
     profile.auth.url ||
     defaults.auth.url;
 
-  const authProvider = profile.auth.provider;
+  const authProvider = resolveProviderSelection('auth', profile.auth.provider, defaults.auth.provider).provider as AuthProvider;
 
   const anonKey = authProvider === 'supabase' && !customConfig.VITE_SUPABASE_URL
     ? resolveSupabaseConfig().publishableKey :
@@ -227,7 +270,7 @@ function buildConfig(): AppConfig {
     defaults.storage.endpoint;
 
   const dataBlock = {
-    provider: profile.data.provider,
+    provider: resolveProviderSelection('data', profile.data.provider, defaults.data.provider).provider as DatabaseProvider,
     url: dataUrl || undefined,
     schemas: splitList(envOpt('VITE_PGRST_SCHEMAS'), DEFAULT_SCHEMAS),
     extraSearchPath: splitList(envOpt('VITE_PGRST_EXTRA_SEARCH_PATH'), DEFAULT_EXTRA_SEARCH_PATH),
@@ -272,7 +315,7 @@ function buildConfig(): AppConfig {
     database: dataBlock,
     data: dataBlock,
     storage: {
-      provider: profile.storage.provider,
+      provider: resolveProviderSelection('storage', profile.storage.provider, defaults.storage.provider).provider as StorageProvider,
       endpoint: storageEndpoint || undefined,
       bucket:
         customConfig.VITE_STORAGE_BUCKET ||

@@ -35,3 +35,4 @@
 - Account administration (create/update/activate/delete/roles, confirmation links by email or SMS) goes through UserAdministrationService and the server-side admin-users function; the browser never holds admin privileges and roles live only in user_roles.
 - Application services, hooks and components obtain every repository, storage, auth and edge-function dependency from RepositoryFactory; only infrastructure adapters import provider clients, so providers can be swapped in one place.
 - Render technical codes (status, priority, unit, role…) through CodeLabel/useI18n referential translators, never raw, so the i18n guard test stays green.
+- Resolve each provider (auth, data, storage) independently as deployment variable > saved deployment profile > mode default, empty meaning unset, and show deployment-pinned providers in the profile screen; a database row must never silently override an explicit deployment choice.

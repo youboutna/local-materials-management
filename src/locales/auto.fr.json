@@ -6726,5 +6726,11 @@
   "planning.financing": "Financements",
   "auto.paymentrequestmodal.contractor_name": "Titulaire / prestataire *",
   "auto.paymentrequestmodal.contractor_contact": "Contact du titulaire *",
-  "auto.paymentrequestmodal.contractor_required": "Renseignez le titulaire et son contact"
+  "auto.paymentrequestmodal.contractor_required": "Renseignez le titulaire et son contact",
+  "deploymentProfile.pinned.title": "Fournisseurs imposés par le déploiement",
+  "deploymentProfile.pinned.inactive": "le profil enregistré est inactif pour ce service",
+  "deploymentProfile.pinned.offline": "Mode hors ligne (comptes de démonstration) : aucun appel réseau, le profil choisi n'est pas appliqué.",
+  "deploymentProfile.service.auth": "Authentification",
+  "deploymentProfile.service.data": "Données",
+  "deploymentProfile.service.storage": "Stockage"
 }

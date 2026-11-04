@@ -6728,5 +6728,11 @@
   "planning.financing": "التمويل",
   "auto.paymentrequestmodal.contractor_name": "المتعهد *",
   "auto.paymentrequestmodal.contractor_contact": "جهة اتصال المتعهد *",
-  "auto.paymentrequestmodal.contractor_required": "أدخل المتعهد وجهة الاتصال"
+  "auto.paymentrequestmodal.contractor_required": "أدخل المتعهد وجهة الاتصال",
+  "deploymentProfile.pinned.title": "مزودون محددون من النشر",
+  "deploymentProfile.pinned.inactive": "الملف المحفوظ غير مفعّل لهذه الخدمة",
+  "deploymentProfile.pinned.offline": "وضع غير متصل (حسابات تجريبية): لا اتصالات شبكية، ولا يُطبّق الملف المختار.",
+  "deploymentProfile.service.auth": "المصادقة",
+  "deploymentProfile.service.data": "البيانات",
+  "deploymentProfile.service.storage": "التخزين"
 }

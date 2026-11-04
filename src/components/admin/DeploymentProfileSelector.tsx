@@ -23,6 +23,8 @@ import {
   listProfiles,
 } from '@/config/profile-manager';
 import type { DeploymentProfile } from '@/config/profiles';
+import { getProviderSelections } from '@/config/app';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { AlertTriangle, Check, Loader2 } from 'lucide-react';
 
 interface ProfileConfigFieldsProps {
@@ -96,6 +98,7 @@ function ProfileConfigFields({ profile, values, onChange }: ProfileConfigFieldsP
 export default function DeploymentProfileSelector() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { signOut } = useHexagonalAuth();
 
   const [profiles] = useState<DeploymentProfile[]>(() => listProfiles());
@@ -167,6 +170,8 @@ export default function DeploymentProfileSelector() {
     }
   };
 
+  const deploymentPinned = getProviderSelections().filter((sel) => sel.source === 'deployment');
+
   if (isLoading) {
     return (
       <Card>
@@ -180,6 +185,21 @@ export default function DeploymentProfileSelector() {
 
   return (
     <div className="space-y-4">
+      {deploymentPinned.length > 0 && (
+        <div className="rounded-lg border border-border bg-muted px-3 py-2 text-sm" role="status">
+          <p className="font-medium">{t('deploymentProfile.pinned.title')}</p>
+          <ul className="mt-1 space-y-0.5 text-muted-foreground">
+            {deploymentPinned.map((sel) => (
+              <li key={sel.service}>
+                {t(`deploymentProfile.service.${sel.service}`)} : <code>{sel.envVar}={sel.provider}</code> — {t('deploymentProfile.pinned.inactive')}
+              </li>
+            ))}
+          </ul>
+          {deploymentPinned.every((sel) => sel.provider === 'local') && (
+            <p className="mt-1 text-muted-foreground">{t('deploymentProfile.pinned.offline')}</p>
+          )}
+        </div>
+      )}
       <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
         <div>
