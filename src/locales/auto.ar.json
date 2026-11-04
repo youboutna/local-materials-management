@@ -6734,5 +6734,9 @@
   "deploymentProfile.pinned.offline": "وضع غير متصل (حسابات تجريبية): لا اتصالات شبكية، ولا يُطبّق الملف المختار.",
   "deploymentProfile.service.auth": "المصادقة",
   "deploymentProfile.service.data": "البيانات",
-  "deploymentProfile.service.storage": "التخزين"
+  "deploymentProfile.service.storage": "التخزين",
+  "plans.occurrences": "مرات الظهور",
+  "plans.surfaces": "المساحات المدونة (للمراجعة، لا تُنشأ سطور)",
+  "plans.warning.repeated_marker": "رمز مكرر: لا يُجمع العدد، يرجى التحقق",
+  "plans.warning.marker_without_dimensions": "رموز بلا أبعاد: أدخل الأبعاد"
 }

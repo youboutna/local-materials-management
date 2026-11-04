@@ -6735,5 +6735,9 @@
   "deploymentProfile.pinned.offline": "Offline mode (demo accounts): no network calls, the selected profile is not applied.",
   "deploymentProfile.service.auth": "Authentication",
   "deploymentProfile.service.data": "Data",
-  "deploymentProfile.service.storage": "Storage"
+  "deploymentProfile.service.storage": "Storage",
+  "plans.occurrences": "occurrences",
+  "plans.surfaces": "Annotated areas (to review, no line created)",
+  "plans.warning.repeated_marker": "Repeated marker: count not summed, please check",
+  "plans.warning.marker_without_dimensions": "Markers without dimensions: enter dimensions"
 }

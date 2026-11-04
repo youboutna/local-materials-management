@@ -48,3 +48,40 @@ describe('Controlled technical plan bridge', () => {
     expect(plan.warnings.some((warning) => warning.code === 'duplicate_page')).toBe(true);
   });
 });
+describe('Joinery, site and roof drawings (review-first)', () => {
+  const sheet = (text: string) => [{ page: 1, source: 'text' as const, confidence: 100, text: `Echelle : 1/100\n${text}` }];
+
+  it('proposes one unconfirmed element per distinct joinery marker without summing repeats', () => {
+    const plan = TechnicalPlanService.extract(sheet('Fen-101 Fen-101 Fen-101 Por-7 Xyz-9'), 'joinery.pdf', 'h');
+    expect(plan.elements.map((e) => [e.ref, e.elementType, e.count, e.occurrences])).toEqual([
+      ['Fen-101', 'window', 1, 3],
+      ['Por-7', 'wooden_door', 1, 1],
+    ]);
+    expect(plan.elements.every((e) => !e.confirmed && e.length === undefined)).toBe(true);
+    expect(plan.warnings.map((w) => w.code)).toEqual(expect.arrayContaining(['repeated_marker', 'marker_without_dimensions']));
+  });
+
+  it('keeps annotated floor areas as observations only', () => {
+    const plan = TechnicalPlanService.extract(sheet('Surf. au sol :12,5 m2'), 'joinery.pdf', 'h');
+    expect(plan.surfaces).toEqual([{ page: 1, rawLabel: 'Surf. au sol :12,5 m2', area: 12.5 }]);
+    expect(plan.elements).toEqual([]);
+  });
+
+  it('reports unresolved dimensions for a title-block-only site or roof sheet', () => {
+    const plan = TechnicalPlanService.extract(sheet('Planche : 01\nPhase: DE\nPlan masse'), 'site.pdf', 'h');
+    expect(plan.elements).toEqual([]);
+    expect(plan.cartouches[0]).toMatchObject({ scale: 100, planche: '01', phase: 'DE' });
+    expect(plan.warnings.map((w) => w.code)).toContain('missing_dimensions');
+  });
+
+  it('confirmed plan elements yield the same BOQ quantities as manual entry', async () => {
+    const { UnifiedBoqParser } = await import('../UnifiedBoqParser');
+    const plan = TechnicalPlanService.extract(sheet('Fen-101'), 'joinery.pdf', 'h');
+    const reviewed = [{ ...plan.elements[0], length: 1.2, confirmed: true }];
+    const [fromPlan] = TechnicalPlanService.toMeterInputs(plan, reviewed, { source: 'dqe', contextId: 'p' });
+    const [manual] = UnifiedBoqParser.fromManual([{ source: 'dqe', contextId: 'p', designation: 'Fen-101', elementType: 'window', unit: fromPlan.unit, length: 1.2, quantity: 0 }]);
+    expect(fromPlan.quantity).toBe(manual.quantity);
+    expect(fromPlan.unit).toBe(manual.unit);
+    expect(fromPlan.provenance).toMatchObject({ format: 'plan', page: 1, fileSha256: 'h' });
+  });
+});

@@ -27,7 +27,7 @@ export class TechnicalPlanService {
   }
 
   static extract(pages: TechnicalPlanPageDTO[], fileName: string, sha256: string): TechnicalPlanDTO {
-    const result: TechnicalPlanDTO = { pages, fileName, sha256, cartouches: [], elements: [], warnings: [] };
+    const result: TechnicalPlanDTO = { pages, fileName, sha256, cartouches: [], elements: [], surfaces: [], warnings: [] };
     const fingerprints = new Set<string>();
     for (const page of pages) {
       const fingerprint = page.text.replace(/\s+/g, ' ').trim();
@@ -59,9 +59,35 @@ export class TechnicalPlanService {
           height: factor ? Number(match[4].replace(',', '.')) * factor : undefined,
           count: 1, confirmed: false });
       }
+      TechnicalPlanService.extractMarkers(page, result);
+      for (const match of page.text.matchAll(new RegExp(TECHNICAL_PLAN_PATTERNS.surface))) {
+        result.surfaces!.push({ page: page.page, rawLabel: match[0].replace(/\s+/g, ' ').trim(), area: Number(match[2].replace(',', '.')) });
+      }
       if (!result.elements.some((element) => element.page === page.page)) result.warnings.push({ code: 'missing_dimensions', page: page.page });
     }
     return result;
+  }
+
+  /**
+   * Repères de menuiserie : un élément par repère distinct et par page, nombre fixé à 1.
+   * Les apparitions répétées sont gardées comme observation ; aucune dimension n'est inventée.
+   */
+  private static extractMarkers(page: TechnicalPlanPageDTO, result: TechnicalPlanDTO): void {
+    const prefixes = TECHNICAL_PLAN_POLICY.markerPrefixes;
+    const seen = new Map<string, TechnicalPlanElementDTO>();
+    for (const match of page.text.matchAll(new RegExp(TECHNICAL_PLAN_PATTERNS.marker))) {
+      const prefix = Object.keys(prefixes).find((key) => key.toLowerCase() === match[1].toLowerCase());
+      if (!prefix) continue;
+      const ref = `${prefix}-${match[2]}`;
+      const existing = seen.get(ref);
+      if (existing) { existing.occurrences = (existing.occurrences ?? 1) + 1; continue; }
+      const element: TechnicalPlanElementDTO = { ref, page: page.page, rawLabel: match[0], elementType: prefixes[prefix], count: 1, confirmed: false, occurrences: 1 };
+      seen.set(ref, element);
+      result.elements.push(element);
+    }
+    if (seen.size === 0) return;
+    result.warnings.push({ code: 'marker_without_dimensions', page: page.page });
+    if ([...seen.values()].some((element) => (element.occurrences ?? 1) > 1)) result.warnings.push({ code: 'repeated_marker', page: page.page });
   }
 
   static toMeterInputs(plan: TechnicalPlanDTO, elements: readonly TechnicalPlanElementDTO[], ctx: ToMeterInputsContext, documentId?: string): MeterInputDTO[] {

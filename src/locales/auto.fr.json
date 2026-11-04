@@ -6732,5 +6732,9 @@
   "deploymentProfile.pinned.offline": "Mode hors ligne (comptes de démonstration) : aucun appel réseau, le profil choisi n'est pas appliqué.",
   "deploymentProfile.service.auth": "Authentification",
   "deploymentProfile.service.data": "Données",
-  "deploymentProfile.service.storage": "Stockage"
+  "deploymentProfile.service.storage": "Stockage",
+  "plans.occurrences": "apparitions",
+  "plans.surfaces": "Surfaces relevées (à vérifier, aucune ligne créée)",
+  "plans.warning.repeated_marker": "Repère répété : le nombre n'est pas additionné, à vérifier",
+  "plans.warning.marker_without_dimensions": "Repères sans dimensions : saisir les dimensions"
 }
