@@ -2,7 +2,6 @@ import { sendTenderSubmissionNotification } from '@/application/services/TenderS
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { SubmissionSecretService } from './SubmissionSecretService';
-import { SupabaseTenderSubmissionEvaluationAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionEvaluationAdapter';
 
 export interface CreateTenderSubmissionDTO {
   tender_id: string;
@@ -177,7 +176,7 @@ export class TenderSubmissionService {
   /** Récupère les soumissions d'un AO avec leurs documents pour l'évaluation. */
   static async getTenderSubmissions(tenderId: string) {
     try {
-      return await SupabaseTenderSubmissionEvaluationAdapter.getSubmissionsForTender(tenderId);
+      return await RepositoryFactory.getTenderSubmissionEvaluationGateway().getSubmissionsForTender(tenderId);
     } catch (error) {
       console.error('Error fetching tender submissions:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération des soumissions');
@@ -197,7 +196,7 @@ export class TenderSubmissionService {
       if (update.reviewerId !== undefined) dbUpdate.reviewer_id = update.reviewerId;
       if (update.reviewedAt !== undefined) dbUpdate.reviewed_at = update.reviewedAt;
 
-      return await SupabaseTenderSubmissionEvaluationAdapter.updateEvaluation(submissionId, dbUpdate);
+      return await RepositoryFactory.getTenderSubmissionEvaluationGateway().updateEvaluation(submissionId, dbUpdate);
     } catch (error) {
       console.error('Error updating tender evaluation:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la mise à jour de l\'évaluation');

@@ -1,5 +1,5 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { IPaymentInitiationRepository } from '@/domain/repositories/IPaymentInitiationRepository';
-import { SupabasePaymentInitiationAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter';
 import {
   ApprovalActionDTO,
   ApprovalChainStep,
@@ -19,7 +19,7 @@ export class PaymentInitiationService {
   static getInstance(): PaymentInitiationService {
     if (!PaymentInitiationService.instance) {
       PaymentInitiationService.instance = new PaymentInitiationService(
-        new SupabasePaymentInitiationAdapter()
+        RepositoryFactory.getPaymentInitiationRepository()
       );
     }
     return PaymentInitiationService.instance;

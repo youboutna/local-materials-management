@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * BoqInjectionGateService — porte de validation avant injection d'un devis ou
  * d'un décompte dans la planification / l'exécution du projet.
@@ -17,7 +18,6 @@ import {
   type BoqInjectionKind,
   type InjectionValidationStamp,
 } from '@/config/referentials/boq/boq-injection-gate.referential';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface InjectionActor {
@@ -159,7 +159,7 @@ export class BoqInjectionGateService {
         : 'validated';
 
       if (!line.id) continue;
-      await boqRepository.update(line.id, { metadata, status: nextStatus, source: line.source });
+      await RepositoryFactory.getBoqRepository().update(line.id, { metadata, status: nextStatus, source: line.source });
       validated += 1;
     }
 

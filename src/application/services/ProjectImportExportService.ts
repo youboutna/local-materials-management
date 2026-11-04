@@ -49,7 +49,6 @@ import type {
 import { ProjectStatus } from '@/dtos/entities/ProjectDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
@@ -1969,7 +1968,7 @@ export class ProjectImportExportService {
   ): Promise<void> {
     if (dqeLines.length === 0) return;
 
-    const existingLines = await boqRepository.list({
+    const existingLines = await RepositoryFactory.getBoqRepository().list({
       source: 'dqe',
       contextId: projectId,
       projectId,
@@ -2061,12 +2060,12 @@ export class ProjectImportExportService {
         if (existingLine?.id) {
           const existingLineId = existingLine.id;
           await this.retryWithBackoff(
-            () => boqRepository.update(existingLineId, boqData),
+            () => RepositoryFactory.getBoqRepository().update(existingLineId, boqData),
             `updateBoqLine ${existingLineId}`,
           );
         } else {
           await this.retryWithBackoff(
-            () => boqRepository.create(boqData),
+            () => RepositoryFactory.getBoqRepository().create(boqData),
             `createBoqLine ${boqData.code}`,
           );
         }
@@ -3307,7 +3306,7 @@ export class ProjectImportExportService {
         ...phase,
         milestones: await this.milestoneService.getPhaseMilestones(p.id, phase.id),
         tasks: await this.taskAssignmentService.getByPhase(phase.id),
-        dqeLines: await boqRepository.list({
+        dqeLines: await RepositoryFactory.getBoqRepository().list({
           source: 'dqe',
           contextId: p.id,
           projectId: p.id,

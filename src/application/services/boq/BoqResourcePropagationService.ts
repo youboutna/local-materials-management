@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * BoqResourcePropagationService
  * Traduit les lignes DQE validées en ressources PLANIFIÉES :
@@ -15,8 +16,6 @@ import type {
   PhaseResourceCounts,
   ProjectResourceAllocation,
 } from '@/domain/repositories/IBoqPropagationRepository';
-import { boqPropagationRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqPropagationAdapter';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 export interface PropagationResult {
@@ -44,7 +43,7 @@ export class BoqResourcePropagationService {
   async propagateValidatedBoq(projectId: string, documentId?: string): Promise<PropagationResult> {
     if (!projectId) throw new AppError(ErrorCode.VALIDATION_ERROR, 'Project ID is required');
 
-    const lines = await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, documentId });
+    const lines = await RepositoryFactory.getBoqRepository().list({ source: 'dqe', contextId: projectId, projectId, documentId });
     const validatedStatuses = new Set(['submitted', 'invoiced', 'paid']);
     const validated = lines.filter((line) => validatedStatuses.has(String(line.status)));
 
@@ -118,6 +117,6 @@ export class BoqResourcePropagationService {
 let instance: BoqResourcePropagationService | null = null;
 
 export function getBoqResourcePropagationService(): BoqResourcePropagationService {
-  if (!instance) instance = new BoqResourcePropagationService(boqPropagationRepository);
+  if (!instance) instance = new BoqResourcePropagationService(RepositoryFactory.getBoqPropagationRepository());
   return instance;
 }

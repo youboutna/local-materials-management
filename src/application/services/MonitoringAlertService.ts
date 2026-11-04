@@ -15,7 +15,6 @@ import {
 } from '@/config/referentials/notifications/alerts.referential';
 import type { INotificationRepository, NotificationData } from '@/domain/repositories/INotificationRepository';
 import type { IDerivedAlertRepository } from '@/domain/repositories/IDerivedAlertRepository';
-import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseDerivedAlertAdapter';
 import { isDerivedAlertId, toDerivedAlerts, type DerivedThresholdMap } from '@/application/services/alerts/DerivedAlertEngine';
 import { resolveDerivedThresholds } from '@/application/services/alerts/AlertThresholdResolver';
 import { getEscalationThresholdService } from '@/application/services/EscalationThresholdService';
@@ -154,7 +153,7 @@ export class MonitoringAlertService {
 
   private getDerivedRepository(): IDerivedAlertRepository {
     if (!this.derivedRepository) {
-      this.derivedRepository = new SupabaseDerivedAlertAdapter();
+      this.derivedRepository = RepositoryFactory.getDerivedAlertRepository();
     }
     return this.derivedRepository;
   }

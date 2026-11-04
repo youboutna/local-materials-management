@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Infrastructure Service
  * Generic multi-network infrastructure management (Utility Network)
@@ -6,7 +7,6 @@
  */
 
 import { IInfraRepository } from '@/domain/repositories/IInfraRepository';
-import { SupabaseInfraAdapter } from '@/infrastructure/adapters/supabase/SupabaseInfraAdapter';
 import { NetworkFeature } from '@/domain/entities/NetworkFeature';
 import { Structure } from '@/domain/entities/Structure';
 import type {
@@ -32,7 +32,7 @@ import type {
 import type { Geometry, FeatureCollection } from 'geojson';
 
 export class InfrastructureService {
-  constructor(private readonly repository: IInfraRepository = new SupabaseInfraAdapter()) {}
+  constructor(private readonly repository: IInfraRepository = RepositoryFactory.getInfraRepository()) {}
 
   // ============= DOMAINS =============
 

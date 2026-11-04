@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * PhaseResourceLinkService — relie la chaîne DQE / Devis à la planification (phase).
  *
@@ -17,7 +18,6 @@ import type {
   PhaseResourceLineDTO,
   PhaseResourceOrigin,
 } from '@/dtos/entities/PhasePlannedResourcesDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 
 /** Unités marquant une prestation de main d'œuvre (homme-jour, homme-mois, forfait). */
 const LABOR_UNITS = ['hj', 'h/j', 'homme-jour', 'hommejour', 'hm', 'hommemois', 'homme-mois', 'mois', 'jour', 'j', 'forfait', 'ff'];
@@ -151,6 +151,6 @@ export class PhaseResourceLinkService {
 let instance: PhaseResourceLinkService | null = null;
 
 export function getPhaseResourceLinkService(): PhaseResourceLinkService {
-  if (!instance) instance = new PhaseResourceLinkService(boqRepository);
+  if (!instance) instance = new PhaseResourceLinkService(RepositoryFactory.getBoqRepository());
   return instance;
 }

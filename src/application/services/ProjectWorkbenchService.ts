@@ -1,12 +1,11 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProjectWorkbenchRepository';
 import type { ProjectCalendarEventDTO, CalendarPeriod, SaveProjectOperationDTO, SaveInfrastructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import type { Geometry } from 'geojson';
 import type { SpatialZoneDTO, InfrastructureRealizationDTO, SaveAssetTypeDTO, ImportFeatureItemDTO, SaveInfraStructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import { getProjectService } from './ProjectService';
-import { SupabaseProjectWorkbenchAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter';
 import { format, isValid, parseISO, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { DecompteService, getDecompteService } from './DecompteService';
 import { ProjectFinancialsService } from './ProjectFinancialsService';
 import { ProjectMetricsOrchestrator } from './ProjectMetricsOrchestrator';
@@ -15,7 +14,7 @@ import { getProjectResourceAggregatorService } from './ProjectResourceAggregator
 import type { ReferentialItemDTO } from '@/dtos/entities/ReferentialItemDTO';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 export class ProjectWorkbenchService {
-  constructor(private readonly repository: IProjectWorkbenchRepository = new SupabaseProjectWorkbenchAdapter()) {}
+  constructor(private readonly repository: IProjectWorkbenchRepository = RepositoryFactory.getProjectWorkbenchRepository()) {}
   projects() { return this.repository.projects(); }
   async load(projectId: string) {
     const authorized = (await this.projects()).find(project => project.id === projectId);
@@ -55,7 +54,7 @@ export class ProjectWorkbenchService {
     if (!(await this.projects()).some(project => project.id === projectId)) throw new Error('Project access denied');
     const [project, collections, scope, operations] = await Promise.all([
       getProjectService().getProjectWithDetails(projectId),
-      Promise.all((['dqe','supplier_bid','invoice'] as const).map(source => boqRepository.list({source,projectId}))),
+      Promise.all((['dqe','supplier_bid','invoice'] as const).map(source => RepositoryFactory.getBoqRepository().list({source,projectId}))),
       getDecompteService().getProjectFinancials(projectId),
       this.repository.operations(projectId),
     ]);
