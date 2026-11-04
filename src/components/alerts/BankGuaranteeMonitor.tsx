@@ -49,21 +49,56 @@ interface ProjectDelay {
   milestonesMissed: number;
 }
 
-// Helper function to detect project delays (mock implementation)
-async function detectProjectDelays(): Promise<ProjectDelay[]> {
-  // In production, this would query actual project data
-  // For now, return empty array - no critical delays
-  return [];
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Projets en cours dont l'échéance contractuelle est dépassée, à partir des données projet réelles. */
+async function detectProjectDelays(): Promise<(ProjectDelay & { recipientIds: string[] })[]> {
+  const { getProjectService } = await import('@/application/services/ProjectService');
+  const projects = await getProjectService().getAllProjects();
+  const now = Date.now();
+  return projects.flatMap((p: any) => {
+    if (!p.endDate || !p.startDate || (p.progress ?? 0) >= 100) return [];
+    const end = new Date(p.endDate).getTime();
+    const start = new Date(p.startDate).getTime();
+    if (!Number.isFinite(end) || !Number.isFinite(start) || end >= now || end <= start) return [];
+    const delayDays = Math.ceil((now - end) / DAY_MS);
+    return [{
+      projectId: p.id,
+      projectName: p.title ?? p.name ?? p.id,
+      contractorId: p.contractorId ?? undefined,
+      contractorName: p.contractorName ?? '',
+      delayDays,
+      delayPercentage: Math.round(((now - end) / (end - start)) * 100),
+      plannedEndDate: p.endDate,
+      milestonesMissed: 0,
+      recipientIds: [p.projectManagerId, p.technicalManagerId].filter(Boolean) as string[],
+    }];
+  });
 }
 
-// Helper function to trigger bank guarantee notification
+/** Notifications internes réelles via CommunicationService ; retourne le nombre effectivement enregistré. */
 async function triggerBankGuaranteeNotification(
   delay: ProjectDelay,
-  bankGuaranteeData: any
+  bankGuaranteeData: { guaranteeId: string; bankName: string; guaranteeAmount: number },
+  recipientIds: string[],
+  title: string,
+  message: string,
 ): Promise<{ notificationsSent: number }> {
-  console.log('Triggering bank guarantee notification:', { delay, bankGuaranteeData });
-  // In production, this would send actual notifications
-  return { notificationsSent: 1 };
+  const { CommunicationService } = await import('@/application/services/CommunicationService');
+  const results = await Promise.allSettled(
+    Array.from(new Set(recipientIds)).map(recipientId => CommunicationService.sendNotification({
+      recipientId,
+      title,
+      message,
+      type: 'warning',
+      priority: 'high',
+      projectId: delay.projectId,
+      metadata: { source: 'bank_guarantee', ...bankGuaranteeData, delayDays: delay.delayDays },
+    })),
+  );
+  const notificationsSent = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+  if (notificationsSent === 0) throw new Error('No notification could be delivered');
+  return { notificationsSent };
 }
 
 // Helper function to create bank guarantee action
