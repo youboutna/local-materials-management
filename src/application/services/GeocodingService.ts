@@ -230,10 +230,13 @@ export class GeocodingService {
       }
 
       // Fusion base locale (MR) + externe (Nominatim) pour une autocomplétion riche.
-      const [localResults, externalResults] = await Promise.all([
-        this.geocodeLocal(address).catch(() => [] as GeocodingResult[]),
-        this.geocodeExternal(address).catch(() => [] as GeocodingResult[]),
-      ]);
+      // Une source indisponible ne masque pas l'autre ; si toutes échouent, l'erreur remonte
+      // au lieu d'être présentée comme « aucun résultat ».
+      const settled = await Promise.allSettled([this.geocodeLocal(address), this.geocodeExternal(address)]);
+      if (settled.every((r) => r.status === 'rejected')) {
+        throw new NetworkError('All geocoding sources failed', (settled[0] as PromiseRejectedResult).reason);
+      }
+      const [localResults, externalResults] = settled.map((r) => (r.status === 'fulfilled' ? r.value : [] as GeocodingResult[]));
 
       const ordered = this.prioritizeLocal
         ? [...localResults, ...externalResults]
