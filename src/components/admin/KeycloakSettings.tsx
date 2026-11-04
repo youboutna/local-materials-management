@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/card';
 import { Loader2, Key, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { keycloakConfig } from '@/integrations/keycloak/config';
 import { T } from '@/components/i18n/T';
 
 const KeycloakSettings = () => {
@@ -163,5 +162,7 @@ const KeycloakSettings = () => {
     </Card>
   );
 };
+
+const keycloakConfig = RepositoryFactory.getKeycloakDefaults();
 
 export default KeycloakSettings;

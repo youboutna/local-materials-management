@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/infrastructure/RepositoryFactory', () => ({
   RepositoryFactory: {
     getNotificationRepository: () => mocks.notifications,
+    getDefaultCommunicationProviders: async () => (await import('@/infrastructure/adapters/communication/EdgeFunctionCommunicationAdapters')).createDefaultCommunicationProviders(),
     getInspectionRepository: () => ({}), getEmployeeRepository: () => ({}),
     getPaymentRepository: () => ({}), getProjectRepository: () => ({}),
     getMilestoneRepository: () => ({}), getPhaseRepository: () => ({}),

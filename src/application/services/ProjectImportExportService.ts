@@ -52,7 +52,6 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { mapDqeStatus } from '@/utils/dqeStatusMapper';
 import { getDQETypeLabel, normalizeDQEType } from '@/utils/dqeTypeMapper';
 import { EmployeeStatus } from '@/dtos/entities/EmployeeDTO';
-import type { BtpDatabase } from '@/integrations/supabase/btp-types';
 const refs = () => RepositoryFactory.getImportReferenceRepository();
 
 
@@ -499,7 +498,7 @@ export class ProjectImportExportService {
     rawId: string | undefined | null,
     rawExternalRef: string | undefined | null,
     options?: {
-      table?: keyof BtpDatabase['btp']['Tables'];
+      table?: string;
       checkExists?: boolean;
     },
   ): Promise<{ id: string; externalRef: string | undefined; existsInDb: boolean; existingId?: string }> {

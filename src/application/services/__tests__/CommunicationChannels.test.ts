@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), user: vi.fn(), sms: vi.fn() }));
 vi.mock('../UserService', () => ({ getUserService: () => ({ getUserById: mocks.user }) }));
 vi.mock('../NotificationService', () => ({ NotificationService: { createNotification: vi.fn().mockResolvedValue({ id: 'notification' }) } }));
-vi.mock('@/infrastructure/RepositoryFactory', () => ({ RepositoryFactory: { getNotificationRepository: () => ({ sendSMS: mocks.sms }) } }));
+vi.mock('@/infrastructure/RepositoryFactory', () => ({ RepositoryFactory: { getDefaultCommunicationProviders: async () => (await import('@/infrastructure/adapters/communication/EdgeFunctionCommunicationAdapters')).createDefaultCommunicationProviders(), getNotificationRepository: () => ({ sendSMS: mocks.sms }) } }));
 vi.mock('@/infrastructure/adapters/supabase/NotificationGatewayAdapter', () => ({ notificationGatewayAdapter: { invokeFunction: mocks.invoke } }));
 import { CommunicationService } from '../CommunicationService';
 beforeEach(() => vi.clearAllMocks());

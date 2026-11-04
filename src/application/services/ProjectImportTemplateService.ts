@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 // src/application/services/ProjectImportTemplateService.ts
 //
 // Génère des modèles de fichier d'import pour les projets.
@@ -66,7 +67,7 @@ export interface ReferentialOption {
 
 export class ProjectImportTemplateService {
   async readWorkbook(file: File) {
-    const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
+    const PlanningWorkbookReader = await RepositoryFactory.getPlanningWorkbookReader();
     return PlanningWorkbookReader.read(file);
   }
 
@@ -107,7 +108,7 @@ export class ProjectImportTemplateService {
   }
 
   async readNarrative(file: File): Promise<string> {
-    const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
+    const PlanningWorkbookReader = await RepositoryFactory.getPlanningWorkbookReader();
     return PlanningWorkbookReader.narrative(file);
   }
 
@@ -142,7 +143,8 @@ export class ProjectImportTemplateService {
 
   async readProjectDataset(file: File): Promise<unknown> {
     const extension = file.name.split('.').pop()?.toLowerCase();
-    const { readFileAsText, readFileAsArrayBuffer } = await import('@/infrastructure/parsers/IProjectFileParser');
+    const readFileAsText = (f: File) => f.text();
+    const readFileAsArrayBuffer = (f: File) => f.arrayBuffer();
     if (extension === 'json') return JSON.parse(await readFileAsText(file));
     if (extension === 'csv') {
       const Papa = await import('papaparse');
@@ -165,8 +167,7 @@ export class ProjectImportTemplateService {
     const documents = getDocumentService();
     const existing = await documents.getProjectDocuments(projectId);
     for (const file of files) {
-      const { readFileAsArrayBuffer } = await import('@/infrastructure/parsers/IProjectFileParser');
-      const digest = await crypto.subtle.digest('SHA-256', await readFileAsArrayBuffer(file));
+      const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
       const hash = Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, '0')).join('');
       if (existing.some(document => document.metadata?.sourceHash === hash)) continue;
       const saved = await documents.createDocument({ title: file.name, file, projectId, documentType: 'supporting_document', isInternalOnly: true, metadata: { sourceHash: hash, source: 'project_import' } });

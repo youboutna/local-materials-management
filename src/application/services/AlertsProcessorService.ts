@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * AlertsProcessorService — déclenche le traitement réel des alertes projet
  * (fonction serveur project-alerts-processor) et rapporte son vrai résultat.
@@ -34,7 +35,7 @@ let instance: AlertsProcessorService | null = null;
 
 export async function getAlertsProcessorService(): Promise<AlertsProcessorService> {
   if (!instance) {
-    const { notificationGatewayAdapter } = await import('@/infrastructure/adapters/supabase/NotificationGatewayAdapter');
+    const notificationGatewayAdapter = RepositoryFactory.getNotificationGateway();
     instance = new AlertsProcessorService({
       async run(options) {
         const { data, error } = await notificationGatewayAdapter.invokeFunction<Record<string, unknown>>(

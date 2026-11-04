@@ -135,10 +135,8 @@ export function configureUserAdministrationService(gateway: IUserAdministrationG
 
 export async function getUserAdministrationService(): Promise<UserAdministrationService> {
   if (!instance) {
-    const { EdgeFunctionUserAdministrationAdapter } = await import(
-      '@/infrastructure/adapters/supabase/EdgeFunctionUserAdministrationAdapter'
-    );
-    instance = new UserAdministrationService(new EdgeFunctionUserAdministrationAdapter());
+    const { RepositoryFactory } = await import('@/infrastructure/RepositoryFactory');
+    instance = new UserAdministrationService(await RepositoryFactory.getUserAdministrationGateway());
   }
   return instance;
 }

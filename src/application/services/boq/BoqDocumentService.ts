@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
 import type { BoqLineDTO, BoqLineFilter } from '@/dtos/boq/BoqLineDTO';
 
@@ -6,8 +7,7 @@ export class BoqDocumentService implements IBoqRepository {
   constructor(private readonly repository?: IBoqRepository) {}
   private async port(): Promise<IBoqRepository> {
     if (this.repository) return this.repository;
-    const { boqRepository } = await import('@/infrastructure/adapters/supabase/SupabaseBoqRepository');
-    return boqRepository;
+    return RepositoryFactory.getBoqRepositoryLazy();
   }
   async list(filter: BoqLineFilter) { return (await this.port()).list(filter); }
   async create(dto: BoqLineDTO) { return (await this.port()).create(dto); }
