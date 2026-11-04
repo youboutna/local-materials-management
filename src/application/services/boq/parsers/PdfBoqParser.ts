@@ -348,7 +348,7 @@ export class PdfBoqParser implements IDocumentParser {
       unit: findCol(/^unit[eé]?$/i),
       quantity: findCol(/qu?antit[eé]|^qt[eé]?$|^qty$/i),
       unitPrice: findCol(/prix.*unit|^p\.?\s*u\.?|^pu\b/i),
-      total: findCol(/montant|^total/i),
+      total: findCol(/montant|^total|prix\s*total|total\s*(?:ttc|ht)/i),
     };
 
     // Cellules centrées verticalement : le montant est imprimé sur une ligne
