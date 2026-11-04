@@ -207,6 +207,7 @@ import { SupabaseNewsletterCampaignAdapter } from '@/infrastructure/adapters/sup
 import { SupabaseNewsletterSubscriptionGateway } from '@/infrastructure/adapters/supabase/SupabaseNewsletterSubscriptionGateway';
 import { SupabaseNewsletterCampaignDispatcher } from '@/infrastructure/adapters/supabase/SupabaseNewsletterCampaignDispatcher';
 import { SupabaseInfraAdapter } from '@/infrastructure/adapters/supabase/SupabaseInfraAdapter';
+import { LocalInfraAdapter } from '@/infrastructure/adapters/local/LocalInfraAdapter';
 
 // ================================================================
 // 4. IMPORTS – AUTH ADAPTERS
@@ -983,7 +984,7 @@ export class RepositoryFactory {
 
   static getInfraRepository(): IInfraRepository {
     if (registry.infra) return registry.infra;
-    registry.infra = new SupabaseInfraAdapter();
+    registry.infra = resolveData() === 'local' ? new LocalInfraAdapter() : new SupabaseInfraAdapter();
     return registry.infra;
   }
 
