@@ -6723,5 +6723,8 @@
   "planning.component": "Composante",
   "planning.subComponents": "Sous-composantes",
   "planning.tasks": "Activités",
-  "planning.financing": "Financements"
+  "planning.financing": "Financements",
+  "auto.paymentrequestmodal.contractor_name": "Titulaire / prestataire *",
+  "auto.paymentrequestmodal.contractor_contact": "Contact du titulaire *",
+  "auto.paymentrequestmodal.contractor_required": "Renseignez le titulaire et son contact"
 }

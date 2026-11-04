@@ -6725,5 +6725,8 @@
   "planning.component": "المكون",
   "planning.subComponents": "المكونات الفرعية",
   "planning.tasks": "الأنشطة",
-  "planning.financing": "التمويل"
+  "planning.financing": "التمويل",
+  "auto.paymentrequestmodal.contractor_name": "المتعهد *",
+  "auto.paymentrequestmodal.contractor_contact": "جهة اتصال المتعهد *",
+  "auto.paymentrequestmodal.contractor_required": "أدخل المتعهد وجهة الاتصال"
 }

@@ -6726,5 +6726,8 @@
   "planning.component": "Component",
   "planning.subComponents": "Sub-components",
   "planning.tasks": "Activities",
-  "planning.financing": "Financing"
+  "planning.financing": "Financing",
+  "auto.paymentrequestmodal.contractor_name": "Contractor *",
+  "auto.paymentrequestmodal.contractor_contact": "Contractor contact *",
+  "auto.paymentrequestmodal.contractor_required": "Enter the contractor and their contact"
 }
