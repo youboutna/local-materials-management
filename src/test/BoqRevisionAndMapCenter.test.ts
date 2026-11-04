@@ -6,7 +6,7 @@ import { INFRA_DEFAULT_MAP_CENTER } from '@/config/referentials/projects/project
 describe('BOQ revision', () => {
   it('copies validated lines as draft under a new document linked to the original', () => {
     const [r] = BoqRevisionService.buildRevisionLines(
-      [{ id: 'l1', source: 'project', contextId: 'p', designation: 'x', unit: 'm3', quantity: 5, status: 'validated', documentId: 'd1' }],
+      [{ id: 'l1', source: 'project' as never, contextId: 'p', designation: 'x', unit: 'm3', quantity: 5, status: 'validated', documentId: 'd1' }],
       'd2', 'd1');
     expect(r.id).toBeUndefined();
     expect(r.status).toBe('draft');
