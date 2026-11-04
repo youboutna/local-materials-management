@@ -12,7 +12,7 @@ describe('Consommation pré-remplie depuis la ligne DQE', () => {
     expect(patch).toMatchObject({ sourceLineId: 'l1', label: 'Pose et tension', unit: 'ml', phaseId: 'ph1' });
   });
   it('déduit la famille main d’œuvre de la ligne', () => {
-    expect(ProjectWorkbenchService.prefillFromLine(line({ resourceType: 'labour' }), form).resourceFamily).toBe('human');
+    expect(ProjectWorkbenchService.prefillFromLine(line({ resourceType: 'labor' }), form).resourceFamily).toBe('human');
   });
   it('déduit la famille équipement par défaut', () => {
     expect(ProjectWorkbenchService.prefillFromLine(line({ resourceType: 'equipment' }), form).resourceFamily).toBe('equipment');
