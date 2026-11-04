@@ -31,7 +31,7 @@ export class SignedUrlStorageAdapter implements IStorageProvider {
     private readonly provider: SignedStorageKind,
     private readonly gateway: StorageSignerGateway,
     private readonly defaultBucket?: string,
-    private readonly fetchImpl: typeof fetch = (...args) => fetch(...args),
+    private readonly fetchImpl: typeof fetch = (input, init) => fetch(input, init),
   ) {}
 
   private async call<T>(body: Record<string, unknown>): Promise<T> {

@@ -27,7 +27,7 @@ type Env = (name: string) => string | undefined;
 const enc = new TextEncoder();
 const hex = (buf: ArrayBuffer) => Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 
-async function hmac(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayBuffer> {
+async function hmac(key: ArrayBuffer | Uint8Array<ArrayBuffer>, data: string): Promise<ArrayBuffer> {
   const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return crypto.subtle.sign("HMAC", k, enc.encode(data));
 }
@@ -109,7 +109,7 @@ export async function presignS3(
   return `${url.protocol}//${url.host}${canonicalPath}?${canonicalQuery}&X-Amz-Signature=${signature}`;
 }
 
-const b64decode = (value: string) => Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
+const b64decode = (value: string): Uint8Array<ArrayBuffer> => Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
 const b64encode = (buf: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(buf)));
 
 /** Azure Blob service SAS (version 2020-12-06). Resource "b" for a blob, "c" for container listing. */
