@@ -5,6 +5,7 @@
  */
 
 import { BaseEntityDTO } from './BaseEntityDTO';
+import type { GeometryKind } from './ProjectWorkbenchDTO';
 
 // =============================================================================
 // ASSET TYPE DTO
@@ -18,7 +19,7 @@ export interface AssetTypeDTO extends BaseEntityDTO {
   labelFr: string;
   labelAr: string;
   labelEn: string;
-  geometryKind: string;
+  geometryKind: GeometryKind;
 }
 
 // =============================================================================

@@ -411,6 +411,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   private domainRowToDTO(row: any): DomainDTO {
     return {
+      id: row.id ?? row.code,
       code: row.code,
       labelFr: row.label_fr,
       labelAr: row.label_ar,
@@ -423,6 +424,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
 
   private assetTypeRowToDTO(row: any): AssetTypeDTO {
     return {
+      id: row.id ?? row.code,
       code: row.code,
       domainCode: row.domain_code,
       assetGroup: row.asset_group,
@@ -489,7 +491,7 @@ export class SupabaseInfraAdapter implements IInfraRepository {
     if (dto.material) row.material = dto.material;
     if (dto.codeGeo) row.code_geo = dto.codeGeo;
     if (dto.localiteType) row.localite_type = dto.localiteType;
-    if (dto.codeAdm) row.code_adm = dto.code_adm;
+    if (dto.codeAdm) row.code_adm = dto.codeAdm;
     if (dto.labelFr) row.label_fr = dto.labelFr;
     if (dto.labelAr) row.label_ar = dto.labelAr;
     if (dto.labelDefault) row.label_default = dto.labelDefault;

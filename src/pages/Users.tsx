@@ -23,9 +23,11 @@ import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrentUserRoles } from "@/hooks/useUserRoles";
-import { useUserProfilesHex, useToggleUserStatusHex } from '@/hooks/hexagonal'
+import { useUserProfilesHex } from '@/hooks/hexagonal'
 import { motion } from "framer-motion";
-import { Ban, CheckCircle, Edit, Search, User, UserPlus } from "lucide-react";
+import { Ban, CheckCircle, Edit, Search, Trash2, User, UserPlus } from "lucide-react";
+import { useUserAdministrationHex } from "@/hooks/hexagonal/useUserAdministrationHex";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
@@ -100,7 +102,8 @@ const Users = () => {
 
   // Use hexagonal hook for user profiles
   const { data: profilesData = [], isLoading, error, refetch } = useUserProfilesHex(user?.id, isDevelopmentMode);
-  const toggleUserStatus = useToggleUserStatusHex();
+  const userAdmin = useUserAdministrationHex(user?.id);
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
 
   // Set profiles from hook data or development mode
   useEffect(() => {
@@ -146,10 +149,25 @@ const Users = () => {
   };
 
   const handleToggleUserStatus = async (profile: UserProfile) => {
-    toggleUserStatus.mutate({
-      userId: profile.id,
-      newStatus: !profile.is_active,
-    });
+    try {
+      await userAdmin.setUserActive({ userId: profile.id, isActive: profile.is_active === false });
+      refetch();
+    } catch (err) {
+      toast({ title: t('common.error'), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+    }
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      await userAdmin.deleteUser(userToDelete.id);
+      toast({ title: "Utilisateur supprimé", description: userToDelete.full_name ?? undefined });
+      refetch();
+    } catch (err) {
+      toast({ title: t('common.error'), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+    } finally {
+      setUserToDelete(null);
+    }
   };
 
   const refreshUserList = () => {
@@ -374,6 +392,17 @@ const Users = () => {
                                   <CheckCircle className="h-4 w-4" />
                                 )}
                               </Button>
+                              {profile.id !== user?.id && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  aria-label="Supprimer l'utilisateur"
+                                  className="h-8 border-destructive/30 text-destructive"
+                                  onClick={() => setUserToDelete(profile)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
                             </>
                           )}
                         </div>
@@ -504,6 +533,21 @@ const Users = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cet utilisateur ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le compte de {userToDelete?.full_name ?? userToDelete?.email} sera supprimé définitivement, avec ses rôles.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteUser}>Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* User Management Dialog */}
       <UserManagementDialog
