@@ -55,7 +55,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return this.transformToDTO(data);
     } catch (error) {
       console.error('Unexpected error finding milestone by ID:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -81,7 +81,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return data ? data.map(item => this.transformToDTO(item)) : [];
     } catch (error) {
       console.error('Unexpected error finding milestones by project ID:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -104,7 +104,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return data ? data.map(item => this.transformToDTO(item)) : [];
     } catch (error) {
       console.error('Unexpected error finding milestones by phase ID:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -128,7 +128,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return data ? data.map(item => this.transformToDTO(item)) : [];
     } catch (error) {
       console.error('Unexpected error finding completed milestones by project ID:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -152,7 +152,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return data ? data.map(item => this.transformToDTO(item)) : [];
     } catch (error) {
       console.error('Unexpected error finding pending milestones by project ID:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -240,7 +240,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return this.transformToDTO(result);
     } catch (error) {
       console.error('Unexpected error updating milestone:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -279,7 +279,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return await this.update(id, updateData);
     } catch (error) {
       console.error('Unexpected error marking milestone as completed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -303,7 +303,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return data ? data.map(item => this.transformToDTO(item)) : [];
     } catch (error) {
       console.error('Unexpected error finding milestones by status:', error);
-      return [];
+      throw error;
     }
   }
 

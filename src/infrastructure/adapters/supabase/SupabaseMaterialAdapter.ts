@@ -99,11 +99,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('id', id)
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) throw error;
+      if (!data) return null;
       return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findById failed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -116,11 +117,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .select('*')
         .in('id', ids);
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByIds failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -131,11 +133,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .select('*')
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findAll failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -229,11 +232,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('category', category as string)
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByCategory failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -245,11 +249,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('workspace_id', workspaceId)
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByWorkspace failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -261,11 +266,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('sku', sku)
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) throw error;
+      if (!data) return null;
       return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findBySku failed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -277,11 +283,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('ean', ean)
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) throw error;
+      if (!data) return null;
       return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByEan failed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -293,11 +300,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('gtin', gtin)
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) throw error;
+      if (!data) return null;
       return MaterialTransformer.fromSupabase(data as Record<string, unknown>);
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByGtin failed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -309,11 +317,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('supplier_id', supplierId)
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findBySupplier failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -326,11 +335,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .gt('available_quantity', 0)
         .order('available_quantity', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findLowStock failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -342,11 +352,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('available_quantity', 0)
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findOutOfStock failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -357,14 +368,15 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .select('*')
         .order('available_quantity', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       const belowMin = (data as BtpRow[]).filter(
         (row) => (row.available_quantity ?? 0) < (row.min_quantity ?? 0)
       );
       return belowMin.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findBelowMinStock failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -376,11 +388,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('material_status', status)
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByStatus failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -392,11 +405,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('adresse', location)
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByLocation failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -412,11 +426,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .or(`name.ilike.%${query}%,description.ilike.%${query}%,sku.ilike.%${query}%,gtin.ilike.%${query}%`)
         .order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.search failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -474,11 +489,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
 
       const { data, error } = await queryBuilder.order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.advancedSearch failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -590,11 +606,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .select('*')
         .eq('project_id', projectId);
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(row => this.toProjectMaterial(row as ProjectMaterialRow));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.getProjectMaterials failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -613,11 +630,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
         .eq('material_id', materialId)
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) throw error;
+      if (!data) return null;
       return this.toProjectMaterial(data as ProjectMaterialRow);
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findProjectMaterial failed:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -770,7 +788,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       return projectMaterials.filter(pm => categoryMaterialIds.has(pm.materialId));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.getProjectMaterialsByCategory failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -787,7 +805,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       return projectMaterials.filter(pm => supplierMaterialIds.has(pm.materialId));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.getProjectMaterialsBySupplier failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -813,7 +831,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       return projectMaterials.filter(pm => filteredMaterialIds.has(pm.materialId));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.searchProjectMaterials failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -830,7 +848,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       return projectMaterials.filter(pm => lowStockMaterialIds.has(pm.materialId));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.getProjectLowStockMaterials failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -853,7 +871,7 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
       return results;
     } catch (error) {
       console.error('SupabaseMaterialAdapter.bulkAddToProject failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -959,11 +977,12 @@ export class SupabaseMaterialAdapter implements IMaterialRepository {
 
       const { data, error } = await queryBuilder.order('name', { ascending: true });
 
-      if (error || !data) return [];
+      if (error) throw error;
+      if (!data) return [];
       return data.map(d => MaterialTransformer.fromSupabase(d as Record<string, unknown>));
     } catch (error) {
       console.error('SupabaseMaterialAdapter.findByCriteria failed:', error);
-      return [];
+      throw error;
     }
   }
 }
