@@ -26,7 +26,7 @@ import type {
     IMonitoringAlertRepository,
     MonitoringAlertDTO,
     UpdateMonitoringAlertDTO
-} from '@/infrastructure/adapters/supabase/SupabaseMonitoringAlertAdapter';
+} from '@/domain/repositories/IMonitoringAlertRepository';
 
 
 // Re-export types for consumers

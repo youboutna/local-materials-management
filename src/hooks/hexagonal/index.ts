@@ -577,12 +577,6 @@ export {
     useCreateSupplier, useDeleteSupplier, useSuppliersList, useUpdateSupplier, type SupplierMgmtFormData
 } from './useSuppliersCrudHex';
 
-// Infrastructure adapters - re-export for accessibility
-export {
-    SupabaseAlertAdapter,
-    SupabaseMilestoneAdapter,
-    SupabaseSupplierPaymentAdapter
-} from '@/infrastructure/adapters/supabase';
 
 // Application services - re-export for accessibility
 export {
