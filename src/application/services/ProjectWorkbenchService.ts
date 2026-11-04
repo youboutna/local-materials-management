@@ -1,5 +1,6 @@
 import { resourceFamilyOf } from '@/application/services/boq/BoqResourcePropagationService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import type { IWorkbenchContextSource } from '@/domain/repositories/IWorkbenchContextSource';
 import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProjectWorkbenchRepository';
 import type { ProjectOperationDTO, ProjectCalendarEventDTO, CalendarPeriod, SaveProjectOperationDTO, SaveInfrastructureDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
@@ -14,6 +15,14 @@ import { getReferentialItemService } from './ReferentialItemService';
 import { getProjectResourceAggregatorService } from './ProjectResourceAggregatorService';
 import type { ReferentialItemDTO } from '@/dtos/entities/ReferentialItemDTO';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+/** Composition canonique : services projet, DQE, décomptes et référentiels existants. */
+const canonicalContextSource: IWorkbenchContextSource = {
+  projectDetail: (projectId) => getProjectService().getProjectWithDetails(projectId),
+  boqLines: (projectId, source) => RepositoryFactory.getBoqRepository().list({ source, projectId }),
+  decomptes: async (projectId) => { const scope = await getDecompteService().getProjectFinancials(projectId); return { decomptes: scope.decomptes, payments: scope.payments }; },
+  operationContexts: (projectId) => getReferentialItemService().list('operation_context', projectId),
+};
+
 export type OperationViolation = 'label' | 'date' | 'quantity' | 'unit' | 'amount' | 'currency';
 
 /** Erreur métier typée : le champ fautif est traduit par l'écran (workbench.invalid_<champ>). */
@@ -25,12 +34,15 @@ export class OperationValidationError extends Error {
 }
 
 export class ProjectWorkbenchService {
-  constructor(private readonly repository: IProjectWorkbenchRepository = RepositoryFactory.getProjectWorkbenchRepository()) {}
+  constructor(
+    private readonly repository: IProjectWorkbenchRepository = RepositoryFactory.getProjectWorkbenchRepository(),
+    private readonly context: IWorkbenchContextSource = RepositoryFactory.getWorkbenchContextSource() ?? canonicalContextSource,
+  ) {}
   projects() { return this.repository.projects(); }
   async load(projectId: string) {
     const authorized = (await this.projects()).find(project => project.id === projectId);
     if (!authorized) throw new Error('Project access denied');
-    const [project, operations] = await Promise.all([getProjectService().getProjectWithDetails(projectId), this.repository.operations(projectId)]);
+    const [project, operations] = await Promise.all([this.context.projectDetail(projectId), this.repository.operations(projectId)]);
     if (!project) throw new Error('Project not found');
     const events = ProjectWorkbenchService.events(project);
     for (const entry of operations) events.push({ id: entry.id, title: entry.label, kind: entry.kind, dateKind: 'recorded', date: entry.occurredOn, phaseId: entry.phaseId, href: `/projects/calendar?projectId=${projectId}&view=${entry.kind}&date=${entry.occurredOn}` });
@@ -65,9 +77,9 @@ export class ProjectWorkbenchService {
   async finance(projectId: string) {
     if (!(await this.projects()).some(project => project.id === projectId)) throw new Error('Project access denied');
     const [project, collections, scope, operations] = await Promise.all([
-      getProjectService().getProjectWithDetails(projectId),
-      Promise.all((['dqe','supplier_bid','invoice'] as const).map(source => RepositoryFactory.getBoqRepository().list({source,projectId}))),
-      getDecompteService().getProjectFinancials(projectId),
+      this.context.projectDetail(projectId),
+      Promise.all((['dqe','supplier_bid','invoice'] as const).map(source => this.context.boqLines(projectId, source))),
+      this.context.decomptes(projectId),
       this.repository.operations(projectId),
     ]);
     if (!project) throw new Error('Project not found');
@@ -93,7 +105,7 @@ export class ProjectWorkbenchService {
     const unallocated = receipts.filter(op => !op.sourceLineId || !ids.has(op.sourceLineId));
     return { lines, unallocatedReceipts: unallocated, unallocatedAmount: unallocated.reduce((sum, op) => sum + op.amount, 0) };
   }
-  operationContexts(projectId: string) { return getReferentialItemService().list('operation_context',projectId); }
+  operationContexts(projectId: string) { return this.context.operationContexts(projectId); }
   /** Presentation projection of server-owned context metadata, never a replacement for authorization. */
   /** Pré-remplit une opération depuis la ligne DQE choisie : seuls date, montant constaté et quantité réelle restent à saisir. */
   static prefillFromLine(line: BoqLineDTO | undefined, form: SaveProjectOperationDTO): Partial<SaveProjectOperationDTO> {
