@@ -428,7 +428,7 @@ export class EnhancedActionService {
         assigneeId: request.assigneeId,
         recipientIds: request.recipientIds || [],
         metadata: request.metadata,
-        createdBy: request.createdBy ?? ''
+        createdBy: request.createdBy ?? '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
