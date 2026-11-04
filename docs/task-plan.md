@@ -8,7 +8,8 @@
 - [x] Pages de test et import de projets codés en dur supprimés.
 - [ ] ~145 erreurs masquées restantes hors services, ~300 méthodes à journaux seuls (voir `docs/AUDIT_IMPLEMENTATION.md`).
 - [x] Lot A (communications), Lot B (calcul DQE par paquets branché à l'import), Lot D (import PTBA + modèle).
-- [ ] Lot C (lecture des plans PDF) : bloqué, le PDF « DQE NDB » n'est pas présent dans les fichiers transmis.
+- [~] Lot C : en-têtes de tableau PDF répartis sur plusieurs lignes reconnus génériquement (titres de groupe ignorés). Essai local sur un DQE client : 3 → 121 lignes, section second œuvre exacte, écarts quantité × P.U. tracés. Restent : libellés repliés en électricité (lignes de suite comptées à part, un montant aberrant), sous-totaux de chapitre lus comme lignes, plans (masse, toiture, menuiseries) non exploités.
+- Données client jointes : tests locaux uniquement, jamais versionnées ni envoyées à un service externe.
 - [ ] Tests : à relancer après cette passe (demande utilisateur : tests ensuite).
 
 ### Import PTBA illustratif — 31/10/2026
