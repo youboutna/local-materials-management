@@ -103,6 +103,41 @@ function alignItemsToBands(items: PdfItem[], bands: Cell[]): string[] {
 }
 
 
+/** Écart (px) sous lequel deux fragments d'un même libellé d'en-tête sont collés. */
+const HEADER_WORD_GAP = 8;
+
+/**
+ * Bandes de colonnes déduites d'un en-tête réparti sur plusieurs lignes
+ * physiques (« N° des / prix », « Prix unitaires » coiffant « Prix Unitaire »
+ * et « Prix Total »). Chaque ligne est découpée finement ; un libellé qui
+ * coiffe au moins deux libellés d'une autre ligne est un titre de groupe et
+ * ne crée pas de bande ; les intervalles restants qui se chevauchent sont fusionnés.
+ */
+function headerBandsFromItems(rows: PdfItem[][]): Cell[] {
+  const perRow = rows.map((row) => {
+    const cells: Cell[] = [];
+    for (const it of [...row].sort((a, b) => a.transform[4] - b.transform[4])) {
+      const text = it.str.trim();
+      if (!text) continue;
+      const x0 = it.transform[4];
+      const x1 = x0 + (it.width ?? 0);
+      const last = cells[cells.length - 1];
+      if (last && x0 - last.x1 <= HEADER_WORD_GAP) { last.text = `${last.text} ${text}`; last.x1 = Math.max(last.x1, x1); }
+      else cells.push({ text, x0, x1 });
+    }
+    return cells;
+  });
+  const candidates = perRow.flatMap((cells, r) => cells.filter((cell) => !perRow.some((other, o) => o !== r
+    && other.filter((c) => centerOf(c) >= cell.x0 && centerOf(c) <= cell.x1).length >= 2)));
+  const merged: Cell[] = [];
+  for (const cell of candidates.sort((a, b) => a.x0 - b.x0)) {
+    const last = merged[merged.length - 1];
+    if (last && cell.x0 <= last.x1) { last.text = `${last.text} ${cell.text}`; last.x1 = Math.max(last.x1, cell.x1); }
+    else merged.push({ ...cell });
+  }
+  return merged;
+}
+
 export class PdfBoqParser implements IDocumentParser {
   supports(file: File): boolean {
     return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
@@ -224,7 +259,8 @@ export class PdfBoqParser implements IDocumentParser {
         bandHeaderIdx = bestGroup[0];
         // Les bandes de colonnes viennent de la ligne la plus large du bloc.
         const bandsRow = bestGroup.reduce((a, b) => (cellRows[b].length > cellRows[a].length ? b : a), bestGroup[0]);
-        const bands = cellRows[bandsRow];
+        const unionBands = headerBandsFromItems(bestGroup.map((r) => itemRows[r] ?? []));
+        const bands = unionBands.length > cellRows[bandsRow].length ? unionBands : cellRows[bandsRow];
         mergedHeader = bestGroup
           .map((r) => alignItemsToBands(itemRows[r] ?? [], bands))
           .reduce((acc, row) => row.map((cell, i) => `${acc[i] ?? ''} ${cell}`.trim()), Array.from({ length: bands.length }, () => ''));
@@ -249,7 +285,6 @@ export class PdfBoqParser implements IDocumentParser {
       const amounts = cells.filter((c) => /\d[\d\s\u00A0.,]*\d/.test(c) && /\d{3}/.test(c)).length;
       return hasLabel && amounts >= 2;
     }).length;
-    if ((globalThis as Record<string, unknown>).__BOQ_DEBUG__) console.log('DBG', JSON.stringify(rowsAcc.slice(16,26)), bandHeaderIdx, completeRows(wrappedAcc), completeRows(rowsAcc), wrappedAcc.length, rowsAcc.length);
     if (wrappedAcc.length && completeRows(wrappedAcc) > completeRows(rowsAcc)) {
 
 
