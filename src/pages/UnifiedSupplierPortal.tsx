@@ -60,7 +60,7 @@ import { formatReference } from '@/utils/entityLabels';
 
 interface SupplierNotificationRow {
   id: string;
-  notification_type: string | null;
+  notification_type: string;
   metadata: Record<string, unknown> | null;
   sent_at: string | null;
   used_at: string | null;
