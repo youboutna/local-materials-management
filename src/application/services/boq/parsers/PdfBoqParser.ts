@@ -351,6 +351,36 @@ export class PdfBoqParser implements IDocumentParser {
       total: findCol(/montant|^total/i),
     };
 
+    // Cellules centrées verticalement : le montant est imprimé sur une ligne
+    // physique et quantité / P.U. sur la suivante (libellé sur 2-3 lignes).
+    // Ces fragments forment UN seul enregistrement : on les fusionne avant la
+    // lecture des lignes pour ne créer ni ligne sans prix ni ligne en double.
+    {
+      const idx = (name?: string) => (name ? baseColumns.indexOf(name) : -1);
+      const [qI, puI, tI] = [idx(canonical.quantity), idx(canonical.unitPrice), idx(canonical.total)];
+      const num = (v: unknown) => /\d/.test(String(v ?? ''));
+      const filled = (row: string[], i: number) => i >= 0 && String(row[i] ?? '').trim() !== '';
+      if (qI >= 0 && puI >= 0 && tI >= 0) {
+        for (let i = 0; i < rowsAcc.length; i++) {
+          const row = rowsAcc[i];
+          if (!num(row[tI]) || filled(row, qI) || filled(row, puI)) continue;
+          for (let j = i + 1; j <= i + 3 && j < rowsAcc.length; j++) {
+            const next = rowsAcc[j];
+            if (num(next[tI])) break;
+            if (num(next[qI]) && filled(next, puI)) {
+              for (let k = i + 1; k <= j; k++) {
+                rowsAcc[k].forEach((cell, c) => {
+                  if (String(cell ?? '').trim()) row[c] = row[c] ? `${row[c]} ${cell}`.trim() : cell;
+                });
+                rowsAcc[k] = rowsAcc[k].map(() => '');
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+
     // En-tête administratif (Expéditeur → fournisseur / Destinataire → organisation).
     const parties = extractDocumentParties(rowsAcc, headerIdx >= 0 ? headerIdx : undefined);
     const consumed = new Set(parties.consumedRows);
