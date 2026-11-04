@@ -7,5 +7,7 @@ export interface IProjectCheckpointSourceRepository {
   /** Inspections approuvées les plus récentes (justificatifs de demande de paiement). */
   findApprovedInspections(projectId: string, limit: number): Promise<Record<string, any>[]>;
   findDocumentsByTypes(projectId: string, types: string[]): Promise<Record<string, any>[]>;
+  findMilestones(projectId: string): Promise<Record<string, any>[]>;
+  findTasks(projectId: string): Promise<Record<string, any>[]>;
   insertPaymentRequest(row: Record<string, unknown>): Promise<void>;
 }

@@ -22,7 +22,6 @@ import { TenderDocumentTransformer } from '@/dtos/transforms/TenderDocumentTrans
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { PROCUREMENT_CHAIN_REFERENTIAL } from '@/config/referentials/procurement/procurement-chain.referential';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
 
 
 /** Statuts d'AO considérés comme publiés (référentiel, jamais en dur dans l'UI). */

@@ -9,7 +9,6 @@ import {
 } from '@/dtos/entities/tender-sharing-dto';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { CommunicationService } from './CommunicationService';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
 
 
 /**

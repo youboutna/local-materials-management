@@ -8,7 +8,6 @@ import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
  * l'entité Phase n'expose ni steps ni tasks (stockés dans custom_phase_data).
  */
 import type { WbsPhase } from '@/config/referentials/wbs/wbs.referential';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
 
 
 interface RawStep {
@@ -60,21 +59,13 @@ export const isActivePhaseStatus = (status?: string | null): boolean =>
 
 export async function loadProjectWbs(projectId: string): Promise<ProjectWbsPhase[]> {
   if (!projectId) return [];
-  const { data, error } = await btpDb()
-    .from('project_phases')
-    .select('id, phase_name, status, order_index, custom_phase_data')
-    .eq('project_id', projectId)
-    .order('order_index', { ascending: true });
-
-  if (error || !data) return [];
+  const src = RepositoryFactory.getProjectCheckpointSourceRepository();
+  const data: any[] = await src.findPhases(projectId);
 
   // Jalons et tâches persistés en tables (projets importés / saisis hors custom_phase_data).
-  const [msRes, taskRes] = await Promise.all([
-    btpDb().from('project_milestones').select('id, title, phase_id, order_index').eq('project_id', projectId),
-    btpDb().from('task_assignments').select('id, title, phase_id').eq('project_id', projectId),
-  ]);
-  const dbMilestones = (msRes.data ?? []) as unknown as { id: string; title: string | null; phase_id: string | null; order_index: number | null }[];
-  const dbTasks = (taskRes.data ?? []) as { id: string; title: string | null; phase_id: string | null }[];
+  const [msRows, taskRows] = await Promise.all([src.findMilestones(projectId), src.findTasks(projectId)]);
+  const dbMilestones = msRows as unknown as { id: string; title: string | null; phase_id: string | null; order_index: number | null }[];
+  const dbTasks = taskRows as { id: string; title: string | null; phase_id: string | null }[];
 
   return data.map((row) => {
     const raw = (row.custom_phase_data ?? {}) as { steps?: RawStep[] };
