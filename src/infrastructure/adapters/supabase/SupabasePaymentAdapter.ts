@@ -44,13 +44,15 @@ export class SupabasePaymentAdapter implements IPaymentRepository {
 
   async findAll(): Promise<Payment[]> {
     const { data, error } = await supabase.from('payments').select('*').order('payment_date', { ascending: false });
-    if (error || !data) return [];
+    if (error) throw new Error(`Failed to load payments: ${error.message}`);
+    if (!data) return [];
     return data.map(d => this.mapToEntity(d));
   }
 
-  async save(payment: Payment): Promise<void> {
+  async save(payment: Payment): Promise<string> {
     const insertData = {
-      id: payment.id,
+      // The database generates the primary key for new payments.
+      ...(payment.id ? { id: payment.id } : {}),
       project_id: payment.projectRef?.id ?? null,
       phase_id: payment.phaseRef?.id ?? null,
       inspection_id: payment.inspectionRef?.id ?? null,
@@ -58,7 +60,7 @@ export class SupabasePaymentAdapter implements IPaymentRepository {
       payment_date: payment.paymentDate,
       payment_method: payment.paymentMethod,
       progress_at_payment: payment.progressAtPayment,
-      transaction_id: payment.transactionId || `TXN-${Date.now()}`,
+      transaction_id: payment.transactionId || null,
       contractor_id: payment.contractorId,
       contractor_name: payment.contractorName,
       contractor_contact: payment.contractorContact,
@@ -72,9 +74,9 @@ export class SupabasePaymentAdapter implements IPaymentRepository {
       created_by: payment.createdBy,
       notes: payment.notes,
     };
-    console.log('[SupabaseAdapter] insert data:', insertData);
-    const { error } = await supabase.from('payments').insert(insertData);
+    const { data, error } = await supabase.from('payments').insert(insertData).select('id').single();
     if (error) throw new Error(`Failed to save payment: ${error.message}`);
+    return (data as { id: string }).id;
   }
 
   async update(id: string, data: Partial<Payment>): Promise<void> {

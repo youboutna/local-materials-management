@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import UserManagementDialog from "@/components/users/UserManagementDialog";
+import { RolesOverview } from "@/components/users/RolesOverview";
 import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -77,6 +78,7 @@ const Users = () => {
   );
   const [loading, setLoading] = useState<boolean>(!isDevelopmentMode);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [isManagementDialogOpen, setIsManagementDialogOpen] =
@@ -176,11 +178,11 @@ const Users = () => {
 
   // Filter profiles based on search query (now including email)
   const filteredProfiles = profiles.filter(
-    (profile) =>
+    (profile) => (!roleFilter || profile.roles?.includes(roleFilter)) && (
       profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.phone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       profile.national_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      profile.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      profile.email?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Get user initials for avatar
@@ -233,17 +235,7 @@ const Users = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-adrar-400" />
-            <Input
-              placeholder={
-                t("users.search_placeholder") || "Rechercher un utilisateur..."
-              }
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <RolesOverview profiles={profiles} selectedRole={roleFilter} onSelectRole={setRoleFilter} />
 
           {/* Users Table */}
           <div className="border rounded-lg overflow-hidden shadow-sm">

@@ -92,6 +92,32 @@ export class UnifiedBoqParser {
     })));
   }
 
+  /**
+   * Same result as toMeterInputs(), computed in chunks so large DQE files
+   * do not freeze the screen. Small files take the synchronous path.
+   */
+  async toMeterInputsChunked(
+    parsed: UnifiedParseResult,
+    mapping: ImportMapping,
+    ctx: ToMeterInputsContext,
+    onProgress?: (done: number, total: number) => void,
+    chunkThreshold = 500,
+  ): Promise<MeterInputDTO[]> {
+    if (parsed.technicalPlan || parsed.rows.length <= chunkThreshold) return this.toMeterInputs(parsed, mapping, ctx);
+    const dtos = BoqImportOrchestrator.toDtos(parsed.rows, mapping, {
+      ...ctx,
+      detectedVatRate: parsed.detectedFiscal?.vatRate ?? null,
+      detectedFiscal: parsed.detectedFiscal ?? null,
+      parties: parsed.parties ?? null,
+    });
+    return MeterService.enrichInChunks(
+      dtos.map((dto, idx) => ({ ...dto, provenance: { format: parsed.format, fileName: parsed.fileName, rowIndex: idx + 1 } })),
+      undefined,
+      200,
+      onProgress,
+    );
+  }
+
   async reviewPlan(parsed: UnifiedParseResult, elements: readonly TechnicalPlanElementDTO[], file: File, ctx: ToMeterInputsContext): Promise<MeterInputDTO[]> {
     if (!parsed.technicalPlan) throw new Error('No plan selected');
     const inputs = TechnicalPlanService.toMeterInputs(parsed.technicalPlan, elements, ctx);

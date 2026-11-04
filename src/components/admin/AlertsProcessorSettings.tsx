@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Play, Pause, Clock, Settings, Activity } from 'lucide-react';
 import { useNotificationHex } from '@/hooks/hexagonal/useNotificationHex';
 import { T } from '@/components/i18n/T';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 
 interface ProcessorConfig {
   enabled: boolean;
@@ -37,6 +38,7 @@ interface ProcessorResult {
 }
 
 const AlertsProcessorSettings: React.FC = () => {
+  const { user: currentUser } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const notificationService = useNotificationHex();
@@ -101,8 +103,8 @@ const AlertsProcessorSettings: React.FC = () => {
   const saveConfig = async () => {
     setSaving(true);
     try {
-      await notificationService.createNotification({
-        recipientId: 'system',
+      if (currentUser?.id) await notificationService.createNotification({
+        recipientId: currentUser.id,
         title: t('auto.alertsprocessorsettings.configuration_processeur_mise_a_jour'),
         message: `Nouvelle configuration: ${config.enabled ? 'Activé' : 'Désactivé'}, lot: ${config.batchSize}, interval: ${config.intervalMinutes}min`,
         type: 'info',
@@ -128,8 +130,8 @@ const AlertsProcessorSettings: React.FC = () => {
   const runProcessor = async () => {
     setIsRunning(true);
     try {
-      await notificationService.createNotification({
-        recipientId: 'system',
+      if (currentUser?.id) await notificationService.createNotification({
+        recipientId: currentUser.id,
         title: 'Exécution du processeur d\'alertes',
         message: `Démarrage du traitement par lots de ${config.batchSize} projets`,
         type: 'system',
@@ -159,8 +161,8 @@ const AlertsProcessorSettings: React.FC = () => {
         }
       };
 
-      await notificationService.createNotification({
-        recipientId: 'system',
+      if (currentUser?.id) await notificationService.createNotification({
+        recipientId: currentUser.id,
         title: 'Résultat du processeur d\'alertes',
         message: `${processorResult.alertsGenerated} alertes générées pour ${processorResult.processed} projets.`,
         type: 'success',
