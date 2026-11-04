@@ -60,7 +60,8 @@ export const isActivePhaseStatus = (status?: string | null): boolean =>
 export async function loadProjectWbs(projectId: string): Promise<ProjectWbsPhase[]> {
   if (!projectId) return [];
   const src = RepositoryFactory.getProjectCheckpointSourceRepository();
-  const data: any[] = await src.findPhases(projectId);
+  const data: any[] = [...(await src.findPhases(projectId))]
+    .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
 
   // Jalons et tâches persistés en tables (projets importés / saisis hors custom_phase_data).
   const [msRows, taskRows] = await Promise.all([src.findMilestones(projectId), src.findTasks(projectId)]);

@@ -13,7 +13,7 @@ async function rows(q: PromiseLike<{ data: any; error: any }>): Promise<Record<s
 
 export class SupabaseProjectCheckpointSourceAdapter implements IProjectCheckpointSourceRepository {
   async findPhases(projectId: string) {
-    return rows((await btp()).from('project_phases').select('*').eq('project_id', projectId).order('order_index', { ascending: true }).order('created_at'));
+    return rows((await btp()).from('project_phases').select('*').eq('project_id', projectId).order('created_at'));
   }
   async findInspections(projectId: string) {
     return rows((await btp()).from('inspections').select('*').eq('project_id', projectId).order('date', { ascending: false }));
