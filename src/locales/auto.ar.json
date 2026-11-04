@@ -6749,5 +6749,7 @@
   "auto.teamoverview.ressources_humaines": "الموارد البشرية",
   "auto.teamoverview.equipements": "المعدات",
   "auto.teamoverview.materiaux": "المواد",
-  "auto.teamoverview.planifier_dans_dqe": "التخطيط في جدول الكميات"
+  "auto.teamoverview.planifier_dans_dqe": "التخطيط في جدول الكميات",
+  "workbench.dqe_remaining": "الكمية المتبقية في جدول الكميات",
+  "workbench.exceeds_dqe_remaining": "تتجاوز الكمية المتبقية في جدول الكميات"
 }

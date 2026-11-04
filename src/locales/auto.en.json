@@ -6750,5 +6750,7 @@
   "auto.teamoverview.ressources_humaines": "Human resources",
   "auto.teamoverview.equipements": "Equipment",
   "auto.teamoverview.materiaux": "Materials",
-  "auto.teamoverview.planifier_dans_dqe": "Plan in the BOQ"
+  "auto.teamoverview.planifier_dans_dqe": "Plan in the BOQ",
+  "workbench.dqe_remaining": "Remaining BOQ quantity",
+  "workbench.exceeds_dqe_remaining": "Exceeds remaining BOQ quantity"
 }

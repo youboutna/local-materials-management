@@ -6747,5 +6747,7 @@
   "auto.teamoverview.ressources_humaines": "Ressources humaines",
   "auto.teamoverview.equipements": "Équipements",
   "auto.teamoverview.materiaux": "Matériaux",
-  "auto.teamoverview.planifier_dans_dqe": "Planifier dans le DQE"
+  "auto.teamoverview.planifier_dans_dqe": "Planifier dans le DQE",
+  "workbench.dqe_remaining": "Quantité DQE restante",
+  "workbench.exceeds_dqe_remaining": "Dépasse la quantité DQE restante"
 }
