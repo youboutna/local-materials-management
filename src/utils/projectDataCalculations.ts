@@ -841,12 +841,10 @@ export class ProjectDataCalculations {
   }
 
   private static async calculateProgressTrend(phaseId: string, currentProgress: number) {
-    // Simplified trend calculation
-    return {
-      daily: Math.max(-5, Math.min(5, Math.random() * 10 - 5)),
-      weekly: Math.max(-10, Math.min(10, Math.random() * 20 - 10)),
-      monthly: Math.max(-20, Math.min(20, Math.random() * 40 - 20))
-    };
+    // No progress history is recorded per phase: report a neutral trend
+    // instead of inventing variations.
+    void phaseId; void currentProgress;
+    return { daily: 0, weekly: 0, monthly: 0 };
   }
 
   private static calculatePerformanceIndicators(progressMetrics: ProgressMetrics, projectAnalytics: LocalProjectDetailData) {

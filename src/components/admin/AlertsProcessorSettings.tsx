@@ -140,10 +140,12 @@ const AlertsProcessorSettings: React.FC = () => {
         }
       });
 
+      const { getAlertsProcessorService } = await import('@/application/services/AlertsProcessorService');
+      const run = await (await getAlertsProcessorService()).run({ batchSize: config.batchSize });
       const processorResult: ProcessorResult = {
-        alertsGenerated: Math.floor(Math.random() * 50) + 10,
-        processed: config.batchSize,
-        processingTime: `${(Math.random() * 30 + 10).toFixed(1)}s`
+        alertsGenerated: run.alertsGenerated,
+        processed: run.processed,
+        processingTime: `${(run.durationMs / 1000).toFixed(1)}s`
       };
 
       const log: ProcessingLog = {
