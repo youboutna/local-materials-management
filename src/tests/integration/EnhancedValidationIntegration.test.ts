@@ -56,7 +56,9 @@ describe('Enhanced Validation Integration', () => {
       projectRepo,
       riskRepo,
       inspectionRepo,
-      documentRepo
+      documentRepo,
+      complianceRepo as any,
+      receptionRepo
     );
     // Inject validation repository fake (it's optional/private in the service)
     (validationService as any).validationRepository = validationRepo;

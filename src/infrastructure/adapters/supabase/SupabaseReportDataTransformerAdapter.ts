@@ -380,7 +380,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
    */
   async assessProjectRisks(project: ProjectData): Promise<RiskAssessmentDTO> {
     try {
-      // For now, generate basic risk assessment based on project status and progress
+      // Évaluation dérivée du statut et de l'avancement du projet.
       const risks = this.generateRiskAssessment(project);
       
       return {
@@ -390,11 +390,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       };
     } catch (error) {
       console.error('Error assessing project risks:', error);
-      return {
-        overallRiskLevel: 'low',
-        risks: [],
-        mitigationStrategies: []
-      };
+      throw error;
     }
   }
 
@@ -470,9 +466,10 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
   }
 
   private calculateTeamEfficiency(project: ProjectData, phases: ProjectPhaseRow[]): number {
-    // Placeholder calculation - could be enhanced with actual team metrics
-    const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length || 0;
-    return Math.min(100, avgProgress * 1.2);
+    // Indicateur observé : avancement moyen des phases (aucun coefficient arbitraire).
+    if (phases.length === 0) return 0;
+    const avgProgress = phases.reduce((sum, p) => sum + (p.progress || 0), 0) / phases.length;
+    return Math.min(100, avgProgress);
   }
 
   private getDefaultAnalytics(project: ProjectData): ProjectAnalyticsDTO {

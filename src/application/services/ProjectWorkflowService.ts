@@ -248,7 +248,7 @@ export class ProjectWorkflowService {
     this.paymentService = paymentRepository ? new PaymentService(paymentRepository) : undefined;
     this.employeeService = employeeRepository ? new EmployeeService(employeeRepository) : undefined;
     this.supplierService = supplierRepository ? new SupplierService(supplierRepository) : undefined;
-    this.receptionService = receptionRepository ? new ReceptionService(receptionRepository, documentRepository || RepositoryFactory.getDocumentRepository(), inspectionRepository || RepositoryFactory.getInspectionRepository(), employeeRepository || RepositoryFactory.getEmployeeRepository()) : undefined;
+    this.receptionService = new ReceptionService(receptionRepository || RepositoryFactory.getReceptionRepository(), documentRepository || RepositoryFactory.getDocumentRepository(), inspectionRepository || RepositoryFactory.getInspectionRepository(), employeeRepository || RepositoryFactory.getEmployeeRepository());
     this.bankGuaranteeService = new BankGuaranteeService(RepositoryFactory.getBankGuaranteeRepository());
     this.insuranceService = new InsuranceService(RepositoryFactory.getInsuranceRepository());
   }

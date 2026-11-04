@@ -104,7 +104,7 @@ export class EnhancedValidationService {
     inspectionRepository?: IInspectionRepository,
     documentRepository?: IDocumentRepository,
     private complianceRepository: IComplianceRepository = RepositoryFactory.getComplianceRepository(),
-    private receptionRepository?: IReceptionRepository
+    private receptionRepository: IReceptionRepository = RepositoryFactory.getReceptionRepository()
   ) {
     this.projectRepository = projectRepository || RepositoryFactory.getProjectRepository();
     this.riskRepository = riskRepository || RepositoryFactory.getRiskRepository();
@@ -122,10 +122,9 @@ export class EnhancedValidationService {
   }
 
   /**
-   * Get receptions for project (repository injected by the workflow; none recorded otherwise).
+   * Get receptions for project (btp.receptions).
    */
   private async getReceptions(projectId: string): Promise<any[]> {
-    if (!this.receptionRepository) return [];
     return this.receptionRepository.findByProjectId(projectId);
   }
 
@@ -769,6 +768,22 @@ export class EnhancedValidationService {
         'project',
         'Overdue compliance items may result in penalties',
         'Address overdue compliance items immediately'
+      ));
+    }
+
+    // Open high-risk items that still require mitigation
+    const unmitigated = complianceItems.filter(c =>
+      c.mitigationRequired && ['high', 'critical'].includes(c.riskLevel) && !['approved', 'compliant', 'closed'].includes(c.status)
+    );
+    if (unmitigated.length > 0) {
+      issues.push(this.createIssue(
+        ValidationCategory.COMPLIANCE,
+        'high',
+        'Unmitigated High-Risk Compliance Items',
+        `${unmitigated.length} high-risk compliance items still require mitigation`,
+        'project',
+        'Open high-risk compliance items may block acceptance',
+        'Implement and document the required mitigation'
       ));
     }
 

@@ -218,10 +218,10 @@ export class SupabaseWorkspaceAdapter implements IWorkspaceRepository {
   private mapToEntity(data: WorkspaceRow): Workspace {
     return {
       id: data.id,
-      workspaceId: data.id, // Assuming workspaceId is same as id for now
+      workspaceId: data.id, // Table has no separate business identifier
       workspaceCode: `WS-${formatReference(data.id, '')}`, // Generate a simple code
       name: data.name,
-      location: data.location || 'Nouakchott', // String location for now
+      location: data.location || '',
       description: data.description || undefined,
       capacity: data.capacity || undefined,
       contact: (data.contact_manager || data.contact_phone) ? {

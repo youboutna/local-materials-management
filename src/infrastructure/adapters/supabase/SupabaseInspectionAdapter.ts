@@ -163,9 +163,7 @@ export class SupabaseInspectionAdapter implements IInspectionRepository {
 
   async findByStepId(stepId: string): Promise<Inspection[]> {
     const { btpClient: supabase } = await import('@/integrations/supabase/schema-clients');
-    // Inspections don't have step_id in current schema - return empty for now
-    // This could be extended to filter by metadata/documents if needed
-    return [];
+    throw new Error('Inspections are linked to phases, not workflow steps; query by phase instead');
   }
 
   async findByStatus(status: InspectionStatus): Promise<Inspection[]> {

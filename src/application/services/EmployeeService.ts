@@ -36,11 +36,14 @@ export class EmployeeService {
       // Get all employees and filter by their current assignments
       const allEmployees = await this.employeeRepository.findAll();
       
-      // For now, return employees that could be assigned to phases
-      // In a real implementation, this would query phase_assignments table
-      const activeEmployees = allEmployees.filter(employee => employee.isActive);
-      
-      return activeEmployees.map(employee => this.employeeToDTO(employee));
+      // Affectations réelles de la phase (public.phase_employees), rapprochées par nom.
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.from('phase_employees').select('employee_name').eq('phase_id', phaseId);
+      if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Failed to load phase assignments: ${error.message}`);
+      const assigned = new Set((data ?? []).map(r => r.employee_name.trim().toLowerCase()));
+      return allEmployees
+        .filter(employee => assigned.has(employee.fullName.trim().toLowerCase()))
+        .map(employee => this.employeeToDTO(employee));
     } catch (error) {
       console.error('EmployeeService.getEmployeesByPhase failed:', error);
       throw error instanceof AppError ? error : new AppError(ErrorCode.INTERNAL_ERROR, 'Failed to get employees by phase');
