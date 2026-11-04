@@ -192,7 +192,7 @@ export class MonitoringAlertService {
       return toDerivedAlerts(signals, 'fr', Date.now(), thresholds);
     } catch (error) {
       console.warn('MonitoringAlertService: derived alerts unavailable', error);
-      return [];
+      throw error;
     }
   }
 

@@ -76,7 +76,6 @@ import EnhancedSupplierTenderPortal from "./components/suppliers/EnhancedSupplie
 import { SupplierSecureAccessPortal } from "./components/tenders/SupplierSecureAccessPortal";
 import { EvaluationAccessPortal } from "./components/tenders/EvaluationAccessPortal";
 import SupplierSubmissionDashboard from "./components/suppliers/SupplierSubmissionDashboard";
-import WorkflowTest from "./pages/WorkflowTest";
 import MergedNavbar from "./components/MergedNavbar";
 import { NewsPage } from "./pages/NewsPage";
 import { ArticlesAdminPage } from "./pages/admin/ArticlesAdminPage";
@@ -167,7 +166,6 @@ function App() {
                         path="/supplier-password-reset"
                         element={<SupplierPasswordReset />}
                       />
-                      <Route path="/workflow-test" element={<WorkflowTest />} />
 
                       {/* Protected routes - require authentication unless in dev mode */}
                       <Route

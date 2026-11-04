@@ -230,10 +230,13 @@ export class GeocodingService {
       }
 
       // Fusion base locale (MR) + externe (Nominatim) pour une autocomplétion riche.
-      const [localResults, externalResults] = await Promise.all([
-        this.geocodeLocal(address).catch(() => [] as GeocodingResult[]),
-        this.geocodeExternal(address).catch(() => [] as GeocodingResult[]),
-      ]);
+      // Une source indisponible ne masque pas l'autre ; si toutes échouent, l'erreur remonte
+      // au lieu d'être présentée comme « aucun résultat ».
+      const settled = await Promise.allSettled([this.geocodeLocal(address), this.geocodeExternal(address)]);
+      if (settled.every((r) => r.status === 'rejected')) {
+        throw new NetworkError('All geocoding sources failed', (settled[0] as PromiseRejectedResult).reason);
+      }
+      const [localResults, externalResults] = settled.map((r) => (r.status === 'fulfilled' ? r.value : [] as GeocodingResult[]));
 
       const ordered = this.prioritizeLocal
         ? [...localResults, ...externalResults]
@@ -318,7 +321,7 @@ export class GeocodingService {
       return [...regions, ...cities];
     } catch (error) {
       console.error('Mauritania search failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -445,7 +448,7 @@ export class GeocodingService {
       return this.deduplicateResults(results.sort((a, b) => b.confidence - a.confidence));
     } catch (error) {
       console.error('Local geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -528,7 +531,7 @@ export class GeocodingService {
       return this.deduplicateResults(results.sort((a, b) => b.confidence - a.confidence));
     } catch (error) {
       console.error('Local reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -546,7 +549,7 @@ export class GeocodingService {
       return [];
     } catch (error) {
       console.error(`${this.provider} geocoding failed:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -562,7 +565,7 @@ export class GeocodingService {
       return [];
     } catch (error) {
       console.error(`${this.provider} reverse geocoding failed:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -701,7 +704,7 @@ export class GeocodingService {
       return [this.formatOpenStreetMapResult(data)];
     } catch (error) {
       console.error('OpenStreetMap reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -730,7 +733,7 @@ export class GeocodingService {
       return (data.results || []).map((result) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -757,7 +760,7 @@ export class GeocodingService {
       return (data.results || []).map((result) => this.formatGoogleResult(result));
     } catch (error) {
       console.error('Google reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -785,7 +788,7 @@ export class GeocodingService {
       return (data.features || []).map((feature) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -811,7 +814,7 @@ export class GeocodingService {
       return (data.features || []).map((feature) => this.formatMapboxResult(feature));
     } catch (error) {
       console.error('Mapbox reverse geocoding failed:', error);
-      return [];
+      throw error;
     }
   }
 

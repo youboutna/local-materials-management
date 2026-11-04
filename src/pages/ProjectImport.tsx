@@ -4,7 +4,6 @@
 import { AppLayout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProjectImporter2025 from "@/components/projects/ProjectImporter2025";
 import ProjectFileImporter from "@/components/projects/ProjectFileImporter";
 import AdvancedProjectImporter from "@/components/projects/AdvancedProjectImporter";
 import ProjectExporter from "@/components/projects/ProjectExporter";
@@ -31,7 +30,7 @@ const ProjectImport = () => {
   return (
     <AppLayout pageTitle={t("projects.importExport.title")}><div className="min-w-0 space-y-3">
       <Tabs defaultValue="file-import" className="w-full">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-4">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-3">
           <TabsTrigger value="file-import" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
             {t("projects.importExport.fileImport")}
@@ -39,10 +38,6 @@ const ProjectImport = () => {
           <TabsTrigger value="advanced" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             QField/MS Project
-          </TabsTrigger>
-          <TabsTrigger value="predefined" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            {t("projects.importExport.predefinedProjects")}
           </TabsTrigger>
           <TabsTrigger value="export" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
@@ -56,36 +51,6 @@ const ProjectImport = () => {
 
         <TabsContent value="advanced" className="space-y-4">
           <AdvancedProjectImporter onImportComplete={handleImportComplete} />
-        </TabsContent>
-
-        <TabsContent value="predefined" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Database className="h-5 w-5 mr-2" />
-                {t("projects.importExport.predefined2025")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                {t("projects.importExport.predefinedDescription")}
-              </p>
-
-              <div className="bg-primary/10 dark:bg-blue-950/30 border border-primary/30 dark:border-blue-800 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                  {t("projects.importExport.includedProjects")}:
-                </h3>
-                <ul className="text-sm text-primary dark:text-blue-200 space-y-1">
-                  <li>• {t("projects.importExport.infrastructureProjects")}</li>
-                  <li>• {t("projects.importExport.diverseFunding")}</li>
-                  <li>• {t("projects.importExport.variedMarkets")}</li>
-                  <li>• {t("projects.importExport.timeline2025")}</li>
-                </ul>
-              </div>
-
-              <ProjectImporter2025 />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="export" className="space-y-4">

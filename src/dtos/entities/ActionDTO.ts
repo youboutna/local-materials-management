@@ -47,5 +47,7 @@ export interface CreateEnhancedActionRequestDTO {
   priority?: EnhancedActionDTO['priority'];
   assigneeId?: string;
   recipientIds?: string[];
+  /** Authenticated user performing the action; never a placeholder. */
+  createdBy?: string;
   metadata?: ActionMetadataDTO;
 }

@@ -122,7 +122,7 @@ export class EnhancedActionService {
           break;
 
         default:
-          console.warn(`Unknown action type: ${actionEvent.type}`);
+          throw new Error(`Unknown action type: ${actionEvent.type}`);
       }
     } catch (error) {
       console.error(`Error executing action ${actionEvent.type}:`, error);
@@ -163,6 +163,7 @@ export class EnhancedActionService {
         console.log('✅ Inspection scheduled successfully');
       } catch (error) {
         console.error('❌ Failed to schedule inspection:', error);
+        throw error;
       }
     }
   }
@@ -191,7 +192,7 @@ export class EnhancedActionService {
           const hierarchyMessage = `Information hiérarchique: ${actionEvent.description}`;
           
           await this.notificationService.createNotification({
-            recipientId: project.projectManagerId || '',
+            recipientId: (() => { if (!project.projectManagerId) throw new Error('Project has no manager to inform'); return project.projectManagerId; })(),
             title: 'Information hiérarchique',
             message: hierarchyMessage,
             type: 'info',
@@ -207,6 +208,7 @@ export class EnhancedActionService {
         }
       } catch (error) {
         console.error('❌ Failed to inform hierarchy:', error);
+        throw error;
       }
     }
   }
@@ -217,8 +219,9 @@ export class EnhancedActionService {
   private async handleSendNotification(actionEvent: ActionEvent): Promise<void> {
     console.log(`📢 Sending notification: ${actionEvent.title}`);
     
-    const recipients = actionEvent.recipients || [actionEvent.assigneeId].filter(Boolean) as string[];
-    
+    const recipients = (actionEvent.recipients?.length ? actionEvent.recipients : [actionEvent.assigneeId]).filter(Boolean) as string[];
+    if (!recipients.length) throw new Error('Notification recipients are required');
+
     for (const recipientId of recipients) {
       await this.notificationService.createNotification({
         recipientId: recipientId || '',
@@ -272,6 +275,7 @@ export class EnhancedActionService {
         console.log('✅ Task assigned successfully');
       } catch (error) {
         console.error('❌ Failed to assign task:', error);
+        throw error;
       }
     }
   }
@@ -285,17 +289,8 @@ export class EnhancedActionService {
     if (actionEvent.entityId && actionEvent.projectId) {
       try {
         // Update payment status through PaymentService
-        await this.paymentService.updatePayment(actionEvent.entityId, {
-          amount: 0, // Required field, will be updated by service
-          paymentDate: new Date().toISOString(),
-          transactionId: `approved-${Date.now()}`,
-          projectId: actionEvent.projectId || '',
-          contractorId: '',
-          contractorName: '',
-          contractorContact: '',
-          paymentMethod: 'bank_transfer',
-          progressAtPayment: 0
-        });
+        if (!actionEvent.createdBy) throw new Error('Payment approver is required');
+        await this.paymentService.processPaymentWithControls(actionEvent.entityId, actionEvent.createdBy);
         
         // Send payment approval notification
         await this.notificationService.createNotification({
@@ -314,6 +309,7 @@ export class EnhancedActionService {
         console.log('✅ Payment approved successfully');
       } catch (error) {
         console.error('❌ Failed to approve payment:', error);
+        throw error;
       }
     }
   }
@@ -325,8 +321,9 @@ export class EnhancedActionService {
     console.log(`⚠️ Escalating issue: ${actionEvent.title}`);
     
     // Send escalation notification to management
+    if (!actionEvent.assigneeId) throw new Error('Action assignee is required');
     await this.notificationService.createNotification({
-      recipientId: actionEvent.assigneeId || '',
+      recipientId: actionEvent.assigneeId,
       title: 'Problème escaladé',
       message: `Problème escaladé: ${actionEvent.description}`,
       type: 'warning',
@@ -347,8 +344,9 @@ export class EnhancedActionService {
   private async handleRequestDocument(actionEvent: ActionEvent): Promise<void> {
     console.log(`📄 Requesting document: ${actionEvent.title}`);
     
+    if (!actionEvent.assigneeId) throw new Error('Action assignee is required');
     await this.notificationService.createNotification({
-      recipientId: actionEvent.assigneeId || '',
+      recipientId: actionEvent.assigneeId,
       title: 'Document demandé',
       message: `Document demandé: ${actionEvent.description}`,
       type: 'info',
@@ -430,7 +428,7 @@ export class EnhancedActionService {
         assigneeId: request.assigneeId,
         recipientIds: request.recipientIds || [],
         metadata: request.metadata,
-        createdBy: 'system', // Will be updated with actual user ID
+        createdBy: request.createdBy ?? '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -492,7 +490,7 @@ export class EnhancedActionService {
         assigneeId: request.assigneeId,
         recipientIds: request.recipientIds || [],
         metadata: request.metadata,
-        createdBy: 'system',
+        createdBy: request.createdBy ?? '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -554,7 +552,7 @@ export class EnhancedActionService {
         assigneeId: request.assigneeId,
         recipientIds: request.recipientIds || [],
         metadata: request.metadata,
-        createdBy: 'system',
+        createdBy: request.createdBy ?? '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -700,6 +698,7 @@ export interface UnifiedActionRequest {
   entityId: string;
   projectId?: string;
   contractorId?: string;
+  createdBy?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -715,8 +714,12 @@ export const EnhancedActionServiceStatic = {
   async executeAction(request: UnifiedActionRequest): Promise<ActionExecutionResult> {
     const service = new EnhancedActionService();
     try {
-      await service.createInsuranceAction({
+      const create = request.entityType === 'payment' ? service.createPaymentAction.bind(service)
+        : request.entityType === 'bankGuarantee' ? service.createBankGuaranteeAction.bind(service)
+        : service.createInsuranceAction.bind(service);
+      await create({
         insuranceId: request.entityId,
+        createdBy: request.createdBy,
         projectId: request.projectId,
         contractorId: request.contractorId,
         actionType: request.actionType as 'taskAssignment' | 'hierarchyNotification' | 'sms' | 'call' | 'email' | 'mail' | 'notification',

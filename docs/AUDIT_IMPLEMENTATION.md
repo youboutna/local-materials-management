@@ -23,8 +23,12 @@ erreurs de lecture converties en listes vides, actions qui affichent un succès 
 | Import DQE (lot B) | Calcul en un seul bloc | Gros fichiers (> 500 lignes) calculés par paquets de 200 sans bloquer l'écran |
 | Anciens panneaux de réglages | Fichiers inutilisés | Supprimés |
 
+| Actions unifiées (`enhancedActionService`) | « Approuver un paiement » écrasait le paiement (montant 0, n° de transaction inventé, prestataire vidé) ; échecs avalés puis succès affiché ; notifications vers destinataire vide ; type inconnu ignoré ; toutes les actions routées vers « assurance » ; auteur « system » | Approbation via `PaymentService.processPaymentWithControls` avec l'auteur réel ; erreurs remontées ; destinataire obligatoire ; type inconnu refusé ; routage par type d'entité ; auteur = utilisateur connecté |
+| Géocodage | Panne des deux sources affichée comme « aucun résultat » | Erreur remontée si toutes les sources échouent |
+| 35 blocs `catch` des services applicatifs | Erreur journalisée puis `[]`/`null` renvoyé | L'erreur est relancée (affichée par l'écran via l'état d'erreur) |
+| Pages de test, import « Projets 2025 » | Projets et identifiants codés en dur importables en production | Pages et onglet supprimés |
+
 ## Reste à traiter (priorisé)
-1. ~180 autres blocs `catch` qui renvoient `[]`/`null` sans remonter l'erreur (GeocodingService, useLocationHex, ProjectManagerProvider, MilestoneService, usePhasesHex…). Les contrôles de permission qui renvoient `false` sont volontairement conservés (refus par défaut).
+1. ~145 autres blocs (hooks, adaptateurs, composants) `catch` qui renvoient `[]`/`null` sans remonter l'erreur (GeocodingService, useLocationHex, ProjectManagerProvider, MilestoneService, usePhasesHex…). Les contrôles de permission qui renvoient `false` sont volontairement conservés (refus par défaut).
 2. ~300 méthodes dont le corps se limite à des journaux console (`enhancedActionService`, `SupplierPaymentService`, `StakeholderService`) : à relire une par une.
-5. Pages de test (`TestProject`, `WorkflowTest`, `ProjectImporter2025`) contenant des identifiants de projets en dur.
 6. Tests en échec déjà présents : sélection des fournisseurs par variables d'environnement (`RepositoryFactory.providers`, 9) et libellés bruts (`I18nNoRawCodes`, 2).

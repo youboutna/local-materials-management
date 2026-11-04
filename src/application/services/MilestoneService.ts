@@ -1080,7 +1080,7 @@ export class MilestoneService {
       return baseTemplates;
     } catch (error) {
       console.error('Error getting milestone templates:', error);
-      return [];
+      throw error;
     }
   }
 

@@ -237,7 +237,7 @@ export class SupplierPaymentReportingService {
       return recommendations;
     } catch (error) {
       console.error('Error generating payment recommendations:', error);
-      return [];
+      throw error;
     }
   }
 

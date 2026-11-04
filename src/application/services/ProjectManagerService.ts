@@ -104,7 +104,7 @@ export class ProjectManagerService implements IProjectManagerService {
       return this.manager.getAlerts();
     } catch (error) {
       console.error('[ProjectManagerService] Erreur lors de la récupération des alertes:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -113,7 +113,7 @@ export class ProjectManagerService implements IProjectManagerService {
       return this.manager.getAlertsByType(type as AlertType);
     } catch (error) {
       console.error(`[ProjectManagerService] Erreur lors de la récupération des alertes de type ${type}:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -122,7 +122,7 @@ export class ProjectManagerService implements IProjectManagerService {
       return this.manager.getAlertsBySeverity(severity as AlertSeverity);
     } catch (error) {
       console.error(`[ProjectManagerService] Erreur lors de la récupération des alertes de sévérité ${severity}:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -171,7 +171,7 @@ export class ProjectManagerService implements IProjectManagerService {
       return this.manager.getEscalationPath(alert);
     } catch (error) {
       console.error('[ProjectManagerService] Erreur lors de la récupération du chemin d\'escalade:', error);
-      return [];
+      throw error;
     }
   }
 
