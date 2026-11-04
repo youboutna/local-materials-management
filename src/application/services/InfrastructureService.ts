@@ -67,8 +67,8 @@ export class InfrastructureService {
   // ============= NETWORK FEATURES (ASSETS) =============
 
   async assets(projectId: string): Promise<InfrastructureAssetDTO[]> {
-    const features = await this.repository.findAllFeatures({ projectId });
-    return features.map(f => this.networkFeatureToAssetDTO(f, projectId));
+    const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
+    return getProjectWorkbenchService().assets(projectId);
   }
 
   async saveAsset(projectId: string, input: SaveInfrastructureDTO): Promise<string> {
