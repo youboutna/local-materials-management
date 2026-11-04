@@ -17,6 +17,15 @@ export interface TechnicalPlanElementDTO {
   height?: number;
   count: number;
   confirmed: boolean;
+  /** Nombre d'apparitions du repère sur la page : observation, jamais additionnée au nombre. */
+  occurrences?: number;
+}
+
+/** Surface annotée sur le plan, conservée pour revue (aucune quantité générée). */
+export interface TechnicalPlanSurfaceDTO {
+  page: number;
+  rawLabel: string;
+  area: number;
 }
 
 export interface TechnicalPlanDTO {
@@ -25,5 +34,6 @@ export interface TechnicalPlanDTO {
   pages: TechnicalPlanPageDTO[];
   cartouches: { page: number; scale?: number; planche?: string; phase?: string; date?: string }[];
   elements: TechnicalPlanElementDTO[];
-  warnings: { code: 'missing_scale' | 'missing_dimensions' | 'ocr_low_confidence' | 'ambiguous_unit' | 'duplicate_page'; page: number }[];
+  surfaces?: TechnicalPlanSurfaceDTO[];
+  warnings: { code: 'missing_scale' | 'missing_dimensions' | 'ocr_low_confidence' | 'ambiguous_unit' | 'duplicate_page' | 'repeated_marker' | 'marker_without_dimensions'; page: number }[];
 }

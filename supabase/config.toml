@@ -213,3 +213,6 @@ enabled = false
 #   - 20260910120000_user_roles_status_alignment.sql
 [functions.admin-users]
 verify_jwt = true
+
+[functions.storage-signer]
+verify_jwt = true

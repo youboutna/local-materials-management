@@ -37,3 +37,4 @@
 - Render technical codes (status, priority, unit, role…) through CodeLabel/useI18n referential translators, never raw, so the i18n guard test stays green.
 - Resolve each provider (auth, data, storage) independently as deployment variable > saved deployment profile > mode default, empty meaning unset, and show deployment-pinned providers in the profile screen; a database row must never silently override an explicit deployment choice.
 - Screens, hooks, services, domain and DTOs import infrastructure only through RepositoryFactory (including lazy loaders); the NoDirectInfrastructureImports guard test enforces it so providers stay swappable.
+- Non-Supabase storage (S3, MinIO, GCS, Azure, FTP) uses SignedUrlStorageAdapter backed by the storage-signer function; credentials stay server-side, uploads return object keys, and unknown providers throw instead of falling back.

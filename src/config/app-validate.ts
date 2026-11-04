@@ -9,7 +9,7 @@ import { getAppConfig } from './app';
 
 const AUTH = ['supabase', 'gotrue', 'keycloak', 'local'] as const;
 const DATA = ['supabase', 'postgrest', 'local'] as const;
-const STORAGE = ['supabase', 's3', 'minio', 'local'] as const;
+const STORAGE = ['supabase', 's3', 'minio', 'gcs', 'azure', 'ftp', 'local'] as const;
 
 export type AuthProviderKind = (typeof AUTH)[number];
 export type DataProviderKind = (typeof DATA)[number];

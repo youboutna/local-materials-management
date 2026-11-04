@@ -23,7 +23,7 @@ import { LocalAuthAdapter } from '@/infrastructure/adapters/local/LocalAuthAdapt
 import { LocalStorageAdapter } from '@/infrastructure/adapters/local/LocalStorageAdapter';
 import { PostgrestClient } from '@/infrastructure/adapters/postgrest/PostgrestClient';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
+import { SignedUrlStorageAdapter } from '@/infrastructure/adapters/storage/SignedUrlStorageAdapter';
 import { SupabaseStorageAdapter } from '@/infrastructure/adapters/supabase/SupabaseStorageAdapter';
 import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 
@@ -130,6 +130,14 @@ describe('RepositoryFactory — storage provider selection', () => {
     expect(RepositoryFactory.getStorageProvider()).toBeInstanceOf(LocalStorageAdapter);
   });
 
+  it('selects the signed-URL adapter for gcs, azure and ftp', () => {
+    for (const kind of ['gcs', 'azure', 'ftp']) {
+      stubProviders({ VITE_STORAGE_PROVIDER: kind });
+      RepositoryFactory.reset();
+      expect(RepositoryFactory.getStorageProvider()).toBeInstanceOf(SignedUrlStorageAdapter);
+    }
+  });
+
   it('selects S3StorageAdapter for s3 and minio', () => {
     for (const kind of ['s3', 'minio'] as const) {
       stubProviders({
@@ -139,7 +147,7 @@ describe('RepositoryFactory — storage provider selection', () => {
       });
       RepositoryFactory.reset();
       expect(RepositoryFactory.getStorageKind()).toBe(kind);
-      expect(RepositoryFactory.getStorageProvider()).toBeInstanceOf(S3StorageAdapter);
+      expect(RepositoryFactory.getStorageProvider()).toBeInstanceOf(SignedUrlStorageAdapter);
     }
   });
 
@@ -176,7 +184,7 @@ describe('validateProviders — rejects legacy / dead-path aliases', () => {
   });
 
   it('flags legacy taxonomy values as invalid', () => {
-    const errors = validateProviders({ auth: 'auth0', data: 'mysql', storage: 'azure' });
+    const errors = validateProviders({ auth: 'auth0', data: 'mysql', storage: 'dropbox' });
     expect(errors).toHaveLength(3);
     expect(errors.join('\n')).toMatch(/VITE_AUTH_PROVIDER/);
     expect(errors.join('\n')).toMatch(/VITE_DATA_PROVIDER/);

@@ -34,7 +34,7 @@ import { DEV_MODE, IS_LOCAL_BYPASS } from '@/config/constants';
 
 export type AuthProviderKind = 'supabase' | 'gotrue' | 'keycloak' | 'local';
 export type DataProviderKind = 'supabase' | 'postgrest' | 'local';
-export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'local';
+export type StorageProviderKind = 'supabase' | 's3' | 'minio' | 'gcs' | 'azure' | 'ftp' | 'local';
 
 // ================================================================
 // 2. IMPORTS – INTERFACES (PORTS)
@@ -231,7 +231,7 @@ import {
 // 6. IMPORTS – STORAGE ADAPTERS
 // ================================================================
 
-import { S3StorageAdapter } from '@/infrastructure/adapters/storage/S3StorageAdapter';
+import { SignedUrlStorageAdapter, type SignedStorageKind } from '@/infrastructure/adapters/storage/SignedUrlStorageAdapter';
 import { StorageProviderToRepositoryAdapter } from '@/infrastructure/adapters/storage/StorageProviderToRepositoryAdapter';
 
 // ================================================================
@@ -421,16 +421,21 @@ export class RepositoryFactory {
         break;
       case 's3':
       case 'minio':
-        registry.storage = new S3StorageAdapter({
-          endpoint: import.meta.env.VITE_STORAGE_ENDPOINT || '',
-          bucket: import.meta.env.VITE_STORAGE_BUCKET || 'documents',
-          region: import.meta.env.VITE_STORAGE_REGION,
-        });
+      case 'gcs':
+      case 'azure':
+      case 'ftp':
+        // Signed URLs / proxied transfers from the server; no credential in the browser.
+        registry.storage = new SignedUrlStorageAdapter(
+          storageKind as SignedStorageKind,
+          notificationGatewayAdapter,
+          getAppConfig().storage.bucket || undefined,
+        );
         break;
       case 'supabase':
-      default:
         registry.storage = new SupabaseStorageAdapter();
         break;
+      default:
+        throw new Error(`Fournisseur de stockage non pris en charge : "${storageKind}"`);
     }
     return registry.storage;
   }

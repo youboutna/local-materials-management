@@ -1,9 +1,13 @@
 /** Parsing hints, not quantity or regulatory rules. No unit inference from a scale. */
 export const TECHNICAL_PLAN_PATTERNS = {
   scale: /(?:[ÉE]chelle|Ech\.?|ECH)\s*[:.]?\s*1\s*[/:]\s*(\d+)/i,
-  planche: /(?:Planche|PLANCHE|Pl)\s*[:.]?\s*([\w-]+)/i,
+  planche: /\b(?:Planche|Pl\.?)(?![a-zà-ÿ])\s*[:.]?\s*([\w-]+)/i,
   phase: /Phase\s*[:.]?\s*([\w-]+)/i,
   date: /Date\s*[:.]?\s*([^\n]+)/i,
+  /** Repères de menuiserie (ex. « Fen-012 », « Por-3 ») : préfixe + numéro. */
+  marker: /\b([A-Za-zÀ-ÿ]{1,4})\s*-\s*(\d{1,4})\b/g,
+  /** Surfaces annotées (« Surf. au sol : 12,5 m2 »). Observation seulement. */
+  surface: /(Surf(?:ace)?\.?\s*(?:au\s*sol|utile|habitable)?)\s*[:=]?\s*(\d+(?:[,.]\d+)?)\s*m\s*(?:2|²)/gi,
   section: /\b([PS]|Lg|Lng)\s*(\d+)\b\s*[:=-]?\s*(\d+(?:[,.]\d+)?)\s*[xX×]\s*(\d+(?:[,.]\d+)?)\s*(cm|mm|m)?\b/gi,
 };
 
@@ -13,4 +17,6 @@ export const TECHNICAL_PLAN_POLICY = {
   maximumPages: 50,
   units: { m: 1, cm: 0.01, mm: 0.001 },
   elementPrefixes: { P: 'concrete_column', S: 'concrete_footing', Lg: 'concrete_beam', Lng: 'concrete_beam' },
+  /** Préfixes de repères de menuiserie → type d'ouvrage (complétable par métier). */
+  markerPrefixes: { Fen: 'window', F: 'window', Por: 'wooden_door', Pte: 'wooden_door' } as Record<string, 'window' | 'wooden_door'>,
 } as const;
