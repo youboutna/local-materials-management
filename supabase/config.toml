@@ -211,3 +211,5 @@ enabled = false
 #   - 20260824120000_create_profit_distributions.sql
 #   - 20260909120000_create_profit_distributions.sql
 #   - 20260910120000_user_roles_status_alignment.sql
+[functions.admin-users]
+verify_jwt = true
