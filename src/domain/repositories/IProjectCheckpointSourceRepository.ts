@@ -9,5 +9,9 @@ export interface IProjectCheckpointSourceRepository {
   findDocumentsByTypes(projectId: string, types: string[]): Promise<Record<string, any>[]>;
   findMilestones(projectId: string): Promise<Record<string, any>[]>;
   findTasks(projectId: string): Promise<Record<string, any>[]>;
+  findProject(projectId: string): Promise<Record<string, any> | null>;
+  findTaskStatuses(projectId: string): Promise<string[]>;
+  /** Pourcentages d'allocation des affectations des ressources du projet. */
+  findResourceAllocations(projectId: string): Promise<number[]>;
   insertPaymentRequest(row: Record<string, unknown>): Promise<void>;
 }

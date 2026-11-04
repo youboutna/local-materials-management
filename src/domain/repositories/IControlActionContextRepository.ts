@@ -3,7 +3,9 @@ export type ControlActionRecordKind = 'project' | 'insurance' | 'inspection' | '
 
 export interface IControlActionContextRepository {
   findRecord(kind: ControlActionRecordKind, id: string): Promise<Record<string, any> | null>;
-  findActiveEmployees(): Promise<Record<string, any>[]>;
+  findActiveEmployees(department?: string): Promise<Record<string, any>[]>;
+  findEmployeesByIds(ids: string[]): Promise<Record<string, any>[]>;
+  findProjectOrganizations(projectId: string): Promise<Record<string, any>[]>;
   findEmployee(id: string): Promise<Record<string, any> | null>;
   findActiveSuppliers(): Promise<Record<string, any>[]>;
   findDocumentsByInspection(inspectionId: string): Promise<Record<string, any>[]>;

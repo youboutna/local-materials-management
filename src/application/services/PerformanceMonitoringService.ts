@@ -16,7 +16,7 @@ import {
 } from '@/dtos/entities/PerformanceMetricsDTO';
 // Direct Supabase access removed for Hexagonal Architecture
 import { AppError, ErrorCode } from '@/utils/errorHandling';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+const src = () => RepositoryFactory.getProjectCheckpointSourceRepository();
 
 
 // Event-driven interfaces for performance monitoring
@@ -355,10 +355,7 @@ export class PerformanceMonitoringService {
 
     try {
       // Calculate task completion rate from task_assignments table
-      const { data: taskAssignments } = await btpDb()
-        .from('task_assignments')
-        .select('status')
-        .eq('project_id', projectId);
+      const taskAssignments = (await src().findTaskStatuses(projectId)).map((status) => ({ status }));
       
       if (taskAssignments && taskAssignments.length > 0) {
         const completedTasks = taskAssignments.filter(t => t.status === 'completed').length;
@@ -367,10 +364,7 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate timeline adherence from project_phases table
-      const { data: phases } = await btpDb()
-        .from('project_phases')
-        .select('start_date, end_date, status')
-        .eq('project_id', projectId);
+      const phases: any[] = await src().findPhases(projectId);
       
       if (phases && phases.length > 0) {
         const onTimePhases = phases.filter((p: any) => {
@@ -384,16 +378,9 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate budget efficiency from payments and projects tables
-      const { data: payments } = await btpDb()
-        .from('payments')
-        .select('amount')
-        .eq('project_id', projectId);
+      const payments: any[] = await src().findPayments(projectId);
       
-      const { data: project } = await btpDb()
-        .from('projects')
-        .select('budget')
-        .eq('id', projectId)
-        .single();
+      const project: any = await src().findProject(projectId);
 
       if (payments && project) {
         const totalSpent = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
@@ -403,10 +390,7 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate quality metrics from inspections table
-      const { data: inspections } = await btpDb()
-        .from('inspections')
-        .select('status')
-        .eq('project_id', projectId);
+      const inspections: any[] = await src().findInspections(projectId);
       
       if (inspections && inspections.length > 0) {
         const passedInspections = inspections.filter(i => i.status === 'approved').length;
@@ -415,17 +399,9 @@ export class PerformanceMonitoringService {
       }
 
       // Calculate resource utilization from project resources and their assignments
-      const { data: projectResources } = await btpDb()
-        .from('project_resources')
-        .select('id')
-        .eq('project_id', projectId);
-
-      if (projectResources && projectResources.length > 0) {
-        const resourceIds = projectResources.map(r => r.id);
-        const { data: resourceAssignments } = await btpDb()
-          .from('resource_assignments')
-          .select('allocation_percentage')
-          .in('resource_id', resourceIds);
+      const allocations = await src().findResourceAllocations(projectId);
+      if (allocations.length > 0) {
+        const resourceAssignments = allocations.map((allocation_percentage) => ({ allocation_percentage }));
 
         if (resourceAssignments && resourceAssignments.length > 0) {
           const totalAllocation = resourceAssignments.reduce(
@@ -542,28 +518,28 @@ export class PerformanceMonitoringService {
    */
   private async getProjectResponsibleId(projectId: string): Promise<string> {
     try {
-      const { data: project } = await btpDb()
-        .from('projects')
-        .select('project_responsable_id, technical_manager_id, supervisor_id, created_by')
-        .eq('id', projectId)
-        .single();
+      const project: any = await src().findProject(projectId);
 
       return (
         project?.project_responsable_id ||
         project?.technical_manager_id ||
         project?.supervisor_id ||
         project?.created_by ||
-        'system'
+        ''
       );
     } catch (error) {
       console.error('Failed to resolve project responsible for notification:', error);
-      return 'system';
+      return '';
     }
   }
 
   private async sendEventPerformanceAlert(alert: EventPerformanceAlert): Promise<void> {
     try {
       const recipientId = await this.getProjectResponsibleId(alert.projectId);
+      if (!recipientId) {
+        console.warn(`No responsible user found for project ${alert.projectId}; performance alert not sent`);
+        return;
+      }
       await this.notificationService.createNotification({
         recipientId,
         title: `Alerte Performance - ${alert.type.replace('_', ' ').toUpperCase()}`,

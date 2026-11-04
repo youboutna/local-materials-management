@@ -1,5 +1,5 @@
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+const ctx = () => RepositoryFactory.getControlActionContextRepository();
 
 /**
  * Organizational Hierarchy Service - Hexagonal Architecture
@@ -59,19 +59,7 @@ export class OrganizationalHierarchyService {
     _projectId: string,
     criteria: FindRecipientsCriteria,
   ): Promise<HierarchyRecipient[]> {
-    const query = btpDb().from('employees')
-      .select('id, full_name, email, phone, position, department')
-      .eq('is_active', true);
-
-    if (criteria.department) {
-      query.eq('department', criteria.department);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      console.error('OrganizationalHierarchyService.findNotificationRecipients', error);
-      return [];
-    }
+    const data: any[] = await ctx().findActiveEmployees(criteria.department);
 
     const rows: HierarchyRecipient[] = (data ?? [])
       .filter((row) => !!row.id)
@@ -93,14 +81,7 @@ export class OrganizationalHierarchyService {
 
   static async resolveByIds(ids: string[]): Promise<HierarchyRecipient[]> {
     if (ids.length === 0) return [];
-    const { data, error } = await btpDb().from('employees')
-      .select('id, full_name, email, phone, position')
-      .in('id', ids);
-
-    if (error) {
-      console.error('OrganizationalHierarchyService.resolveByIds', error);
-      return [];
-    }
+    const data: any[] = await ctx().findEmployeesByIds(ids);
     return (data ?? [])
       .filter((row) => !!row.id)
       .map((row) => ({
@@ -121,15 +102,7 @@ export class OrganizationalHierarchyService {
    */
   static async getProjectOrganizations(projectId: string): Promise<ProjectOrganization[]> {
     if (!projectId) return [];
-    const { data, error } = await btpDb()
-      .from('project_organizations')
-      .select('id, project_id, organization_id, role, is_primary, contract_amount, contract_start_date, contract_end_date, organizations:organization_id(name)')
-      .eq('project_id', projectId);
-
-    if (error) {
-      console.error('OrganizationalHierarchyService.getProjectOrganizations', error);
-      return [];
-    }
+    const data: any[] = await ctx().findProjectOrganizations(projectId);
     return (data ?? []).map((row: any) => ({
       id: row.id,
       project_id: row.project_id,
