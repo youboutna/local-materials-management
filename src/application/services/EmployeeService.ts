@@ -37,10 +37,8 @@ export class EmployeeService {
       const allEmployees = await this.employeeRepository.findAll();
       
       // Affectations réelles de la phase (public.phase_employees), rapprochées par nom.
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.from('phase_employees').select('employee_name').eq('phase_id', phaseId);
-      if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Failed to load phase assignments: ${error.message}`);
-      const assigned = new Set((data ?? []).map(r => r.employee_name.trim().toLowerCase()));
+      const assignments = await RepositoryFactory.getPhaseEmployeeRepository().findByPhaseId(phaseId);
+      const assigned = new Set(assignments.map(r => (r.employeeName ?? '').trim().toLowerCase()).filter(Boolean));
       return allEmployees
         .filter(employee => assigned.has(employee.fullName.trim().toLowerCase()))
         .map(employee => this.employeeToDTO(employee));

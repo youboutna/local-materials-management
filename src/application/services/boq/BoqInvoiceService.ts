@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * BoqInvoiceService — génère un décompte / facture (source `invoice`) à partir
  * d'un devis fournisseur validé (source `supplier_bid`), au pourcentage
@@ -5,7 +6,6 @@
  * repository BOQ, aucune dépendance React.
  */
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 
 export interface CreateDecompteInput {
   /** Lignes du devis source (déjà chargées) ou vide pour recharger. */
@@ -69,10 +69,10 @@ export const BoqInvoiceService = {
   async createFromQuote(input: CreateDecompteInput): Promise<CreateDecompteResult> {
     const source = input.quoteLines?.length
       ? input.quoteLines
-      : await boqRepository.list({ source: 'supplier_bid', contextId: input.quoteContextId });
+      : await RepositoryFactory.getBoqRepository().list({ source: 'supplier_bid', contextId: input.quoteContextId });
     if (!source.length) throw new Error('Aucune ligne de devis à facturer');
     const built = this.build(input, source);
-    const persisted = await boqRepository.bulkCreate(built.lines);
+    const persisted = await RepositoryFactory.getBoqRepository().bulkCreate(built.lines);
     return { lines: persisted, totalHt: built.totalHt };
   },
 };

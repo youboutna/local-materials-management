@@ -101,6 +101,24 @@ import { SupabaseAlertAdapter } from '@/infrastructure/adapters/supabase/Supabas
 import { SupabaseAuthAdapter } from '@/infrastructure/adapters/supabase/SupabaseAuthAdapter';
 import { SupabaseComplianceAdapter } from '@/infrastructure/adapters/supabase/SupabaseComplianceAdapter';
 import { SupabaseReceptionAdapter } from '@/infrastructure/adapters/supabase/SupabaseReceptionAdapter';
+import { boqRepository as boqRepositorySingleton } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
+import type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
+import { boqPropagationRepository as boqPropagationSingleton } from '@/infrastructure/adapters/supabase/SupabaseBoqPropagationAdapter';
+import { SupabasePaymentInitiationAdapter } from '@/infrastructure/adapters/supabase/SupabasePaymentInitiationAdapter';
+import { SupabaseProjectWorkbenchAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectWorkbenchAdapter';
+import { SupabaseMonitoringAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseMonitoringAlertAdapter';
+import { SupabaseDerivedAlertAdapter } from '@/infrastructure/adapters/supabase/SupabaseDerivedAlertAdapter';
+import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
+import { getReferentialItemAdapter } from '@/infrastructure/adapters/supabase/SupabaseReferentialItemAdapter';
+import { SupabaseTenderSubmissionEvaluationAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionEvaluationAdapter';
+import { SupabaseDataClientProvider } from '@/infrastructure/adapters/supabase/SupabaseDataClientProvider';
+import type { IDataClientProvider } from '@/domain/repositories/IDataClientProvider';
+import { SupabaseTenderSubmissionAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionAdapter';
+import type { ITenderSubmissionRepository } from '@/domain/repositories/ITenderSubmissionRepository';
+import { SupabaseTenderLotDocumentAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderLotDocumentAdapter';
+import type { ITenderLotDocumentRepository } from '@/domain/repositories/ITenderLotDocumentRepository';
+import { SupabaseProjectCheckpointSourceAdapter } from '@/infrastructure/adapters/supabase/SupabaseProjectCheckpointSourceAdapter';
+import type { IProjectCheckpointSourceRepository } from '@/domain/repositories/IProjectCheckpointSourceRepository';
 import type { IReceptionRepository } from '@/domain/repositories/IReceptionRepository';
 import { SupabaseContactMessageAdapter } from '@/infrastructure/adapters/supabase/SupabaseContactMessageAdapter';
 import { SupabaseDecompteAdapter } from '@/infrastructure/adapters/supabase/SupabaseDecompteAdapter';
@@ -298,6 +316,18 @@ interface RepositoryRegistry {
 }
 
 const registry: RepositoryRegistry = {};
+
+const lazyPorts: {
+  tenderSubmission?: ITenderSubmissionRepository;
+  tenderLotDocument?: ITenderLotDocumentRepository;
+  projectCheckpointSource?: IProjectCheckpointSourceRepository;
+  paymentInitiation?: SupabasePaymentInitiationAdapter;
+  projectWorkbench?: SupabaseProjectWorkbenchAdapter;
+  derivedAlert?: SupabaseDerivedAlertAdapter;
+  monitoringAlert?: SupabaseMonitoringAlertAdapter;
+  dataClient?: IDataClientProvider;
+  contract?: SupabaseContractAdapter;
+} = {};
 
 // ================================================================
 // 10. REPOSITORY FACTORY
@@ -771,6 +801,59 @@ export class RepositoryFactory {
     if (registry.reception) return registry.reception;
     registry.reception = new SupabaseReceptionAdapter();
     return registry.reception;
+  }
+
+  static getTenderSubmissionRepository(): ITenderSubmissionRepository {
+    return (lazyPorts.tenderSubmission ??= new SupabaseTenderSubmissionAdapter());
+  }
+
+  static getTenderLotDocumentRepository(): ITenderLotDocumentRepository {
+    return (lazyPorts.tenderLotDocument ??= new SupabaseTenderLotDocumentAdapter());
+  }
+
+  static getProjectCheckpointSourceRepository(): IProjectCheckpointSourceRepository {
+    return (lazyPorts.projectCheckpointSource ??= new SupabaseProjectCheckpointSourceAdapter());
+  }
+
+  /** Client de données par schéma pour les services sans port dédié (transitoire). */
+  static getDataClientProvider(): IDataClientProvider {
+    return (lazyPorts.dataClient ??= new SupabaseDataClientProvider());
+  }
+
+  static getBoqRepository(): IBoqRepository {
+    return boqRepositorySingleton;
+  }
+
+  static getBoqPropagationRepository(): typeof boqPropagationSingleton {
+    return boqPropagationSingleton;
+  }
+
+  static getPaymentInitiationRepository(): SupabasePaymentInitiationAdapter {
+    return (lazyPorts.paymentInitiation ??= new SupabasePaymentInitiationAdapter());
+  }
+
+  static getProjectWorkbenchRepository(): SupabaseProjectWorkbenchAdapter {
+    return (lazyPorts.projectWorkbench ??= new SupabaseProjectWorkbenchAdapter());
+  }
+
+  static getMonitoringAlertRepository(): SupabaseMonitoringAlertAdapter {
+    return (lazyPorts.monitoringAlert ??= new SupabaseMonitoringAlertAdapter());
+  }
+
+  static getDerivedAlertRepository(): SupabaseDerivedAlertAdapter {
+    return (lazyPorts.derivedAlert ??= new SupabaseDerivedAlertAdapter());
+  }
+
+  static getContractRepository(): SupabaseContractAdapter {
+    return (lazyPorts.contract ??= new SupabaseContractAdapter());
+  }
+
+  static getReferentialItemRepository(): ReturnType<typeof getReferentialItemAdapter> {
+    return getReferentialItemAdapter();
+  }
+
+  static getTenderSubmissionEvaluationGateway(): typeof SupabaseTenderSubmissionEvaluationAdapter {
+    return SupabaseTenderSubmissionEvaluationAdapter;
   }
 
   static getComplianceRepository(): IComplianceRepository {

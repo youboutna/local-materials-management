@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ReferentialItemService — résolution des référentiels configurables.
  *
@@ -14,11 +15,10 @@ import type {
   ReferentialItemDTO,
   UpsertReferentialItemDTO,
 } from '@/dtos/entities/ReferentialItemDTO';
-import { getReferentialItemAdapter } from '@/infrastructure/adapters/supabase/SupabaseReferentialItemAdapter';
 import type { ReferentialLanguage } from '@/config/referentials/i18n/status-labels.referential';
 
 export class ReferentialItemService {
-  private adapter = getReferentialItemAdapter();
+  private adapter = RepositoryFactory.getReferentialItemRepository();
 
   async list(domain?: ReferentialDomain, projectId?: string | null): Promise<ReferentialItemDTO[]> {
     return this.adapter.list(domain, projectId);

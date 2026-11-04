@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ProjectFinancialsService — SOURCE UNIQUE de la doctrine financière.
  *
@@ -16,7 +17,6 @@ import {
   type FinancialScope,
   type ProjectFinancialDTO,
 } from '@/dtos/entities/ProjectFinancialDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { getDecompteService } from '@/application/services/DecompteService';
 import { DecompteService } from '@/application/services/DecompteService';
 import { DEFAULT_OPERATION_POLICY, type OperationPolicy } from '@/config/referentials/projects/operation-policy.referential';
@@ -79,7 +79,7 @@ export class ProjectFinancialsService {
 
   private async loadLines(scope: FinancialScope, entityId: string): Promise<BoqLineDTO[]> {
     const lists = await Promise.all((['dqe', 'supplier_bid', 'invoice'] as const).map(source =>
-      boqRepository.list(scope === 'phase' ? { source, phaseId: entityId } : { source, projectId: entityId })));
+      RepositoryFactory.getBoqRepository().list(scope === 'phase' ? { source, phaseId: entityId } : { source, projectId: entityId })));
     return lists.flat();
   }
 

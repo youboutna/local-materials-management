@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * TenderToPlanningService — orchestrates conversion of an accepted tender
  * (winning estimate) into a planned project with cascading BOQ lines.
@@ -13,7 +14,6 @@
 
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import { BoqLineMapper } from '@/dtos/boq/BoqLineMapper';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 
 export interface TenderToPlanningInput {
   estimateId: string;
@@ -30,7 +30,7 @@ export interface TenderToPlanningResult {
 
 export class TenderToPlanningService {
   async convert(input: TenderToPlanningInput): Promise<TenderToPlanningResult> {
-    const tenderLines = await boqRepository.list({
+    const tenderLines = await RepositoryFactory.getBoqRepository().list({
       source: 'tender_estimate',
       estimateId: input.estimateId,
       contextId: input.estimateId,
@@ -47,7 +47,7 @@ export class TenderToPlanningService {
       };
     }
 
-    await boqRepository.bulkCreate(reprojected);
+    await RepositoryFactory.getBoqRepository().bulkCreate(reprojected);
 
     const phases = new Set<string>();
     const milestones = new Set<string>();

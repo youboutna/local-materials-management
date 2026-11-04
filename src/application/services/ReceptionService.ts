@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * Reception Service - Hexagonal Architecture
  * Business logic for reception management operations
@@ -369,18 +370,17 @@ export class ReceptionService {
   }
 
   private async uploadDocuments(projectId: string, files: File[]): Promise<ReceptionDocumentDTO[]> {
-    const { supabase } = await import('@/integrations/supabase/client');
+    const storage = RepositoryFactory.getStorageRepository();
+    const { user } = await RepositoryFactory.getAuthRepository().getCurrentUser();
     const documents: ReceptionDocumentDTO[] = [];
 
     for (const file of files) {
       const docId = crypto.randomUUID();
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const path = `receptions/${projectId}/${docId}-${safeName}`;
-      const { error: upErr } = await supabase.storage
-        .from('project-documents')
-        .upload(path, file, { upsert: false, contentType: file.type });
-      if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from('project-documents').getPublicUrl(path);
+      const { result, error: upErr } = await storage.uploadFile('project-documents', path, file);
+      if (upErr || !result) throw upErr ?? new Error('Upload failed');
+      const pub = { publicUrl: result.publicUrl };
 
       const nowIso = new Date().toISOString();
       const document = {
@@ -394,7 +394,7 @@ export class ReceptionService {
         fileSize: file.size,
         mimeType: file.type,
         uploadedAt: nowIso,
-        uploadedBy: 'system',
+        uploadedBy: user?.id ?? '',
         isRequired: true,
         isSubmitted: true,
         validationStatus: 'pending',

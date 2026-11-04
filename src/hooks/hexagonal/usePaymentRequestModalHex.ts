@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 
 export interface PaymentDocument {
   id: string;
@@ -13,16 +14,8 @@ export function usePaymentRequestDocumentsHex(projectId: string, phaseId: string
   return useQuery({
     queryKey: ['payment-documents', projectId, phaseId],
     queryFn: async () => {
-      const { btpClient } = await import('@/integrations/supabase/schema-clients');
-
-      const { data: inspections, error } = await btpClient.from('inspections')
-        .select('id, date, status, documents, progress_at_inspection')
-        .eq('project_id', projectId)
-        .eq('status', 'approved')
-        .order('date', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
+      const repo = RepositoryFactory.getProjectCheckpointSourceRepository();
+      const inspections = await repo.findApprovedInspections(projectId, 5);
 
       const docs: PaymentDocument[] = [];
 
@@ -44,11 +37,7 @@ export function usePaymentRequestDocumentsHex(projectId: string, phaseId: string
         }
       }
 
-      const { data: projectDocs } = await btpClient.from('documents')
-        .select('id, title, document_type, file_url, created_at, status')
-        .eq('project_id', projectId)
-        .in('document_type', ['inspection_report', 'project_report'])
-        .order('created_at', { ascending: false });
+      const projectDocs = await repo.findDocumentsByTypes(projectId, ['inspection_report', 'project_report']);
 
       if (projectDocs) {
         for (const doc of projectDocs) {
@@ -76,9 +65,7 @@ export async function submitPaymentRequestHex(params: {
   progressAtPayment: number;
 }) {
   const { projectId, phaseId, amount, progressAtPayment } = params;
-  const { btpClient } = await import('@/integrations/supabase/schema-clients');
-  const { error } = await btpClient.from('payments')
-    .insert({
+  await RepositoryFactory.getProjectCheckpointSourceRepository().insertPaymentRequest({
       project_id: projectId,
       phase_id: phaseId,
       amount,
@@ -89,6 +76,4 @@ export async function submitPaymentRequestHex(params: {
       contractor_name: 'Pending',
       contractor_contact: 'Pending',
     });
-
-  if (error) throw error;
 }

@@ -3,8 +3,10 @@
  * (or to all lots when lot_id is null).
  * Hexagonal service (pure TS, no React).
  */
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
-import { supabase as rootSupabase } from '@/integrations/supabase/client';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import type { ITenderLotDocumentRepository } from '@/domain/repositories/ITenderLotDocumentRepository';
+import type { IAuthRepository } from '@/domain/repositories/IAuthRepository';
+import type { IStorageRepository } from '@/domain/repositories/IStorageRepository';
 
 export interface TenderLotDocumentRecord {
   id: string;
@@ -57,24 +59,22 @@ export interface CreateTenderLotDocumentInput {
 }
 
 export class TenderLotDocumentService {
+  constructor(
+    private readonly repo: ITenderLotDocumentRepository = RepositoryFactory.getTenderLotDocumentRepository(),
+    private readonly auth: IAuthRepository = RepositoryFactory.getAuthRepository(),
+    private readonly storage: IStorageRepository = RepositoryFactory.getStorageRepository(),
+  ) {}
+
   async listByTender(tenderId: string): Promise<TenderLotDocumentRecord[]> {
     if (!tenderId) return [];
-    const { data, error } = await supabase
-      .from('tender_lot_documents' as any)
-      .select('*')
-      .eq('tender_id', tenderId)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    return (data ?? []).map(fromRow);
+    return (await this.repo.findByTender(tenderId)).map(fromRow);
   }
 
 
   async create(input: CreateTenderLotDocumentInput): Promise<TenderLotDocumentRecord> {
-    const { data: userData } = await rootSupabase.auth.getUser();
+    const { user } = await this.auth.getCurrentUser();
     const lotIds = (input.lotIds ?? (input.lotId ? [input.lotId] : [])).filter(Boolean);
-    const { data, error } = await supabase
-      .from('tender_lot_documents' as any)
-      .insert({
+    return fromRow(await this.repo.insert({
         tender_id: input.tenderId,
         lot_id: lotIds[0] ?? null,
         lot_ids: lotIds,
@@ -85,12 +85,8 @@ export class TenderLotDocumentService {
         file_name: input.fileName ?? null,
         file_size: input.fileSize ?? null,
         mime_type: input.mimeType ?? null,
-        uploaded_by: userData.user?.id ?? null,
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    return fromRow(data);
+        uploaded_by: user?.id ?? null,
+      }));
   }
 
   async update(id: string, updates: Partial<Omit<TenderLotDocumentRecord, 'id' | 'tenderId' | 'createdAt' | 'updatedAt'>>): Promise<TenderLotDocumentRecord> {
@@ -110,35 +106,20 @@ export class TenderLotDocumentService {
     if (updates.fileName !== undefined) row.file_name = updates.fileName;
     if (updates.fileSize !== undefined) row.file_size = updates.fileSize;
     if (updates.mimeType !== undefined) row.mime_type = updates.mimeType;
-    const { data, error } = await supabase
-      .from('tender_lot_documents' as any)
-      .update(row)
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return fromRow(data);
+    return fromRow(await this.repo.update(id, row));
   }
 
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('tender_lot_documents' as any)
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+    await this.repo.delete(id);
   }
 
   async uploadFile(tenderId: string, file: File): Promise<{ path: string; publicUrl: string }> {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `tender-lots/${tenderId}/${Date.now()}-${safeName}`;
-    const { error } = await rootSupabase.storage.from('documents').upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-    if (error) throw error;
-    const { data } = rootSupabase.storage.from('documents').getPublicUrl(path);
-    return { path, publicUrl: data.publicUrl };
+    const { result, error } = await this.storage.uploadFile('documents', path, file);
+    if (error || !result) throw error ?? new Error('Upload failed');
+    return { path: result.path || path, publicUrl: result.publicUrl };
   }
 }
 

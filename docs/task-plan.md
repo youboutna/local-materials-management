@@ -2,6 +2,14 @@
 
 ## Plan de Migration et d'Implémentation
 
+### Injection via RepositoryFactory — 04/11/2026
+- [x] Aucun service applicatif, hook ou composant n'importe plus le client Supabase ni n'appelle de fonction serveur directement ; tout passe par `RepositoryFactory`.
+- [x] Nouveaux ports dédiés : soumissions d'AO, documents de lots d'AO, sources des jalons projet (phases, inspections, documents, paiements).
+- [x] Accès factorisés : BOQ, propagation BOQ, initiation de paiement, workbench, SIG, alertes dérivées/monitoring, contrats, référentiels, évaluation des soumissions, stockage et auth (inscription fournisseur, documents de réception).
+- [x] Faux identifiants supprimés : `uploadedBy: 'system'` (réceptions) et `document_id` aléatoire (ancien upload de soumission retiré, documents liés réellement).
+- [~] 12 services (actions inspection/assurance/garantie, rapports, hiérarchie, performance, AO publics/lots/partage, import/export) utilisent le port transitoire `getDataClientProvider()` ; à migrer vers des ports métier dédiés.
+- [ ] Demande de paiement de la fenêtre modale : moyen de paiement et contractant encore « pending » faute de saisie dans le formulaire.
+
 ### Correctifs P0 « fausses implémentations » — 04/11/2026
 - [x] Actions unifiées : approbation de paiement réelle, erreurs non avalées, auteur réel, routage par entité.
 - [x] Services applicatifs : 35 erreurs masquées en `[]`/`null` relancées ; géocodage honnête.
@@ -11,7 +19,7 @@
 - [~] Lot C (04/11, suite) : en-tête de page, cellules centrées et sous-totaux traités ; DQE client de test : 98 lignes, total lu à ~95 % du récapitulatif des sections présentes, 21 écarts P.U. tracés. Plans (masse, toiture, menuiseries) non exploités.
 - [~] Lot C : en-têtes de tableau PDF répartis sur plusieurs lignes reconnus génériquement (titres de groupe ignorés). Essai local sur un DQE client : 3 → 121 lignes, section second œuvre exacte, écarts quantité × P.U. tracés. Restent : libellés repliés en électricité (lignes de suite comptées à part, un montant aberrant), sous-totaux de chapitre lus comme lignes, plans (masse, toiture, menuiseries) non exploités.
 - Données client jointes : tests locaux uniquement, jamais versionnées ni envoyées à un service externe.
-- [ ] Tests : à relancer après cette passe (demande utilisateur : tests ensuite).
+- [~] Tests 04/11 : 438/449 passent ; 11 échecs préexistants (sélection de fournisseur par variables d'environnement, rendus bruts de statuts).
 
 ### Import PTBA illustratif — 31/10/2026
 - Le parcours d’import projet reconnaît les tableaux PTBA Excel et ouvre une revue configurable : toutes les feuilles, codes, libellés, quantités, unités, montants documentaires, responsables et associés. Échelle monétaire et budget projet sont explicitement confirmés ; aucun cumul automatique de sous-totaux.

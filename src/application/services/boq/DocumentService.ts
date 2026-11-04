@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * DocumentService — orchestrates PDF, e-signature, email, and download flows for
  * BOQ documents. Loads the FULL set of lines for a given context from the BOQ
@@ -5,7 +6,6 @@
  */
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { BoqPdfRenderer, type BoqPdfContext, type BoqPdfCompany } from './BoqPdfRenderer';
 import { CommunicationService } from '@/application/services/CommunicationService';
 
@@ -50,7 +50,7 @@ export interface DocumentContext {
 async function loadLines(ctx: DocumentContext, fallback: BoqLineDTO[]): Promise<BoqLineDTO[]> {
   if (ctx.source && (ctx.contextId || ctx.projectId)) {
     try {
-      const rows = await boqRepository.list({
+      const rows = await RepositoryFactory.getBoqRepository().list({
         source: ctx.source,
         contextId: ctx.contextId,
         projectId: ctx.projectId,
@@ -146,7 +146,7 @@ export const DocumentService = {
     try {
       await Promise.all(
         persistable.map((l) =>
-          boqRepository.update(l.id as string, {
+          RepositoryFactory.getBoqRepository().update(l.id as string, {
             source: l.source,
             status: 'validated',
             metadata: { ...(l.metadata ?? {}), signature: { signedBy, signedAt } },

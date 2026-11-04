@@ -1,10 +1,7 @@
 import { sendTenderSubmissionNotification } from '@/application/services/TenderSubmissionNotificationService';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { SubmissionSecretService } from './SubmissionSecretService';
-import { SupabaseTenderSubmissionEvaluationAdapter } from '@/infrastructure/adapters/supabase/SupabaseTenderSubmissionEvaluationAdapter';
 
 export interface CreateTenderSubmissionDTO {
   tender_id: string;
@@ -32,18 +29,12 @@ export interface UploadedDocument {
   subcategory: string;
 }
 
+const repo = () => RepositoryFactory.getTenderSubmissionRepository();
+
 export class TenderSubmissionService {
   static async hasExistingSubmission(tenderId: string, userId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('id')
-        .eq('tender_id', tenderId)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) throw error;
-      return !!data;
+      return !!(await repo().findByTenderAndUser(tenderId, userId));
     } catch (error) {
       console.error('Error checking existing submission:', error);
       throw new AppError(
@@ -73,28 +64,18 @@ export class TenderSubmissionService {
       }
 
       onProgress?.('creating');
-      const { data: submission, error: submissionError } = await supabase
-        .from('tender_submissions')
-        .insert({
-          tender_id: submissionData.tender_id,
-          user_id: submissionData.user_id,
-          supplier_name: submissionData.supplier_name,
-          supplier_email: submissionData.supplier_email,
-          submission_date: submissionData.submission_date || new Date().toISOString(),
-          status: submissionData.status || 'submitted'
-        })
-        .select()
-        .single();
-
-      if (submissionError) {
-        throw new AppError(
-          ErrorCode.DATABASE_ERROR,
-          `Erreur lors de la création de la soumission: ${submissionError.message}`
-        );
-      }
-
-      if (!submission) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, 'Aucune soumission créée');
+      let submission: Record<string, any>;
+      try {
+        submission = await repo().insert({
+          tenderId: submissionData.tender_id,
+          userId: submissionData.user_id,
+          supplierName: submissionData.supplier_name,
+          supplierEmail: submissionData.supplier_email,
+          submissionDate: submissionData.submission_date || new Date().toISOString(),
+          status: submissionData.status || 'submitted',
+        });
+      } catch (e) {
+        throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de la création de la soumission: ${(e as Error).message}`);
       }
 
       try {
@@ -115,48 +96,20 @@ export class TenderSubmissionService {
             );
           }
 
-          const { data: document, error: docError } = await supabase
-            .from('documents')
-            .insert({
-              title: doc.file.name,
-              description: `${doc.subcategory} pour soumission appel d'offres`,
-              file_url: uploadResult.url,
-              file_name: doc.file.name,
-              mime_type: doc.file.type,
-              file_size: doc.file.size,
-              document_type: 'tender',
-              uploaded_by: submissionData.user_id,
-              metadata: {
-                tender_id: submissionData.tender_id,
-                submission_id: submission.id,
-                category: doc.category,
-                subcategory: doc.subcategory
-              }
-            })
-            .select()
-            .single();
-
-          if (docError || !document) {
-            throw new AppError(
-              ErrorCode.DATABASE_ERROR,
-              `Erreur lors de la création du document: ${docError?.message || 'Document non créé'}`
-            );
-          }
-
-          const { error: linkError } = await supabase
-            .from('tender_submission_documents')
-            .insert({
-              submission_id: submission.id,
-              document_id: document.id,
+          try {
+            await repo().attachDocument({
+              submissionId: submission.id,
+              tenderId: submissionData.tender_id,
+              uploadedBy: submissionData.user_id,
+              fileUrl: uploadResult.url,
+              fileName: doc.file.name,
+              mimeType: doc.file.type,
+              fileSize: doc.file.size,
               category: doc.category,
-              subcategory: doc.subcategory
+              subcategory: doc.subcategory,
             });
-
-          if (linkError) {
-            throw new AppError(
-              ErrorCode.DATABASE_ERROR,
-              `Erreur lors de la liaison du document: ${linkError.message}`
-            );
+          } catch (e) {
+            throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de l'enregistrement du document: ${(e as Error).message}`);
           }
           
           uploadedCount++;
@@ -191,10 +144,7 @@ export class TenderSubmissionService {
 
         return submission;
       } catch (uploadError) {
-        await supabase
-          .from('tender_submissions')
-          .delete()
-          .eq('id', submission.id);
+        await repo().delete(submission.id);
         
         throw uploadError;
       }
@@ -207,13 +157,7 @@ export class TenderSubmissionService {
 
   static async getSubmissionById(submissionId: string) {
     try {
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('id', submissionId)
-        .single();
-      if (error) throw error;
-      return data;
+      return await repo().findById(submissionId);
     } catch (error) {
       console.error('Error fetching submission:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération de la soumission');
@@ -222,14 +166,7 @@ export class TenderSubmissionService {
 
   static async getUserSubmission(tenderId: string, userId: string) {
     try {
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('*')
-        .eq('tender_id', tenderId)
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      return await repo().findByTenderAndUser(tenderId, userId);
     } catch (error) {
       console.error('Error getting user submission:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération de la soumission');
@@ -239,7 +176,7 @@ export class TenderSubmissionService {
   /** Récupère les soumissions d'un AO avec leurs documents pour l'évaluation. */
   static async getTenderSubmissions(tenderId: string) {
     try {
-      return await SupabaseTenderSubmissionEvaluationAdapter.getSubmissionsForTender(tenderId);
+      return await RepositoryFactory.getTenderSubmissionEvaluationGateway().getSubmissionsForTender(tenderId);
     } catch (error) {
       console.error('Error fetching tender submissions:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération des soumissions');
@@ -259,7 +196,7 @@ export class TenderSubmissionService {
       if (update.reviewerId !== undefined) dbUpdate.reviewer_id = update.reviewerId;
       if (update.reviewedAt !== undefined) dbUpdate.reviewed_at = update.reviewedAt;
 
-      return await SupabaseTenderSubmissionEvaluationAdapter.updateEvaluation(submissionId, dbUpdate);
+      return await RepositoryFactory.getTenderSubmissionEvaluationGateway().updateEvaluation(submissionId, dbUpdate);
     } catch (error) {
       console.error('Error updating tender evaluation:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la mise à jour de l\'évaluation');
@@ -277,21 +214,18 @@ export class TenderSubmissionService {
         throw new AppError(ErrorCode.VALIDATION_ERROR, 'Vous avez déjà soumis une candidature pour cet appel d\'offres');
       }
 
-      const { data: submission, error } = await supabase
-        .from('tender_submissions')
-        .insert({
-          tender_id: submissionData.tender_id,
-          user_id: submissionData.user_id,
-          supplier_name: submissionData.supplier_name || '',
-          supplier_email: submissionData.supplier_email || '',
-          submission_date: submissionData.submission_date || new Date().toISOString(),
-          status: submissionData.status || 'submitted'
-        })
-        .select()
-        .single();
-
-      if (error || !submission) {
-        throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur: ${error?.message || 'Submission not created'}`);
+      let submission: Record<string, any>;
+      try {
+        submission = await repo().insert({
+          tenderId: submissionData.tender_id,
+          userId: submissionData.user_id,
+          supplierName: submissionData.supplier_name || '',
+          supplierEmail: submissionData.supplier_email || '',
+          submissionDate: submissionData.submission_date || new Date().toISOString(),
+          status: submissionData.status || 'submitted',
+        });
+      } catch (e) {
+        throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur: ${(e as Error).message}`);
       }
 
       const submissionSecret = await SubmissionSecretService.createSubmissionSecret({
@@ -320,54 +254,10 @@ export class TenderSubmissionService {
     }
   }
 
-  static async uploadDocuments(submissionId: string, documents: UploadedDocument[]): Promise<void> {
-    try {
-      for (const doc of documents) {
-        const fileName = `${Date.now()}-${doc.file.name}`;
-        const filePath = `tender-submissions/${submissionId}/${fileName}`;
-
-        const { error: uploadError } = await supabaseClient.storage
-          .from('tender-documents')
-          .upload(filePath, doc.file);
-
-        if (uploadError) throw uploadError;
-
-        const { error: docError } = await supabase
-          .from('tender_submission_documents')
-          .insert({
-            submission_id: submissionId,
-            document_id: crypto.randomUUID(),
-            category: doc.category,
-            subcategory: doc.subcategory,
-            created_at: new Date().toISOString()
-          });
-
-        if (docError) throw docError;
-      }
-    } catch (error) {
-      console.error('Error uploading documents:', error);
-      throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors du téléchargement des documents');
-    }
-  }
-
   /** Liens soumission→document hydratés avec le document archivé (DocumentService/documents). */
   static async getSubmissionDocuments(submissionId: string): Promise<Array<Record<string, any>>> {
     try {
-      const { data: links, error } = await supabase
-        .from('tender_submission_documents')
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      const ids = (links || []).map((l: any) => l.document_id).filter(Boolean);
-      if (ids.length === 0) return [];
-      const { data: docs, error: docError } = await (supabase as any)
-        .from('documents')
-        .select('id,title,file_name,file_url,file_size,metadata')
-        .in('id', ids);
-      if (docError) throw docError;
-      const byId = new Map((docs || []).map((d: any) => [d.id, d]));
-      return (links || []).map((l: any) => ({ ...l, document: byId.get(l.document_id) ?? null }));
+      return await repo().findDocuments(submissionId);
     } catch (error) {
       console.error('Error getting submission documents:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la récupération des documents');
@@ -376,20 +266,20 @@ export class TenderSubmissionService {
 
   /** Soumissions déposées par un utilisateur fournisseur. */
   static async getSubmissionsByUser(userId: string) {
-    const { data, error } = await supabase
-      .from('tender_submissions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de la récupération des soumissions: ${error.message}`);
-    return data || [];
+    try {
+      return await repo().findByUser(userId);
+    } catch (e) {
+      throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de la récupération des soumissions: ${(e as Error).message}`);
+    }
   }
 
   /** Journal d'activité tracé en base (trigger log_submission_status_change). */
   static async getSubmissionActivityLogs(submissionId: string) {
-    const { data, error } = await (supabaseClient as any).rpc('get_submission_activity_logs', { p_submission_id: submissionId });
-    if (error) throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de la récupération de l'historique: ${error.message}`);
-    return (data || []) as Array<{ id: string; submission_id: string; action: string; details: string | null; performed_by: string | null; created_at: string }>;
+    try {
+      return await repo().findActivityLogs(submissionId);
+    } catch (e) {
+      throw new AppError(ErrorCode.DATABASE_ERROR, `Erreur lors de la récupération de l'historique: ${(e as Error).message}`);
+    }
   }
 
   /** Statistiques des soumissions d'un utilisateur fournisseur. */
@@ -406,17 +296,7 @@ export class TenderSubmissionService {
     reviewComment?: string
   ): Promise<void> {
     try {
-      const updateData: Record<string, any> = {
-        status,
-        updated_at: new Date().toISOString()
-      };
-      if (reviewComment) updateData.review_comment = reviewComment;
-
-      const { error } = await supabase
-        .from('tender_submissions')
-        .update(updateData)
-        .eq('id', submissionId);
-      if (error) throw error;
+      await repo().updateStatus(submissionId, status, reviewComment);
     } catch (error) {
       console.error('Error updating submission status:', error);
       throw new AppError(ErrorCode.DATABASE_ERROR, 'Erreur lors de la mise à jour du statut');
@@ -425,14 +305,9 @@ export class TenderSubmissionService {
 
   static async getSubmissionStats(tenderId: string) {
     try {
-      const { data, error } = await supabase
-        .from('tender_submissions')
-        .select('status')
-        .eq('tender_id', tenderId);
-      if (error) throw error;
-
-      const stats = { total: data?.length || 0, submitted: 0, under_review: 0, approved: 0, rejected: 0 };
-      data?.forEach(s => { (stats as any)[s.status]++; });
+      const statuses = await repo().listStatusesByTender(tenderId);
+      const stats = { total: statuses.length, submitted: 0, under_review: 0, approved: 0, rejected: 0 };
+      statuses.forEach(st => { if (st in stats) (stats as any)[st]++; });
       return stats;
     } catch (error) {
       console.error('Error getting submission stats:', error);

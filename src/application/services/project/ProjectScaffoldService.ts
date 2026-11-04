@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ProjectScaffoldService — complète un projet « vide » (créé ou importé) depuis
  * les référentiels : phases → statuts calendaires → DQE socle (réparti sur le
@@ -19,7 +20,6 @@ import {
 } from '@/config/referentials/projects/project-baseline.referential';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { IBoqRepository } from '@/domain/repositories/IBoqRepository';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 
 export interface ProjectScaffoldPlanDTO {
   projectId: string;
@@ -267,6 +267,6 @@ export class ProjectScaffoldService {
 
 let instance: ProjectScaffoldService | null = null;
 export function getProjectScaffoldService(): ProjectScaffoldService {
-  if (!instance) instance = new ProjectScaffoldService(boqRepository);
+  if (!instance) instance = new ProjectScaffoldService(RepositoryFactory.getBoqRepository());
   return instance;
 }

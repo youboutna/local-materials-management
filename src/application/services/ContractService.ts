@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * ContractService — chaînon « devis accepté → contrat / bon de commande ».
  *
@@ -19,7 +20,6 @@ import type {
   CreateContractLineDTO,
   UpdateContractLineDTO,
 } from '@/dtos/entities/ContractLineDTO';
-import { SupabaseContractAdapter } from '@/infrastructure/adapters/supabase/SupabaseContractAdapter';
 import { TenderEstimateService } from './TenderEstimateService';
 import { TaxService } from '@/application/services/TaxService';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
@@ -88,7 +88,7 @@ export function buildManualContractNumber(at: Date = new Date()): string {
 export class ContractService {
   private estimateService = new TenderEstimateService();
 
-  constructor(private repository: IContractRepository = new SupabaseContractAdapter()) {}
+  constructor(private repository: IContractRepository = RepositoryFactory.getContractRepository()) {}
 
   /** Tous les contrats (vue administration / suivi). */
   async listAll(filters: ContractQueryFilters = {}): Promise<ContractRecordDTO[]> {

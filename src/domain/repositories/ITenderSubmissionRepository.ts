@@ -1,83 +1,49 @@
 /**
- * ITenderSubmissionRepository - Domain Repository Interface
- * Hexagonal Architecture - Port for tender submission operations
- * Defines contract for tender submission data access
- * 
- * Following Rule #1: Arrow Flow
- * Service → Repository Interface → Adapter → Database
+ * Port de persistance des soumissions d'appels d'offres (btp.tender_submissions,
+ * liens tender_submission_documents, documents archivés et journal d'activité).
  */
+export type TenderSubmissionStatus = 'submitted' | 'under_review' | 'approved' | 'rejected';
 
-import { TenderSubmissionDTO, CreateTenderSubmissionDTO, UpdateTenderSubmissionDTO } from '@/dtos/entities/TenderSubmissionDTO';
+export interface TenderSubmissionInsert {
+  tenderId: string;
+  userId: string;
+  supplierName: string;
+  supplierEmail: string;
+  submissionDate: string;
+  status: TenderSubmissionStatus;
+}
+
+export interface TenderSubmissionDocumentInsert {
+  submissionId: string;
+  tenderId: string;
+  uploadedBy: string;
+  fileUrl: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  category: string;
+  subcategory: string;
+}
+
+export interface TenderSubmissionActivityLog {
+  id: string;
+  submission_id: string;
+  action: string;
+  details: string | null;
+  performed_by: string | null;
+  created_at: string;
+}
 
 export interface ITenderSubmissionRepository {
-  /**
-   * Create a new tender submission
-   * @param submission - Submission data to create
-   * @returns Created submission with ID
-   */
-  createSubmission(submission: CreateTenderSubmissionDTO): Promise<TenderSubmissionDTO>;
-
-  /**
-   * Get submission by ID
-   * @param id - Submission ID
-   * @returns Submission or null if not found
-   */
-  getSubmissionById(id: string): Promise<TenderSubmissionDTO | null>;
-
-  /**
-   * Update submission
-   * @param id - Submission ID
-   * @param submission - Updated submission data
-   * @returns Updated submission
-   */
-  updateSubmission(id: string, submission: UpdateTenderSubmissionDTO): Promise<TenderSubmissionDTO>;
-
-  /**
-   * Delete submission
-   * @param id - Submission ID
-   */
-  deleteSubmission(id: string): Promise<void>;
-
-  /**
-   * Get all submissions for a tender
-   * @param tenderId - Tender ID
-   * @returns Array of submissions
-   */
-  getSubmissionsByTenderId(tenderId: string): Promise<TenderSubmissionDTO[]>;
-
-  /**
-   * Get all submissions by user
-   * @param userId - User ID
-   * @returns Array of submissions
-   */
-  getSubmissionsByUserId(userId: string): Promise<TenderSubmissionDTO[]>;
-
-  /**
-   * Get submission count for a tender
-   * @param tenderId - Tender ID
-   * @returns Number of submissions
-   */
-  getSubmissionCountByTenderId(tenderId: string): Promise<number>;
-
-  /**
-   * Get submission statistics by tender
-   * @param tenderId - Tender ID
-   * @returns Array of status counts
-   */
-  getSubmissionStatsByTenderId(tenderId: string): Promise<{ status: string; count: number }[]>;
-
-  /**
-   * Get submission by secret code
-   * @param secretCode - Secret access code
-   * @returns Submission or null if not found
-   */
-  getTenderSubmissionBySecretCode(secretCode: string): Promise<TenderSubmissionDTO | null>;
-
-  /**
-   * Get submissions by tender and user (for duplicate checking)
-   * @param tenderId - Tender ID
-   * @param userId - User ID
-   * @returns Array of submissions (should be 0 or 1)
-   */
-  getSubmissionsByTenderIdAndUserId(tenderId: string, userId: string): Promise<TenderSubmissionDTO[]>;
+  findByTenderAndUser(tenderId: string, userId: string): Promise<Record<string, any> | null>;
+  findById(submissionId: string): Promise<Record<string, any>>;
+  findByUser(userId: string): Promise<Record<string, any>[]>;
+  listStatusesByTender(tenderId: string): Promise<string[]>;
+  insert(input: TenderSubmissionInsert): Promise<Record<string, any>>;
+  delete(submissionId: string): Promise<void>;
+  updateStatus(submissionId: string, status: TenderSubmissionStatus, reviewComment?: string): Promise<void>;
+  /** Archive le document et le relie à la soumission. */
+  attachDocument(input: TenderSubmissionDocumentInsert): Promise<void>;
+  findDocuments(submissionId: string): Promise<Array<Record<string, any>>>;
+  findActivityLogs(submissionId: string): Promise<TenderSubmissionActivityLog[]>;
 }

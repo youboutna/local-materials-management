@@ -1,7 +1,9 @@
-import { btpClient } from '@/integrations/supabase/schema-clients';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import { NotificationService } from './NotificationService';
 import { communicationService } from './CommunicationService';
 import OrganizationalHierarchyService from './OrganizationalHierarchyService';
+const btpDb = (): any => RepositoryFactory.getDataClientProvider().btp();
+
 
 // Destinataire technique des notifications système (traçabilité des actions).
 /** Action tracking goes to the user who executed it, never to a placeholder recipient. */
@@ -34,24 +36,24 @@ export const createBankGuaranteeAction = async (actionData: Omit<BankGuaranteeCo
     // Fetch real project data and related entities
     const [projectData, bankGuaranteeData, projectEmployees, projectSuppliers] = await Promise.all([
       // Get project details
-      btpClient.from('projects')
+      btpDb().from('projects')
         .select('*')
         .eq('id', actionData.projectId)
         .single(),
       
       // Get bank guarantee details
-      btpClient.from('bank_guarantees')
+      btpDb().from('bank_guarantees')
         .select('*')
         .eq('id', actionData.bankGuaranteeId)
         .single(),
       
       // Get project employees
-      btpClient.from('employees')
+      btpDb().from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
       
       // Get project suppliers/contractors
-      btpClient.from('suppliers')
+      btpDb().from('suppliers')
         .select('id, name, email, phone, contact_person')
         .eq('is_active', true)
     ]);
@@ -126,7 +128,7 @@ const executeBankGuaranteeTaskAssignment = async (action: BankGuaranteeControlAc
   if (action.assigneeId) {
     try {
       // Get assignee details
-      const { data: assignee } = await btpClient.from('employees')
+      const { data: assignee } = await btpDb().from('employees')
         .select('id, full_name, email')
         .eq('id', action.assigneeId)
         .single();
@@ -281,17 +283,17 @@ const executeBankGuaranteeCommunication = async (action: BankGuaranteeControlAct
     // Get real project stakeholders for communication
     const [projectEmployees, projectSuppliers, bankGuaranteeDetails] = await Promise.all([
       // Get project team members
-      btpClient.from('employees')
+      btpDb().from('employees')
         .select('id, full_name, email, phone, position, department')
         .eq('is_active', true),
       
       // Get project contractors/suppliers
-      btpClient.from('suppliers')
+      btpDb().from('suppliers')
         .select('id, name, email, phone, contact_person')
         .eq('is_active', true),
       
       // Get bank guarantee details with bank information
-      btpClient.from('bank_guarantees')
+      btpDb().from('bank_guarantees')
         .select('*')
         .eq('id', action.bankGuaranteeId)
         .single()
@@ -430,7 +432,7 @@ PROJET: ${action.metadata?.project?.title || action.projectId}
 
 export const getBankGuaranteeActions = async (bankGuaranteeId?: string): Promise<any[]> => {
   // Get action history from notifications table
-  const query = btpClient.from('notifications')
+  const query = btpDb().from('notifications')
     .select('*')
     .eq('type', 'system')
     .like('metadata->entityType', 'bank_guarantee');

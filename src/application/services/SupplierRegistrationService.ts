@@ -27,24 +27,21 @@ export interface SupplierRegistrationResult {
 
 export class SupplierRegistrationService {
   async register(input: SupplierRegistrationInput): Promise<SupplierRegistrationResult> {
-    const { supabase } = await import('@/integrations/supabase/client');
-
-    const { error } = await supabase.auth.signUp({
+    const { RepositoryFactory } = await import('@/infrastructure/RepositoryFactory');
+    const { error } = await RepositoryFactory.getAuthRepository().signUp({
       email: input.email.trim(),
       password: input.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
-        data: {
-          full_name: input.contactName,
-          phone: input.phone,
-          requested_role: PENDING_SUPPLIER_ROLE,
-          supplier_profile: {
-            company_name: input.companyName,
-            fiscal_id: input.fiscalId,
-            activity_type: input.activityType,
-            intervention_zones: input.interventionZones,
-            documents_note: input.documentsNote ?? null,
-          },
+      fullName: input.contactName,
+      phone: input.phone,
+      redirectTo: `${window.location.origin}/auth`,
+      metadata: {
+        requested_role: PENDING_SUPPLIER_ROLE,
+        supplier_profile: {
+          company_name: input.companyName,
+          fiscal_id: input.fiscalId,
+          activity_type: input.activityType,
+          intervention_zones: input.interventionZones,
+          documents_note: input.documentsNote ?? null,
         },
       },
     });

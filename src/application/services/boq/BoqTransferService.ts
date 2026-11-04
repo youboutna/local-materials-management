@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * BoqTransferService — exécute l'étape « suivante » du workflow d'un document BOQ.
  * Chaque contexte a une cible métier distincte :
@@ -11,7 +12,6 @@
  */
 import type { BoqStatus } from '@/domain/entities/boq/BoqLine';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import type { BoqRouteContext } from './BoqContextService';
 
 export interface BoqTransferTarget {
@@ -83,7 +83,7 @@ export const BoqTransferService = {
     const transferredAt = new Date().toISOString();
     await Promise.all(
       persistable.map((line) =>
-        boqRepository.update(line.id as string, {
+        RepositoryFactory.getBoqRepository().update(line.id as string, {
           source: line.source,
           status: target.status,
           ...(target.businessStatus ? { businessStatus: target.businessStatus } : {}),

@@ -13,7 +13,6 @@ import type { IPhaseRepository } from '@/domain/repositories/IPhaseRepository';
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { QuantityTakeoffWithDetails } from '@/dtos/types/quantityTakeoff';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 
 /** Marker stored in boq_lines.note to make the sync idempotent (one line per takeoff). */
@@ -205,7 +204,7 @@ export function getTakeoffToBoqService(): TakeoffToBoqService {
   if (!instance) {
     instance = new TakeoffToBoqService(
       RepositoryFactory.getQuantityTakeoffRepository(),
-      boqRepository,
+      RepositoryFactory.getBoqRepository(),
       RepositoryFactory.getPhaseMaterialRepository(),
       RepositoryFactory.getPhaseRepository(),
     );

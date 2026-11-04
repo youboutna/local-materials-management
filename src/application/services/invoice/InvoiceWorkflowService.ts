@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 /**
  * InvoiceWorkflowService — moteur des 5 transformations documentaires :
  *   DQE → Devis → Contrat → Décompte(%) → Facture finale
@@ -10,7 +11,6 @@
  */
 import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import {
   getInvoiceDocumentType,
   getNextBusinessStatus,
@@ -141,7 +141,7 @@ export const InvoiceWorkflowService = {
     const persistable = input.lines.filter((l) => !!l.id);
     await Promise.all(
       persistable.map((l) =>
-        boqRepository.update(l.id as string, {
+        RepositoryFactory.getBoqRepository().update(l.id as string, {
           source: l.source,
           documentType: def.code,
           businessStatus: target,
@@ -275,7 +275,7 @@ export const InvoiceWorkflowService = {
   async transform(input: InvoiceTransformInput): Promise<InvoiceTransformResult> {
     const source = input.lines?.length
       ? input.lines
-      : await boqRepository.list({
+      : await RepositoryFactory.getBoqRepository().list({
           source: input.targetSource ?? 'dqe',
           contextId: input.sourceContextId,
           projectId: input.projectId,
@@ -307,7 +307,7 @@ export const InvoiceWorkflowService = {
       currency: input.currency,
     });
 
-    const persisted = await boqRepository.bulkCreate(lines);
+    const persisted = await RepositoryFactory.getBoqRepository().bulkCreate(lines);
     const totals = FacturXTransformer.computeTotals(persisted.length ? persisted : lines);
     return {
       documentId,

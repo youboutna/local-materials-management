@@ -45,6 +45,10 @@ export interface RegisterData {
   phone?: string;
   nationalId?: string;
   role?: string;
+  /** URL de retour du lien de confirmation e-mail. */
+  redirectTo?: string;
+  /** Métadonnées complémentaires stockées sur le compte (jamais des privilèges). */
+  metadata?: Record<string, unknown>;
 }
 
 export interface OAuthSignInParams {

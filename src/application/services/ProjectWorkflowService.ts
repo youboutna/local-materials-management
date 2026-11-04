@@ -67,7 +67,6 @@ import {
   ComplianceDataDTO,
 } from '@/dtos/workflows/ProjectWorkflowDTOs';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
-import { boqRepository } from '@/infrastructure/adapters/supabase/SupabaseBoqRepository';
 import { AppError, ErrorCode } from '@/utils/errorHandling';
 import { addDays, format, parseISO } from 'date-fns';
 import { PROJECT_WORKFLOW_STEPS } from '@/config/referentials/projects/project-workflow-steps.referential';
@@ -507,7 +506,7 @@ export class ProjectWorkflowService {
         constructionStage: phase.constructionStage || '',
         milestones: this.milestoneService ? await this.milestoneService.getPhaseMilestones(projectId, phase.id).catch(() => []) : [],
         tasks: this.taskAssignmentService ? await this.taskAssignmentService.getByPhase(phase.id).catch(() => []) : [],
-        dqeLines: await boqRepository.list({ source: 'dqe', contextId: projectId, projectId, phaseId: phase.id }).catch(() => []),
+        dqeLines: await RepositoryFactory.getBoqRepository().list({ source: 'dqe', contextId: projectId, projectId, phaseId: phase.id }).catch(() => []),
       }))) as unknown as PhaseDTO[];
 
       return {
@@ -847,7 +846,7 @@ export class ProjectWorkflowService {
     }
 
     if (!dqeLines.length) return;
-    const existingLines = await boqRepository.list({ source: 'dqe', projectId });
+    const existingLines = await RepositoryFactory.getBoqRepository().list({ source: 'dqe', projectId });
     for (const line of dqeLines) {
       const phase = phases.find((candidate) =>
         candidate.id === line.phaseId ||
@@ -864,8 +863,8 @@ export class ProjectWorkflowService {
         (line.id && candidate.id === line.id) ||
         (candidate.code && candidate.code === line.code && candidate.phaseId === payload.phaseId)
       );
-      if (existingLine?.id) await boqRepository.update(existingLine.id, payload);
-      else await boqRepository.create(payload);
+      if (existingLine?.id) await RepositoryFactory.getBoqRepository().update(existingLine.id, payload);
+      else await RepositoryFactory.getBoqRepository().create(payload);
     }
   }
 
