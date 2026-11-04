@@ -11,7 +11,7 @@ import { UserAdminAdapter } from '@/infrastructure/adapters/supabase/UserAdminAd
 import type { UserAdminRepository } from '@/application/services/UserAdminService';
 import { getAuthorizationRequestRepository as resolveAuthorizationRequestRepository } from '@/infrastructure/adapters/supabase/AuthorizationRequestAdapter';
 import type { IAuthorizationRequestRepository } from '@/domain/repositories/IAuthorizationRequestRepository';
-import { LocalStorageAdapter } from '@/infrastructure/adapters/localStorage/LocalStorageAdapter';
+import { LocalStorageAdapter as LocalKeyValueStore } from '@/infrastructure/adapters/localStorage/LocalStorageAdapter';
 import { ProjectFileParserFactory } from '@/infrastructure/parsers/ProjectFileParserFactory';
 import type { IProjectFileParser } from '@/infrastructure/parsers/IProjectFileParser';
 /**
@@ -349,6 +349,8 @@ const lazyPorts: {
   controlActionContext?: IControlActionContextRepository;
   importReference?: IImportReferenceRepository;
   contract?: SupabaseContractAdapter;
+  adminBoundary?: IAdministrativeBoundaryRepository;
+  userAdmin?: UserAdminRepository;
 } = {};
 
 // ================================================================
@@ -1056,8 +1058,8 @@ export class RepositoryFactory {
     return resolveAuthorizationRequestRepository();
   }
 
-  static getLocalKeyValueStore(prefix?: string): LocalStorageAdapter {
-    return new LocalStorageAdapter(prefix);
+  static getLocalKeyValueStore(prefix?: string): LocalKeyValueStore {
+    return new LocalKeyValueStore(prefix);
   }
 
   static getProjectFileParser(file: File): IProjectFileParser {
