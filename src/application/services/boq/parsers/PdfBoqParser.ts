@@ -249,7 +249,7 @@ export class PdfBoqParser implements IDocumentParser {
       const amounts = cells.filter((c) => /\d[\d\s\u00A0.,]*\d/.test(c) && /\d{3}/.test(c)).length;
       return hasLabel && amounts >= 2;
     }).length;
-    if ((globalThis as Record<string, unknown>).__BOQ_DEBUG__) console.log('DBG', bandHeaderIdx, completeRows(wrappedAcc), completeRows(rowsAcc), wrappedAcc.length, rowsAcc.length);
+    if ((globalThis as Record<string, unknown>).__BOQ_DEBUG__) console.log('DBG', JSON.stringify(rowsAcc.slice(16,26)), bandHeaderIdx, completeRows(wrappedAcc), completeRows(rowsAcc), wrappedAcc.length, rowsAcc.length);
     if (wrappedAcc.length && completeRows(wrappedAcc) > completeRows(rowsAcc)) {
 
 
