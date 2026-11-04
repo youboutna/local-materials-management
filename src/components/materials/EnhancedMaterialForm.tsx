@@ -575,7 +575,6 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    console.log('image type', file.type);
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner un fichier image valide');
@@ -589,8 +588,16 @@ const EnhancedMaterialForm = forwardRef<FormRef, EnhancedMaterialFormProps>(({
     }
 
     try {
-      // For now, just show a message that upload is disabled
-      toast.info('Upload functionality temporarily disabled');
+      const { getStorageService } = await import('@/application/services/StorageService');
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const result = await getStorageService().uploadFile({
+        bucket: 'documents',
+        path: `materials/${crypto.randomUUID()}-${safeName}`,
+        file,
+      });
+      // Clé d'objet conservée (jamais l'URL publique générée).
+      handleChange('image', result.path);
+      toast.success('Image téléchargée');
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Erreur lors du téléchargement de l\'image');
