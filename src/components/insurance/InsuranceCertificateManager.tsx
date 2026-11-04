@@ -81,10 +81,25 @@ const InsuranceCertificateManager = () => {
 
   const handleSendAlerts = async () => {
     try {
-      const result = { notificationsSent: alerts.length }; // Simplified: alerts already loaded
+      const { CommunicationService } = await import('@/application/services/CommunicationService');
+      let sent = 0;
+      for (const alert of alerts) {
+        const recipientId = (alert as unknown as { contractorId?: string; recipientId?: string }).recipientId
+          ?? (alert as unknown as { contractorId?: string }).contractorId;
+        if (!recipientId) continue;
+        CommunicationService.requireSuccess(await CommunicationService.sendNotification({
+          recipientId,
+          title: "Alerte assurance",
+          message: (alert as unknown as { message?: string }).message ?? '',
+          type: 'warning',
+          priority: 'high',
+        }));
+        sent++;
+      }
       toast({
         title: "Alertes envoyées",
-        description: `${result.notificationsSent} notifications envoyées avec succès`
+        description: `${sent} / ${alerts.length} notifications envoyées`,
+        variant: sent < alerts.length ? 'destructive' : undefined,
       });
     } catch (error) {
       console.error('Error sending alerts:', error);

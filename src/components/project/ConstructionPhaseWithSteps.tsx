@@ -46,7 +46,7 @@ export function ConstructionPhaseWithSteps({
 
   const handleCreatePhasesFromReferential = async (refCode: ReferentialType) => {
     try {
-      toast({ title: "Succès", description: `Phases créées depuis le référentiel ${refCode}` });
+      await constructionPhaseHook.createPhaseFromTemplate(refCode as never);
     } catch (error) {
       toast({ title: "Erreur", description: t('auto.constructionphasewithsteps.echec_de_creation_des_phases'), variant: 'destructive' });
     }
@@ -55,6 +55,7 @@ export function ConstructionPhaseWithSteps({
   const handleUpdateStepProgress = async (stepId: string, progress: number, status?: string) => {
     if (!selectedPhaseId) return;
     try {
+      await constructionPhaseHook.updateConstructionPhase(selectedPhaseId, { progress, ...(status ? { status } : {}) } as never);
       toast({ title: "Succès", description: `Progression mise à jour à ${progress}%` });
     } catch (error) {
       toast({ title: "Erreur", description: t('auto.constructionphasewithsteps.echec_de_mise_a_jour'), variant: 'destructive' });

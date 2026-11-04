@@ -18,18 +18,21 @@ export default function KeycloakConfigurationTab() {
   const { toast } = useToast();
   const [isDeploying, setIsDeploying] = useState(false);
 
-  const handleDeploy = (environment: string) => {
+  // Le déploiement Keycloak se fait côté serveur (docker compose) ; l'écran ne
+  // simule plus de déploiement : il copie la configuration à exécuter.
+  const handleDeploy = async (environment: string) => {
     setIsDeploying(true);
-
-    // Simulate deployment process
-    setTimeout(() => {
-      setIsDeploying(false);
-
+    try {
+      await navigator.clipboard.writeText(dockerComposeContent);
       toast({
-        title: t('auto.keycloakconfigurationtab.deploiement_reussi'),
-        description: `Keycloak a été déployé avec succès en ${environment === 'development' ? 'développement' : 'production'}.`,
+        title: 'Configuration copiée',
+        description: `Exécutez « docker compose up -d » sur le serveur ${environment === 'development' ? 'de développement' : 'de production'} : aucun déploiement n'est lancé depuis le navigateur.`,
       });
-    }, 2000);
+    } catch {
+      toast({ title: 'Copie impossible', description: 'Copiez la configuration manuellement.', variant: 'destructive' });
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   const dockerComposeContent = `version: '3.8'
@@ -225,7 +228,7 @@ jobs:
               disabled={isDeploying}
               className="bg-adrar-600 hover:bg-adrar-700"
             >
-              {isDeploying ? 'Déploiement...' : 'Déployer'}
+              {isDeploying ? 'Copie…' : 'Copier la configuration'}
             </Button>
           </CardFooter>
         </Card>
@@ -365,7 +368,7 @@ jobs:
               disabled={isDeploying}
               className="bg-adrar-600 hover:bg-adrar-700"
             >
-              {isDeploying ? 'Déploiement...' : 'Déployer'}
+              {isDeploying ? 'Copie…' : 'Copier la configuration'}
             </Button>
           </CardFooter>
         </Card>

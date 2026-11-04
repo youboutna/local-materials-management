@@ -52,6 +52,8 @@ import { T } from '@/components/i18n/T';
 
 import { getEntityLabel } from '@/utils/entityLabels';
 import { useProjectsHex } from '@/hooks/hexagonal/useProjectsHex';
+import { useInspectionsHex } from '@/hooks/hexagonal/useInspectionsHex';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // ────────────────────────────────────────────────────────────
@@ -138,6 +140,8 @@ const RoleBasedInspectionMonitoring = () => {
   ]);
 
   // Use hexagonal hook
+  const { updateInspectionAsync } = useInspectionsHex();
+  const queryClient = useQueryClient();
   const inspectionData = useInspectionMonitoringHex({
     filterByInspector: isInspector,
     inspectorName: isInspector ? user?.email : undefined,
@@ -272,10 +276,17 @@ const RoleBasedInspectionMonitoring = () => {
     if (!editingInspection) return;
 
     try {
-      console.log('Edit inspection:', {
+      await updateInspectionAsync({
         id: editingInspection.id,
-        data: editFormData,
+        data: {
+          inspector: editFormData.inspector || undefined,
+          date: editFormData.date || undefined,
+          status: (editFormData.status || undefined) as never,
+          progress: editFormData.progress_at_inspection,
+          comments: editFormData.comments,
+        },
       });
+      await queryClient.invalidateQueries({ queryKey: ['inspection-monitoring'] });
       toast({
         title: 'Succès',
         description: 'Inspection mise à jour',
