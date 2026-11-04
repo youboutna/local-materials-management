@@ -184,7 +184,7 @@ describe('validateProviders — rejects legacy / dead-path aliases', () => {
   });
 
   it('flags legacy taxonomy values as invalid', () => {
-    const errors = validateProviders({ auth: 'auth0', data: 'mysql', storage: 'azure' });
+    const errors = validateProviders({ auth: 'auth0', data: 'mysql', storage: 'dropbox' });
     expect(errors).toHaveLength(3);
     expect(errors.join('\n')).toMatch(/VITE_AUTH_PROVIDER/);
     expect(errors.join('\n')).toMatch(/VITE_DATA_PROVIDER/);
