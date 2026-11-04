@@ -23,7 +23,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ArrowUpDown, ChevronLeft, ChevronRight, Download, Eye, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { BoqRevisionService, REVISABLE_STATUSES } from '@/application/services/boq/BoqRevisionService';
+import { ArrowUpDown, ChevronLeft, ChevronRight, CopyPlus, Download, Eye, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 import { T } from '@/components/i18n/T';
@@ -194,6 +195,37 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
   };
 
   const handleDelete = (doc: BoqDocumentSummary) => setPendingDelete([doc]);
+
+  const [revisingId, setRevisingId] = useState<string | null>(null);
+  const handleRevision = async (doc: BoqDocumentSummary) => {
+    setRevisingId(doc.documentId);
+    try {
+      let lines = rawLines.filter((l) => (l.documentId ?? l.contextId) === doc.documentId);
+      if (!lines.length) lines = await RepositoryFactory.getBoqRepository().list({ source, contextId, projectId, documentId: doc.documentId });
+      const newId = crypto.randomUUID();
+      await BoqRevisionService.createRevision(lines, doc.documentId, newId);
+      await invalidate();
+      toast({ title: t('dqe.revision.created') });
+      onOpen(newId);
+    } catch (e) {
+      toast({ title: t('dqe.revision.failed'), description: String(e instanceof Error ? e.message : e), variant: 'destructive' });
+    } finally {
+      setRevisingId(null);
+    }
+  };
+  const revisionButton = (d: BoqDocumentSummary, variant: 'ghost' | 'outline') =>
+    REVISABLE_STATUSES.has(String(d.status)) ? (
+      <Button
+        size={variant === 'ghost' ? 'icon' : 'sm'}
+        variant={variant}
+        disabled={revisingId !== null}
+        onClick={() => handleRevision(d)}
+        title={t('dqe.revision.create')}
+        aria-label={t('dqe.revision.create')}
+      >
+        <CopyPlus className="h-4 w-4" />
+      </Button>
+    ) : null;
 
   const selectedDocs = useMemo(
     () => filtered.filter((d) => selected.includes(d.documentId) && !d.readOnly),
@@ -388,6 +420,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                           <Pencil className="h-4 w-4" />
                         </Button>
                       )}
+                      {revisionButton(d, 'ghost')}
                       <Button
                         size="icon"
                         variant="ghost"
@@ -442,6 +475,7 @@ export const BoqDocumentList: React.FC<Props> = ({ source, contextId, projectId,
                     <Pencil className="h-4 w-4" />
                   </Button>
                 )}
+                {revisionButton(d, 'outline')}
                 <Button
                   size="sm"
                   variant="outline"

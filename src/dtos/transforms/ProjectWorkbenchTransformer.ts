@@ -1,3 +1,4 @@
+import { INFRA_DEFAULT_MAP_CENTER } from '@/config/referentials/projects/project-workbench.referential';
 import type { ProjectOperationDTO, SaveProjectOperationDTO, SaveInfrastructureDTO, InfrastructureAssetDTO, WorkbenchProjectDTO, AssetTypeDTO, InfraDomainDTO, InfraStructureDTO, SaveInfraStructureDTO, ImportFeatureItemDTO, ImportResultDTO, GeometryKind, InfraRealization } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { Geometry } from 'geojson';
 type Row = Record<string, unknown>;
@@ -12,6 +13,16 @@ const parseGeometry = (text: string): Geometry => {
   return candidate;
 };
 export class ProjectWorkbenchTransformer {
+  /** Centre de carte : zone d'intervention > coordonnées du projet > défaut référentiel. */
+  static mapCenter(project: { interventionZones?: { coordinates?: { lat: number; lng: number }[] }[]; latitude?: number; longitude?: number; coordinates?: { latitude: number; longitude: number } }): { center: [number, number]; zoom: number } {
+    const first = project.interventionZones?.[0]?.coordinates?.[0];
+    if (first && Number.isFinite(first.lat) && Number.isFinite(first.lng)) return { center: [first.lat, first.lng], zoom: 13 };
+    const lat = project.latitude ?? project.coordinates?.latitude;
+    const lng = project.longitude ?? project.coordinates?.longitude;
+    if (Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0)) return { center: [lat as number, lng as number], zoom: 12 };
+    return { center: [INFRA_DEFAULT_MAP_CENTER.lat, INFRA_DEFAULT_MAP_CENTER.lng], zoom: INFRA_DEFAULT_MAP_CENTER.zoom };
+  }
+
   static project(row: Row): WorkbenchProjectDTO { return { id: String(row.id), title: String(row.title), reference: optional(row.reference), canManage: row.can_manage === true }; }
   static operation(row: Row): ProjectOperationDTO { return { id: String(row.id), projectId: String(row.project_id), phaseId: optional(row.phase_id), taskId: optional(row.task_id), kind: row.kind as ProjectOperationDTO['kind'], occurredOn: String(row.occurred_on), label: String(row.label), resourceFamily: row.resource_family as ProjectOperationDTO['resourceFamily'], quantity: Number(row.quantity), unit: String(row.unit), amount: Number(row.amount), currency: String(row.currency), sourceReference: optional(row.source_reference), notes: optional(row.notes), status: (optional(row.status) || 'draft') as ProjectOperationDTO['status'], contextCode: optional(row.context_code) || 'unreconciled', sourceLineId: optional(row.source_line_id), decompteId: optional(row.decompte_id), resourceId: optional(row.resource_id), perspective: (optional(row.perspective) || 'owner') as ProjectOperationDTO['perspective'], requestKey: optional(row.request_key) }; }
   static toOperationRow(input: SaveProjectOperationDTO): Row { return { project_id: input.projectId, phase_id: input.phaseId || null, task_id: input.taskId || null, kind: input.kind, occurred_on: input.occurredOn, label: input.label.trim(), resource_family: input.resourceFamily || null, quantity: input.quantity, unit: input.unit, amount: input.amount, currency: input.currency, source_reference: input.sourceReference || null, notes: input.notes || null, status: input.status || 'draft', context_code: input.contextCode || 'unreconciled', source_line_id: input.sourceLineId || null, decompte_id: input.decompteId || null, resource_id: input.resourceId || null, perspective: input.perspective || 'owner', request_key: input.requestKey || null }; }

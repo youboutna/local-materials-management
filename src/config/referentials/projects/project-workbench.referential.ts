@@ -33,3 +33,6 @@ export const INFRA_VOLTAGE_TIERS = [1, 2, 3, 4] as const; // 1=BT, 2=MT, 3=HT, 4
 
 /** Méthodes d'installation (référentiel ouvert) */
 export const INFRA_INSTALLATION_METHODS = ['overhead', 'underground', 'submarine', 'aerial', 'buried'] as const;
+
+/** Centre de carte par défaut quand le projet n'a ni zone ni coordonnées (paramétrable). */
+export const INFRA_DEFAULT_MAP_CENTER = { lat: 18.0735, lng: -15.9582, zoom: 6 } as const;
