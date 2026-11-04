@@ -11,7 +11,9 @@
 - [x] Demande de paiement : titulaire et contact saisis et obligatoires ; moyen de paiement laissé vide jusqu'au règlement.
 - [x] Anciens utilitaires non utilisés supprimés (notificationToTaskMapper, lib/auth, lib/storage).
 - [x] Codes bruts (statut, unité, priorité…) affichés via CodeLabel et les référentiels i18n.
-- [ ] 7 tests de sélection de fournisseur : la priorité « variable VITE_*_PROVIDER > profil de déploiement » documentée n'est pas celle du code (profil prioritaire) ; décision utilisateur requise.
+- [x] Priorité fournisseurs (décision utilisateur 04/11) : variable VITE_<SERVICE>_PROVIDER > profil enregistré > défaut du mode, par service (auth, données, stockage), chaîne vide = non définie. Cause racine des 7 échecs : lecture indirecte de import.meta.env non suivie par l'environnement de test. 7 cas enregistrés : env local + profil supabase → local ; env supabase + profil local → supabase ; env vide + profil keycloak → keycloak ; env vide + sans profil → défaut ; local-bypass → trois « local » signalés « imposés par le déploiement » ; mixte auth=env/données=profil ; variable vide = non définie. Écran Profil de déploiement : bandeau « fournisseurs imposés par le déploiement » avec la variable active par service.
+- [x] Tests 04/11 21:56 UTC : 506/513 → 520/520 ; typecheck propre ; eslint propre sur les fichiers touchés. Recette connectée non effectuée (pas de session injectable contre Supabase externe) ; écran non validé visuellement.
+- [~] local-bypass est le mode de validation disponible ici ; recette Supabase connectée toujours non effectuée.
 
 ### Correctifs P0 « fausses implémentations » — 04/11/2026
 - [x] Actions unifiées : approbation de paiement réelle, erreurs non avalées, auteur réel, routage par entité.
@@ -22,7 +24,7 @@
 - [~] Lot C (04/11, suite) : en-tête de page, cellules centrées et sous-totaux traités ; DQE client de test : 98 lignes, total lu à ~95 % du récapitulatif des sections présentes, 21 écarts P.U. tracés. Plans (masse, toiture, menuiseries) non exploités.
 - [~] Lot C : en-têtes de tableau PDF répartis sur plusieurs lignes reconnus génériquement (titres de groupe ignorés). Essai local sur un DQE client : 3 → 121 lignes, section second œuvre exacte, écarts quantité × P.U. tracés. Restent : libellés repliés en électricité (lignes de suite comptées à part, un montant aberrant), sous-totaux de chapitre lus comme lignes, plans (masse, toiture, menuiseries) non exploités.
 - Données client jointes : tests locaux uniquement, jamais versionnées ni envoyées à un service externe.
-- [~] Tests 04/11 : 506/513 passent ; 7 échecs liés à la priorité fournisseur ci-dessus.
+- [~] Tests 04/11 : 506/513 passent ; 7 échecs liés à la priorité fournisseur ci-dessus (historique, résolu ci-dessus).
 
 ### Import PTBA illustratif — 31/10/2026
 - Le parcours d’import projet reconnaît les tableaux PTBA Excel et ouvre une revue configurable : toutes les feuilles, codes, libellés, quantités, unités, montants documentaires, responsables et associés. Échelle monétaire et budget projet sont explicitement confirmés ; aucun cumul automatique de sous-totaux.
