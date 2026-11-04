@@ -45,7 +45,7 @@ describe('Dépassement DQE et erreurs typées', () => {
     expect([...ids]).toEqual(['b']);
   });
   it('refuse un montant négatif avec une erreur sur le champ montant', () => {
-    expect(ProjectWorkbenchService.validateOperation({ ...form, amount: -5 })).toBe('amount');
+    expect(ProjectWorkbenchService.validateOperation({ ...form, unit: 'ml', amount: -5 })).toBe('amount');
   });
   it('accepte une opération complète', () => {
     expect(ProjectWorkbenchService.validateOperation({ ...form, unit: 'ml' })).toBeNull();
