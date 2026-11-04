@@ -6759,5 +6759,8 @@
   "workbench.invalid_quantity": "يجب أن تكون الكمية صفراً أو موجبة.",
   "workbench.invalid_unit": "الوحدة مطلوبة.",
   "workbench.invalid_amount": "يجب أن يكون المبلغ صفراً أو موجباً.",
-  "workbench.invalid_currency": "العملة مطلوبة."
+  "workbench.invalid_currency": "العملة مطلوبة.",
+  "dqe.revision.create": "إنشاء مراجعة",
+  "dqe.revision.created": "تم إنشاء مسودة المراجعة",
+  "dqe.revision.failed": "فشل إنشاء المراجعة"
 }

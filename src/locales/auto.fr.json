@@ -6757,5 +6757,8 @@
   "workbench.invalid_quantity": "La quantité doit être un nombre positif ou nul.",
   "workbench.invalid_unit": "L'unité est obligatoire.",
   "workbench.invalid_amount": "Le montant doit être un nombre positif ou nul.",
-  "workbench.invalid_currency": "La devise est obligatoire."
+  "workbench.invalid_currency": "La devise est obligatoire.",
+  "dqe.revision.create": "Créer une révision",
+  "dqe.revision.created": "Révision brouillon créée",
+  "dqe.revision.failed": "Création de la révision échouée"
 }

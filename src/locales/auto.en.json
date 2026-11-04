@@ -6760,5 +6760,8 @@
   "workbench.invalid_quantity": "Quantity must be zero or positive.",
   "workbench.invalid_unit": "Unit is required.",
   "workbench.invalid_amount": "Amount must be zero or positive.",
-  "workbench.invalid_currency": "Currency is required."
+  "workbench.invalid_currency": "Currency is required.",
+  "dqe.revision.create": "Create revision",
+  "dqe.revision.created": "Draft revision created",
+  "dqe.revision.failed": "Revision creation failed"
 }
