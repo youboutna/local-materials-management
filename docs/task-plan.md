@@ -2,6 +2,15 @@
 
 ## Plan de Migration et d'Implémentation
 
+### Correctifs P0 « fausses implémentations » — 04/11/2026
+- [x] Actions unifiées : approbation de paiement réelle, erreurs non avalées, auteur réel, routage par entité.
+- [x] Services applicatifs : 35 erreurs masquées en `[]`/`null` relancées ; géocodage honnête.
+- [x] Pages de test et import de projets codés en dur supprimés.
+- [ ] ~145 erreurs masquées restantes hors services, ~300 méthodes à journaux seuls (voir `docs/AUDIT_IMPLEMENTATION.md`).
+- [x] Lot A (communications), Lot B (calcul DQE par paquets branché à l'import), Lot D (import PTBA + modèle).
+- [ ] Lot C (lecture des plans PDF) : bloqué, le PDF « DQE NDB » n'est pas présent dans les fichiers transmis.
+- [ ] Tests : à relancer après cette passe (demande utilisateur : tests ensuite).
+
 ### Import PTBA illustratif — 31/10/2026
 - Le parcours d’import projet reconnaît les tableaux PTBA Excel et ouvre une revue configurable : toutes les feuilles, codes, libellés, quantités, unités, montants documentaires, responsables et associés. Échelle monétaire et budget projet sont explicitement confirmés ; aucun cumul automatique de sous-totaux.
 - Lecture Word complète via Mammoth, sans limite de 50 pages. Sources originales archivées via DocumentService ; valeurs/formules/formatages/fusions/financements/périodes et sections non interprétées conservés dans les données personnalisées de la première phase. Provenance de chaque activité dans ses métadonnées ; description projet lisible, pas de JSON visible.
