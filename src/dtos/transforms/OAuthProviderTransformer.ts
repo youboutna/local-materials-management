@@ -15,7 +15,7 @@ import {
   OAuthProviderResponse,
   OAuthSessionDTO
 } from "@/dtos/entities/OAuthProviderDTO";
-import { Json } from "@/integrations/supabase/types";
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 // =============================================================================
 // TRANSFORMER: OAuth Provider
