@@ -128,7 +128,7 @@ function headerBandsFromItems(rows: PdfItem[][]): Cell[] {
     return cells;
   });
   const candidates = perRow.flatMap((cells, r) => cells.filter((cell) => !perRow.some((other, o) => o !== r
-    && other.filter((c) => centerOf(c) >= cell.x0 && centerOf(c) <= cell.x1).length >= 2)));
+    && other.filter((c) => c.x1 > cell.x0 && c.x0 < cell.x1).length >= 2)));
   const merged: Cell[] = [];
   for (const cell of candidates.sort((a, b) => a.x0 - b.x0)) {
     const last = merged[merged.length - 1];
@@ -261,7 +261,6 @@ export class PdfBoqParser implements IDocumentParser {
         const bandsRow = bestGroup.reduce((a, b) => (cellRows[b].length > cellRows[a].length ? b : a), bestGroup[0]);
         const unionBands = headerBandsFromItems(bestGroup.map((r) => itemRows[r] ?? []));
         const bands = unionBands.length > cellRows[bandsRow].length ? unionBands : cellRows[bandsRow];
-        if ((globalThis as Record<string, unknown>).__BOQ_DEBUG__) console.log('BANDS', JSON.stringify(bestGroup), JSON.stringify(unionBands), JSON.stringify(bestGroup.map((r) => (itemRows[r] ?? []).map((i) => [i.str, Math.round(i.transform[4]), Math.round(i.width ?? 0)]))));
         mergedHeader = bestGroup
           .map((r) => alignItemsToBands(itemRows[r] ?? [], bands))
           .reduce((acc, row) => row.map((cell, i) => `${acc[i] ?? ''} ${cell}`.trim()), Array.from({ length: bands.length }, () => ''));
