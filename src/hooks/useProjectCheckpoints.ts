@@ -12,8 +12,9 @@ import { useMemo } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 
-import { btpClient as supabase } from '@/integrations/supabase/schema-clients';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+
+const sources = () => RepositoryFactory.getProjectCheckpointSourceRepository();
 
 import type { AutomaticDecompteDTO, CheckpointVerificationResultDTO, MilestoneDTO } from '@/dtos/entities';
 
@@ -196,19 +197,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       if (!projectId) return [];
 
-      const { data, error } = await supabase
-
-        .from('project_phases')
-
-        .select('*')
-
-        .eq('project_id', projectId)
-
-        .order('created_at');
-
-      if (error) throw error;
-
-      return data || [];
+      return sources().findPhases(projectId);
 
     },
 
@@ -230,19 +219,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       if (!projectId) return [];
 
-      const { data, error } = await supabase
-
-        .from('inspections')
-
-        .select('*')
-
-        .eq('project_id', projectId)
-
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-
-      return data || [];
+      return sources().findInspections(projectId);
 
     },
 
@@ -264,17 +241,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       if (!projectId) return [];
 
-      const { data, error } = await supabase
-
-        .from('documents')
-
-        .select('*')
-
-        .eq('project_id', projectId);
-
-      if (error) throw error;
-
-      return data || [];
+      return sources().findDocuments(projectId);
 
     },
 
@@ -296,19 +263,7 @@ export function useProjectCheckpoints(projectId: string | undefined): ProjectChe
 
       if (!projectId) return [];
 
-      const { data, error } = await supabase
-
-        .from('payments')
-
-        .select('*')
-
-        .eq('project_id', projectId)
-
-        .order('payment_date', { ascending: false });
-
-      if (error) throw error;
-
-      return data || [];
+      return sources().findPayments(projectId);
 
     },
 
