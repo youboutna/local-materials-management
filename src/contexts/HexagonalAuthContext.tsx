@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 // src/contexts/HexagonalAuthContext.tsx
 
 import { getAuthManager, type AuthManagerConfig } from '@/application/services/AuthManager';
@@ -326,14 +327,7 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       switch (config.auth.provider) {
         case 'supabase': {
-          const { supabase } = await import('@/integrations/supabase/client');
-          const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: provider as 'github' | 'google' | 'gitlab' | 'azure',
-            options: { redirectTo: effectiveRedirect, skipBrowserRedirect: true },
-          });
-          if (error) throw error;
-          if (!data?.url) throw new Error(`URL OAuth introuvable pour ${provider}`);
-          authUrl = data.url;
+          authUrl = await RepositoryFactory.getHostedOAuthUrl(provider, effectiveRedirect);
           break;
         }
         case 'keycloak':

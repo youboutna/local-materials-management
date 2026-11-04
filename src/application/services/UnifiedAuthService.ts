@@ -331,8 +331,7 @@ export class UnifiedAuthService {
     user: UnifiedAuthUser | null;
     session: UnifiedAuthSession | null;
   }> {
-    const { LocalAuthAdapter } = await import('@/infrastructure/adapters/local/LocalAuthAdapter');
-    const local = new LocalAuthAdapter();
+    const local = RepositoryFactory.createAuthAdapterFor('local');
     const result = await local.signIn(credentials);
 
     if (result.error || !result.session) {

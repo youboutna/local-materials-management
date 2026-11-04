@@ -1097,4 +1097,42 @@ export class RepositoryFactory {
     }
     return new SupabaseAuthAdapterForManager();
   }
+
+  // ---------- Chargements à la demande (gardent les dépendances lourdes hors du bundle initial) ----------
+  static async getTechnicalPlanReader() {
+    const { PdfTechnicalPlanReader } = await import('@/infrastructure/adapters/PdfTechnicalPlanReader');
+    return new PdfTechnicalPlanReader();
+  }
+
+  static async getDefaultCommunicationProviders() {
+    const m = await import('@/infrastructure/adapters/communication/EdgeFunctionCommunicationAdapters');
+    return m.createDefaultCommunicationProviders();
+  }
+
+  static async getNotificationGateway() {
+    const { notificationGatewayAdapter } = await import('@/infrastructure/adapters/supabase/NotificationGatewayAdapter');
+    return notificationGatewayAdapter;
+  }
+
+  static async getBoqRepositoryLazy(): Promise<IBoqRepository> {
+    const { boqRepository } = await import('@/infrastructure/adapters/supabase/SupabaseBoqRepository');
+    return boqRepository;
+  }
+
+  static async getPlanningWorkbookReader() {
+    const { PlanningWorkbookReader } = await import('@/infrastructure/parsers/PlanningWorkbookReader');
+    return PlanningWorkbookReader;
+  }
+
+  /** URL d'autorisation OAuth du fournisseur hébergé (Supabase). */
+  static async getHostedOAuthUrl(provider: string, redirectTo: string): Promise<string> {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: provider as 'github' | 'google' | 'gitlab' | 'azure',
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error) throw error;
+    if (!data?.url) throw new Error(`URL OAuth introuvable pour ${provider}`);
+    return data.url;
+  }
 }

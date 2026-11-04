@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 // src/application/services/CommunicationService.ts
 /**
  * Communication Service - Hexagonal Architecture
@@ -96,8 +97,7 @@ export class CommunicationService {
   private static async provider<K extends keyof CommunicationProviders>(key: K): Promise<CommunicationProviders[K]> {
     const injected = injectedProviders[key];
     if (injected) return injected as CommunicationProviders[K];
-    defaultProviders ??= import('@/infrastructure/adapters/communication/EdgeFunctionCommunicationAdapters')
-      .then(m => m.createDefaultCommunicationProviders());
+    defaultProviders ??= RepositoryFactory.getDefaultCommunicationProviders();
     return (await defaultProviders)[key];
   }
 

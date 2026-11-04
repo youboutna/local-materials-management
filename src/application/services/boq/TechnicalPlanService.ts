@@ -1,3 +1,4 @@
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 import type { ITechnicalPlanReader } from '@/domain/repositories/ITechnicalPlanReader';
 import type { TechnicalPlanDTO, TechnicalPlanElementDTO, TechnicalPlanPageDTO } from '@/dtos/boq/TechnicalPlanDTO';
 import type { MeterInputDTO } from '@/dtos/boq/MeterInputDTO';
@@ -19,7 +20,7 @@ export class TechnicalPlanService {
     const sha256 = Array.from(new Uint8Array(hash), (value) => value.toString(16).padStart(2, '0')).join('');
     const cached = this.cache.get(sha256);
     if (cached) return structuredClone({ ...cached, fileName: file.name });
-    const reader = this.reader ?? new (await import('@/infrastructure/adapters/PdfTechnicalPlanReader')).PdfTechnicalPlanReader();
+    const reader = this.reader ?? await RepositoryFactory.getTechnicalPlanReader();
     const result = TechnicalPlanService.extract(await reader.read(file), file.name, sha256);
     this.cache.set(sha256, structuredClone(result));
     return result;
