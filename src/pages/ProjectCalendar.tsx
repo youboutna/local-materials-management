@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { CodeLabel } from '@/components/common/CodeLabel';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -9,7 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useWorkbenchProjects, useProjectWorkbench, useWorkbenchOperations, useWorkbenchCalendarActions } from '@/hooks/hexagonal/useProjectWorkbenchHex';
+import { useWorkbenchProjects, useProjectWorkbench, useWorkbenchOperations, useWorkbenchCalendarActions, useWorkbenchFinance } from '@/hooks/hexagonal/useProjectWorkbenchHex';
 import { ProjectWorkbenchService } from '@/application/services/ProjectWorkbenchService';
 import { WORKBENCH_VIEWS } from '@/config/referentials/projects/project-workbench.referential';
 import type { WorkbenchView, CalendarPeriod, ProjectOperationDTO } from '@/dtos/entities/ProjectWorkbenchDTO';

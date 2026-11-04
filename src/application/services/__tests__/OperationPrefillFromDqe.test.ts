@@ -36,3 +36,18 @@ describe('Quantité DQE restante (consommations et dépenses)', () => {
     expect(ProjectWorkbenchService.remainingLineQuantity(undefined, [], 'expense')).toBeNull();
   });
 });
+
+describe('Dépassement DQE et erreurs typées', () => {
+  const dqe = { id: 'l1', designation: 'x', unit: 'ml', quantity: 100 } as BoqLineDTO;
+  const op = (p: Record<string, unknown>) => ({ id: 'o', projectId: 'p', kind: 'expense', occurredOn: '2026-01-01', label: 'x', quantity: 0, unit: 'ml', amount: 0, currency: 'MRU', sourceLineId: 'l1', ...p }) as never;
+  it('marque seulement l’opération qui fait dépasser la ligne', () => {
+    const ids = ProjectWorkbenchService.overrunOperationIds([dqe], [op({ id: 'a', quantity: 60, occurredOn: '2026-01-01' }), op({ id: 'b', quantity: 50, occurredOn: '2026-01-02' })]);
+    expect([...ids]).toEqual(['b']);
+  });
+  it('refuse un montant négatif avec une erreur sur le champ montant', () => {
+    expect(ProjectWorkbenchService.validateOperation({ ...form, amount: -5 })).toBe('amount');
+  });
+  it('accepte une opération complète', () => {
+    expect(ProjectWorkbenchService.validateOperation({ ...form, unit: 'ml' })).toBeNull();
+  });
+});
