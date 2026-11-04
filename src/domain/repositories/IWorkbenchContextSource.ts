@@ -5,7 +5,8 @@
  * fournir ces mêmes données via ce port, choisi par RepositoryFactory.
  */
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import type { BoqLineDTO, BoqSource } from '@/dtos/boq/BoqLineDTO';
+import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
+import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { DecomptePaymentDTO, DecompteRecordDTO } from '@/dtos/entities/DecompteRecordDTO';
 import type { ReferentialItemDTO } from '@/dtos/entities/ReferentialItemDTO';
 
