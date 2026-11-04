@@ -1,17 +1,20 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { useUserCreate, useUserUpdate, useUserToggleStatus } from '@/hooks/hexagonal';
-import { useRoleManagement } from '@/hooks/useUserRoles';
-import RoleBadge, { RoleType } from '@/components/RoleBadge';
+import { useAuth } from '@/hooks/hexagonal/useAuth';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { T } from '@/components/i18n/T';
+import { useUserAdministrationHex } from '@/hooks/hexagonal/useUserAdministrationHex';
+import {
+  ROLES_RESPONSIBILITIES,
+  getRoleLabel,
+} from '@/config/referentials/auth/roles-responsibilities.referential';
+import { MIN_PASSWORD_LENGTH, UserAdministrationError } from '@/application/services/UserAdministrationService';
+import type { ConfirmationChannel } from '@/domain/repositories/IUserAdministrationGateway';
 
 interface UserProfile {
   id: string;
@@ -32,390 +35,185 @@ interface UserManagementDialogProps {
   mode: 'create' | 'edit';
 }
 
-const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
-  user,
-  isOpen,
-  onClose,
-  onUpdate,
-  mode
-}) => {
-  const { toast } = useToast();
-  const { assignRole, removeRole } = useRoleManagement();
-  const { t } = useLanguage();
-  const createUserMutation = useUserCreate();
-  const updateUserMutation = useUserUpdate();
-  const toggleStatusMutation = useUserToggleStatus();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    full_name: user?.full_name || '',
-    phone: user?.phone || '',
-    national_id: user?.national_id || '',
-    email: user?.email || '',
-    password: '',
-    new_password: '',
-    confirm_password: '',
-    confirmPassword: '',
-    is_active: user?.is_active ?? true
-  });
-  const [selectedRole, setSelectedRole] = useState<RoleType>('viewer');
+const ERROR_FALLBACKS: Record<string, string> = {
+  INVALID_EMAIL: 'Adresse e-mail invalide.',
+  FULL_NAME_REQUIRED: 'Le nom complet est obligatoire.',
+  INVALID_PHONE: 'Numéro au format international requis (ex. +222 22 33 44 55).',
+  PHONE_REQUIRED_FOR_SMS: "Un numéro de téléphone est nécessaire pour l'envoi par SMS.",
+  ROLE_REQUIRED: 'Choisissez au moins un rôle.',
+  UNKNOWN_ROLE: 'Rôle inconnu.',
+  PASSWORD_TOO_SHORT: `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`,
+  PASSWORD_MISMATCH: 'Les mots de passe ne correspondent pas.',
+};
 
-  const availableRoles: RoleType[] = ['admin', 'project_manager', 'supervisor', 'inspector', 'supplier', 'viewer'];
+const UserManagementDialog: React.FC<UserManagementDialogProps> = ({ user, isOpen, onClose, onUpdate, mode }) => {
+  const { toast } = useToast();
+  const { t, language } = useLanguage();
+  const { user: currentUser } = useAuth();
+  const admin = useUserAdministrationHex(currentUser?.id);
+
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [nationalId, setNationalId] = useState('');
+  const [roles, setRoles] = useState<string[]>(['viewer']);
+  const [channel, setChannel] = useState<ConfirmationChannel>('email');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setFullName(user?.full_name ?? '');
+    setEmail(user?.email ?? '');
+    setPhone(user?.phone ?? '');
+    setNationalId(user?.national_id ?? '');
+    setRoles(user?.roles?.length ? user.roles : ['viewer']);
+    setChannel('email');
+    setPassword('');
+    setConfirm('');
+  }, [isOpen, user]);
+
+  const label = (key: string, fallback: string) => {
+    const v = t(key);
+    return v && v !== key ? v : fallback;
+  };
+
+  const describe = (error: unknown) => {
+    const code = error instanceof UserAdministrationError ? error.code : error instanceof Error ? error.message : '';
+    return ERROR_FALLBACKS[code] ?? (code || label('error.generic', 'Une erreur est survenue'));
+  };
+
+  const toggleRole = (code: string, checked: boolean) =>
+    setRoles((prev) => (checked ? [...new Set([...prev, code])] : prev.filter((r) => r !== code)));
 
   const handleSubmit = async () => {
-    setLoading(true);
     try {
       if (mode === 'create') {
-        if (!formData.email || !formData.password || !formData.full_name) {
-          toast({
-            title: t('error.title') || 'Erreur',
-            description: t('error.missing_fields') || 'Veuillez remplir tous les champs obligatoires',
-            variant: "destructive"
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Create user with hexagonal architecture
-        const userData = {
-          email: formData.email,
-          password: formData.password,
-          full_name: formData.full_name,
-          fullName: formData.full_name,
-          phone: formData.phone,
-          nationalId: formData.national_id,
-          national_id: formData.national_id,
-          isActive: formData.is_active
-        };
-
-        const result = await createUserMutation.mutateAsync(userData as any);
-
-        // Assign role if needed
-        if (selectedRole && selectedRole !== 'viewer') {
-          await assignRole.mutateAsync({ userId: result.id, roleName: selectedRole });
-        }
-
+        const result = await admin.createUser({ email, fullName, phone, nationalId, roles, channel });
+        const sent = result.confirmation?.sent !== false;
         toast({
-          title: t('users.created') || 'Utilisateur créé',
-          description: t('users.created_success') || 'L\'utilisateur a été créé avec succès'
+          title: label('users.created', 'Utilisateur créé'),
+          description: sent
+            ? channel === 'sms'
+              ? 'Un lien de confirmation a été envoyé par SMS.'
+              : 'Un lien de confirmation a été envoyé par e-mail.'
+            : `Compte créé, mais le lien n'a pas pu être envoyé : ${result.confirmation?.error ?? ''}`,
+          variant: sent ? 'default' : 'destructive',
         });
       } else {
-        if (!user?.id) {
-          throw new Error(t('error.user_id_required') || 'ID utilisateur requis');
-        }
-
-        // Update profile information
-        await updateUserMutation.mutateAsync({
+        if (!user?.id) return;
+        if (password && password !== confirm) throw new UserAdministrationError('PASSWORD_MISMATCH');
+        await admin.updateUser({
           userId: user.id,
-          full_name: formData.full_name,
-          phone: formData.phone,
-          national_id: formData.national_id
+          fullName,
+          phone,
+          nationalId,
+          email: email && email !== user.email ? email : undefined,
+          password: password || undefined,
+          roles,
         });
-
-        // Note: Email and password updates require admin privileges that aren't available with the anon key
-        // These would need to be handled by a server-side function or edge function with service role access
-        if (formData.email && formData.email !== user.email) {
-          toast({
-            title: t('users.info') || 'Information',
-            description: 'La mise à jour de l\'email nécessite des privilèges administrateur avancés. Contactez l\'administrateur système.',
-            variant: "default"
-          });
-        }
-
-        if (formData.new_password) {
-          toast({
-            title: t('users.info') || 'Information',
-            description: 'La mise à jour du mot de passe nécessite des privilèges administrateur avancés. Contactez l\'administrateur système.',
-            variant: "default"
-          });
-        }
-
-        toast({
-          title: t('users.updated') || 'Utilisateur mis à jour',
-          description: t('users.updated_success') || 'L\'utilisateur a été mis à jour avec succès'
-        });
+        toast({ title: label('users.updated', 'Utilisateur mis à jour') });
       }
-
       onUpdate();
       onClose();
     } catch (error) {
-      console.error('Error managing user:', error);
-      toast({
-        title: t('error.title') || 'Erreur',
-        description: error instanceof Error ? error.message : t('error.generic') || 'Une erreur est survenue',
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+      toast({ title: label('error.title', 'Erreur'), description: describe(error), variant: 'destructive' });
     }
   };
 
-  const handleRoleAssign = async (role: RoleType) => {
+  const handleResend = async () => {
     if (!user?.id) return;
-
     try {
-      await assignRole.mutateAsync({
-        userId: user.id,
-        roleName: role
-      });
+      const result = await admin.resendConfirmation({ userId: user.id, channel });
       toast({
-        title: t('roles.assigned') || 'Rôle assigné',
-        description: t('roles.assigned_success')?.replace('{role}', role) || `Le rôle ${role} a été assigné avec succès`
+        title: result.sent ? 'Lien envoyé' : 'Envoi impossible',
+        description: result.sent ? undefined : result.error,
+        variant: result.sent ? 'default' : 'destructive',
       });
-      onUpdate();
     } catch (error) {
-      console.error('Error assigning role:', error);
-      toast({
-        title: t('error.title') || 'Erreur',
-        description: t('roles.assign_error') || 'Erreur lors de l\'assignation du rôle',
-        variant: "destructive"
-      });
+      toast({ title: label('error.title', 'Erreur'), description: describe(error), variant: 'destructive' });
     }
   };
 
-  const handleRoleRemove = async (role: string) => {
-    if (!user?.id) return;
-
-    try {
-      await removeRole.mutateAsync({
-        userId: user.id,
-        roleName: role
-      });
-      toast({
-        title: t('roles.removed') || 'Rôle retiré',
-        description: t('roles.removed_success')?.replace('{role}', role) || `Le rôle ${role} a été retiré avec succès`
-      });
-      onUpdate();
-    } catch (error) {
-      console.error('Error removing role:', error);
-      toast({
-        title: t('error.title') || 'Erreur',
-        description: t('roles.remove_error') || 'Erreur lors de la suppression du rôle',
-        variant: "destructive"
-      });
-    }
-  };
+  const lang = (language === 'ar' || language === 'en' ? language : 'fr') as 'fr' | 'ar' | 'en';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? t('users.new') || 'Nouvel utilisateur' : t('users.details_title') || 'Détails de l\'utilisateur'}
+            {mode === 'create' ? label('users.new', 'Nouvel utilisateur') : label('users.details_title', "Modifier l'utilisateur")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="full_name">{t('auth.full_name') || 'Nom complet'} *</Label>
-            <Input
-              id="full_name"
-              value={formData.full_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-              required
-            />
+            <Label htmlFor="full_name">{label('auth.full_name', 'Nom complet')} *</Label>
+            <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="email">{label('auth.email', 'E-mail')} *</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="utilisateur@exemple.mr" />
+            </div>
+            <div>
+              <Label htmlFor="phone">{label('auth.phone', 'Téléphone')}</Label>
+              <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+222 22 33 44 55" />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="national_id">{label('auth.national_id', 'Numéro national')}</Label>
+            <Input id="national_id" value={nationalId} onChange={(e) => setNationalId(e.target.value)} />
           </div>
 
-          <div>
-            <Label htmlFor="phone">{t('auth.phone') || 'Téléphone'}</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="+222 XX XX XX XX"
-            />
+          <div className="space-y-2 border-t pt-4">
+            <Label>{label('users.manage_roles', 'Rôles')} *</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {ROLES_RESPONSIBILITIES.map((role) => (
+                <label key={role.code} className="flex items-center gap-2 rounded-md border p-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={roles.includes(role.code)}
+                    onCheckedChange={(checked) => toggleRole(role.code, checked === true)}
+                  />
+                  {getRoleLabel(role.code, lang)}
+                </label>
+              ))}
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="national_id">{t('auth.national_id') || 'ID National'}</Label>
-            <Input
-              id="national_id"
-              value={formData.national_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, national_id: e.target.value }))}
-              placeholder={t('users.table.national_id') || 'ID National'}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="email">{t('auth.email') || 'Email'} *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              required={mode === 'create'}
-              placeholder="utilisateur@example.com"
-              disabled={mode === 'edit'} // Disable email editing for now
-            />
-            {mode === 'edit' && (
-              <p className="text-xs text-muted-foreground mt-1">
-                <T k="auto.usermanagementdialog.la_modification_de_l_email_necessite_des_privile" fallback="La modification de l'email nécessite des privilèges avancés" />
+          <div className="space-y-2 border-t pt-4">
+            <Label>
+              {mode === 'create' ? 'Envoyer le lien de confirmation par' : 'Canal pour renvoyer le lien'}
+            </Label>
+            <RadioGroup value={channel} onValueChange={(v) => setChannel(v as ConfirmationChannel)} className="flex gap-6">
+              <label className="flex items-center gap-2 text-sm"><RadioGroupItem value="email" /> E-mail</label>
+              <label className="flex items-center gap-2 text-sm"><RadioGroupItem value="sms" /> SMS</label>
+            </RadioGroup>
+            {mode === 'create' && (
+              <p className="text-xs text-muted-foreground">
+                L'utilisateur choisit lui-même son mot de passe en ouvrant le lien.
               </p>
+            )}
+            {mode === 'edit' && (
+              <Button type="button" variant="outline" size="sm" onClick={handleResend} disabled={admin.isPending}>
+                Renvoyer le lien
+              </Button>
             )}
           </div>
 
-          {mode === 'create' && (
-            <>
-              <div>
-                <Label htmlFor="password">{t('auth.password') || 'Mot de passe'} *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  required
-                  placeholder={t('auth.password_requirements') || 'Minimum 6 caractères'}
-                  minLength={6}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="role">{t('users.table.role') || 'Rôle'}</Label>
-                <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as RoleType)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableRoles.map(role => (
-                      <SelectItem key={role} value={role}>
-                        <div className="flex items-center gap-2">
-                          <RoleBadge role={role} />
-                          <span className="text-xs capitalize">{t(`roles.${role}`) || role.replace('_', ' ')}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
-
           {mode === 'edit' && (
-            <>
-              <div className="space-y-3 border-t pt-4">
-                <h4 className="font-medium"><T k="auto.usermanagementdialog.mise_a_jour_du_mot_de_passe" fallback="Mise à jour du mot de passe" /></h4>
-                <div>
-                  <Label htmlFor="new_password"><T k="auto.usermanagementdialog.nouveau_mot_de_passe" fallback="Nouveau mot de passe" /></Label>
-                  <Input
-                    id="new_password"
-                    type="password"
-                    value={formData.new_password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, new_password: e.target.value }))}
-                    placeholder={t('auto.usermanagementdialog.laisser_vide_pour_conserver_le_mot_de_passe_actu')}
-                    minLength={6}
-                    disabled // Disable password editing for now
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <T k="auto.usermanagementdialog.la_modification_du_mot_de_passe_necessite_des_pr" fallback="La modification du mot de passe nécessite des privilèges avancés" />
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4 border-t pt-4">
-                <div>
-                  <Label>{t('users.manage_roles') || 'Gérer les rôles'}</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {user && user.roles && user.roles.length > 0 ? (
-                      user.roles.map(role => (
-                        <div key={role} className="flex items-center gap-2 bg-muted rounded-lg p-2">
-                          <RoleBadge role={role as RoleType} />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRoleRemove(role)}
-                            className="h-6 w-6 p-0 hover:bg-destructive/10"
-                            title={t('auto.usermanagementdialog.supprimer')}
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-sm text-muted-foreground">{t('users.none_found') || 'Aucun rôle trouvé'}</span>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label>{t('users.table.role') || 'Ajouter un rôle'}</Label>
-                  <Select onValueChange={(value) => handleRoleAssign(value as RoleType)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('users.table.role') || 'Sélectionner un rôle'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableRoles
-                        .filter(role => !user?.roles?.includes(role))
-                        .map(role => (
-                          <SelectItem key={role} value={role}>
-                            <div className="flex items-center gap-2">
-                              <RoleBadge role={role} />
-                              <span className="text-xs capitalize">{t(`roles.${role}`) || role.replace('_', ' ')}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      {availableRoles.filter(role => !user?.roles?.includes(role)).length === 0 && (
-                        <SelectItem value="no-roles" disabled>
-                          {t('users.no_results') || 'Aucun rôle disponible'}
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="flex items-center space-x-2 p-3 border rounded-lg">
-            <Switch
-              id="is_active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-            />
-            <Label htmlFor="is_active" className="font-medium">
-              {t('users.active') || 'Actif'}
-            </Label>
-            <span className="text-sm text-muted-foreground ml-2">
-              {formData.is_active ? t('users.active') || 'Actif' : t('users.inactive') || 'Inactif'}
-            </span>
-          </div>
-
-          {/* Admin Password Reset Section */}
-          {mode === 'edit' && (
-            <div className="space-y-4 pt-4 border-t">
-              <h4 className="text-sm font-medium text-foreground"><T k="auto.usermanagementdialog.reinitialisation_du_mot_de_passe" fallback="Réinitialisation du mot de passe" /></h4>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword"><T k="auto.usermanagementdialog.nouveau_mot_de_passe_optionnel" fallback="Nouveau mot de passe (optionnel)" /></Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={formData.new_password || ''}
-                  onChange={(e) => setFormData(prev => ({...prev, new_password: e.target.value}))}
-                  placeholder={t('auto.usermanagementdialog.laisser_vide_pour_ne_pas_changer')}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword"><T k="auto.usermanagementdialog.confirmer_le_mot_de_passe" fallback="Confirmer le mot de passe" /></Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword || ''}
-                  onChange={(e) => setFormData(prev => ({...prev, confirmPassword: e.target.value}))}
-                  placeholder={t('auto.usermanagementdialog.confirmer_le_nouveau_mot_de_passe')}
-                />
-              </div>
+            <div className="space-y-3 border-t pt-4">
+              <Label>Nouveau mot de passe (facultatif)</Label>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={`${MIN_PASSWORD_LENGTH} caractères minimum`} />
+              <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirmer le mot de passe" />
             </div>
           )}
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {t('users.cancel') || 'Annuler'}
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={loading || (mode === 'create' && (!formData.email || !formData.password || !formData.full_name))}
-            className="min-w-[120px]"
-          >
-            {loading ? t('auth.button.loading') || 'Chargement...' : mode === 'create' ? t('users.new') || 'Créer' : t('users.save') || 'Sauvegarder'}
+          <Button variant="outline" onClick={onClose}>{label('users.cancel', 'Annuler')}</Button>
+          <Button onClick={handleSubmit} disabled={admin.isPending || !fullName || !email || roles.length === 0}>
+            {admin.isPending ? 'Enregistrement…' : mode === 'create' ? 'Créer et envoyer le lien' : label('users.save', 'Enregistrer')}
           </Button>
         </DialogFooter>
       </DialogContent>
