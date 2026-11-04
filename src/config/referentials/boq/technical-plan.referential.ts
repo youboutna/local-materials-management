@@ -1,7 +1,7 @@
 /** Parsing hints, not quantity or regulatory rules. No unit inference from a scale. */
 export const TECHNICAL_PLAN_PATTERNS = {
   scale: /(?:[ÉE]chelle|Ech\.?|ECH)\s*[:.]?\s*1\s*[/:]\s*(\d+)/i,
-  planche: /(?:Planche|PLANCHE|Pl)\s*[:.]?\s*([\w-]+)/i,
+  planche: /\b(?:Planche|Pl\.?)(?![a-zà-ÿ])\s*[:.]?\s*([\w-]+)/i,
   phase: /Phase\s*[:.]?\s*([\w-]+)/i,
   date: /Date\s*[:.]?\s*([^\n]+)/i,
   /** Repères de menuiserie (ex. « Fen-012 », « Por-3 ») : préfixe + numéro. */
