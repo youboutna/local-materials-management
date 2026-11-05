@@ -8,7 +8,7 @@ cd "$ROOT"
 [[ "$APP_IMAGE_TAG" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ && "$APP_IMAGE_TAG" != latest && "$APP_IMAGE_TAG" != local ]] || { echo 'Use an immutable release tag, not latest or local.' >&2; exit 1; }
 [[ "$PUBLIC_CONFIG_FILE" = /* && -f "$PUBLIC_CONFIG_FILE" ]] || { echo 'Public config.js must exist at an absolute path.' >&2; exit 1; }
 [[ -s dist/index.html ]] || { echo 'Missing dist: run npm ci and npm run build first.' >&2; exit 1; }
-node scripts/check-public-config.mjs "$PUBLIC_CONFIG_FILE"
+source "$ROOT/scripts/lib/node-run.sh"; node_run scripts/check-public-config.mjs "$PUBLIC_CONFIG_FILE"
 command -v docker >/dev/null || { echo 'Docker is required on the release server.' >&2; exit 1; }
 command -v curl >/dev/null || { echo 'curl is required for release acceptance checks.' >&2; exit 1; }
 if docker image inspect "hadratech-frontend:$APP_IMAGE_TAG" >/dev/null 2>&1; then
