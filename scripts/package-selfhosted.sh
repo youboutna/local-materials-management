@@ -4,7 +4,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-[ "${SKIP_BUILD:-0}" = 1 ] || { npm ci && npm run build; }
+if [ "${SKIP_BUILD:-0}" != 1 ]; then
+  npm ci
+  npm run build
+fi
 [ -s dist/index.html ] || { echo "Missing dist/index.html" >&2; exit 1; }
 TAG="${APP_IMAGE_TAG:-$(date -u +%Y%m%d%H%M%S)}"
 OUT="$ROOT/hadratech-selfhosted-$TAG.zip"
