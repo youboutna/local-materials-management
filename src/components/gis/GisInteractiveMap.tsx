@@ -27,6 +27,10 @@ export interface GisInteractiveMapProps {
   onShapeDrawn?: (zone: InterventionZoneDTO) => void | Promise<void>;
   /** Fourni ⇒ import GeoJSON actif ; la persistance passe par le service de l'appelant. */
   onImportGeoJson?: (collection: FeatureCollection) => void | Promise<void>;
+  /** Calques métier supplémentaires (ex. ouvrages éditables) ; reçoivent l'état des calques. */
+  children?: (layers: Record<MapLayerCode, boolean>) => React.ReactNode;
+  center?: [number, number];
+  zoom?: number;
 }
 
 const tone = (v: string) => {
@@ -85,7 +89,7 @@ const DrawCapture: React.FC<{ tool: DrawTool; points: InterventionZoneLatLng[]; 
 };
 
 export const GisInteractiveMap: React.FC<GisInteractiveMapProps> = ({
-  locations = [], infrastructure, zones = [], height = '600px', className, onMarkerSelect, onShapeDrawn, onImportGeoJson,
+  locations = [], infrastructure, zones = [], height = '600px', className, onMarkerSelect, onShapeDrawn, onImportGeoJson, children, center, zoom,
 }) => {
   const [layers, setLayers] = useState<Record<MapLayerCode, boolean>>(() => Object.fromEntries(MAP_LAYERS.map(l => [l.code, l.defaultOn])) as Record<MapLayerCode, boolean>);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -94,7 +98,8 @@ export const GisInteractiveMap: React.FC<GisInteractiveMapProps> = ({
   const [target, setTarget] = useState<[number, number] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const home: [number, number] = [INFRA_DEFAULT_MAP_CENTER.lat, INFRA_DEFAULT_MAP_CENTER.lng];
+  const home: [number, number] = center ?? [INFRA_DEFAULT_MAP_CENTER.lat, INFRA_DEFAULT_MAP_CENTER.lng];
+  const homeZoom = zoom ?? INFRA_DEFAULT_MAP_CENTER.zoom;
 
   const projects = useMemo(() => locations.filter(l => l.type === 'project'), [locations]);
   const materials = useMemo(() => locations.filter(l => l.type !== 'project'), [locations]);
@@ -157,9 +162,9 @@ export const GisInteractiveMap: React.FC<GisInteractiveMapProps> = ({
 
       {error && <div role="alert" className="absolute bottom-3 right-3 z-[1000] rounded-md bg-destructive px-3 py-2 text-sm text-destructive-foreground">{error}</div>}
 
-      <MapContainer center={home} zoom={INFRA_DEFAULT_MAP_CENTER.zoom} zoomControl={false} className="h-full w-full rounded-lg">
+      <MapContainer center={home} zoom={homeZoom} zoomControl={false} className="h-full w-full rounded-lg">
         <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <MapControls home={home} zoom={INFRA_DEFAULT_MAP_CENTER.zoom} />
+        <MapControls home={home} zoom={homeZoom} />
         <FlyTo target={target} />
         <DrawCapture tool={tool} points={points} setPoints={setPoints} finish={finish} />
         {points.length > 0 && <Polygon positions={points.map(p => [p.lat, p.lng] as [number, number])} pathOptions={{ color: tone('--primary'), dashArray: '4' }} />}
@@ -203,6 +208,7 @@ export const GisInteractiveMap: React.FC<GisInteractiveMapProps> = ({
               layer.bindPopup(el);
             }} />
         )}
+        {children?.(layers)}
       </MapContainer>
     </div>
   );

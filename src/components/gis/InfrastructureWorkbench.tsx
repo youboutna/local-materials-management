@@ -13,6 +13,7 @@ import AddressSearchBox from '@/components/gis/AddressSearchBox';
 import InfraGeometryDrawer from '@/components/gis/InfraGeometryDrawer';
 import InfraAttributeTable, { type AttributeRow } from '@/components/gis/InfraAttributeTable';
 import InfraMapExtent from './InfraMapExtent';
+import GisInteractiveMap from './GisInteractiveMap';
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
 import type { InfrastructureAssetDTO, InfrastructureAnalysisDTO, InfraStructureDTO, AssetTypeDTO, SaveAssetTypeDTO, InfraRealization, GeometryKind, ImportResultDTO, ImportFeatureItemDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
@@ -81,14 +82,14 @@ export function InfrastructureWorkbench({ project, canManage }: { project: Proje
 
     {analysis && <div className="flex flex-wrap gap-8 border-y border-border py-4">{([['present', analysis.presentCount], ['realized', analysis.completedCount], ['length', Number(analysis.intersectedLengthMeters || 0).toFixed(2)]] as const).map(([key, value]) => <div key={key}><p className="text-sm text-muted-foreground">{t(`workbench.${key}`)}</p><p className="text-2xl font-semibold tabular-nums">{value}</p></div>)}</div>}
 
-    <div className="h-[min(65vh,640px)] min-h-[360px] overflow-hidden border border-border"><MapContainer center={center} zoom={mapZoom} className="h-full w-full">
-      <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <GisInteractiveMap className="border border-border" height="min(65vh,640px)" center={center} zoom={mapZoom} onImportGeoJson={canManage ? (fc => { setImportText(JSON.stringify(fc, null, 2)); setPreview(null); }) : undefined}>{layers => (<>
+      
       <InfraMapExtent geometries={[...infra.assets.map(a => a.geometry), ...infra.structures.map(s => s.geometry)]} />
-      {zones.length > 0 && <GeoJSON key={JSON.stringify(zoneGeometry)} data={zoneGeometry as FeatureCollection} style={{ color: 'hsl(var(--primary))', weight: 2, fillOpacity: 0.05 }} />}
-      {infra.structures.map(structure => <GeoJSON key={`s:${structure.id}:${structure.updatedAt}`} data={structure.geometry} style={{ color: 'hsl(var(--muted-foreground))', dashArray: '4' }} eventHandlers={{ click: () => canManage && openStructure(structure) }} />)}
-      {infra.assets.map(asset => <GeoJSON key={`f:${asset.id}:${asset.updatedAt}:${asset.realization}`} data={asset.geometry} style={{ color: asset.realization === 'completed' ? 'hsl(var(--primary))' : 'hsl(var(--destructive))', weight: 3 }} eventHandlers={{ click: () => canManage && openFeature(asset) }} />)}
+      {layers.zones && zones.length > 0 && <GeoJSON key={JSON.stringify(zoneGeometry)} data={zoneGeometry as FeatureCollection} style={{ color: 'hsl(var(--primary))', weight: 2, fillOpacity: 0.05 }} />}
+      {layers.infrastructure && infra.structures.map(structure => <GeoJSON key={`s:${structure.id}:${structure.updatedAt}`} data={structure.geometry} style={{ color: 'hsl(var(--muted-foreground))', dashArray: '4' }} eventHandlers={{ click: () => canManage && openStructure(structure) }} />)}
+      {layers.infrastructure && infra.assets.map(asset => <GeoJSON key={`f:${asset.id}:${asset.updatedAt}:${asset.realization}`} data={asset.geometry} style={{ color: asset.realization === 'completed' ? 'hsl(var(--primary))' : 'hsl(var(--destructive))', weight: 3 }} eventHandlers={{ click: () => canManage && openFeature(asset) }} />)}
       {analysis?.bufferGeojson && <GeoJSON key={JSON.stringify(analysis.bufferGeojson)} data={analysis.bufferGeojson} style={{ color: 'hsl(var(--accent-foreground))', fillOpacity: 0.08 }} />}
-    </MapContainer></div>
+    </>)}</GisInteractiveMap>
 
     {panel === 'feature' && <form className="space-y-4 border-y border-border py-4" onSubmit={e => { e.preventDefault(); action(async () => { await infra.saveAsset(ProjectWorkbenchTransformer.formToAsset({ id: featureId, projectId: project.id, name, assetTypeCode: typeCode, status, geometry, properties: ProjectWorkbenchTransformer.attributesToProperties(attributes, preserved) }, selectedKind)); setPanel(null); }, t('workbench.saved')); }}>
       <div className="grid sm:grid-cols-3 gap-3">

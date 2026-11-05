@@ -11,6 +11,7 @@
 import { getProjectService } from '@/application/services/ProjectService';
 import { referentialService } from '@/application/services/ReferentialService';
 import GeoZoneEditor from '@/components/gis/GeoZoneEditor';
+import GisInteractiveMap from '@/components/gis/GisInteractiveMap';
 import { CriticalPathView, KanbanBoard, PERTDiagram, ProjectTimeline } from "@/components/planning";
 import EnhancedRiskManager from "@/components/project/EnhancedRiskManager";
 import EnhancedTaskManager from "@/components/project/EnhancedTaskManager";
@@ -827,7 +828,20 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
     const address = projectDetail?.location || (project as any)?.location || '';
 
     return (
-      <GeoZoneEditor
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">{hasZones
+            ? address 
+              ? `Adresse : ${address}` 
+              : 'Vue lecture seule — éditez via le workflow projet.'
+            : hasCenter
+            ? address
+              ? `Coordonnées uniquement — ${address}`
+              : 'Marqueur généré depuis les coordonnées du projet.'
+            : "Aucune coordonnée ni zone tracée — définissez-en via l'édition du projet."}</p>
+        <GisInteractiveMap height="520px" zones={interventionZones} center={mapCenter}
+          locations={mapCenter ? [{ id: String(project?.id ?? ''), name: project?.title ?? '', type: 'project', latitude: mapCenter[0], longitude: mapCenter[1], status: (project as { status?: string } | undefined)?.status, adresse: address || undefined }] : []} />
+        <details><summary className="cursor-pointer text-sm text-muted-foreground"><T k="map.detail_view" fallback="Vue détaillée des zones" /></summary>
+          <GeoZoneEditor
         readOnly
         showAddressBar={false}
         value={interventionZones}
@@ -848,6 +862,8 @@ const ProjectDetailByDTO: React.FC<ProjectDetailByDTOProps> = ({
         fallbackAddress={address}
         height={520}
       />
+        </details>
+      </div>
     );
   };
 
