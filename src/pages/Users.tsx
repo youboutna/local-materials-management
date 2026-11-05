@@ -33,6 +33,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout";
 import { getDevUsersSnapshot, type DevUserProfile } from "@/config/constants";
+import { getProviderSelections } from "@/config/app";
+
+/** Source unique : les comptes de test ne s'affichent que si le fournisseur de données configuré est local. */
+const isLocalDataSource = (): boolean =>
+  getProviderSelections().find((s) => s.service === "data")?.provider === "local";
 
 // Define user profile type with roles array and email
 type UserProfile = {
@@ -69,7 +74,8 @@ const getDevProfiles = (): UserProfile[] =>
 
 const Users = () => {
   const { toast } = useToast();
-  const { user, isDevelopmentMode } = useAuth();
+  const { user } = useAuth();
+  const isDevelopmentMode = isLocalDataSource();
   const navigate = useNavigate();
   const { hasAnyRole } = useCurrentUserRoles();
   const { t, language } = useLanguage();
