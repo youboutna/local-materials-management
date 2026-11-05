@@ -1,3 +1,5 @@
+- [ ] SIG local : import GeoJSON générique, types ouverts et données jointes uniquement dans le navigateur de test
+- [ ] Vérifier import → carte → rechargement en local sans envoi des données SIG
 - [x] Recentrer l’onglet Lignes DQE autour d’une barre de résultats avec actions et choix du nombre de lignes
 - [x] Garantir pagination et visibilité immédiate d’une ligne ajoutée
 - [x] Réinitialiser parseur et champ fichier à l’annulation d’un import
