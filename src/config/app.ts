@@ -113,7 +113,7 @@ const splitList = (raw: string | undefined, fallback: string[]): string[] =>
         .filter(Boolean)
     : fallback;
 
-export const DEFAULT_SCHEMAS = ['public', 'btp', 'auth', 'storage', 'graphql_public'];
+export const DEFAULT_SCHEMAS = ['public', 'btp', 'infra', 'auth', 'storage', 'graphql_public'];
 export const BTP_SCHEMA = 'btp';
 export const DEFAULT_EXTRA_SEARCH_PATH = ['public', 'extensions', 'btp'];
 

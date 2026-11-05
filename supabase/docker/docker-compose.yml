@@ -27,7 +27,7 @@
 #   - ✅ GOTRUE_EXTERNAL_GOOGLE_* décommenté
 #   - ✅ GOTRUE_EXTERNAL_GITHUB_* décommenté
 #   - ✅ GOTRUE_EXTERNAL_*_REDIRECT_URI corrigé (/auth/v1/callback)
-#   - ✅ PGRST_DB_SCHEMAS aligné avec le front (public,btp)
+#   - ✅ PGRST_DB_SCHEMAS aligné avec le front (public,btp,infra)
 #   - ✅ Migrations HadraTech montées dans /docker-entrypoint-initdb.d
 # =============================================================================
 
