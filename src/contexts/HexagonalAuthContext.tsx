@@ -1,3 +1,4 @@
+import { getProviderSelections } from '@/config/app';
 import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
 // src/contexts/HexagonalAuthContext.tsx
 
@@ -113,7 +114,7 @@ export const HexagonalAuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const config = getAppConfig();
       setCurrentProvider(config.auth.provider);
-      setIsDevelopmentMode(config.mode === 'development' || config.mode === 'local-bypass');
+      setIsDevelopmentMode(getProviderSelections().find((s) => s.service === 'auth')?.provider === 'local');
     } catch (e) {
       console.warn('Erreur de configuration:', e);
     }

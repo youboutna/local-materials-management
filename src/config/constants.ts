@@ -41,6 +41,9 @@ const envDevMode =
 export const isDevMode = (): boolean => {
   const runtime = isBrowser ? (window as Window & { __APP_CONFIG__?: Record<string, string> }).__APP_CONFIG__ : undefined;
   if (runtime?.VITE_ACTIVE_PROFILE === 'supabase-selfhosted' && runtime.VITE_DEV_MODE === 'false') return false;
+  // Source unique : un fournisseur d'auth explicitement configuré non local interdit les comptes de test.
+  const authProvider = (runtime?.VITE_AUTH_PROVIDER || import.meta.env?.VITE_AUTH_PROVIDER || '').trim();
+  if (authProvider && authProvider !== 'local') return false;
   return readDevModeOverride() ?? envDevMode;
 };
 
