@@ -361,7 +361,16 @@ const lazyPorts: {
 // 10. REPOSITORY FACTORY
 // ================================================================
 
+import { FetchGeocodingHttpAdapter } from './adapters/http/FetchGeocodingHttpAdapter';
+import type { IGeocodingHttpPort } from '@/domain/repositories/IGeocodingHttpPort';
+
+let geocodingHttp: IGeocodingHttpPort | null = null;
+
 export class RepositoryFactory {
+  static getGeocodingHttpPort(): IGeocodingHttpPort {
+    return (geocodingHttp ??= new FetchGeocodingHttpAdapter());
+  }
+
   private static postgrestClient?: PostgrestClient;
 
   // ---------- AUTH ----------

@@ -4,6 +4,8 @@
  */
 
 import { AppError, NetworkError } from '@/utils/errors';
+import { RepositoryFactory } from '@/infrastructure/RepositoryFactory';
+import type { IGeocodingHttpPort } from '@/domain/repositories/IGeocodingHttpPort';
 import { 
   GeographicUnit,
   Region, 
@@ -582,7 +584,7 @@ export class GeocodingService {
         'accept-language': 'en,fr,ar'
       });
 
-      const response = await fetch(`${url}?${params}`, {
+      const response = await this.http.get(`${url}?${params}`, {
         headers: {
           'User-Agent': this.userAgent || 'MauritaniaMapper/1.0'
         }
@@ -688,7 +690,7 @@ export class GeocodingService {
         'accept-language': 'en,fr,ar'
       });
 
-      const response = await fetch(`${url}?${params}`, {
+      const response = await this.http.get(`${url}?${params}`, {
         headers: {
           'User-Agent': this.userAgent || 'MauritaniaMapper/1.0'
         }
@@ -722,7 +724,7 @@ export class GeocodingService {
         language: 'en'
       });
 
-      const response = await fetch(`${url}?${params}`);
+      const response = await this.http.get(`${url}?${params}`);
       if (!response.ok) {
         throw new NetworkError(`Google geocoding error: ${response.statusText}`);
       }
@@ -749,7 +751,7 @@ export class GeocodingService {
         language: 'en'
       });
 
-      const response = await fetch(`${url}?${params}`);
+      const response = await this.http.get(`${url}?${params}`);
       if (!response.ok) {
         throw new NetworkError(`Google reverse geocoding error: ${response.statusText}`);
       }
@@ -777,7 +779,7 @@ export class GeocodingService {
         language: 'en,fr,ar'
       });
 
-      const response = await fetch(`${url}?${params}`);
+      const response = await this.http.get(`${url}?${params}`);
       if (!response.ok) {
         throw new NetworkError(`Mapbox geocoding error: ${response.statusText}`);
       }
@@ -803,7 +805,7 @@ export class GeocodingService {
         language: 'en,fr,ar'
       });
 
-      const response = await fetch(`${url}?${params}`);
+      const response = await this.http.get(`${url}?${params}`);
       if (!response.ok) {
         throw new NetworkError(`Mapbox reverse geocoding error: ${response.statusText}`);
       }
