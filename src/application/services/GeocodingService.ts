@@ -199,7 +199,10 @@ export class GeocodingService {
   private readonly regionSearchTermsCache: Map<string, string[]> = new Map();
   private readonly citySearchTermsCache: Map<string, string[]> = new Map();
 
-  constructor(config: GeocodingConfig = {}) {
+  private readonly http: IGeocodingHttpPort;
+
+  constructor(config: GeocodingConfig = {}, http: IGeocodingHttpPort = RepositoryFactory.getGeocodingHttpPort()) {
+    this.http = http;
     this.provider = config.provider || 'openstreetmap';
     this.apiKey = config.apiKey || (typeof window !== 'undefined' && import.meta.env?.GEOCODING_API_KEY) || undefined;
     this.userAgent = config.userAgent || 'MauritaniaMapper/1.0 (contact@mauritania-mapper.mr)';
