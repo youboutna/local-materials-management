@@ -206,7 +206,8 @@ export const useCurrentUserRoles = () => {
 
   const {
     data: userRoles,
-    isLoading,
+    isLoading: queryLoading,
+    isPlaceholderData,
     error,
     refetch,
   } = useQuery({
@@ -243,6 +244,9 @@ export const useCurrentUserRoles = () => {
     },
   });
 
+  // Les rôles provisoires (placeholder) ne doivent jamais décider d'une redirection :
+  // au rafraîchissement d'un lien profond, on attend les rôles réels.
+  const isLoading = queryLoading || (isPlaceholderData && !IS_LOCAL_BYPASS);
   const roles = (userRoles as string[]) || [];
 
   const hasRole = (roleName: string): boolean =>
