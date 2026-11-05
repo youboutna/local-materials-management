@@ -12,6 +12,7 @@ import ProjectsGridPaginated from "@/components/projects/ProjectsGridPaginated";
 import ProjectFilters from "@/components/projects/ProjectFilters";
 import MapFilters from "@/components/projects/MapFilters";
 import ProjectMap from "@/components/ProjectMap";
+import GisInteractiveMap from "@/components/gis/GisInteractiveMap";
 import InteractiveMapFilters from "@/components/projects/InteractiveMapFilters";
 import InteractiveProjectsList from "@/components/projects/InteractiveProjectsList";
 import EnhancedInteractiveMap from "@/components/projects/EnhancedInteractiveMap";
@@ -325,12 +326,9 @@ const Projects: React.FC = () => {
 
             <Card>
               <CardContent className="p-0">
-                <ProjectMap
+                <GisInteractiveMap
                   locations={filteredMapLocations}
                   height="600px"
-                  focusRegion={
-                    regionFilter !== "all" ? regionFilter : undefined
-                  }
                   className="rounded-lg"
                   onMarkerSelect={(location) => navigate(`/projects/${location.id}`)}
                 />
