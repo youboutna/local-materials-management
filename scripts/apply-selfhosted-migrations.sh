@@ -18,6 +18,12 @@ mapfile -t FILES < <(ls "$ROOT"/supabase/migrations/*.sql | sort)
 FIRST="$(basename "${FILES[0]}")"
 [ "$FIRST" = "20240129000000_bootstrap_core_schema.sql" ] || { echo "Unexpected first migration: $FIRST" >&2; exit 1; }
 
+# MIGRATIONS_BASELINE=1: database already initialized by the old initdb mount →
+# record every file as applied without executing it (run once, after a backup).
+if [ "${MIGRATIONS_BASELINE:-0}" = 1 ]; then
+  for f in "${FILES[@]}"; do "${PSQL[@]}" -c "INSERT INTO public._migrations(name) VALUES ('$(basename "$f")') ON CONFLICT DO NOTHING"; done
+  echo "Baseline recorded for ${#FILES[@]} migrations."; exit 0
+fi
 applied=0
 for f in "${FILES[@]}"; do
   name="$(basename "$f")"

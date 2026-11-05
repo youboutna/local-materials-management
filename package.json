@@ -29,7 +29,8 @@
     "fix:hexagonal:verbose": "node scripts/fix-hexagonal-violations.js --verbose",
     "fix:hexagonal:analyze": "node scripts/fix-hexagonal-violations.js --analyze",
     "fix:hexagonal:file": "node scripts/fix-hexagonal-violations.js --file",
-    "build:zip": "npm run build && node scripts/zip-dist.mjs"
+    "build:zip": "npm run build && node scripts/zip-dist.mjs",
+    "package:selfhosted": "bash scripts/package-selfhosted.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

@@ -12,12 +12,13 @@ echo "Backend env: $ENV_FILE"
 grep -q 'your-super-secret\|your_smtp_password' "$ENV_FILE" && echo "⚠ Placeholder secrets detected: use supabase/docker/.env for production." >&2
 
 echo "1/5 Build frontend"
-npm ci && npm run build
+if [ "${SKIP_BUILD:-0}" = 1 ]; then [ -s dist/index.html ] || { echo "SKIP_BUILD=1 but dist/ missing" >&2; exit 1; }; else npm ci && npm run build; fi
 
 echo "2/5 Sync Edge Functions"
 mkdir -p "$DOCKER_DIR/volumes/functions"
 for d in supabase/functions/*/; do
   n="$(basename "$d")"; [ "$n" = "_templates" ] && continue
+  [ "$n" = "main" ] && continue  # keep upstream dispatcher
   rm -rf "$DOCKER_DIR/volumes/functions/$n"; cp -r "$d" "$DOCKER_DIR/volumes/functions/$n"
 done
 
