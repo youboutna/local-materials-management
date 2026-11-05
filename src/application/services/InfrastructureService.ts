@@ -36,17 +36,16 @@ export class InfrastructureService {
 
   // ============= DOMAINS =============
 
-  async domains(): Promise<DomainDTO[]> {
-    return this.repository.findAllDomains();
+  async domains() {
+    const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
+    return getProjectWorkbenchService().domains();
   }
 
   // ============= ASSET TYPES =============
 
-  async assetTypes(domain?: string): Promise<AssetTypeDTO[]> {
-    if (domain) {
-      return this.repository.findAssetTypesByDomain(domain);
-    }
-    return this.repository.findAllAssetTypes();
+  async assetTypes(domain?: string) {
+    const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
+    return getProjectWorkbenchService().assetTypes(domain);
   }
 
   async saveAssetType(input: SaveAssetTypeDTO): Promise<string> {
@@ -80,28 +79,8 @@ export class InfrastructureService {
       throw new Error('Asset type is required');
     }
 
-    // Convert to SaveFeatureDTO
-    const saveFeature: SaveFeatureDTO = {
-      id: input.id,
-      assetTypeCode: input.assetTypeCode,
-      geometry: input.geometry,
-      properties: input.properties,
-      operationalStatus: input.status,
-      // New fields from generic schema (optional for backward compatibility)
-      codeGeo: input.properties?.code_geo as string | undefined,
-      labelFr: input.properties?.label_fr as string | undefined,
-      labelAr: input.properties?.label_ar as string | undefined,
-      labelDefault: input.properties?.label_default as string | undefined
-    };
-
-    const feature = input.id
-      ? await this.repository.updateFeature(input.id, saveFeature)
-      : await this.repository.createFeature(saveFeature);
-
-    // Link to project
-    await this.repository.linkAssetToProject(projectId, feature.id, 'network_feature');
-
-    return feature.id;
+    const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
+    return getProjectWorkbenchService().saveAsset({ ...input, projectId });
   }
 
   async importAssets(projectId: string, items: ImportFeatureItemDTO[]): Promise<ProjectWorkbenchImportResultDTO> {
@@ -113,29 +92,8 @@ export class InfrastructureService {
       throw new Error('Too many features (max 5000)');
     }
 
-    // Convert to SaveFeatureDTO format
-    const features: SaveFeatureDTO[] = items.map(item => ({
-      assetTypeCode: item.asset_type_code,
-      geometry: item.geometry,
-      properties: item.properties,
-      operationalStatus: item.status,
-      codeGeo: item.properties?.code_geo as string | undefined,
-      labelFr: item.properties?.label_fr as string | undefined,
-      labelAr: item.properties?.label_ar as string | undefined,
-      labelDefault: item.properties?.label_default as string | undefined
-    }));
-
-    const result = await this.repository.importFeatures(projectId, features);
-
-    // Transform InfraDTO.ImportResultDTO to ProjectWorkbenchDTO.ImportResultDTO
-    return {
-      importedCount: result.importedCount,
-      ids: result.ids,
-      errors: result.errors.map(err => ({
-        name: err.feature?.name as string | undefined,
-        error: err.message
-      }))
-    };
+    const { getProjectWorkbenchService } = await import('./ProjectWorkbenchService');
+    return getProjectWorkbenchService().importAssets(projectId, items);
   }
 
   async deleteAsset(projectId: string, id: string): Promise<void> {
