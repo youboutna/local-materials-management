@@ -27,7 +27,8 @@ echo "4/5 Migrations"
 POSTGRES_DB="$(grep -E '^POSTGRES_DB=' "$ENV_FILE" | cut -d= -f2)" bash scripts/apply-selfhosted-migrations.sh
 
 echo "5/5 Frontend release"
-if grep -rqE 'service_role|SERVICE_ROLE_KEY' dist/; then echo "Service role key reference found in bundle." >&2; exit 1; fi
+SRK="$(grep -E '^SERVICE_ROLE_KEY=' "$ENV_FILE" | cut -d= -f2-)"
+if [ -n "$SRK" ] && grep -rqF "$SRK" dist/; then echo "Service role key found in bundle: aborting." >&2; exit 1; fi
 : "${PUBLIC_CONFIG_FILE:?Set PUBLIC_CONFIG_FILE (absolute path to reviewed config.js with the public URL and anon key)}"
 export APP_IMAGE_TAG="${APP_IMAGE_TAG:-$(date -u +%Y%m%d%H%M%S)}"
 bash scripts/release-frontend.sh
