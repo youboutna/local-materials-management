@@ -1,5 +1,6 @@
 #!/bin/bash
 # =============================================================================
+# Pour le déploiement auto-hébergé complet (Docker), utiliser scripts/deploy-selfhosted.sh.
 # deploy.sh – Déploiement des migrations Supabase
 # =============================================================================
 # Utilise npx supabase si la CLI globale n'est pas installée
