@@ -37,6 +37,8 @@ END $$;
 
 -- Schéma btp (métier HadraTech)
 CREATE SCHEMA IF NOT EXISTS btp;
+-- Schéma infra (SIG) : tables créées par les migrations, accès régi par RLS
+CREATE SCHEMA IF NOT EXISTS infra;
 
 -- Schéma extensions (pour les extensions PostgreSQL)
 CREATE SCHEMA IF NOT EXISTS extensions;
@@ -48,6 +50,7 @@ CREATE SCHEMA IF NOT EXISTS extensions;
 -- Usage des schémas
 GRANT USAGE ON SCHEMA public TO web_anon, authenticated;
 GRANT USAGE ON SCHEMA btp TO web_anon, authenticated;
+GRANT USAGE ON SCHEMA infra TO authenticated;
 GRANT USAGE ON SCHEMA extensions TO web_anon, authenticated;
 
 -- Permissions par défaut sur les futures tables

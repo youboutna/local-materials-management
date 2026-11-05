@@ -1003,3 +1003,7 @@ Le plan consolidé reste **NO GO** tant que ces critères sont ouverts ; les chi
 - SIG en mode local : LocalInfraAdapter (carte vide, écritures refusées explicitement), plus d'erreur de schéma.
 - Dette : ~70 accès données encore liés à Supabase (en-tête, organisations, rôles, liste projets…).
 - À étudier : renommer « Métré et plans » en « DQE & Métré », action « Créer une révision » d'un DQE validé, centrage carte sur le projet, regroupements du tableau Consommations.
+
+## Déploiement auto-hébergé (clôture code)
+- Prêt et testé localement : build réel, archive `package:selfhosted`, scan des fichiers de secrets et de la clé service role, migrations ordonnées et idempotentes, schémas exposés `public,btp,infra`.
+- Dette assumée : installation réelle sur serveur vierge (Docker + vrais secrets) à la charge de l'opérateur.
