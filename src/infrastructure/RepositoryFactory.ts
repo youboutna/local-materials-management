@@ -364,6 +364,13 @@ const lazyPorts: {
 import { FetchGeocodingHttpAdapter } from './adapters/http/FetchGeocodingHttpAdapter';
 import type { IGeocodingHttpPort } from '@/domain/repositories/IGeocodingHttpPort';
 
+import { createLocalUnavailableAdapter } from './adapters/local/LocalUnavailableDataAdapter';
+
+/** Port sans adaptateur local dédié : en mode données local, aucune requête vers la base distante. */
+function dataAdapter<T>(port: string, make: () => T): T {
+  return resolveData() === 'local' ? createLocalUnavailableAdapter<T>(port) : make();
+}
+
 let geocodingHttp: IGeocodingHttpPort | null = null;
 
 export class RepositoryFactory {
@@ -539,25 +546,25 @@ export class RepositoryFactory {
 
   static getProjectRepository(): IProjectRepository {
     if (registry.project) return registry.project;
-    registry.project = new SupabaseProjectAdapter();
+    registry.project = dataAdapter('SupabaseProjectAdapter', () => new SupabaseProjectAdapter());
     return registry.project;
   }
 
   static getPhaseRepository(): IPhaseRepository {
     if (registry.phase) return registry.phase;
-    registry.phase = new SupabasePhaseAdapter();
+    registry.phase = dataAdapter('SupabasePhaseAdapter', () => new SupabasePhaseAdapter());
     return registry.phase;
   }
 
   static getOrganizationRepository(): IOrganizationRepository {
     if (registry.organization) return registry.organization;
-    registry.organization = new SupabaseOrganizationAdapter();
+    registry.organization = dataAdapter('SupabaseOrganizationAdapter', () => new SupabaseOrganizationAdapter());
     return registry.organization;
   }
 
   static getOrganizationHierarchyRepository(): IOrganizationHierarchyRepository {
     if (registry.organizationHierarchy) return registry.organizationHierarchy;
-    registry.organizationHierarchy = new SupabaseOrganizationHierarchyAdapter();
+    registry.organizationHierarchy = dataAdapter('SupabaseOrganizationHierarchyAdapter', () => new SupabaseOrganizationHierarchyAdapter());
     return registry.organizationHierarchy;
   }
 
@@ -578,7 +585,7 @@ export class RepositoryFactory {
 
   static getMaterialRepository(): IMaterialRepository {
     if (registry.material) return registry.material;
-    registry.material = new SupabaseMaterialAdapter();
+    registry.material = dataAdapter('SupabaseMaterialAdapter', () => new SupabaseMaterialAdapter());
     return registry.material;
   }
 
@@ -588,68 +595,68 @@ export class RepositoryFactory {
 
   static getDocumentRepository(): IDocumentRepository {
     if (registry.document) return registry.document;
-    registry.document = new SupabaseDocumentAdapter();
+    registry.document = dataAdapter('SupabaseDocumentAdapter', () => new SupabaseDocumentAdapter());
     return registry.document;
   }
 
   static getInspectionRepository(): IInspectionRepository {
     if (registry.inspection) return registry.inspection;
-    registry.inspection = new SupabaseInspectionAdapter();
+    registry.inspection = dataAdapter('SupabaseInspectionAdapter', () => new SupabaseInspectionAdapter());
     return registry.inspection;
   }
 
   static getPaymentRepository(): IPaymentRepository {
     if (registry.payment) return registry.payment;
-    registry.payment = new SupabasePaymentAdapter();
+    registry.payment = dataAdapter('SupabasePaymentAdapter', () => new SupabasePaymentAdapter());
     return registry.payment;
   }
 
   static getDecompteRepository(): IDecompteRepository {
     if (registry.decompte) return registry.decompte;
-    registry.decompte = new SupabaseDecompteAdapter();
+    registry.decompte = dataAdapter('SupabaseDecompteAdapter', () => new SupabaseDecompteAdapter());
     return registry.decompte;
   }
 
   static getTenderRepository(): ITenderRepository {
     if (registry.tender) return registry.tender;
-    registry.tender = new SupabaseTenderAdapter();
+    registry.tender = dataAdapter('SupabaseTenderAdapter', () => new SupabaseTenderAdapter());
     return registry.tender;
   }
 
   static getUserRepository(): IUserRepository {
     if (registry.user) return registry.user;
-    registry.user = new SupabaseUserRepositoryAdapter();
+    registry.user = dataAdapter('SupabaseUserRepositoryAdapter', () => new SupabaseUserRepositoryAdapter());
     return registry.user as IUserRepository;
   }
 
   static getEmployeeRepository(): IEmployeeRepository {
     if (registry.employee) return registry.employee;
-    registry.employee = new SupabaseEmployeeAdapter();
+    registry.employee = dataAdapter('SupabaseEmployeeAdapter', () => new SupabaseEmployeeAdapter());
     return registry.employee;
   }
 
   static getRiskRepository(): IRiskRepository {
     if (registry.risk) return registry.risk;
-    registry.risk = new SupabaseRiskAdapter();
+    registry.risk = dataAdapter('SupabaseRiskAdapter', () => new SupabaseRiskAdapter());
     return registry.risk;
   }
 
   static getRiskTaskRelationRepository(): IRiskTaskRelationRepository {
     if (!registry.riskTaskRelation) {
-      registry.riskTaskRelation = new SupabaseRiskTaskRelationAdapter();
+      registry.riskTaskRelation = dataAdapter('SupabaseRiskTaskRelationAdapter', () => new SupabaseRiskTaskRelationAdapter());
     }
     return registry.riskTaskRelation;
   }
 
   static getSupplierRepository(): ISupplierRepository {
     if (registry.supplier) return registry.supplier;
-    registry.supplier = new SupabaseSupplierAdapter();
+    registry.supplier = dataAdapter('SupabaseSupplierAdapter', () => new SupabaseSupplierAdapter());
     return registry.supplier;
   }
 
   static getHierarchyRepository(): IHierarchyRepository {
     if (registry.hierarchy) return registry.hierarchy;
-    registry.hierarchy = new SupabaseHierarchyAdapter();
+    registry.hierarchy = dataAdapter('SupabaseHierarchyAdapter', () => new SupabaseHierarchyAdapter());
     return registry.hierarchy;
   }
 
@@ -665,19 +672,19 @@ export class RepositoryFactory {
 
   static getInspectionExecutionRepository(): IInspectionExecutionRepository {
     if (registry.inspectionExecution) return registry.inspectionExecution;
-    registry.inspectionExecution = new SupabaseInspectionExecutionAdapter();
+    registry.inspectionExecution = dataAdapter('SupabaseInspectionExecutionAdapter', () => new SupabaseInspectionExecutionAdapter());
     return registry.inspectionExecution;
   }
 
   static getInspectionPaymentValidationRepository(): IInspectionPaymentValidationRepository {
     if (registry.inspectionPaymentValidation) return registry.inspectionPaymentValidation;
-    registry.inspectionPaymentValidation = new SupabaseInspectionPaymentValidationAdapter();
+    registry.inspectionPaymentValidation = dataAdapter('SupabaseInspectionPaymentValidationAdapter', () => new SupabaseInspectionPaymentValidationAdapter());
     return registry.inspectionPaymentValidation;
   }
 
   static getInspectionPermissionRepository(): IInspectionPermissionRepository {
     if (registry.inspectionPermission) return registry.inspectionPermission;
-    registry.inspectionPermission = new SupabaseInspectionPermissionAdapter();
+    registry.inspectionPermission = dataAdapter('SupabaseInspectionPermissionAdapter', () => new SupabaseInspectionPermissionAdapter());
     return registry.inspectionPermission;
   }
 
@@ -693,13 +700,13 @@ export class RepositoryFactory {
 
   static getTenderDocumentRepository(): ITenderDocumentRepository {
     if (registry.tenderDocument) return registry.tenderDocument;
-    registry.tenderDocument = new SupabaseTenderDocumentAdapter();
+    registry.tenderDocument = dataAdapter('SupabaseTenderDocumentAdapter', () => new SupabaseTenderDocumentAdapter());
     return registry.tenderDocument;
   }
 
   static getTenderSharingRepository(): ITenderSharingRepository {
     if (registry.tenderSharing) return registry.tenderSharing;
-    registry.tenderSharing = new SupabaseTenderSharingAdapter();
+    registry.tenderSharing = dataAdapter('SupabaseTenderSharingAdapter', () => new SupabaseTenderSharingAdapter());
     return registry.tenderSharing;
   }
 
@@ -715,13 +722,13 @@ export class RepositoryFactory {
 
   static getPaymentBlockRepository(): IPaymentBlockRepository {
     if (registry.paymentBlock) return registry.paymentBlock;
-    registry.paymentBlock = new SupabasePaymentBlockAdapter();
+    registry.paymentBlock = dataAdapter('SupabasePaymentBlockAdapter', () => new SupabasePaymentBlockAdapter());
     return registry.paymentBlock;
   }
 
   static getPaymentControlActionRepository(): IPaymentControlActionRepository {
     if (registry.paymentControlAction) return registry.paymentControlAction;
-    registry.paymentControlAction = new SupabasePaymentControlActionAdapter();
+    registry.paymentControlAction = dataAdapter('SupabasePaymentControlActionAdapter', () => new SupabasePaymentControlActionAdapter());
     return registry.paymentControlAction;
   }
 
@@ -739,13 +746,13 @@ export class RepositoryFactory {
 
   static getInsuranceRepository(): IInsuranceRepository {
     if (registry.insurance) return registry.insurance;
-    registry.insurance = new SupabaseInsuranceAdapter();
+    registry.insurance = dataAdapter('SupabaseInsuranceAdapter', () => new SupabaseInsuranceAdapter());
     return registry.insurance;
   }
 
   static getParsedInvoiceRepository(): IParsedInvoiceRepository {
     if (registry.parsedInvoice) return registry.parsedInvoice;
-    registry.parsedInvoice = new SupabaseParsedInvoiceAdapter();
+    registry.parsedInvoice = dataAdapter('SupabaseParsedInvoiceAdapter', () => new SupabaseParsedInvoiceAdapter());
     return registry.parsedInvoice;
   }
 
@@ -755,67 +762,67 @@ export class RepositoryFactory {
 
   static getReportingRepository(): IReportingRepository {
     if (registry.reporting) return registry.reporting;
-    registry.reporting = new SupabaseReportingAdapter();
+    registry.reporting = dataAdapter('SupabaseReportingAdapter', () => new SupabaseReportingAdapter());
     return registry.reporting;
   }
 
   static getReportDataTransformerRepository(): IReportDataTransformerRepository {
     if (registry.reportDataTransformer) return registry.reportDataTransformer;
-    registry.reportDataTransformer = new SupabaseReportDataTransformerAdapter();
+    registry.reportDataTransformer = dataAdapter('SupabaseReportDataTransformerAdapter', () => new SupabaseReportDataTransformerAdapter());
     return registry.reportDataTransformer;
   }
 
   static getProjectFormRepository(): IProjectFormRepository {
     if (registry.projectForm) return registry.projectForm;
-    registry.projectForm = new SupabaseProjectFormAdapter() as unknown as IProjectFormRepository;
+    registry.projectForm = dataAdapter('SupabaseProjectFormAdapter', () => new SupabaseProjectFormAdapter()) as unknown as IProjectFormRepository;
     return registry.projectForm;
   }
 
   static getLoadDataRepository(): ILoadDataRepository {
     if (registry.loadData) return registry.loadData;
-    registry.loadData = new SupabaseLoadDataAdapter();
+    registry.loadData = dataAdapter('SupabaseLoadDataAdapter', () => new SupabaseLoadDataAdapter());
     return registry.loadData;
   }
 
   static getProjectResourceRepository(): IProjectResourceRepository {
     if (registry.projectResource) return registry.projectResource;
-    registry.projectResource = new SupabaseProjectResourceAdapter();
+    registry.projectResource = dataAdapter('SupabaseProjectResourceAdapter', () => new SupabaseProjectResourceAdapter());
     return registry.projectResource;
   }
 
   static getTaskDependencyRepository(): ITaskDependencyRepository {
     if (registry.taskDependency) return registry.taskDependency;
-    registry.taskDependency = new SupabaseTaskDependencyAdapter();
+    registry.taskDependency = dataAdapter('SupabaseTaskDependencyAdapter', () => new SupabaseTaskDependencyAdapter());
     return registry.taskDependency;
   }
 
   static getSystemSettingsRepository(): ISystemSettingsRepository {
     if (registry.systemSettings) return registry.systemSettings;
-    registry.systemSettings = new SupabaseSystemSettingsAdapter();
+    registry.systemSettings = dataAdapter('SupabaseSystemSettingsAdapter', () => new SupabaseSystemSettingsAdapter());
     return registry.systemSettings;
   }
 
   static getEscalationThresholdRepository(): IEscalationThresholdRepository {
     if (registry.escalationThreshold) return registry.escalationThreshold;
-    registry.escalationThreshold = new SupabaseEscalationThresholdAdapter();
+    registry.escalationThreshold = dataAdapter('SupabaseEscalationThresholdAdapter', () => new SupabaseEscalationThresholdAdapter());
     return registry.escalationThreshold;
   }
 
   static getQuantityTakeoffRepository(): IQuantityTakeoffRepository {
     if (registry.quantityTakeoff) return registry.quantityTakeoff;
-    registry.quantityTakeoff = new SupabaseQuantityTakeoffAdapter();
+    registry.quantityTakeoff = dataAdapter('SupabaseQuantityTakeoffAdapter', () => new SupabaseQuantityTakeoffAdapter());
     return registry.quantityTakeoff;
   }
 
   static getPhaseEmployeeRepository(): IPhaseEmployeeRepository {
     if (registry.phaseEmployee) return registry.phaseEmployee;
-    registry.phaseEmployee = new SupabasePhaseEmployeeAdapter();
+    registry.phaseEmployee = dataAdapter('SupabasePhaseEmployeeAdapter', () => new SupabasePhaseEmployeeAdapter());
     return registry.phaseEmployee;
   }
 
   static getPhaseMaterialRepository(): IPhaseMaterialRepository {
     if (registry.phaseMaterial) return registry.phaseMaterial;
-    registry.phaseMaterial = new SupabasePhaseMaterialAdapter();
+    registry.phaseMaterial = dataAdapter('SupabasePhaseMaterialAdapter', () => new SupabasePhaseMaterialAdapter());
     return registry.phaseMaterial;
   }
 
@@ -825,13 +832,13 @@ export class RepositoryFactory {
 
   static getProjectStakeholderRepository(): IProjectStakeholderRepository {
     if (registry.projectStakeholder) return registry.projectStakeholder;
-    registry.projectStakeholder = new SupabaseProjectStakeholderAdapter();
+    registry.projectStakeholder = dataAdapter('SupabaseProjectStakeholderAdapter', () => new SupabaseProjectStakeholderAdapter());
     return registry.projectStakeholder;
   }
 
   static getStakeholderRepository(): IStakeholderRepository {
     if (registry.stakeholder) return registry.stakeholder;
-    registry.stakeholder = new SupabaseStakeholderAdapter();
+    registry.stakeholder = dataAdapter('SupabaseStakeholderAdapter', () => new SupabaseStakeholderAdapter());
     return registry.stakeholder;
   }
 
@@ -841,32 +848,32 @@ export class RepositoryFactory {
 
   static getReceptionRepository(): IReceptionRepository {
     if (registry.reception) return registry.reception;
-    registry.reception = new SupabaseReceptionAdapter();
+    registry.reception = dataAdapter('SupabaseReceptionAdapter', () => new SupabaseReceptionAdapter());
     return registry.reception;
   }
 
   static getTenderSubmissionRepository(): ITenderSubmissionRepository {
-    return (lazyPorts.tenderSubmission ??= new SupabaseTenderSubmissionAdapter());
+    return (lazyPorts.tenderSubmission ??= dataAdapter('SupabaseTenderSubmissionAdapter', () => new SupabaseTenderSubmissionAdapter()));
   }
 
   static getTenderLotDocumentRepository(): ITenderLotDocumentRepository {
-    return (lazyPorts.tenderLotDocument ??= new SupabaseTenderLotDocumentAdapter());
+    return (lazyPorts.tenderLotDocument ??= dataAdapter('SupabaseTenderLotDocumentAdapter', () => new SupabaseTenderLotDocumentAdapter()));
   }
 
   static getProjectCheckpointSourceRepository(): IProjectCheckpointSourceRepository {
-    return (lazyPorts.projectCheckpointSource ??= new SupabaseProjectCheckpointSourceAdapter());
+    return (lazyPorts.projectCheckpointSource ??= dataAdapter('SupabaseProjectCheckpointSourceAdapter', () => new SupabaseProjectCheckpointSourceAdapter()));
   }
 
   static getTenderCatalogRepository(): ITenderCatalogRepository {
-    return (lazyPorts.tenderCatalog ??= new SupabaseTenderCatalogAdapter());
+    return (lazyPorts.tenderCatalog ??= dataAdapter('SupabaseTenderCatalogAdapter', () => new SupabaseTenderCatalogAdapter()));
   }
 
   static getControlActionContextRepository(): IControlActionContextRepository {
-    return (lazyPorts.controlActionContext ??= new SupabaseControlActionContextAdapter());
+    return (lazyPorts.controlActionContext ??= dataAdapter('SupabaseControlActionContextAdapter', () => new SupabaseControlActionContextAdapter()));
   }
 
   static getImportReferenceRepository(): IImportReferenceRepository {
-    return (lazyPorts.importReference ??= new SupabaseImportReferenceAdapter());
+    return (lazyPorts.importReference ??= dataAdapter('SupabaseImportReferenceAdapter', () => new SupabaseImportReferenceAdapter()));
   }
 
   static getBoqRepository(): IBoqRepository {
@@ -878,13 +885,13 @@ export class RepositoryFactory {
   }
 
   static getPaymentInitiationRepository(): SupabasePaymentInitiationAdapter {
-    return (lazyPorts.paymentInitiation ??= new SupabasePaymentInitiationAdapter());
+    return (lazyPorts.paymentInitiation ??= dataAdapter('SupabasePaymentInitiationAdapter', () => new SupabasePaymentInitiationAdapter()));
   }
 
   /** Espace projet : adapter local si VITE_DATA_PROVIDER=local (déploiement > profil > défaut), sinon Supabase. */
   static getProjectWorkbenchRepository(): IProjectWorkbenchRepository {
     if (resolveData() === 'local') return RepositoryFactory.localWorkbench();
-    return (lazyPorts.projectWorkbench ??= new SupabaseProjectWorkbenchAdapter());
+    return (lazyPorts.projectWorkbench ??= dataAdapter('SupabaseProjectWorkbenchAdapter', () => new SupabaseProjectWorkbenchAdapter()));
   }
 
   /** Source de contexte autonome du fournisseur de données ; null = composition canonique par les services. */
@@ -898,15 +905,15 @@ export class RepositoryFactory {
   }
 
   static getMonitoringAlertRepository(): SupabaseMonitoringAlertAdapter {
-    return (lazyPorts.monitoringAlert ??= new SupabaseMonitoringAlertAdapter());
+    return (lazyPorts.monitoringAlert ??= dataAdapter('SupabaseMonitoringAlertAdapter', () => new SupabaseMonitoringAlertAdapter()));
   }
 
   static getDerivedAlertRepository(): SupabaseDerivedAlertAdapter {
-    return (lazyPorts.derivedAlert ??= new SupabaseDerivedAlertAdapter());
+    return (lazyPorts.derivedAlert ??= dataAdapter('SupabaseDerivedAlertAdapter', () => new SupabaseDerivedAlertAdapter()));
   }
 
   static getContractRepository(): SupabaseContractAdapter {
-    return (lazyPorts.contract ??= new SupabaseContractAdapter());
+    return (lazyPorts.contract ??= dataAdapter('SupabaseContractAdapter', () => new SupabaseContractAdapter()));
   }
 
   static getReferentialItemRepository(): ReturnType<typeof getReferentialItemAdapter> {
@@ -919,13 +926,13 @@ export class RepositoryFactory {
 
   static getComplianceRepository(): IComplianceRepository {
     if (registry.compliance) return registry.compliance;
-    registry.compliance = new SupabaseComplianceAdapter();
+    registry.compliance = dataAdapter('SupabaseComplianceAdapter', () => new SupabaseComplianceAdapter());
     return registry.compliance;
   }
 
   static getMilestoneRepository(): IMilestoneRepository {
     if (registry.milestone) return registry.milestone;
-    registry.milestone = new SupabaseMilestoneAdapter();
+    registry.milestone = dataAdapter('SupabaseMilestoneAdapter', () => new SupabaseMilestoneAdapter());
     return registry.milestone;
   }
 
@@ -935,7 +942,7 @@ export class RepositoryFactory {
 
   static getWorkspaceRepository(): IWorkspaceRepository {
     if (registry.workspace) return registry.workspace;
-    registry.workspace = new SupabaseWorkspaceAdapter();
+    registry.workspace = dataAdapter('SupabaseWorkspaceAdapter', () => new SupabaseWorkspaceAdapter());
     return registry.workspace;
   }
 
@@ -947,7 +954,7 @@ export class RepositoryFactory {
 
   static getContactMessageRepository(): IContactMessageRepository {
     if (registry.contactMessage) return registry.contactMessage;
-    registry.contactMessage = new SupabaseContactMessageAdapter();
+    registry.contactMessage = dataAdapter('SupabaseContactMessageAdapter', () => new SupabaseContactMessageAdapter());
     return registry.contactMessage;
   }
 
@@ -957,13 +964,13 @@ export class RepositoryFactory {
 
   static getProjectStrategyLinkRepository(): IProjectStrategyLinkRepository {
     if (registry.projectStrategyLink) return registry.projectStrategyLink;
-    registry.projectStrategyLink = new SupabaseProjectStrategyLinkAdapter();
+    registry.projectStrategyLink = dataAdapter('SupabaseProjectStrategyLinkAdapter', () => new SupabaseProjectStrategyLinkAdapter());
     return registry.projectStrategyLink;
   }
 
   static getProjectBudgetLinkRepository(): IProjectBudgetLinkRepository {
     if (registry.projectBudgetLink) return registry.projectBudgetLink;
-    registry.projectBudgetLink = new SupabaseProjectBudgetLinkAdapter();
+    registry.projectBudgetLink = dataAdapter('SupabaseProjectBudgetLinkAdapter', () => new SupabaseProjectBudgetLinkAdapter());
     return registry.projectBudgetLink;
   }
 
@@ -973,7 +980,7 @@ export class RepositoryFactory {
 
   static getMonitoringRepository(): IMonitoringRepository {
     if (registry.monitoring) return registry.monitoring;
-    registry.monitoring = new SupabaseMonitoringAdapter();
+    registry.monitoring = dataAdapter('SupabaseMonitoringAdapter', () => new SupabaseMonitoringAdapter());
     return registry.monitoring;
   }
 
@@ -983,7 +990,7 @@ export class RepositoryFactory {
 
   static getRealtimeRepository(): IRealtimeRepository {
     if (registry.realtime) return registry.realtime;
-    registry.realtime = new SupabaseRealtimeAdapter();
+    registry.realtime = dataAdapter('SupabaseRealtimeAdapter', () => new SupabaseRealtimeAdapter());
     return registry.realtime;
   }
 
@@ -1003,7 +1010,7 @@ export class RepositoryFactory {
 
   static getBoqDocumentHeaderRepository(): IBoqDocumentHeaderRepository {
     if (registry.boqDocumentHeader) return registry.boqDocumentHeader;
-    registry.boqDocumentHeader = new SupabaseBoqDocumentHeaderAdapter();
+    registry.boqDocumentHeader = dataAdapter('SupabaseBoqDocumentHeaderAdapter', () => new SupabaseBoqDocumentHeaderAdapter());
     return registry.boqDocumentHeader;
   }
 
@@ -1013,31 +1020,31 @@ export class RepositoryFactory {
 
   static getArticleRepository(): IArticleRepository {
     if (registry.article) return registry.article;
-    registry.article = new SupabaseArticleAdapter();
+    registry.article = dataAdapter('SupabaseArticleAdapter', () => new SupabaseArticleAdapter());
     return registry.article;
   }
 
   static getNewsletterSubscriberRepository(): INewsletterSubscriberRepository {
     if (registry.newsletterSubscriber) return registry.newsletterSubscriber;
-    registry.newsletterSubscriber = new SupabaseNewsletterSubscriberAdapter();
+    registry.newsletterSubscriber = dataAdapter('SupabaseNewsletterSubscriberAdapter', () => new SupabaseNewsletterSubscriberAdapter());
     return registry.newsletterSubscriber;
   }
 
   static getNewsletterCampaignRepository(): INewsletterCampaignRepository {
     if (registry.newsletterCampaign) return registry.newsletterCampaign;
-    registry.newsletterCampaign = new SupabaseNewsletterCampaignAdapter();
+    registry.newsletterCampaign = dataAdapter('SupabaseNewsletterCampaignAdapter', () => new SupabaseNewsletterCampaignAdapter());
     return registry.newsletterCampaign;
   }
 
   static getNewsletterSubscriptionGateway(): INewsletterSubscriptionGateway {
     if (registry.newsletterSubscriptionGateway) return registry.newsletterSubscriptionGateway;
-    registry.newsletterSubscriptionGateway = new SupabaseNewsletterSubscriptionGateway();
+    registry.newsletterSubscriptionGateway = dataAdapter('SupabaseNewsletterSubscriptionGateway', () => new SupabaseNewsletterSubscriptionGateway());
     return registry.newsletterSubscriptionGateway;
   }
 
   static getNewsletterCampaignDispatcher(): INewsletterCampaignDispatcher {
     if (registry.newsletterCampaignDispatcher) return registry.newsletterCampaignDispatcher;
-    registry.newsletterCampaignDispatcher = new SupabaseNewsletterCampaignDispatcher();
+    registry.newsletterCampaignDispatcher = dataAdapter('SupabaseNewsletterCampaignDispatcher', () => new SupabaseNewsletterCampaignDispatcher());
     return registry.newsletterCampaignDispatcher;
   }
 
