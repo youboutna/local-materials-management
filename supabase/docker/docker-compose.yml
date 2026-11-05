@@ -409,6 +409,26 @@ services:
       SUPABASE_SECRET_KEYS: "{\"default\":\"${SUPABASE_SECRET_KEY:-}\"}"
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       VERIFY_JWT: "${FUNCTIONS_VERIFY_JWT}"
+      SITE_URL: ${SITE_URL}
+      # Communications (valeurs lues uniquement côté serveur)
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-${SMTP_ADMIN_EMAIL:-}}
+      SMTP_AUTH_METHOD: ${SMTP_AUTH_METHOD:-LOGIN}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SMS_PROVIDER: ${SMS_PROVIDER:-}
+      LOVABLE_API_KEY: ${LOVABLE_API_KEY:-}
+      TWILIO_API_KEY: ${TWILIO_API_KEY:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+      TWILIO_MESSAGING_SERVICE_SID: ${TWILIO_MESSAGING_SERVICE_SID:-}
+      GATEWAYAPI_API_KEY: ${GATEWAYAPI_API_KEY:-}
+      GATEWAYAPI_SENDER: ${GATEWAYAPI_SENDER:-}
+      NEWSLETTER_CRON_SECRET: ${NEWSLETTER_CRON_SECRET:-}
+      NEWSLETTER_SITE_URL: ${NEWSLETTER_SITE_URL:-${SITE_URL}}
     command:
       [
         "start",
@@ -434,10 +454,8 @@ services:
       - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
       - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
       - db-config:/etc/postgresql-custom
-      # ⬇️⬇️⬇️ MIGRATIONS HADRATECH ⬇️⬇️⬇️
-      # Les migrations dans supabase/migrations/ sont montées dans le conteneur
-      # Elles s'exécutent au premier démarrage de la DB
-      - ../migrations/:/docker-entrypoint-initdb.d/migrations/hadratech/:Z
+      # Migrations HadraTech : appliquées explicitement par
+      # scripts/apply-selfhosted-migrations.sh (ordonnées, idempotentes).
     healthcheck:
       test:
         [
