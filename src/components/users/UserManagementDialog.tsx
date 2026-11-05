@@ -57,6 +57,7 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({ user, isOpe
   const [phone, setPhone] = useState('');
   const [nationalId, setNationalId] = useState('');
   const [roles, setRoles] = useState<string[]>(['viewer']);
+  const [legacyRoles, setLegacyRoles] = useState<string[]>([]);
   const [channel, setChannel] = useState<ConfirmationChannel>('email');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -67,7 +68,10 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({ user, isOpe
     setEmail(user?.email ?? '');
     setPhone(user?.phone ?? '');
     setNationalId(user?.national_id ?? '');
-    setRoles(user?.roles?.length ? user.roles : ['viewer']);
+    // Seuls les rôles du référentiel sont éditables ; les rôles hérités inconnus ne sont pas renvoyés.
+    const known = (user?.roles ?? []).filter((r) => ROLES_RESPONSIBILITIES.some((x) => x.code === r));
+    setLegacyRoles((user?.roles ?? []).filter((r) => !known.includes(r)));
+    setRoles(known.length ? known : ['viewer']);
     setChannel('email');
     setPassword('');
     setConfirm('');
@@ -168,6 +172,11 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({ user, isOpe
 
           <div className="space-y-2 border-t pt-4">
             <Label>{label('users.manage_roles', 'Rôles')} *</Label>
+            {legacyRoles.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {label('users.legacy_roles_notice', 'Anciens rôles non reconnus, retirés à l\'enregistrement :')} {legacyRoles.join(', ')}
+              </p>
+            )}
             <div className="grid gap-2 sm:grid-cols-2">
               {ROLES_RESPONSIBILITIES.map((role) => (
                 <label key={role.code} className="flex items-center gap-2 rounded-md border p-2 text-sm cursor-pointer">
