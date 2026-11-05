@@ -3,5 +3,5 @@ node_run() {
   if command -v node >/dev/null 2>&1; then node "$@"; return; fi
   local args=() a
   for a in "$@"; do [[ "$a" = /* && -e "$a" ]] && args+=("/host$a") || args+=("$a"); done
-  docker run --rm -v /:/host:ro -w "/host$PWD" node:22-alpine node "${args[@]}"
+  docker run --rm --user "$(id -u):$(id -g)" --network none --read-only -v /:/host:ro -w "/host$PWD" node:22-alpine node "${args[@]}"
 }
