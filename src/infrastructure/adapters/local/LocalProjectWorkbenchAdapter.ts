@@ -3,7 +3,7 @@
  * (calendrier, consommations, dépenses, recettes), utilisé quand VITE_DATA_PROVIDER=local.
  *
  * Données de démonstration fictives, stockées dans le navigateur ; aucune donnée client.
- * Les fonctions SIG (infrastructures) ne sont pas disponibles en local et lèvent une erreur explicite.
+ * Le SIG utilise un inventaire navigateur séparé, sans données client intégrées.
  */
 import type { IProjectWorkbenchRepository } from '@/domain/repositories/IProjectWorkbenchRepository';
 import type { IWorkbenchContextSource } from '@/domain/repositories/IWorkbenchContextSource';
@@ -65,8 +65,6 @@ function demoProject(): ProjectDetailDTO {
   } as unknown as ProjectDetailDTO;
 }
 
-const unavailable = (): never => { throw new Error('Infrastructures SIG indisponibles en mode données local'); };
-
 export class LocalProjectWorkbenchAdapter implements IProjectWorkbenchRepository, IWorkbenchContextSource {
   private readonly infrastructure: LocalInfrastructureStore;
   constructor(private readonly store: Pick<Storage, 'getItem' | 'setItem'> = globalThis.localStorage) {
@@ -79,7 +77,8 @@ export class LocalProjectWorkbenchAdapter implements IProjectWorkbenchRepository
   private write(list: ProjectOperationDTO[]) { this.store.setItem(OPERATIONS_KEY, JSON.stringify(list)); }
 
   async projects(): Promise<WorkbenchProjectDTO[]> {
-    return [{ id: LOCAL_DEMO_PROJECT_ID, title: 'Projet de démonstration (local)', reference: 'DEMO-LOCAL', canManage: true }];
+    const imported = JSON.parse(this.store.getItem('hadratech.local.workbench.projects') || '[]') as ProjectDetailDTO[];
+    return [{ id: LOCAL_DEMO_PROJECT_ID, title: 'Projet de démonstration (local)', reference: 'DEMO-LOCAL', canManage: true }, ...imported.map(p => ({ id: p.id, title: p.title, canManage: true }))];
   }
   async operations(projectId: string) { return this.read().filter(op => op.projectId === projectId); }
   async saveOperation(input: SaveProjectOperationDTO): Promise<ProjectOperationDTO> {
@@ -104,7 +103,11 @@ export class LocalProjectWorkbenchAdapter implements IProjectWorkbenchRepository
   }
 
   // Contexte (port IWorkbenchContextSource)
-  async projectDetail(projectId: string) { return projectId === LOCAL_DEMO_PROJECT_ID ? demoProject() : null; }
+  async projectDetail(projectId: string) {
+    if (projectId === LOCAL_DEMO_PROJECT_ID) return demoProject();
+    const imported = JSON.parse(this.store.getItem('hadratech.local.workbench.projects') || '[]') as ProjectDetailDTO[];
+    return imported.find(p => p.id === projectId) || null;
+  }
   async boqLines(projectId: string, source: BoqSource) { return DEMO_LINES.filter(line => line.contextId === projectId && line.source === source); }
   async decomptes(): Promise<{ decomptes: DecompteRecordDTO[]; payments: DecomptePaymentDTO[] }> { return { decomptes: [], payments: [] }; }
   async operationContexts() { return OPERATION_CONTEXTS; }

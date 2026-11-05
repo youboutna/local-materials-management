@@ -12,8 +12,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import AddressSearchBox from '@/components/gis/AddressSearchBox';
 import InfraGeometryDrawer from '@/components/gis/InfraGeometryDrawer';
 import InfraAttributeTable, { type AttributeRow } from '@/components/gis/InfraAttributeTable';
+import InfraMapExtent from './InfraMapExtent';
 import type { ProjectDetailDTO } from '@/dtos/entities/ProjectDTO';
-import type { InfrastructureAssetDTO, InfrastructureAnalysisDTO, InfraStructureDTO, AssetTypeDTO, InfraRealization, GeometryKind, ImportResultDTO, ImportFeatureItemDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
+import type { InfrastructureAssetDTO, InfrastructureAnalysisDTO, InfraStructureDTO, AssetTypeDTO, SaveAssetTypeDTO, InfraRealization, GeometryKind, ImportResultDTO, ImportFeatureItemDTO } from '@/dtos/entities/ProjectWorkbenchDTO';
 import { GeoJsonZoneCodec } from '@/dtos/transforms/GeoJsonZoneCodec';
 import { ProjectWorkbenchTransformer } from '@/dtos/transforms/ProjectWorkbenchTransformer';
 import { INFRA_ASSET_STATUSES, INFRA_REALIZATIONS, INFRA_GEOMETRY_KINDS } from '@/config/referentials/projects/project-workbench.referential';
@@ -37,6 +38,9 @@ export function InfrastructureWorkbench({ project, canManage }: { project: Proje
   const [structureId, setStructureId] = useState<string | undefined>(); const [structureType, setStructureType] = useState(''); const [structureName, setStructureName] = useState(''); const [structureGeometry, setStructureGeometry] = useState(''); const [structureAttributes, setStructureAttributes] = useState<AttributeRow[]>([]);
   // Import
   const [importText, setImportText] = useState(''); const [importType, setImportType] = useState(''); const [typeProperty, setTypeProperty] = useState('asset_type_code'); const [importReport, setImportReport] = useState<ImportResultDTO | null>(null); const [preview, setPreview] = useState<ImportFeatureItemDTO[] | null>(null);
+  const [nameProperty, setNameProperty] = useState('name');
+  const [missingTypes, setMissingTypes] = useState<Array<SaveAssetTypeDTO & { sourceCode: string }>>([]);
+  const propertyKeys = useMemo(() => ProjectWorkbenchTransformer.geojsonPropertyKeys(importText), [importText]);
   // Type d'ouvrage
   const [newType, setNewType] = useState({ code: '', domainCode: '', domainLabelFr: '', labelFr: '', labelAr: '', labelEn: '', assetGroup: '', geometryKind: 'Point' as GeometryKind });
   // Réalisation
@@ -79,6 +83,7 @@ export function InfrastructureWorkbench({ project, canManage }: { project: Proje
 
     <div className="h-[min(65vh,640px)] min-h-[360px] overflow-hidden border border-border"><MapContainer center={center} zoom={mapZoom} className="h-full w-full">
       <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <InfraMapExtent geometries={[...infra.assets.map(a => a.geometry), ...infra.structures.map(s => s.geometry)]} />
       {zones.length > 0 && <GeoJSON key={JSON.stringify(zoneGeometry)} data={zoneGeometry as FeatureCollection} style={{ color: 'hsl(var(--primary))', weight: 2, fillOpacity: 0.05 }} />}
       {infra.structures.map(structure => <GeoJSON key={`s:${structure.id}:${structure.updatedAt}`} data={structure.geometry} style={{ color: 'hsl(var(--muted-foreground))', dashArray: '4' }} eventHandlers={{ click: () => canManage && openStructure(structure) }} />)}
       {infra.assets.map(asset => <GeoJSON key={`f:${asset.id}:${asset.updatedAt}:${asset.realization}`} data={asset.geometry} style={{ color: asset.realization === 'completed' ? 'hsl(var(--primary))' : 'hsl(var(--destructive))', weight: 3 }} eventHandlers={{ click: () => canManage && openFeature(asset) }} />)}
@@ -110,13 +115,26 @@ export function InfrastructureWorkbench({ project, canManage }: { project: Proje
       <div className="flex gap-2"><Button disabled={busy}><Save className="h-4 w-4 mr-2" />{t('common.save')}</Button><Button type="button" variant="outline" disabled={busy} onClick={() => setPanel(null)}>{t('common.cancel')}</Button></div>
     </form>}
 
-    {panel === 'import' && <form className="space-y-4 border-y border-border py-4" onSubmit={e => { e.preventDefault(); action(async () => { if (!preview) { setPreview(ProjectWorkbenchTransformer.geojsonToImport(importText, importType, typeProperty.trim() || 'asset_type_code')); return; } setImportReport(await infra.importAssets(preview)); setPreview(null); }); }}>
+    {panel === 'import' && <form className="space-y-4 border-y border-border py-4" onSubmit={e => { e.preventDefault(); action(async () => {
+      if (!preview) {
+        const items = ProjectWorkbenchTransformer.geojsonToImport(importText, importType, typeProperty.trim() || 'asset_type_code', nameProperty);
+        setPreview(items);
+        setMissingTypes(ProjectWorkbenchTransformer.missingImportTypes(items, infra.assetTypes).map(type => ({ ...type, sourceCode: type.code, code: type.code.toLowerCase() })));
+        return;
+      }
+      for (const type of missingTypes) await infra.saveAssetType(type);
+      const mapped = preview.map(item => ({ ...item, asset_type_code: missingTypes.find(type => type.sourceCode === item.asset_type_code)?.code || item.asset_type_code }));
+      setImportReport(await infra.importAssets(mapped)); setPreview(null);
+    }); }}>
       <div className="grid sm:grid-cols-3 gap-3">
         <div><Label htmlFor="import-file">{t('workbench.geojson_file')}</Label><Input id="import-file" type="file" accept=".geojson,.json,application/geo+json,application/json" onChange={async e => { const file = e.target.files?.[0]; if (file) { setImportText(await file.text()); setPreview(null); setImportReport(null); } }} /></div>
-        <div><Label>{t('workbench.default_type')}</Label><Select value={importType} onValueChange={setImportType}><SelectTrigger aria-label={t('workbench.default_type')}><SelectValue placeholder={t('workbench.ph_select')} /></SelectTrigger><SelectContent>{typeOptions(infra.assetTypes)}</SelectContent></Select></div>
-        <div><Label htmlFor="import-prop">{t('workbench.type_property')}</Label><Input id="import-prop" placeholder={t('workbench.ph_type_property')} value={typeProperty} onChange={e => setTypeProperty(e.target.value)} /></div>
+        <div><Label>{t('workbench.default_type')}</Label><Select value={importType || NONE} onValueChange={value => { setImportType(value === NONE ? '' : value); setPreview(null); }}><SelectTrigger aria-label={t('workbench.default_type')}><SelectValue placeholder={t('workbench.ph_select')} /></SelectTrigger><SelectContent><SelectItem value={NONE}>—</SelectItem>{typeOptions(infra.assetTypes)}</SelectContent></Select></div>
+        <div><Label htmlFor="import-prop">{t('workbench.type_property')}</Label><Input id="import-prop" list="infra-import-properties" placeholder={t('workbench.ph_type_property')} value={typeProperty} onChange={e => { setTypeProperty(e.target.value); setPreview(null); }} /></div>
+        <div><Label htmlFor="import-name-prop">{t('workbench.name_property')}</Label><Input id="import-name-prop" list="infra-import-properties" value={nameProperty} onChange={e => { setNameProperty(e.target.value); setPreview(null); }} /></div>
+        <datalist id="infra-import-properties">{propertyKeys.map(key => <option key={key} value={key} />)}</datalist>
       </div>
       <Textarea aria-label={t('workbench.geometry')} rows={4} value={importText} onChange={e => { setImportText(e.target.value); setPreview(null); }} placeholder='{"type":"FeatureCollection","features":[…]}' />
+      {preview && missingTypes.length > 0 && <fieldset className="space-y-3"><legend className="font-medium">{t('workbench.new_import_types')}</legend>{missingTypes.map((type, index) => <div key={type.sourceCode} className="grid gap-3 sm:grid-cols-4"><span className="text-sm self-center">{type.sourceCode} · {type.geometryKind}</span>{(['code', 'domainCode', 'labelFr'] as const).map(field => <div key={field}><Label htmlFor={`import-type-${index}-${field}`}>{t(`workbench.${field === 'domainCode' ? 'domain' : field === 'labelFr' ? 'label' : 'code'}`)}</Label><Input id={`import-type-${index}-${field}`} required pattern={field === 'code' ? '[a-z0-9_]+' : undefined} list={field === 'domainCode' ? 'infra-import-domains' : undefined} value={type[field]} onChange={e => setMissingTypes(types => types.map((item, i) => i === index ? { ...item, [field]: e.target.value } : item))} /></div>)}</div>)}<datalist id="infra-import-domains">{infra.domains.map(domain => <option key={domain.code} value={domain.code}>{label(domain)}</option>)}</datalist></fieldset>}
       <div className="flex gap-2"><Button disabled={busy || !importText.trim()}><Upload className="h-4 w-4 mr-2" />{preview ? t('workbench.confirm_import') : t('workbench.preview_import')}</Button><Button type="button" variant="outline" disabled={busy} onClick={() => { setPanel(null); setPreview(null); }}>{t('common.cancel')}</Button></div>
       {preview && <div className="overflow-x-auto border border-border"><table className="w-full text-sm"><thead className="bg-muted/50"><tr><th className="text-start p-2">{t('workbench.label')}</th><th className="text-start p-2">{t('workbench.type')}</th><th className="text-start p-2">{t('workbench.geometry')}</th><th className="text-start p-2">{t('workbench.attribute_table')}</th></tr></thead><tbody>{preview.map((item, index) => { const known = typeByCode.get(item.asset_type_code); const mismatch = known && known.geometryKind !== 'Geometry' && known.geometryKind !== item.geometry.type; return <tr key={index} className="border-t border-border align-top"><td className="p-2 font-medium">{item.name}</td><td className={`p-2 ${!known || mismatch ? 'text-destructive' : ''}`}>{known ? label(known) : `${item.asset_type_code} — ${t('workbench.unknown_type')}`}{mismatch ? ` — ${t('workbench.geometry_mismatch')}` : ''}</td><td className="p-2">{item.geometry.type}</td><td className="p-2 text-muted-foreground">{Object.keys(item.properties).filter(k => k !== '_import').join(', ')}</td></tr>; })}</tbody></table></div>}
       {importReport && <div className="text-sm space-y-1"><p>{t('workbench.imported_count')}: <span className="font-semibold tabular-nums">{importReport.importedCount}</span> · {t('workbench.rejected_count')}: <span className="font-semibold tabular-nums">{importReport.errors.length}</span></p>{importReport.errors.slice(0, 20).map((item, index) => <p key={index} className="text-destructive">{item.name || `#${index + 1}`} — {item.error}</p>)}</div>}

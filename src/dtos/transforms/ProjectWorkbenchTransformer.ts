@@ -1,5 +1,5 @@
 import { INFRA_DEFAULT_MAP_CENTER } from '@/config/referentials/projects/project-workbench.referential';
-import type { ProjectOperationDTO, SaveProjectOperationDTO, SaveInfrastructureDTO, InfrastructureAssetDTO, WorkbenchProjectDTO, AssetTypeDTO, InfraDomainDTO, InfraStructureDTO, SaveInfraStructureDTO, ImportFeatureItemDTO, ImportResultDTO, GeometryKind, InfraRealization } from '@/dtos/entities/ProjectWorkbenchDTO';
+import type { ProjectOperationDTO, SaveProjectOperationDTO, SaveInfrastructureDTO, InfrastructureAssetDTO, WorkbenchProjectDTO, AssetTypeDTO, SaveAssetTypeDTO, InfraDomainDTO, InfraStructureDTO, SaveInfraStructureDTO, ImportFeatureItemDTO, ImportResultDTO, GeometryKind, InfraRealization } from '@/dtos/entities/ProjectWorkbenchDTO';
 import type { Geometry } from 'geojson';
 type Row = Record<string, unknown>;
 const optional = (value: unknown): string | undefined => typeof value === 'string' && value ? value : undefined;
@@ -69,6 +69,25 @@ export class ProjectWorkbenchTransformer {
       if (source && (source.collection || source.metadata)) properties._import = source;
       return { name: optional(properties[nameProperty]) || optional(properties.label) || `${code}-${index + 1}`, asset_type_code: code, status: optional(properties.status) || 'planned', geometry: feature.geometry, properties };
     });
+  }
+  static geojsonPropertyKeys(text: string): string[] {
+    try {
+      const parsed = JSON.parse(text);
+      const features = parsed.type === 'FeatureCollection' ? parsed.features : [parsed];
+      return [...new Set<string>(features.flatMap((f: { properties?: Row }) => Object.keys(f.properties || {})))].sort();
+    } catch { return []; }
+  }
+  static missingImportTypes(items: ImportFeatureItemDTO[], known: AssetTypeDTO[]): SaveAssetTypeDTO[] {
+    const missing = new Map<string, SaveAssetTypeDTO>();
+    for (const item of items) {
+      if (known.some(t => t.code === item.asset_type_code)) continue;
+      const previous = missing.get(item.asset_type_code);
+      missing.set(item.asset_type_code, {
+        code: item.asset_type_code, domainCode: '', labelFr: item.asset_type_code,
+        geometryKind: previous && previous.geometryKind !== item.geometry.type || item.geometry.type === 'GeometryCollection' ? 'Geometry' : item.geometry.type,
+      });
+    }
+    return [...missing.values()];
   }
   /** Seules les coordonnées WGS84 lon/lat sont acceptées (CRS84 / EPSG:4326). */
   static assertWgs84Crs(crs: unknown) {
