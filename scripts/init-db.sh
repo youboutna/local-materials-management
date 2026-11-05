@@ -87,7 +87,7 @@ BEGIN
 
     -- authenticator: role applicatif (la sécurité Supabase moderne se base surtout sur auth+RLS)
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticator') THEN
-        CREATE ROLE authenticator NOINHERIT LOGIN PASSWORD 'authenticator';
+        CREATE ROLE authenticator NOINHERIT LOGIN; -- mot de passe fourni par l'environnement, jamais en dur
     END IF;
 END $$;
 
@@ -206,6 +206,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     brand_id UUID NULL,
     region TEXT NULL,
     department TEXT NULL,
+    last_login_at TIMESTAMPTZ NULL,
 
     CONSTRAINT profiles_pkey PRIMARY KEY (id),
 
@@ -242,6 +243,7 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
     assigned_by UUID NULL,
     expires_at TIMESTAMPTZ NULL,
     status VARCHAR(20) NULL DEFAULT 'active',
+    expired_at TIMESTAMPTZ NULL,
 
     CONSTRAINT user_roles_pkey PRIMARY KEY (id),
 
@@ -254,7 +256,7 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
     CONSTRAINT user_roles_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
 
-    CONSTRAINT check_user_roles_status CHECK (status IN ('active', 'expired', 'revoked', 'suspended')),
+    CONSTRAINT check_user_roles_status CHECK (status IN ('active', 'pending', 'inactive', 'expired', 'revoked', 'suspended')),
 
     CONSTRAINT valid_role_name CHECK (
         role_name IN (
@@ -262,7 +264,8 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
             'agent_dgp', 'agent_cnh', 'inspector_hse', 'chef_service_dgp', 'chef_service_cnh',
             'directeur_dgp', 'directeur_cnh', 'ministre', 'admin', 'super_admin',
             'agent', 'manager', 'director', 'project', 'project_manager',
-            'project_project', 'supplier', 'engineering_consultant'
+            'project_project', 'supplier', 'engineering_consultant',
+            'consultant', 'inspector', 'prmp', 'viewer'
         )
     )
 );
