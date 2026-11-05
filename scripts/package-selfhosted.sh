@@ -13,7 +13,8 @@ zip -qr -9 "$OUT" dist docker/frontend docker-compose.frontend.yml \
   scripts/deploy-selfhosted.sh scripts/apply-selfhosted-migrations.sh scripts/release-frontend.sh \
   scripts/check-frontend-http.sh scripts/check-public-config.mjs scripts/lib/node-run.sh .nvmrc docs/SELF_HOSTED_RELEASE.md \
   -x '*/.git/*' '*/node_modules/*' 'supabase/docker/volumes/db/data/*' 'supabase/docker/volumes/storage/*' \
-     '*/.env' '*/.env.*' -i '*' 'supabase/docker/.env' '*.env.local*' '*/.env.production*''supabase/docker/.env' '*.env.local*' '*/.env.production*' zip -q "$OUT" supabase/docker/.env.hadratech supabase/docker/.env.example 2>/dev/null; true
+     '*/.env' '*/.env.*'
+zip -q "$OUT" supabase/docker/.env.hadratech
 if zipinfo -1 "$OUT" | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.hadratech$' | grep -v '\.env\.example$'; then
   echo "Private env file found in archive: aborting." >&2; rm -f "$OUT"; exit 1
 fi
