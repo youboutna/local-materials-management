@@ -11,7 +11,7 @@ OUT="$ROOT/hadratech-selfhosted-$TAG.zip"
 zip -qr -9 "$OUT" dist docker/frontend docker-compose.frontend.yml \
   supabase/docker supabase/migrations supabase/functions \
   scripts/deploy-selfhosted.sh scripts/apply-selfhosted-migrations.sh scripts/release-frontend.sh \
-  scripts/check-frontend-http.sh scripts/check-public-config.mjs docs/SELF_HOSTED_RELEASE.md \
+  scripts/check-frontend-http.sh scripts/check-public-config.mjs scripts/lib/node-run.sh .nvmrc docs/SELF_HOSTED_RELEASE.md \
   -x '*/.git/*' '*/node_modules/*' 'supabase/docker/volumes/db/data/*' 'supabase/docker/volumes/storage/*' \
      'supabase/docker/.env' '*.env.local*' '*/.env.production*'
 if zipinfo -1 "$OUT" | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.hadratech$' | grep -v '\.env\.example$'; then

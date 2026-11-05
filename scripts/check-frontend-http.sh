@@ -8,7 +8,7 @@ curl --fail --silent --show-error "$BASE/projects/release-check" > "$TMP/index.h
 grep -q 'id="root"' "$TMP/index.html"
 curl --fail --silent --show-error -D "$TMP/headers" "$BASE/config.js" > "$TMP/config.js"
 grep -qi 'cache-control:.*no-store' "$TMP/headers"
-node "$(dirname "$0")/check-public-config.mjs" "$TMP/config.js"
+source "$(cd "$(dirname "$0")" && pwd)/lib/node-run.sh"; node_run "$(cd "$(dirname "$0")" && pwd)/check-public-config.mjs" "$TMP/config.js"
 CODE="$(curl --silent --output /dev/null --write-out '%{http_code}' "$BASE/assets/nonexistent-release-check.mjs")"
 [[ "$CODE" = 404 ]] || { echo 'Missing assets must return 404, not SPA HTML.' >&2; exit 1; }
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

@@ -103,3 +103,9 @@ Before declaring production ready: prove backup restore, authentication and perm
 - `zip-dist.sh` / `build:zip` n'emballent que l'app (dist) : insuffisant pour le serveur.
 - Base déjà initialisée par l'ancien montage : sauvegarde, puis une seule fois `MIGRATIONS_BASELINE=1 bash scripts/apply-selfhosted-migrations.sh` ; ensuite seules les nouvelles migrations s'appliquent.
 - `scripts/deploy.sh` et `scripts/deploy-supabase-cloud.sh` visent la CLI/Supabase Cloud, pas l'auto-hébergé.
+
+### Prérequis
+- Poste de build : Node 22 (`.nvmrc`, minimum 18), npm, zip.
+- Serveur : Docker + `docker compose` v2, curl, unzip. Node **non requis** avec `SKIP_BUILD=1` : les contrôles de `config.js` utilisent Node local s'il existe, sinon un conteneur `node:22-alpine` éphémère.
+- `config.js` : fichier statique de l'opérateur, monté en lecture seule et servi `no-store` par Nginx ; changer l'URL (localhost → supabase.hadratech.com) ne demande pas de rebuild, seulement un redémarrage du conteneur app.
+- **`MIGRATIONS_BASELINE=1` : une seule fois**, uniquement sur une base déjà initialisée par l'ancien montage. Ne jamais le remettre dans un déploiement courant : les nouvelles migrations seraient marquées appliquées sans être exécutées.

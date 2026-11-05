@@ -8,6 +8,12 @@ cd "$ROOT"
 DOCKER_DIR="$ROOT/supabase/docker"
 ENV_FILE="${BACKEND_ENV_FILE:-$DOCKER_DIR/.env}"
 [ -f "$ENV_FILE" ] || ENV_FILE="$DOCKER_DIR/.env.hadratech"
+for c in docker curl; do command -v $c >/dev/null || { echo "Missing prerequisite: $c" >&2; exit 1; }; done
+docker compose version >/dev/null 2>&1 || { echo "Missing prerequisite: docker compose v2" >&2; exit 1; }
+if [ "${SKIP_BUILD:-0}" != 1 ]; then
+  command -v node >/dev/null || { echo "Node $(cat "$ROOT/.nvmrc") required to build (or use SKIP_BUILD=1 with a packaged dist)." >&2; exit 1; }
+  [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 18 ] || { echo "Node >= 18 required (recommended: $(cat "$ROOT/.nvmrc"))." >&2; exit 1; }
+fi
 echo "Backend env: $ENV_FILE"
 grep -q 'your-super-secret\|your_smtp_password' "$ENV_FILE" && echo "⚠ Placeholder secrets detected: use supabase/docker/.env for production." >&2
 
