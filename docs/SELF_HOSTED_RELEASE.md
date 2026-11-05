@@ -86,11 +86,11 @@ Purchase/approve an SMS-capable sender in Twilio, enable SMS Pumping Protection 
 Existing newsletter and project-alert dispatchers must be invoked by an operator-controlled scheduler. Configure HTTPS POSTs to `/functions/v1/newsletter-campaign-dispatcher` with `x-newsletter-cron-secret` and `/functions/v1/project-alerts-processor` with `x-cron-secret`, using their matching private server secrets. Choose frequency from approved operational policy; persisted interval settings alone do not create a scheduler. Avoid overlapping runs and monitor non-2xx results. Calls and inspections are scheduled records, not an implemented phone/reminder worker; payment notifications do not transfer funds.
 
 Before declaring production ready: prove backup restore, authentication and permissions; supplier and consultant CRUD; document upload → preview → download → delete; real PDF parsing; email and SMS acceptance then delivery; newsletter consent/unsubscribe; scheduler execution and failures. Docker is unavailable in this sandbox, and authenticated external Supabase checks are unavailable. Passing code tests is not proof of your infrastructure startup or delivery.
-## Pipeline complet (`./deploy.sh`)
+## Pipeline complet (`bash scripts/deploy-selfhosted.sh`)
 
 1. Copier `supabase/docker/.env.hadratech` (versionné, placeholders) vers `supabase/docker/.env` (non versionné) et y mettre les vrais secrets ; en production appliquer la section PROD OVERRIDE en bas du fichier.
 2. Écrire le `config.js` public (URL publique `API_EXTERNAL_URL` + clé anon uniquement) et exporter `PUBLIC_CONFIG_FILE=/chemin/absolu/config.js`.
-3. Lancer `./deploy.sh` (pas un simple `docker compose up`) : build, synchronisation des Edge Functions, backend, migrations via `scripts/apply-selfhosted-migrations.sh` (ordre par nom, table `public._migrations`, idempotent), puis release frontend. Le script échoue si la clé service role apparaît dans le bundle.
+3. Lancer `bash scripts/deploy-selfhosted.sh` (pas un simple `docker compose up`) : build, synchronisation des Edge Functions, backend, migrations via `scripts/apply-selfhosted-migrations.sh` (ordre par nom, table `public._migrations`, idempotent), puis release frontend. Le script échoue si la clé service role apparaît dans le bundle.
 
 ### Communications (Edge Functions)
 - E-mail : `EMAIL_PROVIDER=smtp|resend|sendgrid` ; SMTP réutilise `SMTP_HOST/PORT/USER/PASS/FROM` ; sinon `RESEND_API_KEY` ou `SENDGRID_API_KEY`.

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+# Différent de scripts/deploy.sh (migrations via la CLI Supabase, cloud ou local).
 # Self-hosted pipeline: build → sync functions → backend → migrations → frontend.
 # Secrets come from supabase/docker/.env (not versioned); falls back to .env.hadratech placeholders.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 DOCKER_DIR="$ROOT/supabase/docker"
 ENV_FILE="${BACKEND_ENV_FILE:-$DOCKER_DIR/.env}"
