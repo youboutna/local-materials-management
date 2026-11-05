@@ -39,7 +39,7 @@ export const INFRA_DEFAULT_MAP_CENTER = { lat: 18.0735, lng: -15.9582, zoom: 6 }
 
 /** Types d'ouvrages génériques de démarrage du mode local (aucune donnée client) ; extensibles par import. */
 export const LOCAL_SEED_ASSET_TYPES = [
-  { code: 'BATIMENT', domainCode: 'road', labelFr: 'Bâtiment', labelAr: 'مبنى', labelEn: 'Building', geometryKind: 'polygon' },
-  { code: 'RESEAU_ASSAINISSEMENT', domainCode: 'sanitation', labelFr: "Réseau d'assainissement", labelAr: 'شبكة صرف صحي', labelEn: 'Sewer network', geometryKind: 'line' },
-  { code: 'EQUIPEMENT_ELECTRIQUE', domainCode: 'electricity', labelFr: 'Équipement électrique', labelAr: 'معدات كهربائية', labelEn: 'Electrical equipment', geometryKind: 'point' },
+  { code: 'BATIMENT', domainCode: 'road', labelFr: 'Bâtiment', labelAr: 'مبنى', labelEn: 'Building', geometryKind: 'Polygon' },
+  { code: 'RESEAU_ASSAINISSEMENT', domainCode: 'sanitation', labelFr: "Réseau d'assainissement", labelAr: 'شبكة صرف صحي', labelEn: 'Sewer network', geometryKind: 'LineString' },
+  { code: 'EQUIPEMENT_ELECTRIQUE', domainCode: 'electricity', labelFr: 'Équipement électrique', labelAr: 'معدات كهربائية', labelEn: 'Electrical equipment', geometryKind: 'Point' },
 ] as const;

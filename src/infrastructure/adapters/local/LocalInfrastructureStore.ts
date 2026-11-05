@@ -12,7 +12,7 @@ export class LocalInfrastructureStore implements InfraPort {
   constructor(private readonly storage: Pick<Storage, 'getItem' | 'setItem'> = globalThis.localStorage) {}
   private read(): Inventory {
     const raw = this.storage.getItem(KEY);
-    return raw ? JSON.parse(raw) as Inventory : { domains: [...INFRA_DOMAINS], types: LOCAL_SEED_ASSET_TYPES.map(t => ({ ...t })) as AssetTypeDTO[], assets: [], structures: [] };
+    return raw ? JSON.parse(raw) as Inventory : { domains: [...INFRA_DOMAINS], types: LOCAL_SEED_ASSET_TYPES.map(t => ({ ...t })), assets: [], structures: [] };
   }
   private write(data: Inventory) { this.storage.setItem(KEY, JSON.stringify(data)); }
   async domains() { return this.read().domains; }
