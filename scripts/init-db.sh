@@ -12,6 +12,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "pgjwt";
+CREATE EXTENSION IF NOT EXISTS "postgis"; -- requis par le schéma infra (SIG)
 
 -- ============================
 -- 2. SCHÉMAS (configurables)
@@ -23,7 +24,7 @@ DECLARE
     schema_name TEXT;
 BEGIN
     IF schema_config IS NULL OR schema_config = '' THEN
-        schema_list := ARRAY['public', 'btp', 'auth'];
+        schema_list := ARRAY['public', 'btp', 'infra', 'auth'];
     ELSE
         schema_list := string_to_array(schema_config, ',');
     END IF;
@@ -101,7 +102,7 @@ DECLARE
     schema_name TEXT;
 BEGIN
     IF schema_config IS NULL OR schema_config = '' THEN
-        schema_list := ARRAY['public', 'btp'];
+        schema_list := ARRAY['public', 'btp', 'infra'];
     ELSE
         schema_list := string_to_array(schema_config, ',');
     END IF;
@@ -380,7 +381,7 @@ BEGIN
     END IF;
 
     IF schema_config IS NULL OR schema_config = '' THEN
-        schema_config := 'public,btp,auth';
+        schema_config := 'public,btp,infra,auth';
     END IF;
 
     RAISE NOTICE '✅ Base initialisée. Schéma principal : %, Schémas configurés : %', main_schema, schema_config;
