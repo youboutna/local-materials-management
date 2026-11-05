@@ -109,3 +109,18 @@ Before declaring production ready: prove backup restore, authentication and perm
 - Serveur : Docker + `docker compose` v2, curl, unzip. Node **non requis** avec `SKIP_BUILD=1` : les contrôles de `config.js` utilisent Node local s'il existe, sinon un conteneur `node:22-alpine` éphémère.
 - `config.js` : fichier statique de l'opérateur, monté en lecture seule et servi `no-store` par Nginx ; changer l'URL (localhost → supabase.hadratech.com) ne demande pas de rebuild, seulement un redémarrage du conteneur app.
 - **`MIGRATIONS_BASELINE=1` : une seule fois**, uniquement sur une base déjà initialisée par l'ancien montage. Ne jamais le remettre dans un déploiement courant : les nouvelles migrations seraient marquées appliquées sans être exécutées.
+
+### Recette / validation de l'archive (reproductible)
+```bash
+npx vite build --outDir /tmp/hdist --emptyOutDir      # build réel hors dépôt
+[ -e dist ] || ln -s /tmp/hdist dist
+SKIP_BUILD=1 APP_IMAGE_TAG=test bash scripts/package-selfhosted.sh
+Z=hadratech-selfhosted-test.zip
+zipinfo -1 $Z | grep -E '(^|/)\.env'                  # attendu : seulement supabase/docker/.env.hadratech
+zipinfo -1 $Z | grep -c '^supabase/migrations/.*\.sql$'  # attendu : nombre de fichiers de supabase/migrations
+zipinfo -1 $Z | grep -c '^dist/assets/'                 # attendu : > 0
+SRK=$(grep -E '^SERVICE_ROLE_KEY=' supabase/docker/.env | cut -d= -f2-)
+grep -rqF "$SRK" /tmp/hdist && echo FUITE || echo OK     # attendu : OK
+rm -f $Z; [ -L dist ] && rm dist
+```
+Dernier essai : 489 fichiers, 6,1 Mo, 294 migrations, aucune clé service role dans le bundle.
