@@ -21,5 +21,20 @@ zip -q "$OUT" supabase/docker/.env.hadratech
 if zipinfo -1 "$OUT" | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.hadratech$' | grep -v '\.env\.example$'; then
   echo "Private env file found in archive: aborting." >&2; rm -f "$OUT"; exit 1
 fi
+for f in \
+  scripts/deploy-selfhosted.sh \
+  scripts/apply-selfhosted-migrations.sh \
+  scripts/release-frontend.sh \
+  scripts/check-frontend-http.sh \
+  scripts/check-public-config.mjs \
+  scripts/lib/node-run.sh \
+  supabase/docker/.env.hadratech
+do
+  if ! zipinfo -1 "$OUT" | grep -Fqx "$f"; then
+    echo "Required deployment file missing from archive: $f" >&2
+    rm -f "$OUT"
+    exit 1
+  fi
+done
 echo "Archive: $OUT ($(zipinfo -1 "$OUT" | wc -l | xargs) files)"
-echo "Server: unzip -q $(basename "$OUT") -d hadratech && cd hadratech && cp supabase/docker/.env.hadratech supabase/docker/.env (edit secrets) && SKIP_BUILD=1 PUBLIC_CONFIG_FILE=/abs/config.js bash scripts/deploy-selfhosted.sh"
+echo "Server: unzip -q $(basename "$OUT") -d hadratech; cd hadratech; cp supabase/docker/.env.hadratech supabase/docker/.env; edit secrets and set PUBLIC_CONFIG_FILE; SKIP_BUILD=1 bash scripts/deploy-selfhosted.sh"

@@ -86,11 +86,37 @@ Purchase/approve an SMS-capable sender in Twilio, enable SMS Pumping Protection 
 Existing newsletter and project-alert dispatchers must be invoked by an operator-controlled scheduler. Configure HTTPS POSTs to `/functions/v1/newsletter-campaign-dispatcher` with `x-newsletter-cron-secret` and `/functions/v1/project-alerts-processor` with `x-cron-secret`, using their matching private server secrets. Choose frequency from approved operational policy; persisted interval settings alone do not create a scheduler. Avoid overlapping runs and monitor non-2xx results. Calls and inspections are scheduled records, not an implemented phone/reminder worker; payment notifications do not transfer funds.
 
 Before declaring production ready: prove backup restore, authentication and permissions; supplier and consultant CRUD; document upload → preview → download → delete; real PDF parsing; email and SMS acceptance then delivery; newsletter consent/unsubscribe; scheduler execution and failures. Docker is unavailable in this sandbox, and authenticated external Supabase checks are unavailable. Passing code tests is not proof of your infrastructure startup or delivery.
-## Pipeline complet (`bash scripts/deploy-selfhosted.sh`)
+## Flow de déploiement auto-hébergé
 
-1. Copier `supabase/docker/.env.hadratech` (versionné, placeholders) vers `supabase/docker/.env` (non versionné) et y mettre les vrais secrets ; en production appliquer la section PROD OVERRIDE en bas du fichier.
-2. Écrire le `config.js` public (URL publique `API_EXTERNAL_URL` + clé anon uniquement) et exporter `PUBLIC_CONFIG_FILE=/chemin/absolu/config.js`.
-3. Lancer `bash scripts/deploy-selfhosted.sh` (pas un simple `docker compose up`) : build, synchronisation des Edge Functions, backend, migrations via `scripts/apply-selfhosted-migrations.sh` (ordre par nom, table `public._migrations`, idempotent), puis release frontend. Le script échoue si la clé service role apparaît dans le bundle.
+Le packaging et le déploiement sont deux étapes distinctes. `package-selfhosted.sh` s'exécute sur le poste de build ; `deploy-selfhosted.sh` s'exécute depuis le dossier déjà extrait sur le serveur et ne décompresse pas l'archive.
+
+### Poste de build
+
+```bash
+npm run package:selfhosted
+```
+
+Cette commande lance `npm ci`, construit le frontend puis crée `hadratech-selfhosted-<tag>.zip`. L'archive contient `dist`, les fichiers Docker, les migrations, les Edge Functions, le modèle `.env.hadratech`, les scripts serveur (dont `deploy-selfhosted.sh`, `apply-selfhosted-migrations.sh`, `release-frontend.sh` et `check-frontend-http.sh`) et leurs dépendances de validation. Elle exclut les secrets `.env` privés et les données de base. Le script vérifie la présence des scripts requis dans l'archive.
+
+### Serveur
+
+1. Copier l'archive sur le serveur et la décompresser dans un nouveau dossier de release, puis entrer dans ce dossier :
+
+   ```bash
+   unzip -q hadratech-selfhosted-<tag>.zip -d hadratech
+   cd hadratech
+   ```
+
+2. Créer `supabase/docker/.env` depuis `supabase/docker/.env.hadratech`, remplacer les placeholders par les secrets réels et configurer le `config.js` public, puis définir `PUBLIC_CONFIG_FILE=/chemin/absolu/config.js`. Ne jamais placer de secrets privés dans ce fichier.
+3. Lancer le déploiement depuis le dossier extrait :
+
+   ```bash
+   SKIP_BUILD=1 PUBLIC_CONFIG_FILE=/chemin/absolu/config.js bash scripts/deploy-selfhosted.sh
+   ```
+
+   `SKIP_BUILD=1` réutilise le `dist` livré dans l'archive ; Node n'est donc pas nécessaire sur le serveur. Le script synchronise les Edge Functions, attend le backend Docker, appelle `scripts/apply-selfhosted-migrations.sh` (ordre par nom, table `public._migrations`, idempotent), publie le frontend via `scripts/release-frontend.sh`, puis appelle `scripts/check-frontend-http.sh` pour valider santé HTTP, routes SPA, configuration runtime, erreurs 404 et worker PDF. Toute erreur interrompt le flux. `--clean-install` force au contraire `npm ci` et le build sur un hôte équipé de Node, même si `SKIP_BUILD=1` est défini.
+
+Les contrôles HTTP sont aussi exécutés par `release-frontend.sh` lors d'une publication frontend autonome. Dans le flux complet, le contrôle final explicite de `deploy-selfhosted.sh` sert de gate d'acceptation après la publication.
 
 ### Communications (Edge Functions)
 - E-mail : `EMAIL_PROVIDER=smtp|resend|sendgrid` ; SMTP réutilise `SMTP_HOST/PORT/USER/PASS/FROM` ; sinon `RESEND_API_KEY` ou `SENDGRID_API_KEY`.

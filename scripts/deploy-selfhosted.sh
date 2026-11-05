@@ -3,6 +3,13 @@
 # Self-hosted pipeline: build → sync functions → backend → migrations → frontend.
 # Secrets come from supabase/docker/.env (not versioned); falls back to .env.hadratech placeholders.
 set -euo pipefail
+CLEAN_INSTALL=0
+for arg in "$@"; do
+  case "$arg" in
+    --clean-install) CLEAN_INSTALL=1 ;;
+    *) echo "Usage: $0 [--clean-install]" >&2; exit 2 ;;
+  esac
+done
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 DOCKER_DIR="$ROOT/supabase/docker"
@@ -18,7 +25,7 @@ echo "Backend env: $ENV_FILE"
 grep -q 'your-super-secret\|your_smtp_password' "$ENV_FILE" && echo "⚠ Placeholder secrets detected: use supabase/docker/.env for production." >&2
 
 echo "1/5 Build frontend"
-if [ "${SKIP_BUILD:-0}" = 1 ]; then
+if [ "${SKIP_BUILD:-0}" = 1 ] && [ "$CLEAN_INSTALL" != 1 ]; then
   [ -s dist/index.html ] || { echo "SKIP_BUILD=1 but dist/ missing" >&2; exit 1; }
 else
   npm ci
@@ -45,4 +52,5 @@ if [ -n "$SRK" ] && grep -rqF "$SRK" dist/; then echo "Service role key found in
 : "${PUBLIC_CONFIG_FILE:?Set PUBLIC_CONFIG_FILE (absolute path to reviewed config.js with the public URL and anon key)}"
 export APP_IMAGE_TAG="${APP_IMAGE_TAG:-$(date -u +%Y%m%d%H%M%S)}"
 bash scripts/release-frontend.sh
-echo "Deployed. Check: curl -s http://localhost:8000/functions/v1/hello"
+bash scripts/check-frontend-http.sh "http://127.0.0.1:${APP_PORT:-8088}"
+echo "Deployment and frontend acceptance checks passed: http://127.0.0.1:${APP_PORT:-8088}"
