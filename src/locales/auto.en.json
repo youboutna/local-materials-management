@@ -6763,5 +6763,8 @@
   "workbench.invalid_currency": "Currency is required.",
   "dqe.revision.create": "Create revision",
   "dqe.revision.created": "Draft revision created",
-  "dqe.revision.failed": "Revision creation failed"
+  "dqe.revision.failed": "Revision creation failed",
+  "auto.profile.telephone": "Phone",
+  "auto.profile.piece_identite": "ID document number",
+  "auto.profile.enregistrer": "Save"
 }

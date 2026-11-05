@@ -6762,5 +6762,8 @@
   "workbench.invalid_currency": "العملة مطلوبة.",
   "dqe.revision.create": "إنشاء مراجعة",
   "dqe.revision.created": "تم إنشاء مسودة المراجعة",
-  "dqe.revision.failed": "فشل إنشاء المراجعة"
+  "dqe.revision.failed": "فشل إنشاء المراجعة",
+  "auto.profile.telephone": "الهاتف",
+  "auto.profile.piece_identite": "رقم وثيقة الهوية",
+  "auto.profile.enregistrer": "حفظ"
 }
