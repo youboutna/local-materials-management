@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getUserService, UserService } from "@/application/services/UserService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +19,36 @@ const Profile = () => {
   const { t } = useLanguage();
   const { updatePassword, loading } = usePasswordManagement();
   const { toast } = useToast();
+
+  const queryClient = useQueryClient();
+  const profileQuery = useQuery({
+    queryKey: ["profile", "self", user?.id],
+    enabled: !!user?.id,
+    queryFn: () => getUserService().getUserById(user!.id),
+  });
+  const [form, setForm] = useState({ fullName: "", phone: "", nationalId: "" });
+  useEffect(() => {
+    const p = profileQuery.data;
+    if (p) setForm({ fullName: p.fullName ?? "", phone: p.phone ?? "", nationalId: p.nationalId ?? "" });
+  }, [profileQuery.data]);
+  const saveProfile = useMutation({
+    mutationFn: () => getUserService().updateOwnProfile(user!.id, form),
+  });
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const violation = UserService.validateOwnProfile(form);
+    if (violation) {
+      toast({ title: t("common.error") || "Erreur", description: violation === "fullName" ? "Nom complet requis (2 caractères minimum)." : "Numéro de téléphone invalide.", variant: "destructive" });
+      return;
+    }
+    try {
+      await saveProfile.mutateAsync();
+      await queryClient.invalidateQueries({ queryKey: ["profile", "self", user?.id] });
+      toast({ title: "Profil mis à jour" });
+    } catch (err) {
+      toast({ title: t("common.error") || "Erreur", description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+    }
+  };
 
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -79,14 +111,23 @@ const Profile = () => {
                   {user?.email || t("materials.not_defined")}
                 </p>
               </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">
-                  {t("auth.full_name")}
-                </Label>
-                <p className="text-lg">
-                  {user?.user_metadata?.full_name || t("materials.not_defined")}
-                </p>
-              </div>
+              <form onSubmit={handleProfileSave} className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="pf-fullName">{t("auth.full_name")}</Label>
+                  <Input id="pf-fullName" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="pf-phone"><T k="auto.profile.telephone" fallback="Téléphone" /></Label>
+                  <Input id="pf-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="pf-nid"><T k="auto.profile.piece_identite" fallback="N° pièce d'identité" /></Label>
+                  <Input id="pf-nid" value={form.nationalId} onChange={(e) => setForm({ ...form, nationalId: e.target.value })} />
+                </div>
+                <Button type="submit" disabled={saveProfile.isPending || profileQuery.isLoading}>
+                  <T k="auto.profile.enregistrer" fallback="Enregistrer" />
+                </Button>
+              </form>
             </div>
             <div className="space-y-4">
               <div>
