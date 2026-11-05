@@ -31,7 +31,14 @@ export class OperationValidationError extends Error {
     super(`workbench.invalid_${field}`);
     this.name = 'OperationValidationError';
   }
+  static of(field: OperationViolation): OperationValidationError {
+    if (field === 'amount') return new InvalidAmountError();
+    if (field === 'quantity') return new InsufficientQuantityError();
+    return new OperationValidationError(field);
+  }
 }
+export class InvalidAmountError extends OperationValidationError { constructor() { super('amount'); this.name = 'InvalidAmountError'; } }
+export class InsufficientQuantityError extends OperationValidationError { constructor() { super('quantity'); this.name = 'InsufficientQuantityError'; } }
 
 export class ProjectWorkbenchService {
   constructor(
@@ -69,7 +76,7 @@ export class ProjectWorkbenchService {
   }
   async saveOperation(input: SaveProjectOperationDTO) {
     const violation = ProjectWorkbenchService.validateOperation(input);
-    if (violation) throw new OperationValidationError(violation);
+    if (violation) throw OperationValidationError.of(violation);
     return this.repository.saveOperation(input);
   }
   deleteOperation(projectId: string, id: string) { return this.repository.deleteOperation(projectId, id); }
