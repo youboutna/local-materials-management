@@ -28,6 +28,8 @@ import { useSearchParams } from "react-router-dom";
 
 // Import step components
 import GeoZoneEditor from "@/components/gis/GeoZoneEditor";
+import GisInteractiveMap from "@/components/gis/GisInteractiveMap";
+import { MapZoneTransformer } from "@/dtos/transforms/MapZoneTransformer";
 import type { InterventionZoneDTO } from "@/dtos/entities/InterventionZoneDTO";
 import ConstructionPhaseManager from "./ConstructionPhaseManager";
 import ProjectDqeTab from "./ProjectDqeTab";
@@ -543,6 +545,12 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
 
 
         {currentStep === 2 && (
+          <div className="space-y-3">
+            <GisInteractiveMap height="520px" zones={interventionZones}
+              center={formData?.projectData?.latitude && formData?.projectData?.longitude ? [formData.projectData.latitude, formData.projectData.longitude] : undefined}
+              onShapeDrawn={z => handleInterventionZonesChange([...interventionZones, z])}
+              onImportGeoJson={fc => handleInterventionZonesChange([...interventionZones, ...MapZoneTransformer.zonesFromGeoJson(fc)])} />
+            <details><summary className="cursor-pointer text-sm text-muted-foreground"><T k="map.detail_edit" fallback="Édition détaillée des zones" /></summary>
           <GeoZoneEditor
             value={interventionZones}
             onChange={handleInterventionZonesChange}
@@ -555,6 +563,8 @@ const ProjectCreationWorkflow: React.FC<ProjectCreationWorkflowProps> = ({
             }
             height={520}
           />
+            </details>
+          </div>
         )}
 
         {currentStep === 3 && (

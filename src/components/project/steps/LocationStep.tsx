@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import UnifiedLocationSelector from '../../location/UnifiedLocationSelector';
 import InterventionZonesPicker from '../../projects/InterventionZonesPicker';
+import GisInteractiveMap from '@/components/gis/GisInteractiveMap';
+import { MapZoneTransformer } from '@/dtos/transforms/MapZoneTransformer';
 import type { InterventionZoneDTO } from '@/dtos/entities/InterventionZoneDTO';
 
 // Import entity DTOs (following PROMPTS.md Rule #4: No type redefinition)
@@ -24,6 +26,18 @@ const LocationStep: React.FC<LocationStepProps> = ({
   isEditing = false
 }) => {
   const { t } = useLanguage();
+  const currentZones: InterventionZoneDTO[] = (formData as unknown as { interventionZones?: InterventionZoneDTO[] })
+                .interventionZones ??
+              ((formData as unknown as { interventionZone?: InterventionZoneDTO })
+                .interventionZone
+                ? [
+                    (formData as unknown as { interventionZone: InterventionZoneDTO })
+                      .interventionZone,
+                  ]
+                : []);
+  const updateZones = (zones: InterventionZoneDTO[]) =>
+    onUpdate({ interventionZones: zones, interventionZone: zones[0] } as unknown as Partial<ProjectDTO>);
+
   return (
     <Card>
       <CardHeader>
@@ -66,6 +80,10 @@ const LocationStep: React.FC<LocationStepProps> = ({
           </div>
 
           {/* Zones d'intervention — multi-polygones bénéficiaires */}
+          <GisInteractiveMap height="480px" zones={currentZones}
+            onShapeDrawn={z => updateZones([...currentZones, z])}
+            onImportGeoJson={fc => updateZones([...currentZones, ...MapZoneTransformer.zonesFromGeoJson(fc)])} />
+          <details><summary className="cursor-pointer text-sm text-muted-foreground"><T k="map.detail_edit" fallback="Édition détaillée des zones" /></summary>
           <InterventionZonesPicker
             value={
               (formData as unknown as { interventionZones?: InterventionZoneDTO[] })
@@ -86,6 +104,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
               } as unknown as Partial<ProjectDTO>)
             }
           />
+          </details>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
