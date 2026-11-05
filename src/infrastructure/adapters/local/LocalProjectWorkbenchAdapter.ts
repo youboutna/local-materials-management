@@ -17,6 +17,8 @@ import type { BoqLineDTO } from '@/dtos/boq/BoqLineDTO';
 import type { BoqSource } from '@/domain/entities/boq/BoqLine';
 import type { DecomptePaymentDTO, DecompteRecordDTO } from '@/dtos/entities/DecompteRecordDTO';
 import type { ReferentialItemDTO } from '@/dtos/entities/ReferentialItemDTO';
+import { LocalInfrastructureStore } from './LocalInfrastructureStore';
+import type { IProjectWorkbenchRepository as WorkbenchPort } from '@/domain/repositories/IProjectWorkbenchRepository';
 
 const OPERATIONS_KEY = 'hadratech.local.workbench.operations';
 export const LOCAL_DEMO_PROJECT_ID = '00000000-0000-4000-8000-00000000d001';
@@ -66,7 +68,10 @@ function demoProject(): ProjectDetailDTO {
 const unavailable = (): never => { throw new Error('Infrastructures SIG indisponibles en mode données local'); };
 
 export class LocalProjectWorkbenchAdapter implements IProjectWorkbenchRepository, IWorkbenchContextSource {
-  constructor(private readonly store: Pick<Storage, 'getItem' | 'setItem'> = globalThis.localStorage) {}
+  private readonly infrastructure: LocalInfrastructureStore;
+  constructor(private readonly store: Pick<Storage, 'getItem' | 'setItem'> = globalThis.localStorage) {
+    this.infrastructure = new LocalInfrastructureStore(store);
+  }
 
   private read(): ProjectOperationDTO[] {
     try { return JSON.parse(this.store.getItem(OPERATIONS_KEY) || '[]') as ProjectOperationDTO[]; } catch { return []; }
@@ -104,17 +109,17 @@ export class LocalProjectWorkbenchAdapter implements IProjectWorkbenchRepository
   async decomptes(): Promise<{ decomptes: DecompteRecordDTO[]; payments: DecomptePaymentDTO[] }> { return { decomptes: [], payments: [] }; }
   async operationContexts() { return OPERATION_CONTEXTS; }
 
-  // SIG : non disponible en local
-  async domains(): Promise<InfraDomainDTO[]> { return []; }
-  async assetTypes(): Promise<AssetTypeDTO[]> { return []; }
-  async saveAssetType(): Promise<string> { return unavailable(); }
-  async assets(): Promise<InfrastructureAssetDTO[]> { return []; }
-  async saveAsset(): Promise<string> { return unavailable(); }
-  async importAssets(): Promise<ImportResultDTO> { return unavailable(); }
-  async deleteAsset(): Promise<void> { return unavailable(); }
-  async structures(): Promise<InfraStructureDTO[]> { return []; }
-  async saveStructure(): Promise<string> { return unavailable(); }
-  async deleteStructure(): Promise<void> { return unavailable(); }
-  async analyze(): Promise<InfrastructureAnalysisDTO> { return unavailable(); }
-  async saveRealization(): Promise<string> { return unavailable(); }
+  // SIG : même port, inventaire strictement local au navigateur.
+  domains: WorkbenchPort['domains'] = () => this.infrastructure.domains();
+  assetTypes: WorkbenchPort['assetTypes'] = domain => this.infrastructure.assetTypes(domain);
+  saveAssetType: WorkbenchPort['saveAssetType'] = input => this.infrastructure.saveAssetType(input);
+  assets: WorkbenchPort['assets'] = projectId => this.infrastructure.assets(projectId);
+  saveAsset: WorkbenchPort['saveAsset'] = input => this.infrastructure.saveAsset(input);
+  importAssets: WorkbenchPort['importAssets'] = (projectId, items) => this.infrastructure.importAssets(projectId, items);
+  deleteAsset: WorkbenchPort['deleteAsset'] = (projectId, id) => this.infrastructure.deleteAsset(projectId, id);
+  structures: WorkbenchPort['structures'] = projectId => this.infrastructure.structures(projectId);
+  saveStructure: WorkbenchPort['saveStructure'] = input => this.infrastructure.saveStructure(input);
+  deleteStructure: WorkbenchPort['deleteStructure'] = (projectId, id) => this.infrastructure.deleteStructure(projectId, id);
+  analyze: WorkbenchPort['analyze'] = () => this.infrastructure.analyze();
+  saveRealization: WorkbenchPort['saveRealization'] = input => this.infrastructure.saveRealization(input);
 }
