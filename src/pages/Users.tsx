@@ -93,8 +93,9 @@ const Users = () => {
     "create"
   );
 
-  // Check if user can manage users (admin or director)
-  const canManageUsers = hasAnyRole(["admin", "director"]);
+  // Seul l'administrateur système gère les autres comptes (rôles, e-mail) :
+  // la liste couvre plusieurs projets, le serveur admin-users applique la même règle.
+  const canManageUsers = hasAnyRole(["admin", "super_admin"]);
 
   // Check if user is authenticated
   useEffect(() => {

@@ -124,6 +124,24 @@ export class UserService {
     }
   }
 
+  /** Valide la saisie du profil personnel ; l'ID, le statut et les rôles ne sont jamais modifiables ici. */
+  static validateOwnProfile(data: { fullName?: string; phone?: string; nationalId?: string }): 'fullName' | 'phone' | null {
+    if (!data.fullName || data.fullName.trim().length < 2) return 'fullName';
+    if (data.phone && !/^\+?[0-9 ()-]{6,20}$/.test(data.phone.trim())) return 'phone';
+    return null;
+  }
+
+  /** Mise à jour du profil par l'utilisateur connecté : champs personnels uniquement. */
+  async updateOwnProfile(userId: string, data: { fullName: string; phone?: string; nationalId?: string }): Promise<User> {
+    const violation = UserService.validateOwnProfile(data);
+    if (violation) throw new AppError(ErrorCode.VALIDATION_ERROR, `invalid_${violation}`);
+    return this.updateUser(userId, {
+      fullName: data.fullName.trim(),
+      phone: data.phone?.trim() || null,
+      nationalId: data.nationalId?.trim() || null,
+    } as unknown as Partial<User>);
+  }
+
   async updateProfile(userId: string, data: {
     fullName?: string;
     phone?: string;
