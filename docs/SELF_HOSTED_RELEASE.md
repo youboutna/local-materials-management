@@ -96,3 +96,10 @@ Before declaring production ready: prove backup restore, authentication and perm
 - E-mail : `EMAIL_PROVIDER=smtp|resend|sendgrid` ; SMTP réutilise `SMTP_HOST/PORT/USER/PASS/FROM` ; sinon `RESEND_API_KEY` ou `SENDGRID_API_KEY`.
 - SMS : `SMS_PROVIDER=twilio|gatewayapi` + `LOVABLE_API_KEY` et `TWILIO_*` ou `GATEWAYAPI_*`. Sans clés, l'envoi renvoie `SMS_PROVIDER_NOT_CONFIGURED` (jamais un faux succès).
 - Newsletter : `NEWSLETTER_CRON_SECRET`, `NEWSLETTER_SITE_URL`.
+
+### Archive et copie vers le serveur
+- Poste de build : `npm run package:selfhosted` → `hadratech-selfhosted-<tag>.zip` (dist, compose, migrations, fonctions, scripts ; aucun `.env` privé ni données de base).
+- Serveur : `unzip`, `cp supabase/docker/.env.hadratech supabase/docker/.env` puis renseigner les secrets, puis `SKIP_BUILD=1 PUBLIC_CONFIG_FILE=/abs/config.js bash scripts/deploy-selfhosted.sh`.
+- `zip-dist.sh` / `build:zip` n'emballent que l'app (dist) : insuffisant pour le serveur.
+- Base déjà initialisée par l'ancien montage : sauvegarde, puis une seule fois `MIGRATIONS_BASELINE=1 bash scripts/apply-selfhosted-migrations.sh` ; ensuite seules les nouvelles migrations s'appliquent.
+- `scripts/deploy.sh` et `scripts/deploy-supabase-cloud.sh` visent la CLI/Supabase Cloud, pas l'auto-hébergé.
