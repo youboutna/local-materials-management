@@ -74,20 +74,12 @@ export class ProjectScaffoldService {
   constructor(private readonly boq: IBoqRepository) {}
 
   private async listDqeLines(projectId: string): Promise<BoqLineDTO[]> {
-    try {
-      return await this.boq.list({ source: 'dqe', contextId: projectId, projectId });
-    } catch {
-      return [];
-    }
+    return await this.boq.list({ source: 'dqe', contextId: projectId, projectId });
   }
 
   private async loadPhases(projectId: string): Promise<PhaseLike[]> {
-    try {
-      const phases = await getPhaseService().getPhasesByProject(projectId);
-      return (phases ?? []) as unknown as PhaseLike[];
-    } catch {
-      return [];
-    }
+    const phases = await getPhaseService().getPhasesByProject(projectId);
+    return (phases ?? []) as unknown as PhaseLike[];
   }
 
   /** Diagnostic : ce qui manque au projet pour être opérationnel. */
