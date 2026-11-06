@@ -86,7 +86,7 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
       if (error) return null;
       return data ? mapDbRowToTenderSharingSecretDTO(data) : null;
     } catch (error) {
-      return null;
+      throw error;
     }
   }
 
@@ -132,7 +132,7 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
       if (error) return [];
       return data ? data.map(mapDbRowToTenderSharingSecretDTO) : [];
     } catch (error) {
-      return [];
+      throw error;
     }
   }
 
@@ -288,7 +288,7 @@ export class SupabaseTenderSharingAdapter implements ITenderSharingRepository {
         metadata: row.metadata,
       })) : [];
     } catch (error) {
-      return [];
+      throw error;
     }
   }
 

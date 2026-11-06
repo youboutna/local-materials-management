@@ -194,7 +194,7 @@ export class SupabaseReportDataTransformerAdapter implements IReportDataTransfor
       });
     } catch (error) {
       console.error('Error fetching enhanced phases:', error);
-      return [];
+      throw error;
     }
   }
 

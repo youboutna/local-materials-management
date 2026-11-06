@@ -173,7 +173,7 @@ export class SupabaseUserAdapter extends BaseAuthAdapter implements IAuthReposit
       return (data ?? []).map((r) => r.role_name);
     } catch (error) {
       console.error('[SupabaseUserAdapter.getUserRolesList] Unexpected:', error);
-      return [];
+      throw error;
     }
   }
 

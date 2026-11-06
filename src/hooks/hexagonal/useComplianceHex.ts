@@ -59,7 +59,7 @@ export function useComplianceHex(projectId?: string) {
       return createdItem;
     } catch (err) {
       console.error('Error creating compliance item:', err);
-      return null;
+      throw err;
     }
   }, [projectId, fetchComplianceItems, complianceService]);
 
@@ -74,7 +74,7 @@ export function useComplianceHex(projectId?: string) {
       return true;
     } catch (err) {
       console.error('Error updating compliance item:', err);
-      return false;
+      throw err;
     }
   }, [fetchComplianceItems, complianceService]);
 
@@ -86,7 +86,7 @@ export function useComplianceHex(projectId?: string) {
       return true;
     } catch (err) {
       console.error('Error deleting compliance item:', err);
-      return false;
+      throw err;
     }
   }, [fetchComplianceItems, complianceService]);
 

@@ -132,7 +132,7 @@ export class SupabaseReportingAdapter implements IReportingRepository {
         return data || [];
       } catch (e) {
         console.warn(`[ReportSections] ${label} threw:`, e);
-        return [];
+        throw e;
       }
     };
 

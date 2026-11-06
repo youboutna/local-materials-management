@@ -600,7 +600,7 @@ export function usePhaseDetails(phaseId: string | undefined) {
       return orderedPhases.sort((a, b) => a.order - b.order);
     } catch (error) {
       console.error('Error getting workflow hierarchy:', error);
-      return [];
+      throw error;
     }
   };
 

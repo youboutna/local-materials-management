@@ -262,7 +262,7 @@ export class SupabaseMilestoneAdapter implements IMilestoneRepository {
       return true;
     } catch (error) {
       console.error('Unexpected error deleting milestone:', error);
-      return false;
+      throw error;
     }
   }
 

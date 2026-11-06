@@ -232,7 +232,7 @@ export function useLocationHex(): UseLocationHexResult {
       };
     } catch (error) {
       console.error('Error getting region for city:', error);
-      return null;
+      throw error;
     }
   }, []);
 
@@ -255,7 +255,7 @@ export function useLocationHex(): UseLocationHexResult {
       }));
     } catch (error) {
       console.error('Error getting major cities:', error);
-      return [];
+      throw error;
     }
   }, []);
 
@@ -278,7 +278,7 @@ export function useLocationHex(): UseLocationHexResult {
       }));
     } catch (error) {
       console.error('Error getting cities by population:', error);
-      return [];
+      throw error;
     }
   }, []);
 
@@ -290,7 +290,7 @@ export function useLocationHex(): UseLocationHexResult {
       return cities.length > 0 ? cities[0] : null;
     } catch (error) {
       console.error('Error finding nearest city:', error);
-      return null;
+      throw error;
     }
   }, [locationService]);
 
@@ -319,7 +319,7 @@ export function useLocationHex(): UseLocationHexResult {
       });
     } catch (error) {
       console.error('Error finding location by search term:', error);
-      return [];
+      throw error;
     }
   }, [geocodingService]);
 
@@ -348,7 +348,7 @@ export function useLocationHex(): UseLocationHexResult {
       return await locationService.searchLocations('', { type: basicType });
     } catch (error) {
       console.error('Error getting locations by type:', error);
-      return [];
+      throw error;
     }
   }, [locationService]);
 
@@ -358,7 +358,7 @@ export function useLocationHex(): UseLocationHexResult {
       return await locationService.findAll();
     } catch (error) {
       console.error('Error getting all locations:', error);
-      return [];
+      throw error;
     }
   }, [locationService]);
 

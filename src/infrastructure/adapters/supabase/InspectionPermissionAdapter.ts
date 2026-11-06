@@ -153,7 +153,7 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
       return (data?.access_level || 0) > 0;
     } catch (error) {
       console.error('Error checking project access:', error);
-      return false;
+      throw error;
     }
   }
 
@@ -246,7 +246,7 @@ export class InspectionPermissionAdapter implements IInspectionPermissionReposit
       return data?.is_available || false;
     } catch (error) {
       console.error('Error checking inspector availability:', error);
-      return false;
+      throw error;
     }
   }
 }

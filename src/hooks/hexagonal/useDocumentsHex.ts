@@ -215,7 +215,7 @@ export const useDocumentsByProject = (projectId: string) => {
         return documents;
       } catch (err) {
         console.error('Error fetching project documents:', err);
-        return [];
+        throw err;
       }
     },
     enabled: !!projectId
@@ -235,7 +235,7 @@ export const useDocumentById = (id: string) => {
         return document || null;
       } catch (err) {
         console.error('Error fetching document:', err);
-        return null;
+        throw err;
       }
     },
     enabled: !!id
@@ -258,7 +258,7 @@ export const useTenderDocuments = (tenderId: string) => {
         return tenderDocuments;
       } catch (err) {
         console.error('Error fetching tender documents:', err);
-        return [];
+        throw err;
       }
     },
     enabled: !!tenderId
@@ -281,7 +281,7 @@ export const useWorkflowStepDocuments = (stepId: string) => {
         return stepDocuments;
       } catch (err) {
         console.error('Error fetching workflow step documents:', err);
-        return [];
+        throw err;
       }
     },
     enabled: !!stepId

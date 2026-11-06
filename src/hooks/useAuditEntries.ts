@@ -60,7 +60,7 @@ const fetchAuditEntries = async (
       }));
   } catch (error) {
     console.error('Error fetching audit entries:', error);
-    return [];
+    throw error;
   }
 };
 

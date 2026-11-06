@@ -573,7 +573,7 @@ export class SupabaseSupplierPaymentAdapter implements ISupplierPaymentRepositor
       return data?.supplier_id || null;
     } catch (error) {
       console.error('[SupabaseSupplierPaymentAdapter] getContractorSupplierIdForProject failed:', error);
-      return null;
+      throw error;
     }
   }
 }

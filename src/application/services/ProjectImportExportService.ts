@@ -598,7 +598,7 @@ export class ProjectImportExportService {
       return created.id;
     } catch (err) {
       console.error(`[ensureStakeholderCommunityOrg] ❌ Échec pour "${name}":`, err);
-      return undefined;
+      throw err;
     }
   }
 
@@ -712,7 +712,7 @@ export class ProjectImportExportService {
       return data.id;
     } catch (err) {
       console.error(`[ensureEntityExists] ❌ Création ${entityType} "${trimmed}" échouée:`, err);
-      return undefined;
+      throw err;
     }
   }
 

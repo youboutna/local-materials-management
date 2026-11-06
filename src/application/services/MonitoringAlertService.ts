@@ -175,7 +175,7 @@ export class MonitoringAlertService {
       return map;
     } catch (error) {
       console.warn('MonitoringAlertService: escalation thresholds unavailable', error);
-      return {};
+      throw error;
     }
   }
 
