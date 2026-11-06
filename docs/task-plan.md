@@ -19,7 +19,7 @@
 - [x] Actions unifiées : approbation de paiement réelle, erreurs non avalées, auteur réel, routage par entité.
 - [x] Services applicatifs : 35 erreurs masquées en `[]`/`null` relancées ; géocodage honnête.
 - [x] Pages de test et import de projets codés en dur supprimés.
-- [~] Erreurs masquées (06/11) : 43 lectures (adaptateurs, services, hooks de lecture) relancent l'erreur au lieu de renvoyer liste vide/null. Restent ~36 cas volontaires ou à arbitrer : actions renvoyant false (jalons, alertes), lectures localStorage, profile-manager.
+- [~] Erreurs masquées (06/11) : 43 lectures + 8 (décompte automatique, ossature projet, points de contrôle ; montant de jalon = poids × coût estimé de la phase au lieu de poids × 10 000) (adaptateurs, services, hooks de lecture) relancent l'erreur au lieu de renvoyer liste vide/null. Restent ~36 cas volontaires ou à arbitrer : actions renvoyant false (jalons, alertes), lectures localStorage, profile-manager.
 - [x] Lot A (communications), Lot B (calcul DQE par paquets branché à l'import), Lot D (import PTBA + modèle).
 - [~] Lot C (04/11, suite) : en-tête de page, cellules centrées et sous-totaux traités ; DQE client de test : 98 lignes, total lu à ~95 % du récapitulatif des sections présentes, 21 écarts P.U. tracés. Plans (masse, toiture, menuiseries) non exploités.
 - [~] Lot C : en-têtes de tableau PDF répartis sur plusieurs lignes reconnus génériquement (titres de groupe ignorés). Essai local sur un DQE client : 3 → 121 lignes, section second œuvre exacte, écarts quantité × P.U. tracés. Restent : libellés repliés en électricité (lignes de suite comptées à part, un montant aberrant), sous-totaux de chapitre lus comme lignes, plans (masse, toiture, menuiseries) non exploités.
