@@ -227,11 +227,7 @@ export class ContractService {
     if (!contractId || !estimateId) return [];
 
     const items = await this.estimateService
-      .getEstimateItems({ estimateId })
-      .catch((e) => {
-        console.warn('[ContractService] lecture du devis impossible:', e);
-        return [];
-      });
+      .getEstimateItems({ estimateId });
 
     if (items.length === 0) return [];
 
