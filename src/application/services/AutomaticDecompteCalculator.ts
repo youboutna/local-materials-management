@@ -356,39 +356,39 @@ export class AutomaticDecompteCalculator {
   }
 
   private async getPhaseFinancials(projectId: string): Promise<PhaseFinancials[]> {
-    try {
-      const phases = await this.phaseRepository.getPhasesByProjectId(projectId);
-      return phases.map(p => ({
-        id: p.id,
-        name: p.phaseName ?? 'Phase',
-        phaseName: p.phaseName ?? 'Phase',
-        estimatedCost: p.estimatedCost ?? 0,
-        progress: p.progress ?? 0,
-        totalPaid: 0,
-        remainingBudget: p.estimatedCost ?? 0
-      }));
-    } catch {
-      return [];
-    }
+    const phases = await this.phaseRepository.getPhasesByProjectId(projectId);
+    return phases.map(p => ({
+      id: p.id,
+      name: p.phaseName ?? 'Phase',
+      phaseName: p.phaseName ?? 'Phase',
+      estimatedCost: p.estimatedCost ?? 0,
+      progress: p.progress ?? 0,
+      totalPaid: 0,
+      remainingBudget: p.estimatedCost ?? 0
+    }));
   }
 
   private async getVerifiedMilestones(projectId: string): Promise<VerifiedMilestone[]> {
-    try {
-      const milestones = await this.milestoneRepository.findByProjectId(projectId);
-      return milestones
-        .filter(m => m.status === 'completed')
-        .map(m => ({
+    const [milestones, phases] = await Promise.all([
+      this.milestoneRepository.findByProjectId(projectId),
+      this.phaseRepository.getPhasesByProjectId(projectId),
+    ]);
+    const costByPhase = new Map(phases.map(p => [p.id, p.estimatedCost ?? 0]));
+    return milestones
+      .filter(m => m.status === 'completed' && !!m.completionDate)
+      .map(m => {
+        const weight = m.weight ?? 0;
+        const phaseEstimatedCost = m.phaseId ? costByPhase.get(m.phaseId) ?? 0 : 0;
+        return {
           id: m.id,
           title: m.title,
-          weight: m.weight ?? 0.1,
-          completionDate: m.completionDate ?? new Date().toISOString(),
-          amount: (m.weight ?? 0.1) * 10000, // Approximate calculation
+          weight,
+          completionDate: m.completionDate as string,
+          amount: weight * phaseEstimatedCost,
           phaseId: m.phaseId ?? '',
-          phaseEstimatedCost: 0
-        }));
-    } catch {
-      return [];
-    }
+          phaseEstimatedCost,
+        };
+      });
   }
 
   private async getPreviousDecomptes(projectId: string, phaseId?: string): Promise<AutomaticDecompteDTO[]> {
@@ -428,29 +428,21 @@ export class AutomaticDecompteCalculator {
   }
 
   private async getPhaseData(phaseId: string): Promise<PhaseFinancials | null> {
-    try {
-      const phase = await this.phaseRepository.findById(phaseId);
-      if (!phase) return null;
-      return {
-        id: phase.id,
-        name: phase.phaseName ?? 'Phase',
-        phaseName: phase.phaseName ?? 'Phase',
-        estimatedCost: phase.estimatedCost ?? 0,
-        progress: phase.progress ?? 0,
-        totalPaid: 0,
-        remainingBudget: phase.estimatedCost ?? 0
-      };
-    } catch {
-      return null;
-    }
+    const phase = await this.phaseRepository.findById(phaseId);
+    if (!phase) return null;
+    return {
+      id: phase.id,
+      name: phase.phaseName ?? 'Phase',
+      phaseName: phase.phaseName ?? 'Phase',
+      estimatedCost: phase.estimatedCost ?? 0,
+      progress: phase.progress ?? 0,
+      totalPaid: 0,
+      remainingBudget: phase.estimatedCost ?? 0
+    };
   }
 
   private async getPhaseMilestones(phaseId: string): Promise<MilestoneDTO[]> {
-    try {
-      return await this.milestoneRepository.findByPhaseId(phaseId);
-    } catch {
-      return [];
-    }
+    return await this.milestoneRepository.findByPhaseId(phaseId);
   }
 
   private calculateCurrentPeriodAmount(

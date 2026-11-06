@@ -87,7 +87,7 @@ export function useCheckpointVerification({
         }));
       } catch (error) {
         console.error('Error fetching checkpoints:', error);
-        return [];
+        throw error;
       }
     },
     enabled: !!projectId && !!phaseId,
@@ -108,7 +108,7 @@ export function useCheckpointVerification({
         });
       } catch (error) {
         console.error('AutomaticDecompteCalculator.calculatePhaseDecompte failed:', error);
-        return null;
+        throw error;
       }
     },
     enabled: !!projectId && !!phaseId,
