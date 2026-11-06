@@ -286,7 +286,7 @@ export class SupabaseParsedInvoiceAdapter implements IParsedInvoiceRepository {
       if (error) return false;
       return !!data;
     } catch (error) {
-      return false;
+      throw error;
     }
   }
 

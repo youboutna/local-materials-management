@@ -519,7 +519,7 @@ export class SupabasePhaseAdapter implements IPhaseRepository {
 
     } catch (error) {
       console.error('[SupabasePhaseAdapter] findByProjectIdAndCode error:', error);
-      return null;
+      throw error;
     }
   }
 }

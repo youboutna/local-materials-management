@@ -110,7 +110,7 @@ export class InspectionSchedulingService {
       return !conflict;
     } catch (error) {
       console.error('Error checking inspector availability:', error);
-      return false;
+      throw error;
     }
   }
 

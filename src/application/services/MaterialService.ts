@@ -429,7 +429,7 @@ export class MaterialService {
       return !!projectMaterial;
     } catch (error) {
       console.error('MaterialService.isMaterialInProject failed:', error);
-      return false;
+      throw error;
     }
   }
 

@@ -94,7 +94,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       ];
     } catch (error) {
       console.error('Error getting assignable inspectors:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -150,7 +150,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       return (data ?? []).map((r) => r.role_name);
     } catch (error) {
       console.error('[SupabaseInspectionPermissionAdapter.getUserRolesList]', error);
-      return [];
+      throw error;
     }
   }
 
@@ -176,7 +176,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       return !error && !!data;
     } catch (error) {
       console.error('Error checking project access:', error);
-      return false;
+      throw error;
     }
   }
 
@@ -216,7 +216,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       ];
     } catch (error) {
       console.error('Error getting alternative inspectors:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -247,7 +247,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       return null;
     } catch (error) {
       console.error('Error getting inspector details:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -290,7 +290,7 @@ export class SupabaseInspectionPermissionAdapter implements IInspectionPermissio
       return false;
     } catch (error) {
       console.error('Error checking inspector availability:', error);
-      return false;
+      throw error;
     }
   }
 

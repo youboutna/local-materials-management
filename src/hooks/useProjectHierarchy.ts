@@ -77,7 +77,7 @@ export const useProjectHierarchy = (projectId: string) => {
       }));
     } catch (err) {
       console.error('Error getting escalation targets:', err);
-      return [];
+      throw err;
     }
   };
 
@@ -114,6 +114,6 @@ export const getProjectEmployeesByRole = async (projectId: string, roleFilter?: 
     return members;
   } catch (err) {
     console.error('Error getting project employees by role:', err);
-    return [];
+    throw err;
   }
 };

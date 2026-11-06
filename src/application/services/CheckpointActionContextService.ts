@@ -722,7 +722,7 @@ export class CheckpointActionContextService {
       };
     } catch (error) {
       console.error('CheckpointActionContextService.fetchMainContractor failed:', error);
-      return undefined;
+      throw error;
     }
   }
 

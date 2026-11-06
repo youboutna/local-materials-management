@@ -162,7 +162,7 @@ export class ProjectManagerService implements IProjectManagerService {
       return this.manager.needsEscalation(alert);
     } catch (error) {
       console.error('[ProjectManagerService] Erreur lors de la vérification d\'escalade:', error);
-      return false;
+      throw error;
     }
   }
 
