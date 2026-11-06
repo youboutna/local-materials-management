@@ -333,27 +333,21 @@ export class AutomaticDecompteCalculator {
   // ============= HELPERS PRIVÉS =============
 
   private async getProjectFinancials(projectId: string): Promise<ProjectFinancials> {
-    try {
-      const project = await this.projectRepository.findById(projectId);
-      return {
-        budget: project?.budget ?? 0,
-        totalPaid: 0, // Would need payment aggregation
-        totalRetentionHeld: 0,
-        paymentCount: 0,
-        allowsInitialPayment: true,
-        initialPaymentPercentage: this.rules.initialPaymentPercentage ?? 30
-      };
-    } catch {
-      return {
-        budget: 0,
-        totalPaid: 0,
-        totalRetentionHeld: 0,
-        paymentCount: 0,
-        allowsInitialPayment: true,
-        initialPaymentPercentage: 30
-      };
-    }
+    const [project, records] = await Promise.all([
+      this.projectRepository.findById(projectId),
+      RepositoryFactory.getDecompteRepository().findByProjectId(projectId),
+    ]);
+    const paid = records.filter(r => r.status === 'paid');
+    return {
+      budget: project?.budget ?? 0,
+      totalPaid: paid.reduce((sum, r) => sum + (r.validatedAmount || r.amount || 0), 0),
+      totalRetentionHeld: paid.reduce((sum, r) => sum + (r.retentionAmount || 0), 0),
+      paymentCount: paid.length,
+      allowsInitialPayment: true,
+      initialPaymentPercentage: this.rules.initialPaymentPercentage ?? 30
+    };
   }
+
 
   private async getPhaseFinancials(projectId: string): Promise<PhaseFinancials[]> {
     const phases = await this.phaseRepository.getPhasesByProjectId(projectId);
